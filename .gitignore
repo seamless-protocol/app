@@ -56,6 +56,7 @@ storybook-static
 # TypeScript
 *.tsbuildinfo
 .tmp
+src/routeTree.gen.ts
 
 # Biome
 .biome
