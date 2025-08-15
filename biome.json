@@ -17,7 +17,8 @@
       "!.storybook",
       "!playwright-report",
       "!test-results",
-      "!**/*.min.js"
+      "!**/*.min.js",
+      "!src/routeTree.gen.ts"
     ]
   },
   "formatter": {
