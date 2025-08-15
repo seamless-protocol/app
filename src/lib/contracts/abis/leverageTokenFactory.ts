@@ -1,264 +1,264 @@
 export const leverageTokenFactoryAbi = [
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "_implementation",
-        "type": "address"
+        internalType: 'address',
+        name: '_implementation',
+        type: 'address',
       },
       {
-        "internalType": "address",
-        "name": "_owner",
-        "type": "address"
-      }
+        internalType: 'address',
+        name: '_owner',
+        type: 'address',
+      },
     ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
+    stateMutability: 'nonpayable',
+    type: 'constructor',
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "implementation",
-        "type": "address"
-      }
+        internalType: 'address',
+        name: 'implementation',
+        type: 'address',
+      },
     ],
-    "name": "BeaconInvalidImplementation",
-    "type": "error"
+    name: 'BeaconInvalidImplementation',
+    type: 'error',
   },
   {
-    "inputs": [],
-    "name": "Create2EmptyBytecode",
-    "type": "error"
+    inputs: [],
+    name: 'Create2EmptyBytecode',
+    type: 'error',
   },
   {
-    "inputs": [],
-    "name": "FailedDeployment",
-    "type": "error"
+    inputs: [],
+    name: 'FailedDeployment',
+    type: 'error',
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "balance",
-        "type": "uint256"
+        internalType: 'uint256',
+        name: 'balance',
+        type: 'uint256',
       },
       {
-        "internalType": "uint256",
-        "name": "needed",
-        "type": "uint256"
-      }
+        internalType: 'uint256',
+        name: 'needed',
+        type: 'uint256',
+      },
     ],
-    "name": "InsufficientBalance",
-    "type": "error"
+    name: 'InsufficientBalance',
+    type: 'error',
   },
   {
-    "inputs": [],
-    "name": "InvalidAddress",
-    "type": "error"
+    inputs: [],
+    name: 'InvalidAddress',
+    type: 'error',
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
+        internalType: 'address',
+        name: 'owner',
+        type: 'address',
+      },
     ],
-    "name": "OwnableInvalidOwner",
-    "type": "error"
+    name: 'OwnableInvalidOwner',
+    type: 'error',
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
     ],
-    "name": "OwnableUnauthorizedAccount",
-    "type": "error"
+    name: 'OwnableUnauthorizedAccount',
+    type: 'error',
   },
   {
-    "anonymous": false,
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "proxy",
-        "type": "address"
+        indexed: true,
+        internalType: 'address',
+        name: 'proxy',
+        type: 'address',
       },
       {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
+        indexed: false,
+        internalType: 'bytes',
+        name: 'data',
+        type: 'bytes',
       },
       {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "baseSalt",
-        "type": "bytes32"
-      }
+        indexed: false,
+        internalType: 'bytes32',
+        name: 'baseSalt',
+        type: 'bytes32',
+      },
     ],
-    "name": "BeaconProxyCreated",
-    "type": "event"
+    name: 'BeaconProxyCreated',
+    type: 'event',
   },
   {
-    "anonymous": false,
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "previousOwner",
-        "type": "address"
+        indexed: true,
+        internalType: 'address',
+        name: 'previousOwner',
+        type: 'address',
       },
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
+        indexed: true,
+        internalType: 'address',
+        name: 'newOwner',
+        type: 'address',
+      },
     ],
-    "name": "OwnershipTransferred",
-    "type": "event"
+    name: 'OwnershipTransferred',
+    type: 'event',
   },
   {
-    "anonymous": false,
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "implementation",
-        "type": "address"
-      }
+        indexed: true,
+        internalType: 'address',
+        name: 'implementation',
+        type: 'address',
+      },
     ],
-    "name": "Upgraded",
-    "type": "event"
+    name: 'Upgraded',
+    type: 'event',
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
+        internalType: 'address',
+        name: 'sender',
+        type: 'address',
       },
       {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
+        internalType: 'bytes',
+        name: 'data',
+        type: 'bytes',
       },
       {
-        "internalType": "bytes32",
-        "name": "baseSalt",
-        "type": "bytes32"
-      }
+        internalType: 'bytes32',
+        name: 'baseSalt',
+        type: 'bytes32',
+      },
     ],
-    "name": "computeProxyAddress",
-    "outputs": [
+    name: 'computeProxyAddress',
+    outputs: [
       {
-        "internalType": "address",
-        "name": "proxy",
-        "type": "address"
-      }
+        internalType: 'address',
+        name: 'proxy',
+        type: 'address',
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
+    stateMutability: 'view',
+    type: 'function',
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
+        internalType: 'bytes',
+        name: 'data',
+        type: 'bytes',
       },
       {
-        "internalType": "bytes32",
-        "name": "baseSalt",
-        "type": "bytes32"
-      }
+        internalType: 'bytes32',
+        name: 'baseSalt',
+        type: 'bytes32',
+      },
     ],
-    "name": "createProxy",
-    "outputs": [
+    name: 'createProxy',
+    outputs: [
       {
-        "internalType": "address",
-        "name": "proxy",
-        "type": "address"
-      }
+        internalType: 'address',
+        name: 'proxy',
+        type: 'address',
+      },
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    "inputs": [],
-    "name": "implementation",
-    "outputs": [
+    inputs: [],
+    name: 'implementation',
+    outputs: [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
+    stateMutability: 'view',
+    type: 'function',
   },
   {
-    "inputs": [],
-    "name": "numProxies",
-    "outputs": [
+    inputs: [],
+    name: 'numProxies',
+    outputs: [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
+    stateMutability: 'view',
+    type: 'function',
   },
   {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [
+    inputs: [],
+    name: 'owner',
+    outputs: [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
+    stateMutability: 'view',
+    type: 'function',
   },
   {
-    "inputs": [],
-    "name": "renounceOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
+        internalType: 'address',
+        name: 'newOwner',
+        type: 'address',
+      },
     ],
-    "name": "transferOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "newImplementation",
-        "type": "address"
-      }
+        internalType: 'address',
+        name: 'newImplementation',
+        type: 'address',
+      },
     ],
-    "name": "upgradeTo",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
+    name: 'upgradeTo',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
 ] as const
