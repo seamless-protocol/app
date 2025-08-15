@@ -25,7 +25,8 @@ export function RainbowThemeWrapper({ children }: RainbowThemeWrapperProps) {
       mediaQuery.addEventListener('change', handleChange)
       return () => mediaQuery.removeEventListener('change', handleChange)
     } else {
-      setResolvedTheme(theme)
+      setResolvedTheme(theme as 'light' | 'dark')
+      return undefined
     }
   }, [theme])
 

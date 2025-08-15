@@ -23,7 +23,7 @@ type Web3ErrorType =
   | 'UNKNOWN'
 
 export class Web3ErrorBoundary extends Component<Props, State> {
-  public state: State = {
+  public override state: State = {
     hasError: false,
     error: null,
     errorType: 'UNKNOWN',
@@ -60,7 +60,7 @@ export class Web3ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error }
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Web3ErrorBoundary caught an error:', error, errorInfo)
     const errorType = this.parseWeb3Error(error)
     this.setState({ errorType })
@@ -170,7 +170,7 @@ export class Web3ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  public render() {
+  public override render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback
@@ -189,7 +189,7 @@ export class Web3ErrorBoundary extends Component<Props, State> {
               <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-              {this.state.error && process.env.NODE_ENV === 'development' && (
+              {this.state.error && process.env['NODE_ENV'] === 'development' && (
                 <details className="mb-4 rounded-lg bg-muted p-4">
                   <summary className="cursor-pointer text-sm font-medium">Error details</summary>
                   <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
