@@ -128,6 +128,11 @@ Use `VITE_ENABLE_*` environment variables to control feature visibility for phas
 
 When making changes to this codebase:
 
+### Before Committing
+Always run these commands before committing any changes:
+- **`bun check:fix`** - Auto-fix linting issues and check types
+- **`bun run build`** - Ensure the build succeeds
+
 ### Code Philosophy
 - **Code is a liability** - Write less code that does more
 - **Explicit over implicit** - Clear intent matters more than cleverness

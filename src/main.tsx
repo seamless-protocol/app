@@ -1,8 +1,15 @@
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { RouterProvider } from '@tanstack/react-router'
+import '@rainbow-me/rainbowkit/styles.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { validateEnv } from './lib/env'
+import { WagmiProvider } from 'wagmi'
 import './index.css'
+import { queryClient } from './lib/config/query.config'
+import { config } from './lib/config/wagmi.config'
 import { router } from './router'
 
 // Validate environment variables before app starts
@@ -38,6 +45,13 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider modalSize="compact" showRecentTransactions={true}>
+          <RouterProvider router={router} />
+          <ReactQueryDevtools initialIsOpen={false} />
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   </StrictMode>,
 )
