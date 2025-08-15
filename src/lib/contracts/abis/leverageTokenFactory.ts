@@ -1,4 +1,4 @@
-[
+export const leverageTokenFactoryAbi = [
   {
     "inputs": [
       {
@@ -261,4 +261,4 @@
     "stateMutability": "nonpayable",
     "type": "function"
   }
-]
+] as const

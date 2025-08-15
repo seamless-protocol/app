@@ -1,4 +1,4 @@
-[
+export const seamTokenAbi = [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -1227,4 +1227,4 @@
     "stateMutability": "payable",
     "type": "function"
   }
-]
+] as const

@@ -1,4 +1,4 @@
-[
+export const leverageTokenAbi = [
   {
     "inputs": [],
     "name": "ECDSAInvalidSignature",
@@ -676,4 +676,4 @@
     "stateMutability": "nonpayable",
     "type": "function"
   }
-]
+] as const
