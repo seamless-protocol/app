@@ -8,6 +8,8 @@ import { createRoot } from 'react-dom/client'
 import { validateEnv } from './lib/env'
 import { WagmiProvider } from 'wagmi'
 import './index.css'
+import { ErrorBoundary } from './components/error-boundary'
+import { ThemeProvider } from './components/theme-provider'
 import { queryClient } from './lib/config/query.config'
 import { config } from './lib/config/wagmi.config'
 import { router } from './router'
@@ -45,13 +47,17 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider modalSize="compact" showRecentTransactions={true}>
-          <RouterProvider router={router} />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="system">
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <RainbowKitProvider modalSize="compact" showRecentTransactions={true}>
+              <RouterProvider router={router} />
+              <ReactQueryDevtools initialIsOpen={false} />
+            </RainbowKitProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

@@ -2,12 +2,16 @@ import { useState } from 'react'
 import viteLogo from '/vite.svg'
 import reactLogo from './assets/react.svg'
 import './App.css'
+import { ModeToggle } from './components/mode-toggle'
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
+      <div className="fixed top-4 right-4">
+        <ModeToggle />
+      </div>
       <div>
         <a href="https://vite.dev" target="_blank" rel="noopener">
           <img src={viteLogo} className="logo" alt="Vite logo" />
