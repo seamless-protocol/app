@@ -9,12 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VaultsRouteImport } from './routes/vaults'
+import { Route as TokensRouteImport } from './routes/tokens'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TokensRouteImport } from './routes/tokens'
-import { Route as TokensIdRouteImport } from './routes/tokens.$id'
-import { Route as VaultsRouteImport } from './routes/vaults'
 import { Route as VaultsIdRouteImport } from './routes/vaults.$id'
+import { Route as TokensIdRouteImport } from './routes/tokens.$id'
 
 const VaultsRoute = VaultsRouteImport.update({
   id: '/vaults',
@@ -74,10 +74,23 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/tokens' | '/vaults' | '/tokens/$id' | '/vaults/$id'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/tokens'
+    | '/vaults'
+    | '/tokens/$id'
+    | '/vaults/$id'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/dashboard' | '/tokens' | '/vaults' | '/tokens/$id' | '/vaults/$id'
-  id: '__root__' | '/' | '/dashboard' | '/tokens' | '/vaults' | '/tokens/$id' | '/vaults/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/tokens'
+    | '/vaults'
+    | '/tokens/$id'
+    | '/vaults/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -142,7 +155,8 @@ const TokensRouteChildren: TokensRouteChildren = {
   TokensIdRoute: TokensIdRoute,
 }
 
-const TokensRouteWithChildren = TokensRoute._addFileChildren(TokensRouteChildren)
+const TokensRouteWithChildren =
+  TokensRoute._addFileChildren(TokensRouteChildren)
 
 interface VaultsRouteChildren {
   VaultsIdRoute: typeof VaultsIdRoute
@@ -152,7 +166,8 @@ const VaultsRouteChildren: VaultsRouteChildren = {
   VaultsIdRoute: VaultsIdRoute,
 }
 
-const VaultsRouteWithChildren = VaultsRoute._addFileChildren(VaultsRouteChildren)
+const VaultsRouteWithChildren =
+  VaultsRoute._addFileChildren(VaultsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
