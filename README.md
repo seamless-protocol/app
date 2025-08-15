@@ -82,13 +82,46 @@ src/
 
 ## Environment Variables
 
-Key environment variables needed:
+### Setup
 
-- `VITE_WALLETCONNECT_PROJECT_ID` - WalletConnect project ID
-- `VITE_BASE_RPC_URL` - Base network RPC endpoint
-- `VITE_SENTRY_DSN` - Error tracking
+```bash
+# Copy the example file
+cp .env.example .env.local
 
-See `.env.example` for the complete list.
+# Edit .env.local with your values
+```
+
+### Required Variables
+
+These must be set for the application to start:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `VITE_WALLETCONNECT_PROJECT_ID` | WalletConnect Cloud project ID | Get from [cloud.walletconnect.com](https://cloud.walletconnect.com/) |
+| `VITE_BASE_RPC_URL` | Base network RPC endpoint | `https://mainnet.base.org` |
+| `VITE_ETHEREUM_RPC_URL` | Ethereum mainnet RPC | `https://eth.llamarpc.com` |
+
+### Optional Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_SENTRY_DSN` | Error tracking | None |
+| `VITE_ENABLE_LEVERAGE_TOKENS` | Feature flag | `false` |
+| `VITE_ENABLE_VAULTS` | Feature flag | `false` |
+| `VITE_ENABLE_STAKING` | Feature flag | `false` |
+| `VITE_ENABLE_GOVERNANCE` | Feature flag | `false` |
+
+### Contract Addresses
+
+The app includes pre-configured contract addresses for Seamless Protocol on Base network. See `.env.example` for the complete list of available contract configurations.
+
+### Environment Validation
+
+The app validates required environment variables on startup. If any are missing:
+- **Development**: Shows an error banner with missing variables
+- **Production**: Logs to console and prevents app from starting
+
+See `.env.example` for the complete configuration reference.
 
 ## Scripts
 
