@@ -1,4 +1,3 @@
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { RouterProvider } from '@tanstack/react-router'
@@ -9,6 +8,7 @@ import { validateEnv } from './lib/env'
 import { WagmiProvider } from 'wagmi'
 import './index.css'
 import { ErrorBoundary } from './components/error-boundary'
+import { RainbowThemeWrapper } from './components/rainbow-theme-wrapper'
 import { ThemeProvider } from './components/theme-provider'
 import { queryClient } from './lib/config/query.config'
 import { config } from './lib/config/wagmi.config'
@@ -51,10 +51,10 @@ createRoot(rootElement).render(
       <ThemeProvider defaultTheme="system">
         <WagmiProvider config={config}>
           <QueryClientProvider client={queryClient}>
-            <RainbowKitProvider modalSize="compact" showRecentTransactions={true}>
+            <RainbowThemeWrapper>
               <RouterProvider router={router} />
               <ReactQueryDevtools initialIsOpen={false} />
-            </RainbowKitProvider>
+            </RainbowThemeWrapper>
           </QueryClientProvider>
         </WagmiProvider>
       </ThemeProvider>
