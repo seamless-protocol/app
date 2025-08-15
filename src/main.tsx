@@ -11,6 +11,7 @@ import { ErrorBoundary } from './components/error-boundary'
 import { RainbowThemeWrapper } from './components/rainbow-theme-wrapper'
 import { ThemeProvider } from './components/theme-provider'
 import { queryClient } from './lib/config/query.config'
+import { initSentry } from './lib/config/sentry.config'
 import { config } from './lib/config/wagmi.config'
 import { router } from './router'
 
@@ -39,6 +40,9 @@ try {
   }
   throw error
 }
+
+// Initialize Sentry before app renders
+initSentry()
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {
