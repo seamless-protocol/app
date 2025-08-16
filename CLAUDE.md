@@ -155,3 +155,17 @@ Always run these commands before committing any changes:
 - Don't add server-side features
 - Don't assume wallet is connected (check first)
 - Don't trust external data (validate everything)
+
+## Known Issues & Solutions
+
+### esbuild Service Errors
+If you encounter `The service was stopped` or `The service is no longer running`:
+- **Cause**: Usually happens when multiple processes (dev server + build) compete for esbuild
+- **Solution**: Kill the dev server before running build: `pkill -f "bun dev"` or close the terminal
+- **Prevention**: Don't run `bun dev` and `bun build` simultaneously
+
+### Environment Variable Access
+TypeScript requires bracket notation for env vars due to `noPropertyAccessFromIndexSignature`:
+- **Use**: `import.meta.env['VITE_VAR']` (not `import.meta.env.VITE_VAR`)
+- **Why**: Type safety - ensures you handle potentially undefined values
+- **Biome config**: Set `useLiteralKeys: "off"` to avoid linting conflicts
