@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/react'
  * Only initializes if VITE_SENTRY_DSN is provided
  */
 export function initSentry() {
-  const dsn = import.meta.env.VITE_SENTRY_DSN
+  const dsn = import.meta.env['VITE_SENTRY_DSN']
 
   if (!dsn) {
     console.log('[Sentry] No DSN provided, skipping initialization')
@@ -15,7 +15,7 @@ export function initSentry() {
   try {
     Sentry.init({
       dsn,
-      environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || import.meta.env.MODE,
+      environment: import.meta.env['VITE_SENTRY_ENVIRONMENT'] || import.meta.env.MODE,
       integrations: [
         Sentry.browserTracingIntegration(),
         Sentry.replayIntegration({
@@ -29,7 +29,7 @@ export function initSentry() {
       replaysSessionSampleRate: 0.1, // 10% of sessions
       replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
       // Release tracking
-      release: import.meta.env.VITE_SENTRY_RELEASE,
+      release: import.meta.env['VITE_SENTRY_RELEASE'],
       // Only send errors in production
       beforeSend(event) {
         if (import.meta.env.MODE === 'development') {

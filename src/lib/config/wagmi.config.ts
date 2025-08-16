@@ -2,7 +2,7 @@ import { getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { http } from 'wagmi'
 import { base, mainnet } from 'wagmi/chains'
 
-const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID
+const walletConnectProjectId = import.meta.env['VITE_WALLETCONNECT_PROJECT_ID']
 
 if (!walletConnectProjectId) {
   console.warn(
@@ -16,8 +16,8 @@ export const config = getDefaultConfig({
   projectId: walletConnectProjectId || 'YOUR_PROJECT_ID',
   chains: [base, mainnet],
   transports: {
-    [base.id]: http(import.meta.env.VITE_BASE_RPC_URL || 'https://mainnet.base.org'),
-    [mainnet.id]: http(import.meta.env.VITE_MAINNET_RPC_URL || 'https://eth.llamarpc.com'),
+    [base.id]: http(import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org'),
+    [mainnet.id]: http(import.meta.env['VITE_MAINNET_RPC_URL'] || 'https://eth.llamarpc.com'),
   },
   ssr: false, // Critical for IPFS deployment - we're a pure client-side app
   // Improve wallet connection behavior
