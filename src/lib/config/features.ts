@@ -3,21 +3,22 @@
  * Uses environment variables for configuration
  */
 export const features = {
-  // Phase II
+  // Phase II - Currently in development
   leverageTokens: import.meta.env['VITE_ENABLE_LEVERAGE_TOKENS'] !== 'false',
+  // Token creation is an advanced feature within Phase II - disabled by default
   leverageTokenCreation: import.meta.env['VITE_ENABLE_LEVERAGE_TOKEN_CREATION'] === 'true',
 
-  // Phase III
+  // Phase III - Not started
   morphoVaults: import.meta.env['VITE_ENABLE_VAULTS'] === 'true',
   dashboard: import.meta.env['VITE_ENABLE_DASHBOARD'] === 'true',
 
-  // Phase V
+  // Phase V - Not started
   staking: import.meta.env['VITE_ENABLE_STAKING'] === 'true',
 
-  // Phase VI
+  // Phase VI - Not started
   governance: import.meta.env['VITE_ENABLE_GOVERNANCE'] === 'true',
 
-  // Advanced features
+  // Phase VII - Advanced features - Not started
   advancedFilters: import.meta.env['VITE_ENABLE_ADVANCED_FILTERS'] === 'true',
   portfolioPnl: import.meta.env['VITE_ENABLE_PORTFOLIO_PNL'] === 'true',
 
