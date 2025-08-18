@@ -1,13 +1,15 @@
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { RouterProvider } from '@tanstack/react-router'
 import '@rainbow-me/rainbowkit/styles.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { validateEnv } from './lib/env'
 import { WagmiProvider } from 'wagmi'
+import { validateEnv } from './lib/env'
 import './index.css'
+import { ErrorBoundary } from './components/error-boundary'
+import { RainbowThemeWrapper } from './components/rainbow-theme-wrapper'
+import { ThemeProvider } from './components/theme-provider'
 import { queryClient } from './lib/config/query.config'
 import { config } from './lib/config/wagmi.config'
 import { router } from './router'
@@ -45,13 +47,17 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider modalSize="compact" showRecentTransactions={true}>
-          <RouterProvider router={router} />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="system">
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <RainbowThemeWrapper>
+              <RouterProvider router={router} />
+              <ReactQueryDevtools initialIsOpen={false} />
+            </RainbowThemeWrapper>
+          </QueryClientProvider>
+        </WagmiProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

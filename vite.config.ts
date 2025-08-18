@@ -14,16 +14,16 @@ export default defineConfig(({ mode }) => ({
   // Path resolution for aliases
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@hooks': path.resolve(__dirname, './src/hooks'),
-      '@lib': path.resolve(__dirname, './src/lib'),
-      '@utils': path.resolve(__dirname, './src/lib/utils'),
-      '@constants': path.resolve(__dirname, './src/lib/constants'),
-      '@types': path.resolve(__dirname, './src/types'),
-      '@routes': path.resolve(__dirname, './src/routes'),
-      '@features': path.resolve(__dirname, './src/features'),
-      '@assets': path.resolve(__dirname, './src/assets'),
+      '@': path.resolve('./src'),
+      '@components': path.resolve('./src/components'),
+      '@hooks': path.resolve('./src/hooks'),
+      '@lib': path.resolve('./src/lib'),
+      '@utils': path.resolve('./src/lib/utils'),
+      '@constants': path.resolve('./src/lib/constants'),
+      '@types': path.resolve('./src/types'),
+      '@routes': path.resolve('./src/routes'),
+      '@features': path.resolve('./src/features'),
+      '@assets': path.resolve('./src/assets'),
     },
   },
 
