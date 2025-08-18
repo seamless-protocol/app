@@ -38,7 +38,7 @@ class Logger {
       },
       ...(context && { extra: context }),
     }
-    
+
     Sentry.captureException(context?.error || new Error(message), sentryContext)
   }
 
