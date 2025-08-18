@@ -29,15 +29,17 @@ class Logger {
     }
 
     // In production, send to Sentry
-    Sentry.captureException(context?.error || new Error(message), {
+    const sentryContext = {
       tags: {
         feature: 'leverage-tokens',
-        chainId: context?.chainId?.toString(),
-        token: context?.token as string,
-        method: context?.method,
+        ...(context?.chainId && { chainId: context.chainId.toString() }),
+        ...(context?.token && { token: context.token as string }),
+        ...(context?.method && { method: context.method }),
       },
-      extra: context,
-    })
+      ...(context && { extra: context }),
+    }
+    
+    Sentry.captureException(context?.error || new Error(message), sentryContext)
   }
 
   /**
