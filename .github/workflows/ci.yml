@@ -43,6 +43,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
       
+      - name: Generate route tree
+        run: bunx @tanstack/router-cli generate --config vite.config.ts
+      
       - name: Build application
         run: bun run build
       
