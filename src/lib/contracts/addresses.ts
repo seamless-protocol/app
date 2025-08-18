@@ -50,7 +50,7 @@ export const contractAddresses: Record<number, ContractAddresses> = {
 
 // Additional known contract addresses for reference
 export const seamlessContracts = {
-  base: {
+  [base.id]: {
     // Vaults
     vaults: {
       usdc: '0x616a4E1db48e22028f6bbf20444Cd3b8e3273738' as Address,
@@ -64,6 +64,10 @@ export const seamlessContracts = {
     escrowSeam: '0x998e44232BEF4F8B033e5A5175BDC97F2B10d5e5' as Address,
     // Rewards
     rewardsController: '0x2C6dC2CE7747E726A590082ADB3d7d08F52ADB93' as Address,
+  },
+  // Ethereum mainnet
+  [mainnet.id]: {
+    // To be added when deployed on mainnet
   },
 }
 
