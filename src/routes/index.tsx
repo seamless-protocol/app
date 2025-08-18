@@ -1,4 +1,3 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { createFileRoute } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,9 +6,8 @@ import { WalletInfo } from '../components/WalletInfo'
 export const Route = createFileRoute('/')({
   component: () => (
     <div className="p-4 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+      <div className="mb-8">
         <h1 className="text-4xl font-bold">Welcome to Seamless Protocol</h1>
-        <ConnectButton />
       </div>
 
       <Card className="mb-8">
