@@ -2,9 +2,6 @@
  * Leverage token specific constants
  */
 
-// Multicall3 address for batching reads (same on all chains)
-export const MULTICALL3_ADDRESS = '0xcA11bde05977b3631167028862bE2a173976CA11' as const
-
 // Query stale times (in milliseconds)
 export const STALE_TIME = {
   factory: 60_000, // 1 minute - token list doesn't change often
