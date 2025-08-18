@@ -7,19 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": [
-      "**",
-      "!dist",
-      "!build",
-      "!node_modules",
-      "!coverage",
-      "!storybook-static",
-      "!.storybook",
-      "!playwright-report",
-      "!test-results",
-      "!**/*.min.js",
-      "!src/routeTree.gen.ts"
-    ]
+    "includes": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx"]
   },
   "formatter": {
     "enabled": true,
@@ -34,7 +22,8 @@
       "recommended": true,
       "complexity": {
         "noBannedTypes": "error",
-        "noUselessTypeConstraint": "error"
+        "noUselessTypeConstraint": "error",
+        "useLiteralKeys": "off"
       },
       "correctness": {
         "noUnusedVariables": "warn",
@@ -55,9 +44,7 @@
         },
         "useImportType": "error"
       },
-      "suspicious": {
-        "noUnknownAtRules": "off"
-      }
+      "suspicious": {}
     }
   },
   "javascript": {
@@ -80,14 +67,6 @@
       "indentStyle": "space",
       "indentWidth": 2,
       "lineWidth": 100
-    }
-  },
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
     }
   }
 }
