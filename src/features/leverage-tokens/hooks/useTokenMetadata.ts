@@ -1,14 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { 
+import type { Address } from 'viem'
+import {
+  useReadLeverageTokenDecimals,
   useReadLeverageTokenName,
   useReadLeverageTokenSymbol,
-  useReadLeverageTokenDecimals,
-  useReadLeverageTokenTotalSupply 
 } from '@/lib/contracts/generated'
-import { ltKeys } from '../utils/queryKeys'
-import { STALE_TIME } from '../utils/constants'
-import type { Address } from 'viem'
 import type { TokenMetadata } from '../types'
+import { STALE_TIME } from '../utils/constants'
+import { ltKeys } from '../utils/queryKeys'
 
 /**
  * Example hook using Wagmi CLI generated hooks
@@ -20,30 +19,32 @@ export function useTokenMetadata(token: Address) {
     address: token,
     query: {
       staleTime: STALE_TIME.metadata,
-    }
+    },
   })
-  
+
   const { data: symbol } = useReadLeverageTokenSymbol({
     address: token,
     query: {
       staleTime: STALE_TIME.metadata,
-    }
+    },
   })
-  
+
   const { data: decimals } = useReadLeverageTokenDecimals({
     address: token,
     query: {
       staleTime: STALE_TIME.metadata,
-    }
+    },
   })
-  
-  const { data: totalSupply } = useReadLeverageTokenTotalSupply({
-    address: token,
-    query: {
-      staleTime: STALE_TIME.supply,
-    }
-  })
-  
+
+  // Removed totalSupply since it's not being used
+  // Can add back when needed for actual implementation
+  // const { data: totalSupply } = useReadLeverageTokenTotalSupply({
+  //   address: token,
+  //   query: {
+  //     staleTime: STALE_TIME.supply,
+  //   },
+  // })
+
   // Combine into a single metadata object
   return useQuery({
     queryKey: ltKeys.metadata(token),
@@ -59,7 +60,7 @@ export function useTokenMetadata(token: Address) {
           address: '0x0000000000000000000000000000000000000000' as Address,
           symbol: 'WETH',
           decimals: 18,
-        }
+        },
       }
     },
     enabled: !!name && !!symbol && decimals !== undefined,

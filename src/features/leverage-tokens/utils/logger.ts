@@ -8,7 +8,7 @@ interface LogContext {
   token?: string
   method?: string
   error?: unknown
-  [key: string]: any
+  [key: string]: unknown
 }
 
 class Logger {
@@ -26,7 +26,7 @@ class Logger {
       // In production, this would send to Sentry
       // For now, we'll still log to console but could easily swap
       console.error(`[LeverageTokens] ${message}`, context)
-      
+
       // Future Sentry integration:
       // if (window.Sentry) {
       //   window.Sentry.captureException(context?.error || new Error(message), {
