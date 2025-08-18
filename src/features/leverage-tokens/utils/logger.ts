@@ -3,6 +3,8 @@
  * Abstracts logging to allow easy switching between console and monitoring services
  */
 
+import * as Sentry from '@sentry/react'
+
 interface LogContext {
   chainId?: number
   token?: string
@@ -17,29 +19,25 @@ class Logger {
   /**
    * Log an error with context
    * In development: logs to console
-   * In production: would send to Sentry or other monitoring service
+   * In production: sends to Sentry
    */
   error(message: string, context?: LogContext) {
+    // Always log to console in development
     if (this.isDev) {
       console.error(`[LeverageTokens] ${message}`, context)
-    } else {
-      // In production, this would send to Sentry
-      // For now, we'll still log to console but could easily swap
-      console.error(`[LeverageTokens] ${message}`, context)
-
-      // Future Sentry integration:
-      // if (window.Sentry) {
-      //   window.Sentry.captureException(context?.error || new Error(message), {
-      //     tags: {
-      //       feature: 'leverage-tokens',
-      //       chainId: context?.chainId,
-      //       token: context?.token,
-      //       method: context?.method,
-      //     },
-      //     extra: context
-      //   })
-      // }
+      return
     }
+
+    // In production, send to Sentry
+    Sentry.captureException(context?.error || new Error(message), {
+      tags: {
+        feature: 'leverage-tokens',
+        chainId: context?.chainId?.toString(),
+        token: context?.token as string,
+        method: context?.method,
+      },
+      extra: context,
+    })
   }
 
   /**
