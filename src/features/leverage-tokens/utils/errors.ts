@@ -41,23 +41,23 @@ export function classifyError(e: unknown): LeverageTokenError {
 
   // Contract revert reasons
   if (error?.reason || error?.data?.message) {
-    const reason = error.reason || error.data.message
+    const reason = error.reason || error.data?.message
 
-    if (reason.includes('StaleOracle')) {
+    if (reason?.includes('StaleOracle')) {
       return {
         type: 'STALE_ORACLE',
         lastUpdate: Date.now() - 3600000, // Default to 1 hour ago
       }
     }
 
-    if (reason.includes('RebalancingInProgress')) {
+    if (reason?.includes('RebalancingInProgress')) {
       return {
         type: 'REBALANCING_IN_PROGRESS',
         estimatedCompletion: Date.now() + 300000, // Default to 5 minutes
       }
     }
 
-    if (reason.includes('InsufficientLiquidity')) {
+    if (reason?.includes('InsufficientLiquidity')) {
       return {
         type: 'INSUFFICIENT_LIQUIDITY',
         available: 0n,
@@ -66,8 +66,8 @@ export function classifyError(e: unknown): LeverageTokenError {
     }
 
     if (
-      reason.includes('InsufficientBalance') ||
-      reason.includes('ERC20: transfer amount exceeds balance')
+      reason?.includes('InsufficientBalance') ||
+      reason?.includes('ERC20: transfer amount exceeds balance')
     ) {
       return {
         type: 'INSUFFICIENT_BALANCE',
