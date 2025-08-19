@@ -15,11 +15,12 @@ PR #34 establishes the foundation scaffolding. **Tests still need to be implemen
 - ✅ Logger with Sentry integration
 - ✅ Feature flags configured
 - ✅ Test dependencies installed
+- ✅ Unit test for useMintToken hook (with shared utilities)
+- ✅ Unit test for useTokenMetadata hook (with shared utilities)
 
 ### What's Still Needed (Per Execution Plan)
 - ❌ Tenderly integration test for mint flow
 - ❌ E2E test with MockConnector for mint flow  
-- ✅ Unit test for useMintToken hook (with shared utilities)
 - ❌ Complete mint flow working at all 3 test layers
 
 **These tests are critical** - they provide the template patterns that Engineer 2 will follow for all other features.
@@ -102,10 +103,15 @@ ltKeys.user(token, owner)            // ['leverage-tokens', 'tokens', token, 'us
 
 ### Track F: Testing Infrastructure (Tech Lead)
 **Issue**: #29, #30 - Testing
+**Files completed**:
+- `tests/setup.ts` - Global mocks and configuration
+- `tests/utils.tsx` - Shared utilities and helpers
+- `tests/unit/useMintToken.test.tsx` - Complete unit test suite
+- `tests/unit/useTokenMetadata.test.tsx` - Complete unit test suite
+
 **Files to create**:
 - `tests/integration/tenderly.test.ts` - Integration tests
 - `tests/e2e/leverageTokens.spec.ts` - E2E tests
-- `tests/unit/hooks.test.ts` - Unit tests
 
 **Dependencies**: None - can start immediately
 

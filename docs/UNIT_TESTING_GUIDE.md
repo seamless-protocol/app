@@ -6,8 +6,9 @@
 
 ```typescript
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { simulateContract, waitForTransactionReceipt, writeContract } from '@wagmi/core'
-import { useMyHook } from '@/features/my-feature/hooks/useMyHook'
+import { waitFor } from '@testing-library/react'
+import { simulateContract, waitForTransactionReceipt, writeContract, readContracts } from '@wagmi/core'
+import { useMyHook, MY_HOOK_CONTRACTS } from '@/features/my-feature/hooks/useMyHook'
 import { makeAddr, mockSetup, hookTestUtils, mockData } from '../utils'
 
 describe('useMyHook', () => {
@@ -43,7 +44,9 @@ describe('useMyHook', () => {
 
 ## Test Categories
 
-### 1. Hook Initialization
+### For Mutation Hooks (`useMutation`)
+
+#### 1. Hook Initialization
 ```typescript
 it('should create mutation with correct initial state', () => {
   const { result } = hookTestUtils.renderHookWithQuery(() => useMyHook({ token: tokenAddress }))
@@ -52,7 +55,7 @@ it('should create mutation with correct initial state', () => {
 })
 ```
 
-### 2. Successful Flow
+#### 2. Successful Flow
 ```typescript
 it('should execute full flow', async () => {
   const { result } = hookTestUtils.renderHookWithQuery(() => useMyHook({ token: tokenAddress }))
@@ -63,6 +66,31 @@ it('should execute full flow', async () => {
     functionName: 'myFunction',
     args: [ownerAddress, TOKEN_AMOUNT]
   }))
+})
+```
+
+### For Query Hooks (`useQuery`)
+
+#### 1. Hook Initialization
+```typescript
+it('should create query with correct initial state', () => {
+  const { result } = hookTestUtils.renderHookWithQuery(() => useMyQuery(tokenAddress))
+  expect(result.current.isLoading).toBe(true)
+  expect(result.current.data).toBeUndefined()
+})
+```
+
+#### 2. Successful Data Fetching
+```typescript
+it('should fetch data successfully', async () => {
+  // If you export the contract configuration
+  const { result } = hookTestUtils.renderHookWithQuery(() => useMyQuery(tokenAddress))
+  
+  await waitFor(() => {
+    expect(readContracts).toHaveBeenCalledWith(expect.any(Object), {
+      contracts: MY_QUERY_CONTRACTS(tokenAddress),
+    })
+  })
 })
 ```
 
@@ -113,6 +141,8 @@ hookTestUtils.renderHookWithQuery(hook, options)  // Render with providers
 
 ### ✅ Do
 - Use constants for test values (`const TOKEN_AMOUNT = 1000n`)
+- Export contract configurations from hooks for testing
+- Use `waitFor` for async query assertions
 - Test real scenarios (wallet not connected, user rejection)
 - Use shared utilities for consistency
 - Clear mocks in beforeEach
@@ -124,6 +154,7 @@ hookTestUtils.renderHookWithQuery(hook, options)  // Render with providers
 - Mock React Query directly (use hookTestUtils)
 - Test optimistic updates (we don't use them)
 - Duplicate mock setup across tests
+- Hardcode contract configurations in tests
 
 ## Error Classification
 
@@ -144,10 +175,11 @@ npm test -- --watch                        # Watch mode
 
 ## Reference
 
-- **Example**: `tests/unit/useMintToken.test.tsx`
+- **Mutation Example**: `tests/unit/useMintToken.test.tsx`
+- **Query Example**: `tests/unit/useTokenMetadata.test.tsx`
 - **Utilities**: `tests/utils.tsx`
 - **Setup**: `tests/setup.ts`
 
 ---
 
-*Copy the pattern from useMintToken.test.tsx and adjust for your hook.* 🚀 
+*Copy the pattern from the relevant example and adjust for your hook.* 🚀 
