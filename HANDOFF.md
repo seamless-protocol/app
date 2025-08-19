@@ -93,38 +93,82 @@ tests/integration/mint.test.ts
 
 ---
 
+## 🌅 Getting Started Tomorrow Morning
+
+### Before Tech Lead Arrives (45 min)
+1. **Get oriented** (15 min)
+   - `git checkout feature/tenderly-integration && git pull`
+   - Read `HANDOFF.md`, `tests/integration/FINDINGS.md`, and `useMintViaRouter.ts`
+   - Run `bun run build` and `bun check:fix` to verify current state
+
+2. **Research V1 patterns** (25 min) 
+   - Study existing V1 interface DEX integration
+   - Identify which DEXes V1 uses on Base (Aerodrome? Uniswap?)
+   - Understand V1's swap routing configuration patterns
+   - Note any existing swap utilities or helpers
+
+3. **Test current integration** (5 min)
+   - Run integration tests to confirm Tenderly setup works
+   - Verify noop SwapContext fails as expected
+
+### First Tech Lead Discussion
+- V1 DEX patterns discovered
+- Proposed configurable SwapContext approach
+- Questions about routing complexity vs simplicity
+
+---
+
 ## 🚨 Immediate Next Steps for Handoff Engineer
 
-### Priority 1: DEX Integration (CRITICAL)
+### Priority 1: Internal DEX Routing (CRITICAL - SwapContext)
+The Router contract needs SwapContext for **internal protocol swaps during leverage creation**.
+
+**Approach:**
+1. **Research V1 interface first** - Understand how DEX routing is implemented in existing app
+2. **Prioritize V1 DEXes** - Use the same DEXes/patterns that V1 already supports
+3. **Make it configurable** - Don't hardcode specific DEX, allow runtime configuration
+4. **Start simple** - Get one working path, then expand
+
 ```typescript
-// Need to implement proper SwapContext for Base DEXes
-const realSwapContext = {
-  path: [USDC_ADDRESS, WETH_ADDRESS], // Actual routing path
-  encodedPath: encodeV3Path([USDC, WETH], [3000]), // Proper encoding
-  exchange: Exchange.AERODROME_V2, // Or UNISWAP_V3
-  exchangeAddresses: {
-    aerodromeRouter: '0x...', // Real Base Aerodrome addresses
-    uniswapSwapRouter02: '0x...', // Real Base Uniswap addresses
-    // ... other DEX addresses
-  }
-}
+// Implementation should be configurable like V1
+const swapContext = createSwapContext({
+  fromToken: USDC_ADDRESS,
+  toToken: WETH_ADDRESS, 
+  exchange: getPreferredExchange(), // Based on V1 patterns
+  slippageTolerance: 50 // bps
+})
 ```
 
-### Priority 2: Frontend Components
+**Next Engineer Tasks:**
+1. Study V1 interface DEX integration patterns
+2. Identify which DEXes V1 uses on Base
+3. Implement configurable SwapContext system
+4. Test successful mint with Tenderly integration
+
+### Priority 2: Hook Testing Strategy  
+After DEX routing works in Tenderly integration:
+1. **Verify useMintViaRouter hook behavior** - Test the hook itself in isolation
+2. **Integration test validation** - Ensure full mint flow works end-to-end
+3. **Error scenario coverage** - Test slippage, failed swaps, insufficient funds
+
+### Priority 3: Frontend Components (ShadCN)
+Once mint hook is tested and working:
 ```typescript
-// Build actual UI components
-- MintForm component
-- RedeemForm component  
-- Token selection interface
-- Slippage settings
+// Build simple UI components with ShadCN
+- MintForm component (uses useMintViaRouter hook)
+- RedeemForm component (future)
+- Token selection interface  
+- Slippage settings for internal swaps
 - Transaction status/confirmation
 ```
 
-### Priority 3: Complete Integration Testing
+### Priority 4: Complete Integration Testing
 - Test with real DEX routing (once implemented)
-- End-to-end user flow testing
+- End-to-end user flow testing 
 - Error scenario coverage
 - Gas optimization testing
+
+**Note**: Kyber swap widget integration not relevant for this feature - focus on leverage token minting flow
 
 ---
 
