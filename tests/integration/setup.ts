@@ -22,7 +22,8 @@ const Env = z
     TEST_PRIVATE_KEYS_CSV: z.string().optional(),
     TEST_LEVERAGE_FACTORY: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
     TEST_LEVERAGE_MANAGER: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-    TEST_LEVERAGE_TOKEN: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+    TEST_LEVERAGE_ROUTER: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+    TEST_LEVERAGE_TOKEN_PROXY: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
     TEST_USDC: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
     TEST_WETH: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   })
@@ -54,25 +55,32 @@ export const extraWallets = extraAccounts.map((acct) =>
 export const ADDR = {
   factory: Env.TEST_LEVERAGE_FACTORY as `0x${string}`,
   manager: Env.TEST_LEVERAGE_MANAGER as `0x${string}`,
-  leverageToken: Env.TEST_LEVERAGE_TOKEN as `0x${string}`,
+  router: Env.TEST_LEVERAGE_ROUTER as `0x${string}`,
+  leverageToken: Env.TEST_LEVERAGE_TOKEN_PROXY as `0x${string}`,
   usdc: Env.TEST_USDC as `0x${string}`,
   weth: Env.TEST_WETH as `0x${string}`,
 }
 
 // --------- Tenderly Admin RPC helpers ----------
 export async function takeSnapshot(): Promise<string> {
-  const id = await publicClient.request({ method: 'evm_snapshot', params: [] })
+  const id = await publicClient.request({ 
+    method: 'evm_snapshot' as any, 
+    params: [] as any 
+  })
   return typeof id === 'string' ? id : String(id)
 }
 
 export async function revertSnapshot(id: string) {
-  await publicClient.request({ method: 'evm_revert', params: [id] })
+  await publicClient.request({ 
+    method: 'evm_revert' as any, 
+    params: [id] as any 
+  })
 }
 
 export async function topUpNative(to: `0x${string}`, ether: string) {
   const value = parseEther(ether)
   await publicClient.request({
-    method: 'tenderly_setBalance',
-    params: [to, `0x${value.toString(16)}`],
+    method: 'tenderly_setBalance' as any,
+    params: [to, `0x${value.toString(16)}`] as any,
   })
 }

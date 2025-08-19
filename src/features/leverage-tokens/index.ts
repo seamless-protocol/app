@@ -4,7 +4,7 @@
  */
 
 // Export hooks
-export { useMintToken } from './hooks/useMintToken'
+export { useMintViaRouter } from './hooks/useMintViaRouter'
 // Export types
 export * from './types'
 export * from './utils/constants'

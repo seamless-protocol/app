@@ -9,6 +9,8 @@ import { base, mainnet } from 'wagmi/chains'
 export interface ContractAddresses {
   // Core Protocol Contracts
   leverageTokenFactory?: Address
+  leverageManager?: Address
+  leverageRouter?: Address
   morphoVaultFactory?: Address
   stakingRewards?: Address
   governance?: Address
@@ -31,6 +33,8 @@ export const contractAddresses: Record<number, ContractAddresses> = {
   [base.id]: {
     // Core Protocol
     leverageTokenFactory: '0xE0b2e40EDeb53B96C923381509a25a615c1Abe57' as Address,
+    leverageManager: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8' as Address,
+    leverageRouter: '0xDbA92fC3dc10a17b96b6E807a908155C389A887C' as Address,
 
     // Tokens
     seamlessToken: '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85' as Address,
@@ -60,6 +64,7 @@ export const seamlessContracts = {
     // Leverage
     leverageTokenImpl: '0x057A2a1CC13A9Af430976af912A27A05DE537673' as Address,
     leverageManager: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8' as Address,
+    leverageRouter: '0xDbA92fC3dc10a17b96b6E807a908155C389A887C' as Address,
     // Governance
     escrowSeam: '0x998e44232BEF4F8B033e5A5175BDC97F2B10d5e5' as Address,
     // Rewards

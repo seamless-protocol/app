@@ -34,8 +34,8 @@ export async function topUpErc20(
   amount: bigint,
 ) {
   await publicClient.request({
-    method: 'tenderly_setErc20Balance',
-    params: [token, to, toHex(amount, { size: 32 })],
+    method: 'tenderly_setErc20Balance' as any,
+    params: [token, to, toHex(amount, { size: 32 })] as any,
   })
 }
 
@@ -97,7 +97,7 @@ export async function withFork<T>(
       ADDR,
       others: extraAccounts.map((acct, i) => ({
         account: acct,
-        wallet: extraWallets[i],
+        wallet: extraWallets[i]!,
       })),
       fund: {
         native: async (addrs, ether) => {
