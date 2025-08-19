@@ -8,6 +8,35 @@ import { STALE_TIME } from '../utils/constants'
 import { ltKeys } from '../utils/queryKeys'
 
 /**
+ * Contract calls for token metadata
+ * Exported for testing purposes
+ */
+export const TOKEN_METADATA_CONTRACTS = (token: Address) => [
+  {
+    address: token,
+    abi: leverageTokenAbi,
+    functionName: 'name',
+  },
+  {
+    address: token,
+    abi: leverageTokenAbi,
+    functionName: 'symbol',
+  },
+  {
+    address: token,
+    abi: leverageTokenAbi,
+    functionName: 'decimals',
+  },
+  {
+    address: token,
+    abi: leverageTokenAbi,
+    functionName: 'totalSupply',
+  },
+  // Add more contract reads here as needed
+  // e.g., underlying token, leverage ratio from factory, etc.
+]
+
+/**
  * Fetches token metadata using multicall for efficiency
  * Batches all reads into a single RPC call
  */
@@ -17,36 +46,16 @@ export function useTokenMetadata(token: Address) {
     queryFn: async (): Promise<TokenMetadata> => {
       // Batch all metadata reads in a single multicall
       const results = await readContracts(config, {
-        contracts: [
-          {
-            address: token,
-            abi: leverageTokenAbi,
-            functionName: 'name',
-          },
-          {
-            address: token,
-            abi: leverageTokenAbi,
-            functionName: 'symbol',
-          },
-          {
-            address: token,
-            abi: leverageTokenAbi,
-            functionName: 'decimals',
-          },
-          {
-            address: token,
-            abi: leverageTokenAbi,
-            functionName: 'totalSupply',
-          },
-          // Add more contract reads here as needed
-          // e.g., underlying token, leverage ratio from factory, etc.
-        ],
+        contracts: TOKEN_METADATA_CONTRACTS(token),
       })
 
       const [nameResult, symbolResult, decimalsResult, _totalSupplyResult] = results
 
       // Handle potential errors from individual calls
       if (
+        !nameResult ||
+        !symbolResult ||
+        !decimalsResult ||
         nameResult.status === 'failure' ||
         symbolResult.status === 'failure' ||
         decimalsResult.status === 'failure'
@@ -55,9 +64,9 @@ export function useTokenMetadata(token: Address) {
       }
 
       return {
-        name: nameResult.result || '',
-        symbol: symbolResult.result || '',
-        decimals: decimalsResult.result || 18,
+        name: nameResult.result as string,
+        symbol: symbolResult.result as string,
+        decimals: decimalsResult.result as number,
         leverageRatio: 3, // TODO: Fetch from factory contract
         underlying: {
           // TODO: Fetch actual underlying token from contract

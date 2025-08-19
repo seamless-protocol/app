@@ -62,6 +62,8 @@ src/features/leverage-tokens/
     └── index.ts
 
 tests/
+├── setup.ts                  # Global test setup & mocks
+├── utils.tsx                 # Shared test utilities & helpers
 ├── unit/                     # Application logic
 │   ├── leverage-calculations.test.ts
 │   └── useMintToken.test.tsx
