@@ -9,10 +9,13 @@ Phase II delivers a production-ready leverage tokens experience where users can 
 ## Architecture Principles
 
 - **Client-only SPA** with hash routing (`base: './'` for IPFS)
+- **Router-based minting** (User → Router → Manager → LeverageToken)
 - **No optimistic updates** for on-chain state (wait for confirmation)
 - **Three-layer testing**: Unit → Integration (Tenderly) → E2E (MockConnector)
 - **Error classification** with actionable Sentry filtering
 - **Multi-chain ready** with per-chain query keys
+
+> **Architecture Update**: During testing, discovered that leverage tokens cannot be minted directly (`token.mint()` fails with `OwnableUnauthorizedAccount`). The correct flow is Router-based: `Router.mint()` → `Manager.mint()` → LeverageToken creation.
 
 ## Team Structure
 
@@ -26,7 +29,7 @@ Phase II delivers a production-ready leverage tokens experience where users can 
 - **0:15-0:35** — Create scaffolding (queryKeys, errors, hooks)
 - **0:35-1:05** — Tenderly integration test setup
 - **1:05-1:30** — E2E test with MockConnector
-- **1:30-1:55** — Unit test for useMintToken
+- **1:30-1:55** — Unit test for useMintViaRouter
 - **1:55-2:00** — Handoff documentation
 
 ### Deliverable
@@ -49,7 +52,7 @@ src/features/leverage-tokens/
 │   ├── useUserTokenBalance.ts
 │   ├── useMintSimulation.ts
 │   ├── useRedeemSimulation.ts
-│   ├── useMintToken.ts       # No optimistic updates
+│   ├── useMintViaRouter.ts   # Router-based minting, no optimistic updates
 │   └── useRedeemToken.ts
 ├── components/
 │   ├── TokenList.tsx
@@ -66,7 +69,7 @@ tests/
 ├── utils.tsx                 # Shared test utilities & helpers
 ├── unit/                     # Application logic
 │   ├── leverage-calculations.test.ts
-│   └── useMintToken.test.tsx
+│   └── useMintViaRouter.test.tsx
 ├── integration/              # Contract behavior
 │   ├── tenderlyAdmin.ts
 │   └── mint.spec.ts
@@ -111,7 +114,7 @@ export function classifyError(e: unknown): LeverageTokenError {
 
 ### Write Hook Pattern (No Optimistic Updates)
 ```typescript
-export function useMintToken(token: `0x${string}`, owner: `0x${string}`) {
+export function useMintViaRouter(token: `0x${string}`, owner: `0x${string}`) {
   const qc = useQueryClient()
   return useMutation({
     mutationKey: [...ltKeys.token(token), 'mint', owner],
