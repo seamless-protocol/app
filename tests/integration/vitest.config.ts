@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config'
+import { resolve } from 'path'
 
 export default defineConfig({
   test: {
@@ -7,4 +8,5 @@ export default defineConfig({
     hookTimeout: 60_000,
     isolate: true,
   },
+  envDir: resolve(__dirname),
 })

@@ -8,6 +8,11 @@ import {
 } from 'viem'
 import { base } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
+import { config } from 'dotenv'
+import { resolve } from 'path'
+
+// Load .env file from integration directory
+config({ path: resolve(__dirname, '.env') })
 
 // --------- Env (schema-first) ----------
 const Env = z
