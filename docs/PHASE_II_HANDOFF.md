@@ -19,7 +19,7 @@ PR #34 establishes the foundation scaffolding. **Tests still need to be implemen
 ### What's Still Needed (Per Execution Plan)
 - ❌ Tenderly integration test for mint flow
 - ❌ E2E test with MockConnector for mint flow  
-- ❌ Unit test for useMintToken hook
+- ✅ Unit test for useMintToken hook (with shared utilities)
 - ❌ Complete mint flow working at all 3 test layers
 
 **These tests are critical** - they provide the template patterns that Engineer 2 will follow for all other features.
@@ -44,6 +44,12 @@ ltKeys.user(token, owner)            // ['leverage-tokens', 'tokens', token, 'us
 - Use multicall for multiple values (useTokenMetadata)
 - Use Wagmi CLI generated hooks for single values
 - Proper stale time configuration
+
+#### 4. Testing Pattern (Unit Tests)
+- Use shared utilities from `tests/utils/*.tsx`
+- Follow established mock patterns
+- Test hook state transitions and query invalidations
+- No blockchain interaction in unit tests
 
 ## Parallel Work Tracks
 
