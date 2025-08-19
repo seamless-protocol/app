@@ -65,6 +65,9 @@ await page.locator('input[name="amount"]').fill('100')
 
 // Select dropdown
 await page.locator('select[name="token"]').selectOption('USDC')
+
+// Click navigation link
+await page.locator('a[href="/tokens"]').click()
 ```
 
 **Assertions**

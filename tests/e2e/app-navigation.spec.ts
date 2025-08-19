@@ -7,9 +7,6 @@ test.describe('App Navigation & Wallet Connection', () => {
   })
 
   test('should load home page successfully', async ({ page }) => {
-    // Wait for the page to load
-    await page.waitForLoadState('networkidle')
-
     // Verify we're on the home page
     await expect(page.locator('h1:has-text("Welcome to Seamless Protocol")')).toBeVisible()
     await expect(page.locator('text=DeFi Made Simple')).toBeVisible()
@@ -25,9 +22,6 @@ test.describe('App Navigation & Wallet Connection', () => {
   })
 
   test('should open wallet connection modal', async ({ page }) => {
-    // Wait for the page to load
-    await page.waitForLoadState('networkidle')
-
     // Look for the connect wallet button
     const connectButton = page.locator('button:has-text("Connect Wallet")')
     
@@ -47,9 +41,6 @@ test.describe('App Navigation & Wallet Connection', () => {
   })
 
   test('should show wallet info when connected', async ({ page }) => {
-    // Wait for the page to load
-    await page.waitForLoadState('networkidle')
-
     // Check if wallet info is already visible (indicating wallet is connected)
     const walletInfo = page.locator('text=Connected Address:')
     

@@ -66,6 +66,10 @@ jobs:
       
       - name: Run E2E tests
         run: bun run test:e2e
+        env:
+          VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
+          VITE_BASE_RPC_URL: ${{ vars.VITE_BASE_RPC_URL }}
+          VITE_ETHEREUM_RPC_URL: ${{ vars.VITE_ETHEREUM_RPC_URL }}
       
       - name: Upload test results
         uses: actions/upload-artifact@v4
