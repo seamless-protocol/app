@@ -15,9 +15,11 @@ const Env = z
     TEST_TENDERLY_ADMIN_RPC_BASE: z.string().url(),
     TEST_PRIVATE_KEY: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
     TEST_PRIVATE_KEYS_CSV: z.string().optional(),
+    TEST_LEVERAGE_FACTORY: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
     TEST_LEVERAGE_MANAGER: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
     TEST_LEVERAGE_TOKEN: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-    TEST_UNDERLYING_ERC20: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+    TEST_USDC: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+    TEST_WETH: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   })
   .parse(process.env)
 
@@ -45,9 +47,11 @@ export const extraWallets = extraAccounts.map((acct) =>
 )
 
 export const ADDR = {
+  factory: Env.TEST_LEVERAGE_FACTORY as `0x${string}`,
   manager: Env.TEST_LEVERAGE_MANAGER as `0x${string}`,
-  lt: Env.TEST_LEVERAGE_TOKEN as `0x${string}`,
-  underlying: Env.TEST_UNDERLYING_ERC20 as `0x${string}`,
+  leverageToken: Env.TEST_LEVERAGE_TOKEN as `0x${string}`,
+  usdc: Env.TEST_USDC as `0x${string}`,
+  weth: Env.TEST_WETH as `0x${string}`,
 }
 
 // --------- Tenderly Admin RPC helpers ----------

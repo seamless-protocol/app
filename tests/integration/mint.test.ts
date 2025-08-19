@@ -11,23 +11,23 @@ import { leverageTokenFactoryAbi } from '../../src/lib/contracts/abis/leverageTo
 describe('Leverage Tokens — mint (Tenderly VNet / viem)', () => {
   it('simulate → write → verify (direct mint on leverage token)', async () =>
     withFork(async ({ account, walletClient, publicClient, ADDR, fund }) => {
-      const lt: Address = ADDR.lt
-      const mintAmount = await parseAmount(lt, '10') // Mint 10 leverage tokens
+      const leverageToken: Address = ADDR.leverageToken
 
       // Fund: 1 native for gas
       await fund.native([account.address], '1')
 
       // Pre-state
       const preLt = await publicClient.readContract({
-        address: lt,
+        address: leverageToken,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account.address],
       })
 
       // Simulate → Write → Wait (direct mint on leverage token)
+      const mintAmount = 1000000000000000000n // 1 token in wei
       const { request } = await publicClient.simulateContract({
-        address: lt,
+        address: leverageToken,
         abi: leverageTokenAbi,
         functionName: 'mint',
         args: [account.address, mintAmount],
@@ -39,7 +39,7 @@ describe('Leverage Tokens — mint (Tenderly VNet / viem)', () => {
 
       // Post-state
       const postLt = await publicClient.readContract({
-        address: lt,
+        address: leverageToken,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [account.address],
@@ -58,14 +58,14 @@ describe('Leverage Tokens — mint (Tenderly VNet / viem)', () => {
         return
       }
       const { account: userB, wallet: walletB } = others[0]
-      const lt: Address = ADDR.lt
-      const mintAmountB = await parseAmount(lt, '5') // Mint 5 leverage tokens
+      const leverageToken: Address = ADDR.leverageToken
+      const mintAmountB = 500000000000000000n // 0.5 tokens in wei
 
       // Fund: 1 native for gas
       await fund.native([userB.address], '1')
 
       const { request } = await publicClient.simulateContract({
-        address: lt,
+        address: leverageToken,
         abi: leverageTokenAbi,
         functionName: 'mint',
         args: [userB.address, mintAmountB],
