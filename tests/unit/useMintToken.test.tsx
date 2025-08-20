@@ -234,10 +234,14 @@ describe('useMintToken', () => {
         // Expected to throw
       }
 
-      expect(consoleSpy).toHaveBeenCalledWith('[Mint Error]', expect.objectContaining({
-        type: 'UNKNOWN',
+      expect(consoleSpy).toHaveBeenCalledWith('[LeverageTokens] mint token failed', expect.objectContaining({
         chainId: 8453,
         token: tokenAddress,
+        method: 'mint',
+        error: expect.objectContaining({
+          type: 'UNKNOWN',
+        }),
+        feature: 'leverage-tokens',
       }))
 
       consoleSpy.mockRestore()
