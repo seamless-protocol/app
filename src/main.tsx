@@ -55,7 +55,7 @@ createRoot(rootElement).render(
   <StrictMode>
     <ErrorBoundary>
       <ThemeProvider defaultTheme="system">
-        <WagmiProvider config={features.testMode ? testConfig : prodConfig}>
+        <WagmiProvider config={features.testMode ? testConfig : (prodConfig as any)}>
           <QueryClientProvider client={queryClient}>
             <RainbowThemeWrapper>
               <RouterProvider router={router} />

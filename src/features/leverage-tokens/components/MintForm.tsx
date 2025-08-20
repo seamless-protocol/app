@@ -156,7 +156,9 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
           <div className="p-3 bg-red-50 border border-red-200 rounded-md">
             <p className="text-sm text-red-600">
               Error:{' '}
-              {error instanceof Error ? error.message : String(error) || 'Unknown error occurred'}
+              {error && typeof error === 'object' && 'message' in error
+                ? (error as Error).message
+                : String(error) || 'Unknown error occurred'}
             </p>
           </div>
         )}
