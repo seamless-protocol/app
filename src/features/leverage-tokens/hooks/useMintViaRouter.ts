@@ -1,7 +1,3 @@
-import { config } from '@/lib/config/wagmi.config'
-import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
-import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
-import { getContractAddresses } from '@/lib/contracts/addresses'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   readContract,
@@ -12,10 +8,14 @@ import {
 import type { Address } from 'viem'
 import { erc20Abi, maxUint256 } from 'viem'
 import { useAccount, useChainId } from 'wagmi'
+import { config } from '@/lib/config/wagmi.config'
+import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
+import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
+import { getContractAddresses } from '@/lib/contracts/addresses'
 import { TX_SETTINGS } from '../utils/constants'
 import { classifyError, isActionableError } from '../utils/errors'
 import { ltKeys } from '../utils/queryKeys'
-import { type SwapContext, createSwapContext } from '../utils/swapContext'
+import { createSwapContext, type SwapContext } from '../utils/swapContext'
 
 export interface UseMintViaRouterParams {
   token: Address

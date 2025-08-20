@@ -1,5 +1,3 @@
-import { useMintViaRouter } from '@/features/leverage-tokens/hooks/useMintViaRouter'
-import * as contractAddresses from '@/lib/contracts/addresses'
 import { waitFor } from '@testing-library/react'
 import {
   readContract,
@@ -8,6 +6,8 @@ import {
   writeContract,
 } from '@wagmi/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useMintViaRouter } from '@/features/leverage-tokens/hooks/useMintViaRouter'
+import * as contractAddresses from '@/lib/contracts/addresses'
 import { hookTestUtils, makeAddr, mockData, mockSetup } from '../utils'
 
 describe('useMintViaRouter', () => {

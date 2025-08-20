@@ -1,6 +1,6 @@
+import { createFileRoute } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { createFileRoute } from '@tanstack/react-router'
 import { WalletInfo } from '../components/WalletInfo'
 
 export const Route = createFileRoute('/')({

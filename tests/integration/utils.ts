@@ -173,10 +173,16 @@ export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise
       walletClient,
       publicClient,
       ADDR,
-      others: extraAccounts.map((acct, i) => ({
-        account: acct,
-        wallet: extraWallets[i]!,
-      })),
+      others: extraAccounts.map((acct, i) => {
+        const wallet = extraWallets[i]
+        if (!wallet) {
+          throw new Error(`Missing wallet for account at index ${i}`)
+        }
+        return {
+          account: acct,
+          wallet,
+        }
+      }),
       fund: {
         native: async (addrs, ether) => {
           await Promise.all(addrs.map((a) => topUpNative(a, ether)))

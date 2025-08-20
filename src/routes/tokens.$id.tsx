@@ -1,5 +1,5 @@
-import { MintForm } from '@/features/leverage-tokens'
 import { createFileRoute } from '@tanstack/react-router'
+import { MintForm } from '@/features/leverage-tokens'
 
 export const Route = createFileRoute('/tokens/$id')({
   component: () => {

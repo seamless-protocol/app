@@ -1,7 +1,7 @@
+import { useId, useState } from 'react'
+import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useState } from 'react'
-import { useAccount } from 'wagmi'
 import { useMintViaRouter } from '../hooks/useMintViaRouter'
 
 interface MintFormProps {
@@ -14,6 +14,8 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
   console.log('MintForm rendering with:', { tokenAddress, tokenName })
 
   const { address: user } = useAccount()
+  const amountId = useId()
+  const slippageId = useId()
   const [amount, setAmount] = useState('')
   const [slippage, setSlippage] = useState('50') // 0.5% default
 
@@ -92,11 +94,11 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
       <CardContent className="space-y-4">
         {/* Amount Input */}
         <div className="space-y-2">
-          <label htmlFor="amount-input" className="text-sm font-medium">
+          <label htmlFor={amountId} className="text-sm font-medium">
             Amount (ETH)
           </label>
           <input
-            id="amount-input"
+            id={amountId}
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -109,11 +111,11 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
 
         {/* Slippage Input */}
         <div className="space-y-2">
-          <label htmlFor="slippage-input" className="text-sm font-medium">
+          <label htmlFor={slippageId} className="text-sm font-medium">
             Slippage (basis points)
           </label>
           <input
-            id="slippage-input"
+            id={slippageId}
             type="number"
             value={slippage}
             onChange={(e) => setSlippage(e.target.value)}

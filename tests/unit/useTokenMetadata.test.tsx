@@ -1,10 +1,10 @@
+import { waitFor } from '@testing-library/react'
+import { readContracts } from '@wagmi/core'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   TOKEN_METADATA_CONTRACTS,
   useTokenMetadata,
 } from '@/features/leverage-tokens/hooks/useTokenMetadata'
-import { waitFor } from '@testing-library/react'
-import { readContracts } from '@wagmi/core'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { hookTestUtils, makeAddr, mockSetup } from '../utils'
 
 describe('useTokenMetadata', () => {

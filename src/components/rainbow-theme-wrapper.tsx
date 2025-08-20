@@ -1,4 +1,4 @@
-import { RainbowKitProvider, darkTheme, lightTheme } from '@rainbow-me/rainbowkit'
+import { darkTheme, lightTheme, RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { type ReactNode, useEffect, useState } from 'react'
 import { useTheme } from './theme-provider'
 
