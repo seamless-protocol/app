@@ -14,6 +14,7 @@ import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
 import { getContractAddresses } from '@/lib/contracts/addresses'
 import { TX_SETTINGS } from '../utils/constants'
 import { classifyError, isActionableError } from '../utils/errors'
+import { logWriteError, logWriteSuccess } from '../utils/logger'
 import { ltKeys } from '../utils/queryKeys'
 import { makeNoopSwapContext, type SwapContext } from '../utils/swapContext'
 
@@ -183,7 +184,10 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
       }
       queryClient.invalidateQueries({ queryKey: ltKeys.supply(token) })
 
-      console.log('[Mint Success]', {
+      logWriteSuccess('mint via router success', {
+        chainId,
+        token,
+        method: 'mintViaRouter',
         hash,
         expectedShares: preview.shares.toString(),
         tokenFee: preview.tokenFee.toString(),
@@ -198,10 +202,10 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
 
       // Only send actionable errors to monitoring
       if (isActionableError(classifiedError)) {
-        console.error('[Mint Error]', {
-          type: classifiedError.type,
+        logWriteError('mint via router failed', {
           chainId,
           token,
+          method: 'mintViaRouter',
           router: routerAddress,
           error: classifiedError,
         })
