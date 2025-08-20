@@ -5,9 +5,13 @@ export function ConnectButtonTest() {
   const connector = useConnectors().find((c) => c.id === 'mock')
   if (!connector) return null
   return (
-    <button data-testid="connect-mock" onClick={() => connect({ connector })} className="px-3 py-2 border rounded-md">
+    <button
+      type="button"
+      data-testid="connect-mock"
+      onClick={() => connect({ connector })}
+      className="px-3 py-2 border rounded-md"
+    >
       Connect (Mock)
     </button>
   )
 }
-

@@ -10,11 +10,11 @@ import './index.css'
 import { ErrorBoundary } from './components/error-boundary'
 import { RainbowThemeWrapper } from './components/rainbow-theme-wrapper'
 import { ThemeProvider } from './components/theme-provider'
+import { features } from './lib/config/features'
 import { queryClient } from './lib/config/query.config'
 import { initSentry } from './lib/config/sentry.config'
 import { config as prodConfig } from './lib/config/wagmi.config'
 import { testConfig } from './lib/config/wagmi.config.test'
-import { features } from './lib/config/features'
 import { router } from './router'
 
 // Validate environment variables before app starts

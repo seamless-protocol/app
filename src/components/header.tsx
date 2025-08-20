@@ -3,9 +3,9 @@ import { Link } from '@tanstack/react-router'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ModeToggle } from './mode-toggle'
 import { features } from '@/lib/config/features'
 import { ConnectButtonTest } from './ConnectButtonTest'
+import { ModeToggle } from './mode-toggle'
 
 const navLinks = [
   { to: '/', label: 'Home' },
