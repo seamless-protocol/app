@@ -1,11 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { simulateContract, waitForTransactionReceipt, writeContract } from '@wagmi/core'
+import { waitFor } from '@testing-library/react'
+import { readContract, simulateContract, waitForTransactionReceipt, writeContract } from '@wagmi/core'
 import { useMintViaRouter } from '@/features/leverage-tokens/hooks/useMintViaRouter'
 import { makeAddr, mockSetup, hookTestUtils, mockData } from '../utils'
+import * as contractAddresses from '@/lib/contracts/addresses'
 
 describe('useMintViaRouter', () => {
   const tokenAddress = makeAddr('token')
   const ownerAddress = makeAddr('owner')
+  const routerAddress = makeAddr('router')
+  const managerAddress = makeAddr('manager')
   const mockHash = mockData.transactionHash
   const mockReceipt = mockData.transactionReceipt(mockHash)
   const TOKEN_AMOUNT = 1000n
@@ -14,10 +18,39 @@ describe('useMintViaRouter', () => {
     // Setup common mocks
     mockSetup.setupWagmiMocks(ownerAddress)
     
+    // Mock contract addresses
+    vi.mocked(contractAddresses.getContractAddresses).mockReturnValue({
+      leverageRouter: routerAddress,
+      leverageManager: managerAddress,
+    })
+    
+    // Debug: Log what's being returned
+    console.log('Mocked addresses:', {
+      leverageRouter: routerAddress,
+      leverageManager: managerAddress,
+    })
+    
     // Setup wagmi core function mocks
+    vi.mocked(readContract).mockImplementation(async (config, params) => {
+      // Mock different contract calls based on function name
+      if (params.functionName === 'previewMint') {
+        return { shares: 1000n, tokenFee: 0n, treasuryFee: 0n }
+      }
+      if (params.functionName === 'getLeverageTokenCollateralAsset') {
+        return makeAddr('collateralAsset')
+      }
+      if (params.functionName === 'getLeverageTokenDebtAsset') {
+        return makeAddr('debtAsset')
+      }
+      if (params.functionName === 'allowance') {
+        return 0n // No allowance initially
+      }
+      return null
+    })
+    
     vi.mocked(simulateContract).mockResolvedValue({
       // request mirrors whatever simulateContract returns; we don't depend on exact shape
-      request: { address: makeAddr('manager'), abi: [], functionName: 'mint' },
+      request: { address: routerAddress, abi: [], functionName: 'mint' },
     } as any)
     vi.mocked(writeContract).mockResolvedValue(mockHash as any)
     vi.mocked(waitForTransactionReceipt).mockResolvedValue(mockReceipt as any)
@@ -27,7 +60,19 @@ describe('useMintViaRouter', () => {
   })
 
   describe('hook initialization', () => {
+    it('should verify contract addresses are mocked', () => {
+      const addresses = contractAddresses.getContractAddresses(8453)
+      expect(addresses.leverageRouter).toBe(routerAddress)
+      expect(addresses.leverageManager).toBe(managerAddress)
+    })
+
     it('should create a mutation with correct initial state', () => {
+      // Ensure mocks are set up before hook initialization
+      vi.mocked(contractAddresses.getContractAddresses).mockReturnValue({
+        leverageRouter: routerAddress,
+        leverageManager: managerAddress,
+      })
+      
       const { result } = hookTestUtils.renderHookWithQuery(() => 
         useMintViaRouter({ token: tokenAddress })
       )
@@ -51,21 +96,46 @@ describe('useMintViaRouter', () => {
     })
   })
 
-  describe('successful mutation flow (simulate → write → wait)', () => {
-    it('should execute the full mint flow with correct parameters', async () => {
-      const { result } = hookTestUtils.renderHookWithQuery(() => 
+  describe('successful mutation flow (preview → approve → simulate → write → wait)', () => {
+    it('should execute the full Router-based mint flow with correct parameters', async () => {
+      // Ensure mocks are set up before hook initialization
+      vi.mocked(contractAddresses.getContractAddresses).mockReturnValue({
+        leverageRouter: routerAddress,
+        leverageManager: managerAddress,
+      })
+      
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
         useMintViaRouter({ token: tokenAddress })
       )
 
+      // Set the query data directly to ensure the collateral asset is available
+      queryClient.setQueryData(['collateralAsset', tokenAddress, 8453], makeAddr('collateralAsset'))
+
+      // Wait for the mutation to be ready
+      await waitFor(() => {
+        expect(result.current.mutate).toBeDefined()
+        expect(result.current.mutateAsync).toBeDefined()
+      })
+
       await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
 
-      // Verify simulateContract was called with manager.mint(token, amount, minShares)
+      // Verify simulateContract was called with router.mint(token, amount, minShares, maxSwapCost, swapContext)
       expect(simulateContract).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
           abi: expect.any(Array),
           functionName: 'mint',
-          args: [tokenAddress, TOKEN_AMOUNT, expect.any(BigInt)],
+          args: [
+            tokenAddress, 
+            TOKEN_AMOUNT, 
+            expect.any(BigInt), // minShares
+            expect.any(BigInt), // maxSwapCost
+            expect.objectContaining({ // swapContext
+              path: expect.any(Array),
+              exchange: expect.any(Number),
+              exchangeAddresses: expect.any(Object),
+            })
+          ],
           account: ownerAddress,
         })
       )
@@ -84,21 +154,47 @@ describe('useMintViaRouter', () => {
     })
 
     it('should return correct result after successful mint', async () => {
-      const { result } = hookTestUtils.renderHookWithQuery(() => 
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
         useMintViaRouter({ token: tokenAddress })
       )
 
+      // Set the query data directly to ensure the collateral asset is available
+      queryClient.setQueryData(['collateralAsset', tokenAddress, 8453], makeAddr('collateralAsset'))
+
+      // Wait for the mutation to be ready
+      await waitFor(() => {
+        expect(result.current.mutate).toBeDefined()
+        expect(result.current.mutateAsync).toBeDefined()
+      })
+
       const mutationResult = await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
 
-      expect(mutationResult).toEqual({ hash: mockHash, receipt: mockReceipt })
+      expect(mutationResult).toEqual({
+        hash: mockHash,
+        receipt: mockReceipt,
+        preview: expect.objectContaining({
+          shares: expect.any(BigInt),
+        }),
+        minShares: expect.any(BigInt),
+        slippageBps: expect.any(Number),
+      })
     })
 
     it('should call onSuccess callback with transaction hash', async () => {
       const onSuccess = vi.fn()
       
-      const { result } = hookTestUtils.renderHookWithQuery(() => 
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
         useMintViaRouter({ token: tokenAddress, onSuccess })
       )
+
+      // Set the query data directly to ensure the collateral asset is available
+      queryClient.setQueryData(['collateralAsset', tokenAddress, 8453], makeAddr('collateralAsset'))
+
+      // Wait for the mutation to be ready
+      await waitFor(() => {
+        expect(result.current.mutate).toBeDefined()
+        expect(result.current.mutateAsync).toBeDefined()
+      })
 
       await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
 
@@ -112,6 +208,15 @@ describe('useMintViaRouter', () => {
         useMintViaRouter({ token: tokenAddress })
       )
       const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      // Set the query data directly to ensure the collateral asset is available
+      queryClient.setQueryData(['collateralAsset', tokenAddress, 8453], makeAddr('collateralAsset'))
+
+      // Wait for the mutation to be ready
+      await waitFor(() => {
+        expect(result.current.mutate).toBeDefined()
+        expect(result.current.mutateAsync).toBeDefined()
+      })
 
       await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
 
@@ -138,6 +243,15 @@ describe('useMintViaRouter', () => {
         useMintViaRouter({ token: tokenAddress })
       )
       const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      // Set the query data directly to ensure the collateral asset is available
+      queryClient.setQueryData(['collateralAsset', tokenAddress, 8453], makeAddr('collateralAsset'))
+
+      // Wait for the mutation to be ready
+      await waitFor(() => {
+        expect(result.current.mutate).toBeDefined()
+        expect(result.current.mutateAsync).toBeDefined()
+      })
 
       try {
         await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
@@ -167,9 +281,18 @@ describe('useMintViaRouter', () => {
       vi.mocked(simulateContract).mockRejectedValue(simulationError)
       
       const onError = vi.fn()
-      const { result } = hookTestUtils.renderHookWithQuery(() => 
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
         useMintViaRouter({ token: tokenAddress, onError })
       )
+
+      // Set the query data directly to ensure the collateral asset is available
+      queryClient.setQueryData(['collateralAsset', tokenAddress, 8453], makeAddr('collateralAsset'))
+
+      // Wait for the mutation to be ready
+      await waitFor(() => {
+        expect(result.current.mutate).toBeDefined()
+        expect(result.current.mutateAsync).toBeDefined()
+      })
 
       try {
         await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
@@ -190,9 +313,18 @@ describe('useMintViaRouter', () => {
       vi.mocked(writeContract).mockRejectedValue(writeError)
       
       const onError = vi.fn()
-      const { result } = hookTestUtils.renderHookWithQuery(() => 
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
         useMintViaRouter({ token: tokenAddress, onError })
       )
+
+      // Set the query data directly to ensure the collateral asset is available
+      queryClient.setQueryData(['collateralAsset', tokenAddress, 8453], makeAddr('collateralAsset'))
+
+      // Wait for the mutation to be ready
+      await waitFor(() => {
+        expect(result.current.mutate).toBeDefined()
+        expect(result.current.mutateAsync).toBeDefined()
+      })
 
       try {
         await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
@@ -217,9 +349,18 @@ describe('useMintViaRouter', () => {
       const actionableError = new Error('RPC Error')
       vi.mocked(simulateContract).mockRejectedValue(actionableError)
       
-      const { result } = hookTestUtils.renderHookWithQuery(() => 
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
         useMintViaRouter({ token: tokenAddress })
       )
+
+      // Set the query data directly to ensure the collateral asset is available
+      queryClient.setQueryData(['collateralAsset', tokenAddress, 8453], makeAddr('collateralAsset'))
+
+      // Wait for the mutation to be ready
+      await waitFor(() => {
+        expect(result.current.mutate).toBeDefined()
+        expect(result.current.mutateAsync).toBeDefined()
+      })
 
       try {
         await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
@@ -244,9 +385,18 @@ describe('useMintViaRouter', () => {
       ;(userRejectedError as any).code = 4001
       vi.mocked(simulateContract).mockRejectedValue(userRejectedError)
       
-      const { result } = hookTestUtils.renderHookWithQuery(() => 
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
         useMintViaRouter({ token: tokenAddress })
       )
+
+      // Set the query data directly to ensure the collateral asset is available
+      queryClient.setQueryData(['collateralAsset', tokenAddress, 8453], makeAddr('collateralAsset'))
+
+      // Wait for the mutation to be ready
+      await waitFor(() => {
+        expect(result.current.mutate).toBeDefined()
+        expect(result.current.mutateAsync).toBeDefined()
+      })
 
       try {
         await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
