@@ -28,8 +28,12 @@ export function makeAddr(name: string): `0x${string}` {
 export const mockSetup = {
   // Setup default wagmi mocks with common return values
   setupWagmiMocks: (ownerAddress: `0x${string}`, chainId = 8453) => {
-    vi.mocked(useAccount).mockReturnValue({ address: ownerAddress } as any)
-    vi.mocked(useChainId).mockReturnValue(chainId)
+    // The mocks are already set up in tests/setup.ts
+    // Just need to configure their return values
+    const mockUseAccount = useAccount as any
+    const mockUseChainId = useChainId as any
+    mockUseAccount.mockReturnValue({ address: ownerAddress })
+    mockUseChainId.mockReturnValue(chainId)
   },
 
   // Clear all mocks (useful in beforeEach)

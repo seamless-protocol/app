@@ -12,7 +12,9 @@ import { RainbowThemeWrapper } from './components/rainbow-theme-wrapper'
 import { ThemeProvider } from './components/theme-provider'
 import { queryClient } from './lib/config/query.config'
 import { initSentry } from './lib/config/sentry.config'
-import { config } from './lib/config/wagmi.config'
+import { config as prodConfig } from './lib/config/wagmi.config'
+import { testConfig } from './lib/config/wagmi.config.test'
+import { features } from './lib/config/features'
 import { router } from './router'
 
 // Validate environment variables before app starts
@@ -53,7 +55,7 @@ createRoot(rootElement).render(
   <StrictMode>
     <ErrorBoundary>
       <ThemeProvider defaultTheme="system">
-        <WagmiProvider config={config}>
+        <WagmiProvider config={features.testMode ? testConfig : prodConfig}>
           <QueryClientProvider client={queryClient}>
             <RainbowThemeWrapper>
               <RouterProvider router={router} />

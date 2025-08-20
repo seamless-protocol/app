@@ -1,7 +1,6 @@
-import type { Address } from 'viem'
+import type { Address, ContractFunctionArgs } from 'viem'
 import { base } from 'viem/chains'
-import { leverageRouterAbi } from '@/lib/contracts/generated'
-import type { ContractFunctionArgs } from 'viem'
+import type { leverageRouterAbi } from '@/lib/contracts/generated'
 
 /**
  * Extract SwapContext type from wagmi-generated ABI

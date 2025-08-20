@@ -23,8 +23,9 @@ describe('useMintViaRouter', () => {
     // Setup common mocks
     mockSetup.setupWagmiMocks(ownerAddress)
 
-    // Mock contract addresses
-    vi.mocked(contractAddresses.getContractAddresses).mockReturnValue({
+    // Mock contract addresses - already mocked in tests/setup.ts
+    const mockGetContractAddresses = contractAddresses.getContractAddresses as any
+    mockGetContractAddresses.mockReturnValue({
       leverageRouter: routerAddress,
       leverageManager: managerAddress,
     })
@@ -35,8 +36,9 @@ describe('useMintViaRouter', () => {
       leverageManager: managerAddress,
     })
 
-    // Setup wagmi core function mocks
-    vi.mocked(readContract).mockImplementation(async (_config, params) => {
+    // Setup wagmi core function mocks - already mocked in tests/setup.ts
+    const mockReadContract = readContract as any
+    mockReadContract.mockImplementation(async (_config, params) => {
       // Mock different contract calls based on function name
       if (params.functionName === 'previewMint') {
         return { shares: 1000n, tokenFee: 0n, treasuryFee: 0n }
@@ -53,12 +55,16 @@ describe('useMintViaRouter', () => {
       return null
     })
 
-    vi.mocked(simulateContract).mockResolvedValue({
+    const mockSimulateContract = simulateContract as any
+    const mockWriteContract = writeContract as any
+    const mockWaitForTransactionReceipt = waitForTransactionReceipt as any
+
+    mockSimulateContract.mockResolvedValue({
       // request mirrors whatever simulateContract returns; we don't depend on exact shape
       request: { address: routerAddress, abi: [], functionName: 'mint' },
-    } as any)
-    vi.mocked(writeContract).mockResolvedValue(mockHash as any)
-    vi.mocked(waitForTransactionReceipt).mockResolvedValue(mockReceipt as any)
+    })
+    mockWriteContract.mockResolvedValue(mockHash)
+    mockWaitForTransactionReceipt.mockResolvedValue(mockReceipt)
 
     // Clear all mocks
     mockSetup.clearAllMocks()
@@ -73,7 +79,8 @@ describe('useMintViaRouter', () => {
 
     it('should create a mutation with correct initial state', () => {
       // Ensure mocks are set up before hook initialization
-      vi.mocked(contractAddresses.getContractAddresses).mockReturnValue({
+      const mockGetContractAddresses = contractAddresses.getContractAddresses as any
+      mockGetContractAddresses.mockReturnValue({
         leverageRouter: routerAddress,
         leverageManager: managerAddress,
       })
@@ -104,7 +111,8 @@ describe('useMintViaRouter', () => {
   describe('successful mutation flow (preview → approve → simulate → write → wait)', () => {
     it('should execute the full Router-based mint flow with correct parameters', async () => {
       // Ensure mocks are set up before hook initialization
-      vi.mocked(contractAddresses.getContractAddresses).mockReturnValue({
+      const mockGetContractAddresses = contractAddresses.getContractAddresses as any
+      mockGetContractAddresses.mockReturnValue({
         leverageRouter: routerAddress,
         leverageManager: managerAddress,
       })
@@ -245,7 +253,8 @@ describe('useMintViaRouter', () => {
     })
 
     it('should not invalidate queries on error', async () => {
-      vi.mocked(simulateContract).mockRejectedValue(new Error('Test error'))
+      const mockSimulateContract = simulateContract as any
+      mockSimulateContract.mockRejectedValue(new Error('Test error'))
 
       const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
         useMintViaRouter({ token: tokenAddress }),
@@ -286,7 +295,8 @@ describe('useMintViaRouter', () => {
 
     it('should handle simulation errors', async () => {
       const simulationError = new Error('Simulation failed')
-      vi.mocked(simulateContract).mockRejectedValue(simulationError)
+      const mockSimulateContract = simulateContract as any
+      mockSimulateContract.mockRejectedValue(simulationError)
 
       const onError = vi.fn()
       const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
@@ -318,7 +328,8 @@ describe('useMintViaRouter', () => {
 
     it('should handle write contract errors', async () => {
       const writeError = new Error('Transaction failed')
-      vi.mocked(writeContract).mockRejectedValue(writeError)
+      const mockWriteContract = writeContract as any
+      mockWriteContract.mockRejectedValue(writeError)
 
       const onError = vi.fn()
       const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
@@ -355,7 +366,8 @@ describe('useMintViaRouter', () => {
 
       // Unknown error should be logged (actionable)
       const actionableError = new Error('RPC Error')
-      vi.mocked(simulateContract).mockRejectedValue(actionableError)
+      const mockSimulateContract = simulateContract as any
+      mockSimulateContract.mockRejectedValue(actionableError)
 
       const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
         useMintViaRouter({ token: tokenAddress }),
@@ -394,7 +406,8 @@ describe('useMintViaRouter', () => {
       // User rejected error should not be logged (non-actionable)
       const userRejectedError = new Error('User rejected')
       ;(userRejectedError as any).code = 4001
-      vi.mocked(simulateContract).mockRejectedValue(userRejectedError)
+      const mockSimulateContract = simulateContract as any
+      mockSimulateContract.mockRejectedValue(userRejectedError)
 
       const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
         useMintViaRouter({ token: tokenAddress }),

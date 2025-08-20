@@ -1,8 +1,8 @@
 import {
   createUseReadContract,
-  createUseWriteContract,
   createUseSimulateContract,
   createUseWatchContractEvent,
+  createUseWriteContract,
 } from 'wagmi/codegen'
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -107,9 +107,7 @@ export const leverageManagerAbi = [
       },
     ],
     name: 'getLeverageTokenDebtAsset',
-    outputs: [
-      { name: 'debtAsset', internalType: 'contract IERC20', type: 'address' },
-    ],
+    outputs: [{ name: 'debtAsset', internalType: 'contract IERC20', type: 'address' }],
     stateMutability: 'view',
   },
 ] as const
@@ -141,9 +139,7 @@ export const leverageRouterAbi = [
     type: 'function',
     inputs: [],
     name: 'leverageManager',
-    outputs: [
-      { name: '', internalType: 'contract ILeverageManager', type: 'address' },
-    ],
+    outputs: [{ name: '', internalType: 'contract ILeverageManager', type: 'address' }],
     stateMutability: 'view',
   },
   {
@@ -667,9 +663,7 @@ export const leverageTokenFactoryAbi = [
   },
   {
     type: 'error',
-    inputs: [
-      { name: 'implementation', internalType: 'address', type: 'address' },
-    ],
+    inputs: [{ name: 'implementation', internalType: 'address', type: 'address' }],
     name: 'BeaconInvalidImplementation',
   },
   { type: 'error', inputs: [], name: 'Create2EmptyBytecode' },
@@ -803,9 +797,7 @@ export const leverageTokenFactoryAbi = [
   },
   {
     type: 'function',
-    inputs: [
-      { name: 'newImplementation', internalType: 'address', type: 'address' },
-    ],
+    inputs: [{ name: 'newImplementation', internalType: 'address', type: 'address' }],
     name: 'upgradeTo',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -864,9 +856,7 @@ export const seamTokenAbi = [
   },
   {
     type: 'error',
-    inputs: [
-      { name: 'implementation', internalType: 'address', type: 'address' },
-    ],
+    inputs: [{ name: 'implementation', internalType: 'address', type: 'address' }],
     name: 'ERC1967InvalidImplementation',
   },
   { type: 'error', inputs: [], name: 'ERC1967NonPayable' },
@@ -1497,12 +1487,11 @@ export const useReadLeverageManager = /*#__PURE__*/ createUseReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerPreviewMint =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageManagerAbi,
-    address: leverageManagerAddress,
-    functionName: 'previewMint',
-  })
+export const useReadLeverageManagerPreviewMint = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'previewMint',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenCollateralAsset"`
@@ -1521,12 +1510,11 @@ export const useReadLeverageManagerGetLeverageTokenCollateralAsset =
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerGetLeverageTokenDebtAsset =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageManagerAbi,
-    address: leverageManagerAddress,
-    functionName: 'getLeverageTokenDebtAsset',
-  })
+export const useReadLeverageManagerGetLeverageTokenDebtAsset = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getLeverageTokenDebtAsset',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__
@@ -1543,36 +1531,32 @@ export const useWriteLeverageManager = /*#__PURE__*/ createUseWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerMint = /*#__PURE__*/ createUseWriteContract(
-  {
-    abi: leverageManagerAbi,
-    address: leverageManagerAddress,
-    functionName: 'mint',
-  },
-)
+export const useWriteLeverageManagerMint = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'mint',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManager =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageManagerAbi,
-    address: leverageManagerAddress,
-  })
+export const useSimulateLeverageManager = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"mint"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerMint =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageManagerAbi,
-    address: leverageManagerAddress,
-    functionName: 'mint',
-  })
+export const useSimulateLeverageManagerMint = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'mint',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterAbi}__
@@ -1589,12 +1573,11 @@ export const useReadLeverageRouter = /*#__PURE__*/ createUseReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
-export const useReadLeverageRouterLeverageManager =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageRouterAbi,
-    address: leverageRouterAddress,
-    functionName: 'leverageManager',
-  })
+export const useReadLeverageRouterLeverageManager = /*#__PURE__*/ createUseReadContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'leverageManager',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterAbi}__
@@ -1622,47 +1605,43 @@ export const useWriteLeverageRouterMint = /*#__PURE__*/ createUseWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
-export const useWriteLeverageRouterRedeem =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageRouterAbi,
-    address: leverageRouterAddress,
-    functionName: 'redeem',
-  })
+export const useWriteLeverageRouterRedeem = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'redeem',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
-export const useSimulateLeverageRouter =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageRouterAbi,
-    address: leverageRouterAddress,
-  })
+export const useSimulateLeverageRouter = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"mint"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
-export const useSimulateLeverageRouterMint =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageRouterAbi,
-    address: leverageRouterAddress,
-    functionName: 'mint',
-  })
+export const useSimulateLeverageRouterMint = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'mint',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"redeem"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
-export const useSimulateLeverageRouterRedeem =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageRouterAbi,
-    address: leverageRouterAddress,
-    functionName: 'redeem',
-  })
+export const useSimulateLeverageRouterRedeem = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'redeem',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__
@@ -1674,45 +1653,42 @@ export const useReadLeverageToken = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"DOMAIN_SEPARATOR"`
  */
-export const useReadLeverageTokenDomainSeparator =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageTokenAbi,
-    functionName: 'DOMAIN_SEPARATOR',
-  })
+export const useReadLeverageTokenDomainSeparator = /*#__PURE__*/ createUseReadContract({
+  abi: leverageTokenAbi,
+  functionName: 'DOMAIN_SEPARATOR',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"allowance"`
  */
-export const useReadLeverageTokenAllowance =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageTokenAbi,
-    functionName: 'allowance',
-  })
+export const useReadLeverageTokenAllowance = /*#__PURE__*/ createUseReadContract({
+  abi: leverageTokenAbi,
+  functionName: 'allowance',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"balanceOf"`
  */
-export const useReadLeverageTokenBalanceOf =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageTokenAbi,
-    functionName: 'balanceOf',
-  })
+export const useReadLeverageTokenBalanceOf = /*#__PURE__*/ createUseReadContract({
+  abi: leverageTokenAbi,
+  functionName: 'balanceOf',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"decimals"`
  */
-export const useReadLeverageTokenDecimals = /*#__PURE__*/ createUseReadContract(
-  { abi: leverageTokenAbi, functionName: 'decimals' },
-)
+export const useReadLeverageTokenDecimals = /*#__PURE__*/ createUseReadContract({
+  abi: leverageTokenAbi,
+  functionName: 'decimals',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"eip712Domain"`
  */
-export const useReadLeverageTokenEip712Domain =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageTokenAbi,
-    functionName: 'eip712Domain',
-  })
+export const useReadLeverageTokenEip712Domain = /*#__PURE__*/ createUseReadContract({
+  abi: leverageTokenAbi,
+  functionName: 'eip712Domain',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"name"`
@@ -1749,11 +1725,10 @@ export const useReadLeverageTokenSymbol = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"totalSupply"`
  */
-export const useReadLeverageTokenTotalSupply =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageTokenAbi,
-    functionName: 'totalSupply',
-  })
+export const useReadLeverageTokenTotalSupply = /*#__PURE__*/ createUseReadContract({
+  abi: leverageTokenAbi,
+  functionName: 'totalSupply',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__
@@ -1765,11 +1740,10 @@ export const useWriteLeverageToken = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"approve"`
  */
-export const useWriteLeverageTokenApprove =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenAbi,
-    functionName: 'approve',
-  })
+export const useWriteLeverageTokenApprove = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenAbi,
+  functionName: 'approve',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"burn"`
@@ -1782,11 +1756,10 @@ export const useWriteLeverageTokenBurn = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"initialize"`
  */
-export const useWriteLeverageTokenInitialize =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenAbi,
-    functionName: 'initialize',
-  })
+export const useWriteLeverageTokenInitialize = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenAbi,
+  functionName: 'initialize',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"mint"`
@@ -1799,148 +1772,136 @@ export const useWriteLeverageTokenMint = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"permit"`
  */
-export const useWriteLeverageTokenPermit = /*#__PURE__*/ createUseWriteContract(
-  { abi: leverageTokenAbi, functionName: 'permit' },
-)
+export const useWriteLeverageTokenPermit = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenAbi,
+  functionName: 'permit',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"renounceOwnership"`
  */
-export const useWriteLeverageTokenRenounceOwnership =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenAbi,
-    functionName: 'renounceOwnership',
-  })
+export const useWriteLeverageTokenRenounceOwnership = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenAbi,
+  functionName: 'renounceOwnership',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transfer"`
  */
-export const useWriteLeverageTokenTransfer =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenAbi,
-    functionName: 'transfer',
-  })
+export const useWriteLeverageTokenTransfer = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenAbi,
+  functionName: 'transfer',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferFrom"`
  */
-export const useWriteLeverageTokenTransferFrom =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenAbi,
-    functionName: 'transferFrom',
-  })
+export const useWriteLeverageTokenTransferFrom = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenAbi,
+  functionName: 'transferFrom',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferOwnership"`
  */
-export const useWriteLeverageTokenTransferOwnership =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenAbi,
-    functionName: 'transferOwnership',
-  })
+export const useWriteLeverageTokenTransferOwnership = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenAbi,
+  functionName: 'transferOwnership',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__
  */
-export const useSimulateLeverageToken = /*#__PURE__*/ createUseSimulateContract(
-  { abi: leverageTokenAbi },
-)
+export const useSimulateLeverageToken = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenAbi,
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"approve"`
  */
-export const useSimulateLeverageTokenApprove =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenAbi,
-    functionName: 'approve',
-  })
+export const useSimulateLeverageTokenApprove = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenAbi,
+  functionName: 'approve',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"burn"`
  */
-export const useSimulateLeverageTokenBurn =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenAbi,
-    functionName: 'burn',
-  })
+export const useSimulateLeverageTokenBurn = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenAbi,
+  functionName: 'burn',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"initialize"`
  */
-export const useSimulateLeverageTokenInitialize =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenAbi,
-    functionName: 'initialize',
-  })
+export const useSimulateLeverageTokenInitialize = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenAbi,
+  functionName: 'initialize',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"mint"`
  */
-export const useSimulateLeverageTokenMint =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenAbi,
-    functionName: 'mint',
-  })
+export const useSimulateLeverageTokenMint = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenAbi,
+  functionName: 'mint',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"permit"`
  */
-export const useSimulateLeverageTokenPermit =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenAbi,
-    functionName: 'permit',
-  })
+export const useSimulateLeverageTokenPermit = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenAbi,
+  functionName: 'permit',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"renounceOwnership"`
  */
-export const useSimulateLeverageTokenRenounceOwnership =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenAbi,
-    functionName: 'renounceOwnership',
-  })
+export const useSimulateLeverageTokenRenounceOwnership = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenAbi,
+  functionName: 'renounceOwnership',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transfer"`
  */
-export const useSimulateLeverageTokenTransfer =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenAbi,
-    functionName: 'transfer',
-  })
+export const useSimulateLeverageTokenTransfer = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenAbi,
+  functionName: 'transfer',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferFrom"`
  */
-export const useSimulateLeverageTokenTransferFrom =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenAbi,
-    functionName: 'transferFrom',
-  })
+export const useSimulateLeverageTokenTransferFrom = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenAbi,
+  functionName: 'transferFrom',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferOwnership"`
  */
-export const useSimulateLeverageTokenTransferOwnership =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenAbi,
-    functionName: 'transferOwnership',
-  })
+export const useSimulateLeverageTokenTransferOwnership = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenAbi,
+  functionName: 'transferOwnership',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__
  */
-export const useWatchLeverageTokenEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({ abi: leverageTokenAbi })
+export const useWatchLeverageTokenEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageTokenAbi,
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"Approval"`
  */
-export const useWatchLeverageTokenApprovalEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: leverageTokenAbi,
-    eventName: 'Approval',
-  })
+export const useWatchLeverageTokenApprovalEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageTokenAbi,
+  eventName: 'Approval',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"EIP712DomainChanged"`
@@ -1954,11 +1915,10 @@ export const useWatchLeverageTokenEip712DomainChangedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"Initialized"`
  */
-export const useWatchLeverageTokenInitializedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: leverageTokenAbi,
-    eventName: 'Initialized',
-  })
+export const useWatchLeverageTokenInitializedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageTokenAbi,
+  eventName: 'Initialized',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"LeverageTokenInitialized"`
@@ -1981,11 +1941,10 @@ export const useWatchLeverageTokenOwnershipTransferredEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"Transfer"`
  */
-export const useWatchLeverageTokenTransferEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: leverageTokenAbi,
-    eventName: 'Transfer',
-  })
+export const useWatchLeverageTokenTransferEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageTokenAbi,
+  eventName: 'Transfer',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
@@ -2002,130 +1961,119 @@ export const useReadLeverageTokenFactory = /*#__PURE__*/ createUseReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryComputeProxyAddress =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    functionName: 'computeProxyAddress',
-  })
+export const useReadLeverageTokenFactoryComputeProxyAddress = /*#__PURE__*/ createUseReadContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  functionName: 'computeProxyAddress',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"implementation"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryImplementation =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    functionName: 'implementation',
-  })
+export const useReadLeverageTokenFactoryImplementation = /*#__PURE__*/ createUseReadContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  functionName: 'implementation',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"numProxies"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryNumProxies =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    functionName: 'numProxies',
-  })
+export const useReadLeverageTokenFactoryNumProxies = /*#__PURE__*/ createUseReadContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  functionName: 'numProxies',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"owner"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryOwner =
-  /*#__PURE__*/ createUseReadContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    functionName: 'owner',
-  })
+export const useReadLeverageTokenFactoryOwner = /*#__PURE__*/ createUseReadContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  functionName: 'owner',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactory =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-  })
+export const useWriteLeverageTokenFactory = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"createProxy"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryCreateProxy =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    functionName: 'createProxy',
-  })
+export const useWriteLeverageTokenFactoryCreateProxy = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  functionName: 'createProxy',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"renounceOwnership"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryRenounceOwnership =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    functionName: 'renounceOwnership',
-  })
+export const useWriteLeverageTokenFactoryRenounceOwnership = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  functionName: 'renounceOwnership',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transferOwnership"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryTransferOwnership =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    functionName: 'transferOwnership',
-  })
+export const useWriteLeverageTokenFactoryTransferOwnership = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  functionName: 'transferOwnership',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"upgradeTo"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryUpgradeTo =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    functionName: 'upgradeTo',
-  })
+export const useWriteLeverageTokenFactoryUpgradeTo = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  functionName: 'upgradeTo',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactory =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-  })
+export const useSimulateLeverageTokenFactory = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"createProxy"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactoryCreateProxy =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    functionName: 'createProxy',
-  })
+export const useSimulateLeverageTokenFactoryCreateProxy = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  functionName: 'createProxy',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"renounceOwnership"`
@@ -2156,23 +2104,21 @@ export const useSimulateLeverageTokenFactoryTransferOwnership =
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactoryUpgradeTo =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    functionName: 'upgradeTo',
-  })
+export const useSimulateLeverageTokenFactoryUpgradeTo = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  functionName: 'upgradeTo',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWatchLeverageTokenFactoryEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-  })
+export const useWatchLeverageTokenFactoryEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `eventName` set to `"BeaconProxyCreated"`
@@ -2203,12 +2149,11 @@ export const useWatchLeverageTokenFactoryOwnershipTransferredEvent =
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWatchLeverageTokenFactoryUpgradedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: leverageTokenFactoryAbi,
-    address: leverageTokenFactoryAddress,
-    eventName: 'Upgraded',
-  })
+export const useWatchLeverageTokenFactoryUpgradedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageTokenFactoryAbi,
+  address: leverageTokenFactoryAddress,
+  eventName: 'Upgraded',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__
@@ -2236,49 +2181,44 @@ export const useReadSeamTokenClockMode = /*#__PURE__*/ createUseReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenDefaultAdminRole =
-  /*#__PURE__*/ createUseReadContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'DEFAULT_ADMIN_ROLE',
-  })
+export const useReadSeamTokenDefaultAdminRole = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'DEFAULT_ADMIN_ROLE',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"DOMAIN_SEPARATOR"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenDomainSeparator =
-  /*#__PURE__*/ createUseReadContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'DOMAIN_SEPARATOR',
-  })
+export const useReadSeamTokenDomainSeparator = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'DOMAIN_SEPARATOR',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"UPGRADER_ROLE"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenUpgraderRole = /*#__PURE__*/ createUseReadContract(
-  {
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'UPGRADER_ROLE',
-  },
-)
+export const useReadSeamTokenUpgraderRole = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'UPGRADER_ROLE',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"UPGRADE_INTERFACE_VERSION"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenUpgradeInterfaceVersion =
-  /*#__PURE__*/ createUseReadContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'UPGRADE_INTERFACE_VERSION',
-  })
+export const useReadSeamTokenUpgradeInterfaceVersion = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'UPGRADE_INTERFACE_VERSION',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"allowance"`
@@ -2351,51 +2291,44 @@ export const useReadSeamTokenDelegates = /*#__PURE__*/ createUseReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenEip712Domain = /*#__PURE__*/ createUseReadContract(
-  {
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'eip712Domain',
-  },
-)
+export const useReadSeamTokenEip712Domain = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'eip712Domain',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"getPastTotalSupply"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenGetPastTotalSupply =
-  /*#__PURE__*/ createUseReadContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'getPastTotalSupply',
-  })
+export const useReadSeamTokenGetPastTotalSupply = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'getPastTotalSupply',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"getPastVotes"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenGetPastVotes = /*#__PURE__*/ createUseReadContract(
-  {
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'getPastVotes',
-  },
-)
+export const useReadSeamTokenGetPastVotes = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'getPastVotes',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"getRoleAdmin"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenGetRoleAdmin = /*#__PURE__*/ createUseReadContract(
-  {
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'getRoleAdmin',
-  },
-)
+export const useReadSeamTokenGetRoleAdmin = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'getRoleAdmin',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"getVotes"`
@@ -2446,36 +2379,33 @@ export const useReadSeamTokenNonces = /*#__PURE__*/ createUseReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenNumCheckpoints =
-  /*#__PURE__*/ createUseReadContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'numCheckpoints',
-  })
+export const useReadSeamTokenNumCheckpoints = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'numCheckpoints',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"proxiableUUID"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenProxiableUuid =
-  /*#__PURE__*/ createUseReadContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'proxiableUUID',
-  })
+export const useReadSeamTokenProxiableUuid = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'proxiableUUID',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"supportsInterface"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenSupportsInterface =
-  /*#__PURE__*/ createUseReadContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'supportsInterface',
-  })
+export const useReadSeamTokenSupportsInterface = /*#__PURE__*/ createUseReadContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'supportsInterface',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"symbol"`
@@ -2536,12 +2466,11 @@ export const useWriteSeamTokenDelegate = /*#__PURE__*/ createUseWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenDelegateBySig =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'delegateBySig',
-  })
+export const useWriteSeamTokenDelegateBySig = /*#__PURE__*/ createUseWriteContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'delegateBySig',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"grantRole"`
@@ -2559,9 +2488,11 @@ export const useWriteSeamTokenGrantRole = /*#__PURE__*/ createUseWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenInitialize = /*#__PURE__*/ createUseWriteContract(
-  { abi: seamTokenAbi, address: seamTokenAddress, functionName: 'initialize' },
-)
+export const useWriteSeamTokenInitialize = /*#__PURE__*/ createUseWriteContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'initialize',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"permit"`
@@ -2579,21 +2510,22 @@ export const useWriteSeamTokenPermit = /*#__PURE__*/ createUseWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenRenounceRole =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'renounceRole',
-  })
+export const useWriteSeamTokenRenounceRole = /*#__PURE__*/ createUseWriteContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'renounceRole',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"revokeRole"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenRevokeRole = /*#__PURE__*/ createUseWriteContract(
-  { abi: seamTokenAbi, address: seamTokenAddress, functionName: 'revokeRole' },
-)
+export const useWriteSeamTokenRevokeRole = /*#__PURE__*/ createUseWriteContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'revokeRole',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"transfer"`
@@ -2611,24 +2543,22 @@ export const useWriteSeamTokenTransfer = /*#__PURE__*/ createUseWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenTransferFrom =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'transferFrom',
-  })
+export const useWriteSeamTokenTransferFrom = /*#__PURE__*/ createUseWriteContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'transferFrom',
+})
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"upgradeToAndCall"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenUpgradeToAndCall =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'upgradeToAndCall',
-  })
+export const useWriteSeamTokenUpgradeToAndCall = /*#__PURE__*/ createUseWriteContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'upgradeToAndCall',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__
@@ -2645,258 +2575,240 @@ export const useSimulateSeamToken = /*#__PURE__*/ createUseSimulateContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenApprove =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'approve',
-  })
+export const useSimulateSeamTokenApprove = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'approve',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"delegate"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenDelegate =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'delegate',
-  })
+export const useSimulateSeamTokenDelegate = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'delegate',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"delegateBySig"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenDelegateBySig =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'delegateBySig',
-  })
+export const useSimulateSeamTokenDelegateBySig = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'delegateBySig',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"grantRole"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenGrantRole =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'grantRole',
-  })
+export const useSimulateSeamTokenGrantRole = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'grantRole',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"initialize"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenInitialize =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'initialize',
-  })
+export const useSimulateSeamTokenInitialize = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'initialize',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"permit"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenPermit =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'permit',
-  })
+export const useSimulateSeamTokenPermit = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'permit',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"renounceRole"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenRenounceRole =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'renounceRole',
-  })
+export const useSimulateSeamTokenRenounceRole = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'renounceRole',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"revokeRole"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenRevokeRole =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'revokeRole',
-  })
+export const useSimulateSeamTokenRevokeRole = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'revokeRole',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"transfer"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenTransfer =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'transfer',
-  })
+export const useSimulateSeamTokenTransfer = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'transfer',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"transferFrom"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenTransferFrom =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'transferFrom',
-  })
+export const useSimulateSeamTokenTransferFrom = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'transferFrom',
+})
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"upgradeToAndCall"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenUpgradeToAndCall =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    functionName: 'upgradeToAndCall',
-  })
+export const useSimulateSeamTokenUpgradeToAndCall = /*#__PURE__*/ createUseSimulateContract({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  functionName: 'upgradeToAndCall',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenEvent = /*#__PURE__*/ createUseWatchContractEvent(
-  { abi: seamTokenAbi, address: seamTokenAddress },
-)
+export const useWatchSeamTokenEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Approval"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenApprovalEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    eventName: 'Approval',
-  })
+export const useWatchSeamTokenApprovalEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  eventName: 'Approval',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"DelegateChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenDelegateChangedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    eventName: 'DelegateChanged',
-  })
+export const useWatchSeamTokenDelegateChangedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  eventName: 'DelegateChanged',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"DelegateVotesChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenDelegateVotesChangedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
+export const useWatchSeamTokenDelegateVotesChangedEvent = /*#__PURE__*/ createUseWatchContractEvent(
+  {
     abi: seamTokenAbi,
     address: seamTokenAddress,
     eventName: 'DelegateVotesChanged',
-  })
+  },
+)
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"EIP712DomainChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenEip712DomainChangedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    eventName: 'EIP712DomainChanged',
-  })
+export const useWatchSeamTokenEip712DomainChangedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  eventName: 'EIP712DomainChanged',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Initialized"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenInitializedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    eventName: 'Initialized',
-  })
+export const useWatchSeamTokenInitializedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  eventName: 'Initialized',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"RoleAdminChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenRoleAdminChangedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    eventName: 'RoleAdminChanged',
-  })
+export const useWatchSeamTokenRoleAdminChangedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  eventName: 'RoleAdminChanged',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"RoleGranted"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenRoleGrantedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    eventName: 'RoleGranted',
-  })
+export const useWatchSeamTokenRoleGrantedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  eventName: 'RoleGranted',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"RoleRevoked"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenRoleRevokedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    eventName: 'RoleRevoked',
-  })
+export const useWatchSeamTokenRoleRevokedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  eventName: 'RoleRevoked',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Transfer"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenTransferEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    eventName: 'Transfer',
-  })
+export const useWatchSeamTokenTransferEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  eventName: 'Transfer',
+})
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Upgraded"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenUpgradedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: seamTokenAbi,
-    address: seamTokenAddress,
-    eventName: 'Upgraded',
-  })
+export const useWatchSeamTokenUpgradedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: seamTokenAbi,
+  address: seamTokenAddress,
+  eventName: 'Upgraded',
+})

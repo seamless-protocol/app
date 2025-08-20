@@ -1,6 +1,6 @@
 import { waitFor } from '@testing-library/react'
 import { readContracts } from '@wagmi/core'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   TOKEN_METADATA_CONTRACTS,
   useTokenMetadata,
@@ -15,13 +15,15 @@ describe('useTokenMetadata', () => {
   const TOKEN_TOTAL_SUPPLY = 1000000n
 
   beforeEach(() => {
-    vi.mocked(readContracts).mockResolvedValue([
+    mockSetup.clearAllMocks()
+    // readContracts is already mocked in tests/setup.ts
+    const mockReadContracts = readContracts as any
+    mockReadContracts.mockResolvedValue([
       { status: 'success', result: TOKEN_NAME },
       { status: 'success', result: TOKEN_SYMBOL },
       { status: 'success', result: TOKEN_DECIMALS },
       { status: 'success', result: TOKEN_TOTAL_SUPPLY },
-    ] as any)
-    mockSetup.clearAllMocks()
+    ])
   })
 
   describe('hook initialization', () => {
@@ -66,12 +68,13 @@ describe('useTokenMetadata', () => {
 
   describe('error handling', () => {
     it('should handle contract read failures', async () => {
-      vi.mocked(readContracts).mockResolvedValue([
+      const mockReadContracts = readContracts as any
+      mockReadContracts.mockResolvedValue([
         { status: 'failure', error: new Error('Contract error') },
         { status: 'success', result: TOKEN_SYMBOL },
         { status: 'success', result: TOKEN_DECIMALS },
         { status: 'success', result: TOKEN_TOTAL_SUPPLY },
-      ] as any)
+      ])
 
       const { result } = hookTestUtils.renderHookWithQuery(() => useTokenMetadata(tokenAddress))
 
@@ -82,12 +85,13 @@ describe('useTokenMetadata', () => {
     })
 
     it('should handle partial failures gracefully', async () => {
-      vi.mocked(readContracts).mockResolvedValue([
+      const mockReadContracts = readContracts as any
+      mockReadContracts.mockResolvedValue([
         { status: 'success', result: TOKEN_NAME },
         { status: 'failure', error: new Error('Symbol read failed') },
         { status: 'success', result: TOKEN_DECIMALS },
         { status: 'success', result: TOKEN_TOTAL_SUPPLY },
-      ] as any)
+      ])
 
       const { result } = hookTestUtils.renderHookWithQuery(() => useTokenMetadata(tokenAddress))
 

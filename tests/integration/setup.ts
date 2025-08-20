@@ -26,7 +26,8 @@ const defaults = {
   ANVIL_PORT: process.env['ANVIL_PORT'] ?? '8545',
 }
 const ANVIL_RPC_URL =
-  process.env['ANVIL_RPC_URL'] ?? `http://127.0.0.1:${process.env['ANVIL_PORT'] ?? defaults.ANVIL_PORT}`
+  process.env['ANVIL_RPC_URL'] ??
+  `http://127.0.0.1:${process.env['ANVIL_PORT'] ?? defaults.ANVIL_PORT}`
 
 // --------- Env (schema-first) ----------
 const Env = z

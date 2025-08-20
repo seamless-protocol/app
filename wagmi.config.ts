@@ -1,10 +1,10 @@
 import { defineConfig } from '@wagmi/cli'
 import { react } from '@wagmi/cli/plugins'
 import { base } from 'viem/chains'
+import { leverageManagerAbi } from './src/lib/contracts/abis/leverageManager'
+import { leverageRouterAbi } from './src/lib/contracts/abis/leverageRouter'
 import { leverageTokenAbi } from './src/lib/contracts/abis/leverageToken'
 import { leverageTokenFactoryAbi } from './src/lib/contracts/abis/leverageTokenFactory'
-import { leverageRouterAbi } from './src/lib/contracts/abis/leverageRouter'
-import { leverageManagerAbi } from './src/lib/contracts/abis/leverageManager'
 import { seamTokenAbi } from './src/lib/contracts/abis/seamToken'
 import { contractAddresses } from './src/lib/contracts/addresses'
 
