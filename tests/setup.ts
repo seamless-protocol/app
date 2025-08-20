@@ -26,9 +26,10 @@ vi.mock('@/lib/config/wagmi.config', () => ({
   config: {},
 }))
 
-// Mock contract ABI
+// Mock contract ABI exports used by hooks/tests
 vi.mock('@/lib/contracts/generated', () => ({
   leverageTokenAbi: [],
+  leverageRouterAbi: [],
 }))
 
 // Mock contract addresses

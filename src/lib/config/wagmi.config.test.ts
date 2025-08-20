@@ -18,10 +18,3 @@ export const testConfig = createConfig({
   transports: { [base.id]: http(anvilUrl) },
   ssr: false,
 })
-
-declare module 'wagmi' {
-  interface Register {
-    config: typeof testConfig
-  }
-}
-
