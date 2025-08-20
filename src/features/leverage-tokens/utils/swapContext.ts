@@ -1,25 +1,13 @@
 import type { Address } from 'viem'
 import { base } from 'viem/chains'
+import { leverageRouterAbi } from '@/lib/contracts/generated'
+import type { ContractFunctionArgs } from 'viem'
 
 /**
- * SwapContext type based on Router ABI
- * Matches ISwapAdapter.SwapContext struct
+ * Extract SwapContext type from wagmi-generated ABI
+ * This ensures perfect type compatibility
  */
-export interface SwapContext {
-  path: Array<Address>
-  encodedPath: `0x${string}`
-  fees: Array<number>
-  tickSpacing: Array<number>
-  exchange: number // enum ISwapAdapter.Exchange as uint8
-  exchangeAddresses: {
-    aerodromeRouter: Address
-    aerodromePoolFactory: Address
-    aerodromeSlipstreamRouter: Address
-    uniswapSwapRouter02: Address
-    uniswapV2Router02: Address
-  }
-  additionalData: `0x${string}`
-}
+export type SwapContext = ContractFunctionArgs<typeof leverageRouterAbi, 'nonpayable', 'mint'>[4]
 
 /**
  * Exchange enum values for ISwapAdapter.Exchange
