@@ -158,10 +158,10 @@ export type WithForkCtx = {
   publicClient: typeof publicClient
   ADDR: typeof ADDR
   // optional multi-account participants
-  others: { account: (typeof extraAccounts)[number]; wallet: (typeof extraWallets)[number] }[]
+  others: Array<{ account: (typeof extraAccounts)[number]; wallet: (typeof extraWallets)[number] }>
   fund: {
-    native: (addrs: Address[], ether: string) => Promise<void>
-    erc20: (token: Address, targets: Address[], human: string) => Promise<void>
+    native: (addrs: Array<Address>, ether: string) => Promise<void>
+    erc20: (token: Address, targets: Array<Address>, human: string) => Promise<void>
   }
 }
 

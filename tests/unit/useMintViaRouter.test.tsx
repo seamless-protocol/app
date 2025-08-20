@@ -263,7 +263,7 @@ describe('useMintViaRouter', () => {
 
       try {
         await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
-      } catch (error) {
+      } catch (_error) {
         // Expected to throw
       }
 
@@ -304,7 +304,7 @@ describe('useMintViaRouter', () => {
 
       try {
         await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
-      } catch (error) {
+      } catch (_error) {
         // Expected to throw
       }
 
@@ -336,7 +336,7 @@ describe('useMintViaRouter', () => {
 
       try {
         await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
-      } catch (error) {
+      } catch (_error) {
         // Expected to throw
       }
 
@@ -372,7 +372,7 @@ describe('useMintViaRouter', () => {
 
       try {
         await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
-      } catch (error) {
+      } catch (_error) {
         // Expected to throw
       }
 
@@ -411,7 +411,7 @@ describe('useMintViaRouter', () => {
 
       try {
         await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
-      } catch (error) {
+      } catch (_error) {
         // Expected to throw
       }
 

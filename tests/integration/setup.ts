@@ -1,4 +1,4 @@
-import { resolve } from 'path'
+import { resolve } from 'node:path'
 import { config } from 'dotenv'
 import {
   http,
@@ -73,7 +73,7 @@ export const testClient = createTestClient({
 const extraKeys = (Env.TEST_PRIVATE_KEYS_CSV ?? '')
   .split(',')
   .map((s) => s.trim())
-  .filter(Boolean) as Hex[]
+  .filter(Boolean) as Array<Hex>
 
 export const extraAccounts = extraKeys.map((k) => privateKeyToAccount(k))
 export const extraWallets = extraAccounts.map((acct) =>
