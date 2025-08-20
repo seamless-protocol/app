@@ -1,10 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/tokens')({
-  component: () => (
-    <div className="p-2">
-      <h3>Leverage Tokens</h3>
-      <p>Browse and manage leverage tokens.</p>
-    </div>
-  ),
+  component: () => {
+    return (
+      <div className="p-4 max-w-4xl mx-auto">
+        <Outlet />
+      </div>
+    )
+  },
 })

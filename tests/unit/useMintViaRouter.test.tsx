@@ -31,7 +31,7 @@ describe('useMintViaRouter', () => {
     })
     
     // Setup wagmi core function mocks
-    vi.mocked(readContract).mockImplementation(async (config, params) => {
+    vi.mocked(readContract).mockImplementation(async (_config, params) => {
       // Mock different contract calls based on function name
       if (params.functionName === 'previewMint') {
         return { shares: 1000n, tokenFee: 0n, treasuryFee: 0n }

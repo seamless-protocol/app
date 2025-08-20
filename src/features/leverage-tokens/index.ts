@@ -13,4 +13,4 @@ export * from './utils/errors'
 export * from './utils/queryKeys'
 
 // Components will be exported as they're created
-// export * from './components'
+export { MintForm } from './components/MintForm'
