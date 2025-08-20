@@ -1,12 +1,17 @@
 import { z } from 'zod'
+import { base } from 'viem/chains'
 import {
   createPublicClient,
   createWalletClient,
+  createTestClient,
   http,
   parseEther,
+  publicActions,
+  getAddress,
+  type Address,
+  type Hash,
   type Hex,
 } from 'viem'
-import { base } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
 import { config } from 'dotenv'
 import { resolve } from 'path'
@@ -14,10 +19,22 @@ import { resolve } from 'path'
 // Load .env file from integration directory
 config({ path: resolve(__dirname, '.env') })
 
+/** ──────────────────────────────────────────────────────────────────────
+ *  ENV
+ *  ──────────────────────────────────────────────────────────────────── */
+const defaults = {
+  ANVIL_PORT: process.env.ANVIL_PORT ?? '8545',
+}
+const ANVIL_RPC_URL =
+  process.env.ANVIL_RPC_URL ??
+  `http://127.0.0.1:${process.env.ANVIL_PORT ?? defaults.ANVIL_PORT}`
+
 // --------- Env (schema-first) ----------
 const Env = z
   .object({
-    TEST_TENDERLY_ADMIN_RPC_BASE: z.string().url(),
+    // ✅ Replaces TEST_TENDERLY_ADMIN_RPC_BASE
+    ANVIL_BASE_FORK_URL: z.string().url().optional(), // used by the anvil process, not by tests
+    ANVIL_RPC_URL: z.string().url().default(ANVIL_RPC_URL),
     TEST_PRIVATE_KEY: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
     TEST_PRIVATE_KEYS_CSV: z.string().optional(),
     TEST_LEVERAGE_FACTORY: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
@@ -29,17 +46,29 @@ const Env = z
   })
   .parse(process.env)
 
+/** ──────────────────────────────────────────────────────────────────────
+ *  Clients
+ *  ──────────────────────────────────────────────────────────────────── */
 export const chain = base
-const transport = http(Env.TEST_TENDERLY_ADMIN_RPC_BASE, { batch: true })
 
 export const publicClient = createPublicClient({
   chain,
-  transport,
+  transport: http(Env.ANVIL_RPC_URL, { batch: true }),
   batch: { multicall: true },
 })
 
 export const account = privateKeyToAccount(Env.TEST_PRIVATE_KEY as Hex)
-export const walletClient = createWalletClient({ account, chain, transport })
+export const walletClient = createWalletClient({
+  account,
+  chain,
+  transport: http(Env.ANVIL_RPC_URL),
+}).extend(publicActions)
+
+export const testClient = createTestClient({
+  chain,
+  mode: 'anvil',
+  transport: http(Env.ANVIL_RPC_URL),
+})
 
 // Optional extra accounts for multi-user scenarios
 const extraKeys = (Env.TEST_PRIVATE_KEYS_CSV ?? '')
@@ -49,38 +78,36 @@ const extraKeys = (Env.TEST_PRIVATE_KEYS_CSV ?? '')
 
 export const extraAccounts = extraKeys.map((k) => privateKeyToAccount(k))
 export const extraWallets = extraAccounts.map((acct) =>
-  createWalletClient({ account: acct, chain, transport }),
+  createWalletClient({ 
+    account: acct, 
+    chain, 
+    transport: http(Env.ANVIL_RPC_URL) 
+  }),
 )
 
 export const ADDR = {
-  factory: Env.TEST_LEVERAGE_FACTORY as `0x${string}`,
-  manager: Env.TEST_LEVERAGE_MANAGER as `0x${string}`,
-  router: Env.TEST_LEVERAGE_ROUTER as `0x${string}`,
-  leverageToken: Env.TEST_LEVERAGE_TOKEN_PROXY as `0x${string}`,
-  usdc: Env.TEST_USDC as `0x${string}`,
-  weth: Env.TEST_WETH as `0x${string}`,
+  factory: getAddress(Env.TEST_LEVERAGE_FACTORY),
+  manager: getAddress(Env.TEST_LEVERAGE_MANAGER),
+  router: getAddress(Env.TEST_LEVERAGE_ROUTER),
+  leverageToken: getAddress(Env.TEST_LEVERAGE_TOKEN_PROXY),
+  usdc: getAddress(Env.TEST_USDC),
+  weth: getAddress(Env.TEST_WETH),
 }
 
-// --------- Tenderly Admin RPC helpers ----------
-export async function takeSnapshot(): Promise<string> {
-  const id = await publicClient.request({ 
-    method: 'evm_snapshot' as any, 
-    params: [] as any 
-  })
-  return typeof id === 'string' ? id : String(id)
+/** ──────────────────────────────────────────────────────────────────────
+ *  Fork controls (snapshot / revert) via Test Actions
+ *  ──────────────────────────────────────────────────────────────────── */
+export async function takeSnapshot(): Promise<Hash> {
+  return await testClient.snapshot()
 }
 
-export async function revertSnapshot(id: string) {
-  await publicClient.request({ 
-    method: 'evm_revert' as any, 
-    params: [id] as any 
-  })
+export async function revertSnapshot(id: Hash) {
+  await testClient.revert({ id })
 }
 
-export async function topUpNative(to: `0x${string}`, ether: string) {
-  const value = parseEther(ether)
-  await publicClient.request({
-    method: 'tenderly_setBalance' as any,
-    params: [to, `0x${value.toString(16)}`] as any,
-  })
+/** ──────────────────────────────────────────────────────────────────────
+ *  Funding helpers (Anvil Test Actions)
+ *  ──────────────────────────────────────────────────────────────────── */
+export async function topUpNative(to: Address, ether: string) {
+  await testClient.setBalance({ address: to, value: parseEther(ether) })
 }

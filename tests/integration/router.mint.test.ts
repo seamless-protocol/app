@@ -5,7 +5,7 @@ import { leverageManagerAbi } from '../../src/lib/contracts/abis/leverageManager
 import { leverageRouterAbi } from '../../src/lib/contracts/abis/leverageRouter'
 import { createSwapContext } from '../../src/features/leverage-tokens/utils/swapContext'
 
-describe('Router-Based Minting (Tenderly VNet / viem)', () => {
+describe('Router-Based Minting (Anvil Base fork / viem)', () => {
   it('previewMint and check collateral asset', async () =>
     withFork(async ({ account, publicClient, ADDR, fund }) => {
       const leverageToken: Address = ADDR.leverageToken
