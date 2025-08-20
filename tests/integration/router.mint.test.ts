@@ -3,7 +3,7 @@ import { type Address, erc20Abi, maxUint256 } from 'viem'
 import { withFork } from './utils'
 import { leverageManagerAbi } from '../../src/lib/contracts/abis/leverageManager'
 import { leverageRouterAbi } from '../../src/lib/contracts/abis/leverageRouter'
-import { makeNoopSwapContext } from '../../src/features/leverage-tokens/utils/swapContext'
+import { createSwapContext } from '../../src/features/leverage-tokens/utils/swapContext'
 
 describe('Router-Based Minting (Tenderly VNet / viem)', () => {
   it('previewMint and check collateral asset', async () =>
@@ -43,7 +43,7 @@ describe('Router-Based Minting (Tenderly VNet / viem)', () => {
       expect(preview.shares).toBeGreaterThan(0n)
     }))
 
-  it('Router.mint with noop SwapContext (expect revert)', async () =>
+  it('Router.mint with real SwapContext (should succeed)', async () =>
     withFork(async ({ account, walletClient, publicClient, ADDR, fund }) => {
       const leverageToken: Address = ADDR.leverageToken
       const router: Address = ADDR.router
@@ -86,24 +86,40 @@ describe('Router-Based Minting (Tenderly VNet / viem)', () => {
       })
       const minShares = preview.shares // No slippage for test
 
-      // Create noop SwapContext (this should cause revert)
-      const noopContext = makeNoopSwapContext()
+      // Get debt asset (underlying asset for leverage exposure)
+      const debtAsset = await publicClient.readContract({
+        address: manager,
+        abi: leverageManagerAbi,
+        functionName: 'getLeverageTokenDebtAsset',
+        args: [leverageToken],
+      }) as Address
+
+      console.log('Using debt asset (underlying):', debtAsset)
+
+      // Create real SwapContext for collateral → debt asset swap (chain-aware)
+      const swapContext = createSwapContext(
+        collateralAsset, // e.g., weETH (collateral)
+        debtAsset, // e.g., WETH (debt asset / underlying)
+        8453 // Base chain ID - will auto-select Aerodrome V2 for Base
+      )
       const maxSwapCost = (equityAmount * 500n) / 10000n // 5%
 
-      console.log('Attempting Router.mint with noop SwapContext...')
+      console.log('Attempting Router.mint with real SwapContext...')
 
-      // This should revert due to invalid SwapContext
-      await expect(
-        publicClient.simulateContract({
-          address: router,
-          abi: leverageRouterAbi,
-          functionName: 'mint',
-          args: [leverageToken, equityAmount, minShares, maxSwapCost, noopContext] as any,
-          account,
-        })
-      ).rejects.toThrow()
+      // This should succeed with proper SwapContext
+      await publicClient.simulateContract({
+        address: router,
+        abi: leverageRouterAbi,
+        functionName: 'mint',
+        args: [leverageToken, equityAmount, minShares, maxSwapCost, swapContext] as any,
+        account,
+      })
 
-      console.log('✅ Router correctly rejected noop SwapContext')
+      console.log('✅ Router accepted real SwapContext - simulation successful')
+      
+      // Note: We don't execute the transaction in this test to avoid consuming real funds
+      // The simulation success confirms the SwapContext is properly configured
+      
     }))
 
   it('Router allowance check', async () =>
@@ -134,8 +150,4 @@ describe('Router-Based Minting (Tenderly VNet / viem)', () => {
       // This test shows the approval flow is properly set up
       // In a real flow, user would approve Router before minting
     }))
-
-  // TODO: Add test with proper SwapContext once we have DEX configuration
-  // This test would use makeSingleHopV2Context() with real DEX addresses
-  // and should succeed once SwapContext configuration is properly set up
 })
