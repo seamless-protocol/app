@@ -44,7 +44,17 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
     if (!amount || !user) return
 
     try {
-      const amountBigInt = BigInt(Number.parseFloat(amount) * 10 ** 18) // Assuming 18 decimals
+      // Safe decimal parsing: convert string to wei avoiding float precision issues
+      const amountString = amount.trim()
+      if (!amountString || Number.isNaN(Number(amountString))) {
+        throw new Error('Invalid amount')
+      }
+
+      // Parse as string-based decimal to avoid float precision loss
+      const [whole = '0', decimal = ''] = amountString.split('.')
+      const paddedDecimal = decimal.padEnd(18, '0').slice(0, 18) // Pad to 18 decimals, truncate if longer
+      const amountBigInt = BigInt(whole + paddedDecimal)
+
       const slippageBps = Number.parseInt(slippage, 10)
 
       await mintToken({
@@ -99,6 +109,7 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
           </label>
           <input
             id={amountId}
+            data-testid="mint-amount-input"
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -131,7 +142,12 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
         </div>
 
         {/* Mint Button */}
-        <Button onClick={handleMint} disabled={isPending || !amount} className="w-full">
+        <Button
+          data-testid="mint-submit-button"
+          onClick={handleMint}
+          disabled={isPending || !amount}
+          className="w-full"
+        >
           {isPending ? 'Minting...' : 'Mint Tokens'}
         </Button>
 
@@ -147,9 +163,14 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
 
         {isSuccess && data && (
           <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-sm text-green-600">✅ Mint successful! Hash: {data.hash}</p>
+            <p className="text-sm text-green-600">
+              ✅ Mint successful! Hash: <span data-testid="mint-tx-hash">{data.hash}</span>
+            </p>
             <p className="text-xs text-green-500 mt-1">
-              Expected shares: {data.preview?.shares?.toString() || 'N/A'}
+              Expected shares:{' '}
+              <span data-testid="mint-expected-shares">
+                {data.preview?.shares?.toString() || 'N/A'}
+              </span>
             </p>
           </div>
         )}
