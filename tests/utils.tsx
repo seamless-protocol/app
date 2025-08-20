@@ -1,6 +1,6 @@
-import { vi } from 'vitest'
-import { renderHook, type RenderHookOptions } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { type RenderHookOptions, renderHook } from '@testing-library/react'
+import { vi } from 'vitest'
 import { useAccount, useChainId } from 'wagmi'
 
 // Utility to create deterministic hashes from strings
@@ -38,12 +38,13 @@ export const mockSetup = {
   },
 
   // Create a fresh QueryClient for each test
-  createQueryClient: () => new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  }),
+  createQueryClient: () =>
+    new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    }),
 }
 
 // Hook testing utilities
@@ -54,17 +55,15 @@ export const hookTestUtils = {
     options?: {
       initialProps?: TProps
       queryClient?: QueryClient
-    } & Omit<RenderHookOptions<TProps>, 'wrapper'>
+    } & Omit<RenderHookOptions<TProps>, 'wrapper'>,
   ) => {
     const queryClient = options?.queryClient ?? mockSetup.createQueryClient()
-    
+
     return {
       ...renderHook(hook, {
         ...options,
         wrapper: ({ children }) => (
-          <QueryClientProvider client={queryClient}>
-            {children}
-          </QueryClientProvider>
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
         ),
       }),
       queryClient,
@@ -81,4 +80,4 @@ export const mockData = {
     blockNumber: 12345n,
     gasUsed: 21000n,
   }),
-} 
+}

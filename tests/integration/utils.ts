@@ -1,22 +1,15 @@
-import {
-  parseAbi,
-  parseUnits,
-  parseEther,
-  maxUint256,
-  getAddress,
-  type Address,
-} from 'viem'
+import { type Address, getAddress, maxUint256, parseAbi, parseUnits } from 'viem'
 import {
   ADDR,
   account,
   extraAccounts,
   extraWallets,
   publicClient,
-  takeSnapshot,
   revertSnapshot,
+  takeSnapshot,
+  testClient,
   topUpNative,
   walletClient,
-  testClient,
 } from './setup'
 
 // --------- Minimal ERC20 ABI slice ----------
@@ -31,10 +24,7 @@ export const erc20Abi = parseAbi([
 ])
 
 // --------- WETH ABI slice ----------
-export const wethAbi = parseAbi([
-  'function deposit() payable',
-  'function withdraw(uint256 wad)',
-])
+export const wethAbi = parseAbi(['function deposit() payable', 'function withdraw(uint256 wad)'])
 
 // Base canonical WETH on L2s often uses the 0x4200...0006 pattern on OP-stack chains.
 // On Base, WETH = 0x4200...0006
@@ -44,15 +34,23 @@ const BASE_WETH: Address = '0x4200000000000000000000000000000000000006'
  *  Safer than poking storage on modern (ERC‑7201 namespaced) tokens. */
 const RICH_HOLDERS: Record<string, Address | undefined> = {
   // USDC on Base (native) - Coinbase treasury address
-  [getAddress('0x833589fcd6edb6e08f4c7c32d4f71b54bda02913')]: getAddress('0x3304dd20f87a67ed649c3dF34aD6b19dFEC33877'),
+  [getAddress('0x833589fcd6edb6e08f4c7c32d4f71b54bda02913')]: getAddress(
+    '0x3304dd20f87a67ed649c3dF34aD6b19dFEC33877',
+  ),
   // weETH on Base (from test output) - use a major holder
-  [getAddress('0x04c0599ae5a44757c0af6f9ec3b93da8976c150a')]: getAddress('0xb26ff591F44b04E78de18f43B46f8b70C6676984'), // Binance 14
+  [getAddress('0x04c0599ae5a44757c0af6f9ec3b93da8976c150a')]: getAddress(
+    '0xb26ff591F44b04E78de18f43B46f8b70C6676984',
+  ), // Binance 14
 }
 
-async function fundErc20ViaWethDeposit(token: Address, to: Address, human: string): Promise<boolean> {
+async function fundErc20ViaWethDeposit(
+  token: Address,
+  to: Address,
+  human: string,
+): Promise<boolean> {
   if (token.toLowerCase() !== BASE_WETH.toLowerCase()) return false
   const value = parseUnits(human, 18)
-  
+
   // Deposit ETH to get WETH
   await walletClient.writeContract({
     address: BASE_WETH,
@@ -61,7 +59,7 @@ async function fundErc20ViaWethDeposit(token: Address, to: Address, human: strin
     value,
     account: account.address,
   })
-  
+
   // Transfer WETH to target if depositor != target
   if (account.address.toLowerCase() !== to.toLowerCase()) {
     await walletClient.writeContract({
@@ -76,7 +74,11 @@ async function fundErc20ViaWethDeposit(token: Address, to: Address, human: strin
 }
 
 /** Impersonate a rich holder and transfer tokens */
-async function fundErc20ViaImpersonation(token: Address, to: Address, human: string): Promise<boolean> {
+async function fundErc20ViaImpersonation(
+  token: Address,
+  to: Address,
+  human: string,
+): Promise<boolean> {
   const holder = RICH_HOLDERS[getAddress(token)]
   if (!holder) return false
 
@@ -115,11 +117,7 @@ async function fundErc20ViaStorageWrite(): Promise<never> {
 }
 
 /** Top up ERC-20 balance using safe funding strategies */
-export async function topUpErc20(
-  token: Address,
-  to: Address,
-  human: string,
-) {
+export async function topUpErc20(token: Address, to: Address, human: string) {
   if (await fundErc20ViaWethDeposit(token, to, human)) return
   if (await fundErc20ViaImpersonation(token, to, human)) return
   await fundErc20ViaStorageWrite()
@@ -136,11 +134,7 @@ export async function parseAmount(token: Address, human: string) {
 }
 
 /** Approves `spender` if current allowance < minAmount (approves max) */
-export async function approveIfNeeded(
-  token: Address,
-  spender: Address,
-  minAmount: bigint,
-) {
+export async function approveIfNeeded(token: Address, spender: Address, minAmount: bigint) {
   const allowance = await publicClient.readContract({
     address: token,
     abi: erc20Abi,
@@ -171,9 +165,7 @@ export type WithForkCtx = {
   }
 }
 
-export async function withFork<T>(
-  fn: (ctx: WithForkCtx) => Promise<T>,
-): Promise<T> {
+export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise<T> {
   const snap = await takeSnapshot()
   try {
     const ctx: WithForkCtx = {

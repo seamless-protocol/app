@@ -1,20 +1,20 @@
-import { z } from 'zod'
-import { base } from 'viem/chains'
+import { resolve } from 'path'
+import { config } from 'dotenv'
 import {
-  createPublicClient,
-  createWalletClient,
-  createTestClient,
   http,
-  parseEther,
-  publicActions,
-  getAddress,
   type Address,
   type Hash,
   type Hex,
+  createPublicClient,
+  createTestClient,
+  createWalletClient,
+  getAddress,
+  parseEther,
+  publicActions,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { config } from 'dotenv'
-import { resolve } from 'path'
+import { base } from 'viem/chains'
+import { z } from 'zod'
 
 // Load .env file from integration directory
 config({ path: resolve(__dirname, '.env') })
@@ -26,8 +26,7 @@ const defaults = {
   ANVIL_PORT: process.env.ANVIL_PORT ?? '8545',
 }
 const ANVIL_RPC_URL =
-  process.env.ANVIL_RPC_URL ??
-  `http://127.0.0.1:${process.env.ANVIL_PORT ?? defaults.ANVIL_PORT}`
+  process.env.ANVIL_RPC_URL ?? `http://127.0.0.1:${process.env.ANVIL_PORT ?? defaults.ANVIL_PORT}`
 
 // --------- Env (schema-first) ----------
 const Env = z
@@ -78,10 +77,10 @@ const extraKeys = (Env.TEST_PRIVATE_KEYS_CSV ?? '')
 
 export const extraAccounts = extraKeys.map((k) => privateKeyToAccount(k))
 export const extraWallets = extraAccounts.map((acct) =>
-  createWalletClient({ 
-    account: acct, 
-    chain, 
-    transport: http(Env.ANVIL_RPC_URL) 
+  createWalletClient({
+    account: acct,
+    chain,
+    transport: http(Env.ANVIL_RPC_URL),
   }),
 )
 

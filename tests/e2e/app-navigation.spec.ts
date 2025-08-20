@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test.describe('App Navigation & Wallet Connection', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,7 +15,7 @@ test.describe('App Navigation & Wallet Connection', () => {
   test('should navigate to tokens page', async ({ page }) => {
     // Navigate to tokens page using hash routing
     await page.goto('/#/tokens')
-    
+
     // Verify we're on the tokens page
     await expect(page.locator('h3:has-text("Leverage Tokens")')).toBeVisible()
     await expect(page.locator('text=Browse and manage leverage tokens.')).toBeVisible()
@@ -24,16 +24,16 @@ test.describe('App Navigation & Wallet Connection', () => {
   test('should open wallet connection modal', async ({ page }) => {
     // Look for the connect wallet button
     const connectButton = page.locator('button:has-text("Connect Wallet")')
-    
+
     // Verify the button is visible
     await expect(connectButton).toBeVisible()
-    
+
     // Click the button to open the modal
     await connectButton.click()
-    
+
     // Wait for the modal to appear and verify wallet options are shown
     await expect(page.locator('text=MetaMask')).toBeVisible()
-    
+
     // Verify wallet options are present (should be at least one)
     const walletOptions = page.locator('[role="button"]')
     const count = await walletOptions.count()
@@ -43,7 +43,7 @@ test.describe('App Navigation & Wallet Connection', () => {
   test('should show wallet info when connected', async ({ page }) => {
     // Check if wallet info is already visible (indicating wallet is connected)
     const walletInfo = page.locator('text=Connected Address:')
-    
+
     if (await walletInfo.isVisible()) {
       // Wallet is already connected, verify the info is displayed
       await expect(walletInfo).toBeVisible()
@@ -58,14 +58,14 @@ test.describe('App Navigation & Wallet Connection', () => {
   test('should show wallet connection prompt when not connected', async ({ page }) => {
     // Navigate to tokens page using hash routing
     await page.goto('/#/tokens')
-    
+
     // Look for wallet connection prompt
     const walletPrompt = page.locator('text=Connect your wallet to see account info')
-    
+
     // This should be visible if wallet is not connected
     // Note: In a real test environment, we'd need to ensure wallet is disconnected
     if (await walletPrompt.isVisible()) {
       await expect(walletPrompt).toBeVisible()
     }
   })
-}) 
+})

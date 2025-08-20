@@ -1,3 +1,7 @@
+import { config } from '@/lib/config/wagmi.config'
+import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
+import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
+import { getContractAddresses } from '@/lib/contracts/addresses'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   readContract,
@@ -8,14 +12,10 @@ import {
 import type { Address } from 'viem'
 import { erc20Abi, maxUint256 } from 'viem'
 import { useAccount, useChainId } from 'wagmi'
-import { config } from '@/lib/config/wagmi.config'
-import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
-import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
-import { getContractAddresses } from '@/lib/contracts/addresses'
 import { TX_SETTINGS } from '../utils/constants'
 import { classifyError, isActionableError } from '../utils/errors'
 import { ltKeys } from '../utils/queryKeys'
-import { createSwapContext, type SwapContext } from '../utils/swapContext'
+import { type SwapContext, createSwapContext } from '../utils/swapContext'
 
 export interface UseMintViaRouterParams {
   token: Address
@@ -114,18 +114,14 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
       throw new Error('Collateral asset not available')
     }
 
-    const debtAsset = await readContract(config, {
+    const debtAsset = (await readContract(config, {
       address: managerAddress,
       abi: leverageManagerAbi,
       functionName: 'getLeverageTokenDebtAsset',
       args: [token],
-    }) as Address
+    })) as Address
 
-    return createSwapContext(
-      collateralAsset,
-      debtAsset,
-      chainId
-    )
+    return createSwapContext(collateralAsset, debtAsset, chainId)
   }
 
   const mutation = useMutation({
@@ -167,13 +163,7 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
         address: routerAddress,
         abi: leverageRouterAbi,
         functionName: 'mint',
-        args: [
-          token,
-          equityInCollateralAsset,
-          minShares,
-          finalMaxSwapCost,
-          finalSwapContext,
-        ] as any,
+        args: [token, equityInCollateralAsset, minShares, finalMaxSwapCost, finalSwapContext],
         account: user,
       })
 

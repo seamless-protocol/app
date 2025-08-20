@@ -1,9 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { waitFor } from '@testing-library/react'
-import { readContract, simulateContract, waitForTransactionReceipt, writeContract } from '@wagmi/core'
 import { useMintViaRouter } from '@/features/leverage-tokens/hooks/useMintViaRouter'
-import { makeAddr, mockSetup, hookTestUtils, mockData } from '../utils'
 import * as contractAddresses from '@/lib/contracts/addresses'
+import { waitFor } from '@testing-library/react'
+import {
+  readContract,
+  simulateContract,
+  waitForTransactionReceipt,
+  writeContract,
+} from '@wagmi/core'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { hookTestUtils, makeAddr, mockData, mockSetup } from '../utils'
 
 describe('useMintViaRouter', () => {
   const tokenAddress = makeAddr('token')
@@ -17,19 +22,19 @@ describe('useMintViaRouter', () => {
   beforeEach(() => {
     // Setup common mocks
     mockSetup.setupWagmiMocks(ownerAddress)
-    
+
     // Mock contract addresses
     vi.mocked(contractAddresses.getContractAddresses).mockReturnValue({
       leverageRouter: routerAddress,
       leverageManager: managerAddress,
     })
-    
+
     // Debug: Log what's being returned
     console.log('Mocked addresses:', {
       leverageRouter: routerAddress,
       leverageManager: managerAddress,
     })
-    
+
     // Setup wagmi core function mocks
     vi.mocked(readContract).mockImplementation(async (_config, params) => {
       // Mock different contract calls based on function name
@@ -47,7 +52,7 @@ describe('useMintViaRouter', () => {
       }
       return null
     })
-    
+
     vi.mocked(simulateContract).mockResolvedValue({
       // request mirrors whatever simulateContract returns; we don't depend on exact shape
       request: { address: routerAddress, abi: [], functionName: 'mint' },
@@ -72,9 +77,9 @@ describe('useMintViaRouter', () => {
         leverageRouter: routerAddress,
         leverageManager: managerAddress,
       })
-      
-      const { result } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress })
+
+      const { result } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress }),
       )
 
       expect(result.current.isPending).toBe(false)
@@ -85,8 +90,8 @@ describe('useMintViaRouter', () => {
     })
 
     it('should have proper mutation configuration', () => {
-      const { result } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress })
+      const { result } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress }),
       )
 
       // Verify the mutation has the expected properties
@@ -103,9 +108,9 @@ describe('useMintViaRouter', () => {
         leverageRouter: routerAddress,
         leverageManager: managerAddress,
       })
-      
-      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress })
+
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress }),
       )
 
       // Set the query data directly to ensure the collateral asset is available
@@ -126,18 +131,19 @@ describe('useMintViaRouter', () => {
           abi: expect.any(Array),
           functionName: 'mint',
           args: [
-            tokenAddress, 
-            TOKEN_AMOUNT, 
+            tokenAddress,
+            TOKEN_AMOUNT,
             expect.any(BigInt), // minShares
             expect.any(BigInt), // maxSwapCost
-            expect.objectContaining({ // swapContext
+            expect.objectContaining({
+              // swapContext
               path: expect.any(Array),
               exchange: expect.any(Number),
               exchangeAddresses: expect.any(Object),
-            })
+            }),
           ],
           account: ownerAddress,
-        })
+        }),
       )
 
       // Verify writeContract was called with the simulated request
@@ -149,13 +155,13 @@ describe('useMintViaRouter', () => {
         expect.objectContaining({
           hash: mockHash,
           confirmations: 1, // From TX_SETTINGS
-        })
+        }),
       )
     })
 
     it('should return correct result after successful mint', async () => {
-      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress })
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress }),
       )
 
       // Set the query data directly to ensure the collateral asset is available
@@ -167,7 +173,9 @@ describe('useMintViaRouter', () => {
         expect(result.current.mutateAsync).toBeDefined()
       })
 
-      const mutationResult = await result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })
+      const mutationResult = await result.current.mutateAsync({
+        equityInCollateralAsset: TOKEN_AMOUNT,
+      })
 
       expect(mutationResult).toEqual({
         hash: mockHash,
@@ -182,9 +190,9 @@ describe('useMintViaRouter', () => {
 
     it('should call onSuccess callback with transaction hash', async () => {
       const onSuccess = vi.fn()
-      
-      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress, onSuccess })
+
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress, onSuccess }),
       )
 
       // Set the query data directly to ensure the collateral asset is available
@@ -204,8 +212,8 @@ describe('useMintViaRouter', () => {
 
   describe('query invalidation (no optimistic updates)', () => {
     it('should invalidate relevant queries after successful mint', async () => {
-      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress })
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress }),
       )
       const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
@@ -238,9 +246,9 @@ describe('useMintViaRouter', () => {
 
     it('should not invalidate queries on error', async () => {
       vi.mocked(simulateContract).mockRejectedValue(new Error('Test error'))
-      
-      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress })
+
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress }),
       )
       const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
@@ -266,23 +274,23 @@ describe('useMintViaRouter', () => {
   describe('error scenarios', () => {
     it('should throw error when wallet is not connected', async () => {
       mockSetup.setupWagmiMocks(undefined as any) // No wallet connected
-      
-      const { result } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress })
+
+      const { result } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress }),
       )
 
-      await expect(result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT })).rejects.toThrow(
-        'WALLET_NOT_CONNECTED: Please connect your wallet before minting tokens'
-      )
+      await expect(
+        result.current.mutateAsync({ equityInCollateralAsset: TOKEN_AMOUNT }),
+      ).rejects.toThrow('WALLET_NOT_CONNECTED: Please connect your wallet before minting tokens')
     })
 
     it('should handle simulation errors', async () => {
       const simulationError = new Error('Simulation failed')
       vi.mocked(simulateContract).mockRejectedValue(simulationError)
-      
+
       const onError = vi.fn()
-      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress, onError })
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress, onError }),
       )
 
       // Set the query data directly to ensure the collateral asset is available
@@ -304,17 +312,17 @@ describe('useMintViaRouter', () => {
         expect.objectContaining({
           type: 'UNKNOWN',
           message: 'Simulation failed',
-        })
+        }),
       )
     })
 
     it('should handle write contract errors', async () => {
       const writeError = new Error('Transaction failed')
       vi.mocked(writeContract).mockRejectedValue(writeError)
-      
+
       const onError = vi.fn()
-      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress, onError })
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress, onError }),
       )
 
       // Set the query data directly to ensure the collateral asset is available
@@ -336,7 +344,7 @@ describe('useMintViaRouter', () => {
         expect.objectContaining({
           type: 'UNKNOWN',
           message: 'Transaction failed',
-        })
+        }),
       )
     })
   })
@@ -344,13 +352,13 @@ describe('useMintViaRouter', () => {
   describe('error classification and logging', () => {
     it('should classify and log actionable errors', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-      
+
       // Unknown error should be logged (actionable)
       const actionableError = new Error('RPC Error')
       vi.mocked(simulateContract).mockRejectedValue(actionableError)
-      
-      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress })
+
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress }),
       )
 
       // Set the query data directly to ensure the collateral asset is available
@@ -368,25 +376,28 @@ describe('useMintViaRouter', () => {
         // Expected to throw
       }
 
-      expect(consoleSpy).toHaveBeenCalledWith('[Mint Error]', expect.objectContaining({
-        type: 'UNKNOWN',
-        chainId: 8453,
-        token: tokenAddress,
-      }))
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[Mint Error]',
+        expect.objectContaining({
+          type: 'UNKNOWN',
+          chainId: 8453,
+          token: tokenAddress,
+        }),
+      )
 
       consoleSpy.mockRestore()
     })
 
     it('should not log user rejected errors (non-actionable)', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-      
+
       // User rejected error should not be logged (non-actionable)
       const userRejectedError = new Error('User rejected')
       ;(userRejectedError as any).code = 4001
       vi.mocked(simulateContract).mockRejectedValue(userRejectedError)
-      
-      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() => 
-        useMintViaRouter({ token: tokenAddress })
+
+      const { result, queryClient } = hookTestUtils.renderHookWithQuery(() =>
+        useMintViaRouter({ token: tokenAddress }),
       )
 
       // Set the query data directly to ensure the collateral asset is available
@@ -409,4 +420,4 @@ describe('useMintViaRouter', () => {
       consoleSpy.mockRestore()
     })
   })
-}) 
+})

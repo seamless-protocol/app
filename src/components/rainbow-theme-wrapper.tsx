@@ -1,4 +1,4 @@
-import { darkTheme, lightTheme, RainbowKitProvider } from '@rainbow-me/rainbowkit'
+import { RainbowKitProvider, darkTheme, lightTheme } from '@rainbow-me/rainbowkit'
 import { type ReactNode, useEffect, useState } from 'react'
 import { useTheme } from './theme-provider'
 
@@ -24,10 +24,9 @@ export function RainbowThemeWrapper({ children }: RainbowThemeWrapperProps) {
       // Listen for changes
       mediaQuery.addEventListener('change', handleChange)
       return () => mediaQuery.removeEventListener('change', handleChange)
-    } else {
-      setResolvedTheme(theme as 'light' | 'dark')
-      return undefined
     }
+    setResolvedTheme(theme as 'light' | 'dark')
+    return undefined
   }, [theme])
 
   // Custom theme configuration to better match our app

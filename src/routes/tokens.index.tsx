@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Link, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/tokens/')({
   component: () => {
@@ -7,13 +7,13 @@ export const Route = createFileRoute('/tokens/')({
     const weETHToken = {
       address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as `0x${string}`,
       name: 'weETH / WETH 17x Leverage Token',
-      symbol: 'WEETH-WETH-17x'
+      symbol: 'WEETH-WETH-17x',
     }
 
     return (
       <div>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Leverage Tokens</h1>
+          <h3 className="text-3xl font-bold mb-2">Leverage Tokens</h3>
           <p className="text-muted-foreground">Browse and manage leverage tokens.</p>
         </div>
 
@@ -36,4 +36,4 @@ export const Route = createFileRoute('/tokens/')({
       </div>
     )
   },
-}) 
+})

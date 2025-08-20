@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react'
+import { useAccount } from 'wagmi'
 import { useMintViaRouter } from '../hooks/useMintViaRouter'
 
 interface MintFormProps {
@@ -12,14 +12,21 @@ interface MintFormProps {
 
 export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
   console.log('MintForm rendering with:', { tokenAddress, tokenName })
-  
+
   const { address: user } = useAccount()
   const [amount, setAmount] = useState('')
   const [slippage, setSlippage] = useState('50') // 0.5% default
 
   console.log('User address:', user)
 
-  const { mutateAsync: mintToken, isPending, isError, error, isSuccess, data } = useMintViaRouter({
+  const {
+    mutateAsync: mintToken,
+    isPending,
+    isError,
+    error,
+    isSuccess,
+    data,
+  } = useMintViaRouter({
     token: tokenAddress,
     onSuccess: (hash) => {
       console.log('Mint successful! Hash:', hash)
@@ -35,8 +42,8 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
     if (!amount || !user) return
 
     try {
-      const amountBigInt = BigInt(parseFloat(amount) * 10 ** 18) // Assuming 18 decimals
-      const slippageBps = parseInt(slippage)
+      const amountBigInt = BigInt(Number.parseFloat(amount) * 10 ** 18) // Assuming 18 decimals
+      const slippageBps = Number.parseInt(slippage, 10)
 
       await mintToken({
         equityInCollateralAsset: amountBigInt,
@@ -85,8 +92,11 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
       <CardContent className="space-y-4">
         {/* Amount Input */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Amount (ETH)</label>
+          <label htmlFor="amount-input" className="text-sm font-medium">
+            Amount (ETH)
+          </label>
           <input
+            id="amount-input"
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -99,8 +109,11 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
 
         {/* Slippage Input */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Slippage (basis points)</label>
+          <label htmlFor="slippage-input" className="text-sm font-medium">
+            Slippage (basis points)
+          </label>
           <input
+            id="slippage-input"
             type="number"
             value={slippage}
             onChange={(e) => setSlippage(e.target.value)}
@@ -111,16 +124,12 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
             max="1000"
           />
           <p className="text-xs text-muted-foreground">
-            {parseFloat(slippage) / 100}% tolerance for price impact
+            {Number.parseFloat(slippage) / 100}% tolerance for price impact
           </p>
         </div>
 
         {/* Mint Button */}
-        <Button
-          onClick={handleMint}
-          disabled={isPending || !amount}
-          className="w-full"
-        >
+        <Button onClick={handleMint} disabled={isPending || !amount} className="w-full">
           {isPending ? 'Minting...' : 'Mint Tokens'}
         </Button>
 
@@ -135,9 +144,7 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
 
         {isSuccess && data && (
           <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-sm text-green-600">
-              ✅ Mint successful! Hash: {data.hash}
-            </p>
+            <p className="text-sm text-green-600">✅ Mint successful! Hash: {data.hash}</p>
             <p className="text-xs text-green-500 mt-1">
               Expected shares: {data.preview?.shares?.toString() || 'N/A'}
             </p>
@@ -153,4 +160,4 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
       </CardContent>
     </Card>
   )
-} 
+}

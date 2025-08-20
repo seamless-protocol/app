@@ -1,15 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { MintForm } from '@/features/leverage-tokens'
+import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/tokens/$id')({
   component: () => {
     const { id } = Route.useParams()
-    
+
     // For now, hardcode the token info - in production this would come from an API
     const weETHToken = {
       address: id as `0x${string}`,
       name: 'weETH / WETH 17x Leverage Token',
-      symbol: 'WEETH-WETH-17x'
+      symbol: 'WEETH-WETH-17x',
     }
 
     return (
@@ -44,10 +44,7 @@ export const Route = createFileRoute('/tokens/$id')({
         {/* Mint Form */}
         <div>
           <h2 className="text-xl font-semibold mb-4">Mint Tokens</h2>
-          <MintForm 
-            tokenAddress={weETHToken.address}
-            tokenName={weETHToken.name}
-          />
+          <MintForm tokenAddress={weETHToken.address} tokenName={weETHToken.name} />
         </div>
       </div>
     )

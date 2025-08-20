@@ -1,8 +1,8 @@
+import { Button } from '@/components/ui/button'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Link } from '@tanstack/react-router'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { ModeToggle } from './mode-toggle'
 
 const navLinks = [

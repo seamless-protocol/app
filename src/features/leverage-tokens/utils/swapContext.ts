@@ -52,7 +52,9 @@ function getPrimaryExchange(chainId: number): number {
     case base.id: // Base
       return Exchange.AERODROME_V2 // Best liquidity on Base
     default:
-      throw new Error(`Chain ${chainId} not supported yet. Currently only Base (${base.id}) is supported.`)
+      throw new Error(
+        `Chain ${chainId} not supported yet. Currently only Base (${base.id}) is supported.`,
+      )
   }
 }
 
@@ -61,29 +63,33 @@ function getPrimaryExchange(chainId: number): number {
  */
 function getTickSpacing(fee: number): number {
   switch (fee) {
-    case 500: return 10    // 0.05%
-    case 3000: return 60   // 0.3%
-    case 10000: return 200 // 1%
-    default: return 60     // Default to 0.3%
+    case 500:
+      return 10 // 0.05%
+    case 3000:
+      return 60 // 0.3%
+    case 10000:
+      return 200 // 1%
+    default:
+      return 60 // Default to 0.3%
   }
 }
 
 /**
  * Encode Uniswap V3 path for single-hop swaps
  */
-function encodeV3Path(tokens: Address[], fees: number[]): `0x${string}` {
+function encodeV3Path(tokens: Array<Address>, fees: Array<number>): `0x${string}` {
   if (tokens.length !== fees.length + 1) {
     throw new Error('Invalid path: tokens length must be fees length + 1')
   }
-  
+
   // For single hop, concatenate token0 + fee + token1
   if (tokens.length === 2) {
-    const token0 = tokens[0]!.slice(2) // Remove 0x
-    const token1 = tokens[1]!.slice(2) // Remove 0x
-    const fee = fees[0]!.toString(16).padStart(6, '0') // 3 bytes for fee
+    const token0 = tokens[0]?.slice(2) // Remove 0x
+    const token1 = tokens[1]?.slice(2) // Remove 0x
+    const fee = fees[0]?.toString(16).padStart(6, '0') // 3 bytes for fee
     return `0x${token0}${fee}${token1}` as `0x${string}`
   }
-  
+
   // Multi-hop encoding would go here if needed
   throw new Error('Multi-hop paths not implemented yet')
 }
@@ -118,16 +124,15 @@ export function createSwapContext(
       exchangeAddresses: addresses,
       additionalData: '0x',
     }
-  } else {
-    // V2-style context (Aerodrome V2, Uniswap V2)
-    return {
-      path: [fromToken, toToken],
-      encodedPath: '0x', // V2 doesn't need encoded paths
-      fees: [0], // V2 doesn't use fees in the same way
-      tickSpacing: [0], // V2 doesn't use tick spacing
-      exchange,
-      exchangeAddresses: addresses,
-      additionalData: '0x',
-    }
+  }
+  // V2-style context (Aerodrome V2, Uniswap V2)
+  return {
+    path: [fromToken, toToken],
+    encodedPath: '0x', // V2 doesn't need encoded paths
+    fees: [0], // V2 doesn't use fees in the same way
+    tickSpacing: [0], // V2 doesn't use tick spacing
+    exchange,
+    exchangeAddresses: addresses,
+    additionalData: '0x',
   }
 }

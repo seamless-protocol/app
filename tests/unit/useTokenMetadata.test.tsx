@@ -1,8 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import {
+  TOKEN_METADATA_CONTRACTS,
+  useTokenMetadata,
+} from '@/features/leverage-tokens/hooks/useTokenMetadata'
 import { waitFor } from '@testing-library/react'
 import { readContracts } from '@wagmi/core'
-import { useTokenMetadata, TOKEN_METADATA_CONTRACTS } from '@/features/leverage-tokens/hooks/useTokenMetadata'
-import { makeAddr, mockSetup, hookTestUtils } from '../utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { hookTestUtils, makeAddr, mockSetup } from '../utils'
 
 describe('useTokenMetadata', () => {
   const tokenAddress = makeAddr('token')
@@ -24,7 +27,7 @@ describe('useTokenMetadata', () => {
   describe('hook initialization', () => {
     it('should create query with correct initial state', () => {
       const { result } = hookTestUtils.renderHookWithQuery(() => useTokenMetadata(tokenAddress))
-      
+
       expect(result.current.isLoading).toBe(true)
       expect(result.current.isError).toBe(false)
       expect(result.current.data).toBeUndefined()
@@ -34,7 +37,7 @@ describe('useTokenMetadata', () => {
   describe('successful data fetching', () => {
     it('should fetch token metadata successfully', async () => {
       hookTestUtils.renderHookWithQuery(() => useTokenMetadata(tokenAddress))
-      
+
       await waitFor(() => {
         expect(readContracts).toHaveBeenCalledWith(expect.any(Object), {
           contracts: TOKEN_METADATA_CONTRACTS(tokenAddress),
@@ -44,7 +47,7 @@ describe('useTokenMetadata', () => {
 
     it('should return correct metadata structure', async () => {
       const { result } = hookTestUtils.renderHookWithQuery(() => useTokenMetadata(tokenAddress))
-      
+
       await waitFor(() => {
         expect(result.current.data).toEqual({
           name: TOKEN_NAME,
@@ -71,7 +74,7 @@ describe('useTokenMetadata', () => {
       ] as any)
 
       const { result } = hookTestUtils.renderHookWithQuery(() => useTokenMetadata(tokenAddress))
-      
+
       await waitFor(() => {
         expect(result.current.isError).toBe(true)
         expect(result.current.error).toEqual(new Error('Failed to fetch token metadata'))
@@ -87,7 +90,7 @@ describe('useTokenMetadata', () => {
       ] as any)
 
       const { result } = hookTestUtils.renderHookWithQuery(() => useTokenMetadata(tokenAddress))
-      
+
       await waitFor(() => {
         expect(result.current.isError).toBe(true)
         expect(result.current.error).toEqual(new Error('Failed to fetch token metadata'))
@@ -98,7 +101,7 @@ describe('useTokenMetadata', () => {
   describe('query key structure', () => {
     it('should use correct query key for caching', () => {
       const { result } = hookTestUtils.renderHookWithQuery(() => useTokenMetadata(tokenAddress))
-      
+
       // The query key should be based on the token address
       expect(result.current.dataUpdatedAt).toBeDefined()
     })
@@ -107,9 +110,9 @@ describe('useTokenMetadata', () => {
   describe('stale time configuration', () => {
     it('should respect stale time configuration', () => {
       const { result } = hookTestUtils.renderHookWithQuery(() => useTokenMetadata(tokenAddress))
-      
+
       // The hook should use the STALE_TIME.metadata configuration
       expect(result.current.isStale).toBeDefined()
     })
   })
-}) 
+})

@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest'
 import { type Address, erc20Abi, maxUint256 } from 'viem'
-import { withFork } from './utils'
+import { describe, expect, it } from 'vitest'
+import { createSwapContext } from '../../src/features/leverage-tokens/utils/swapContext'
 import { leverageManagerAbi } from '../../src/lib/contracts/abis/leverageManager'
 import { leverageRouterAbi } from '../../src/lib/contracts/abis/leverageRouter'
-import { createSwapContext } from '../../src/features/leverage-tokens/utils/swapContext'
+import { withFork } from './utils'
 
 describe('Router-Based Minting (Anvil Base fork / viem)', () => {
   it('previewMint and check collateral asset', async () =>
@@ -15,12 +15,12 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
       await fund.native([account.address], '1')
 
       // Get collateral asset for this leverage token
-      const collateralAsset = await publicClient.readContract({
+      const collateralAsset = (await publicClient.readContract({
         address: manager,
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenCollateralAsset',
         args: [leverageToken],
-      }) as Address
+      })) as Address
 
       console.log('Collateral asset:', collateralAsset)
       expect(collateralAsset).toMatch(/^0x[a-fA-F0-9]{40}$/)
@@ -36,7 +36,7 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
 
       console.log('Preview result:')
       console.log('  Expected shares:', preview.shares.toString())
-      console.log('  Token fee:', preview.tokenFee.toString()) 
+      console.log('  Token fee:', preview.tokenFee.toString())
       console.log('  Treasury fee:', preview.treasuryFee.toString())
 
       // Should return positive shares
@@ -48,17 +48,17 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
       const leverageToken: Address = ADDR.leverageToken
       const router: Address = ADDR.router
       const manager: Address = ADDR.manager
-      
+
       // Fund: 10 native for gas
       await fund.native([account.address], '10')
 
       // Get collateral asset
-      const collateralAsset = await publicClient.readContract({
+      const collateralAsset = (await publicClient.readContract({
         address: manager,
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenCollateralAsset',
         args: [leverageToken],
-      }) as Address
+      })) as Address
 
       console.log('Using collateral asset:', collateralAsset)
 
@@ -87,12 +87,12 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
       const minShares = preview.shares // No slippage for test
 
       // Get debt asset (underlying asset for leverage exposure)
-      const debtAsset = await publicClient.readContract({
+      const debtAsset = (await publicClient.readContract({
         address: manager,
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenDebtAsset',
         args: [leverageToken],
-      }) as Address
+      })) as Address
 
       console.log('Using debt asset (underlying):', debtAsset)
 
@@ -100,7 +100,7 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
       const swapContext = createSwapContext(
         collateralAsset, // e.g., weETH (collateral)
         debtAsset, // e.g., WETH (debt asset / underlying)
-        8453 // Base chain ID - will auto-select Aerodrome V2 for Base
+        8453, // Base chain ID - will auto-select Aerodrome V2 for Base
       )
       const maxSwapCost = (equityAmount * 500n) / 10000n // 5%
 
@@ -116,10 +116,9 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
       })
 
       console.log('✅ Router accepted real SwapContext - simulation successful')
-      
+
       // Note: We don't execute the transaction in this test to avoid consuming real funds
       // The simulation success confirms the SwapContext is properly configured
-      
     }))
 
   it('Router allowance check', async () =>
@@ -129,12 +128,12 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
       const leverageToken: Address = ADDR.leverageToken
 
       // Get collateral asset
-      const collateralAsset = await publicClient.readContract({
+      const collateralAsset = (await publicClient.readContract({
         address: manager,
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenCollateralAsset',
         args: [leverageToken],
-      }) as Address
+      })) as Address
 
       // Check initial allowance (should be 0)
       const initialAllowance = await publicClient.readContract({
