@@ -1,4 +1,5 @@
 import type { Address } from 'viem'
+import { base } from 'viem/chains'
 
 /**
  * SwapContext type based on Router ABI
@@ -31,74 +32,102 @@ export const Exchange = {
 } as const
 
 /**
- * Base exchange addresses (to be filled with actual deployed addresses)
+ * DEX addresses by chain ID
  */
-const BASE_EXCHANGE_ADDRESSES = {
-  aerodromeRouter: '0x0000000000000000000000000000000000000000' as Address,
-  aerodromePoolFactory: '0x0000000000000000000000000000000000000000' as Address,
-  aerodromeSlipstreamRouter: '0x0000000000000000000000000000000000000000' as Address,
-  uniswapSwapRouter02: '0x0000000000000000000000000000000000000000' as Address,
-  uniswapV2Router02: '0x0000000000000000000000000000000000000000' as Address,
-}
+const DEX_ADDRESSES: Record<number, SwapContext['exchangeAddresses']> = {
+  [base.id]: {
+    aerodromeRouter: '0x420DD381b31aEf6683db6B902084cB0FFECe40Da' as Address,
+    aerodromePoolFactory: '0x420DD381b31aEf6683db6B902084cB0FFECe40Da' as Address,
+    aerodromeSlipstreamRouter: '0x420DD381b31aEf6683db6B902084cB0FFECe40Da' as Address,
+    uniswapSwapRouter02: '0x2626664c2603336E57B271c5C0b26F421741e481' as Address,
+    uniswapV2Router02: '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' as Address,
+  },
+} as const
 
 /**
- * Creates a noop SwapContext for testing/simulation that should cause reverts
- * Useful for preflight testing and ensuring Router properly validates SwapContext
+ * Get the primary exchange for a chain
  */
-export function makeNoopSwapContext(): SwapContext {
-  return {
-    path: [],
-    encodedPath: '0x',
-    fees: [],
-    tickSpacing: [],
-    exchange: Exchange.UNISWAP_V2,
-    exchangeAddresses: BASE_EXCHANGE_ADDRESSES,
-    additionalData: '0x',
+function getPrimaryExchange(chainId: number): number {
+  switch (chainId) {
+    case base.id: // Base
+      return Exchange.AERODROME_V2 // Best liquidity on Base
+    default:
+      throw new Error(`Chain ${chainId} not supported yet. Currently only Base (${base.id}) is supported.`)
   }
 }
 
 /**
- * Creates a single-hop V2 SwapContext for token swaps
- * TODO: Replace with actual DEX addresses and proper path encoding
- *
- * @param tokenA - Input token address
- * @param tokenB - Output token address
- * @param fee - Pool fee (for V3) or 0 for V2
+ * Get tick spacing for Uniswap V3 fee tiers
  */
-export function makeSingleHopV2Context(
-  tokenA: Address,
-  tokenB: Address,
-  fee: number = 3000,
+function getTickSpacing(fee: number): number {
+  switch (fee) {
+    case 500: return 10    // 0.05%
+    case 3000: return 60   // 0.3%
+    case 10000: return 200 // 1%
+    default: return 60     // Default to 0.3%
+  }
+}
+
+/**
+ * Encode Uniswap V3 path for single-hop swaps
+ */
+function encodeV3Path(tokens: Address[], fees: number[]): `0x${string}` {
+  if (tokens.length !== fees.length + 1) {
+    throw new Error('Invalid path: tokens length must be fees length + 1')
+  }
+  
+  // For single hop, concatenate token0 + fee + token1
+  if (tokens.length === 2) {
+    const token0 = tokens[0]!.slice(2) // Remove 0x
+    const token1 = tokens[1]!.slice(2) // Remove 0x
+    const fee = fees[0]!.toString(16).padStart(6, '0') // 3 bytes for fee
+    return `0x${token0}${fee}${token1}` as `0x${string}`
+  }
+  
+  // Multi-hop encoding would go here if needed
+  throw new Error('Multi-hop paths not implemented yet')
+}
+
+/**
+ * Create SwapContext for token swaps
+ * Automatically selects the best DEX for each supported chain
+ * Handles V2 vs V3 differences (path encoding, fees, tick spacing)
+ */
+export function createSwapContext(
+  fromToken: Address,
+  toToken: Address,
+  chainId: number,
 ): SwapContext {
-  return {
-    path: [tokenA, tokenB],
-    encodedPath: '0x', // TODO: Encode path for V3 if needed
-    fees: [fee],
-    tickSpacing: [60], // Standard tick spacing for 0.3% fee tier
-    exchange: Exchange.UNISWAP_V2,
-    exchangeAddresses: BASE_EXCHANGE_ADDRESSES, // TODO: Fill with real addresses
-    additionalData: '0x',
+  const addresses = DEX_ADDRESSES[chainId]
+  if (!addresses) {
+    throw new Error(`Chain ${chainId} not supported yet.`)
   }
-}
 
-/**
- * TODO: Add proper exchange address discovery
- * For production, these should be fetched from a config or discovered dynamically
- */
-export function getExchangeAddresses(): SwapContext['exchangeAddresses'] {
-  // TODO: Implement proper address resolution for Base network
-  return BASE_EXCHANGE_ADDRESSES
-}
+  const exchange = getPrimaryExchange(chainId)
 
-/**
- * TODO: Add path encoding utilities for different DEX types
- * Each exchange has different path encoding requirements
- */
-export function encodeSwapPath(
-  _tokens: Array<Address>,
-  _fees: Array<number>,
-  _exchange: number,
-): `0x${string}` {
-  // TODO: Implement proper path encoding based on exchange type
-  return '0x'
+  // Branch based on exchange type (V2 vs V3)
+  if (exchange === Exchange.UNISWAP_V3) {
+    // V3-style context with path encoding and fee tiers
+    const fee = 3000 // 0.3% fee tier (most common)
+    return {
+      path: [fromToken, toToken],
+      encodedPath: encodeV3Path([fromToken, toToken], [fee]),
+      fees: [fee],
+      tickSpacing: [getTickSpacing(fee)],
+      exchange,
+      exchangeAddresses: addresses,
+      additionalData: '0x',
+    }
+  } else {
+    // V2-style context (Aerodrome V2, Uniswap V2)
+    return {
+      path: [fromToken, toToken],
+      encodedPath: '0x', // V2 doesn't need encoded paths
+      fees: [0], // V2 doesn't use fees in the same way
+      tickSpacing: [0], // V2 doesn't use tick spacing
+      exchange,
+      exchangeAddresses: addresses,
+      additionalData: '0x',
+    }
+  }
 }

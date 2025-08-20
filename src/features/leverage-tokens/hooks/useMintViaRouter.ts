@@ -15,7 +15,7 @@ import { getContractAddresses } from '@/lib/contracts/addresses'
 import { TX_SETTINGS } from '../utils/constants'
 import { classifyError, isActionableError } from '../utils/errors'
 import { ltKeys } from '../utils/queryKeys'
-import { makeNoopSwapContext, type SwapContext } from '../utils/swapContext'
+import { createSwapContext, type SwapContext } from '../utils/swapContext'
 
 export interface UseMintViaRouterParams {
   token: Address
@@ -108,6 +108,26 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
     }
   }
 
+  // Create swap context for the leverage token
+  const generateSwapContext = async () => {
+    if (!collateralAsset) {
+      throw new Error('Collateral asset not available')
+    }
+
+    const debtAsset = await readContract(config, {
+      address: managerAddress,
+      abi: leverageManagerAbi,
+      functionName: 'getLeverageTokenDebtAsset',
+      args: [token],
+    }) as Address
+
+    return createSwapContext(
+      collateralAsset,
+      debtAsset,
+      chainId
+    )
+  }
+
   const mutation = useMutation({
     mutationKey: [...ltKeys.token(token), 'mintViaRouter', user],
 
@@ -132,8 +152,8 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
       // Step 2: Calculate minShares with slippage protection
       const minShares = (expectedShares * BigInt(10000 - slippageBps)) / 10000n
 
-      // Step 3: Use provided swapContext or default to noop for testing
-      const finalSwapContext = swapContext || makeNoopSwapContext()
+      // Step 3: Use provided swapContext or create chain-based context
+      const finalSwapContext = swapContext || (await generateSwapContext())
 
       // Step 4: Default maxSwapCost to 5% of equity if not provided
       const finalMaxSwapCost =

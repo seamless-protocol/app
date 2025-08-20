@@ -59,4 +59,11 @@ export const leverageManagerAbi = [
     inputs: [{ name: 'token', internalType: 'contract ILeverageToken', type: 'address' }],
     outputs: [{ name: 'collateralAsset', internalType: 'contract IERC20', type: 'address' }],
   },
+  {
+    type: 'function',
+    stateMutability: 'view',
+    name: 'getLeverageTokenDebtAsset',
+    inputs: [{ name: 'token', internalType: 'contract ILeverageToken', type: 'address' }],
+    outputs: [{ name: 'debtAsset', internalType: 'contract IERC20', type: 'address' }],
+  },
 ] as const
