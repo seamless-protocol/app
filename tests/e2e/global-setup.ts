@@ -42,9 +42,27 @@ async function globalSetup() {
     ],
     {
       detached: true,
-      stdio: 'ignore',
+      stdio: ['ignore', 'pipe', 'pipe'], // Capture stdout and stderr
     },
   )
+
+  // Log any errors from Anvil
+  anvilProcess.stderr?.on('data', (data) => {
+    console.error(`❌ Anvil stderr: ${data}`)
+  })
+
+  anvilProcess.on('error', (error) => {
+    console.error(`❌ Failed to start Anvil process: ${error.message}`)
+  })
+
+  anvilProcess.on('exit', (code, signal) => {
+    if (code !== null && code !== 0) {
+      console.error(`❌ Anvil exited with code ${code}`)
+    }
+    if (signal) {
+      console.error(`❌ Anvil killed with signal ${signal}`)
+    }
+  })
 
   // Don't keep the process alive when parent exits
   anvilProcess.unref()
