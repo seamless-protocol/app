@@ -7,15 +7,15 @@
     "dev": "bunx --bun vite",
     "build": "tsc -b && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
-    "check": "biome check . && tsc --noEmit",
-    "check:fix": "biome check --write . && tsc --noEmit",
-    "format": "biome format --write .",
+    "check": "bunx --bun biome check . && bunx --bun tsc --noEmit",
+    "check:fix": "bunx --bun biome check --write . && bunx --bun tsc --noEmit",
+    "format": "bunx --bun biome format --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:integration": "vitest --config tests/integration/vitest.config.ts",
-    "anvil:base": "ANVIL_PORT=${ANVIL_PORT:-8545} anvil --fork-url \"$ANVIL_BASE_FORK_URL\" --port $ANVIL_PORT --block-time 0 --no-rate-limit ${ANVIL_FORK_BLOCK:+--fork-block-number $ANVIL_FORK_BLOCK}",
+    "anvil:base": "ANVIL_PORT=${ANVIL_PORT:-8545} anvil --fork-url \"$ANVIL_BASE_FORK_URL\" --port $ANVIL_PORT --block-time 1 --no-rate-limit ${ANVIL_FORK_BLOCK:+--fork-block-number $ANVIL_FORK_BLOCK}",
     "test:e2e": "playwright test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
@@ -64,5 +64,8 @@
     "typescript": "~5.8.3",
     "vite": "^7.1.2",
     "vitest": "^3.2.4"
+  },
+  "volta": {
+    "node": "20.19.4"
   }
 }
