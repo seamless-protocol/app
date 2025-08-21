@@ -58,6 +58,11 @@ jobs:
         with:
           bun-version: latest
       
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      
       - name: Install dependencies
         run: bun install --frozen-lockfile
       
@@ -70,6 +75,8 @@ jobs:
           VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
           VITE_BASE_RPC_URL: ${{ vars.VITE_BASE_RPC_URL }}
           VITE_ETHEREUM_RPC_URL: ${{ vars.VITE_ETHEREUM_RPC_URL }}
+          # Anvil Base fork URL for E2E tests (required by global setup)
+          ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
       
       - name: Upload test results
         uses: actions/upload-artifact@v4
