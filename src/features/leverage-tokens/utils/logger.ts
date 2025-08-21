@@ -1,64 +1,45 @@
 /**
- * Logger utility for the leverage tokens feature
- * Abstracts logging to allow easy switching between console and monitoring services
+ * Feature-scoped logger using the shared app logger
+ */
+import type { LogContext } from '@/lib/logger'
+import { createLogger } from '@/lib/logger'
+
+export const logger = createLogger('LeverageTokens', { feature: 'leverage-tokens' })
+
+/**
+ * Typed helpers for specific logging scenarios with enforced context
  */
 
-import * as Sentry from '@sentry/react'
-
-interface LogContext {
-  chainId?: number
-  token?: string
-  method?: string
-  error?: unknown
-  [key: string]: unknown
+// Context required for write operations (minting, approving, etc.)
+interface WriteContext extends LogContext {
+  chainId: number
+  token: string
+  method: string
 }
 
-class Logger {
-  private isDev = import.meta.env.DEV
-
-  /**
-   * Log an error with context
-   * In development: logs to console
-   * In production: sends to Sentry
-   */
-  error(message: string, context?: LogContext) {
-    // Always log to console in development
-    if (this.isDev) {
-      console.error(`[LeverageTokens] ${message}`, context)
-      return
-    }
-
-    // In production, send to Sentry
-    const sentryContext = {
-      tags: {
-        feature: 'leverage-tokens',
-        ...(context?.chainId && { chainId: context.chainId.toString() }),
-        ...(context?.token && { token: context.token as string }),
-        ...(context?.method && { method: context.method }),
-      },
-      ...(context && { extra: context }),
-    }
-
-    Sentry.captureException(context?.error || new Error(message), sentryContext)
-  }
-
-  /**
-   * Log a warning
-   */
-  warn(message: string, context?: LogContext) {
-    if (this.isDev) {
-      console.warn(`[LeverageTokens] ${message}`, context)
-    }
-  }
-
-  /**
-   * Log info (only in development)
-   */
-  info(message: string, context?: LogContext) {
-    if (this.isDev) {
-      console.log(`[LeverageTokens] ${message}`, context)
-    }
-  }
+// Context required for query operations
+interface QueryContext extends LogContext {
+  chainId: number
+  method: string
 }
 
-export const logger = new Logger()
+/**
+ * Log write operation errors with required context
+ */
+export function logWriteError(message: string, ctx: WriteContext) {
+  logger.error(message, ctx)
+}
+
+/**
+ * Log write operation success with required context
+ */
+export function logWriteSuccess(message: string, ctx: WriteContext & { hash?: string }) {
+  logger.info(message, ctx)
+}
+
+/**
+ * Log query operation errors with required context
+ */
+export function logQueryError(message: string, ctx: QueryContext) {
+  logger.error(message, ctx)
+}

@@ -6,6 +6,7 @@ import { config } from '@/lib/config/wagmi.config'
 import { leverageTokenAbi } from '@/lib/contracts/generated'
 import { TX_SETTINGS } from '../utils/constants'
 import { classifyError, isActionableError } from '../utils/errors'
+import { logWriteError, logWriteSuccess } from '../utils/logger'
 import { ltKeys } from '../utils/queryKeys'
 
 export interface UseMintTokenParams {
@@ -61,6 +62,13 @@ export function useMintToken({ token, onSuccess, onError }: UseMintTokenParams) 
       }
       queryClient.invalidateQueries({ queryKey: ltKeys.supply(token) })
 
+      logWriteSuccess('mint token success', {
+        chainId,
+        token,
+        method: 'mint',
+        hash,
+      })
+
       onSuccess?.(hash)
     },
 
@@ -69,11 +77,10 @@ export function useMintToken({ token, onSuccess, onError }: UseMintTokenParams) 
 
       // Only send actionable errors to monitoring
       if (isActionableError(classifiedError)) {
-        // This is where we'd send to Sentry
-        console.error('[Mint Error]', {
-          type: classifiedError.type,
+        logWriteError('mint token failed', {
           chainId,
           token,
+          method: 'mint',
           error: classifiedError,
         })
       }
