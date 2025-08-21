@@ -36,7 +36,7 @@ async function globalSetup() {
       '--port',
       '8545',
       '--block-time',
-      '0',
+      '1',
       '--no-rate-limit',
       '--silent', // Reduce noise in test output
     ],
