@@ -389,11 +389,15 @@ describe('useMintViaRouter', () => {
       }
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        '[Mint Error]',
+        '[LeverageTokens] mint token failed',
         expect.objectContaining({
-          type: 'UNKNOWN',
           chainId: 8453,
           token: tokenAddress,
+          method: 'mint',
+          error: expect.objectContaining({
+            type: 'UNKNOWN',
+          }),
+          feature: 'leverage-tokens',
         }),
       )
 

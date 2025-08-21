@@ -16,6 +16,7 @@ import { TX_SETTINGS } from '../utils/constants'
 import { classifyError, isActionableError } from '../utils/errors'
 import { ltKeys } from '../utils/queryKeys'
 import { createSwapContext, type SwapContext } from '../utils/swapContext'
+import { logWriteSuccess, logWriteError } from '../utils/logger'
 
 export interface UseMintViaRouterParams {
   token: Address
@@ -193,11 +194,11 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
       }
       queryClient.invalidateQueries({ queryKey: ltKeys.supply(token) })
 
-      console.log('[Mint Success]', {
+      logWriteSuccess('mint token success', {
+        chainId,
+        token,
+        method: 'mint',
         hash,
-        expectedShares: preview.shares.toString(),
-        tokenFee: preview.tokenFee.toString(),
-        treasuryFee: preview.treasuryFee.toString(),
       })
 
       onSuccess?.(hash)
@@ -208,11 +209,10 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
 
       // Only send actionable errors to monitoring
       if (isActionableError(classifiedError)) {
-        console.error('[Mint Error]', {
-          type: classifiedError.type,
+        logWriteError('mint token failed', {
           chainId,
           token,
-          router: routerAddress,
+          method: 'mint',
           error: classifiedError,
         })
       }
