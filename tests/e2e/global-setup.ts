@@ -17,16 +17,22 @@ async function globalSetup() {
 
   console.log('🚀 Starting Anvil Base fork for E2E tests...')
 
-  // Get the Base RPC URL from environment (fallback to public Base RPC)
-  const baseRpcUrl = process.env['ANVIL_BASE_FORK_URL'] || 'https://mainnet.base.org'
-  console.log(`🔗 Using Base RPC URL: ${baseRpcUrl}`)
+  // Get the Base RPC URL from environment
+  const baseRpcUrl = process.env['ANVIL_BASE_FORK_URL']
+  if (!baseRpcUrl) {
+    console.warn('⚠️  ANVIL_BASE_FORK_URL not set, using public Base RPC (may hit rate limits)')
+    console.warn('   For reliable CI, set ANVIL_BASE_FORK_URL to a dedicated RPC endpoint')
+  }
+
+  const finalRpcUrl = baseRpcUrl || 'https://mainnet.base.org'
+  console.log(`🔗 Using Base RPC URL: ${finalRpcUrl}`)
 
   // Start Anvil in the background
   const anvilProcess = spawn(
     'anvil',
     [
       '--fork-url',
-      baseRpcUrl,
+      finalRpcUrl,
       '--port',
       '8545',
       '--block-time',
