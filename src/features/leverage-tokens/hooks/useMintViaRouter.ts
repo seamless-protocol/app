@@ -14,9 +14,9 @@ import { getContractAddresses } from '@/lib/contracts/addresses'
 import { leverageRouterAbi } from '@/lib/contracts/generated'
 import { TX_SETTINGS } from '../utils/constants'
 import { classifyError, isActionableError } from '../utils/errors'
+import { logWriteError, logWriteSuccess } from '../utils/logger'
 import { ltKeys } from '../utils/queryKeys'
 import { createSwapContext, type SwapContext } from '../utils/swapContext'
-import { logWriteSuccess, logWriteError } from '../utils/logger'
 
 export interface UseMintViaRouterParams {
   token: Address
@@ -186,7 +186,7 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
       }
     },
 
-    onSuccess: ({ hash, preview }) => {
+    onSuccess: ({ hash }) => {
       // Invalidate relevant queries after confirmation
       if (user) {
         queryClient.invalidateQueries({ queryKey: ltKeys.user(token, user) })
