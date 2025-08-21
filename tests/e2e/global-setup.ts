@@ -17,14 +17,9 @@ async function globalSetup() {
 
   console.log('🚀 Starting Anvil Base fork for E2E tests...')
 
-  // Get the Base RPC URL from environment
-  const baseRpcUrl = process.env['ANVIL_BASE_FORK_URL']
-  if (!baseRpcUrl) {
-    throw new Error(
-      'ANVIL_BASE_FORK_URL environment variable is required for E2E tests. ' +
-        'Please set it to a valid Base mainnet RPC URL.',
-    )
-  }
+  // Get the Base RPC URL from environment (fallback to public Base RPC)
+  const baseRpcUrl = process.env['ANVIL_BASE_FORK_URL'] || 'https://mainnet.base.org'
+  console.log(`🔗 Using Base RPC URL: ${baseRpcUrl}`)
 
   // Start Anvil in the background
   const anvilProcess = spawn(
