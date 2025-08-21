@@ -9,6 +9,7 @@ import type { Address } from 'viem'
 import { erc20Abi, maxUint256 } from 'viem'
 import { useAccount, useChainId } from 'wagmi'
 import { config } from '@/lib/config/wagmi.config'
+import { testLocalAccount } from '@/lib/config/wagmi.config.test'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
 import { getContractAddresses } from '@/lib/contracts/addresses'
 import { leverageRouterAbi } from '@/lib/contracts/generated'
@@ -78,17 +79,20 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
   }
 
   // Check and handle allowance for Router
-  const ensureAllowance = async (amount: bigint) => {
-    if (!user || !collateralAsset || !routerAddress) {
-      throw new Error('Missing user, collateral asset, or router address')
+  const ensureAllowance = async (amount: bigint, account: any) => {
+    if (!collateralAsset || !routerAddress) {
+      throw new Error('Missing collateral asset or router address')
     }
+
+    // Extract address from account (Local Account has .address property, Address is already a string)
+    const accountAddress = typeof account === 'string' ? account : account.address
 
     // Check current allowance
     const currentAllowance = await readContract(config, {
       address: collateralAsset,
       abi: erc20Abi,
       functionName: 'allowance',
-      args: [user, routerAddress],
+      args: [accountAddress, routerAddress],
     })
 
     // If allowance is insufficient, approve max
@@ -98,7 +102,7 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
         abi: erc20Abi,
         functionName: 'approve',
         args: [routerAddress, maxUint256],
-        account: user,
+        account,
       })
 
       const approveHash = await writeContract(config, request)
@@ -142,6 +146,9 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
         throw new Error('Required contracts not available')
       }
 
+      // 👇 Use Local Account to sign writes in test mode; otherwise use connected user
+      const writeAccount = testLocalAccount ?? user
+
       // Step 1: Preview mint to get expected shares
       const preview = await previewMint(equityInCollateralAsset)
       const expectedShares = preview.shares
@@ -156,19 +163,19 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
       const finalMaxSwapCost =
         maxSwapCostInCollateralAsset || (equityInCollateralAsset * 500n) / 10000n
 
-      // Step 5: Ensure Router has allowance for collateral
-      await ensureAllowance(equityInCollateralAsset)
+      // Step 5: Ensure Router has allowance for collateral — IMPORTANT: pass writeAccount
+      await ensureAllowance(equityInCollateralAsset, writeAccount)
 
-      // Step 6: Simulate Router.mint transaction
+      // Step 6: Simulate Router.mint transaction — IMPORTANT: pass writeAccount
       const { request } = await simulateContract(config, {
         address: routerAddress,
         abi: leverageRouterAbi,
         functionName: 'mint',
         args: [token, equityInCollateralAsset, minShares, finalMaxSwapCost, finalSwapContext],
-        account: user,
+        account: writeAccount,
       })
 
-      // Step 7: Execute transaction
+      // Step 7: Execute transaction — request already carries account (Local Account in E2E)
       const hash = await writeContract(config, request)
 
       // Step 8: Wait for confirmation
