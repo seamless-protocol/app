@@ -80,6 +80,14 @@ async function globalSetup() {
   }
 
   console.log('✅ Anvil Base fork is running and ready for E2E tests')
+  
+  // Fund the mock connector account with ETH and WETH for testing
+  try {
+    const { fundMockAccount } = await import('./test-setup.js')
+    await fundMockAccount()
+  } catch (error) {
+    console.error('⚠️  Failed to fund mock account, tests may fail:', error)
+  }
 }
 
 /**

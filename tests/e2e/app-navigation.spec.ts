@@ -22,22 +22,20 @@ test.describe('App Navigation & Wallet Connection', () => {
   })
 
   test('should open wallet connection modal', async ({ page }) => {
-    // Look for the connect wallet button
-    const connectButton = page.locator('button:has-text("Connect Wallet")')
+    // In test mode, look for the mock connect button
+    const connectButton = page.getByTestId('connect-mock')
 
     // Verify the button is visible
     await expect(connectButton).toBeVisible()
 
-    // Click the button to open the modal
+    // Click the button to connect mock wallet
     await connectButton.click()
 
-    // Wait for the modal to appear and verify wallet options are shown
-    await expect(page.locator('text=MetaMask')).toBeVisible()
-
-    // Verify wallet options are present (should be at least one)
-    const walletOptions = page.locator('[role="button"]')
-    const count = await walletOptions.count()
-    expect(count).toBeGreaterThanOrEqual(1)
+    // Verify the connection was successful by checking disconnect button appears
+    await expect(page.getByTestId('disconnect-mock')).toBeVisible()
+    
+    // Verify the connected address is shown
+    await expect(page.getByTestId('connected-address')).toBeVisible()
   })
 
   test('should show wallet info when connected', async ({ page }) => {
