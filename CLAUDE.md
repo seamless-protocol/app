@@ -167,6 +167,36 @@ foundryup
 
 See `tests/integration/README.md` for complete setup guide and CI configuration.
 
+### End-to-End Testing with Playwright
+
+E2E tests verify complete user workflows using real blockchain transactions against Anvil Base fork.
+
+**Test Philosophy:**
+- **Happy Path Tests MUST succeed** - Tests named "Happy Path" should complete real transactions successfully, not just validate error handling
+- **Real transactions required** - E2E tests execute actual blockchain transactions via Local Account signing
+- **Proper funding essential** - Test accounts must have sufficient token balances for the operations being tested
+
+**Key Features:**
+- **Mock Wallet + Local Account** - UI uses MockConnector, transactions signed by Local Account (Anvil account #0)
+- **Dynamic token funding** - Test setup automatically funds accounts with required tokens (weETH, WETH, etc.)
+- **Comprehensive error decoding** - ERC-6093 standard errors are properly decoded and logged
+- **Chain alignment validation** - Runtime assertions ensure frontend connects to correct Anvil instance
+
+**Test Structure:**
+```
+tests/e2e/
+├── mint-flow.spec.ts     # Leverage token minting workflows
+├── global-setup.ts      # Anvil startup and account funding
+├── fund-test-account.ts # Token funding utilities
+└── playwright.config.ts # Test mode configuration
+```
+
+**Critical Requirements:**
+1. **Anvil must run with Base chain ID (8453)** - Configured in `package.json` anvil:base script
+2. **Test accounts must have sufficient balances** - Verified before attempting transactions
+3. **Happy Path tests must complete successfully** - No passing tests that only validate errors
+4. **Environment variables required** - VITE_TEST_MODE=mock, VITE_BASE_RPC_URL=http://127.0.0.1:8545
+
 ## Feature Flags
 
 Use `VITE_ENABLE_*` environment variables to control feature visibility for phased releases.
