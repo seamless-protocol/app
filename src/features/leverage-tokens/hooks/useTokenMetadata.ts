@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { readContracts } from '@wagmi/core'
 import type { Address } from 'viem'
-import { config } from '@/lib/config/wagmi.config'
+import { useConfig } from 'wagmi'
 import { leverageTokenAbi } from '@/lib/contracts/generated'
 import type { TokenMetadata } from '../types'
 import { STALE_TIME } from '../utils/constants'
@@ -41,6 +41,8 @@ export const TOKEN_METADATA_CONTRACTS = (token: Address) => [
  * Batches all reads into a single RPC call
  */
 export function useTokenMetadata(token: Address) {
+  const config = useConfig() // Get config from context instead of importing
+  
   return useQuery({
     queryKey: ltKeys.metadata(token),
     queryFn: async (): Promise<TokenMetadata> => {
