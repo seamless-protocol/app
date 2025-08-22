@@ -75,109 +75,55 @@ async function fundTestAccount() {
       value: parseEther('100'),
     })
 
-    // Step 3: Directly set weETH balance using storage manipulation
-    console.log('2. Setting weETH balance directly using storage manipulation...')
-    const weETHAmount = parseEther('10') // 10 weETH
+    // Step 3: Directly set test account weETH balance using Anvil's deal cheat
+    console.log('2. Setting test account weETH balance directly...')
+    const weETHAmount = parseEther('10') // 10 weETH - plenty for testing
     
-    // For standard ERC20 tokens, balances are usually in slot 0
-    // Storage slot = keccak256(abi.encodePacked(account, slot))
-    // We'll try the standard mapping pattern first
-    
+    // Use Anvil's deal functionality to directly set ERC20 balance
+    // This is much simpler than storage slot manipulation
     try {
-      // Try slot 0 (most common for balances mapping)
-      const slot = 0
-      
-      // Calculate storage slot: keccak256(abi.encode(account, slot))
-      const storageKey = keccak256(
-        encodeAbiParameters(
-          [{ type: 'address' }, { type: 'uint256' }],
-          [TEST_ACCOUNT.address, BigInt(slot)]
-        )
-      )
-      
-      await testClient.setStorageAt({
-        address: WEETH_ADDRESS,
-        index: storageKey,
-        value: `0x${weETHAmount.toString(16).padStart(64, '0')}`
+      await testClient.request({
+        method: 'anvil_deal',
+        params: [WEETH_ADDRESS, TEST_ACCOUNT.address, `0x${weETHAmount.toString(16)}`]
       })
+      console.log(`Set test account weETH balance to ${weETHAmount.toString()} wei via anvil_deal`)
+    } catch (dealError) {
+      console.log('anvil_deal failed, trying storage manipulation...')
       
-      console.log(`Set weETH balance via storage slot: ${storageKey}`)
+      // Fallback: Try different storage slot layouts for ERC20 balances
+      const attempts = [
+        // Try slot 0 (most common)
+        keccak256(encodeAbiParameters([{ type: 'address' }, { type: 'uint256' }], [TEST_ACCOUNT.address, BigInt(0)])),
+        // Try slot 1 
+        keccak256(encodeAbiParameters([{ type: 'address' }, { type: 'uint256' }], [TEST_ACCOUNT.address, BigInt(1)])),
+        // Try reversed order (account first, then slot)
+        keccak256(encodeAbiParameters([{ type: 'uint256' }, { type: 'address' }], [BigInt(0), TEST_ACCOUNT.address]))
+      ]
       
-      // Check if it worked
-      const testBalance = await publicClient.readContract({
-        address: WEETH_ADDRESS,
-        abi: WETH_ABI,
-        functionName: 'balanceOf',
-        args: [TEST_ACCOUNT.address],
-      })
-      
-      if (testBalance < parseEther('1')) {
-        throw new Error('Storage manipulation failed, balance still 0')
+      for (let i = 0; i < attempts.length; i++) {
+        try {
+          await testClient.setStorageAt({
+            address: WEETH_ADDRESS,
+            index: attempts[i],
+            value: `0x${weETHAmount.toString(16).padStart(64, '0')}`
+          })
+          
+          // Check if this worked
+          const testBalance = await publicClient.readContract({
+            address: WEETH_ADDRESS,
+            abi: WETH_ABI,
+            functionName: 'balanceOf',
+            args: [TEST_ACCOUNT.address],
+          })
+          
+          if (testBalance >= parseEther('1')) {
+            console.log(`Storage manipulation succeeded with slot attempt ${i + 1}`)
+            break
+          }
+        } catch (e) {
+          console.log(`Storage slot attempt ${i + 1} failed`)
+        }
       }
-    } catch (error) {
-      console.log('Storage manipulation failed, trying impersonation approach...')
-      
-      // Fallback: try to get more weETH through impersonation and artificial funding
-      await testClient.setBalance({
-        address: WEETH_WHALE,
-        value: parseEther('100'), // Give whale ETH for gas
-      })
-      
-      // Give the whale a much larger weETH balance artificially
-      const whaleSlot = keccak256(
-        encodeAbiParameters(
-          [{ type: 'address' }, { type: 'uint256' }],
-          [WEETH_WHALE, BigInt(0)]
-        )
-      )
-      
-      await testClient.setStorageAt({
-        address: WEETH_ADDRESS,
-        index: whaleSlot,
-        value: `0x${parseEther('1000').toString(16).padStart(64, '0')}`
-      })
-      
-      // Check whale balance after manipulation
-      const whaleBalance = await publicClient.readContract({
-        address: WEETH_ADDRESS,
-        abi: WETH_ABI,
-        functionName: 'balanceOf',
-        args: [WEETH_WHALE],
-      })
-      console.log(`Whale balance after manipulation: ${whaleBalance.toString()} weETH`)
-      
-      // Impersonate whale and transfer
-      await testClient.impersonateAccount({ address: WEETH_WHALE })
-      
-      const whaleClient = createWalletClient({
-        chain: base,
-        transport: http(ANVIL_RPC_URL),
-        account: WEETH_WHALE,
-      })
-      
-      // Transfer available weETH from whale to test account
-      const transferAmount = whaleBalance > weETHAmount ? weETHAmount : whaleBalance
-      console.log(`Transferring ${transferAmount.toString()} weETH from whale to test account`)
-      
-      try {
-        const transferHash = await whaleClient.writeContract({
-          address: WEETH_ADDRESS,
-          abi: WETH_ABI, // Same transfer function
-          functionName: 'transfer',
-          args: [TEST_ACCOUNT.address, transferAmount],
-        })
-        
-        console.log(`Transfer hash: ${transferHash}`)
-        
-        // Wait for confirmation
-        await publicClient.waitForTransactionReceipt({ hash: transferHash })
-        console.log('Transfer confirmed')
-        
-      } catch (transferError) {
-        console.error('Transfer failed:', transferError)
-      }
-      
-      await testClient.stopImpersonatingAccount({ address: WEETH_WHALE })
     }
 
     // Step 4: Verify weETH balance
