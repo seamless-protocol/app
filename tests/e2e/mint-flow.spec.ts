@@ -25,37 +25,46 @@ test.describe('Mint Flow - Happy Path', () => {
     // Wait for connection to complete
     await expect(connectMockButton).not.toBeVisible()
 
-    // Step 2: Fill in mint amount first (button is disabled without amount)
+    // Step 2: Verify we have weETH balance before attempting mint
+    // Check that funding worked by looking for balance display
+    const balanceDisplay = page.locator('text=weETH').first()
+    await expect(balanceDisplay).toBeVisible({ timeout: 10000 })
+    
+    // Step 3: Fill in mint amount first (button is disabled without amount)
     const amountInput = page.getByTestId('mint-amount-input')
     await expect(amountInput).toBeVisible()
-    await amountInput.fill('0.0000008') // Use amount matching our exact balance
+    await amountInput.fill('0.1') // Use amount we should be able to afford with 10 weETH funding
 
     // Step 3: Submit mint transaction (button should be enabled now)
     const submitButton = page.getByTestId('mint-submit-button')
     await submitButton.click()
 
-    // Step 4: Wait for either transaction success or error
+    // Step 4: Wait for successful transaction
     const txHash = page.getByTestId('mint-tx-hash')
     const errorMessage = page.locator('text=Error occurred')
     
-    // Wait for either success or error (temporarily expect error to debug)
+    // Happy Path: Should succeed without errors
     try {
-      await expect(errorMessage).toBeVisible({ timeout: 30000 })
-      console.log('⚠️ Expected error occurred, checking details...')
-      
-      // Look for the error details in the page
-      const errorText = await page.locator('p').filter({ hasText: 'Error:' }).textContent()
-      console.log('🔍 Error details:', errorText)
-      
-      // For now, we expect the error but want to see what debugging info we get
-      expect(errorText).toContain('0xe450d38c')
-      
-    } catch (error) {
-      // If no error found, maybe it succeeded
-      await expect(txHash).toBeVisible({ timeout: 10000 })
+      // Wait for transaction success
+      await expect(txHash).toBeVisible({ timeout: 30000 })
       const hashText = await txHash.textContent()
       expect(hashText).toMatch(/^0x[a-fA-F0-9]{64}$/)
       console.log('✅ Transaction hash:', hashText)
+      
+      // Verify we get expected leverage token shares
+      const successMessage = page.locator('text=Mint successful')
+      await expect(successMessage).toBeVisible()
+      
+    } catch (successError) {
+      // If transaction failed, check what error we got
+      const isErrorVisible = await errorMessage.isVisible()
+      if (isErrorVisible) {
+        const errorText = await page.locator('p').filter({ hasText: 'Error:' }).textContent()
+        console.log('❌ Unexpected error in Happy Path test:', errorText)
+        throw new Error(`Happy Path test failed with error: ${errorText}`)
+      } else {
+        throw new Error('Happy Path test failed: Neither success nor error state detected')
+      }
     }
 
     // TODO: Once we fix the balance issue, these assertions should work
