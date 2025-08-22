@@ -5,12 +5,15 @@ import {
   waitForTransactionReceipt,
   writeContract,
 } from '@wagmi/core'
+import { decodeErrorResult, type BaseError } from 'viem'
 import type { Address } from 'viem'
 import { erc20Abi, maxUint256 } from 'viem'
-import { useAccount, useChainId } from 'wagmi'
-import { config } from '@/lib/config/wagmi.config'
+import { getPublicClient } from '@wagmi/core'
+import { base } from 'wagmi/chains'
+import { useAccount, useChainId, useConfig } from 'wagmi'
 import { testLocalAccount } from '@/lib/config/wagmi.config.test'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
+import { IERC20Errors } from '@/lib/abi/erc20Errors'
 import { getContractAddresses } from '@/lib/contracts/addresses'
 import { leverageRouterAbi } from '@/lib/contracts/generated'
 import { TX_SETTINGS } from '../utils/constants'
@@ -18,6 +21,34 @@ import { classifyError, isActionableError } from '../utils/errors'
 import { logWriteError, logWriteSuccess } from '../utils/logger'
 import { ltKeys } from '../utils/queryKeys'
 import { createSwapContext, type SwapContext } from '../utils/swapContext'
+
+// Runtime validation for test mode
+async function assertTestRuntime(config: any, address: `0x${string}`) {
+  const client = getPublicClient(config, { chainId: base.id })
+  const [rpcChainId, transport] = await Promise.all([
+    client.getChainId(),
+    Promise.resolve((client as any).transport?.url ?? 'unknown'),
+  ])
+  console.log('🔧 Runtime:', { rpcChainId, expected: base.id, transport, address })
+  if (rpcChainId !== base.id) {
+    throw new Error(`CHAIN_ID_MISMATCH: rpc=${rpcChainId} expected=${base.id}`)
+  }
+}
+
+// Decode ERC20 errors for better debugging
+function tryDecodeERC20Error(err: unknown) {
+  const e = err as BaseError
+  // Find first error that carries raw `data` (viem exposes nested causes)
+  const raw = e.walk((ee) => (ee as any)?.data) as `0x${string}` | undefined
+  if (!raw) return null
+  try {
+    const decoded = decodeErrorResult({ abi: IERC20Errors, data: raw })
+    console.error('🧨 Decoded ERC20 revert:', decoded)
+    return decoded
+  } catch {
+    return null
+  }
+}
 
 export interface UseMintViaRouterParams {
   token: Address
@@ -41,11 +72,22 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
   const queryClient = useQueryClient()
   const { address: user } = useAccount()
   const chainId = useChainId()
+  const config = useConfig() // Get config from context instead of importing
   const addresses = getContractAddresses(chainId)
 
   // Get Router and Manager addresses
   const routerAddress = addresses.leverageRouter
   const managerAddress = addresses.leverageManager
+
+  // Debug logging for E2E tests
+  console.log('🏗️ Contract resolution:', {
+    chainId,
+    addresses,
+    routerAddress,
+    managerAddress,
+    hasRouter: !!routerAddress,
+    hasManager: !!managerAddress,
+  })
 
   if (!routerAddress || !managerAddress) {
     throw new Error(`Router/Manager contracts not deployed on chain ${chainId}`)
@@ -148,6 +190,52 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
 
       // 👇 Use Local Account to sign writes in test mode; otherwise use connected user
       const writeAccount = testLocalAccount ?? user
+      const accountAddress = typeof writeAccount === 'string' ? writeAccount : writeAccount?.address
+
+      // 0) Confirm we're on the right node & address
+      await assertTestRuntime(config, accountAddress as `0x${string}`)
+
+      // 1) Read token metadata to verify we're on the right asset
+      const [decimals, symbol] = await Promise.all([
+        readContract(config, { address: collateralAsset, abi: erc20Abi, functionName: 'decimals' }),
+        readContract(config, { address: collateralAsset, abi: erc20Abi, functionName: 'symbol' }),
+      ])
+      console.log('🪙 Collateral:', { collateralAsset, symbol, decimals })
+
+      // 2) Check balance/allowance with proper typing
+      const [wethBalance, currentAllowance] = await Promise.all([
+        readContract(config, {
+          address: collateralAsset,
+          abi: erc20Abi,
+          functionName: 'balanceOf',
+          args: [accountAddress],
+        }),
+        readContract(config, {
+          address: collateralAsset,
+          abi: erc20Abi,
+          functionName: 'allowance',
+          args: [accountAddress, routerAddress],
+        }),
+      ])
+
+      console.log('📊 Pre-flight:', {
+        sender: accountAddress,
+        collateralAsset,
+        symbol,
+        decimals,
+        wethBalance: wethBalance.toString(),
+        currentAllowance: currentAllowance.toString(),
+        equity: equityInCollateralAsset.toString(),
+        hasEnoughBalance: wethBalance >= equityInCollateralAsset,
+        hasEnoughAllowance: currentAllowance >= equityInCollateralAsset,
+      })
+
+      // Early validation - fail fast if insufficient balance
+      if (wethBalance < equityInCollateralAsset) {
+        throw new Error(
+          `INSUFFICIENT_BALANCE: Need ${equityInCollateralAsset} ${symbol}, have ${wethBalance}`
+        )
+      }
 
       // Step 1: Preview mint to get expected shares
       const preview = await previewMint(equityInCollateralAsset)
@@ -167,16 +255,29 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
       await ensureAllowance(equityInCollateralAsset, writeAccount)
 
       // Step 6: Simulate Router.mint transaction — IMPORTANT: pass writeAccount
-      const { request } = await simulateContract(config, {
-        address: routerAddress,
-        abi: leverageRouterAbi,
-        functionName: 'mint',
-        args: [token, equityInCollateralAsset, minShares, finalMaxSwapCost, finalSwapContext],
-        account: writeAccount,
-      })
+      let request
+      try {
+        const simulation = await simulateContract(config, {
+          address: routerAddress,
+          abi: leverageRouterAbi,
+          functionName: 'mint',
+          args: [token, equityInCollateralAsset, minShares, finalMaxSwapCost, finalSwapContext],
+          account: writeAccount,
+        })
+        request = simulation.request
+      } catch (err) {
+        tryDecodeERC20Error(err)
+        throw err
+      }
 
       // Step 7: Execute transaction — request already carries account (Local Account in E2E)
-      const hash = await writeContract(config, request)
+      let hash
+      try {
+        hash = await writeContract(config, request)
+      } catch (err) {
+        tryDecodeERC20Error(err)
+        throw err
+      }
 
       // Step 8: Wait for confirmation
       const receipt = await waitForTransactionReceipt(config, {
@@ -212,6 +313,38 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
     },
 
     onError: (error) => {
+      // Try to decode custom error if it's a contract revert
+      let decodedError: any = null
+      try {
+        if (error instanceof Error && error.message.includes('0x')) {
+          // Extract error signature from message
+          const errorMatch = error.message.match(/0x[a-fA-F0-9]+/)
+          if (errorMatch) {
+            const errorData = errorMatch[0]
+            // Try to decode with Router ABI
+            decodedError = decodeErrorResult({
+              abi: leverageRouterAbi,
+              data: errorData as `0x${string}`,
+            })
+          }
+        }
+      } catch (decodeErr) {
+        console.log('Could not decode error with Router ABI')
+      }
+
+      // Log full error details for debugging
+      console.error('🔍 Full mint error details:', {
+        error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorCause: error instanceof Error ? error.cause : undefined,
+        decodedError,
+        stack: error instanceof Error ? error.stack : undefined,
+        chainId,
+        token,
+        testAccount: testLocalAccount?.address,
+        userAccount: user,
+      })
+
       const classifiedError = classifyError(error)
 
       // Only send actionable errors to monitoring
