@@ -21,7 +21,7 @@ const WEETH_ADDRESS = '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A' // weETH (Wra
 
 // Whale addresses (for impersonation)
 // const _WETH_WHALE = '0xecbf6e57d9430b8F79927e6109183846fab55D25' // Base WETH whale
-// const _WEETH_WHALE = '0x46a83dC1a264Bff133dB887023d2884167094837' // Base weETH whale
+const WEETH_WHALE = '0xbD3cd0D9d429b41F0a2e1C026552Bd598294d5E0' // Base weETH whale
 
 const WETH_ABI = [
   {
@@ -84,71 +84,63 @@ async function fundTestAccount() {
       value: parseEther('100'),
     })
 
-    // Step 3: Directly set test account weETH balance using Anvil's deal cheat
-    console.log('2. Setting test account weETH balance directly...')
+    // Step 3: Fund test account with weETH using whale impersonation
+    console.log('2. Funding test account with weETH via whale impersonation...')
     const weETHAmount = parseEther('10') // 10 weETH - plenty for testing
 
-    // Use Anvil's deal functionality to directly set ERC20 balance
-    // This is much simpler than storage slot manipulation
-    try {
-      await testClient.request({
-        method: 'anvil_deal',
-        params: [WEETH_ADDRESS, TEST_ACCOUNT.address, `0x${weETHAmount.toString(16)}`],
-      })
-      console.log(`Set test account weETH balance to ${weETHAmount.toString()} wei via anvil_deal`)
-    } catch (_dealError) {
-      console.log('anvil_deal failed, trying storage manipulation...')
+    // Check whale's weETH balance first
+    const whaleBalance = (await publicClient.readContract({
+      address: WEETH_ADDRESS,
+      abi: WETH_ABI,
+      functionName: 'balanceOf',
+      args: [WEETH_WHALE],
+    })) as bigint
+    console.log(`Whale weETH balance: ${whaleBalance.toString()} (${whaleBalance / BigInt(10 ** 18)} weETH)`)
 
-      // Fallback: Try different storage slot layouts for ERC20 balances
-      const attempts = [
-        // Try slot 0 (most common)
-        keccak256(
-          encodeAbiParameters(
-            [{ type: 'address' }, { type: 'uint256' }],
-            [TEST_ACCOUNT.address, BigInt(0)],
-          ),
-        ),
-        // Try slot 1
-        keccak256(
-          encodeAbiParameters(
-            [{ type: 'address' }, { type: 'uint256' }],
-            [TEST_ACCOUNT.address, BigInt(1)],
-          ),
-        ),
-        // Try reversed order (account first, then slot)
-        keccak256(
-          encodeAbiParameters(
-            [{ type: 'uint256' }, { type: 'address' }],
-            [BigInt(0), TEST_ACCOUNT.address],
-          ),
-        ),
-      ]
-
-      for (let i = 0; i < attempts.length; i++) {
-        try {
-          await testClient.setStorageAt({
-            address: WEETH_ADDRESS,
-            index: attempts[i] as number | `0x${string}`,
-            value: `0x${weETHAmount.toString(16).padStart(64, '0')}`,
-          })
-
-          // Check if this worked
-          const testBalance = (await publicClient.readContract({
-            address: WEETH_ADDRESS,
-            abi: WETH_ABI,
-            functionName: 'balanceOf',
-            args: [TEST_ACCOUNT.address],
-          })) as bigint
-
-          if (testBalance >= parseEther('1')) {
-            console.log(`Storage manipulation succeeded with slot attempt ${i + 1}`)
-            break
-          }
-        } catch (_e) {
-          console.log(`Storage slot attempt ${i + 1} failed`)
-        }
-      }
+    if (whaleBalance < weETHAmount) {
+      throw new Error(`Whale has insufficient weETH balance: ${whaleBalance / BigInt(10 ** 18)} weETH`)
     }
+
+    // Impersonate the whale
+    await testClient.impersonateAccount({
+      address: WEETH_WHALE,
+    })
+    console.log('✅ Whale account impersonated')
+
+    // Set whale's ETH balance for gas
+    await testClient.setBalance({
+      address: WEETH_WHALE,
+      value: parseEther('100'),
+    })
+    console.log('✅ Whale ETH balance set to 100 ETH')
+
+    // Transfer weETH from whale to test account
+    const { request } = await publicClient.simulateContract({
+      address: WEETH_ADDRESS,
+      abi: WETH_ABI,
+      functionName: 'transfer',
+      args: [TEST_ACCOUNT.address, weETHAmount],
+      account: WEETH_WHALE,
+    })
+
+    const walletClient = createWalletClient({
+      chain: base,
+      transport: http(ANVIL_RPC_URL),
+      account: TEST_ACCOUNT,
+    })
+
+    const hash = await walletClient.writeContract(request)
+    console.log(`Transfer transaction hash: ${hash}`)
+
+    // Wait for transaction
+    const receipt = await publicClient.waitForTransactionReceipt({ hash })
+    console.log(`Transaction confirmed in block ${receipt.blockNumber}`)
+
+    // Stop impersonating
+    await testClient.stopImpersonatingAccount({
+      address: WEETH_WHALE,
+    })
+    console.log('✅ Stopped impersonating whale')
 
     // Step 4: Verify weETH balance
     const weETHBalance = (await publicClient.readContract({
@@ -177,9 +169,13 @@ async function fundTestAccount() {
 
 export { fundTestAccount }
 
-// Run if called directly
-if (import.meta.main) {
-  fundTestAccount()
-    .then(() => process.exit(0))
-    .catch(() => process.exit(1))
-}
+// Run the function
+fundTestAccount()
+  .then((success) => {
+    console.log('\n🎯 Funding result:', success ? 'SUCCESS' : 'FAILED')
+    process.exit(success ? 0 : 1)
+  })
+  .catch((error) => {
+    console.error('❌ Unexpected error:', error)
+    process.exit(1)
+  })
