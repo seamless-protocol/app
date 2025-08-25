@@ -10,6 +10,20 @@ vi.stubEnv('VITE_TEST_MODE', 'mock')
 vi.mock('wagmi', () => ({
   useAccount: vi.fn(),
   useChainId: vi.fn(),
+  useConfig: vi.fn(() => ({})),
+  createConfig: vi.fn(),
+  http: vi.fn(),
+}))
+
+// Mock wagmi chains
+vi.mock('wagmi/chains', () => ({
+  base: { id: 8453, name: 'Base' },
+  mainnet: { id: 1, name: 'Ethereum' },
+}))
+
+// Mock wagmi connectors
+vi.mock('wagmi/connectors', () => ({
+  mock: vi.fn(),
 }))
 
 // Mock wagmi core functions
@@ -19,6 +33,10 @@ vi.mock('@wagmi/core', () => ({
   waitForTransactionReceipt: vi.fn(),
   readContract: vi.fn(),
   readContracts: vi.fn(),
+  getPublicClient: vi.fn(() => ({
+    getChainId: vi.fn(() => Promise.resolve(8453)),
+    transport: { url: 'http://localhost:8545' },
+  })),
 }))
 
 // Mock config
