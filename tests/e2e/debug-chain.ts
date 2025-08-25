@@ -13,7 +13,7 @@ async function checkChain() {
     const blockNumber = await anvilClient.getBlockNumber()
     console.log('Block number:', blockNumber)
   } catch (error) {
-    console.log('❌ Error connecting to Anvil:', error.message)
+    console.log('❌ Error connecting to Anvil:', error)
   }
 }
 
