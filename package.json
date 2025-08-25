@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite",
-    "build": "tsc -b && bunx --bun vite build",
+    "build": "bunx @tanstack/router-cli generate --config vite.config.ts && tsc -b && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
     "check": "biome check . && tsc --noEmit",
     "check:fix": "biome check --write . && tsc --noEmit",
