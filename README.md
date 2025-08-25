@@ -156,6 +156,10 @@ Please ensure all code passes checks before submitting PRs:
 bun check:fix
 ```
 
+## Testing Deployment
+
+This deployment test was added on 2025-08-25 to verify Vercel deployment functionality.
+
 ## License
 
 [License details to be added]
