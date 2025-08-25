@@ -20,11 +20,16 @@ bun check              # Check only (for CI)
 bun format             # Format code with Biome
 bun typecheck          # Type-check only
 
-# Testing (scripts ready, packages not installed)
-bun test               # Run unit tests with Vitest (needs setup)
-bun test:ui            # Run tests with UI (needs setup)
-bun test:coverage      # Run tests with coverage (needs setup)
-bun test:e2e           # Run E2E tests with Playwright (needs setup)
+# Testing
+bun test               # Run unit tests with Vitest
+bun test:ui            # Run tests with UI
+bun test:coverage      # Run tests with coverage
+bun test:integration   # Run integration tests (requires Anvil)
+bun test:e2e           # Run E2E tests with Playwright
+
+# Integration Testing (Anvil Base Fork)
+bun run anvil:base     # Start local Base fork (Terminal 1)
+# Then run integration tests (Terminal 2)
 
 # Component Development (needs setup)
 bun storybook          # Start Storybook on port 6006 (needs setup)
@@ -114,11 +119,53 @@ Tests are organized in the `tests/` directory:
 ```
 tests/
 ├── unit/         # Business logic, calculations
-├── integration/  # Blockchain interactions (Anvil)
+├── integration/  # Blockchain interactions (Anvil Base fork)
 ├── e2e/         # User flows (Playwright)
 ├── fixtures/    # Test data and mocks
 └── utils/       # Test helpers
 ```
+
+### Integration Testing with Anvil
+
+Integration tests use a local Anvil fork of Base mainnet, replacing the previous Tenderly setup to eliminate API limits.
+
+**Prerequisites:**
+```bash
+# Install Foundry (includes Anvil)
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+```
+
+**Setup:**
+1. Configure environment:
+   ```bash
+   cd tests/integration
+   cp .env.example .env
+   # Edit .env with your Base RPC URL (required: ANVIL_BASE_FORK_URL)
+   ```
+
+2. Run integration tests:
+   ```bash
+   # Terminal 1: Start Anvil Base fork
+   ANVIL_BASE_FORK_URL=https://mainnet.base.org bun run anvil:base
+   
+   # Terminal 2: Run tests
+   bun run test:integration
+   ```
+
+**Key Features:**
+- **No API limits** - Tests run against local Anvil fork
+- **Fast execution** - <30s local test suite
+- **Deterministic** - Consistent state with snapshot/revert isolation
+- **Safe token funding** - WETH deposits + rich holder impersonation (no storage writes)
+
+**Test Architecture:**
+- **Public Client**: Read blockchain state from Base fork  
+- **Wallet Client**: Sign and send transactions
+- **Test Client**: Anvil-specific actions (`setBalance`, `impersonateAccount`, `snapshot`, `revert`)
+- **Funding**: Automatic via WETH deposits or rich holder impersonation
+
+See `tests/integration/README.md` for complete setup guide and CI configuration.
 
 ## Feature Flags
 
@@ -132,6 +179,7 @@ When making changes to this codebase:
 Always run these commands before committing any changes:
 - **`bun check:fix`** - Auto-fix linting issues and check types
 - **`bun run build`** - Ensure the build succeeds
+- **`bun run test:integration`** - Run integration tests if modifying contract interactions (requires Anvil)
 
 ### Code Philosophy
 - **Code is a liability** - Write less code that does more

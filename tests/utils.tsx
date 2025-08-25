@@ -1,6 +1,6 @@
-import { vi } from 'vitest'
-import { renderHook, type RenderHookOptions } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { type RenderHookOptions, renderHook } from '@testing-library/react'
+import { vi } from 'vitest'
 import { useAccount, useChainId } from 'wagmi'
 
 // Utility to create deterministic hashes from strings
@@ -28,8 +28,12 @@ export function makeAddr(name: string): `0x${string}` {
 export const mockSetup = {
   // Setup default wagmi mocks with common return values
   setupWagmiMocks: (ownerAddress: `0x${string}`, chainId = 8453) => {
-    vi.mocked(useAccount).mockReturnValue({ address: ownerAddress } as any)
-    vi.mocked(useChainId).mockReturnValue(chainId)
+    // The mocks are already set up in tests/setup.ts
+    // Just need to configure their return values
+    const mockUseAccount = useAccount as any
+    const mockUseChainId = useChainId as any
+    mockUseAccount.mockReturnValue({ address: ownerAddress })
+    mockUseChainId.mockReturnValue(chainId)
   },
 
   // Clear all mocks (useful in beforeEach)
@@ -38,12 +42,13 @@ export const mockSetup = {
   },
 
   // Create a fresh QueryClient for each test
-  createQueryClient: () => new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  }),
+  createQueryClient: () =>
+    new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    }),
 }
 
 // Hook testing utilities
@@ -54,17 +59,15 @@ export const hookTestUtils = {
     options?: {
       initialProps?: TProps
       queryClient?: QueryClient
-    } & Omit<RenderHookOptions<TProps>, 'wrapper'>
+    } & Omit<RenderHookOptions<TProps>, 'wrapper'>,
   ) => {
     const queryClient = options?.queryClient ?? mockSetup.createQueryClient()
-    
+
     return {
       ...renderHook(hook, {
         ...options,
         wrapper: ({ children }) => (
-          <QueryClientProvider client={queryClient}>
-            {children}
-          </QueryClientProvider>
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
         ),
       }),
       queryClient,
@@ -81,4 +84,4 @@ export const mockData = {
     blockNumber: 12345n,
     gasUsed: 21000n,
   }),
-} 
+}

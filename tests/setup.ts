@@ -17,6 +17,7 @@ vi.mock('@wagmi/core', () => ({
   simulateContract: vi.fn(),
   writeContract: vi.fn(),
   waitForTransactionReceipt: vi.fn(),
+  readContract: vi.fn(),
   readContracts: vi.fn(),
 }))
 
@@ -25,9 +26,15 @@ vi.mock('@/lib/config/wagmi.config', () => ({
   config: {},
 }))
 
-// Mock contract ABI
+// Mock contract ABI exports used by hooks/tests
 vi.mock('@/lib/contracts/generated', () => ({
   leverageTokenAbi: [],
+  leverageRouterAbi: [],
+}))
+
+// Mock contract addresses
+vi.mock('@/lib/contracts/addresses', () => ({
+  getContractAddresses: vi.fn(),
 }))
 
 // Mock query keys
@@ -65,4 +72,4 @@ global.console = {
   ...console,
   error: vi.fn(),
   warn: vi.fn(),
-} 
+}

@@ -3,6 +3,8 @@ import { Link } from '@tanstack/react-router'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { features } from '@/lib/config/features'
+import { ConnectButtonTest } from './ConnectButtonTest'
 import { ModeToggle } from './mode-toggle'
 
 const navLinks = [
@@ -45,7 +47,7 @@ export function Header() {
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
             <ModeToggle />
-            <ConnectButton />
+            {features.testMode ? <ConnectButtonTest /> : <ConnectButton />}
           </div>
 
           {/* Mobile Menu Button */}
@@ -75,7 +77,7 @@ export function Header() {
               ))}
             </nav>
             <div className="mt-4 flex items-center gap-4 px-2">
-              <ConnectButton />
+              {features.testMode ? <ConnectButtonTest /> : <ConnectButton />}
               <ModeToggle />
             </div>
           </div>

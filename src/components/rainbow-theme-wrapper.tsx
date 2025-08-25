@@ -24,10 +24,9 @@ export function RainbowThemeWrapper({ children }: RainbowThemeWrapperProps) {
       // Listen for changes
       mediaQuery.addEventListener('change', handleChange)
       return () => mediaQuery.removeEventListener('change', handleChange)
-    } else {
-      setResolvedTheme(theme as 'light' | 'dark')
-      return undefined
     }
+    setResolvedTheme(theme as 'light' | 'dark')
+    return undefined
   }, [theme])
 
   // Custom theme configuration to better match our app

@@ -6,6 +6,298 @@ import {
 } from 'wagmi/codegen'
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// LeverageManager
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const leverageManagerAbi = [
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'equityInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'minShares', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'mint',
+    outputs: [
+      {
+        name: 'actionData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'equityInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    name: 'previewMint',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenCollateralAsset',
+    outputs: [
+      {
+        name: 'collateralAsset',
+        internalType: 'contract IERC20',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenDebtAsset',
+    outputs: [{ name: 'debtAsset', internalType: 'contract IERC20', type: 'address' }],
+    stateMutability: 'view',
+  },
+] as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const leverageManagerAddress = {
+  8453: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8',
+} as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const leverageManagerConfig = {
+  address: leverageManagerAddress,
+  abi: leverageManagerAbi,
+} as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// LeverageRouter
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const leverageRouterAbi = [
+  {
+    type: 'function',
+    inputs: [],
+    name: 'leverageManager',
+    outputs: [{ name: '', internalType: 'contract ILeverageManager', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'equityInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'minShares', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'maxSwapCostInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      {
+        name: 'swapContext',
+        internalType: 'struct ISwapAdapter.SwapContext',
+        type: 'tuple',
+        components: [
+          { name: 'path', internalType: 'address[]', type: 'address[]' },
+          { name: 'encodedPath', internalType: 'bytes', type: 'bytes' },
+          { name: 'fees', internalType: 'uint24[]', type: 'uint24[]' },
+          { name: 'tickSpacing', internalType: 'int24[]', type: 'int24[]' },
+          { name: 'exchange', internalType: 'uint8', type: 'uint8' },
+          {
+            name: 'exchangeAddresses',
+            internalType: 'tuple',
+            type: 'tuple',
+            components: [
+              {
+                name: 'aerodromeRouter',
+                internalType: 'address',
+                type: 'address',
+              },
+              {
+                name: 'aerodromePoolFactory',
+                internalType: 'address',
+                type: 'address',
+              },
+              {
+                name: 'aerodromeSlipstreamRouter',
+                internalType: 'address',
+                type: 'address',
+              },
+              {
+                name: 'uniswapSwapRouter02',
+                internalType: 'address',
+                type: 'address',
+              },
+              {
+                name: 'uniswapV2Router02',
+                internalType: 'address',
+                type: 'address',
+              },
+            ],
+          },
+          { name: 'additionalData', internalType: 'bytes', type: 'bytes' },
+        ],
+      },
+    ],
+    name: 'mint',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'equityInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'maxShares', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'maxSwapCostInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      {
+        name: 'swapContext',
+        internalType: 'struct ISwapAdapter.SwapContext',
+        type: 'tuple',
+        components: [
+          { name: 'path', internalType: 'address[]', type: 'address[]' },
+          { name: 'encodedPath', internalType: 'bytes', type: 'bytes' },
+          { name: 'fees', internalType: 'uint24[]', type: 'uint24[]' },
+          { name: 'tickSpacing', internalType: 'int24[]', type: 'int24[]' },
+          { name: 'exchange', internalType: 'uint8', type: 'uint8' },
+          {
+            name: 'exchangeAddresses',
+            internalType: 'tuple',
+            type: 'tuple',
+            components: [
+              {
+                name: 'aerodromeRouter',
+                internalType: 'address',
+                type: 'address',
+              },
+              {
+                name: 'aerodromePoolFactory',
+                internalType: 'address',
+                type: 'address',
+              },
+              {
+                name: 'aerodromeSlipstreamRouter',
+                internalType: 'address',
+                type: 'address',
+              },
+              {
+                name: 'uniswapSwapRouter02',
+                internalType: 'address',
+                type: 'address',
+              },
+              {
+                name: 'uniswapV2Router02',
+                internalType: 'address',
+                type: 'address',
+              },
+            ],
+          },
+          { name: 'additionalData', internalType: 'bytes', type: 'bytes' },
+        ],
+      },
+    ],
+    name: 'redeem',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+] as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const leverageRouterAddress = {
+  8453: '0xDbA92fC3dc10a17b96b6E807a908155C389A887C',
+} as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const leverageRouterConfig = {
+  address: leverageRouterAddress,
+  abi: leverageRouterAbi,
+} as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LeverageToken
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1179,6 +1471,177 @@ export const seamTokenConfig = {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // React
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManager = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"previewMint"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerPreviewMint = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'previewMint',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenCollateralAsset"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetLeverageTokenCollateralAsset =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'getLeverageTokenCollateralAsset',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenDebtAsset"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetLeverageTokenDebtAsset = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getLeverageTokenDebtAsset',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManager = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"mint"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerMint = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManager = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"mint"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerMint = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useReadLeverageRouter = /*#__PURE__*/ createUseReadContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"leverageManager"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useReadLeverageRouterLeverageManager = /*#__PURE__*/ createUseReadContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'leverageManager',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useWriteLeverageRouter = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"mint"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useWriteLeverageRouterMint = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"redeem"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useWriteLeverageRouterRedeem = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useSimulateLeverageRouter = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"mint"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useSimulateLeverageRouterMint = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"redeem"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useSimulateLeverageRouterRedeem = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'redeem',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__

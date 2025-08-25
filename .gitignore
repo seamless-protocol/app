@@ -61,5 +61,7 @@ src/routeTree.gen.ts
 # Biome
 .biome
 
-# Bun
+# Lockfiles
 bun.lockb
+bun.lock
+package-lock.json

@@ -1,0 +1,2 @@
+# Ignore Tailwind CSS files with custom at-rules
+src/index.css
