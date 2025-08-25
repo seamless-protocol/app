@@ -33,7 +33,7 @@ test.describe('App Navigation & Wallet Connection', () => {
 
     // Verify the connection was successful by checking disconnect button appears
     await expect(page.getByTestId('disconnect-mock')).toBeVisible()
-    
+
     // Verify the connected address is shown
     await expect(page.getByTestId('connected-address')).toBeVisible()
   })

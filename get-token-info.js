@@ -1,10 +1,9 @@
-
 import { createPublicClient, http } from 'viem'
 import { base } from 'viem/chains'
 
 const client = createPublicClient({
   chain: base,
-  transport: http('http://127.0.0.1:8545')
+  transport: http('http://127.0.0.1:8545'),
 })
 
 const erc20Abi = [
@@ -56,4 +55,3 @@ console.log('  Address:', collateralAsset)
 console.log('  Symbol:', symbol)
 console.log('  Name:', name)
 console.log('  Decimals:', decimals)
-

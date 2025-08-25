@@ -1,4 +1,12 @@
-import { createTestClient, createPublicClient, createWalletClient, http, parseEther, keccak256, encodeAbiParameters } from 'viem'
+import {
+  createPublicClient,
+  createTestClient,
+  createWalletClient,
+  encodeAbiParameters,
+  http,
+  keccak256,
+  parseEther,
+} from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base } from 'viem/chains'
 
@@ -23,7 +31,10 @@ const WETH_ABI = [
     outputs: [],
   },
   {
-    inputs: [{ name: 'guy', type: 'address' }, { name: 'wad', type: 'uint256' }],
+    inputs: [
+      { name: 'guy', type: 'address' },
+      { name: 'wad', type: 'uint256' },
+    ],
     name: 'transfer',
     outputs: [{ name: '', type: 'bool' }],
     type: 'function',
@@ -78,36 +89,51 @@ async function fundTestAccount() {
     // Step 3: Directly set test account weETH balance using Anvil's deal cheat
     console.log('2. Setting test account weETH balance directly...')
     const weETHAmount = parseEther('10') // 10 weETH - plenty for testing
-    
+
     // Use Anvil's deal functionality to directly set ERC20 balance
     // This is much simpler than storage slot manipulation
     try {
       await testClient.request({
         method: 'anvil_deal',
-        params: [WEETH_ADDRESS, TEST_ACCOUNT.address, `0x${weETHAmount.toString(16)}`]
+        params: [WEETH_ADDRESS, TEST_ACCOUNT.address, `0x${weETHAmount.toString(16)}`],
       })
       console.log(`Set test account weETH balance to ${weETHAmount.toString()} wei via anvil_deal`)
     } catch (dealError) {
       console.log('anvil_deal failed, trying storage manipulation...')
-      
+
       // Fallback: Try different storage slot layouts for ERC20 balances
       const attempts = [
         // Try slot 0 (most common)
-        keccak256(encodeAbiParameters([{ type: 'address' }, { type: 'uint256' }], [TEST_ACCOUNT.address, BigInt(0)])),
-        // Try slot 1 
-        keccak256(encodeAbiParameters([{ type: 'address' }, { type: 'uint256' }], [TEST_ACCOUNT.address, BigInt(1)])),
+        keccak256(
+          encodeAbiParameters(
+            [{ type: 'address' }, { type: 'uint256' }],
+            [TEST_ACCOUNT.address, BigInt(0)],
+          ),
+        ),
+        // Try slot 1
+        keccak256(
+          encodeAbiParameters(
+            [{ type: 'address' }, { type: 'uint256' }],
+            [TEST_ACCOUNT.address, BigInt(1)],
+          ),
+        ),
         // Try reversed order (account first, then slot)
-        keccak256(encodeAbiParameters([{ type: 'uint256' }, { type: 'address' }], [BigInt(0), TEST_ACCOUNT.address]))
+        keccak256(
+          encodeAbiParameters(
+            [{ type: 'uint256' }, { type: 'address' }],
+            [BigInt(0), TEST_ACCOUNT.address],
+          ),
+        ),
       ]
-      
+
       for (let i = 0; i < attempts.length; i++) {
         try {
           await testClient.setStorageAt({
             address: WEETH_ADDRESS,
             index: attempts[i],
-            value: `0x${weETHAmount.toString(16).padStart(64, '0')}`
+            value: `0x${weETHAmount.toString(16).padStart(64, '0')}`,
           })
-          
+
           // Check if this worked
           const testBalance = await publicClient.readContract({
             address: WEETH_ADDRESS,
@@ -115,7 +141,7 @@ async function fundTestAccount() {
             functionName: 'balanceOf',
             args: [TEST_ACCOUNT.address],
           })
-          
+
           if (testBalance >= parseEther('1')) {
             console.log(`Storage manipulation succeeded with slot attempt ${i + 1}`)
             break
@@ -133,10 +159,13 @@ async function fundTestAccount() {
       functionName: 'balanceOf',
       args: [TEST_ACCOUNT.address],
     })
-    
-    console.log(`✅ Test account weETH balance: ${weETHBalance.toString()} (${weETHBalance / BigInt(10**18)} weETH)`)
 
-    if (weETHBalance >= BigInt(100000000000)) { // ~0.0001 weETH in wei, accept any reasonable amount
+    console.log(
+      `✅ Test account weETH balance: ${weETHBalance.toString()} (${weETHBalance / BigInt(10 ** 18)} weETH)`,
+    )
+
+    if (weETHBalance >= BigInt(100000000000)) {
+      // ~0.0001 weETH in wei, accept any reasonable amount
       console.log('✅ Test account successfully funded with weETH!')
       return true
     } else {
