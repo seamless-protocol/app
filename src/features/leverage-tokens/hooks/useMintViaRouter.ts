@@ -341,23 +341,23 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
         console.log('Could not decode error with Router ABI', decodeErr)
       }
 
-      // Log full error details for debugging
-      console.error('🔍 Full mint error details:', {
-        error,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorCause: error instanceof Error ? error.cause : undefined,
-        decodedError,
-        stack: error instanceof Error ? error.stack : undefined,
-        chainId,
-        token,
-        testAccount: testLocalAccount?.address,
-        userAccount: user,
-      })
-
       const classifiedError = classifyError(error)
 
-      // Only send actionable errors to monitoring
+      // Only log and send actionable errors to monitoring
       if (isActionableError(classifiedError)) {
+        // Log full error details for debugging (only actionable errors)
+        console.error('🔍 Full mint error details:', {
+          error,
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorCause: error instanceof Error ? error.cause : undefined,
+          decodedError,
+          stack: error instanceof Error ? error.stack : undefined,
+          chainId,
+          token,
+          testAccount: testLocalAccount?.address,
+          userAccount: user,
+        })
+
         logWriteError('mint token failed', {
           chainId,
           token,
