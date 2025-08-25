@@ -54,7 +54,7 @@ test.describe('Mint Flow - Happy Path', () => {
       // Verify we get expected leverage token shares
       const successMessage = page.locator('text=Mint successful')
       await expect(successMessage).toBeVisible()
-    } catch (successError) {
+    } catch (_successError) {
       // If transaction failed, check what error we got
       const isErrorVisible = await errorMessage.isVisible()
       if (isErrorVisible) {

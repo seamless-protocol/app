@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  type Config,
   getPublicClient,
   readContract,
   simulateContract,
   waitForTransactionReceipt,
   writeContract,
 } from '@wagmi/core'
-import type { Address } from 'viem'
+import type { Account, Address } from 'viem'
 import { type BaseError, decodeErrorResult, erc20Abi, maxUint256 } from 'viem'
 import { useAccount, useChainId, useConfig } from 'wagmi'
 import { base } from 'wagmi/chains'
@@ -22,11 +23,12 @@ import { ltKeys } from '../utils/queryKeys'
 import { createSwapContext, type SwapContext } from '../utils/swapContext'
 
 // Runtime validation for test mode
-async function assertTestRuntime(config: any, address: `0x${string}`) {
+async function assertTestRuntime(config: Config, address: `0x${string}`) {
   const client = getPublicClient(config, { chainId: base.id })
+  if (!client) throw new Error('Failed to get public client')
   const [rpcChainId, transport] = await Promise.all([
     client.getChainId(),
-    Promise.resolve((client as any).transport?.url ?? 'unknown'),
+    Promise.resolve(client.transport?.['url'] ?? 'unknown'),
   ])
   console.log('🔧 Runtime:', { rpcChainId, expected: base.id, transport, address })
   if (rpcChainId !== base.id) {
@@ -38,7 +40,15 @@ async function assertTestRuntime(config: any, address: `0x${string}`) {
 function tryDecodeERC20Error(err: unknown) {
   const e = err as BaseError
   // Find first error that carries raw `data` (viem exposes nested causes)
-  const raw = e.walk((ee) => (ee as any)?.data) as `0x${string}` | undefined
+  let raw: `0x${string}` | undefined
+  e.walk((ee) => {
+    const errorWithData = ee as { data?: `0x${string}` }
+    if (errorWithData?.data) {
+      raw = errorWithData.data
+      return true // Stop walking when we find data
+    }
+    return false
+  })
   if (!raw) return null
   try {
     const decoded = decodeErrorResult({ abi: IERC20Errors, data: raw })
@@ -120,7 +130,7 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
   }
 
   // Check and handle allowance for Router
-  const ensureAllowance = async (amount: bigint, account: any) => {
+  const ensureAllowance = async (amount: bigint, account: Address | Account) => {
     if (!collateralAsset || !routerAddress) {
       throw new Error('Missing collateral asset or router address')
     }
@@ -254,7 +264,7 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
       await ensureAllowance(equityInCollateralAsset, writeAccount)
 
       // Step 6: Simulate Router.mint transaction — IMPORTANT: pass writeAccount
-      let request
+      let request = null
       try {
         const simulation = await simulateContract(config, {
           address: routerAddress,
@@ -270,7 +280,7 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
       }
 
       // Step 7: Execute transaction — request already carries account (Local Account in E2E)
-      let hash
+      let hash: Address
       try {
         hash = await writeContract(config, request)
       } catch (err) {
@@ -313,7 +323,7 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
 
     onError: (error) => {
       // Try to decode custom error if it's a contract revert
-      let decodedError: any = null
+      let decodedError = null
       try {
         if (error instanceof Error && error.message.includes('0x')) {
           // Extract error signature from message
@@ -328,7 +338,7 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
           }
         }
       } catch (decodeErr) {
-        console.log('Could not decode error with Router ABI')
+        console.log('Could not decode error with Router ABI', decodeErr)
       }
 
       // Log full error details for debugging
