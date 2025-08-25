@@ -11,7 +11,7 @@ test.describe('Mint Flow - Happy Path', () => {
 
   test('should complete full mint flow using mock wallet', async ({ page }) => {
     // Listen to console messages to capture our debugging logs
-    page.on('console', msg => {
+    page.on('console', (msg) => {
       if (msg.type() === 'error' || msg.text().includes('🔍')) {
         console.log(`Browser: ${msg.text()}`)
       }
@@ -29,7 +29,7 @@ test.describe('Mint Flow - Happy Path', () => {
     // Check that funding worked by looking for balance display
     const balanceDisplay = page.locator('text=weETH').first()
     await expect(balanceDisplay).toBeVisible({ timeout: 10000 })
-    
+
     // Step 3: Fill in mint amount first (button is disabled without amount)
     const amountInput = page.getByTestId('mint-amount-input')
     await expect(amountInput).toBeVisible()
@@ -42,7 +42,7 @@ test.describe('Mint Flow - Happy Path', () => {
     // Step 4: Wait for successful transaction
     const txHash = page.getByTestId('mint-tx-hash')
     const errorMessage = page.locator('text=Error occurred')
-    
+
     // Happy Path: Should succeed without errors
     try {
       // Wait for transaction success
@@ -50,11 +50,10 @@ test.describe('Mint Flow - Happy Path', () => {
       const hashText = await txHash.textContent()
       expect(hashText).toMatch(/^0x[a-fA-F0-9]{64}$/)
       console.log('✅ Transaction hash:', hashText)
-      
+
       // Verify we get expected leverage token shares
       const successMessage = page.locator('text=Mint successful')
       await expect(successMessage).toBeVisible()
-      
     } catch (successError) {
       // If transaction failed, check what error we got
       const isErrorVisible = await errorMessage.isVisible()
@@ -121,12 +120,12 @@ test.describe('Mint Flow - Happy Path', () => {
     // Test that button responds to amount input
     const amountInput = page.getByTestId('mint-amount-input')
     await expect(amountInput).toBeVisible()
-    
+
     // Clear input - button should be disabled
     await amountInput.fill('')
     const submitButton = page.getByTestId('mint-submit-button')
     await expect(submitButton).toBeDisabled()
-    
+
     // Enter amount - button should be enabled (validation happens on contract level)
     await amountInput.fill('0.1')
     await expect(submitButton).toBeEnabled()

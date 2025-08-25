@@ -80,7 +80,7 @@ async function globalSetup() {
   }
 
   console.log('✅ Anvil Base fork is running and ready for E2E tests')
-  
+
   // Fund the test account with WETH for testing
   try {
     const { fundTestAccount } = await import('./fund-test-account.js')

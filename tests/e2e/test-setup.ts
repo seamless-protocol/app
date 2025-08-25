@@ -19,7 +19,9 @@ export const testClient = createTestClient({
 })
 
 // Create wallet client for contract interactions (using Anvil default account private key)
-const account = privateKeyToAccount('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80')
+const account = privateKeyToAccount(
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+)
 export const walletClient = createWalletClient({
   account,
   chain: base,
@@ -31,7 +33,7 @@ export const walletClient = createWalletClient({
  */
 export async function fundMockAccount() {
   console.log('🔧 Funding mock connector account for E2E testing...')
-  
+
   try {
     // 1. Set ETH balance for gas fees (10 ETH)
     await testClient.setBalance({
@@ -43,7 +45,7 @@ export async function fundMockAccount() {
     // 2. Fund WETH balance by depositing ETH
     // We'll impersonate the test account and deposit ETH to get WETH
     await testClient.impersonateAccount({ address: TEST_ADDRESS })
-    
+
     // Deposit 5 ETH to get 5 WETH using wallet client
     await walletClient.writeContract({
       address: BASE_WETH,
@@ -63,7 +65,6 @@ export async function fundMockAccount() {
 
     await testClient.stopImpersonatingAccount({ address: TEST_ADDRESS })
     console.log('✅ Mock account funding complete')
-    
   } catch (error) {
     console.error('❌ Failed to fund mock account:', error)
     throw error
@@ -77,7 +78,7 @@ export async function checkMockAccountBalances() {
   try {
     // ETH balance
     const ethBalance = await testClient.getBalance({ address: TEST_ADDRESS })
-    console.log(`ETH balance: ${ethBalance / 10n**18n} ETH`)
+    console.log(`ETH balance: ${ethBalance / 10n ** 18n} ETH`)
 
     // WETH balance
     const wethBalance = await walletClient.readContract({
@@ -94,8 +95,8 @@ export async function checkMockAccountBalances() {
       functionName: 'balanceOf',
       args: [TEST_ADDRESS],
     })
-    console.log(`WETH balance: ${wethBalance / 10n**18n} WETH`)
-    
+    console.log(`WETH balance: ${wethBalance / 10n ** 18n} WETH`)
+
     return { ethBalance, wethBalance }
   } catch (error) {
     console.error('❌ Failed to check balances:', error)
