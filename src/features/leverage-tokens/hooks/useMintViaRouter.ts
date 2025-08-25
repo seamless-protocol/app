@@ -1,19 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  getPublicClient,
   readContract,
   simulateContract,
   waitForTransactionReceipt,
   writeContract,
 } from '@wagmi/core'
-import { decodeErrorResult, type BaseError } from 'viem'
 import type { Address } from 'viem'
-import { erc20Abi, maxUint256 } from 'viem'
-import { getPublicClient } from '@wagmi/core'
-import { base } from 'wagmi/chains'
+import { type BaseError, decodeErrorResult, erc20Abi, maxUint256 } from 'viem'
 import { useAccount, useChainId, useConfig } from 'wagmi'
+import { base } from 'wagmi/chains'
+import { IERC20Errors } from '@/lib/abi/erc20Errors'
 import { testLocalAccount } from '@/lib/config/wagmi.config.test'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
-import { IERC20Errors } from '@/lib/abi/erc20Errors'
 import { getContractAddresses } from '@/lib/contracts/addresses'
 import { leverageRouterAbi } from '@/lib/contracts/generated'
 import { TX_SETTINGS } from '../utils/constants'
@@ -233,7 +232,7 @@ export function useMintViaRouter({ token, onSuccess, onError }: UseMintViaRouter
       // Early validation - fail fast if insufficient balance
       if (wethBalance < equityInCollateralAsset) {
         throw new Error(
-          `INSUFFICIENT_BALANCE: Need ${equityInCollateralAsset} ${symbol}, have ${wethBalance}`
+          `INSUFFICIENT_BALANCE: Need ${equityInCollateralAsset} ${symbol}, have ${wethBalance}`,
         )
       }
 

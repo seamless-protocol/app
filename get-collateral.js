@@ -1,10 +1,9 @@
-
 import { createPublicClient, http } from 'viem'
 import { base } from 'viem/chains'
 
 const client = createPublicClient({
   chain: base,
-  transport: http('http://127.0.0.1:8545')
+  transport: http('http://127.0.0.1:8545'),
 })
 
 const leverageManagerAbi = [
@@ -28,4 +27,3 @@ const collateralAsset = await client.readContract({
 })
 
 console.log('🪙 Collateral asset for token', token, ':', collateralAsset)
-

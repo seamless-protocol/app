@@ -42,7 +42,7 @@ export const TOKEN_METADATA_CONTRACTS = (token: Address) => [
  */
 export function useTokenMetadata(token: Address) {
   const config = useConfig() // Get config from context instead of importing
-  
+
   return useQuery({
     queryKey: ltKeys.metadata(token),
     queryFn: async (): Promise<TokenMetadata> => {
