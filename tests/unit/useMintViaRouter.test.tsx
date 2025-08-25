@@ -52,7 +52,16 @@ describe('useMintViaRouter', () => {
       if (params.functionName === 'allowance') {
         return 0n // No allowance initially
       }
-      return null
+      if (params.functionName === 'balanceOf') {
+        return 1000000n // Mock balance
+      }
+      if (params.functionName === 'symbol') {
+        return 'WETH'
+      }
+      if (params.functionName === 'decimals') {
+        return 18
+      }
+      return 0n // Default to 0n instead of null
     })
 
     const mockSimulateContract = simulateContract as any
