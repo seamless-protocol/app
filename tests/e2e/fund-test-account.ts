@@ -16,11 +16,12 @@ const TEST_ACCOUNT = privateKeyToAccount(TEST_PRIVATE_KEY)
 const ANVIL_RPC_URL = 'http://127.0.0.1:8545'
 
 // Token addresses on Base
-const WETH_ADDRESS = '0x4200000000000000000000000000000000000006'
+const _WETH_ADDRESS = '0x4200000000000000000000000000000000000006'
 const WEETH_ADDRESS = '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A' // weETH (Wrapped eETH)
 
-// Known WETH whale on Base for impersonation
-const WETH_WHALE = '0xecbf6e57d9430b8F79927e6109183846fab55D25' // Base WETH whale
+// Whale addresses (for impersonation)
+const _WETH_WHALE = '0xecbf6e57d9430b8F79927e6109183846fab55D25' // Base WETH whale
+const _WEETH_WHALE = '0x46a83dC1a264Bff133dB887023d2884167094837' // Base weETH whale
 
 const WETH_ABI = [
   {
@@ -47,9 +48,6 @@ const WETH_ABI = [
   },
 ] as const
 
-// Known weETH whale on Base
-const WEETH_WHALE = '0x46a83dC1a264Bff133dB887023d2884167094837'
-
 async function fundTestAccount() {
   console.log('🔧 Setting up test account with weETH...')
 
@@ -65,7 +63,7 @@ async function fundTestAccount() {
     transport: http(ANVIL_RPC_URL),
   })
 
-  const walletClient = createWalletClient({
+  createWalletClient({
     chain: base,
     transport: http(ANVIL_RPC_URL),
     account: TEST_ACCOUNT,
@@ -98,7 +96,7 @@ async function fundTestAccount() {
         params: [WEETH_ADDRESS, TEST_ACCOUNT.address, `0x${weETHAmount.toString(16)}`],
       })
       console.log(`Set test account weETH balance to ${weETHAmount.toString()} wei via anvil_deal`)
-    } catch (dealError) {
+    } catch (_dealError) {
       console.log('anvil_deal failed, trying storage manipulation...')
 
       // Fallback: Try different storage slot layouts for ERC20 balances
@@ -146,7 +144,7 @@ async function fundTestAccount() {
             console.log(`Storage manipulation succeeded with slot attempt ${i + 1}`)
             break
           }
-        } catch (e) {
+        } catch (_e) {
           console.log(`Storage slot attempt ${i + 1} failed`)
         }
       }
