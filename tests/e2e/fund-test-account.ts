@@ -2,9 +2,7 @@ import {
   createPublicClient,
   createTestClient,
   createWalletClient,
-  encodeAbiParameters,
   http,
-  keccak256,
   parseEther,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
