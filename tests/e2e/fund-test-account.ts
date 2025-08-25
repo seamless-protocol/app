@@ -16,12 +16,12 @@ const TEST_ACCOUNT = privateKeyToAccount(TEST_PRIVATE_KEY)
 const ANVIL_RPC_URL = 'http://127.0.0.1:8545'
 
 // Token addresses on Base
-const _WETH_ADDRESS = '0x4200000000000000000000000000000000000006'
+// const _WETH_ADDRESS = '0x4200000000000000000000000000000000000006'
 const WEETH_ADDRESS = '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A' // weETH (Wrapped eETH)
 
 // Whale addresses (for impersonation)
-const _WETH_WHALE = '0xecbf6e57d9430b8F79927e6109183846fab55D25' // Base WETH whale
-const _WEETH_WHALE = '0x46a83dC1a264Bff133dB887023d2884167094837' // Base weETH whale
+// const _WETH_WHALE = '0xecbf6e57d9430b8F79927e6109183846fab55D25' // Base WETH whale
+// const _WEETH_WHALE = '0x46a83dC1a264Bff133dB887023d2884167094837' // Base weETH whale
 
 const WETH_ABI = [
   {
@@ -128,17 +128,17 @@ async function fundTestAccount() {
         try {
           await testClient.setStorageAt({
             address: WEETH_ADDRESS,
-            index: attempts[i],
+            index: attempts[i] as number | `0x${string}`,
             value: `0x${weETHAmount.toString(16).padStart(64, '0')}`,
           })
 
           // Check if this worked
-          const testBalance = await publicClient.readContract({
+          const testBalance = (await publicClient.readContract({
             address: WEETH_ADDRESS,
             abi: WETH_ABI,
             functionName: 'balanceOf',
             args: [TEST_ACCOUNT.address],
-          })
+          })) as bigint
 
           if (testBalance >= parseEther('1')) {
             console.log(`Storage manipulation succeeded with slot attempt ${i + 1}`)
@@ -151,12 +151,12 @@ async function fundTestAccount() {
     }
 
     // Step 4: Verify weETH balance
-    const weETHBalance = await publicClient.readContract({
+    const weETHBalance = (await publicClient.readContract({
       address: WEETH_ADDRESS,
       abi: WETH_ABI,
       functionName: 'balanceOf',
       args: [TEST_ACCOUNT.address],
-    })
+    })) as bigint
 
     console.log(
       `✅ Test account weETH balance: ${weETHBalance.toString()} (${weETHBalance / BigInt(10 ** 18)} weETH)`,
