@@ -87,6 +87,62 @@ bun run test:integration mint/mintWithRouter.int.test.ts
 bun run test:integration --watch
 ```
 
+### Tenderly VirtualNet (Local)
+
+You can run the integration suite (and E2E UI) on an ephemeral Tenderly VirtualNet. The scripts will create the VNet, run tests against its RPC, and delete it afterward.
+
+Option A — use an existing VNet URL (no create/delete):
+
+```bash
+TENDERLY_VNET_URL="https://virtual.base.eu.rpc.tenderly.co/<id>" \
+  bun run test:integration:tenderly
+
+# Or run both integration + E2E on the same VNet URL
+TENDERLY_VNET_URL="https://virtual.base.eu.rpc.tenderly.co/<id>" \
+  bun run test:all:tenderly
+```
+
+Option B — create a fresh VNet with an explicit JSON body (recommended):
+
+```bash
+export TENDERLY_ACCESS_KEY=... # or TENDERLY_TOKEN=...
+export TENDERLY_ACCOUNT=marco_scopelift
+export TENDERLY_PROJECT=project
+
+export TENDERLY_VNET_CREATE_JSON='{
+  "display_name": "local",
+  "fork_config": { "network_id": 8453, "block_number": "latest" },
+  "virtual_network_config": { "chain_config": { "chain_id": 8453 } },
+  "sync_state_config": { "enabled": false },
+  "explorer_page_config": { "enabled": false, "verification_visibility": "bytecode" }
+}'
+
+# Integration only
+bun run test:integration:tenderly
+
+# Integration + E2E (UI) on the same VNet
+bun run test:all:tenderly
+```
+
+Option C — create a fresh VNet with env knobs (fork mode):
+
+```bash
+export TENDERLY_ACCESS_KEY=... # or TENDERLY_TOKEN=...
+export TENDERLY_ACCOUNT=marco_scopelift
+export TENDERLY_PROJECT=project
+
+export TENDERLY_FORK_NETWORK_ID=8453
+export TENDERLY_VNET_BLOCK=latest   # or decimal / 0x-hex
+
+bun run test:integration:tenderly       # integration only
+bun run test:all:tenderly               # integration + E2E
+```
+
+Notes:
+- Auth works with either X-Access-Key (TENDERLY_ACCESS_KEY) or Bearer token (TENDERLY_TOKEN).
+- The scripts choose the best RPC URL from the VNet response (Admin/Public).
+- E2E reuses the same `TEST_RPC_URL` so UI and integration tests share one VNet.
+
 ### Debugging
 
 ```bash

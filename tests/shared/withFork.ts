@@ -19,4 +19,3 @@ export async function withFork<T>(fn: () => Promise<T>): Promise<T> {
     await revertSnapshot(snap)
   }
 }
-

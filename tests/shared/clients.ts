@@ -1,7 +1,7 @@
-import { http, createPublicClient, createWalletClient, publicActions, createTestClient } from 'viem'
+import type { Address } from 'viem'
+import { createPublicClient, createTestClient, createWalletClient, http, publicActions } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base } from 'viem/chains'
-import type { Address } from 'viem'
 import { ENV } from './env'
 
 export const chain = base
@@ -19,9 +19,10 @@ export const walletClient = createWalletClient({
   transport: http(ENV.RPC_URL),
 }).extend(publicActions)
 
-export const testClient = ENV.RPC_KIND === 'anvil'
-  ? createTestClient({ chain, mode: 'anvil', transport: http(ENV.RPC_URL) })
-  : null
+export const testClient =
+  ENV.RPC_KIND === 'anvil'
+    ? createTestClient({ chain, mode: 'anvil', transport: http(ENV.RPC_URL) })
+    : null
 
 export async function setTenderlyNativeBalance(target: Address, hexBalance: `0x${string}`) {
   if (ENV.RPC_KIND !== 'tenderly') return
@@ -33,7 +34,11 @@ export async function setTenderlyNativeBalance(target: Address, hexBalance: `0x$
   }
 }
 
-export async function setTenderlyErc20Balance(token: Address, target: Address, hexBalance: `0x${string}`) {
+export async function setTenderlyErc20Balance(
+  token: Address,
+  target: Address,
+  hexBalance: `0x${string}`,
+) {
   if (ENV.RPC_KIND !== 'tenderly') return
   try {
     // @ts-expect-error custom RPC method
@@ -45,4 +50,3 @@ export async function setTenderlyErc20Balance(token: Address, target: Address, h
     // ignore
   }
 }
-

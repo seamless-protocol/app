@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
 import type { Address } from 'viem'
+import { describe, expect, it, vi } from 'vitest'
 import { mintWithRouter } from '../../../src/domain/mint-with-router/mintWithRouter'
 
 const router = '0x0000000000000000000000000000000000000011' as Address
@@ -28,13 +28,15 @@ describe('mintWithRouter (mocked)', () => {
         if (fn === 'allowance') return reads.allowance()
         return 0n
       }),
-      simulateContract: vi.fn(async () => ({ request: { address: router, abi: [], functionName: 'mint' } })),
+      simulateContract: vi.fn(async () => ({
+        request: { address: router, abi: [], functionName: 'mint' },
+      })),
       waitForTransactionReceipt: vi.fn(async () => ({ status: 'success' })),
       getChainId: vi.fn(async () => 8453),
     }
 
     const walletClient: any = {
-      writeContract: vi.fn(async () => ('0x' + 'b'.repeat(64)) as Address),
+      writeContract: vi.fn(async () => `0x${'b'.repeat(64)}` as Address),
     }
 
     const res = await mintWithRouter(
@@ -51,4 +53,3 @@ describe('mintWithRouter (mocked)', () => {
     expect(walletClient.writeContract).toHaveBeenCalled()
   })
 })
-

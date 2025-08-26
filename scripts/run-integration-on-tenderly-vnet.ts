@@ -17,20 +17,49 @@ type CreateVNetResp = { id: string; rpc_url: string }
 
 async function createVNet() {
   const key = process.env.TENDERLY_ACCESS_KEY
+  const bearer = process.env.TENDERLY_TOKEN
   const account = process.env.TENDERLY_ACCOUNT
   const project = process.env.TENDERLY_PROJECT
   const template = process.env.TENDERLY_VNET_TEMPLATE ?? 'base-mainnet'
-  const block = process.env.TENDERLY_VNET_BLOCK
+  const block = process.env.TENDERLY_VNET_BLOCK ?? 'latest'
 
   if (!key || !account || !project) {
     throw new Error('Missing Tenderly env. Set TENDERLY_ACCESS_KEY, TENDERLY_ACCOUNT, TENDERLY_PROJECT')
   }
 
-  const body: Record<string, unknown> = {
-    display_name: `local-${Date.now()}`,
-    virtual_network_template: template,
+  // Allow full override via env for maximum compatibility with Tenderly API versions/plans
+  const override = process.env.TENDERLY_VNET_CREATE_JSON
+  let body: Record<string, unknown>
+  if (override) {
+    try {
+      body = JSON.parse(override)
+    } catch (e) {
+      throw new Error(`Invalid TENDERLY_VNET_CREATE_JSON: ${(e as Error).message}`)
+    }
+  } else {
+    const mode = (process.env.TENDERLY_VNET_MODE ?? 'fork').toLowerCase()
+    const nid = Number(process.env.TENDERLY_FORK_NETWORK_ID ?? '8453')
+    // Normalize block number to string, allowing decimal or hex or 'latest'
+    let blockNumber: string | undefined = block
+    if (block && block !== 'latest' && !block.startsWith('0x')) {
+      const n = Number(block)
+      if (!Number.isNaN(n)) blockNumber = `0x${n.toString(16)}`
+    }
+    const slug = `local-${Date.now()}`
+    body = {
+      slug,
+      display_name: slug,
+      fork_config: {
+        network_id: nid,
+        ...(blockNumber ? { block_number: blockNumber } : {}),
+      },
+      virtual_network_config: {
+        chain_config: { chain_id: nid },
+      },
+      sync_state_config: { enabled: false },
+      explorer_page_config: { enabled: false, verification_visibility: 'bytecode' },
+    }
   }
-  if (block) body['block_number'] = Number(block)
 
   const res = await fetch(
     `https://api.tenderly.co/api/v1/account/${account}/project/${project}/vnets`,
@@ -38,7 +67,8 @@ async function createVNet() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Access-Key': key,
+        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        ...(key && !bearer ? { 'X-Access-Key': key } : {}),
       },
       body: JSON.stringify(body),
     },
@@ -47,18 +77,36 @@ async function createVNet() {
     const text = await res.text()
     throw new Error(`Create VNet failed: ${res.status} ${text}`)
   }
-  const json = (await res.json()) as CreateVNetResp
-  if (!json.id || !json.rpc_url) throw new Error('Invalid VNet response')
-  return json
+  const json = (await res.json()) as any
+  // Try common response shapes
+  const id = json.id ?? json.virtual_network?.id ?? json.vnet?.id
+  let rpcUrl = json.rpc_url ?? json.endpoints?.rpc ?? json.virtual_network?.rpc_url
+  if (!rpcUrl && Array.isArray(json.rpcs)) {
+    const admin = json.rpcs.find((r: any) => r.name?.toLowerCase().includes('admin') && r.url)
+    const pub = json.rpcs.find((r: any) => r.name?.toLowerCase().includes('public') && r.url)
+    rpcUrl = admin?.url ?? pub?.url ?? json.rpcs[0]?.url
+  }
+  if (!id || !rpcUrl) {
+    console.error('Unexpected VNet response:', JSON.stringify(json, null, 2))
+    throw new Error('Invalid VNet response')
+  }
+  return { id, rpc_url: rpcUrl }
 }
 
 async function deleteVNet(id: string) {
-  const key = process.env.TENDERLY_ACCESS_KEY!
+  const key = process.env.TENDERLY_ACCESS_KEY
+  const bearer = process.env.TENDERLY_TOKEN
   const account = process.env.TENDERLY_ACCOUNT!
   const project = process.env.TENDERLY_PROJECT!
   await fetch(
     `https://api.tenderly.co/api/v1/account/${account}/project/${project}/vnets/${id}`,
-    { method: 'DELETE', headers: { 'X-Access-Key': key } },
+    {
+      method: 'DELETE',
+      headers: {
+        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        ...(key && !bearer ? { 'X-Access-Key': key } : {}),
+      },
+    },
   ).catch(() => {})
 }
 
@@ -77,18 +125,27 @@ function runTests(rpcUrl: string) {
 }
 
 async function main() {
-  const vnet = await createVNet()
-  console.log('Created Tenderly VirtualNet:', vnet)
+  // If a VNet URL is provided, use it directly (no creation/deletion)
+  const presetUrl = process.env.TENDERLY_VNET_URL
+  let vnet: { id: string; rpc_url: string } | null = null
+  if (presetUrl) {
+    console.log('Using provided Tenderly VNet URL:', presetUrl)
+  } else {
+    vnet = await createVNet()
+    console.log('Created Tenderly VirtualNet:', vnet)
+  }
 
   const cleanup = async () => {
-    console.log('Deleting Tenderly VirtualNet:', vnet.id)
-    await deleteVNet(vnet.id)
+    if (vnet) {
+      console.log('Deleting Tenderly VirtualNet:', vnet.id)
+      await deleteVNet(vnet.id)
+    }
   }
   process.on('SIGINT', () => void cleanup().then(() => process.exit(130)))
   process.on('SIGTERM', () => void cleanup().then(() => process.exit(143)))
 
   try {
-    await runTests(vnet.rpc_url)
+    await runTests(presetUrl ?? vnet!.rpc_url)
   } finally {
     await cleanup()
   }
@@ -98,4 +155,3 @@ main().catch((err) => {
   console.error(err)
   process.exit(1)
 })
-

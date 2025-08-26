@@ -1,6 +1,5 @@
 import type { Address, ContractFunctionArgs } from 'viem'
-import { zeroAddress, encodeAbiParameters } from 'viem'
-import { base } from 'viem/chains'
+import { encodeAbiParameters, zeroAddress } from 'viem'
 import type { leverageRouterAbi } from '@/lib/contracts/generated'
 
 /**
@@ -41,7 +40,8 @@ export const ETHERFI_ADDRESSES = {
  * DEX addresses by chain ID (matching V1 SWAP_ADAPTER_EXCHANGE_ADDRESSES)
  */
 const DEX_ADDRESSES: Record<number, SwapContext['exchangeAddresses']> = {
-  [8453]: { // Base chain ID
+  [8453]: {
+    // Base chain ID
     aerodromeRouter: '0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43' as Address, // V1's address
     aerodromePoolFactory: '0x5e7BB104d84c7CB9B682AaC2F3d509f5F406809A' as Address, // V1's address
     aerodromeSlipstreamRouter: '0xBE6D8f0d05cC4be24d5167a3eF062215bE6D18a5' as Address, // V1's address
@@ -173,7 +173,7 @@ export function createWeETHSwapContext(): SwapContext {
         BASE_TOKEN_ADDRESSES.ETH, // V1's ETH_ADDRESS
         BASE_TOKEN_ADDRESSES.weETH, // V1's WEETH_ADDRESS
         zeroAddress, // No referral (V1 uses zeroAddress)
-      ]
+      ],
     ),
   }
 }

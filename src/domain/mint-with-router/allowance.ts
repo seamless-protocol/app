@@ -33,4 +33,3 @@ export async function ensureAllowance(
   const hash = await write(request)
   await wait({ hash })
 }
-

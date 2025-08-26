@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
 import type { Address } from 'viem'
+import { describe, expect, it, vi } from 'vitest'
 import { ensureAllowance } from '../../../src/domain/mint-with-router/allowance'
 
 const token = '0x0000000000000000000000000000000000000001' as Address
@@ -33,7 +33,7 @@ describe('ensureAllowance', () => {
   it('approves max when allowance is insufficient', async () => {
     const clients = makeClients({ allowance: 10n })
     const request = { address: token, abi: [], functionName: 'approve' }
-    const hash = '0x' + 'a'.repeat(64)
+    const hash = `0x${'a'.repeat(64)}`
     clients.publicClient.simulateContract.mockResolvedValue({ request })
     clients.walletClient.writeContract.mockResolvedValue(hash)
     clients.publicClient.waitForTransactionReceipt.mockResolvedValue({ status: 'success' })
@@ -45,4 +45,3 @@ describe('ensureAllowance', () => {
     expect(clients.publicClient.waitForTransactionReceipt).toHaveBeenCalledWith({ hash })
   })
 })
-

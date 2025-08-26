@@ -1,3 +1,7 @@
+// E2E env source
+// - Uses tests/shared/env to derive TEST_RPC_URL (Tenderly VirtualNet or Anvil)
+// - The dev server is started with VITE_BASE_RPC_URL/VITE_ANVIL_RPC_URL set to that value
+// - This ensures E2E and integration can share the exact same RPC in CI or locally
 import { defineConfig, devices } from '@playwright/test'
 import { ENV } from './tests/shared/env'
 

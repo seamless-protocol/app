@@ -20,4 +20,3 @@ export async function previewMint(
     treasuryFee: res.treasuryFee as bigint,
   }
 }
-

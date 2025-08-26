@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
-import { ENV } from '../shared/env'
 import { account } from '../shared/clients'
+import { ENV } from '../shared/env'
 import { fundNative, fundWeETH } from '../shared/funding'
 
 /**
@@ -19,11 +19,22 @@ async function globalSetup() {
       console.log(`🔗 Using Base RPC URL: ${baseRpcUrl}`)
       const anvilProcess = spawn(
         'anvil',
-        ['--fork-url', baseRpcUrl, '--port', '8545', '--block-time', '1', '--no-rate-limit', '--silent'],
+        [
+          '--fork-url',
+          baseRpcUrl,
+          '--port',
+          '8545',
+          '--block-time',
+          '1',
+          '--no-rate-limit',
+          '--silent',
+        ],
         { detached: true, stdio: ['ignore', 'pipe', 'pipe'] },
       )
       anvilProcess.stderr?.on('data', (data) => console.error(`❌ Anvil stderr: ${data}`))
-      anvilProcess.on('error', (error) => console.error(`❌ Failed to start Anvil process: ${error.message}`))
+      anvilProcess.on('error', (error) =>
+        console.error(`❌ Failed to start Anvil process: ${error.message}`),
+      )
       anvilProcess.on('exit', (code, signal) => {
         if (code !== null && code !== 0) console.error(`❌ Anvil exited with code ${code}`)
         if (signal) console.error(`❌ Anvil killed with signal ${signal}`)
@@ -32,7 +43,10 @@ async function globalSetup() {
       console.log('⏳ Waiting for Anvil to start...')
       await new Promise((r) => setTimeout(r, 3000))
       const up = await checkAnvilRunning()
-      if (!up) throw new Error('Failed to start Anvil. Check ANVIL_BASE_FORK_URL and Foundry installation.')
+      if (!up)
+        throw new Error(
+          'Failed to start Anvil. Check ANVIL_BASE_FORK_URL and Foundry installation.',
+        )
       console.log('✅ Anvil Base fork is running and ready for E2E tests')
     } else {
       console.log('✅ Anvil is already running on port 8545')

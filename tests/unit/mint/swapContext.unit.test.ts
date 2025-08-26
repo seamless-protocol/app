@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest'
-import { createSwapContext, createWeETHSwapContext, BASE_TOKEN_ADDRESSES } from '../../../src/domain/mint-with-router'
+import { describe, expect, it } from 'vitest'
+import {
+  BASE_TOKEN_ADDRESSES,
+  createSwapContext,
+  createWeETHSwapContext,
+} from '../../../src/domain/mint-with-router'
 
 describe('swapContext helpers', () => {
   it('createWeETHSwapContext returns EtherFi config with empty paths', () => {
@@ -22,4 +26,3 @@ describe('swapContext helpers', () => {
     expect(ctx.tickSpacing[0]).toBe(0)
   })
 })
-

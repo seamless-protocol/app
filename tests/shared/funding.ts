@@ -1,11 +1,17 @@
-import { parseEther, parseUnits } from 'viem'
 import type { Address } from 'viem'
-import { account, publicClient, testClient, walletClient, setTenderlyNativeBalance, setTenderlyErc20Balance } from './clients'
+import { parseEther, parseUnits } from 'viem'
+import {
+  publicClient,
+  setTenderlyErc20Balance,
+  setTenderlyNativeBalance,
+  testClient,
+  walletClient,
+} from './clients'
 import { ENV } from './env'
 
 export async function fundNative(to: Address, ether: string) {
   if (ENV.RPC_KIND === 'anvil') {
-    await testClient!.setBalance({ address: to, value: parseEther(ether) })
+    await testClient?.setBalance({ address: to, value: parseEther(ether) })
   } else {
     // Tenderly: set large balance
     const hex = `0x${parseEther(ether).toString(16)}` as `0x${string}`
@@ -25,21 +31,23 @@ export async function fundWeETH(target: Address, human: string) {
   // Anvil: impersonate a rich weETH holder and transfer
   const whale = ENV.WEETH_WHALE
   // Give whale gas and impersonate
-  await testClient!.setBalance({ address: whale, value: parseEther('1') })
-  await testClient!.impersonateAccount({ address: whale })
+  await testClient?.setBalance({ address: whale, value: parseEther('1') })
+  await testClient?.impersonateAccount({ address: whale })
 
   const amount = parseUnits(human, 18)
   // Minimal ERC20 ABI
-  const erc20Abi = [{
-    type: 'function',
-    name: 'transfer',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'to', type: 'address' },
-      { name: 'amount', type: 'uint256' }
-    ],
-    outputs: [{ name: '', type: 'bool' }]
-  }] as const
+  const erc20Abi = [
+    {
+      type: 'function',
+      name: 'transfer',
+      stateMutability: 'nonpayable',
+      inputs: [
+        { name: 'to', type: 'address' },
+        { name: 'amount', type: 'uint256' },
+      ],
+      outputs: [{ name: '', type: 'bool' }],
+    },
+  ] as const
 
   const hash = await walletClient.writeContract({
     address: ENV.ADDR.WEETH,
@@ -49,6 +57,5 @@ export async function fundWeETH(target: Address, human: string) {
     account: whale,
   })
   await publicClient.waitForTransactionReceipt({ hash })
-  await testClient!.stopImpersonatingAccount({ address: whale })
+  await testClient?.stopImpersonatingAccount({ address: whale })
 }
-

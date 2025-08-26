@@ -132,6 +132,41 @@ See `.env.example` for the complete configuration reference.
 | `bun check` | Run linter and type checker |
 | `bun check:fix` | Auto-fix issues and type check |
 | `bun format` | Format code with Biome |
+| `bun run test:integration` | Run integration tests (Anvil or configured RPC) |
+| `bun run test:integration:tenderly` | Create/Use Tenderly VNet, run integration, cleanup |
+| `bun run test:all:tenderly` | Create/Use Tenderly VNet, run integration + E2E, cleanup |
+
+### Tenderly VirtualNet (Local)
+
+Run tests on a fresh Tenderly VirtualNet or reuse an existing URL.
+
+- Use existing VNet URL:
+
+```bash
+TENDERLY_VNET_URL="https://virtual.base.eu.rpc.tenderly.co/<id>" bun run test:integration:tenderly
+
+# Or run both integration + E2E on the same VNet URL
+TENDERLY_VNET_URL="https://virtual.base.eu.rpc.tenderly.co/<id>" bun run test:all:tenderly
+```
+
+- Create a fresh VNet via explicit JSON (recommended):
+
+```bash
+export TENDERLY_ACCESS_KEY=... # or TENDERLY_TOKEN=...
+export TENDERLY_ACCOUNT=marco_scopelift
+export TENDERLY_PROJECT=project
+
+export TENDERLY_VNET_CREATE_JSON='{
+  "display_name": "local",
+  "fork_config": { "network_id": 8453, "block_number": "latest" },
+  "virtual_network_config": { "chain_config": { "chain_id": 8453 } },
+  "sync_state_config": { "enabled": false },
+  "explorer_page_config": { "enabled": false, "verification_visibility": "bytecode" }
+}'
+
+bun run test:integration:tenderly   # integration only
+bun run test:all:tenderly           # integration + E2E
+```
 
 ## Deployment
 

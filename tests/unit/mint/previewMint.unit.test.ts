@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
 import type { Address } from 'viem'
+import { describe, expect, it, vi } from 'vitest'
 import { previewMint } from '../../../src/domain/mint-with-router/previewMint'
 
 const manager = '0x0000000000000000000000000000000000000009' as Address
@@ -16,4 +16,3 @@ describe('previewMint', () => {
     expect(publicClient.readContract).toHaveBeenCalled()
   })
 })
-

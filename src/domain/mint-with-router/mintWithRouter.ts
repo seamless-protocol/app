@@ -1,10 +1,10 @@
 import type { Address } from 'viem'
-import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
-import type { Addresses, Clients, IoOverrides, MintParams, MintResult } from './types'
-import { previewMint } from './previewMint'
+import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
 import { ensureAllowance } from './allowance'
-import { createSwapContext, BASE_TOKEN_ADDRESSES, createWeETHSwapContext } from './swapContext'
+import { previewMint } from './previewMint'
+import { BASE_TOKEN_ADDRESSES, createSwapContext, createWeETHSwapContext } from './swapContext'
+import type { Addresses, Clients, IoOverrides, MintParams, MintResult } from './types'
 
 export async function mintWithRouter(
   clients: Clients,
@@ -14,7 +14,12 @@ export async function mintWithRouter(
   io?: IoOverrides,
 ): Promise<MintResult> {
   const { router, manager, token } = addresses
-  const { equityInCollateralAsset, slippageBps = 50, maxSwapCostInCollateralAsset, swapContext } = params
+  const {
+    equityInCollateralAsset,
+    slippageBps = 50,
+    maxSwapCostInCollateralAsset,
+    swapContext,
+  } = params
 
   // 1) Confirm collateral asset and preview mint
   const collateralAsset = (await clients.publicClient.readContract({
@@ -24,24 +29,34 @@ export async function mintWithRouter(
     args: [token],
   })) as Address
 
-  const preview = await previewMint({ publicClient: clients.publicClient }, manager, token, equityInCollateralAsset)
+  const preview = await previewMint(
+    { publicClient: clients.publicClient },
+    manager,
+    token,
+    equityInCollateralAsset,
+  )
   const minShares = (preview.shares * BigInt(10000 - slippageBps)) / 10000n
 
   // 2) Swap context
-  const finalSwapContext = swapContext ?? (await (async () => {
-    const debtAsset = (await clients.publicClient.readContract({
-      address: manager,
-      abi: leverageManagerAbi,
-      functionName: 'getLeverageTokenDebtAsset',
-      args: [token],
-    })) as Address
-    const chainId = await clients.publicClient.getChainId()
-    // Special-case weETH path per V1 pattern
-    if (chainId === 8453 && collateralAsset.toLowerCase() === BASE_TOKEN_ADDRESSES.weETH.toLowerCase()) {
-      return createWeETHSwapContext()
-    }
-    return createSwapContext(collateralAsset, debtAsset, chainId)
-  })())
+  const finalSwapContext =
+    swapContext ??
+    (await (async () => {
+      const debtAsset = (await clients.publicClient.readContract({
+        address: manager,
+        abi: leverageManagerAbi,
+        functionName: 'getLeverageTokenDebtAsset',
+        args: [token],
+      })) as Address
+      const chainId = await clients.publicClient.getChainId()
+      // Special-case weETH path per V1 pattern
+      if (
+        chainId === 8453 &&
+        collateralAsset.toLowerCase() === BASE_TOKEN_ADDRESSES.weETH.toLowerCase()
+      ) {
+        return createWeETHSwapContext()
+      }
+      return createSwapContext(collateralAsset, debtAsset, chainId)
+    })())
 
   // 3) Max swap cost default to 5%
   const finalMaxSwapCost = maxSwapCostInCollateralAsset ?? (equityInCollateralAsset * 500n) / 10000n

@@ -125,9 +125,11 @@ tests/
 └── utils/       # Test helpers
 ```
 
-### Integration Testing with Anvil
+### Integration Testing (Tenderly or Anvil)
 
-Integration tests use a local Anvil fork of Base mainnet, replacing the previous Tenderly setup to eliminate API limits.
+Integration tests can run against either:
+- A local Anvil fork of Base mainnet (no API limits), or
+- A Tenderly VirtualNet (ephemeral) created on the fly.
 
 **Prerequisites:**
 ```bash
@@ -144,7 +146,7 @@ foundryup
    # Edit .env with your Base RPC URL (required: ANVIL_BASE_FORK_URL)
    ```
 
-2. Run integration tests:
+2. Run integration tests (Anvil):
    ```bash
    # Terminal 1: Start Anvil Base fork
    ANVIL_BASE_FORK_URL=https://mainnet.base.org bun run anvil:base
@@ -152,6 +154,21 @@ foundryup
    # Terminal 2: Run tests
    bun run test:integration
    ```
+
+3. Run integration tests (Tenderly VirtualNet):
+   - Use an existing VNet URL:
+     ```bash
+     TEST_RPC_KIND=tenderly TEST_RPC_URL=https://virtual.base.eu.rpc.tenderly.co/<id> \
+       bun run test:integration
+     ```
+   - Or create a fresh VNet and run locally (one-liner script):
+     ```bash
+     export TENDERLY_ACCESS_KEY=...   # or TENDERLY_TOKEN=...
+     export TENDERLY_ACCOUNT=marco_scopelift
+     export TENDERLY_PROJECT=project
+     export TENDERLY_VNET_CREATE_JSON='{"display_name":"local","fork_config":{"network_id":8453,"block_number":"latest"},"virtual_network_config":{"chain_config":{"chain_id":8453}},"sync_state_config":{"enabled":false},"explorer_page_config":{"enabled":false,"verification_visibility":"bytecode"}}'
+     bun run test:integration:tenderly
+     ```
 
 **Key Features:**
 - **No API limits** - Tests run against local Anvil fork
@@ -165,11 +182,13 @@ foundryup
 - **Test Client**: Anvil-specific actions (`setBalance`, `impersonateAccount`, `snapshot`, `revert`)
 - **Funding**: Automatic via WETH deposits or rich holder impersonation
 
-See `tests/integration/README.md` for complete setup guide and CI configuration.
+See `tests/integration/README.md` for complete setup and local Tenderly scripts.
+
+CI workflow to create a VNet and run the suite: `.github/workflows/integration-tenderly-vnet.yml` (requires Tenderly secrets).
 
 ### End-to-End Testing with Playwright
 
-E2E tests verify complete user workflows using real blockchain transactions against Anvil Base fork.
+E2E tests verify complete user workflows using real blockchain transactions against the same RPC used by integration (Anvil or Tenderly).
 
 **Test Philosophy:**
 - **Happy Path Tests MUST succeed** - Tests named "Happy Path" should complete real transactions successfully, not just validate error handling
@@ -186,16 +205,27 @@ E2E tests verify complete user workflows using real blockchain transactions agai
 ```
 tests/e2e/
 ├── mint-flow.spec.ts     # Leverage token minting workflows
-├── global-setup.ts      # Anvil startup and account funding
-├── fund-test-account.ts # Token funding utilities
-└── playwright.config.ts # Test mode configuration
+├── global-setup.ts       # Starts Anvil if selected; funds accounts (via shared harness)
+├── README.md             # How to run E2E locally (Anvil or Tenderly)
+└── playwright.config.ts  # Uses tests/shared/env to wire RPC into the UI
 ```
 
 **Critical Requirements:**
-1. **Anvil must run with Base chain ID (8453)** - Configured in `package.json` anvil:base script
+1. **RPC selection via tests/shared/env** - `TEST_RPC_KIND` and `TEST_RPC_URL` control target (Tenderly or Anvil)
 2. **Test accounts must have sufficient balances** - Verified before attempting transactions
 3. **Happy Path tests must complete successfully** - No passing tests that only validate errors
-4. **Environment variables required** - VITE_TEST_MODE=mock, VITE_BASE_RPC_URL=http://127.0.0.1:8545
+4. **Environment variables** - Playwright config passes `VITE_BASE_RPC_URL` / `VITE_ANVIL_RPC_URL` from the selected RPC so UI and tests share the same chain
+
+### Cloud/CI Quick Start (Tenderly VirtualNet)
+
+- Workflow: `.github/workflows/integration-tenderly-vnet.yml`
+- Secrets required:
+  - `TENDERLY_ACCOUNT`, `TENDERLY_PROJECT`, and one of `TENDERLY_ACCESS_KEY` or `TENDERLY_TOKEN`
+- Optional:
+  - `TENDERLY_VNET_CREATE_JSON` for exact create payload
+  - Or repo variables `TENDERLY_FORK_NETWORK_ID` (default 8453), `TENDERLY_VNET_BLOCK` (default latest)
+- Behavior:
+  - Creates VNet → runs integration → runs E2E (same RPC) → deletes VNet
 
 ## Feature Flags
 

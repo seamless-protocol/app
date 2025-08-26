@@ -1,7 +1,5 @@
-import type { Address, Hash } from 'viem'
-import type { PublicClient, WalletClient } from 'viem'
+import type { Address, ContractFunctionArgs, Hash, PublicClient, WalletClient } from 'viem'
 import type { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
-import type { ContractFunctionArgs } from 'viem'
 
 export type SwapContext = ContractFunctionArgs<typeof leverageRouterAbi, 'nonpayable', 'mint'>[4]
 
@@ -43,4 +41,3 @@ export type IoOverrides = {
   writeContract?: Clients['walletClient']['writeContract']
   waitForTransactionReceipt?: Clients['publicClient']['waitForTransactionReceipt']
 }
-

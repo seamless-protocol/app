@@ -1,8 +1,7 @@
 // Re-export swap context helpers to provide a stable import surface for the domain lib
 export {
-  type SwapContext,
+  BASE_TOKEN_ADDRESSES,
   createSwapContext,
   createWeETHSwapContext,
-  BASE_TOKEN_ADDRESSES,
+  type SwapContext,
 } from '@/features/leverage-tokens/utils/swapContext'
-

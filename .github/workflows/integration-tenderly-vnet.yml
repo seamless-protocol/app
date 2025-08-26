@@ -15,10 +15,10 @@ concurrency:
   group: integration-tenderly-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
+  jobs:
+    test:
+      runs-on: ubuntu-latest
+      steps:
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -34,21 +34,48 @@ jobs:
         id: vnet
         env:
           TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
           TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
-          VNET_TEMPLATE: ${{ vars.TENDERLY_VNET_TEMPLATE || 'base-mainnet' }}
+          TENDERLY_VNET_MODE: ${{ vars.TENDERLY_VNET_MODE }}
+          TENDERLY_VNET_TEMPLATE: ${{ vars.TENDERLY_VNET_TEMPLATE }}
+          TENDERLY_FORK_NETWORK_ID: ${{ vars.TENDERLY_FORK_NETWORK_ID }}
+          TENDERLY_VNET_BLOCK: ${{ vars.TENDERLY_VNET_BLOCK }}
+          TENDERLY_VNET_CREATE_JSON: ${{ secrets.TENDERLY_VNET_CREATE_JSON }}
         run: |
           set -euo pipefail
           if [ -z "${TENDERLY_ACCESS_KEY:-}" ] || [ -z "${TENDERLY_ACCOUNT:-}" ] || [ -z "${TENDERLY_PROJECT:-}" ]; then
             echo "Tenderly secrets not configured (TENDERLY_ACCESS_KEY, TENDERLY_ACCOUNT, TENDERLY_PROJECT)." >&2
             exit 1
           fi
-          # Create VirtualNet
+          # Create VirtualNet (support both template and fork modes, or full JSON override)
+          CREATE_BODY="${TENDERLY_VNET_CREATE_JSON:-}"
+          if [ -z "$CREATE_BODY" ]; then
+            MODE=${TENDERLY_VNET_MODE:-fork}
+            NID=${TENDERLY_FORK_NETWORK_ID:-8453}
+            BLOCK=${TENDERLY_VNET_BLOCK:-latest}
+            # Convert decimal block to hex if needed
+            if [[ "$BLOCK" != latest && "$BLOCK" != 0x* ]]; then
+              BLOCK=$(printf "0x%x" "$BLOCK")
+            fi
+            SLUG="ci-${{ github.run_id }}"
+            CREATE_BODY=$(jq -n \
+              --arg slug "$SLUG" \
+              --arg name "$SLUG" \
+              --argjson nid "$NID" \
+              --arg block "$BLOCK" \
+              '{slug: $slug, display_name: $name, fork_config: {network_id: $nid, block_number: $block}, virtual_network_config: {chain_config: {chain_id: $nid}}, sync_state_config: {enabled: false}, explorer_page_config: {enabled: false, verification_visibility: "bytecode"}}')
+          fi
+
+          echo "Create body:"; echo "$CREATE_BODY" | jq .
+          # Auth header (Access-Key or Bearer)
+          if [ -n "${TENDERLY_TOKEN:-}" ]; then AUTH_HEADER="Authorization: Bearer $TENDERLY_TOKEN"; else AUTH_HEADER="X-Access-Key: $TENDERLY_ACCESS_KEY"; fi
+
           resp=$(curl -sS -X POST \
             "https://api.tenderly.co/api/v1/account/$TENDERLY_ACCOUNT/project/$TENDERLY_PROJECT/vnets" \
             -H "Content-Type: application/json" \
-            -H "X-Access-Key: $TENDERLY_ACCESS_KEY" \
-            -d "{\"display_name\": \"ci-${{ github.run_id }}\", \"virtual_network_template\": \"${VNET_TEMPLATE}\" }")
+            -H "$AUTH_HEADER" \
+            -d "$CREATE_BODY")
           echo "$resp" | jq .
           id=$(echo "$resp" | jq -r .id)
           rpc_url=$(echo "$resp" | jq -r .rpc_url)
@@ -66,20 +93,27 @@ jobs:
           TEST_RPC_URL: ${{ steps.vnet.outputs.rpc_url }}
         run: bun run test:integration
 
+      - name: Run E2E tests (same VirtualNet)
+        env:
+          TEST_RPC_KIND: tenderly
+          TEST_RPC_URL: ${{ steps.vnet.outputs.rpc_url }}
+        run: bun run test:e2e
+
       - name: Cleanup VirtualNet
         if: always()
         env:
           TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
           TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
           VNET_ID: ${{ steps.vnet.outputs.id }}
         run: |
           if [ -n "${VNET_ID:-}" ]; then
+            if [ -n "${TENDERLY_TOKEN:-}" ]; then AUTH_HEADER="Authorization: Bearer $TENDERLY_TOKEN"; else AUTH_HEADER="X-Access-Key: $TENDERLY_ACCESS_KEY"; fi
             curl -sS -X DELETE \
               "https://api.tenderly.co/api/v1/account/$TENDERLY_ACCOUNT/project/$TENDERLY_PROJECT/vnets/$VNET_ID" \
-              -H "X-Access-Key: $TENDERLY_ACCESS_KEY" \
+              -H "$AUTH_HEADER" \
               -o /dev/null -w "HTTP %{http_code}\n"
           else
             echo "No VNet ID to delete"
           fi
-
