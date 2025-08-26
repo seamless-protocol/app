@@ -1,0 +1,85 @@
+name: Integration (Tenderly VirtualNet)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/integration-tenderly-vnet.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-tenderly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: Create Tenderly VirtualNet
+        id: vnet
+        env:
+          TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
+          TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
+          VNET_TEMPLATE: ${{ vars.TENDERLY_VNET_TEMPLATE || 'base-mainnet' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TENDERLY_ACCESS_KEY:-}" ] || [ -z "${TENDERLY_ACCOUNT:-}" ] || [ -z "${TENDERLY_PROJECT:-}" ]; then
+            echo "Tenderly secrets not configured (TENDERLY_ACCESS_KEY, TENDERLY_ACCOUNT, TENDERLY_PROJECT)." >&2
+            exit 1
+          fi
+          # Create VirtualNet
+          resp=$(curl -sS -X POST \
+            "https://api.tenderly.co/api/v1/account/$TENDERLY_ACCOUNT/project/$TENDERLY_PROJECT/vnets" \
+            -H "Content-Type: application/json" \
+            -H "X-Access-Key: $TENDERLY_ACCESS_KEY" \
+            -d "{\"display_name\": \"ci-${{ github.run_id }}\", \"virtual_network_template\": \"${VNET_TEMPLATE}\" }")
+          echo "$resp" | jq .
+          id=$(echo "$resp" | jq -r .id)
+          rpc_url=$(echo "$resp" | jq -r .rpc_url)
+          if [ -z "$id" ] || [ "$id" = "null" ] || [ -z "$rpc_url" ] || [ "$rpc_url" = "null" ]; then
+            echo "Failed to create VirtualNet; response:" >&2
+            echo "$resp" >&2
+            exit 1
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          echo "rpc_url=$rpc_url" >> "$GITHUB_OUTPUT"
+
+      - name: Run integration tests (Tenderly VirtualNet)
+        env:
+          TEST_RPC_KIND: tenderly
+          TEST_RPC_URL: ${{ steps.vnet.outputs.rpc_url }}
+        run: bun run test:integration
+
+      - name: Cleanup VirtualNet
+        if: always()
+        env:
+          TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
+          TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
+          VNET_ID: ${{ steps.vnet.outputs.id }}
+        run: |
+          if [ -n "${VNET_ID:-}" ]; then
+            curl -sS -X DELETE \
+              "https://api.tenderly.co/api/v1/account/$TENDERLY_ACCOUNT/project/$TENDERLY_PROJECT/vnets/$VNET_ID" \
+              -H "X-Access-Key: $TENDERLY_ACCESS_KEY" \
+              -o /dev/null -w "HTTP %{http_code}\n"
+          else
+            echo "No VNet ID to delete"
+          fi
+
