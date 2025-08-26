@@ -20,8 +20,10 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 // Simple mock icon component
-const MockIcon = ({ size, className }: { size?: number; className?: string }) => (
-  <div className={`w-full h-full bg-slate-600 rounded-full flex items-center justify-center text-white text-xs font-medium ${className || ''}`}>
+const MockIcon = ({ className }: { size?: number; className?: string }) => (
+  <div
+    className={`w-full h-full bg-slate-600 rounded-full flex items-center justify-center text-white text-xs font-medium ${className || ''}`}
+  >
     T
   </div>
 )

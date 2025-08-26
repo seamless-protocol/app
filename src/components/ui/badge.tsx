@@ -9,12 +9,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-secondary bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
+        default:
+          'border-secondary bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
         secondary:
           'border-secondary bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
         destructive:
           'border-destructive bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
-        outline: 'border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
+        outline:
+          'border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
       },
     },
     defaultVariants: {
@@ -55,32 +57,34 @@ function Badge({
   if (logo) {
     const LogoComponent = logo
     const content = (
-      <div className={cn(
-        "flex items-center space-x-2",
-        clickable && "hover:bg-secondary/90 transition-colors rounded cursor-pointer",
-        className
-      )}>
-        <div className={cn(
-          "rounded-full border border-secondary bg-secondary flex items-center justify-center p-0.5",
-          logoSize <= 16 && "w-4 h-4",
-          logoSize > 16 && logoSize <= 20 && "w-5 h-5", 
-          logoSize > 20 && logoSize <= 24 && "w-6 h-6",
-          logoSize > 24 && "w-8 h-8"
-        )}>
+      <div
+        className={cn(
+          'flex items-center space-x-2',
+          clickable && 'hover:bg-secondary/90 transition-colors rounded cursor-pointer',
+          className,
+        )}
+      >
+        <div
+          className={cn(
+            'rounded-full border border-secondary bg-secondary flex items-center justify-center p-0.5',
+            logoSize <= 16 && 'w-4 h-4',
+            logoSize > 16 && logoSize <= 20 && 'w-5 h-5',
+            logoSize > 20 && logoSize <= 24 && 'w-6 h-6',
+            logoSize > 24 && 'w-8 h-8',
+          )}
+        >
           <LogoComponent size={logoSize} />
         </div>
-        
+
         <span className="font-medium text-secondary-foreground text-sm truncate">
-          {showName && typeof children === 'string' && children.includes(' ') 
-            ? children 
-            : children}
+          {showName && typeof children === 'string' && children.includes(' ') ? children : children}
         </span>
       </div>
     )
 
     if (clickable && onClick) {
       return (
-        <button onClick={onClick} className="w-full text-left">
+        <button type="button" onClick={onClick} className="w-full text-left">
           {content}
         </button>
       )
@@ -90,7 +94,11 @@ function Badge({
   }
 
   // Regular badge
-  return <Comp data-slot="badge" className={cn(badgeVariants({ variant }), className)} {...props}>{children}</Comp>
+  return (
+    <Comp data-slot="badge" className={cn(badgeVariants({ variant }), className)} {...props}>
+      {children}
+    </Comp>
+  )
 }
 
 export { Badge, badgeVariants }
