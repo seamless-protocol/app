@@ -8,7 +8,7 @@ import {
   getLeverageTokenData,
   approveRouter,
   previewMint,
-  simulateRouterMint,
+  executeRouterMint,
   getTokenBalance,
   getTokenAllowance,
 } from './helpers'
@@ -16,8 +16,8 @@ import { withFork } from './utils'
 
 describe('Router Mint Integration', () => {
   it('should preview mint correctly', async () =>
-    withFork(async ({ account, publicClient, ADDR, fund }) => {
-      await fund.native([account.address], '1')
+    withFork(async ({ account, publicClient, ADDR }) => {
+      // No need to fund - test account should already have ETH for gas calls
 
       const preview = await publicClient.readContract({
         address: ADDR.manager,
@@ -43,11 +43,10 @@ describe('Router Mint Integration', () => {
       expect(collateralAsset.toLowerCase()).toBe(BASE_TOKEN_ADDRESSES.weETH.toLowerCase())
     }))
 
-  it('should simulate Router.mint with V1 pattern', async () =>
-    withFork(async ({ publicClient, ADDR, fund }) => {
-      // Setup whale account with weETH balance
+  it('should execute Router.mint with V1 pattern', async () =>
+    withFork(async ({ publicClient, ADDR }) => {
+      // Setup whale account with weETH balance (includes ETH funding)
       const account = await setupWhaleAccount()
-      await fund.native([account.address], '10')
 
       // Get leverage token data
       const { collateralAsset, debtAsset } = await getLeverageTokenData(
@@ -59,22 +58,29 @@ describe('Router Mint Integration', () => {
       const balance = await getTokenBalance(collateralAsset, account.address)
       expect(balance).toBeGreaterThan(TEST_CONSTANTS.AMOUNTS.EQUITY)
 
-      // Calculate mint parameters using V1 pattern
+      // V1 PATTERN: Calculate swap cost and amountAfterSwapCost first
       const { amountAfterSwapCost, maxSwapCost } = calculateMintParams(TEST_CONSTANTS.AMOUNTS.EQUITY)
+      // Preview mint with the reduced amount (after swap cost) to get correct minShares
       const { minShares } = await previewMint(ADDR.manager, ADDR.leverageToken, amountAfterSwapCost)
 
       // Approve Router to spend collateral (V1 pattern - single approval)
       await approveRouter(collateralAsset, ADDR.router, account)
 
-      // Simulate Router.mint - should succeed
-      await simulateRouterMint(
+      // Execute Router.mint with V1 pattern - should succeed and return receipt
+      const { hash, receipt } = await executeRouterMint(
         ADDR.router,
         ADDR.leverageToken,
-        amountAfterSwapCost,
+        amountAfterSwapCost, // V1 pattern: use amountAfterSwapCost
         minShares,
         maxSwapCost,
         account
       )
+      
+      // Verify transaction succeeded
+      expect(receipt.status).toBe('success')
+      expect(hash).toMatch(/^0x[a-fA-F0-9]{64}$/)
+      
+      console.log('✅ Router.mint executed successfully:', hash)
     }))
 
   it('should check initial allowance is zero', async () =>

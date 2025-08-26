@@ -1,7 +1,7 @@
 import { type Address, erc20Abi, maxUint256 } from 'viem'
 import { leverageManagerAbi } from '../../src/lib/contracts/abis/leverageManager'
 import { leverageRouterAbi } from '../../src/lib/contracts/abis/leverageRouter' 
-import { createSwapContext } from '../../src/features/leverage-tokens/utils/swapContext'
+import { createWeETHSwapContext } from '../../src/features/leverage-tokens/utils/swapContext'
 import { TEST_CONSTANTS, calculateMinShares } from './constants'
 import { testClient, publicClient, walletClient } from './setup'
 
@@ -12,34 +12,29 @@ export const BASE_TOKEN_ADDRESSES = {
   ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as Address,
 }
 
-// Create weETH-specific swap context (matching V1 working pattern)
-export function createWeETHSwapContext() {
-  return createSwapContext(
-    BASE_TOKEN_ADDRESSES.weETH, // collateral
-    BASE_TOKEN_ADDRESSES.WETH,  // debt asset
-    8453 // Base chain ID
-  )
-}
+// Note: createWeETHSwapContext is now imported from swapContext.ts - V1 working pattern
 
 /** Account setup for whale testing */
 export async function setupWhaleAccount(whaleAddress: Address = TEST_CONSTANTS.WHALE_ADDRESS) {
   const account = { address: whaleAddress, type: 'json-rpc' } as const
   
-  // Try Tenderly funding first, fallback to regular funding
+  // Fund account with ETH for gas using Tenderly method
   try {
     await publicClient.request({
       method: 'tenderly_setBalance', 
       params: [[account.address], TEST_CONSTANTS.TENDERLY_BALANCE]
     })
-  } catch {
-    // Fallback will happen in fund.native
+    console.log('✅ Funded account via tenderly_setBalance')
+  } catch (e) {
+    console.log('Note: Could not set balance via tenderly_setBalance, whale should already have balance')
   }
 
-  // Try account impersonation (Anvil only)
+  // Try account impersonation (Anvil only, skip for Tenderly)
   try {
     await testClient.impersonateAccount({ address: account.address })
+    console.log('✅ Account impersonation enabled')
   } catch {
-    // Tenderly doesn't support impersonation but has real balances
+    console.log('Note: Account impersonation not supported on Tenderly, using account directly')
   }
 
   return account
@@ -47,7 +42,7 @@ export async function setupWhaleAccount(whaleAddress: Address = TEST_CONSTANTS.W
 
 /** Get leverage token metadata */
 export async function getLeverageTokenData(leverageToken: Address, manager: Address) {
-  const [collateralAsset, debtAsset, tokenConfig] = await Promise.all([
+  const [collateralAsset, debtAsset] = await Promise.all([
     publicClient.readContract({
       address: manager,
       abi: leverageManagerAbi,
@@ -60,22 +55,15 @@ export async function getLeverageTokenData(leverageToken: Address, manager: Addr
       functionName: 'getLeverageTokenDebtAsset',
       args: [leverageToken],
     }),
-    publicClient.readContract({
-      address: manager,
-      abi: leverageManagerAbi, 
-      functionName: 'getLeverageTokenConfig',
-      args: [leverageToken],
-    })
   ])
 
   return {
     collateralAsset: collateralAsset as Address,
     debtAsset: debtAsset as Address,
-    tokenConfig,
   }
 }
 
-/** Approve Router to spend collateral (V1 pattern) */
+/** Approve Router to spend collateral (V1 pattern - single approval only) */
 export async function approveRouter(
   collateralAsset: Address,
   router: Address,
@@ -86,6 +74,24 @@ export async function approveRouter(
     abi: erc20Abi,
     functionName: 'approve',
     args: [router, maxUint256],
+    account,
+  })
+  
+  const hash = await walletClient.writeContract(request)
+  await publicClient.waitForTransactionReceipt({ hash })
+}
+
+/** Approve EtherFi L2ModeSyncPool for dual approval pattern */
+export async function approveEtherFi(
+  collateralAsset: Address,
+  etherFiPool: Address,
+  account: { address: Address; type: 'json-rpc' }
+) {
+  const { request } = await publicClient.simulateContract({
+    address: collateralAsset,
+    abi: erc20Abi,
+    functionName: 'approve',
+    args: [etherFiPool, maxUint256],
     account,
   })
   
@@ -114,8 +120,8 @@ export async function previewMint(
   }
 }
 
-/** Simulate Router.mint transaction */
-export async function simulateRouterMint(
+/** Execute Router.mint transaction (full write) */
+export async function executeRouterMint(
   router: Address,
   leverageToken: Address,
   amountAfterSwapCost: bigint,
@@ -125,13 +131,20 @@ export async function simulateRouterMint(
 ) {
   const swapContext = createWeETHSwapContext()
   
-  await publicClient.simulateContract({
+  // First simulate to catch errors early
+  const { request } = await publicClient.simulateContract({
     address: router,
     abi: leverageRouterAbi,
     functionName: 'mint', 
     args: [leverageToken, amountAfterSwapCost, minShares, maxSwapCost, swapContext],
     account,
   })
+  
+  // Execute the actual transaction
+  const hash = await walletClient.writeContract(request)
+  const receipt = await publicClient.waitForTransactionReceipt({ hash })
+  
+  return { hash, receipt }
 }
 
 /** Check token balance */
