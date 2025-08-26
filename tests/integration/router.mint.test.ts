@@ -1,152 +1,88 @@
-import { type Address, erc20Abi, maxUint256 } from 'viem'
+import { type Address } from 'viem'
 import { describe, expect, it } from 'vitest'
-import { createSwapContext } from '../../src/features/leverage-tokens/utils/swapContext'
 import { leverageManagerAbi } from '../../src/lib/contracts/abis/leverageManager'
-import { leverageRouterAbi } from '../../src/lib/contracts/abis/leverageRouter'
+import { TEST_CONSTANTS, calculateMintParams } from './constants'
+import {
+  BASE_TOKEN_ADDRESSES,
+  setupWhaleAccount,
+  getLeverageTokenData,
+  approveRouter,
+  previewMint,
+  simulateRouterMint,
+  getTokenBalance,
+  getTokenAllowance,
+} from './helpers'
 import { withFork } from './utils'
 
-describe('Router-Based Minting (Anvil Base fork / viem)', () => {
-  it('previewMint and check collateral asset', async () =>
+describe('Router Mint Integration', () => {
+  it('should preview mint correctly', async () =>
     withFork(async ({ account, publicClient, ADDR, fund }) => {
-      const leverageToken: Address = ADDR.leverageToken
-      const manager: Address = ADDR.manager
-
-      // Fund: 1 native for gas
       await fund.native([account.address], '1')
 
-      // Get collateral asset for this leverage token
-      const collateralAsset = (await publicClient.readContract({
-        address: manager,
-        abi: leverageManagerAbi,
-        functionName: 'getLeverageTokenCollateralAsset',
-        args: [leverageToken],
-      })) as Address
-
-      console.log('Collateral asset:', collateralAsset)
-      expect(collateralAsset).toMatch(/^0x[a-fA-F0-9]{40}$/)
-
-      // Preview mint with 1 unit of collateral
-      const equityInCollateralAsset = 1000000000000000000n // 1 token in wei
       const preview = await publicClient.readContract({
-        address: manager,
+        address: ADDR.manager,
         abi: leverageManagerAbi,
         functionName: 'previewMint',
-        args: [leverageToken, equityInCollateralAsset],
+        args: [ADDR.leverageToken, TEST_CONSTANTS.AMOUNTS.EQUITY],
       })
 
-      console.log('Preview result:')
-      console.log('  Expected shares:', preview.shares.toString())
-      console.log('  Token fee:', preview.tokenFee.toString())
-      console.log('  Treasury fee:', preview.treasuryFee.toString())
-
-      // Should return positive shares
       expect(preview.shares).toBeGreaterThan(0n)
+      expect(preview.tokenFee).toBeGreaterThanOrEqual(0n)
+      expect(preview.treasuryFee).toBeGreaterThanOrEqual(0n)
     }))
 
-  it('Router.mint with real SwapContext (should succeed)', async () =>
-    withFork(async ({ account, walletClient, publicClient, ADDR, fund }) => {
-      const leverageToken: Address = ADDR.leverageToken
-      const router: Address = ADDR.router
-      const manager: Address = ADDR.manager
+  it('should verify collateral asset is weETH', async () =>
+    withFork(async ({ publicClient, ADDR }) => {
+      const collateralAsset = await publicClient.readContract({
+        address: ADDR.manager,
+        abi: leverageManagerAbi,
+        functionName: 'getLeverageTokenCollateralAsset',
+        args: [ADDR.leverageToken],
+      })
 
-      // Fund: 10 native for gas
+      expect(collateralAsset.toLowerCase()).toBe(BASE_TOKEN_ADDRESSES.weETH.toLowerCase())
+    }))
+
+  it('should simulate Router.mint with V1 pattern', async () =>
+    withFork(async ({ publicClient, ADDR, fund }) => {
+      // Setup whale account with weETH balance
+      const account = await setupWhaleAccount()
       await fund.native([account.address], '10')
 
-      // Get collateral asset
-      const collateralAsset = (await publicClient.readContract({
-        address: manager,
-        abi: leverageManagerAbi,
-        functionName: 'getLeverageTokenCollateralAsset',
-        args: [leverageToken],
-      })) as Address
-
-      console.log('Using collateral asset:', collateralAsset)
-
-      // Fund account with collateral tokens (simulate)
-      const equityAmount = 1000000000000000000n // 1 token
-      await fund.erc20(collateralAsset, [account.address], '1')
-
-      // Approve Router for collateral
-      const { request: approveRequest } = await publicClient.simulateContract({
-        address: collateralAsset,
-        abi: erc20Abi,
-        functionName: 'approve',
-        args: [router, maxUint256],
-        account,
-      })
-      const approveHash = await walletClient.writeContract(approveRequest)
-      await publicClient.waitForTransactionReceipt({ hash: approveHash })
-
-      // Preview mint to calculate minShares
-      const preview = await publicClient.readContract({
-        address: manager,
-        abi: leverageManagerAbi,
-        functionName: 'previewMint',
-        args: [leverageToken, equityAmount],
-      })
-      const minShares = preview.shares // No slippage for test
-
-      // Get debt asset (underlying asset for leverage exposure)
-      const debtAsset = (await publicClient.readContract({
-        address: manager,
-        abi: leverageManagerAbi,
-        functionName: 'getLeverageTokenDebtAsset',
-        args: [leverageToken],
-      })) as Address
-
-      console.log('Using debt asset (underlying):', debtAsset)
-
-      // Create real SwapContext for collateral → debt asset swap (chain-aware)
-      const swapContext = createSwapContext(
-        collateralAsset, // e.g., weETH (collateral)
-        debtAsset, // e.g., WETH (debt asset / underlying)
-        8453, // Base chain ID - will auto-select Aerodrome V2 for Base
+      // Get leverage token data
+      const { collateralAsset, debtAsset } = await getLeverageTokenData(
+        ADDR.leverageToken,
+        ADDR.manager
       )
-      const maxSwapCost = (equityAmount * 500n) / 10000n // 5%
 
-      console.log('Attempting Router.mint with real SwapContext...')
+      // Verify we have sufficient weETH balance
+      const balance = await getTokenBalance(collateralAsset, account.address)
+      expect(balance).toBeGreaterThan(TEST_CONSTANTS.AMOUNTS.EQUITY)
 
-      // This should succeed with proper SwapContext
-      await publicClient.simulateContract({
-        address: router,
-        abi: leverageRouterAbi,
-        functionName: 'mint',
-        args: [leverageToken, equityAmount, minShares, maxSwapCost, swapContext] as any,
-        account,
-      })
+      // Calculate mint parameters using V1 pattern
+      const { amountAfterSwapCost, maxSwapCost } = calculateMintParams(TEST_CONSTANTS.AMOUNTS.EQUITY)
+      const { minShares } = await previewMint(ADDR.manager, ADDR.leverageToken, amountAfterSwapCost)
 
-      console.log('✅ Router accepted real SwapContext - simulation successful')
+      // Approve Router to spend collateral (V1 pattern - single approval)
+      await approveRouter(collateralAsset, ADDR.router, account)
 
-      // Note: We don't execute the transaction in this test to avoid consuming real funds
-      // The simulation success confirms the SwapContext is properly configured
+      // Simulate Router.mint - should succeed
+      await simulateRouterMint(
+        ADDR.router,
+        ADDR.leverageToken,
+        amountAfterSwapCost,
+        minShares,
+        maxSwapCost,
+        account
+      )
     }))
 
-  it('Router allowance check', async () =>
+  it('should check initial allowance is zero', async () =>
     withFork(async ({ account, publicClient, ADDR }) => {
-      const manager: Address = ADDR.manager
-      const router: Address = ADDR.router
-      const leverageToken: Address = ADDR.leverageToken
+      const { collateralAsset } = await getLeverageTokenData(ADDR.leverageToken, ADDR.manager)
 
-      // Get collateral asset
-      const collateralAsset = (await publicClient.readContract({
-        address: manager,
-        abi: leverageManagerAbi,
-        functionName: 'getLeverageTokenCollateralAsset',
-        args: [leverageToken],
-      })) as Address
+      const allowance = await getTokenAllowance(collateralAsset, account.address, ADDR.router)
 
-      // Check initial allowance (should be 0)
-      const initialAllowance = await publicClient.readContract({
-        address: collateralAsset,
-        abi: erc20Abi,
-        functionName: 'allowance',
-        args: [account.address, router],
-      })
-
-      console.log('Initial allowance:', initialAllowance.toString())
-      expect(initialAllowance).toBe(0n)
-
-      // This test shows the approval flow is properly set up
-      // In a real flow, user would approve Router before minting
+      expect(allowance).toBe(0n)
     }))
 })
