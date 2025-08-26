@@ -58,11 +58,12 @@ export function ConnectionStatusCard() {
 
         // If not connected, show the connection card
         return (
-          <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+          <div className="flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
+              className="w-full max-w-2xl"
             >
               <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
                 <CardContent className="p-8 text-center">
