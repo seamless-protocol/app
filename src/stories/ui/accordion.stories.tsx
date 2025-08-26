@@ -1,5 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
+import type { Meta, StoryObj } from '@storybook/react-vite'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '../../components/ui/accordion'
 
 const meta = {
   title: 'UI/Accordion',
@@ -8,10 +13,10 @@ const meta = {
     layout: 'centered',
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof Accordion>;
+} satisfies Meta<typeof Accordion>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: {
@@ -25,7 +30,8 @@ export const Default: Story = {
         <AccordionContent>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              This yield farming strategy leverages liquidity pools on Base to generate returns through trading fees and token rewards.
+              This yield farming strategy leverages liquidity pools on Base to generate returns
+              through trading fees and token rewards.
             </p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
@@ -46,7 +52,7 @@ export const Default: Story = {
       </AccordionItem>
     </Accordion>
   ),
-};
+}
 
 export const Multiple: Story = {
   args: {
@@ -100,4 +106,4 @@ export const Multiple: Story = {
       </AccordionItem>
     </Accordion>
   ),
-};
+}
