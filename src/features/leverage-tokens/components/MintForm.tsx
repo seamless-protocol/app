@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useMintViaRouter } from '../hooks/useMintViaRouter'
+import { useMintWithRouter } from '../hooks/useMintWithRouter'
 
 interface MintFormProps {
   tokenAddress: `0x${string}`
@@ -28,7 +28,7 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
     error,
     isSuccess,
     data,
-  } = useMintViaRouter({
+  } = useMintWithRouter({
     token: tokenAddress,
     onSuccess: (hash) => {
       console.log('Mint successful! Hash:', hash)
@@ -38,7 +38,7 @@ export function MintForm({ tokenAddress, tokenName, onClose }: MintFormProps) {
     },
   })
 
-  console.log('useMintViaRouter result:', { isPending, isError, error, isSuccess, data })
+  console.log('useMintWithRouter result:', { isPending, isError, error, isSuccess, data })
 
   const handleMint = async () => {
     if (!amount || !user) return

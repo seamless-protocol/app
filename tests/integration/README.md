@@ -45,9 +45,10 @@ foundryup
 ```
 tests/integration/
 ├── .env.example          # Environment configuration template
-├── setup.ts              # Anvil clients and Test Actions
-├── utils.ts              # Funding utilities (WETH deposit, impersonation)
-├── router.mint.test.ts   # Working integration tests
+├── setup.ts              # Legacy Anvil clients (replaced by tests/shared/*)
+├── utils.ts              # Legacy funding utils (replaced by tests/shared/*)
+├── mint/                 # Mint flow integration tests
+│   └── mintWithRouter.int.test.ts
 └── vitest.config.ts      # Test runner configuration
 ```
 
@@ -58,10 +59,10 @@ tests/integration/
 - **Wallet Client**: Sign and send transactions  
 - **Test Client**: Anvil-specific actions (setBalance, impersonateAccount, snapshot/revert)
 
-#### Funding Strategy (utils.ts)
-1. **WETH**: Use `deposit()` function for deterministic funding
-2. **Other tokens**: Impersonate rich holders (add addresses to `RICH_HOLDERS` map)
-3. **Storage writes**: Disabled by default (ERC-7201 compatibility)
+#### Funding Strategy (tests/shared/funding.ts)
+1. **weETH**: On Tenderly, set ERC20 balance via `tenderly_setErc20Balance`; on Anvil, impersonate a weETH whale and transfer
+2. **Native**: On Anvil, `setBalance`; on Tenderly, `tenderly_setBalance`
+3. **Storage writes**: Avoided by default (ERC-7201 compatibility)
 
 #### Test Isolation
 - Each test uses `withFork()` wrapper
@@ -80,7 +81,7 @@ ANVIL_BASE_FORK_URL=https://mainnet.base.org bun run anvil:base
 bun run test:integration
 
 # Run specific test file
-bun run test:integration router.mint.test.ts
+bun run test:integration mint/mintWithRouter.int.test.ts
 
 # Run with watch mode
 bun run test:integration --watch
@@ -131,26 +132,12 @@ For GitHub Actions, add this step before running tests:
     ANVIL_BASE_FORK_URL: https://mainnet.base.org
 ```
 
-## Migration from Tenderly
+## Shared Harness (Tenderly & Anvil)
 
-The following changes were made:
-
-### Removed
-- ❌ `TEST_TENDERLY_ADMIN_RPC_BASE` environment variable
-- ❌ `tenderly_setBalance` / `tenderly_setErc20Balance` RPC calls
-- ❌ External API dependencies
-
-### Added  
-- ✅ `ANVIL_BASE_FORK_URL` / `ANVIL_RPC_URL` configuration
-- ✅ Viem Test Client with `setBalance` / `impersonateAccount`
-- ✅ WETH deposit funding strategy
-- ✅ `anvil:base` package.json script
-
-### Preserved
-- ✅ All existing test logic and assertions
-- ✅ `withFork()` wrapper pattern
-- ✅ Snapshot/revert isolation
-- ✅ Contract address configuration
+- `tests/shared/env.ts`: Single env configuration for both RPCs
+- `tests/shared/clients.ts`: Builds viem clients; includes Test Actions on Anvil
+- `tests/shared/funding.ts`: weETH/native funding utilities for each RPC
+- `tests/shared/withFork.ts`: Snapshot/revert wrapper; no-op on Tenderly
 
 ## Performance
 

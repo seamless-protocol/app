@@ -9,4 +9,9 @@ export default defineConfig({
     isolate: true,
   },
   envDir: resolve(__dirname),
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, '../../src'),
+    },
+  },
 })
