@@ -33,7 +33,7 @@ export function SupplyCap({ currentSupply, supplyCap, size = 'md', className }: 
   const sizeConfig = sizeClasses[size]
   const fillPercentage = (currentSupply / supplyCap) * 100
   const available = supplyCap - currentSupply
-  
+
   const isNearCapacity = fillPercentage >= 90
 
   return (
@@ -60,7 +60,7 @@ export function SupplyCap({ currentSupply, supplyCap, size = 'md', className }: 
             sizeConfig.progress,
             isNearCapacity
               ? 'bg-gradient-to-r from-warning-yellow to-error-red'
-              : 'bg-gradient-to-r from-purple-500 to-pink-500'
+              : 'bg-gradient-to-r from-purple-500 to-pink-500',
           )}
           style={{ width: `${fillPercentage}%` }}
         />
@@ -70,7 +70,7 @@ export function SupplyCap({ currentSupply, supplyCap, size = 'md', className }: 
         <span
           className={cn(
             sizeConfig.text,
-            isNearCapacity ? 'text-warning-yellow font-medium' : 'text-slate-400'
+            isNearCapacity ? 'text-warning-yellow font-medium' : 'text-slate-400',
           )}
         >
           {fillPercentage.toFixed(1)}% filled

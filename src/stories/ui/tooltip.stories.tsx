@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import { Button } from '../../components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 
 const meta = {
   title: 'UI/Tooltip',
@@ -39,6 +39,7 @@ export const WithIcon: Story = {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className="h-4 w-4"
+            aria-hidden="true"
           >
             <path
               d="M7.49991 0.877075C3.84222 0.877075 0.877075 3.84222 0.877075 7.49991C0.877075 11.1576 3.84222 14.1227 7.49991 14.1227C11.1576 14.1227 14.1227 11.1576 14.1227 7.49991C14.1227 3.84222 11.1576 0.877075 7.49991 0.877075ZM7.49991 1.82708C10.6329 1.82708 13.1727 4.36689 13.1727 7.49991C13.1727 10.6329 10.6329 13.1727 7.49991 13.1727C4.36689 13.1727 1.82708 10.6329 1.82708 7.49991C1.82708 4.36689 4.36689 1.82708 7.49991 1.82708Z"
@@ -75,8 +76,10 @@ export const LongContent: Story = {
         <Button variant="outline">Long tooltip</Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs">
-        <p>This is a longer tooltip with more detailed information that might wrap to multiple lines.</p>
+        <p>
+          This is a longer tooltip with more detailed information that might wrap to multiple lines.
+        </p>
       </TooltipContent>
     </Tooltip>
   ),
-} 
+}

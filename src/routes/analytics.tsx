@@ -10,4 +10,4 @@ function AnalyticsPage() {
       <p>TO BE IMPLEMENTED</p>
     </div>
   )
-} 
+}

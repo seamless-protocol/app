@@ -1,5 +1,6 @@
 'use client'
 
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import {
   BarChart3,
   BookOpen,
@@ -12,12 +13,11 @@ import {
   Vault,
   Vote,
 } from 'lucide-react'
-import { useLocation, useNavigate } from '@tanstack/react-router'
-import { VerticalNavbar } from './vertical-navbar'
 import { features } from '@/lib/config/features'
 import { ConnectButtonTest } from './ConnectButtonTest'
-import { WalletConnectButton } from './WalletConnectButton'
 import { ModeToggle } from './mode-toggle'
+import { VerticalNavbar } from './vertical-navbar'
+import { WalletConnectButton } from './WalletConnectButton'
 
 // Navigation configuration that maps to existing routes
 const navigationItems = [
@@ -114,7 +114,7 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
-  
+
   // Determine current page from route
   const getCurrentPage = () => {
     const pathname = location.pathname
@@ -131,6 +131,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const handlePageChange = (pageId: string) => {
     const route = routeMapping[pageId]
     if (route) {
+      // biome-ignore lint/suspicious/noExplicitAny: route mapping is safe here
       navigate({ to: route as any })
     }
   }
@@ -158,14 +159,15 @@ export function MainLayout({ children }: MainLayoutProps) {
               <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
                 <div className="min-w-0 flex-1">
                   <h1 className="text-base sm:text-lg font-semibold text-white truncate">
-                    {navigationItems.find(item => item.id === currentPage)?.title || 'Page'}
+                    {navigationItems.find((item) => item.id === currentPage)?.title || 'Page'}
                   </h1>
                   <p className="text-xs sm:text-sm text-slate-400 hidden sm:block truncate">
-                    {navigationItems.find(item => item.id === currentPage)?.subtitle || 'Page description'}
+                    {navigationItems.find((item) => item.id === currentPage)?.subtitle ||
+                      'Page description'}
                   </p>
                 </div>
               </div>
-              
+
               {/* Actions */}
               <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
                 <ModeToggle />
@@ -177,11 +179,9 @@ export function MainLayout({ children }: MainLayoutProps) {
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto p-6">
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
+          <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
     </div>
   )
-} 
+}
