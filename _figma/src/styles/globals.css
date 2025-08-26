@@ -1,0 +1,430 @@
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@1,2,3,4,5,6,7,8,9&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 14px;
+  
+  /* Seamless Protocol Brand Colors */
+  --brand-purple: #A16CFE;
+  --accent-pink: #F9A8D4;
+  --accent-cyan: #22D3EE;
+  
+  /* Dark Theme Neutrals - Primary Colors */
+  --bg-hero: #0F0F11;
+  --bg-section: #101024;
+  --surface-card: #1E1E23;
+  --surface-elevated: #2A2A30;
+  --text-primary: #FFFFFF;
+  --text-secondary: #D1D5DB;
+  --text-muted: #6B7280;
+  --divider-line: #2F2F35;
+  
+  /* Semantic Colors */
+  --success-green: #10B981;
+  --warning-yellow: #FACC15;
+  --error-red: #EF4444;
+  
+  /* Gradients */
+  --gradient-violet: linear-gradient(135deg, #8B5CF6, #EC4899);
+  --gradient-ui-primary: linear-gradient(135deg, #8B5CF6, #EC4899);
+  --gradient-token-glow: linear-gradient(135deg, #A16CFE, #22D3EE, #F9A8D4);
+  --gradient-darkwave: linear-gradient(135deg, #0F0F11, #101024, #1E1E23);
+}
+
+/* Force dark theme as default for entire application */
+html {
+  color-scheme: dark;
+}
+
+html, body, .dark, :root {
+  /* Seamless Protocol Dark Theme - Applied globally */
+  --background: var(--bg-hero);
+  --foreground: var(--text-primary);
+  --card: var(--surface-card);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-card);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--gradient-violet);
+  --primary-foreground: #ffffff;
+  --secondary: var(--bg-section);
+  --secondary-foreground: var(--text-secondary);
+  --muted: var(--bg-section);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--surface-elevated);
+  --accent-foreground: var(--text-secondary);
+  --destructive: var(--error-red);
+  --destructive-foreground: #ffffff;
+  --border: var(--divider-line);
+  --input: var(--surface-card);
+  --input-background: var(--surface-card);
+  --switch-background: var(--divider-line);
+  --ring: var(--brand-purple);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: var(--brand-purple);
+  --chart-2: var(--accent-cyan);
+  --chart-3: var(--accent-pink);
+  --chart-4: var(--success-green);
+  --chart-5: var(--warning-yellow);
+  --sidebar: var(--bg-section);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--brand-purple);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--surface-card);
+  --sidebar-accent-foreground: var(--text-secondary);
+  --sidebar-border: var(--divider-line);
+  --sidebar-ring: var(--brand-purple);
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Custom Seamless Protocol Colors */
+  --color-brand-purple: var(--brand-purple);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-bg-hero: var(--bg-hero);
+  --color-bg-section: var(--bg-section);
+  --color-surface-card: var(--surface-card);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-divider-line: var(--divider-line);
+  --color-success-green: var(--success-green);
+  --color-warning-yellow: var(--warning-yellow);
+  --color-error-red: var(--error-red);
+  --color-gradient-violet: var(--gradient-violet);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply bg-background text-foreground;
+    font-size: var(--font-size);
+    font-family: 'Satoshi Variable', 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background-color: var(--bg-hero);
+    color: var(--text-primary);
+    font-family: inherit;
+  }
+  
+  /* Ensure all elements inherit dark theme and Satoshi font */
+  *, *::before, *::after {
+    border-color: var(--divider-line);
+    font-family: 'Satoshi Variable', 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  }
+  
+  /* Custom gradient utilities for Seamless Protocol */
+  .gradient-violet {
+    background: var(--gradient-violet);
+  }
+  
+  .gradient-ui-primary {
+    background: var(--gradient-ui-primary);
+  }
+  
+  .gradient-token-glow {
+    background: var(--gradient-token-glow);
+  }
+  
+  .gradient-darkwave {
+    background: var(--gradient-darkwave);
+  }
+  
+  /* Enhanced dark theme utilities */
+  .bg-dark-card {
+    background-color: var(--surface-card);
+  }
+  
+  .bg-dark-elevated {
+    background-color: var(--surface-elevated);
+  }
+  
+  .bg-dark-section {
+    background-color: var(--bg-section);
+  }
+  
+  .bg-dark-hero {
+    background-color: var(--bg-hero);
+  }
+  
+  /* Custom brand color utilities */
+  .text-brand-purple {
+    color: var(--brand-purple);
+  }
+  
+  .bg-brand-purple {
+    background-color: var(--brand-purple);
+  }
+  
+  .text-accent-pink {
+    color: var(--accent-pink);
+  }
+  
+  .bg-accent-pink {
+    background-color: var(--accent-pink);
+  }
+  
+  .text-accent-cyan {
+    color: var(--accent-cyan);
+  }
+  
+  .bg-accent-cyan {
+    background-color: var(--accent-cyan);
+  }
+  
+  .text-success-green {
+    color: var(--success-green);
+  }
+  
+  .bg-success-green {
+    background-color: var(--success-green);
+  }
+  
+  .text-warning-yellow {
+    color: var(--warning-yellow);
+  }
+  
+  .bg-warning-yellow {
+    background-color: var(--warning-yellow);
+  }
+  
+  .text-error-red {
+    color: var(--error-red);
+  }
+  
+  .bg-error-red {
+    background-color: var(--error-red);
+  }
+  
+  /* Dark theme text utilities */
+  .text-dark-primary {
+    color: var(--text-primary);
+  }
+  
+  .text-dark-secondary {
+    color: var(--text-secondary);
+  }
+  
+  .text-dark-muted {
+    color: var(--text-muted);
+  }
+  
+  /* Primary CTA gradient utilities */
+  .bg-gradient-violet {
+    background: var(--gradient-violet);
+  }
+  
+  .btn-primary-gradient {
+    background: var(--gradient-violet);
+    color: white;
+    border: none;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary-gradient:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  }
+  
+  .btn-primary-gradient:active {
+    transform: translateY(0);
+  }
+}
+
+/**
+ * Base typography with dark theme colors and Satoshi Variable font
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--text-primary);
+      font-family: 'Satoshi Variable', 'Satoshi', sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--text-primary);
+      font-family: 'Satoshi Variable', 'Satoshi', sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--text-primary);
+      font-family: 'Satoshi Variable', 'Satoshi', sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    h4 {
+      font-size: var(--text-base);
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--text-primary);
+      font-family: 'Satoshi Variable', 'Satoshi', sans-serif;
+    }
+
+    p {
+      font-size: var(--text-base);
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      font-family: 'Satoshi Variable', 'Satoshi', sans-serif;
+    }
+
+    label {
+      font-size: var(--text-base);
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--text-primary);
+      font-family: 'Satoshi Variable', 'Satoshi', sans-serif;
+    }
+
+    button {
+      font-size: var(--text-base);
+      font-weight: 500;
+      line-height: 1.5;
+      font-family: 'Satoshi Variable', 'Satoshi', sans-serif;
+    }
+
+    input {
+      font-size: var(--text-base);
+      font-weight: 400;
+      line-height: 1.5;
+      background-color: var(--surface-card);
+      color: var(--text-primary);
+      font-family: 'Satoshi Variable', 'Satoshi', sans-serif;
+    }
+  }
+}
+
+/* Dark scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-section);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--divider-line);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Selection styling for dark theme */
+::selection {
+  background-color: var(--brand-purple);
+  color: var(--text-primary);
+}
+
+/* Mobile-specific enhancements */
+@media (max-width: 768px) {
+  /* Adjust base font size for mobile */
+  html {
+    font-size: 14px;
+  }
+  
+  /* Mobile-friendly touch targets */
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve text readability on mobile */
+  p, span, div {
+    line-height: 1.6;
+  }
+  
+  /* Mobile-optimized spacing */
+  .mobile-space-compact {
+    padding: 1rem;
+  }
+  
+  .mobile-gap-sm {
+    gap: 0.75rem;
+  }
+  
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Tablet and up improvements */
+@media (min-width: 768px) {
+  /* Restore desktop font size */
+  html {
+    font-size: var(--font-size);
+  }
+}
