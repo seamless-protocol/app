@@ -2,6 +2,8 @@ import React from 'react'
 import { CBBTCLogo } from '../../components/icons/cbbtc-logo'
 import { USDCLogo } from '../../components/icons/usdc-logo'
 import { WETHLogo } from '../../components/icons/weth-logo'
+import { weETHLogo } from '../../components/icons/weeth-logo'
+import { rETHLogo } from '../../components/icons/reth-logo'
 
 export function getTokenLogo(asset: string) {
   switch (asset) {
@@ -11,6 +13,10 @@ export function getTokenLogo(asset: string) {
       return CBBTCLogo
     case 'WETH':
       return WETHLogo
+    case 'weETH':
+      return weETHLogo
+    case 'rETH':
+      return rETHLogo
     default:
       return null
   }
