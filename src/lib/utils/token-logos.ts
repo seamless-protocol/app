@@ -1,9 +1,9 @@
 import React from 'react'
 import { CBBTCLogo } from '../../components/icons/cbbtc-logo'
-import { USDCLogo } from '../../components/icons/usdc-logo'
-import { WETHLogo } from '../../components/icons/weth-logo'
-import { weETHLogo } from '../../components/icons/weeth-logo'
 import { rETHLogo } from '../../components/icons/reth-logo'
+import { USDCLogo } from '../../components/icons/usdc-logo'
+import { weETHLogo } from '../../components/icons/weeth-logo'
+import { WETHLogo } from '../../components/icons/weth-logo'
 
 export function getTokenLogo(asset: string) {
   switch (asset) {
