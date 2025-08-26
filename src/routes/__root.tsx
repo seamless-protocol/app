@@ -11,17 +11,6 @@ export const Route = createRootRoute({
       <TanStackRouterDevtools />
     </>
   ),
-  beforeLoad: ({ location }) => {
-    // Redirect from root to tokens page
-    if (location.pathname === '/') {
-      throw new Response('', {
-        status: 302,
-        headers: {
-          Location: '/tokens',
-        },
-      })
-    }
-  },
   notFoundComponent: () => (
     <div className="p-2">
       <h3>404 - Page Not Found</h3>
