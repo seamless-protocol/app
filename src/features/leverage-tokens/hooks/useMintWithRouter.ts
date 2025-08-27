@@ -25,6 +25,9 @@ export function useMintWithRouter({ token, onSuccess, onError }: UseMintWithRout
     throw new Error(`Router/Manager contracts not deployed on chain ${chainId}`)
   }
 
+  const router = addresses.leverageRouter
+  const manager = addresses.leverageManager
+
   return useMutation<MintResult, unknown, MintParams>({
     mutationKey: [...ltKeys.token(token), 'mintWithRouter', user],
     mutationFn: async (params) => {
@@ -37,11 +40,11 @@ export function useMintWithRouter({ token, onSuccess, onError }: UseMintWithRout
       if (!walletClient) throw new Error('Failed to get wallet client')
 
       const result = await mintWithRouter(
-        { 
-          publicClient: publicClient as any, 
-          walletClient: walletClient as any 
+        {
+          publicClient,
+          walletClient,
         },
-        { router: addresses.leverageRouter!, manager: addresses.leverageManager!, token },
+        { router, manager, token },
         user,
         params,
       )

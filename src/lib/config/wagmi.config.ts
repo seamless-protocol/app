@@ -19,7 +19,9 @@ export const config = getDefaultConfig({
     // In test mode, prioritize VITE_ANVIL_RPC_URL (set by Playwright) over everything else
     [base.id]: http(
       import.meta.env['VITE_ANVIL_RPC_URL'] ||
-        (import.meta.env['VITE_TEST_MODE'] === 'mock' ? 'http://127.0.0.1:8545' : import.meta.env['VITE_BASE_RPC_URL']) ||
+        (import.meta.env['VITE_TEST_MODE'] === 'mock'
+          ? 'http://127.0.0.1:8545'
+          : import.meta.env['VITE_BASE_RPC_URL']) ||
         'http://127.0.0.1:8545',
     ),
     [mainnet.id]: http(import.meta.env['VITE_MAINNET_RPC_URL'] || 'https://eth.llamarpc.com'),
