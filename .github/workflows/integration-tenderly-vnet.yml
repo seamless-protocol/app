@@ -15,9 +15,13 @@ concurrency:
   group: integration-tenderly-${{ github.ref }}
   cancel-in-progress: true
 
-  jobs:
-    test:
-      runs-on: ubuntu-latest
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.54.2-noble
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
       steps:
       - name: Checkout
         uses: actions/checkout@v4

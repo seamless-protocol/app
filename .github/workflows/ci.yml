@@ -49,39 +49,35 @@ jobs:
         run: bun run test
 
   test-e2e:
-    name: E2E Tests
+    name: E2E Tests (Tenderly VirtualNet)
     runs-on: ubuntu-latest
-    
+    container:
+      image: mcr.microsoft.com/playwright:v1.54.2-noble
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-      
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
-      
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-      
-      - name: Run E2E tests
-        run: bun run test:e2e
+
+      - name: Run integration + E2E on Tenderly VNet (single run)
         env:
-          VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
-          VITE_BASE_RPC_URL: ${{ vars.VITE_BASE_RPC_URL }}
-          VITE_ETHEREUM_RPC_URL: ${{ vars.VITE_ETHEREUM_RPC_URL }}
-          # Dedicated RPC endpoint for Anvil fork (better reliability than public RPC)
-          ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
-      
-      - name: Upload test results
+          TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
+          TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
+          TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
+          # Optional override for creation JSON if needed
+          TENDERLY_VNET_CREATE_JSON: ${{ secrets.TENDERLY_VNET_CREATE_JSON }}
+        run: bun run test:all:tenderly
+
+      - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: always()
         with:
