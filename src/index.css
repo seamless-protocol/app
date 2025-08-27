@@ -441,3 +441,34 @@ body,
     font-size: var(--font-size);
   }
 }
+
+/* Sonner toast description styling */
+[data-sonner-toaster] [data-description] {
+  color: var(--text-secondary) !important;
+  opacity: 0.8;
+}
+
+/* More specific selector for Sonner toast description */
+[data-sonner-toaster="true"] li[data-sonner-toast] [data-description] {
+  color: var(--text-secondary) !important;
+  opacity: 0.85;
+  font-size: 0.875rem;
+}
+
+/* Ensure title stays white */
+[data-sonner-toaster="true"] li[data-sonner-toast] [data-title] {
+  color: var(--text-primary) !important;
+}
+
+/* Toast type-specific styling */
+[data-sonner-toaster="true"] li[data-sonner-toast][data-type="success"] [data-icon] {
+  color: var(--success-green) !important;
+}
+
+[data-sonner-toaster="true"] li[data-sonner-toast][data-type="warning"] [data-icon] {
+  color: var(--warning-yellow) !important;
+}
+
+[data-sonner-toaster="true"] li[data-sonner-toast][data-type="error"] [data-icon] {
+  color: var(--error-red) !important;
+}

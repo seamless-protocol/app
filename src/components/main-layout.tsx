@@ -15,7 +15,9 @@ import {
 } from 'lucide-react'
 import { features } from '@/lib/config/features'
 import { ConnectButtonTest } from './ConnectButtonTest'
+import { KyberSwapWidget } from './KyberSwapWidget'
 import { ModeToggle } from './mode-toggle'
+import { Toaster } from './ui/sonner'
 import { VerticalNavbar } from './VerticalNavbar'
 import { WalletConnectButton } from './WalletConnectButton'
 
@@ -170,8 +172,9 @@ export function MainLayout({ children }: MainLayoutProps) {
 
               {/* Actions */}
               <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
-                <ModeToggle />
+                <KyberSwapWidget />
                 {features.testMode ? <ConnectButtonTest /> : <WalletConnectButton />}
+                <ModeToggle />
               </div>
             </div>
           </div>
@@ -182,6 +185,19 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
+
+      {/* Toast Notifications */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: 'var(--surface-card)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--divider-line)',
+          },
+        }}
+        className="sm:!top-4 !top-2"
+      />
     </div>
   )
 }
