@@ -88,7 +88,7 @@ jobs:
             -d "$CREATE_BODY")
           echo "$resp" | jq .
           id=$(echo "$resp" | jq -r .id)
-          rpc_url=$(echo "$resp" | jq -r .rpc_url)
+          rpc_url=$(echo "$resp" | jq -r '.rpcs[] | select(.name == "Admin RPC") | .url')
           if [ -z "$id" ] || [ "$id" = "null" ] || [ -z "$rpc_url" ] || [ "$rpc_url" = "null" ]; then
             echo "Failed to create VirtualNet; response:" >&2
             echo "$resp" >&2
