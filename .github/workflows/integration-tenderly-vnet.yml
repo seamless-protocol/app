@@ -40,6 +40,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Create Tenderly VirtualNet
+        shell: bash
         id: vnet
         env:
           TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
@@ -109,6 +110,7 @@ jobs:
         run: bun run test:e2e
 
       - name: Cleanup VirtualNet
+        shell: bash
         if: always()
         env:
           TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
