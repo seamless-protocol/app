@@ -24,9 +24,13 @@ export const ENV = {
   TEST_PRIVATE_KEY: (process.env['TEST_PRIVATE_KEY'] ??
     '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80') as `0x${string}`,
   ADDR: {
-    MANAGER: process.env['TEST_LEVERAGE_MANAGER'] as `0x${string}`,
-    ROUTER: process.env['TEST_LEVERAGE_ROUTER'] as `0x${string}`,
-    TOKEN: process.env['TEST_LEVERAGE_TOKEN_PROXY'] as `0x${string}`,
+    // Fallback to known Base mainnet addresses if not provided in env
+    MANAGER: (process.env['TEST_LEVERAGE_MANAGER'] ??
+      '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8') as `0x${string}`,
+    ROUTER: (process.env['TEST_LEVERAGE_ROUTER'] ??
+      '0xDbA92fC3dc10a17b96b6E807a908155C389A887C') as `0x${string}`,
+    TOKEN: (process.env['TEST_LEVERAGE_TOKEN_PROXY'] ??
+      '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c') as `0x${string}`,
     WEETH: (process.env['TEST_WEETH'] ??
       '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A') as `0x${string}`,
   },
