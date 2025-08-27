@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test.describe('Mint Flow - Happy Path', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the specific token page where mint form is available
+    // Navigate to the specific token page where mint form is available (hash routing for dynamic routes)
     await page.goto('/#/tokens/0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c')
 
     // Wait for the page to load and mint section to be visible
@@ -52,7 +52,7 @@ test.describe('Mint Flow - Happy Path', () => {
       console.log('✅ Transaction hash:', hashText)
 
       // Verify we get expected leverage token shares
-      const successMessage = page.locator('text=Mint successful')
+      const successMessage = page.locator('text=Mint successful!')
       await expect(successMessage).toBeVisible()
     } catch (_successError) {
       // If transaction failed, check what error we got
@@ -72,7 +72,7 @@ test.describe('Mint Flow - Happy Path', () => {
 
   test('should show wallet connection prompt when not connected', async ({ page }) => {
     // Navigate directly to a token page (assuming tokens exist)
-    await page.goto('/#/tokens')
+    await page.goto('/tokens')
 
     // If not connected, should show connect wallet message or button
     const connectPrompt = page.locator('text=Connect your wallet')

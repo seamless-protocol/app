@@ -7,8 +7,8 @@ test.describe('App Navigation & Wallet Connection', () => {
   })
 
   test('should load tokens page', async ({ page }) => {
-    // Verify we're on the tokens page (with hash routing)
-    await expect(page).toHaveURL(/.*#\/tokens/)
+    // Verify we're on the tokens page (direct navigation uses regular routing)
+    await expect(page).toHaveURL(/.*\/tokens/)
     await expect(page.locator('main h3:has-text("Leverage Tokens")')).toBeVisible()
     await expect(page.locator('text=Browse and manage leverage tokens.')).toBeVisible()
   })
@@ -20,7 +20,7 @@ test.describe('App Navigation & Wallet Connection', () => {
     // Wait a bit for redirect to happen
     await page.waitForTimeout(1000)
 
-    // Should be redirected to tokens (with hash routing)
+    // Should be redirected to tokens (hash routing works for redirects)
     await expect(page).toHaveURL(/.*#\/tokens/)
   })
 
@@ -28,11 +28,12 @@ test.describe('App Navigation & Wallet Connection', () => {
     // Navigate to tokens page
     await page.goto('/tokens')
 
-    // Look for the connect wallet button in the top bar
-    const connectButton = page.locator('button:has-text("Connect Wallet")')
+    // Look for the mock connect button in the top bar (test mode uses mock connector)
+    const connectButton = page.getByTestId('connect-mock')
 
     // Verify the button is visible
     await expect(connectButton).toBeVisible()
+    await expect(connectButton).toHaveText('Connect (Mock)')
   })
 
   test('should show connection status card on portfolio page when not connected', async ({
@@ -54,10 +55,11 @@ test.describe('App Navigation & Wallet Connection', () => {
     // Navigate to tokens page
     await page.goto('/tokens')
 
-    // Verify vertical navigation is visible (look for navigation items by title)
-    await expect(page.locator('h3:has-text("Leverage Tokens")').first()).toBeVisible()
-    await expect(page.locator('h3:has-text("Portfolio")').first()).toBeVisible()
-    await expect(page.locator('h3:has-text("Analytics")').first()).toBeVisible()
+    // Verify vertical navigation is visible (look for navigation items by title in sidebar)
+    const sidebar = page.locator('.w-84') // The sidebar has w-84 class from MainLayout
+    await expect(sidebar.locator('h3:has-text("Leverage Tokens")')).toBeVisible()
+    await expect(sidebar.locator('h3:has-text("Portfolio")')).toBeVisible()
+    await expect(sidebar.locator('h3:has-text("Analytics")')).toBeVisible()
   })
 
   test('should navigate between pages using sidebar', async ({ page }) => {
@@ -66,10 +68,10 @@ test.describe('App Navigation & Wallet Connection', () => {
 
     // Click on Portfolio in sidebar (click the button containing the Portfolio text)
     await page.locator('button:has(h3:has-text("Portfolio"))').click()
-    await expect(page).toHaveURL(/.*#\/portfolio/)
+    await expect(page).toHaveURL(/.*\/portfolio/)
 
     // Click on Analytics in sidebar
     await page.locator('button:has(h3:has-text("Analytics"))').click()
-    await expect(page).toHaveURL(/.*#\/analytics/)
+    await expect(page).toHaveURL(/.*\/analytics/)
   })
 })
