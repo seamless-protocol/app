@@ -98,16 +98,28 @@ async function deleteVNet(id: string) {
   const bearer = process.env.TENDERLY_TOKEN
   const account = process.env.TENDERLY_ACCOUNT!
   const project = process.env.TENDERLY_PROJECT!
-  await fetch(
-    `https://api.tenderly.co/api/v1/account/${account}/project/${project}/vnets/${id}`,
-    {
-      method: 'DELETE',
-      headers: {
-        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
-        ...(key && !bearer ? { 'X-Access-Key': key } : {}),
+  
+  try {
+    const response = await fetch(
+      `https://api.tenderly.co/api/v1/account/${account}/project/${project}/vnets/${id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+          ...(key && !bearer ? { 'X-Access-Key': key } : {}),
+        },
       },
-    },
-  ).catch(() => {})
+    )
+    
+    if (response.ok) {
+      console.log(`✅ Successfully deleted VNet: ${id}`)
+    } else {
+      const errorText = await response.text().catch(() => 'No response body')
+      console.warn(`⚠️ VNet deletion returned ${response.status}: ${errorText}`)
+    }
+  } catch (error) {
+    console.error(`❌ Failed to delete VNet ${id}:`, error)
+  }
 }
 
 function runTests(rpcUrl: string) {
@@ -137,8 +149,11 @@ async function main() {
 
   const cleanup = async () => {
     if (vnet) {
-      console.log('Deleting Tenderly VirtualNet:', vnet.id)
+      console.log('🧹 Cleaning up Tenderly VirtualNet:', vnet.id)
       await deleteVNet(vnet.id)
+      console.log('🧹 Cleanup completed')
+    } else {
+      console.log('🧹 No VNet to clean up (using preset URL)')
     }
   }
   process.on('SIGINT', () => void cleanup().then(() => process.exit(130)))
