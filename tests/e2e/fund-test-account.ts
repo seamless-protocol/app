@@ -1,12 +1,4 @@
-import {
-  createPublicClient,
-  createTestClient,
-  createWalletClient,
-  encodeAbiParameters,
-  http,
-  keccak256,
-  parseEther,
-} from 'viem'
+import { createPublicClient, createTestClient, createWalletClient, http, parseEther } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base } from 'viem/chains'
 
@@ -95,10 +87,14 @@ async function fundTestAccount() {
       functionName: 'balanceOf',
       args: [WEETH_WHALE],
     })) as bigint
-    console.log(`Whale weETH balance: ${whaleBalance.toString()} (${whaleBalance / BigInt(10 ** 18)} weETH)`)
+    console.log(
+      `Whale weETH balance: ${whaleBalance.toString()} (${whaleBalance / BigInt(10 ** 18)} weETH)`,
+    )
 
     if (whaleBalance < weETHAmount) {
-      throw new Error(`Whale has insufficient weETH balance: ${whaleBalance / BigInt(10 ** 18)} weETH`)
+      throw new Error(
+        `Whale has insufficient weETH balance: ${whaleBalance / BigInt(10 ** 18)} weETH`,
+      )
     }
 
     // Impersonate the whale
