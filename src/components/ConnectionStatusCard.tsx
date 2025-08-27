@@ -2,8 +2,8 @@
 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { motion } from 'framer-motion'
-import { AlertCircle, Shield, TrendingUp, Wallet, Zap } from 'lucide-react'
-import { Alert, AlertDescription } from './ui/alert'
+import { Shield, TrendingUp, Wallet, Zap } from 'lucide-react'
+import { Alert } from './ui/alert'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 
@@ -138,14 +138,12 @@ export function ConnectionStatusCard() {
                     transition={{ duration: 0.5, delay: 0.6 }}
                     className="mt-6"
                   >
-                    <Alert className="bg-blue-500/10 border-blue-500/30 text-left">
-                      <AlertCircle className="h-4 w-4 text-blue-400" />
-                      <AlertDescription className="text-blue-200">
-                        <strong>New to crypto wallets?</strong> We support MetaMask, WalletConnect,
-                        Coinbase Wallet, and more. Your wallet stays secure and we never store your
-                        private keys.
-                      </AlertDescription>
-                    </Alert>
+                    <Alert
+                      type="info"
+                      title="New to crypto wallets?"
+                      description="We support MetaMask, WalletConnect, Coinbase Wallet, and more. Your wallet stays secure and we never store your private keys."
+                      className="text-left"
+                    />
                   </motion.div>
                 </CardContent>
               </Card>
