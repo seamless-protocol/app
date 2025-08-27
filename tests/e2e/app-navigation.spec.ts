@@ -9,8 +9,10 @@ test.describe('App Navigation & Wallet Connection', () => {
   test('should load tokens page', async ({ page }) => {
     // Verify we're on the tokens page (direct navigation uses regular routing)
     await expect(page).toHaveURL(/.*\/tokens/)
-    // Check for the page content heading specifically (not the sidebar navigation)
-    await expect(page.locator('main h3:has-text("Leverage Tokens")').first()).toBeVisible()
+    // Check for the page title in the top bar (not main content)
+    await expect(page.locator('h1:has-text("Leverage Tokens")')).toBeVisible()
+    // Check for the main content heading in tokens index page
+    await expect(page.locator('main h3:has-text("Leverage Tokens")')).toBeVisible()
     await expect(page.locator('text=Browse and manage leverage tokens.')).toBeVisible()
   })
 
@@ -57,7 +59,7 @@ test.describe('App Navigation & Wallet Connection', () => {
     await page.goto('/tokens')
 
     // Verify vertical navigation is visible (look for navigation items by title in sidebar)
-    const sidebar = page.locator('.w-84') // The sidebar has w-84 class from MainLayout
+    const sidebar = page.locator('div.w-84') // The sidebar has w-84 class from MainLayout
     await expect(sidebar.locator('h3:has-text("Leverage Tokens")')).toBeVisible()
     await expect(sidebar.locator('h3:has-text("Portfolio")')).toBeVisible()
     await expect(sidebar.locator('h3:has-text("Analytics")')).toBeVisible()
