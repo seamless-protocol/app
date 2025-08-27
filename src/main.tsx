@@ -17,11 +17,20 @@ import { config as prodConfig } from './lib/config/wagmi.config'
 import { testConfig } from './lib/config/wagmi.config.test'
 import { router } from './router'
 
+// Add startup debugging for CI
+console.log('🚀 Starting React app...')
+console.log('Environment mode:', import.meta.env.MODE)
+console.log('CI mode:', import.meta.env.CI)
+console.log('Test mode:', import.meta.env.VITE_TEST_MODE)
+console.log('Debug mode:', import.meta.env.VITE_CI_DEBUG)
+
 // Validate environment variables before app starts
 try {
+  console.log('🔍 Validating environment variables...')
   validateEnv()
+  console.log('✅ Environment validation passed')
 } catch (error) {
-  console.error('Environment validation failed:', error)
+  console.error('❌ Environment validation failed:', error)
   // In development, show the error in the UI
   if (import.meta.env.DEV) {
     const errorDiv = document.createElement('div')
@@ -46,12 +55,20 @@ try {
 // Initialize Sentry before app renders
 initSentry()
 
+console.log('🔍 Finding root element...')
 const rootElement = document.getElementById('root')
 if (!rootElement) {
+  console.error('❌ Root element not found!')
   throw new Error('Failed to find root element')
 }
+console.log('✅ Root element found:', rootElement)
 
-createRoot(rootElement).render(
+console.log('🔧 Creating React root...')
+const root = createRoot(rootElement)
+console.log('✅ React root created')
+
+console.log('🎨 Rendering React app...')
+root.render(
   <StrictMode>
     <ErrorBoundary>
       <ThemeProvider defaultTheme="system">
@@ -68,3 +85,14 @@ createRoot(rootElement).render(
     </ErrorBoundary>
   </StrictMode>,
 )
+
+console.log('✅ React app render initiated')
+
+// Add global error handling for debugging
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error)
+})
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason)
+})

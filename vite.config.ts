@@ -51,8 +51,11 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: '0.0.0.0', // Listen on all addresses for container compatibility
     port: 3000,
-    strictPort: false,
+    strictPort: true, // Required for Docker containers to work properly
     open: !process.env.CI, // Prevent browser opening in headless CI
+    watch: {
+      usePolling: true, // Required for file watching in Docker containers
+    },
   },
 
   // Preview server (for testing production builds)

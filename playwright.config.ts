@@ -13,7 +13,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 1 : undefined, // Recommended: single worker for CI stability
   reporter: 'html',
 
   // Global setup to start Anvil before tests
@@ -22,6 +22,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
+    // Capture screenshots and videos on failure for CI debugging
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
 
   projects: [
@@ -33,15 +36,22 @@ export default defineConfig({
 
   webServer: {
     // Run dev server in test mode with mock wallet and selected RPC (Tenderly or Anvil)
-    command: 'bun dev',
+    command: 'bun dev --debug --logLevel info',
     env: {
       VITE_TEST_MODE: 'mock',
       VITE_BASE_RPC_URL: TEST_RPC_URL,
       VITE_ANVIL_RPC_URL: TEST_RPC_URL,
       VITE_TEST_PRIVATE_KEY: process.env.VITE_TEST_PRIVATE_KEY ?? '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+      // Add debugging environment variables for CI
+      VITE_CI_DEBUG: 'true',
+      DEBUG: 'vite:*',
+      NODE_ENV: 'development',
     },
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 30000, // Allow more time for test mode startup
+    timeout: 60000, // Increase timeout for container startup
+    // Pipe server output to console for debugging in CI
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 })
