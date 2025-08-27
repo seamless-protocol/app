@@ -109,7 +109,7 @@ Owner: MM (Marco Mariscal)
 - **Foundry**: Required for Anvil (install with `curl -L https://foundry.paradigm.xyz | bash`)
 - **Alchemy RPC**: Base mainnet endpoint with valid API key
 - **Node.js/Bun**: ARM64 versions recommended for M-series Macs
-- **Playwright**: Version 1.54.2+ for latest browser support
+- **Playwright**: Version 1.55.0+ for latest browser support
 
 ## Acceptance Criteria ✅ ALL MET
 - ✅ E2E infrastructure automatically manages Anvil lifecycle

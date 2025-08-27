@@ -52,7 +52,7 @@ jobs:
     name: E2E Tests (Tenderly VirtualNet)
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.54.2-noble
+      image: mcr.microsoft.com/playwright:v1.55.0-noble
     env:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
     steps:
