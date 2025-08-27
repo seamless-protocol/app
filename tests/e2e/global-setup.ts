@@ -29,16 +29,9 @@ async function globalSetup() {
           '--no-rate-limit',
           '--silent',
         ],
-        { detached: true, stdio: ['ignore', 'pipe', 'pipe'] },
+        // Fully detach and ignore stdio so Node event loop is not held open
+        { detached: true, stdio: 'ignore' },
       )
-      anvilProcess.stderr?.on('data', (data) => console.error(`❌ Anvil stderr: ${data}`))
-      anvilProcess.on('error', (error) =>
-        console.error(`❌ Failed to start Anvil process: ${error.message}`),
-      )
-      anvilProcess.on('exit', (code, signal) => {
-        if (code !== null && code !== 0) console.error(`❌ Anvil exited with code ${code}`)
-        if (signal) console.error(`❌ Anvil killed with signal ${signal}`)
-      })
       anvilProcess.unref()
       console.log('⏳ Waiting for Anvil to start...')
       await new Promise((r) => setTimeout(r, 3000))
