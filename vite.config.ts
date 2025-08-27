@@ -56,6 +56,11 @@ export default defineConfig(({ mode }) => ({
     watch: {
       usePolling: true, // Required for file watching in Docker containers
     },
+    // Critical: Add CORS and security headers for headless Chrome compatibility
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'unsafe-none',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    },
   },
 
   // Preview server (for testing production builds)

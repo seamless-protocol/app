@@ -8,6 +8,44 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Critical: Add module loading detection for CI debugging -->
+    <script>
+      console.log('📄 HTML loaded, checking module support...')
+      console.log('Module support:', 'noModule' in HTMLScriptElement.prototype)
+      console.log('User agent:', navigator.userAgent)
+      
+      // Add error handler before module loads
+      window.addEventListener('error', (event) => {
+        console.error('🔥 Script error before module load:', {
+          message: event.message,
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+          error: event.error
+        })
+      })
+      
+      // Check if main.tsx loads within 10 seconds (CI debugging)
+      let moduleLoaded = false
+      const startTime = Date.now()
+      
+      const checkInterval = setInterval(() => {
+        if (window.React || document.querySelector('#root').children.length > 0) {
+          moduleLoaded = true
+          console.log('✅ Module loaded successfully after', Date.now() - startTime, 'ms')
+          clearInterval(checkInterval)
+        }
+      }, 100)
+      
+      setTimeout(() => {
+        if (!moduleLoaded) {
+          console.error('💥 CRITICAL: main.tsx module failed to load within 10 seconds')
+          console.error('Root element children:', document.querySelector('#root').children.length)
+          console.error('Document ready state:', document.readyState)
+        }
+        clearInterval(checkInterval)
+      }, 10000)
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
