@@ -16,10 +16,10 @@ export const config = getDefaultConfig({
   projectId: walletConnectProjectId || 'YOUR_PROJECT_ID',
   chains: [base, mainnet],
   transports: {
-    // Prefer explicit VITE_BASE_RPC_URL; otherwise fall back to dev-safe local RPC
+    // In test mode, prioritize test RPC URLs over .env.local values
     [base.id]: http(
-      import.meta.env['VITE_BASE_RPC_URL'] ||
-        import.meta.env['VITE_ANVIL_RPC_URL'] ||
+      import.meta.env['VITE_ANVIL_RPC_URL'] ||
+        import.meta.env['VITE_BASE_RPC_URL'] ||
         'http://127.0.0.1:8545',
     ),
     [mainnet.id]: http(import.meta.env['VITE_MAINNET_RPC_URL'] || 'https://eth.llamarpc.com'),

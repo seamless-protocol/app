@@ -9,7 +9,8 @@ test.describe('App Navigation & Wallet Connection', () => {
   test('should load tokens page', async ({ page }) => {
     // Verify we're on the tokens page (direct navigation uses regular routing)
     await expect(page).toHaveURL(/.*\/tokens/)
-    await expect(page.locator('main h3:has-text("Leverage Tokens")')).toBeVisible()
+    // Check for the page content heading specifically (not the sidebar navigation)
+    await expect(page.locator('main h3:has-text("Leverage Tokens")').first()).toBeVisible()
     await expect(page.locator('text=Browse and manage leverage tokens.')).toBeVisible()
   })
 
@@ -20,8 +21,8 @@ test.describe('App Navigation & Wallet Connection', () => {
     // Wait a bit for redirect to happen
     await page.waitForTimeout(1000)
 
-    // Should be redirected to tokens (hash routing works for redirects)
-    await expect(page).toHaveURL(/.*#\/tokens/)
+    // Should be redirected to tokens (using regular routing for redirects)
+    await expect(page).toHaveURL(/.*\/tokens/)
   })
 
   test('should show connect wallet button', async ({ page }) => {
