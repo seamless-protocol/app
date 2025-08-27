@@ -3,6 +3,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* RainbowKit Modal Background Override */
+[data-rk] {
+  --rk-colors-modalBackground: #1e293b !important;
+  --rk-colors-modalText: #ffffff !important;
+  --rk-colors-modalTextSecondary: #ffffff !important;
+  --rk-colors-accentColor: #c026d3 !important;
+  --rk-colors-generalBorder: #2f2f35 !important;
+  --rk-colors-profileAction: #c026d3 !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

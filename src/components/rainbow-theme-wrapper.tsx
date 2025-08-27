@@ -31,14 +31,12 @@ export function RainbowThemeWrapper({ children }: RainbowThemeWrapperProps) {
 
   // Custom theme configuration to better match our app
   const customLightTheme = lightTheme({
-    accentColor: '#0ea5e9', // Sky-500
     accentColorForeground: 'white',
     borderRadius: 'medium',
     fontStack: 'system',
   })
 
   const customDarkTheme = darkTheme({
-    accentColor: '#0ea5e9', // Sky-500
     accentColorForeground: 'white',
     borderRadius: 'medium',
     fontStack: 'system',
