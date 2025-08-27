@@ -37,8 +37,11 @@ export function useMintWithRouter({ token, onSuccess, onError }: UseMintWithRout
       if (!walletClient) throw new Error('Failed to get wallet client')
 
       const result = await mintWithRouter(
-        { publicClient, walletClient },
-        { router: addresses.leverageRouter, manager: addresses.leverageManager, token },
+        { 
+          publicClient: publicClient as any, 
+          walletClient: walletClient as any 
+        },
+        { router: addresses.leverageRouter!, manager: addresses.leverageManager!, token },
         user,
         params,
       )
