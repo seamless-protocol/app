@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { getPublicClient, getWalletClient } from '@wagmi/core'
-import type { Address } from 'viem'
+import type { Address, PublicClient, WalletClient } from 'viem'
 import { useAccount, useChainId, useConfig } from 'wagmi'
 import { type MintParams, type MintResult, mintWithRouter } from '@/domain/mint-with-router'
 import { getContractAddresses } from '@/lib/contracts/addresses'
@@ -41,8 +41,8 @@ export function useMintWithRouter({ token, onSuccess, onError }: UseMintWithRout
 
       const result = await mintWithRouter(
         {
-          publicClient,
-          walletClient,
+          publicClient: publicClient as PublicClient,
+          walletClient: walletClient as WalletClient,
         },
         { router, manager, token },
         user,
