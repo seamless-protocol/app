@@ -49,18 +49,8 @@ export default defineConfig(({ mode }) => ({
 
   // Development server
   server: {
-    host: '0.0.0.0', // Listen on all addresses for container compatibility
     port: 3000,
-    strictPort: true, // Required for Docker containers to work properly
-    open: !process.env.CI, // Prevent browser opening in headless CI
-    watch: {
-      usePolling: true, // Required for file watching in Docker containers
-    },
-    // Critical: Add CORS and security headers for headless Chrome compatibility
-    headers: {
-      'Cross-Origin-Embedder-Policy': 'unsafe-none',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-    },
+    open: !process.env.CI,
   },
 
   // Preview server (for testing production builds)
