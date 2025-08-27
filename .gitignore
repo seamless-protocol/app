@@ -32,6 +32,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.tanstack/
 
 # Editor directories and files
 .vscode/*
@@ -65,3 +66,4 @@ src/routeTree.gen.ts
 bun.lockb
 bun.lock
 package-lock.json
+*storybook.log

@@ -16,7 +16,12 @@ export const config = getDefaultConfig({
   projectId: walletConnectProjectId || 'YOUR_PROJECT_ID',
   chains: [base, mainnet],
   transports: {
-    [base.id]: http(import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org'),
+    // Prefer explicit VITE_BASE_RPC_URL; otherwise fall back to dev-safe local RPC
+    [base.id]: http(
+      import.meta.env['VITE_BASE_RPC_URL'] ||
+        import.meta.env['VITE_ANVIL_RPC_URL'] ||
+        'http://127.0.0.1:8545',
+    ),
     [mainnet.id]: http(import.meta.env['VITE_MAINNET_RPC_URL'] || 'https://eth.llamarpc.com'),
   },
   ssr: false, // Critical for IPFS deployment - we're a pure client-side app
