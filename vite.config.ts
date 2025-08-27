@@ -49,9 +49,10 @@ export default defineConfig(({ mode }) => ({
 
   // Development server
   server: {
+    host: '0.0.0.0', // Listen on all addresses for container compatibility
     port: 3000,
     strictPort: false,
-    open: true,
+    open: !process.env.CI, // Prevent browser opening in headless CI
   },
 
   // Preview server (for testing production builds)
