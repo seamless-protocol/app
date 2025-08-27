@@ -1,7 +1,12 @@
 import type { Address, ContractFunctionArgs, Hash, PublicClient, WalletClient } from 'viem'
 import type { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
 
-export type SwapContext = ContractFunctionArgs<typeof leverageRouterAbi, 'nonpayable', 'mint'>[4]
+// Alias to avoid export name collision with swapContext.ts re-exports
+export type MintSwapContext = ContractFunctionArgs<
+  typeof leverageRouterAbi,
+  'nonpayable',
+  'mint'
+>[4]
 
 export type Clients = {
   publicClient: PublicClient
@@ -18,7 +23,7 @@ export type MintParams = {
   equityInCollateralAsset: bigint
   slippageBps?: number
   maxSwapCostInCollateralAsset?: bigint
-  swapContext?: SwapContext
+  swapContext?: MintSwapContext
 }
 
 export type PreviewMintResult = {

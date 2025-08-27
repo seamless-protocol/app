@@ -60,5 +60,5 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true
   },
-  "include": ["src", "tests"]
+  "include": ["src"]
 }
