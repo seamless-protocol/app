@@ -30,7 +30,13 @@ export default defineConfig({
 
   webServer: {
     // Run dev server in test mode with mock wallet and selected RPC (Tenderly or Anvil)
-    command: `VITE_TEST_MODE=mock VITE_BASE_RPC_URL=${ENV.RPC_URL} VITE_ANVIL_RPC_URL=${ENV.RPC_URL} VITE_TEST_PRIVATE_KEY=${process.env.VITE_TEST_PRIVATE_KEY ?? '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'} bun dev`,
+    command: 'bun dev',
+    env: {
+      VITE_TEST_MODE: 'mock',
+      VITE_BASE_RPC_URL: ENV.RPC_URL,
+      VITE_ANVIL_RPC_URL: ENV.RPC_URL,
+      VITE_TEST_PRIVATE_KEY: process.env.VITE_TEST_PRIVATE_KEY ?? '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+    },
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 30000, // Allow more time for test mode startup
