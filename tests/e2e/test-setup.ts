@@ -77,7 +77,7 @@ export async function fundMockAccount() {
 export async function checkMockAccountBalances() {
   try {
     // ETH balance
-    const ethBalance = await testClient.getBalance({ address: TEST_ADDRESS })
+    const ethBalance = await walletClient.getBalance({ address: TEST_ADDRESS })
     console.log(`ETH balance: ${ethBalance / 10n ** 18n} ETH`)
 
     // WETH balance
