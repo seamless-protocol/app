@@ -12,7 +12,7 @@ import {
   Vote,
 } from 'lucide-react'
 import { useState } from 'react'
-import { VerticalNavbar } from '../../components/vertical-navbar'
+import { VerticalNavbar } from '../../components/VerticalNavbar'
 
 // Navigation configuration
 const navigationItems = [

@@ -16,7 +16,7 @@ import {
 import { features } from '@/lib/config/features'
 import { ConnectButtonTest } from './ConnectButtonTest'
 import { ModeToggle } from './mode-toggle'
-import { VerticalNavbar } from './vertical-navbar'
+import { VerticalNavbar } from './VerticalNavbar'
 import { WalletConnectButton } from './WalletConnectButton'
 
 // Navigation configuration that maps to existing routes
