@@ -89,4 +89,30 @@ function TableCaption({ className, ...props }: React.ComponentProps<'caption'>) 
   )
 }
 
-export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption }
+interface TableEmptyProps {
+  colSpan: number
+  message?: string
+  className?: string
+}
+
+function TableEmpty({ colSpan, message = 'No data', className }: TableEmptyProps) {
+  return (
+    <TableRow>
+      <TableCell colSpan={colSpan} className={cn('py-12 text-center', className)}>
+        <div className="text-slate-400 text-sm">{message}</div>
+      </TableCell>
+    </TableRow>
+  )
+}
+
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+  TableEmpty,
+}

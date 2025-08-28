@@ -25,7 +25,7 @@ const mockVaultData: Array<VaultStrategy> = [
     riskLevel: 'Low',
     participants: 2847,
     performance7d: 0.9,
-    asset: 'USDC',
+    asset: { symbol: 'USDC', name: 'USD Coin' },
     chainId: CHAIN_IDS.BASE,
   },
   {
@@ -36,7 +36,7 @@ const mockVaultData: Array<VaultStrategy> = [
     tvl: 22100000,
     riskLevel: 'Medium',
     participants: 892,
-    asset: 'cbBTC',
+    asset: { symbol: 'cbBTC', name: 'Coinbase Bitcoin' },
     chainId: CHAIN_IDS.BASE,
   },
   {
@@ -47,7 +47,7 @@ const mockVaultData: Array<VaultStrategy> = [
     tvl: 28700000,
     riskLevel: 'Medium',
     participants: 1743,
-    asset: 'WETH',
+    asset: { symbol: 'WETH', name: 'Wrapped Ethereum' },
     chainId: CHAIN_IDS.ETHEREUM,
   },
 ]
@@ -55,5 +55,11 @@ const mockVaultData: Array<VaultStrategy> = [
 export const Default: Story = {
   args: {
     strategies: mockVaultData,
+  },
+}
+
+export const NoData: Story = {
+  args: {
+    strategies: [],
   },
 }

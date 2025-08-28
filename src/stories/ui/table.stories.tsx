@@ -1,58 +1,91 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta, StoryObj } from '@storybook/react'
 import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
 } from '../../components/ui/table'
 
-const meta = {
+const meta: Meta<typeof Table> = {
   title: 'UI/Table',
   component: Table,
   parameters: {
     layout: 'padded',
+    backgrounds: {
+      default: 'dark',
+      values: [
+        {
+          name: 'dark',
+          value: '#0f172a',
+        },
+      ],
+    },
   },
-  tags: ['autodocs'],
-} satisfies Meta<typeof Table>
+}
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   render: () => (
-    <div className="w-full max-w-4xl">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow>
-            <TableCell>John Doe</TableCell>
-            <TableCell>john@example.com</TableCell>
-            <TableCell>Active</TableCell>
-            <TableCell className="text-right">$250.00</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>Jane Smith</TableCell>
-            <TableCell>jane@example.com</TableCell>
-            <TableCell>Inactive</TableCell>
-            <TableCell className="text-right">$150.00</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>Bob Johnson</TableCell>
-            <TableCell>bob@example.com</TableCell>
-            <TableCell>Active</TableCell>
-            <TableCell className="text-right">$350.00</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Amount</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+          <TableCell>John Doe</TableCell>
+          <TableCell>Active</TableCell>
+          <TableCell>$1,234.56</TableCell>
+        </TableRow>
+        <TableRow>
+          <TableCell>Jane Smith</TableCell>
+          <TableCell>Inactive</TableCell>
+          <TableCell>$987.65</TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  ),
+}
+
+export const Empty: Story = {
+  render: () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Amount</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableEmpty colSpan={3} />
+      </TableBody>
+    </Table>
+  ),
+}
+
+export const EmptyWithCustomMessage: Story = {
+  render: () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Product</TableHead>
+          <TableHead>Category</TableHead>
+          <TableHead>Price</TableHead>
+          <TableHead>Stock</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableEmpty colSpan={4} message="No products found" />
+      </TableBody>
+    </Table>
   ),
 }
