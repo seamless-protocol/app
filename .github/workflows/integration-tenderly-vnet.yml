@@ -101,12 +101,20 @@ jobs:
         env:
           TEST_RPC_KIND: tenderly
           TEST_RPC_URL: ${{ steps.vnet.outputs.rpc_url }}
+          # Required VITE environment variables
+          VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
+          VITE_BASE_RPC_URL: ${{ vars.VITE_BASE_RPC_URL }}
+          VITE_ETHEREUM_RPC_URL: ${{ vars.VITE_ETHEREUM_RPC_URL }}
         run: bun run test:integration
 
       - name: Run E2E tests (same VirtualNet)
         env:
           TEST_RPC_KIND: tenderly
           TEST_RPC_URL: ${{ steps.vnet.outputs.rpc_url }}
+          # Required VITE environment variables
+          VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
+          VITE_BASE_RPC_URL: ${{ vars.VITE_BASE_RPC_URL }}
+          VITE_ETHEREUM_RPC_URL: ${{ vars.VITE_ETHEREUM_RPC_URL }}
         run: bun run test:e2e
 
       - name: Cleanup VirtualNet

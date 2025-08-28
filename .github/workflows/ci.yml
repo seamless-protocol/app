@@ -74,6 +74,10 @@ jobs:
           TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
           # Optional override for creation JSON if needed
           TENDERLY_VNET_CREATE_JSON: ${{ secrets.TENDERLY_VNET_CREATE_JSON }}
+          # Required VITE environment variables
+          VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
+          VITE_BASE_RPC_URL: ${{ vars.VITE_BASE_RPC_URL }}
+          VITE_ETHEREUM_RPC_URL: ${{ vars.VITE_ETHEREUM_RPC_URL }}
         run: bun run test:all:tenderly
 
       - name: Upload Playwright report
