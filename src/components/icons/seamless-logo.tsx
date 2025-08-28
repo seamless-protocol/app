@@ -1,10 +1,7 @@
+import type { SVGProps } from 'react'
 import { useId } from 'react'
 
-interface SeamlessLogoProps {
-  className?: string
-}
-
-export function SeamlessLogo({ className }: SeamlessLogoProps) {
+export function SeamlessLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
   const logoId = useId()
   const pathId = useId()
 
@@ -16,6 +13,7 @@ export function SeamlessLogo({ className }: SeamlessLogoProps) {
       viewBox="0 0 25 25"
       role="img"
       aria-labelledby={logoId}
+      {...props}
     >
       <title id={logoId}>Seamless Protocol Logo</title>
       <g id={logoId}>

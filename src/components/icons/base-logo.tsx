@@ -1,10 +1,7 @@
+import type { SVGProps } from 'react'
 import { useId } from 'react'
 
-interface BaseLogoProps {
-  className?: string
-}
-
-export function BaseLogo({ className }: BaseLogoProps) {
+export function BaseLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
   const logoId = useId()
   const pathId = useId()
 
@@ -16,6 +13,7 @@ export function BaseLogo({ className }: BaseLogoProps) {
       viewBox="0 0 32 32"
       role="img"
       aria-labelledby={logoId}
+      {...props}
     >
       <title id={logoId}>Base Logo</title>
       <g id={logoId}>

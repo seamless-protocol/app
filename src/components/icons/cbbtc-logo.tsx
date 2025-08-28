@@ -1,6 +1,7 @@
+import type { SVGProps } from 'react'
 import { useId } from 'react'
 
-export function CBBTCLogo({ className }: { className?: string }) {
+export function CBBTCLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
   const logoId = useId()
 
   return (
@@ -11,6 +12,7 @@ export function CBBTCLogo({ className }: { className?: string }) {
       viewBox="0 0 32 32"
       role="img"
       aria-labelledby={logoId}
+      {...props}
     >
       <title id={logoId}>cbBTC Logo</title>
       <g fill="none" fillRule="evenodd">

@@ -1,10 +1,7 @@
+import type { SVGProps } from 'react'
 import { useId } from 'react'
 
-interface EthereumLogoProps {
-  className?: string
-}
-
-export function EthereumLogo({ className }: EthereumLogoProps) {
+export function EthereumLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
   const logoId = useId()
   const path1Id = useId()
   const path2Id = useId()
@@ -21,6 +18,7 @@ export function EthereumLogo({ className }: EthereumLogoProps) {
       viewBox="0 0 32 32"
       role="img"
       aria-labelledby={logoId}
+      {...props}
     >
       <title id={logoId}>Ethereum Logo</title>
       <g id={logoId} fill="none" fillRule="evenodd">

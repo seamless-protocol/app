@@ -109,7 +109,7 @@ export function AssetDisplay({
       <div className={cn('flex items-center space-x-2', className)}>
         <div
           className={cn(
-            'rounded-full border border-slate-600 bg-slate-800 flex items-center justify-center p-0.5',
+            'rounded-full border border-slate-600 bg-slate-800 flex items-center justify-center',
             sizeConfig.container,
           )}
         >

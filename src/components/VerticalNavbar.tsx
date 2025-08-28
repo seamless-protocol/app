@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { ChevronRight, Github } from 'lucide-react'
 import type * as React from 'react'
-import { SeamlessLogo } from './icons/seamless-logo'
+import { SeamlessLogo } from './icons'
 import { Badge } from './ui/badge'
 import { cn } from './ui/utils'
 
