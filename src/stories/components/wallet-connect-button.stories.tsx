@@ -8,7 +8,7 @@ import { config } from '../../lib/config/wagmi.config'
 const queryClient = new QueryClient()
 
 const meta = {
-  title: 'Components/WalletConnectButton',
+  title: 'Components/General/WalletConnectButton',
   component: WalletConnectButton,
   parameters: {
     layout: 'centered',

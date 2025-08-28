@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { AccordionContainer } from '../../components/AccordionContainer'
 
 const meta: Meta<typeof AccordionContainer> = {
-  title: 'Components/AccordionContainer',
+  title: 'Components/General/AccordionContainer',
   component: AccordionContainer,
   parameters: {
     layout: 'padded',

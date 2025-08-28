@@ -4,7 +4,7 @@ import { StatCard } from '../../components/StatCard'
 import { StatCardList } from '../../components/StatCardList'
 
 const meta = {
-  title: 'Components/StatCardList',
+  title: 'Components/General/StatCardList',
   component: StatCardList,
   parameters: {
     layout: 'padded',

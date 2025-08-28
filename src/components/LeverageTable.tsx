@@ -1,26 +1,14 @@
 import { motion } from 'framer-motion'
 import { Info, Search, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
-import { useAccount, useConnectorClient } from 'wagmi'
-import { getTokenExplorerUrl } from '@/lib/utils/block-explorer'
 import { cn } from '@/lib/utils/cn'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
-import {
-  countByField,
-  filterByField,
-  filterByRange,
-  filterBySearch,
-  getUniqueValues,
-  parseSortString,
-  sortData,
-} from '@/lib/utils/table-utils'
-import { APYBreakdown, type APYBreakdownData } from './ui/apy-breakdown'
-import { AssetDisplay } from './ui/asset-display'
+import { filterByRange, filterBySearch, parseSortString, sortData } from '@/lib/utils/table-utils'
+import { APYBreakdown, type APYBreakdownData } from './APYBreakdown'
+import { LeverageBadge } from './LeverageBadge'
+import { SupplyCap } from './SupplyCap'
 import { Badge } from './ui/badge'
 import { FilterDropdown } from './ui/filter-dropdown'
-import { LeverageBadge } from './ui/leverage-badge'
-import { SupplyCap } from './ui/supply-cap'
 import {
   Table,
   TableBody,
@@ -64,44 +52,15 @@ interface LeverageTableProps {
 }
 
 export function LeverageTable({ tokens, onTokenClick, className }: LeverageTableProps) {
-  // Get wallet connection - hooks must be called at top level
-  const account = useAccount()
-  const connectorClient = useConnectorClient()
-
-  // Handle cases where wagmi context might not be available
-  const isConnected = account.isConnected
-  const address = account.address
-  const client = connectorClient.data
-
   const [sortBy, setSortBy] = useState('apy-desc')
   const [filters, setFilters] = useState({
-    inWallet: false,
-    collateralAsset: 'all',
     leverageRange: 'all',
   })
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Handle wallet connection check for "In Wallet" toggle
-  const handleInWalletToggle = () => {
-    if (!isConnected || !client || !address) {
-      toast.info('Please connect your wallet first', {
-        description: 'You need to connect a wallet to filter tokens in your wallet',
-      })
-      return
-    }
-    setFilters((prev) => ({ ...prev, inWallet: !prev.inWallet }))
-  }
-
   const sortedAndFilteredData = useMemo(() => {
     // Apply search filter
-    let filtered = filterBySearch(tokens, searchQuery, (token) => [
-      token.name,
-      token.collateralAsset.symbol,
-      token.debtAsset.symbol,
-    ])
-
-    // Apply collateral asset filter
-    filtered = filterByField(filtered, 'collateralAsset.symbol', filters.collateralAsset)
+    let filtered = filterBySearch(tokens, searchQuery, (token) => [token.name])
 
     // Apply leverage range filter
     filtered = filterByRange(filtered, 'leverage', filters.leverageRange)
@@ -143,20 +102,6 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
     }
   }
 
-  // Calculate counts for filter options
-  const getAssetOptions = () => {
-    const uniqueAssets = getUniqueValues(tokens, 'collateralAsset.symbol')
-
-    return [
-      { value: 'all', label: 'All Assets', count: tokens.length },
-      ...uniqueAssets.map((asset) => ({
-        value: asset,
-        label: asset,
-        count: countByField(tokens, 'collateralAsset.symbol', asset),
-      })),
-    ]
-  }
-
   const getLeverageOptions = () => {
     const ranges = [
       { value: '1-5', label: '1x-5x', min: 1, max: 5 },
@@ -196,40 +141,6 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
-            {/* In Wallet Switch */}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-slate-300">In Wallet:</span>
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={filters.inWallet}
-                  className={cn(
-                    'inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent transition-all outline-none focus-visible:ring-[3px]',
-                    filters.inWallet ? 'bg-blue-600' : 'bg-slate-600 dark:bg-input/80',
-                    (!isConnected || !client || !address) && 'opacity-50',
-                  )}
-                  onClick={handleInWalletToggle}
-                >
-                  <span
-                    className={cn(
-                      'pointer-events-none block size-4 rounded-full ring-0 transition-transform',
-                      'bg-card dark:bg-card-foreground',
-                      filters.inWallet ? 'translate-x-[calc(100%-2px)]' : 'translate-x-0',
-                    )}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Collateral Asset Filter */}
-            <FilterDropdown
-              label="Asset"
-              value={filters.collateralAsset}
-              options={getAssetOptions()}
-              onValueChange={(value) => setFilters((prev) => ({ ...prev, collateralAsset: value }))}
-            />
-
             {/* Leverage Range Filter */}
             <FilterDropdown
               label="Leverage"
@@ -281,12 +192,6 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <span>TVL</span>
                 </TableHead>
-                <TableHead className="text-slate-300 font-medium py-4 px-6 text-center min-w-[120px]">
-                  <span>Collateral Asset</span>
-                </TableHead>
-                <TableHead className="text-slate-300 font-medium py-4 px-6 text-center min-w-[120px]">
-                  <span>Debt Asset</span>
-                </TableHead>
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <span>APY</span>
                 </TableHead>
@@ -300,7 +205,7 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
             </TableHeader>
             <TableBody>
               {sortedAndFilteredData.length === 0 ? (
-                <TableEmpty colSpan={7} />
+                <TableEmpty colSpan={5} />
               ) : (
                 sortedAndFilteredData.map((token, index) => (
                   <motion.tr
@@ -312,31 +217,17 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
                     onClick={() => onTokenClick?.(token)}
                   >
                     <TableCell className="py-4 px-6">
-                      <div className="flex flex-row space-y-1">
-                        <AssetDisplay
-                          assets={[
-                            {
-                              symbol: token.collateralAsset.symbol,
-                              name: token.collateralAsset.name,
-                            },
-                            { symbol: token.debtAsset.symbol, name: token.debtAsset.name },
-                          ]}
-                          name={token.name}
-                          size="md"
-                          showBadge={false}
-                          className="flex-1"
-                        />
-                        <div className="flex items-center space-x-2">
-                          <Badge
-                            variant="secondary"
-                            className="text-xs bg-slate-800/60 hover:bg-slate-700/60 border-slate-600/50 text-slate-300"
-                          >
-                            <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center mr-1">
-                              <token.chainLogo className="w-3 h-3" />
-                            </div>
-                            {token.chainName}
-                          </Badge>
-                        </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300 font-medium text-sm">{token.name}</span>
+                        <Badge
+                          variant="secondary"
+                          className="text-xs bg-slate-800/60 hover:bg-slate-700/60 border-slate-600/50 text-slate-300"
+                        >
+                          <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center mr-1">
+                            <token.chainLogo className="w-3 h-3" />
+                          </div>
+                          {token.chainName}
+                        </Badge>
                       </div>
                     </TableCell>
 
@@ -344,41 +235,6 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
                       <span className="text-slate-300 font-medium text-sm">
                         {formatCurrency(token.tvl)}
                       </span>
-                    </TableCell>
-
-                    <TableCell className="py-4 px-6 text-center">
-                      <a
-                        href={getTokenExplorerUrl(token.chainId, token.collateralAsset.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block"
-                      >
-                        <AssetDisplay
-                          asset={{
-                            symbol: token.collateralAsset.symbol,
-                            name: token.collateralAsset.name,
-                          }}
-                          showLink={true}
-                          size="md"
-                          className="justify-center hover:bg-slate-800/50 rounded-lg p-2 transition-colors"
-                        />
-                      </a>
-                    </TableCell>
-
-                    <TableCell className="py-4 px-6 text-center">
-                      <a
-                        href={getTokenExplorerUrl(token.chainId, token.debtAsset.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block"
-                      >
-                        <AssetDisplay
-                          asset={{ symbol: token.debtAsset.symbol, name: token.debtAsset.name }}
-                          showLink={true}
-                          size="md"
-                          className="justify-center hover:bg-slate-800/50 rounded-lg p-2 transition-colors"
-                        />
-                      </a>
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-right">
@@ -407,11 +263,7 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-right">
-                      <SupplyCap
-                        currentSupply={token.currentSupply}
-                        supplyCap={token.supplyCap}
-                        size="md"
-                      />
+                      <SupplyCap currentSupply={token.currentSupply} supplyCap={token.supplyCap} />
                     </TableCell>
                   </motion.tr>
                 ))

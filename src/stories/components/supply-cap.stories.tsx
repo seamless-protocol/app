@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { SupplyCap } from '../../components/ui/supply-cap'
+import { SupplyCap } from '../../components/SupplyCap'
 
 const meta = {
-  title: 'UI/SupplyCap',
+  title: 'Components/Leverage/SupplyCap',
   component: SupplyCap,
   parameters: {
     layout: 'centered',
@@ -13,7 +13,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const AllSizes: Story = {
+export const Default: Story = {
   args: {
     currentSupply: 750000,
     supplyCap: 1000000,
@@ -21,16 +21,8 @@ export const AllSizes: Story = {
   render: (args) => (
     <div className="space-y-6">
       <div className="flex items-center space-x-4">
-        <span className="text-sm text-slate-400 w-16">Small:</span>
-        <SupplyCap {...args} size="sm" />
-      </div>
-      <div className="flex items-center space-x-4">
-        <span className="text-sm text-slate-400 w-16">Medium:</span>
-        <SupplyCap {...args} size="md" />
-      </div>
-      <div className="flex items-center space-x-4">
-        <span className="text-sm text-slate-400 w-16">Large:</span>
-        <SupplyCap {...args} size="lg" />
+        <span className="text-sm text-slate-400 w-16">Default:</span>
+        <SupplyCap {...args} />
       </div>
     </div>
   ),

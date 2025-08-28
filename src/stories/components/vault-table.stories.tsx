@@ -3,7 +3,7 @@ import { type VaultStrategy, VaultTable } from '../../components/VaultTable'
 import { CHAIN_IDS } from '../../lib/utils/chain-logos'
 
 const meta: Meta<typeof VaultTable> = {
-  title: 'Components/VaultTable',
+  title: 'Components/Vault/VaultTable',
   component: VaultTable,
   parameters: {
     layout: 'padded',

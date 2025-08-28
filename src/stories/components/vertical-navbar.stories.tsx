@@ -160,7 +160,7 @@ function NavbarWrapper({ currentPage, isMobile }: { currentPage: string; isMobil
 }
 
 const meta = {
-  title: 'Components/VerticalNavbar',
+  title: 'Components/General/VerticalNavbar',
   component: NavbarWrapper,
   parameters: {
     layout: 'fullscreen',
