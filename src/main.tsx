@@ -20,9 +20,9 @@ import { router } from './router'
 // Add startup debugging for CI
 console.log('🚀 Starting React app...')
 console.log('Environment mode:', import.meta.env.MODE)
-console.log('CI mode:', import.meta.env.CI)
-console.log('Test mode:', import.meta.env.VITE_TEST_MODE)
-console.log('Debug mode:', import.meta.env.VITE_CI_DEBUG)
+console.log('CI mode:', import.meta.env['CI'])
+console.log('Test mode:', import.meta.env['VITE_TEST_MODE'])
+console.log('Debug mode:', import.meta.env['VITE_CI_DEBUG'])
 
 // Validate environment variables before app starts
 try {
