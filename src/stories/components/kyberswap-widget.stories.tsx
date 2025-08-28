@@ -10,7 +10,7 @@ import { config } from '../../lib/config/wagmi.config'
 const queryClient = new QueryClient()
 
 const meta = {
-  title: 'Components/KyberSwapWidget',
+  title: 'Components/General/KyberSwapWidget',
   component: KyberSwapWidget,
   parameters: {
     layout: 'centered',
@@ -48,7 +48,7 @@ export const Default: Story = {
       <Alert
         type="info"
         title="💡 To see the full swap widget"
-        description="Navigate to Components/WalletConnectButton story, connect your wallet, then return here to see the complete functionality!"
+        description="Navigate to Components/General/WalletConnectButton story, connect your wallet, then return here to see the complete functionality!"
       />
     </div>
   ),
@@ -56,7 +56,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          'The KyberSwap widget with helpful instructions. When wallet is not connected, it shows a button that triggers a toast notification. To see the full swap widget, navigate to Components/WalletConnectButton story, connect your wallet, then return here.',
+          'The KyberSwap widget with helpful instructions. When wallet is not connected, it shows a button that triggers a toast notification. To see the full swap widget, navigate to Components/General/WalletConnectButton story, connect your wallet, then return here.',
       },
     },
   },

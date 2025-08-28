@@ -1,8 +1,6 @@
 import { motion } from 'framer-motion'
 import { Info, Search, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
-import { useAccount, useConnectorClient } from 'wagmi'
 import { getTokenExplorerUrl } from '@/lib/utils/block-explorer'
 import { cn } from '@/lib/utils/cn'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
@@ -15,12 +13,12 @@ import {
   parseSortString,
   sortData,
 } from '@/lib/utils/table-utils'
-import { APYBreakdown, type APYBreakdownData } from './ui/apy-breakdown'
+import { APYBreakdown, type APYBreakdownData } from './APYBreakdown'
+import { LeverageBadge } from './LeverageBadge'
+import { SupplyCap } from './SupplyCap'
 import { AssetDisplay } from './ui/asset-display'
 import { Badge } from './ui/badge'
 import { FilterDropdown } from './ui/filter-dropdown'
-import { LeverageBadge } from './ui/leverage-badge'
-import { SupplyCap } from './ui/supply-cap'
 import {
   Table,
   TableBody,
@@ -64,33 +62,12 @@ interface LeverageTableProps {
 }
 
 export function LeverageTable({ tokens, onTokenClick, className }: LeverageTableProps) {
-  // Get wallet connection - hooks must be called at top level
-  const account = useAccount()
-  const connectorClient = useConnectorClient()
-
-  // Handle cases where wagmi context might not be available
-  const isConnected = account.isConnected
-  const address = account.address
-  const client = connectorClient.data
-
   const [sortBy, setSortBy] = useState('apy-desc')
   const [filters, setFilters] = useState({
-    inWallet: false,
     collateralAsset: 'all',
     leverageRange: 'all',
   })
   const [searchQuery, setSearchQuery] = useState('')
-
-  // Handle wallet connection check for "In Wallet" toggle
-  const handleInWalletToggle = () => {
-    if (!isConnected || !client || !address) {
-      toast.info('Please connect your wallet first', {
-        description: 'You need to connect a wallet to filter tokens in your wallet',
-      })
-      return
-    }
-    setFilters((prev) => ({ ...prev, inWallet: !prev.inWallet }))
-  }
 
   const sortedAndFilteredData = useMemo(() => {
     // Apply search filter
@@ -196,32 +173,6 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
-            {/* In Wallet Switch */}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-slate-300">In Wallet:</span>
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={filters.inWallet}
-                  className={cn(
-                    'inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent transition-all outline-none focus-visible:ring-[3px]',
-                    filters.inWallet ? 'bg-blue-600' : 'bg-slate-600 dark:bg-input/80',
-                    (!isConnected || !client || !address) && 'opacity-50',
-                  )}
-                  onClick={handleInWalletToggle}
-                >
-                  <span
-                    className={cn(
-                      'pointer-events-none block size-4 rounded-full ring-0 transition-transform',
-                      'bg-card dark:bg-card-foreground',
-                      filters.inWallet ? 'translate-x-[calc(100%-2px)]' : 'translate-x-0',
-                    )}
-                  />
-                </button>
-              </div>
-            </div>
-
             {/* Collateral Asset Filter */}
             <FilterDropdown
               label="Asset"

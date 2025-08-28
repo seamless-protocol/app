@@ -24,7 +24,7 @@ function CenteredWrapper() {
 }
 
 const meta = {
-  title: 'Components/CreateProposalCard',
+  title: 'Components/Governance/CreateProposalCard',
   component: CreateProposalCard,
   parameters: {
     layout: 'fullscreen',

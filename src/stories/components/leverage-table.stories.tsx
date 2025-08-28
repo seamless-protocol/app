@@ -1,13 +1,6 @@
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import type { Meta, StoryObj } from '@storybook/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider } from 'wagmi'
 import { BaseLogo, EthereumLogo } from '../../components/icons'
 import { LeverageTable, type LeverageToken } from '../../components/LeverageTable'
-import { Toaster } from '../../components/ui/sonner'
-import { config } from '../../lib/config/wagmi.config'
-
-const queryClient = new QueryClient()
 
 const mockLeverageTokens: Array<LeverageToken> = [
   {
@@ -101,7 +94,7 @@ const mockLeverageTokens: Array<LeverageToken> = [
 ]
 
 const meta: Meta<typeof LeverageTable> = {
-  title: 'Components/LeverageTable',
+  title: 'Components/Leverage/LeverageTable',
   component: LeverageTable,
   parameters: {
     layout: 'fullscreen',
@@ -115,20 +108,7 @@ const meta: Meta<typeof LeverageTable> = {
       ],
     },
   },
-  decorators: [
-    (Story) => (
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider>
-            <div className="p-4">
-              <Story />
-              <Toaster position="top-center" />
-            </div>
-          </RainbowKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
-    ),
-  ],
+  decorators: [(Story) => <Story />],
 }
 
 export default meta

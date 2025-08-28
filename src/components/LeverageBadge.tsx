@@ -1,4 +1,3 @@
-import { BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 interface LeverageBadgeProps {
@@ -29,15 +28,14 @@ export function LeverageBadge({ leverage, size = 'md', className }: LeverageBadg
   const sizeConfig = sizeClasses[size]
 
   return (
-    <div
+    <span
       className={cn(
-        'inline-flex items-center space-x-1 bg-gradient-to-r from-purple-600/20 to-pink-600/20 px-2 py-1 rounded border border-purple-500/30',
+        'inline-flex items-center justify-center rounded-md border px-2 py-0.5 w-fit whitespace-nowrap shrink-0 text-purple-400 border-purple-400/30 bg-purple-400/10 text-sm font-medium',
         sizeConfig.container,
         className,
       )}
     >
-      <BarChart3 className={cn('text-purple-400', sizeConfig.icon)} />
-      <span className={cn('text-purple-400 font-medium', sizeConfig.text)}>{leverage}x</span>
-    </div>
+      {leverage}x
+    </span>
   )
 }

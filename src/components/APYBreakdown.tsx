@@ -1,5 +1,5 @@
 import { formatPercentage, formatPoints } from '@/lib/utils/formatting'
-import { cn } from './utils'
+import { cn } from './ui/utils'
 
 export interface APYBreakdownData {
   baseYield: number
