@@ -398,6 +398,14 @@ body,
   color: var(--text-primary);
 }
 
+/* Remove focus outline from chart components */
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-responsive-container,
+.recharts-responsive-container * {
+  outline: none !important;
+}
+
 /* Mobile-specific enhancements */
 @media (max-width: 768px) {
   /* Adjust base font size for mobile */

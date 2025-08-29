@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion'
 import { Info, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { calculateAPYBreakdown } from '@/lib/utils/apy-calculations'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { cn } from '@/lib/utils/cn'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
 import { filterBySearch, parseSortString, sortData } from '@/lib/utils/table-utils'
-import { APYBreakdown, type APYBreakdownData } from './APYBreakdown'
+import { APYBreakdown } from './APYBreakdown'
 import { SortArrowDown, SortArrowNeutral, SortArrowUp } from './icons'
 import { LeverageBadge } from './LeverageBadge'
 import { SupplyCap } from './SupplyCap'
@@ -43,17 +44,22 @@ interface LeverageToken {
   chainId: number
   chainName: string
   chainLogo: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  // APY calculation properties
+  baseYield: number
+  borrowRate: number
+  rewardMultiplier?: number
+  rank?: number
 }
 
 export type { LeverageToken }
 
-interface LeverageTableProps {
+interface LeverageTokenTableProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
 }
 
-export function LeverageTable({ tokens, onTokenClick, className }: LeverageTableProps) {
+export function LeverageTokenTable({ tokens, onTokenClick, className }: LeverageTokenTableProps) {
   const [sortBy, setSortBy] = useState('apy-desc')
   const [filters, setFilters] = useState({
     collateralAsset: 'all',
@@ -138,24 +144,6 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
 
     return sorted
   }, [tokens, sortBy, filters, searchQuery])
-
-  // Generate APY breakdown data for a token
-  const getAPYBreakdown = (token: LeverageToken): APYBreakdownData => {
-    // Calculate breakdown based on token data
-    const baseYield = 5.12 // This would come from real data
-    const borrowCost = -3.67 // This would be calculated from borrow rates
-    const rewardAPY = 2.55 // This would come from reward programs
-    const points = Math.floor(token.tvl / 1000) // Example calculation
-
-    return {
-      baseYield,
-      leverageMultiplier: token.leverage,
-      borrowCost,
-      rewardAPY,
-      points,
-      totalAPY: token.apy,
-    }
-  }
 
   const getCollateralAssetOptions = () => {
     const assets = Array.from(new Set(tokens.map((token) => token.collateralAsset.symbol)))
@@ -401,7 +389,7 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
                             </button>
                           </TooltipTrigger>
                           <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                            <APYBreakdown data={getAPYBreakdown(token)} compact />
+                            <APYBreakdown data={calculateAPYBreakdown(token)} compact />
                           </TooltipContent>
                         </Tooltip>
                       </div>
