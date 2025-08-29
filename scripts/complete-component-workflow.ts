@@ -53,6 +53,7 @@ const [, , figmaIdentifier, outputComponentName] = process.argv
 if (!figmaIdentifier || !outputComponentName) {
   console.error('Usage: bun scripts/complete-component-workflow.ts [figma-component-identifier] [OutputComponentName]')
   console.error('Example: bun scripts/complete-component-workflow.ts "StrategyCard" "LeverageTokenCard"')
+  console.error('Or with direct JSX: bun scripts/complete-component-workflow.ts "<div>...</div>" "ComponentName"')
   process.exit(1)
 }
 
@@ -60,15 +61,28 @@ async function main(): Promise<void> {
   try {
     console.log(`🚀 Starting component workflow for: ${figmaIdentifier} → ${outputComponentName}`)
     
-    // Step 1: Search _figma folder for matching component
-    console.log('📁 Searching _figma folder...')
-    const figmaComponent = await findFigmaComponent(figmaIdentifier)
+    let figmaComponent: FigmaComponent
     
-    if (!figmaComponent) {
-      throw new Error(`Component "${figmaIdentifier}" not found in _figma folder`)
+    // Check if figmaIdentifier is direct JSX (starts with '<' and contains JSX elements)
+    if (figmaIdentifier.trim().startsWith('<') && figmaIdentifier.includes('>')) {
+      console.log('📝 Using direct JSX input...')
+      figmaComponent = {
+        path: 'direct-input',
+        name: outputComponentName,
+        content: figmaIdentifier
+      }
+    } else {
+      // Step 1: Search _figma folder for matching component
+      console.log('📁 Searching _figma folder...')
+      const foundComponent = await findFigmaComponent(figmaIdentifier)
+      
+      if (!foundComponent) {
+        throw new Error(`Component "${figmaIdentifier}" not found in _figma folder`)
+      }
+      
+      console.log(`✅ Found Figma component: ${foundComponent.path}`)
+      figmaComponent = foundComponent
     }
-    
-    console.log(`✅ Found Figma component: ${figmaComponent.path}`)
     
     // Step 2: Extract component structure and styling
     console.log('🎨 Extracting component styling...')
@@ -195,8 +209,23 @@ async function generateReactComponent(componentData: ComponentData, outputPath: 
   // Transform the Figma component into a production-ready React component
   let content = componentData.content
   
+  // If this is direct JSX input, wrap it in a proper React component
+  if (componentData.path === 'direct-input') {
+    // Extract the component name from the output path
+    const componentName = path.basename(outputPath, '.tsx')
+    
+    // Wrap the JSX in a proper React component function
+    content = `export function ${componentName}() {
+  return (
+    ${content.trim()}
+  )
+}`
+  }
+  
   // Add proper test ID
-  content = content.replace(/data-testid="[^"]*"/, `data-testid="${componentData.testId}"`)
+  if (!content.includes('data-testid=')) {
+    content = content.replace(/className="([^"]*)"/, `className="$1" data-testid="${componentData.testId}"`)
+  }
   
   // Ensure proper imports based on what's used
   const imports = new Set<string>()
@@ -208,8 +237,14 @@ async function generateReactComponent(componentData: ComponentData, outputPath: 
   if (content.includes('Button')) {
     imports.add("import { Button } from '@/components/ui/button'")
   }
+  if (content.includes('Avatar')) {
+    imports.add("import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'")
+  }
   if (content.includes('Plus') || content.includes('Minus') || content.includes('Zap')) {
     imports.add("import { Plus, Minus, Zap } from 'lucide-react'")
+  }
+  if (content.includes('motion.')) {
+    imports.add("import { motion } from 'framer-motion'")
   }
   
   // Create the final component content
