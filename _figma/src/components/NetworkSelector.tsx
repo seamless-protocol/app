@@ -1,21 +1,6 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "./ui/button"
-import { Badge } from "./ui/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from "./ui/dropdown-menu"
-import { 
-  Check, 
-  AlertTriangle,
-  Loader2 
-} from "lucide-react"
+import { Loader2 } from "lucide-react"
 import BaseLogo from "../imports/BaseLogo"
 
 export interface Network {
@@ -37,7 +22,6 @@ export interface Network {
 
 interface NetworkSelectorProps {
   currentNetwork: Network
-  onNetworkChange: (network: Network) => void
   isConnecting?: boolean
 }
 
@@ -112,127 +96,22 @@ const AVAILABLE_NETWORKS: Network[] = [
 
 export function NetworkSelector({ 
   currentNetwork, 
-  onNetworkChange, 
   isConnecting = false 
 }: NetworkSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false)
-
-  const handleNetworkSelect = async (network: Network) => {
-    if (network.id === currentNetwork.id) {
-      setIsOpen(false)
-      return
-    }
-
-    if (!network.isSupported) {
-      // Could show a toast or alert here
-      console.warn(`${network.name} is not yet supported`)
-      setIsOpen(false)
-      return
-    }
-
-    try {
-      await onNetworkChange(network)
-      setIsOpen(false)
-    } catch (error) {
-      console.error('Failed to switch network:', error)
-      // Could show error toast here
-    }
-  }
-
-  const supportedNetworks = AVAILABLE_NETWORKS.filter(network => network.isSupported)
-  const unsupportedNetworks = AVAILABLE_NETWORKS.filter(network => !network.isSupported)
-
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8" disabled={isConnecting}>
-          <div className="flex items-center space-x-2">
-            {currentNetwork.id === 'base' ? (
-              <div className="w-3 h-3">
-                <BaseLogo />
-              </div>
-            ) : (
-              <div className={`w-2 h-2 rounded-full ${currentNetwork.color}`} />
-            )}
-            <span className="text-xs">{currentNetwork.displayName}</span>
-            {isConnecting && (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            )}
-          </div>
-        </Button>
-      </DropdownMenuTrigger>
-      
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="flex items-center space-x-2">
-          <span>Select Network</span>
-          {isConnecting && (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          )}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        
-        {supportedNetworks.map((network) => (
-          <DropdownMenuItem
-            key={network.id}
-            onClick={() => handleNetworkSelect(network)}
-            className="flex items-center justify-between cursor-pointer p-3"
-            disabled={isConnecting}
-          >
-            <div className="flex items-center space-x-3">
-              {network.id === 'base' ? (
-                <div className="w-4 h-4">
-                  <BaseLogo />
-                </div>
-              ) : (
-                <div className={`w-4 h-4 rounded-full ${network.color}`} />
-              )}
-              <div>
-                <p className="font-medium">{network.displayName}</p>
-                <p className="text-xs text-muted-foreground">
-                  Chain ID: {network.chainId} • {network.nativeCurrency.symbol}
-                </p>
-              </div>
-            </div>
-            {network.id === currentNetwork.id && (
-              <Check className="h-4 w-4 text-green-600" />
-            )}
-          </DropdownMenuItem>
-        ))}
-        
-        {unsupportedNetworks.length > 0 && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Coming Soon
-            </DropdownMenuLabel>
-            {unsupportedNetworks.map((network) => (
-              <DropdownMenuItem
-                key={network.id}
-                disabled
-                className="flex items-center justify-between opacity-50"
-              >
-                <div className="flex items-center space-x-3">
-                  {network.id === 'base' ? (
-                    <div className="w-3 h-3">
-                      <BaseLogo />
-                    </div>
-                  ) : (
-                    <div className={`w-3 h-3 rounded-full ${network.color}`} />
-                  )}
-                  <div>
-                    <p className="font-medium">{network.displayName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Chain ID: {network.chainId}
-                    </p>
-                  </div>
-                </div>
-                <AlertTriangle className="h-3 w-3 text-yellow-500" />
-              </DropdownMenuItem>
-            ))}
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700">
+      {currentNetwork.id === 'base' ? (
+        <div className="w-3 h-3">
+          <BaseLogo />
+        </div>
+      ) : (
+        <div className={`w-2 h-2 rounded-full ${currentNetwork.color}`} />
+      )}
+      <span className="text-xs text-slate-300">{currentNetwork.displayName}</span>
+      {isConnecting && (
+        <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
+      )}
+    </div>
   )
 }
 

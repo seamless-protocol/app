@@ -1,7 +1,7 @@
 
   # Seamless
 
-  This is a code bundle for Seamless. The original project is available at https://www.figma.com/design/MGT5uDk1iWa4nqRaojl6kD/Seamless.
+  This is a code bundle for Seamless. The original project is available at https://www.figma.com/design/cEyzgJpgOiLKXnmlLsVvle/Seamless.
 
   ## Running the code
 

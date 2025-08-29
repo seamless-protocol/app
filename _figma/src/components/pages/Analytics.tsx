@@ -102,10 +102,7 @@ export function Analytics() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
       >
-        <div>
-          <h1 className="text-2xl font-bold text-white">Analytics Dashboard</h1>
-          <p className="text-slate-400 mt-1">Real-time protocol metrics and performance insights</p>
-        </div>
+
         
         <div className="flex space-x-1">
           {timeframes.map((timeframe) => (
@@ -288,6 +285,7 @@ export function Analytics() {
                         tickLine={false}
                         tick={{ fill: '#64748B', fontSize: 12 }}
                         tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
+                        label={{ value: 'TVL ($)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' } }}
                       />
                       <Tooltip 
                         contentStyle={{
@@ -392,6 +390,7 @@ export function Analytics() {
                       tickLine={false}
                       tick={{ fill: '#64748B', fontSize: 12 }}
                       tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
+                      label={{ value: 'TVL ($)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' } }}
                     />
                     <YAxis 
                       yAxisId="volume"
@@ -400,6 +399,7 @@ export function Analytics() {
                       tickLine={false}
                       tick={{ fill: '#64748B', fontSize: 12 }}
                       tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                      label={{ value: 'Volume ($)', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' } }}
                     />
                     <Tooltip 
                       contentStyle={{
@@ -463,6 +463,7 @@ export function Analytics() {
                       axisLine={false}
                       tickLine={false}
                       tick={{ fill: '#64748B', fontSize: 12 }}
+                      label={{ value: 'Active Users', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' } }}
                     />
                     <Tooltip 
                       contentStyle={{

@@ -32,18 +32,21 @@ import { toast } from "sonner@2.0.3"
 interface StakeModalProps {
   isOpen: boolean
   onClose: () => void
+  action?: 'stake' | 'unstake'
+  amount?: string
+  tokenSymbol?: string
   poolId?: string | null
 }
 
 type StakeStep = 'input' | 'approval' | 'confirm' | 'transaction' | 'success' | 'error'
 
-export function StakeModal({ isOpen, onClose, poolId }: StakeModalProps) {
-  // Mock data - in a real app, this would be fetched based on poolId
-  const mode: 'stake' | 'unstake' = 'stake' // Default to stake mode
+export function StakeModal({ isOpen, onClose, action = 'stake', amount: initialAmount = '', tokenSymbol: propTokenSymbol = 'SEAM', poolId }: StakeModalProps) {
+  // Use passed action or default to stake mode
+  const mode: 'stake' | 'unstake' = action
   const currentBalance = {
-    seam: '15,234.56',
-    esSeam: '8,765.43',
-    stakedAmount: '25,000.00'
+    seam: '1250.75', // Match the balance from staking page
+    esSeam: '500.25', // Match the staked balance from staking page
+    stakedAmount: '500.25'
   }
   const [amount, setAmount] = useState("")
   const [currentStep, setCurrentStep] = useState<StakeStep>('input')
@@ -55,20 +58,20 @@ export function StakeModal({ isOpen, onClose, poolId }: StakeModalProps) {
   const [slippageTolerance, setSlippageTolerance] = useState("0.5")
 
   // Mock data for calculations
-  const currentPrice = 15.68 // USD per SEAM
-  const exchangeRate = 1 // 1 SEAM = 1 esSEAM for staking
-  const estimatedApy = "24.5"
+  const currentPrice = 2.15 // USD per SEAM (matching staking page)
+  const exchangeRate = 1 // 1 SEAM = 1 stkSEAM for staking
+  const estimatedApy = "35.72" // Match staking page APR
   const cooldownPeriod = "7 days"
 
   // Get available balance based on mode
   const availableBalance = mode === 'stake' ? currentBalance.seam : currentBalance.esSeam
-  const tokenSymbol = mode === 'stake' ? 'SEAM' : 'esSEAM'
-  const receiveSymbol = mode === 'stake' ? 'esSEAM' : 'SEAM'
+  const tokenSymbol = mode === 'stake' ? propTokenSymbol : 'stkSEAM'
+  const receiveSymbol = mode === 'stake' ? 'stkSEAM' : propTokenSymbol
 
-  // Reset modal state when opened/closed
+  // Reset modal state when opened/closed and pre-fill amount
   useEffect(() => {
     if (isOpen) {
-      setAmount("")
+      setAmount(initialAmount) // Pre-fill with the amount from staking page
       setCurrentStep('input')
       setTransactionHash("")
       setError("")
@@ -76,7 +79,7 @@ export function StakeModal({ isOpen, onClose, poolId }: StakeModalProps) {
       // Check if approval is needed (simulate)
       setNeedsApproval(mode === 'stake' && Math.random() > 0.5)
     }
-  }, [isOpen, mode])
+  }, [isOpen, mode, initialAmount])
 
   // Calculate derived values
   const amountNumber = parseFloat(amount) || 0
@@ -438,12 +441,12 @@ export function StakeModal({ isOpen, onClose, poolId }: StakeModalProps) {
             <div className="w-7 h-7 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
               <Coins className="h-4 w-4 text-white" />
             </div>
-            <span>{mode === 'stake' ? 'Stake SEAM' : 'Unstake esSEAM'}</span>
+            <span>{mode === 'stake' ? 'Stake SEAM' : 'Unstake SEAM'}</span>
           </DialogTitle>
           <DialogDescription className="text-slate-400">
             {mode === 'stake' 
               ? 'Stake your SEAM tokens to earn protocol rewards and governance rights'
-              : `Unstake your esSEAM tokens (${cooldownPeriod} cooldown period applies)`
+              : `Unstake your stkSEAM tokens (${cooldownPeriod} cooldown period applies)`
             }
           </DialogDescription>
         </DialogHeader>
@@ -555,7 +558,7 @@ export function StakeModal({ isOpen, onClose, poolId }: StakeModalProps) {
                   {mode === 'stake' && (
                     <div className="flex justify-between">
                       <span className="text-slate-500">Est. Annual Rewards</span>
-                      <span className="text-green-400">{estimatedYearlyRewards} {tokenSymbol} ({estimatedApy}% APY)</span>
+                      <span className="text-green-400">{estimatedYearlyRewards} {tokenSymbol} ({estimatedApy}% APR)</span>
                     </div>
                   )}
                   {mode === 'unstake' && (

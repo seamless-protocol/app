@@ -12,12 +12,13 @@ import {
   Vault,
   ChevronRight,
   BookOpen,
-  MessageCircle,
   Twitter,
   Github,
-  ExternalLink
+  ExternalLink,
+  Users
 } from "lucide-react"
 import SeamlessLogo from "../imports/SeamlessLogo"
+import { DiscordIcon } from "./ui/discord-icon"
 
 interface NavigationProps {
   currentPage: string
@@ -81,8 +82,14 @@ const socialLinks = [
   {
     id: 'discord',
     name: 'Discord',
-    icon: MessageCircle,
+    icon: DiscordIcon,
     url: 'https://discord.gg/seamlessprotocol'
+  },
+  {
+    id: 'discourse',
+    name: 'Discourse',
+    icon: Users,
+    url: 'https://seamlessprotocol.discourse.group/'
   },
   {
     id: 'twitter',
@@ -144,23 +151,25 @@ export function Navigation({ currentPage, onPageChange, isMobile = false }: Navi
     >
       {/* Logo Section - Mobile Optimized */}
       <motion.div 
-        className="p-4 sm:p-6 border-b border-slate-700"
+        className="border-b border-slate-700"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <div className="flex items-center space-x-3">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="h-8 w-8 sm:h-10 sm:w-10"
-          >
-            <SeamlessLogo />
-          </motion.div>
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold text-white">Seamless</h2>
-            <p className="text-xs text-slate-400">Protocol</p>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4">
+          <div className="flex items-center space-x-3">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="h-8 w-8 sm:h-10 sm:w-10"
+            >
+              <SeamlessLogo />
+            </motion.div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-white">Seamless Protocol</h2>
+              <p className="text-xs text-slate-400">Platform TVL: $142.8M</p>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -257,28 +266,29 @@ export function Navigation({ currentPage, onPageChange, isMobile = false }: Navi
         </div>
       </div>
 
-      {/* Social Links Section - Simplified */}
-      <div className="px-3 sm:px-4 py-4 border-t border-slate-700">
-        <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-3">
-          Community
-        </h3>
-        
-        <div className="flex justify-between space-x-2">
-          {socialLinks.map((social) => {
-            const Icon = social.icon
-            
-            return (
-              <button
-                key={social.id}
-                onClick={() => handleSocialLinkClick(social.url, social.name)}
-                className="flex items-center justify-center w-12 h-12 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all duration-200 group"
-                aria-label={`Open ${social.name} in new tab`}
-                title={social.name}
-              >
-                <Icon className="h-4 w-4 text-slate-400 group-hover:text-purple-400 transition-colors duration-200" />
-              </button>
-            )
-          })}
+      {/* Social Links Section - Centered */}
+      <div className="px-3 sm:px-4 py-3 border-t border-slate-700">
+        <div className="flex justify-center">
+          <div className="flex space-x-2">
+            {socialLinks.map((social) => {
+              const Icon = social.icon
+              
+              return (
+                <motion.button
+                  key={social.id}
+                  onClick={() => handleSocialLinkClick(social.url, social.name)}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all duration-200 group"
+                  aria-label={`Open ${social.name} in new tab`}
+                  title={social.name}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Icon className="h-3.5 w-3.5 text-slate-400 group-hover:text-purple-400 transition-colors duration-200" />
+                </motion.button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
@@ -291,20 +301,16 @@ export function Navigation({ currentPage, onPageChange, isMobile = false }: Navi
       >
         <div className="space-y-3">
           <div className="text-center">
-            <p className="text-xs text-slate-500">Seamless Protocol v2.0</p>
-            <p className="text-xs text-slate-500 mt-1">
-              {isMobile ? 'Tap to navigate' : 'Use Alt+1-6 for quick access'}
-            </p>
+            <a 
+              href="https://github.com/seamless-protocol/seamless-protocol/commit/a7f4c8d9e2b1f6a3c5e8d4b7a9f2c6e1d8b5c3a7" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-slate-500 hover:text-purple-400 transition-colors duration-200 inline-flex items-center space-x-1"
+            >
+              <Github className="h-3 w-3" />
+              <span>Current Deployment</span>
+            </a>
           </div>
-          
-          <motion.div
-            className="flex items-center justify-center space-x-2 py-2 px-3 rounded-lg bg-slate-800/50 border border-slate-700"
-            whileHover={{ backgroundColor: "rgba(30, 41, 59, 0.7)" }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-xs text-slate-400">All Systems Operational</span>
-          </motion.div>
         </div>
       </motion.div>
     </motion.nav>
