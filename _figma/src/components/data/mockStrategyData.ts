@@ -14,6 +14,7 @@ import {
   GHOLogo,
   SEAMLogo
 } from "../ui/crypto-logos"
+import BaseLogo from "../../imports/BaseLogo"
 
 export interface Asset {
   symbol: string
@@ -70,6 +71,11 @@ export interface LeverageTokenInfo {
   debtAsset: Asset
   supplyCap: number
   currentSupply: number
+  chain: {
+    id: string
+    name: string
+    logo: React.ComponentType<any> | string
+  }
   apyBreakdown: {
     baseYield: number
     leverageMultiplier: number
@@ -97,6 +103,12 @@ export interface Strategy {
   maxDeposit?: number
   lockPeriod?: number
   tags: string[]
+  // Chain information for all strategies
+  chain: {
+    id: string
+    name: string
+    logo: React.ComponentType<any> | string
+  }
   // New fields for vault information
   curator?: CuratorInfo
   collateral?: CollateralInfo
@@ -147,6 +159,11 @@ const mockStrategies: Strategy[] = [
     minDeposit: 100,
     maxDeposit: 1000000,
     tags: ['Stable', 'Low Risk', 'USDC'],
+    chain: {
+      id: 'base',
+      name: 'Base',
+      logo: BaseLogo
+    },
     curator: {
       name: 'Gauntlet',
       logo: '🛡️',
@@ -203,6 +220,11 @@ const mockStrategies: Strategy[] = [
     minDeposit: 0.1,
     maxDeposit: 100,
     tags: ['ETH', 'Medium Risk', 'Staking'],
+    chain: {
+      id: 'base',
+      name: 'Base',
+      logo: BaseLogo
+    },
     curator: {
       name: 'Gauntlet',
       logo: '🛡️',
@@ -259,6 +281,11 @@ const mockStrategies: Strategy[] = [
     minDeposit: 0.01,
     maxDeposit: 10,
     tags: ['Bitcoin', 'cbBTC', 'Medium Risk'],
+    chain: {
+      id: 'base',
+      name: 'Base',
+      logo: BaseLogo
+    },
     curator: {
       name: 'Gauntlet',
       logo: '🛡️',
@@ -337,6 +364,11 @@ const mockStrategies: Strategy[] = [
       },
       supplyCap: 10000,
       currentSupply: 9650,
+      chain: {
+        id: 'base',
+        name: 'Base',
+        logo: BaseLogo
+      },
       apyBreakdown: {
         baseYield: 4.2,
         leverageMultiplier: 17,
@@ -405,6 +437,11 @@ const mockStrategies: Strategy[] = [
       },
       supplyCap: 15000,
       currentSupply: 13650,
+      chain: {
+        id: 'ethereum',
+        name: 'Ethereum',
+        logo: EthereumLogo
+      },
       apyBreakdown: {
         baseYield: 3.8,
         leverageMultiplier: 12,
@@ -473,6 +510,11 @@ const mockStrategies: Strategy[] = [
       },
       supplyCap: 500,
       currentSupply: 489,
+      chain: {
+        id: 'base',
+        name: 'Base',
+        logo: BaseLogo
+      },
       apyBreakdown: {
         baseYield: 2.1,
         leverageMultiplier: 8,
@@ -541,6 +583,11 @@ const mockStrategies: Strategy[] = [
       },
       supplyCap: 8500,
       currentSupply: 6800,
+      chain: {
+        id: 'ethereum',
+        name: 'Ethereum',
+        logo: EthereumLogo
+      },
       apyBreakdown: {
         baseYield: 3.67,
         leverageMultiplier: 10,
@@ -609,6 +656,11 @@ const mockStrategies: Strategy[] = [
       },
       supplyCap: 50000,
       currentSupply: 38400,
+      chain: {
+        id: 'base',
+        name: 'Base',
+        logo: BaseLogo
+      },
       apyBreakdown: {
         baseYield: 2.45,
         leverageMultiplier: 5,
@@ -677,6 +729,11 @@ const mockStrategies: Strategy[] = [
       },
       supplyCap: 6000,
       currentSupply: 4920,
+      chain: {
+        id: 'ethereum',
+        name: 'Ethereum',
+        logo: EthereumLogo
+      },
       apyBreakdown: {
         baseYield: 4.23,
         leverageMultiplier: 15,
@@ -745,6 +802,11 @@ const mockStrategies: Strategy[] = [
       },
       supplyCap: 12000,
       currentSupply: 9360,
+      chain: {
+        id: 'ethereum',
+        name: 'Ethereum',
+        logo: EthereumLogo
+      },
       apyBreakdown: {
         baseYield: 3.94,
         leverageMultiplier: 6,
@@ -813,11 +875,640 @@ const mockStrategies: Strategy[] = [
       },
       supplyCap: 20000,
       currentSupply: 13780,
+      chain: {
+        id: 'ethereum',
+        name: 'Ethereum',
+        logo: EthereumLogo
+      },
       apyBreakdown: {
         baseYield: 2.67,
         leverageMultiplier: 4,
         borrowCost: 1.94,
         netAPY: 6.89
+      }
+    }
+  },
+  {
+    id: 'cbbtc-btc-11x-leverage',
+    name: 'cbBTC / BTC 11x Leverage Token',
+    description: 'Coinbase wrapped Bitcoin leverage with 11x amplification for premium exposure',
+    longDescription: 'The cbBTC / BTC 11x Leverage Token provides leveraged exposure to the Coinbase wrapped Bitcoin premium against native Bitcoin. This token captures yield opportunities and price differentials through automated leverage management.',
+    category: 'Leverage Tokens',
+    apy: 14.52,
+    tvl: 3200000,
+    assets: [
+      {
+        symbol: 'cbBTC',
+        name: 'Coinbase Wrapped BTC',
+        logo: cbBTCLogo
+      },
+      {
+        symbol: 'BTC',
+        name: 'Bitcoin',
+        logo: BitcoinLogo
+      }
+    ],
+    riskLevel: 'High',
+    riskMetrics: {
+      marketRisk: 'High',
+      smartContractRisk: 'Medium',
+      liquidityRisk: 'High',
+      impermanentLoss: 'High'
+    },
+    fees: {
+      managementFee: 2.6,
+      performanceFee: 17.5,
+      depositFee: 0.09,
+      withdrawalFee: 0.14
+    },
+    metrics: {
+      utilization: 89.3,
+      participants: 156,
+      averagePosition: 20512.82,
+      successRate: 94.7
+    },
+    launchDate: '2024-04-15',
+    isActive: true,
+    minDeposit: 0.01,
+    maxDeposit: 8,
+    lockPeriod: 0,
+    tags: ['Leverage', 'High Risk', 'cbBTC', 'Bitcoin'],
+    chain: {
+      id: 'base',
+      name: 'Base',
+      logo: BaseLogo
+    },
+    leverageToken: {
+      symbol: 'cbBTC11x',
+      leverageAmount: 11,
+      collateralAsset: {
+        symbol: 'cbBTC',
+        name: 'Coinbase Wrapped BTC',
+        logo: cbBTCLogo
+      },
+      debtAsset: {
+        symbol: 'BTC',
+        name: 'Bitcoin',
+        logo: BitcoinLogo
+      },
+      supplyCap: 400,
+      currentSupply: 357,
+      chain: {
+        id: 'base',
+        name: 'Base',
+        logo: BaseLogo
+      },
+      apyBreakdown: {
+        baseYield: 2.34,
+        leverageMultiplier: 11,
+        borrowCost: 1.89,
+        netAPY: 14.52
+      }
+    }
+  },
+  {
+    id: 'seam-usdc-20x-leverage',
+    name: 'SEAM / USDC 20x Leverage Token',
+    description: 'Seamless Protocol token leverage with 20x amplification for governance exposure',
+    longDescription: 'The SEAM / USDC 20x Leverage Token provides maximum leverage exposure to the Seamless Protocol governance token. This high-risk, high-reward token amplifies SEAM price movements for sophisticated traders seeking governance token exposure.',
+    category: 'Leverage Tokens',
+    apy: 28.94,
+    tvl: 1800000,
+    assets: [
+      {
+        symbol: 'SEAM',
+        name: 'Seamless Token',
+        logo: SEAMLogo
+      },
+      {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      }
+    ],
+    riskLevel: 'High',
+    riskMetrics: {
+      marketRisk: 'Very High',
+      smartContractRisk: 'Low',
+      liquidityRisk: 'Very High',
+      impermanentLoss: 'Very High'
+    },
+    fees: {
+      managementFee: 3.5,
+      performanceFee: 22.0,
+      depositFee: 0.15,
+      withdrawalFee: 0.25
+    },
+    metrics: {
+      utilization: 97.2,
+      participants: 89,
+      averagePosition: 20224.72,
+      successRate: 89.4
+    },
+    launchDate: '2024-05-01',
+    isActive: true,
+    minDeposit: 100,
+    maxDeposit: 10000,
+    lockPeriod: 0,
+    tags: ['Leverage', 'High Risk', 'SEAM', 'Governance', 'New'],
+    chain: {
+      id: 'base',
+      name: 'Base',
+      logo: BaseLogo
+    },
+    leverageToken: {
+      symbol: 'SEAM20x',
+      leverageAmount: 20,
+      collateralAsset: {
+        symbol: 'SEAM',
+        name: 'Seamless Token',
+        logo: SEAMLogo
+      },
+      debtAsset: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      },
+      supplyCap: 1000000,
+      currentSupply: 972000,
+      chain: {
+        id: 'base',
+        name: 'Base',
+        logo: BaseLogo
+      },
+      apyBreakdown: {
+        baseYield: 5.12,
+        leverageMultiplier: 20,
+        borrowCost: 3.67,
+        netAPY: 28.94
+      }
+    }
+  },
+  {
+    id: 'dai-usdc-3x-leverage',
+    name: 'DAI / USDC 3x Leverage Token',
+    description: 'Ultra-conservative stablecoin leverage with 3x amplification for stable yield',
+    longDescription: 'The DAI / USDC 3x Leverage Token offers the most conservative leverage approach in the Seamless ecosystem. This token captures minimal yield differentials between major stablecoins with ultra-low leverage for maximum stability.',
+    category: 'Leverage Tokens',
+    apy: 5.23,
+    tvl: 22500000,
+    assets: [
+      {
+        symbol: 'DAI',
+        name: 'Dai Stablecoin',
+        logo: DAILogo
+      },
+      {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      }
+    ],
+    riskLevel: 'Low',
+    riskMetrics: {
+      marketRisk: 'Very Low',
+      smartContractRisk: 'Low',
+      liquidityRisk: 'Very Low',
+      impermanentLoss: 'Very Low'
+    },
+    fees: {
+      managementFee: 1.2,
+      performanceFee: 8.0,
+      depositFee: 0.02,
+      withdrawalFee: 0.03
+    },
+    metrics: {
+      utilization: 72.1,
+      participants: 3456,
+      averagePosition: 6510.58,
+      successRate: 99.1
+    },
+    launchDate: '2024-05-15',
+    isActive: true,
+    minDeposit: 250,
+    maxDeposit: 250000,
+    lockPeriod: 0,
+    tags: ['Leverage', 'Low Risk', 'Stablecoins', 'Conservative', 'Popular'],
+    chain: {
+      id: 'ethereum',
+      name: 'Ethereum',
+      logo: EthereumLogo
+    },
+    leverageToken: {
+      symbol: 'DAI3x',
+      leverageAmount: 3,
+      collateralAsset: {
+        symbol: 'DAI',
+        name: 'Dai Stablecoin',
+        logo: DAILogo
+      },
+      debtAsset: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      },
+      supplyCap: 100000,
+      currentSupply: 72100,
+      chain: {
+        id: 'ethereum',
+        name: 'Ethereum',
+        logo: EthereumLogo
+      },
+      apyBreakdown: {
+        baseYield: 2.15,
+        leverageMultiplier: 3,
+        borrowCost: 1.37,
+        netAPY: 5.23
+      }
+    }
+  },
+  {
+    id: 'weth-usdc-9x-leverage',
+    name: 'WETH / USDC 9x Leverage Token',
+    description: 'Ethereum vs USD leverage with 9x amplification for directional exposure',
+    longDescription: 'The WETH / USDC 9x Leverage Token provides directional exposure to Ethereum price movements against the US dollar with moderate-high leverage. This token captures ETH price appreciation opportunities through automated position management.',
+    category: 'Leverage Tokens',
+    apy: 19.87,
+    tvl: 6800000,
+    assets: [
+      {
+        symbol: 'WETH',
+        name: 'Wrapped Ethereum',
+        logo: EthereumLogo
+      },
+      {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      }
+    ],
+    riskLevel: 'High',
+    riskMetrics: {
+      marketRisk: 'Very High',
+      smartContractRisk: 'Medium',
+      liquidityRisk: 'Medium',
+      impermanentLoss: 'Very High'
+    },
+    fees: {
+      managementFee: 2.7,
+      performanceFee: 18.5,
+      depositFee: 0.11,
+      withdrawalFee: 0.16
+    },
+    metrics: {
+      utilization: 91.8,
+      participants: 534,
+      averagePosition: 12734.46,
+      successRate: 93.6
+    },
+    launchDate: '2024-06-01',
+    isActive: true,
+    minDeposit: 0.05,
+    maxDeposit: 25,
+    lockPeriod: 0,
+    tags: ['Leverage', 'High Risk', 'WETH', 'Directional', 'Popular'],
+    chain: {
+      id: 'base',
+      name: 'Base',
+      logo: BaseLogo
+    },
+    leverageToken: {
+      symbol: 'WETH9x',
+      leverageAmount: 9,
+      collateralAsset: {
+        symbol: 'WETH',
+        name: 'Wrapped Ethereum',
+        logo: EthereumLogo
+      },
+      debtAsset: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      },
+      supplyCap: 5000,
+      currentSupply: 4590,
+      chain: {
+        id: 'base',
+        name: 'Base',
+        logo: BaseLogo
+      },
+      apyBreakdown: {
+        baseYield: 3.98,
+        leverageMultiplier: 9,
+        borrowCost: 2.54,
+        netAPY: 19.87
+      }
+    }
+  },
+  {
+    id: 'steth-usdc-7x-leverage',
+    name: 'stETH / USDC 7x Leverage Token',
+    description: 'Lido staked ETH vs USD leverage with 7x amplification for yield and price exposure',
+    longDescription: 'The stETH / USDC 7x Leverage Token combines Ethereum staking yield with directional price exposure against USD. This strategy captures both stETH staking rewards and ETH price appreciation through balanced leverage.',
+    category: 'Leverage Tokens',
+    apy: 17.43,
+    tvl: 4700000,
+    assets: [
+      {
+        symbol: 'stETH',
+        name: 'Lido Staked ETH',
+        logo: stETHLogo
+      },
+      {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      }
+    ],
+    riskLevel: 'High',
+    riskMetrics: {
+      marketRisk: 'High',
+      smartContractRisk: 'Medium',
+      liquidityRisk: 'Medium',
+      impermanentLoss: 'High'
+    },
+    fees: {
+      managementFee: 2.4,
+      performanceFee: 16.5,
+      depositFee: 0.08,
+      withdrawalFee: 0.12
+    },
+    metrics: {
+      utilization: 86.4,
+      participants: 312,
+      averagePosition: 15064.10,
+      successRate: 95.2
+    },
+    launchDate: '2024-06-15',
+    isActive: true,
+    minDeposit: 0.1,
+    maxDeposit: 20,
+    lockPeriod: 0,
+    tags: ['Leverage', 'High Risk', 'stETH', 'Staking', 'Yield'],
+    chain: {
+      id: 'ethereum',
+      name: 'Ethereum',
+      logo: EthereumLogo
+    },
+    leverageToken: {
+      symbol: 'stETH7x',
+      leverageAmount: 7,
+      collateralAsset: {
+        symbol: 'stETH',
+        name: 'Lido Staked ETH',
+        logo: stETHLogo
+      },
+      debtAsset: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      },
+      supplyCap: 3500,
+      currentSupply: 3024,
+      chain: {
+        id: 'ethereum',
+        name: 'Ethereum',
+        logo: EthereumLogo
+      },
+      apyBreakdown: {
+        baseYield: 3.72,
+        leverageMultiplier: 7,
+        borrowCost: 2.31,
+        netAPY: 17.43
+      }
+    }
+  },
+  {
+    id: 'reth-usdc-13x-leverage',
+    name: 'rETH / USDC 13x Leverage Token',
+    description: 'Rocket Pool staked ETH vs USD leverage with 13x amplification for maximum yield exposure',
+    longDescription: 'The rETH / USDC 13x Leverage Token maximizes exposure to Rocket Pool staking rewards while providing directional ETH price exposure against USD. This high-leverage strategy targets sophisticated traders seeking maximum rETH yield amplification.',
+    category: 'Leverage Tokens',
+    apy: 24.61,
+    tvl: 2900000,
+    assets: [
+      {
+        symbol: 'rETH',
+        name: 'Rocket Pool ETH',
+        logo: rETHLogo
+      },
+      {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      }
+    ],
+    riskLevel: 'High',
+    riskMetrics: {
+      marketRisk: 'Very High',
+      smartContractRisk: 'Medium',
+      liquidityRisk: 'High',
+      impermanentLoss: 'Very High'
+    },
+    fees: {
+      managementFee: 3.1,
+      performanceFee: 20.5,
+      depositFee: 0.13,
+      withdrawalFee: 0.19
+    },
+    metrics: {
+      utilization: 94.6,
+      participants: 178,
+      averagePosition: 16292.13,
+      successRate: 91.8
+    },
+    launchDate: '2024-07-01',
+    isActive: true,
+    minDeposit: 0.08,
+    maxDeposit: 15,
+    lockPeriod: 0,
+    tags: ['Leverage', 'High Risk', 'rETH', 'Rocket Pool', 'Advanced'],
+    chain: {
+      id: 'ethereum',
+      name: 'Ethereum',
+      logo: EthereumLogo
+    },
+    leverageToken: {
+      symbol: 'rETH13x',
+      leverageAmount: 13,
+      collateralAsset: {
+        symbol: 'rETH',
+        name: 'Rocket Pool ETH',
+        logo: rETHLogo
+      },
+      debtAsset: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      },
+      supplyCap: 2500,
+      currentSupply: 2365,
+      chain: {
+        id: 'ethereum',
+        name: 'Ethereum',
+        logo: EthereumLogo
+      },
+      apyBreakdown: {
+        baseYield: 4.18,
+        leverageMultiplier: 13,
+        borrowCost: 2.93,
+        netAPY: 24.61
+      }
+    }
+  },
+  {
+    id: 'cbeth-usdc-14x-leverage',
+    name: 'cbETH / USDC 14x Leverage Token',
+    description: 'Coinbase staked ETH vs USD leverage with 14x amplification for institutional directional exposure',
+    longDescription: 'The cbETH / USDC 14x Leverage Token provides institutional-grade leveraged exposure to Coinbase staked ETH against USD. This token combines cbETH staking rewards with high leverage for directional ETH price movements.',
+    category: 'Leverage Tokens',
+    apy: 26.34,
+    tvl: 3400000,
+    assets: [
+      {
+        symbol: 'cbETH',
+        name: 'Coinbase Staked ETH',
+        logo: cbETHLogo
+      },
+      {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      }
+    ],
+    riskLevel: 'High',
+    riskMetrics: {
+      marketRisk: 'Very High',
+      smartContractRisk: 'Medium',
+      liquidityRisk: 'High',
+      impermanentLoss: 'Very High'
+    },
+    fees: {
+      managementFee: 3.0,
+      performanceFee: 21.0,
+      depositFee: 0.14,
+      withdrawalFee: 0.20
+    },
+    metrics: {
+      utilization: 92.7,
+      participants: 143,
+      averagePosition: 23776.22,
+      successRate: 90.9
+    },
+    launchDate: '2024-07-15',
+    isActive: true,
+    minDeposit: 0.1,
+    maxDeposit: 18,
+    lockPeriod: 0,
+    tags: ['Leverage', 'High Risk', 'cbETH', 'Institutional', 'Advanced'],
+    chain: {
+      id: 'ethereum',
+      name: 'Ethereum',
+      logo: EthereumLogo
+    },
+    leverageToken: {
+      symbol: 'cbETH14x',
+      leverageAmount: 14,
+      collateralAsset: {
+        symbol: 'cbETH',
+        name: 'Coinbase Staked ETH',
+        logo: cbETHLogo
+      },
+      debtAsset: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      },
+      supplyCap: 3000,
+      currentSupply: 2781,
+      chain: {
+        id: 'ethereum',
+        name: 'Ethereum',
+        logo: EthereumLogo
+      },
+      apyBreakdown: {
+        baseYield: 4.45,
+        leverageMultiplier: 14,
+        borrowCost: 3.12,
+        netAPY: 26.34
+      }
+    }
+  },
+  {
+    id: 'wsteth-usdc-8x-leverage',
+    name: 'wstETH / USDC 8x Leverage Token',
+    description: 'Wrapped staked ETH vs USD leverage with 8x amplification for balanced directional exposure',
+    longDescription: 'The wstETH / USDC 8x Leverage Token offers balanced leveraged exposure to Lido wrapped staked ETH against USD. This strategy provides moderate-high leverage for directional ETH exposure while capturing wstETH staking benefits.',
+    category: 'Leverage Tokens',
+    apy: 18.92,
+    tvl: 5600000,
+    assets: [
+      {
+        symbol: 'wstETH',
+        name: 'Wrapped liquid staked Ether 2.0',
+        logo: wstETHLogo
+      },
+      {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      }
+    ],
+    riskLevel: 'High',
+    riskMetrics: {
+      marketRisk: 'High',
+      smartContractRisk: 'Medium',
+      liquidityRisk: 'Medium',
+      impermanentLoss: 'High'
+    },
+    fees: {
+      managementFee: 2.5,
+      performanceFee: 17.0,
+      depositFee: 0.09,
+      withdrawalFee: 0.13
+    },
+    metrics: {
+      utilization: 88.2,
+      participants: 421,
+      averagePosition: 13301.90,
+      successRate: 94.3
+    },
+    launchDate: '2024-08-01',
+    isActive: true,
+    minDeposit: 0.08,
+    maxDeposit: 22,
+    lockPeriod: 0,
+    tags: ['Leverage', 'High Risk', 'wstETH', 'Directional', 'Popular'],
+    chain: {
+      id: 'base',
+      name: 'Base',
+      logo: BaseLogo
+    },
+    leverageToken: {
+      symbol: 'wstETH8x',
+      leverageAmount: 8,
+      collateralAsset: {
+        symbol: 'wstETH',
+        name: 'Wrapped liquid staked Ether 2.0',
+        logo: wstETHLogo
+      },
+      debtAsset: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        logo: USDCLogo
+      },
+      supplyCap: 4500,
+      currentSupply: 3969,
+      chain: {
+        id: 'base',
+        name: 'Base',
+        logo: BaseLogo
+      },
+      apyBreakdown: {
+        baseYield: 3.86,
+        leverageMultiplier: 8,
+        borrowCost: 2.42,
+        netAPY: 18.92
       }
     }
   }

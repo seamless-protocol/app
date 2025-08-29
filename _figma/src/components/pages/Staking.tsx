@@ -5,421 +5,593 @@ import { motion } from "motion/react"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Button } from "../ui/button"
 import { Badge } from "../ui/badge"
-import { Progress } from "../ui/progress"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible"
+import { Switch } from "../ui/switch"
+import { Input } from "../ui/input"
+import { Label } from "../ui/label"
 import { 
   Coins,
   TrendingUp,
   Clock,
-  Users,
-  Plus,
-  Minus,
-  Zap,
-  Target,
-  Calendar,
-  Award,
-  Lock,
-  Unlock
+  ChevronDown,
+  ChevronUp,
+  Info,
+  DollarSign,
+  Network
 } from "lucide-react"
 import { StakeModal } from "../StakeModal"
 import { ClaimModal } from "../ClaimModal"
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
+import { USDCLogo, EthereumLogo, cbBTCLogo } from "../ui/crypto-logos"
 
 export function Staking() {
   const [showStakeModal, setShowStakeModal] = useState(false)
   const [showClaimModal, setShowClaimModal] = useState(false)
   const [stakingAction, setStakingAction] = useState<'stake' | 'unstake'>('stake')
+  const [isStakeMode, setIsStakeMode] = useState(true)
+  const [stakeAmount, setStakeAmount] = useState('')
+  const [unstakeAmount, setUnstakeAmount] = useState('')
+  const [openFAQs, setOpenFAQs] = useState<Record<string, boolean>>({})
 
-  // Mock user staking data
+  // Mock user staking data based on screenshot
   const userStakingData = {
-    totalStaked: '12,450.50',
-    availableToStake: '3,750.25',
-    pendingRewards: '247.83',
-    stakingAPR: 24.5,
-    lockPeriod: 30, // days
-    nextUnlockDate: '2024-03-15',
-    stakingRank: 156,
-    totalStakers: 8934
+    currentHoldings: 0.00,
+    stkSeamBalance: '0.00',
+    claimableRewards: 0.00,
+    totalStaked: 3.70, // 3.70M SEAM
+    totalAPR: 35.72,
+    unstakingCooldown: 7, // days
+    availableBalance: 1250.75, // Available SEAM balance for staking
+    stakedBalance: 500.25 // Currently staked SEAM for unstaking
   }
 
-  // Mock staking pool data
-  const stakingPools = [
+  // Mock vault rewards data
+  const vaultRewards = [
     {
-      id: 'seam-30d',
-      name: '30-Day Lock',
-      apr: '24.5%',
-      lockPeriod: 30,
-      totalStaked: '15.2M',
-      userStaked: '8,450.50',
-      minStake: '100',
-      earlyWithdrawalFee: '5%'
+      name: 'Seamless USDC Vault',
+      symbol: 'smUSDC',
+      logo: USDCLogo,
+      apr: 30.27
     },
     {
-      id: 'seam-90d',
-      name: '90-Day Lock',
-      apr: '32.8%',
-      lockPeriod: 90,
-      totalStaked: '8.7M',
-      userStaked: '4,000.00',
-      minStake: '100',
-      earlyWithdrawalFee: '10%'
+      name: 'Seamless WETH Vault', 
+      symbol: 'smWETH',
+      logo: EthereumLogo,
+      apr: 5.37
     },
     {
-      id: 'seam-180d',
-      name: '180-Day Lock',
-      apr: '45.2%',
-      lockPeriod: 180,
-      totalStaked: '4.3M',
-      userStaked: '0.00',
-      minStake: '500',
-      earlyWithdrawalFee: '15%'
+      name: 'Seamless cbBTC Vault',
+      symbol: 'smcBTC', 
+      logo: cbBTCLogo,
+      apr: 0.07
     }
   ]
 
-  // Mock staking rewards history
-  const stakingHistory = Array.from({ length: 30 }, (_, i) => {
-    const date = new Date()
-    date.setDate(date.getDate() - (29 - i))
-    
-    return {
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      rewards: Math.round(8 + Math.sin(i * 0.2) * 2 + Math.random() * 2),
-      totalStaked: Math.round(12450 + Math.sin(i * 0.1) * 500)
+  // FAQ data from screenshot
+  const faqData = [
+    {
+      id: 'benefits',
+      question: 'What are the benefits of staking?',
+      answer: 'Staking SEAM tokens allows you to earn protocol rewards while participating in governance. You receive a share of protocol fees and additional incentives based on your staking duration and amount.'
+    },
+    {
+      id: 'fees',
+      question: 'By staking, how much protocol fees/rewards can I expect?',
+      answer: 'Protocol rewards vary based on total staked amount, protocol performance, and your stake duration. Current APR ranges from 5-35% depending on the reward source.'
+    },
+    {
+      id: 'claiming',
+      question: 'How often can I claim staking rewards?',
+      answer: 'Rewards can be claimed at any time. However, note that SEAM can only be unstaked after the 7-day cooldown period expires.'
+    },
+    {
+      id: 'unstaking',
+      question: 'How do I unstake SEAM?',
+      answer: 'To unstake SEAM, initiate the unstaking process which triggers a 7-day cooldown period. After the cooldown expires, you can complete the unstaking to receive your SEAM tokens.'
+    },
+    {
+      id: 'cooldown',
+      question: 'What happens after the 7-day cooldown expires?',
+      answer: 'After the 7-day cooldown period, you have a window to complete your unstaking. If you don\'t unstake during this window, you\'ll need to restart the cooldown process.'
+    },
+    {
+      id: 'earning-during-cooldown',
+      question: 'Do I continue to earn staking rewards during the unstake cooldown period?',
+      answer: 'Yes, you continue to earn staking rewards during the cooldown period until you complete the unstaking process.'
+    },
+    {
+      id: 'cooldown-purpose',
+      question: 'Why is there a cooldown period and unstaking windows?',
+      answer: 'The cooldown period helps maintain protocol stability and prevents rapid exits that could impact the staking ecosystem. It also ensures fair reward distribution.'
+    },
+    {
+      id: 'slashing',
+      question: 'What does it mean to be "slashed"?',
+      answer: 'Slashing is a penalty mechanism where a portion of staked tokens can be reduced if the protocol experiences certain adverse events. This helps align staker incentives with protocol health.'
+    },
+    {
+      id: 'learn-more',
+      question: 'Where can I learn more?',
+      answer: 'Visit our documentation, Discord community, or governance forum for detailed information about staking mechanics, rewards, and protocol updates.'
     }
-  })
+  ]
 
-  // Handle staking action
-  const handleStakeAction = (action: 'stake' | 'unstake', poolId?: string) => {
-    setStakingAction(action)
-    setShowStakeModal(true)
+  const toggleFAQ = (id: string) => {
+    setOpenFAQs(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }))
   }
+
+  const handleStakeToggle = (checked: boolean) => {
+    setIsStakeMode(checked)
+  }
+
+  // Get available balance based on current mode
+  const availableBalance = isStakeMode ? userStakingData.availableBalance : userStakingData.stakedBalance
+  const currentAmount = isStakeMode ? stakeAmount : unstakeAmount
+  const setCurrentAmount = isStakeMode ? setStakeAmount : setUnstakeAmount
+
+  // Handle percentage button clicks
+  const handlePercentageClick = (percentage: number) => {
+    const amount = (availableBalance * percentage / 100).toFixed(2)
+    setCurrentAmount(amount)
+  }
+
+  // Handle max button click
+  const handleMaxClick = () => {
+    setCurrentAmount(availableBalance.toFixed(2))
+  }
+
+  // Handle amount input change
+  const handleAmountChange = (value: string) => {
+    // Remove any non-numeric characters except decimal point
+    const sanitized = value.replace(/[^0-9.]/g, '')
+    
+    // Ensure only one decimal point
+    const parts = sanitized.split('.')
+    if (parts.length > 2) {
+      return
+    }
+    
+    // Limit decimal places to 2
+    if (parts[1] && parts[1].length > 2) {
+      return
+    }
+    
+    // Don't allow amounts greater than available balance
+    const numericValue = parseFloat(sanitized)
+    if (numericValue > availableBalance) {
+      return
+    }
+    
+    setCurrentAmount(sanitized)
+  }
+
+  // Calculate USD value
+  const usdValue = currentAmount ? (parseFloat(currentAmount) * 2.15).toFixed(2) : '0.00'
+
+  // Check if amount is valid for submission
+  const isValidAmount = currentAmount && parseFloat(currentAmount) > 0 && parseFloat(currentAmount) <= availableBalance
+
+  // Calculate estimated daily rewards
+  const estimatedDailyRewards = currentAmount ? 
+    ((parseFloat(currentAmount) * userStakingData.totalAPR / 100 / 365) * 2.15).toFixed(2) : '0.00'
 
 
 
   return (
     <motion.div 
-      className="space-y-8"
+      className="space-y-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Header */}
-      <motion.div 
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0"
-        initial={{ opacity: 0, y: -20 }}
+      {/* Base Chain Network Requirement Notice */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
+        transition={{ duration: 0.4 }}
+        className="bg-blue-950/30 border border-blue-500/30 rounded-lg p-4"
       >
-        <div>
-          <h1 className="text-2xl font-bold text-white">SEAM Staking</h1>
-          <p className="text-slate-400 mt-1">Stake SEAM tokens to earn rewards and participate in governance</p>
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+            <Network className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center space-x-2">
+              <h3 className="font-semibold text-white">Base Chain Required</h3>
+              <Badge variant="outline" className="border-blue-500/50 text-blue-300 bg-blue-500/10">
+                Base
+              </Badge>
+            </div>
+            <p className="text-sm text-blue-200/80 mt-1">
+              SEAM staking is only available on Base Chain. Please ensure your wallet is connected to Base to participate in staking.
+            </p>
+          </div>
         </div>
+      </motion.div>
+
+      {/* Main 2-Panel Layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         
-        <Button
-          onClick={() => setShowClaimModal(true)}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
-        >
-          <Award className="h-4 w-4 mr-2" />
-          Claim Rewards
-        </Button>
-      </motion.div>
-
-      {/* Staking Overview */}
-      <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
-        <Card className="bg-slate-900/80 border-slate-700">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">Total Staked</p>
-                <p className="text-2xl font-bold text-white">{userStakingData.totalStaked}</p>
-                <p className="text-xs text-slate-400 mt-1">SEAM tokens</p>
-              </div>
-              <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                <Coins className="h-5 w-5 text-purple-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/80 border-slate-700">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">Pending Rewards</p>
-                <p className="text-2xl font-bold text-white">{userStakingData.pendingRewards}</p>
-                <p className="text-xs text-green-400 mt-1 flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  +{userStakingData.stakingAPR}% APR
-                </p>
-              </div>
-              <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                <Award className="h-5 w-5 text-green-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/80 border-slate-700">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">Available to Stake</p>
-                <p className="text-2xl font-bold text-white">{userStakingData.availableToStake}</p>
-                <p className="text-xs text-slate-400 mt-1">SEAM balance</p>
-              </div>
-              <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
-                <Plus className="h-5 w-5 text-cyan-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/80 border-slate-700">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">Staking Rank</p>
-                <p className="text-2xl font-bold text-white">#{userStakingData.stakingRank}</p>
-                <p className="text-xs text-slate-400 mt-1">of {userStakingData.totalStakers.toLocaleString()}</p>
-              </div>
-              <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                <Target className="h-5 w-5 text-yellow-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Staking Pools Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
-        className="space-y-4"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">Staking Pools</h2>
-          <Badge variant="secondary" className="bg-slate-800 text-slate-300">
-            {stakingPools.length} Pools Available
-          </Badge>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {stakingPools.map((pool, index) => (
-            <motion.div
-              key={pool.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
-            >
-              <Card className="bg-slate-900/80 border-slate-700 hover:bg-slate-900/90 transition-all duration-200 h-full">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-white">{pool.name}</CardTitle>
-                    <Badge variant="outline" className="text-green-400 border-green-400/20">
-                      {pool.apr} APR
-                    </Badge>
+        {/* Left Panel - Main Content */}
+        <div className="xl:col-span-2 space-y-6">
+          
+          {/* Current Holdings */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <Card className="bg-slate-900/80 border-slate-700">
+              <CardContent className="p-6">
+                <div>
+                  <p className="text-sm text-slate-400 mb-2">Current holdings</p>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">S</span>
+                    </div>
+                    <span className="text-2xl font-bold text-white">{userStakingData.currentHoldings.toFixed(2)} stkSEAM</span>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4 flex-1 flex flex-col">
-                  <div className="space-y-3 flex-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Your Stake</span>
-                      <span className="text-white">{pool.userStaked} SEAM</span>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Total Staked</span>
-                      <span className="text-white">{pool.totalStaked} SEAM</span>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Lock Period</span>
-                      <span className="text-white flex items-center">
-                        <Lock className="h-3 w-3 mr-1" />
-                        {pool.lockPeriod} days
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Min. Stake</span>
-                      <span className="text-white">{pool.minStake} SEAM</span>
-                    </div>
+                  <p className="text-sm text-slate-400 mt-1">${userStakingData.currentHoldings.toFixed(2)}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Claimable Rewards */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Card className="bg-slate-900/80 border-slate-700">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-lg font-medium text-white mb-2">Claimable rewards</p>
+                    <p className="text-3xl font-bold text-white">${userStakingData.claimableRewards.toFixed(2)}</p>
+                    <p className="text-sm text-slate-400 mt-1">Stake SEAM to receive rewards.</p>
                   </div>
+                  <Button
+                    onClick={() => setShowClaimModal(true)}
+                    disabled={userStakingData.claimableRewards === 0}
+                    className="bg-slate-600 hover:bg-slate-500 text-white px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Claim
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-                  <div className="pt-4 border-t border-slate-700 mt-auto">
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={() => handleStakeAction('stake', pool.id)}
-                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Stake
-                      </Button>
-                      
-                      {parseFloat(pool.userStaked) > 0 && (
-                        <Button
-                          onClick={() => handleStakeAction('unstake', pool.id)}
-                          variant="outline"
-                          className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800"
-                        >
-                          <Unlock className="h-4 w-4 mr-1" />
-                          Unstake
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+          {/* Key Metrics Row */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
+            <Card className="bg-slate-900/80 border-slate-700">
+              <CardContent className="p-4">
+                <div>
+                  <p className="text-sm text-slate-400">Total Staked</p>
+                  <p className="text-xl font-bold text-white">{userStakingData.totalStaked}M SEAM</p>
+                  <p className="text-xs text-slate-400 mt-1">${(userStakingData.totalStaked * 2.15).toFixed(1)}M</p>
+                </div>
+              </CardContent>
+            </Card>
 
-      {/* Rewards History Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.5 }}
-        className="space-y-4"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">Rewards History</h2>
-          <Badge variant="secondary" className="bg-slate-800 text-slate-300">
-            Last 30 Days
-          </Badge>
-        </div>
+            <Card className="bg-slate-900/80 border-slate-700">
+              <CardContent className="p-4">
+                <div>
+                  <p className="text-sm text-slate-400">Total APR</p>
+                  <p className="text-xl font-bold text-white">{userStakingData.totalAPR}%</p>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="bg-slate-900/80 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">Daily Rewards</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={stakingHistory}>
-                  <XAxis 
-                    dataKey="date" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748B', fontSize: 12 }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748B', fontSize: 12 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: '#1E293B',
-                      border: '1px solid #334155',
-                      borderRadius: '8px',
-                      color: '#F8FAFC'
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="rewards" 
-                    stroke="#10B981" 
-                    strokeWidth={2}
-                    dot={false}
-                    name="Daily Rewards (SEAM)"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+            <Card className="bg-slate-900/80 border-slate-700">
+              <CardContent className="p-4">
+                <div>
+                  <p className="text-sm text-slate-400">Unstaking cooldown</p>
+                  <p className="text-xl font-bold text-white">{userStakingData.unstakingCooldown} days</p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-      {/* Analytics Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.6 }}
-        className="space-y-4"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">Analytics</h2>
-          <Badge variant="secondary" className="bg-slate-800 text-slate-300">
-            Protocol Overview
-          </Badge>
-        </div>
+          {/* Rewards Table */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+          >
+            <Card className="bg-slate-900/80 border-slate-700">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-slate-700">
+                      <TableHead className="text-slate-300 py-4 px-6">Rewards</TableHead>
+                      <TableHead className="text-slate-300 py-4 px-6">Name</TableHead>
+                      <TableHead className="text-slate-300 py-4 px-6">Symbol</TableHead>
+                      <TableHead className="text-slate-300 py-4 px-6 text-right">APR</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vaultRewards.map((vault, index) => {
+                      const LogoComponent = vault.logo
+                      return (
+                        <TableRow key={vault.symbol} className="border-slate-700 hover:bg-slate-800/30">
+                          <TableCell className="py-4 px-6">
+                            <div className="w-10 h-10 rounded-full border-2 border-slate-600 bg-slate-800 flex items-center justify-center p-1">
+                              <LogoComponent size={24} />
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-4 px-6">
+                            <span className="text-white font-medium">{vault.name}</span>
+                          </TableCell>
+                          <TableCell className="py-4 px-6">
+                            <span className="text-slate-300">{vault.symbol}</span>
+                          </TableCell>
+                          <TableCell className="py-4 px-6 text-right">
+                            <span className="text-white font-medium">{vault.apr.toFixed(2)}%</span>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-slate-900/80 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Staking Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stakingPools.map((pool, index) => {
-                  const totalStakedValue = stakingPools.reduce((sum, p) => 
-                    sum + parseFloat(p.totalStaked.replace('M', '')) * 1000000, 0)
-                  const poolValue = parseFloat(pool.totalStaked.replace('M', '')) * 1000000
-                  const percentage = (poolValue / totalStakedValue) * 100
-                  
-                  return (
-                    <div key={pool.id} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-400">{pool.name}</span>
-                        <span className="text-white">{percentage.toFixed(1)}%</span>
+          {/* Staking Details FAQ */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+            className="space-y-4"
+          >
+            <h2 className="text-lg font-semibold text-white">Staking details</h2>
+            
+            <div className="space-y-2">
+              {faqData.map((faq, index) => (
+                <motion.div
+                  key={faq.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
+                >
+                  <Collapsible
+                    open={openFAQs[faq.id]}
+                    onOpenChange={() => toggleFAQ(faq.id)}
+                  >
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between p-4 bg-slate-900/50 hover:bg-slate-900/70 border border-slate-700 rounded-lg transition-colors">
+                        <span className="text-left text-white font-medium">{faq.question}</span>
+                        {openFAQs[faq.id] ? (
+                          <ChevronUp className="h-4 w-4 text-slate-400" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-slate-400" />
+                        )}
                       </div>
-                      <Progress 
-                        value={percentage} 
-                        className="h-2 bg-slate-700"
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-900/80 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Staking Metrics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="text-center">
-                  <p className="text-sm text-slate-400 mb-1">Total Protocol Staking</p>
-                  <p className="text-3xl font-bold text-white">28.2M SEAM</p>
-                  <p className="text-xs text-green-400 mt-1">+12.5% this month</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <p className="text-sm text-slate-400">Avg. Lock Period</p>
-                    <p className="text-xl font-bold text-white">67 days</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-400">Total Stakers</p>
-                    <p className="text-xl font-bold text-white">8,934</p>
-                  </div>
-                </div>
-                
-                <div className="pt-4 border-t border-slate-700">
-                  <div className="flex items-center justify-center text-sm text-slate-400">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Next unlock: {userStakingData.nextUnlockDate}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="p-4 bg-slate-900/30 border border-t-0 border-slate-700 rounded-b-lg">
+                        <p className="text-slate-300 text-sm leading-relaxed">{faq.answer}</p>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
-      </motion.div>
+
+        {/* Right Panel - Stake/Unstake Module */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.6 }}
+          className="xl:col-span-1"
+        >
+          <div className="sticky top-6">
+            <Card className="bg-slate-900/80 border-slate-700">
+              <CardContent className="p-4 space-y-4">
+                
+                {/* Compact Header */}
+                <div className="flex items-center space-x-3 p-3 bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-lg">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                    <Coins className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white">Stake SEAM</h3>
+                    <p className="text-xs text-slate-400">Earn protocol rewards</p>
+                  </div>
+                </div>
+                
+                {/* Compact Toggle Switch */}
+                <div className="relative bg-slate-800/60 backdrop-blur-sm rounded-lg p-1 border border-slate-700/50">
+                  <div className="grid grid-cols-2 gap-1">
+                    <button
+                      onClick={() => setIsStakeMode(true)}
+                      className={`relative px-3 py-2 rounded-md text-sm font-semibold transition-all duration-300 ${
+                        isStakeMode 
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25' 
+                          : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                      }`}
+                    >
+                      <span className="flex items-center justify-center space-x-1">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>Stake</span>
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setIsStakeMode(false)}
+                      className={`relative px-3 py-2 rounded-md text-sm font-semibold transition-all duration-300 ${
+                        !isStakeMode 
+                          ? 'bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-lg shadow-slate-500/25' 
+                          : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                      }`}
+                    >
+                      <span className="flex items-center justify-center space-x-1">
+                        <Clock className="h-3 w-3" />
+                        <span>Unstake</span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Interactive Amount Input Section */}
+                <div className="space-y-3">
+                  <Label className="text-xs font-medium text-slate-300 flex items-center space-x-1">
+                    <DollarSign className="h-3 w-3 text-purple-400" />
+                    <span>{isStakeMode ? 'Amount to stake' : 'Amount to unstake'}</span>
+                  </Label>
+                  
+                  {/* Interactive Input Area */}
+                  <div className="relative bg-slate-800/60 backdrop-blur-sm border border-slate-700/70 rounded-lg p-4 space-y-3">
+                    {/* Amount Input and Display */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <Input
+                          type="text"
+                          placeholder="0.00"
+                          value={currentAmount}
+                          onChange={(e) => handleAmountChange(e.target.value)}
+                          className="text-2xl font-bold text-white bg-transparent border-none p-0 h-auto focus:ring-0 focus-visible:ring-0 placeholder:text-slate-600"
+                          style={{ fontSize: '1.5rem' }}
+                        />
+                        <div className="text-xs text-slate-400 mt-1">~${usdValue}</div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-xs">S</span>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-white text-sm">SEAM</div>
+                          <div className="text-xs text-slate-400">
+                            Balance: {availableBalance.toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Interactive Quick Amount Buttons */}
+                    <div className="grid grid-cols-4 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePercentageClick(25)}
+                        className="h-8 text-xs bg-slate-800/50 border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-purple-500/50 hover:text-white transition-all duration-200"
+                      >
+                        25%
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePercentageClick(50)}
+                        className="h-8 text-xs bg-slate-800/50 border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-purple-500/50 hover:text-white transition-all duration-200"
+                      >
+                        50%
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePercentageClick(75)}
+                        className="h-8 text-xs bg-slate-800/50 border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-purple-500/50 hover:text-white transition-all duration-200"
+                      >
+                        75%
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleMaxClick}
+                        className="h-8 text-xs bg-slate-800/50 border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-purple-500/50 hover:text-white transition-all duration-200"
+                      >
+                        MAX
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Compact Info Message */}
+                <div className="flex items-start space-x-2 text-xs bg-slate-800/30 border border-cyan-500/20 p-3 rounded-lg">
+                  <Info className="h-3 w-3 text-cyan-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-slate-400 leading-relaxed">
+                    7 day cooldown required for unstaking. Rewards continue during cooldown.
+                  </p>
+                </div>
+
+                {/* Interactive Action Button */}
+                <Button
+                  disabled={!isValidAmount}
+                  onClick={() => isValidAmount && setShowStakeModal(true)}
+                  className={`w-full h-10 border border-slate-600/50 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    isValidAmount
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white cursor-pointer'
+                      : 'bg-slate-700/80 hover:bg-slate-600 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {isValidAmount 
+                    ? (isStakeMode ? `Stake ${currentAmount} SEAM` : `Unstake ${currentAmount} SEAM`)
+                    : (isStakeMode ? 'Enter amount to stake' : 'Enter amount to unstake')
+                  }
+                </Button>
+                
+                {/* Compact Transaction Summary */}
+                <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-lg p-3 space-y-2">
+                  <h4 className="text-sm font-semibold text-white flex items-center space-x-1">
+                    <TrendingUp className="h-3 w-3 text-green-400" />
+                    <span>Summary</span>
+                  </h4>
+                  
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div>
+                      <div className="flex items-center justify-center space-x-1">
+                        <span className="text-lg font-bold text-green-400">{userStakingData.totalAPR}%</span>
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+                      </div>
+                      <span className="text-xs text-slate-400">APR</span>
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center justify-center space-x-1">
+                        <Clock className="h-3 w-3 text-slate-400" />
+                        <span className="text-sm font-medium text-white">{userStakingData.unstakingCooldown}d</span>
+                      </div>
+                      <span className="text-xs text-slate-400">Cooldown</span>
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center justify-center space-x-1">
+                        <DollarSign className="h-3 w-3 text-slate-400" />
+                        <span className="text-sm font-medium text-white">${estimatedDailyRewards}</span>
+                      </div>
+                      <span className="text-xs text-slate-400">Daily</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
+      </div>
 
       {/* Modals */}
       <StakeModal
         isOpen={showStakeModal}
-        onClose={() => setShowStakeModal(false)}
-        action={stakingAction}
+        onClose={() => {
+          setShowStakeModal(false)
+          // Clear amounts after modal closes
+          setStakeAmount('')
+          setUnstakeAmount('')
+        }}
+        action={isStakeMode ? 'stake' : 'unstake'}
+        amount={currentAmount}
+        tokenSymbol="SEAM"
       />
 
       <ClaimModal

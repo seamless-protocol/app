@@ -1,40 +1,50 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+import { Card, CardContent } from "../ui/card"
 import { Button } from "../ui/button"
 import { Badge } from "../ui/badge"
-import { Input } from "../ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../ui/pagination"
 
 import { 
-  Search, 
-  Filter, 
   TrendingUp,
-  Shield,
-  AlertTriangle,
   Target,
   Vault,
   Users,
   DollarSign,
-  Grid3X3,
-  TableProperties,
-  ExternalLink
+  Search,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react"
-import { StrategyCard } from "../StrategyCard"
-import { PillFilter } from "../PillFilter"
+import { StreamlinedFilterBar } from "../StreamlinedFilterBar"
 import { getStrategiesByCategory, type Strategy as RawStrategy } from "../data/mockStrategyData"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
+import BaseLogo from "../../imports/BaseLogo"
 
 interface VaultsProps {
   onViewStrategy: (strategyId: string) => void
 }
 
 export function Vaults({ onViewStrategy }: VaultsProps) {
-  const [activeCategory, setActiveCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState('apy-desc')
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table') // Default to table view
+  const [assetTypeFilter, setAssetTypeFilter] = useState('all')
+  const [riskLevelFilter, setRiskLevelFilter] = useState('all')
+  const [availabilityFilter, setAvailabilityFilter] = useState('all')
+  const [sortField, setSortField] = useState<string>('apy')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   // Get vault strategies data and convert to StrategyCard format
   const allStrategies = useMemo(() => {
@@ -60,7 +70,9 @@ export function Vaults({ onViewStrategy }: VaultsProps) {
       performance7d: Math.random() > 0.5 ? (Math.random() * 10 - 5) : undefined, // Mock 7d performance
       curator: strategy.curator,
       collateral: strategy.collateral,
-      rewards: strategy.rewards
+      rewards: strategy.rewards,
+      chain: strategy.chain,
+      isInWallet: Math.random() > 0.6 // Mock wallet ownership
     }))
   }, [])
 
@@ -68,16 +80,35 @@ export function Vaults({ onViewStrategy }: VaultsProps) {
   const filteredStrategies = useMemo(() => {
     let filtered = allStrategies
 
-    // Filter by category
-    if (activeCategory !== 'all') {
+    // Filter by asset type
+    if (assetTypeFilter !== 'all') {
       filtered = filtered.filter(strategy => {
-        if (activeCategory === 'stablecoins') {
+        if (assetTypeFilter === 'stablecoins') {
           return strategy.assets.some(asset => asset.symbol === 'USDC')
         }
-        if (activeCategory === 'crypto-assets') {
+        if (assetTypeFilter === 'crypto-assets') {
           return strategy.assets.some(asset => ['cbBTC', 'WETH'].includes(asset.symbol))
         }
         return true
+      })
+    }
+
+    // Filter by risk level
+    if (riskLevelFilter !== 'all') {
+      filtered = filtered.filter(strategy => 
+        strategy.riskLevel.toLowerCase() === riskLevelFilter
+      )
+    }
+
+    // Filter by availability
+    if (availabilityFilter !== 'all') {
+      filtered = filtered.filter(strategy => {
+        if (availabilityFilter === 'active') {
+          return strategy.isActive
+        } else if (availabilityFilter === 'inactive') {
+          return !strategy.isActive
+        }
+        return true // 'both' option shows all
       })
     }
 
@@ -94,53 +125,104 @@ export function Vaults({ onViewStrategy }: VaultsProps) {
 
     // Sort strategies
     filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'apy-desc':
-          return b.apy - a.apy
-        case 'apy-asc':
-          return a.apy - b.apy
-        case 'tvl-desc':
-          return b.tvl - a.tvl
-        case 'tvl-asc':
-          return a.tvl - b.tvl
-        case 'name-asc':
-          return a.name.localeCompare(b.name)
+      let result = 0
+      
+      switch (sortField) {
+        case 'name':
+          result = a.name.localeCompare(b.name)
+          break
+        case 'tvl':
+          result = a.tvl - b.tvl
+          break
+        case 'apy':
+          result = a.apy - b.apy
+          break
+        case 'risk':
+          const riskOrder = { 'Low': 1, 'Medium': 2, 'High': 3 }
+          const aRisk = riskOrder[a.riskLevel as keyof typeof riskOrder] || 0
+          const bRisk = riskOrder[b.riskLevel as keyof typeof riskOrder] || 0
+          result = aRisk - bRisk
+          break
+        case 'participants':
+          result = (a.participants || 0) - (b.participants || 0)
+          break
+        case 'assets':
+          // Sort by asset count, then by first asset symbol
+          const assetCountDiff = a.assets.length - b.assets.length
+          if (assetCountDiff !== 0) {
+            result = assetCountDiff
+          } else {
+            result = (a.assets[0]?.symbol || '').localeCompare(b.assets[0]?.symbol || '')
+          }
+          break
         default:
-          return 0
+          result = 0
       }
+      
+      return sortDirection === 'desc' ? -result : result
     })
 
     return filtered
-  }, [allStrategies, activeCategory, searchQuery, sortBy])
+  }, [allStrategies, assetTypeFilter, riskLevelFilter, availabilityFilter, searchQuery, sortField, sortDirection])
 
-  const categories = [
-    { 
-      id: 'all', 
-      name: 'All Vaults', 
-      count: allStrategies.length,
-      icon: <Target className="h-4 w-4" />
-    },
-    { 
-      id: 'stablecoins', 
-      name: 'Stablecoins', 
-      count: allStrategies.filter(s => s.assets.some(asset => asset.symbol === 'USDC')).length,
-      icon: <Shield className="h-4 w-4" />
-    },
-    { 
-      id: 'crypto-assets', 
-      name: 'Crypto Assets', 
-      count: allStrategies.filter(s => s.assets.some(asset => ['cbBTC', 'WETH'].includes(asset.symbol))).length,
-      icon: <Vault className="h-4 w-4" />
+  // Handle column sort
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // Set new field with default direction
+      setSortField(field)
+      setSortDirection(['name', 'assets', 'risk'].includes(field) ? 'asc' : 'desc')
     }
+  }
+
+  // Get sort icon for column header
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-3 w-3 text-slate-500" />
+    }
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-3 w-3 text-purple-400" />
+      : <ArrowDown className="h-3 w-3 text-purple-400" />
+  }
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, assetTypeFilter, riskLevelFilter, availabilityFilter, sortField, sortDirection])
+
+  // Paginated strategies
+  const paginatedStrategies = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredStrategies.slice(startIndex, endIndex)
+  }, [filteredStrategies, currentPage, itemsPerPage])
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredStrategies.length / itemsPerPage)
+
+  // Filter options
+  const assetTypeOptions = [
+    { value: 'all', label: 'All Assets', count: allStrategies.length },
+    { value: 'stablecoins', label: 'Stablecoins', count: allStrategies.filter(s => s.assets.some(asset => asset.symbol === 'USDC')).length },
+    { value: 'crypto-assets', label: 'Crypto Assets', count: allStrategies.filter(s => s.assets.some(asset => ['cbBTC', 'WETH'].includes(asset.symbol))).length }
   ]
 
-  const sortOptions = [
-    { value: 'apy-desc', label: 'Highest APY' },
-    { value: 'apy-asc', label: 'Lowest APY' },
-    { value: 'tvl-desc', label: 'Highest TVL' },
-    { value: 'tvl-asc', label: 'Lowest TVL' },
-    { value: 'name-asc', label: 'Name (A-Z)' }
+  const riskLevelOptions = [
+    { value: 'all', label: 'All Risk Levels', count: allStrategies.length },
+    { value: 'low', label: 'Low Risk', count: allStrategies.filter(s => s.riskLevel === 'Low').length },
+    { value: 'medium', label: 'Medium Risk', count: allStrategies.filter(s => s.riskLevel === 'Medium').length },
+    { value: 'high', label: 'High Risk', count: allStrategies.filter(s => s.riskLevel === 'High').length }
   ]
+
+  const availabilityOptions = [
+    { value: 'all', label: 'Both', count: allStrategies.length },
+    { value: 'active', label: 'Active', count: allStrategies.filter(s => s.isActive).length },
+    { value: 'inactive', label: 'Inactive', count: allStrategies.filter(s => !s.isActive).length }
+  ]
+
+
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -169,28 +251,91 @@ export function Vaults({ onViewStrategy }: VaultsProps) {
     return <LogoComponent size={size} />
   }
 
+  // Render chain logo component
+  const renderChainLogo = (chain: { id: string; name: string; logo: React.ComponentType<any> }, size: number = 20) => {
+    const LogoComponent = chain.logo
+    return <LogoComponent size={size} />
+  }
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    // Scroll to top of table
+    document.getElementById('vaults-table')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   // Table view component
   const TableView = () => (
-    <motion.div 
-      className="bg-slate-900/80 border border-slate-700 rounded-lg overflow-hidden"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <TooltipProvider>
+      <motion.div 
+        id="vaults-table"
+        className="bg-slate-900/80 border border-slate-700 rounded-lg overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-slate-700 hover:bg-slate-800/50">
-              <TableHead className="text-slate-300 font-medium py-4 px-6">Vault</TableHead>
-              <TableHead className="text-slate-300 font-medium py-4 px-6">Assets</TableHead>
-              <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">APY</TableHead>
-              <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">TVL</TableHead>
-              <TableHead className="text-slate-300 font-medium py-4 px-6 text-center">Risk</TableHead>
-              <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">Participants</TableHead>
+              <TableHead className="text-slate-300 font-medium py-4 px-6">
+                <button 
+                  onClick={() => handleSort('name')}
+                  className="flex items-center space-x-2 hover:text-white transition-colors"
+                >
+                  <span>Vault</span>
+                  {getSortIcon('name')}
+                </button>
+              </TableHead>
+              <TableHead className="text-slate-300 font-medium py-4 px-6">
+                <button 
+                  onClick={() => handleSort('assets')}
+                  className="flex items-center space-x-2 hover:text-white transition-colors"
+                >
+                  <span>Assets</span>
+                  {getSortIcon('assets')}
+                </button>
+              </TableHead>
+              <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
+                <button 
+                  onClick={() => handleSort('apy')}
+                  className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                >
+                  <span>APY</span>
+                  {getSortIcon('apy')}
+                </button>
+              </TableHead>
+              <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
+                <button 
+                  onClick={() => handleSort('tvl')}
+                  className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                >
+                  <span>TVL</span>
+                  {getSortIcon('tvl')}
+                </button>
+              </TableHead>
+              <TableHead className="text-slate-300 font-medium py-4 px-6 text-center">
+                <button 
+                  onClick={() => handleSort('risk')}
+                  className="flex items-center space-x-2 hover:text-white transition-colors mx-auto"
+                >
+                  <span>Risk</span>
+                  {getSortIcon('risk')}
+                </button>
+              </TableHead>
+              <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
+                <button 
+                  onClick={() => handleSort('participants')}
+                  className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                >
+                  <span>Participants</span>
+                  {getSortIcon('participants')}
+                </button>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredStrategies.map((strategy, index) => (
+            {paginatedStrategies.map((strategy, index) => (
               <motion.tr
                 key={strategy.id}
                 className="border-slate-700 hover:bg-slate-800/30 transition-colors cursor-pointer"
@@ -204,6 +349,22 @@ export function Vaults({ onViewStrategy }: VaultsProps) {
                   <div className="flex flex-col space-y-1">
                     <div className="flex items-center space-x-2">
                       <h4 className="font-medium text-white text-sm">{strategy.name}</h4>
+                      {/* Chain Badge */}
+                      {strategy.chain && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="inline-flex items-center space-x-1 bg-slate-800/60 hover:bg-slate-700/60 px-2 py-1 rounded-full border border-slate-600/50 transition-colors">
+                              <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center">
+                                {renderChainLogo(strategy.chain, 12)}
+                              </div>
+                              <span className="text-xs text-slate-300 font-medium">{strategy.chain.name}</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Deployed on {strategy.chain.name}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       {strategy.isPopular && (
                         <Badge className="text-xs bg-purple-500/20 text-purple-400 border-purple-500/30 px-2 py-0.5">
                           Popular
@@ -259,7 +420,90 @@ export function Vaults({ onViewStrategy }: VaultsProps) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <motion.div 
+          className="px-6 py-4 border-t border-slate-700 bg-slate-900/60"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 text-sm text-slate-400">
+              <span>
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredStrategies.length)} of {filteredStrategies.length} results
+              </span>
+            </div>
+            
+            <Pagination className="mx-0 w-auto">
+              <PaginationContent className="space-x-1">
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    className={`h-9 px-3 ${currentPage === 1 ? 'pointer-events-none opacity-50' : 'hover:bg-slate-800 border-slate-600'}`}
+                  />
+                </PaginationItem>
+                
+                {/* Page numbers */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNumber;
+                  if (totalPages <= 5) {
+                    pageNumber = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNumber = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNumber = totalPages - 4 + i;
+                  } else {
+                    pageNumber = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <PaginationItem key={pageNumber}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(pageNumber)}
+                        isActive={currentPage === pageNumber}
+                        className={`h-9 w-9 ${
+                          currentPage === pageNumber 
+                            ? 'bg-purple-600 text-white border-purple-600' 
+                            : 'hover:bg-slate-800 border-slate-600 text-slate-300'
+                        }`}
+                      >
+                        {pageNumber}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                {totalPages > 5 && currentPage < totalPages - 2 && (
+                  <>
+                    <PaginationItem>
+                      <PaginationEllipsis className="text-slate-400" />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink
+                        onClick={() => handlePageChange(totalPages)}
+                        className="h-9 w-9 hover:bg-slate-800 border-slate-600 text-slate-300"
+                      >
+                        {totalPages}
+                      </PaginationLink>
+                    </PaginationItem>
+                  </>
+                )}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    className={`h-9 px-3 ${currentPage === totalPages ? 'pointer-events-none opacity-50' : 'hover:bg-slate-800 border-slate-600'}`}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
+    </TooltipProvider>
   )
 
   return (
@@ -269,20 +513,7 @@ export function Vaults({ onViewStrategy }: VaultsProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Header - Mobile Optimized */}
-      <motion.div 
-        className="flex flex-col space-y-4"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Secure Vaults</h1>
-          <p className="text-sm sm:text-base text-slate-400 mt-1">Automated yield strategies with institutional-grade security</p>
-        </div>
-      </motion.div>
-
-      {/* Vault Overview Cards - Mobile Optimized */}
+      {/* Vault Overview Cards */}
       <motion.div 
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
         initial={{ opacity: 0, y: 20 }}
@@ -342,121 +573,33 @@ export function Vaults({ onViewStrategy }: VaultsProps) {
         </Card>
       </motion.div>
 
-      {/* Unified Controls Module */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
-      >
-        <Card className="bg-slate-900/80 border-slate-700">
-          <CardContent className="p-4 sm:p-6">
-            <div className="space-y-6">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                <div>
-                  <h3 className="text-lg font-medium text-white">Find Vaults</h3>
-                  <p className="text-sm text-slate-400">Search, filter, and organize vaults to match your investment strategy</p>
-                </div>
-                {searchQuery && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-lg border border-slate-600"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    Results for "{searchQuery}"
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Search vaults, assets, or strategies..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-slate-800 border-slate-600 text-white h-12 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                />
-              </div>
-
-              {/* Category Filters */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Filter className="h-4 w-4 text-slate-400" />
-                  <span className="text-sm font-medium text-slate-300">Categories</span>
-                </div>
-                <div className="overflow-x-auto pb-2">
-                  <PillFilter
-                    options={categories}
-                    activeValue={activeCategory}
-                    onValueChange={setActiveCategory}
-                    size="md"
-                    showCounts={true}
-                  />
-                </div>
-              </div>
-
-              {/* Sort and View Controls */}
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 pt-4 border-t border-slate-700">
-                {/* Sort Dropdown */}
-                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-4 w-4 text-slate-400" />
-                    <span className="text-sm font-medium text-slate-300">Sort by</span>
-                  </div>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-slate-800 border border-slate-600 text-white px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 h-10 w-full sm:w-48"
-                  >
-                    {sortOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* View Mode Toggle */}
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm font-medium text-slate-300">View</span>
-                  <div className="flex items-center space-x-1 bg-slate-800 p-1 rounded-lg border border-slate-600">
-                    <Button
-                      size="sm"
-                      variant={viewMode === 'table' ? 'default' : 'ghost'}
-                      onClick={() => setViewMode('table')}
-                      className={`h-8 px-3 text-xs transition-all duration-200 ${
-                        viewMode === 'table' 
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 shadow-md' 
-                          : 'text-slate-400 hover:text-white hover:bg-slate-700'
-                      }`}
-                      aria-label="Table view"
-                    >
-                      <TableProperties className="h-3 w-3 mr-1" />
-                      Table
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={viewMode === 'cards' ? 'default' : 'ghost'}
-                      onClick={() => setViewMode('cards')}
-                      className={`h-8 px-3 text-xs transition-all duration-200 ${
-                        viewMode === 'cards' 
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 shadow-md' 
-                          : 'text-slate-400 hover:text-white hover:bg-slate-700'
-                      }`}
-                      aria-label="Card view"
-                    >
-                      <Grid3X3 className="h-3 w-3 mr-1" />
-                      Cards
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      {/* Streamlined Filter Bar */}
+      <StreamlinedFilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Filter vaults"
+        primaryFilter={{
+          label: "Asset Type",
+          value: assetTypeFilter,
+          options: assetTypeOptions,
+          onChange: setAssetTypeFilter
+        }}
+        secondaryFilter={{
+          label: "Risk Level",
+          value: riskLevelFilter,
+          options: riskLevelOptions,
+          onChange: setRiskLevelFilter
+        }}
+        tertiaryFilter={{
+          label: "Status",
+          value: availabilityFilter,
+          options: availabilityOptions,
+          onChange: setAvailabilityFilter
+        }}
+        resultsCount={filteredStrategies.length}
+        totalCount={allStrategies.length}
+        itemLabel="vaults"
+      />
 
       {/* Vault Results */}
       <motion.div
@@ -465,105 +608,41 @@ export function Vaults({ onViewStrategy }: VaultsProps) {
         transition={{ duration: 0.4, delay: 0.4 }}
       >
         <AnimatePresence mode="wait">
-          <motion.div
-            key={activeCategory}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {filteredStrategies.length > 0 ? (
-              <div className="space-y-6">
-                {/* Results Summary */}
-                <motion.div 
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-                    <h4 className="text-lg font-medium text-white">
-                      {filteredStrategies.length} {filteredStrategies.length === 1 ? 'Vault' : 'Vaults'}
-                    </h4>
-                    {activeCategory !== 'all' && (
-                      <Badge variant="secondary" className="bg-purple-500/20 text-purple-400 border-purple-500/30 w-fit">
-                        {categories.find(c => c.id === activeCategory)?.name}
-                      </Badge>
-                    )}
-                    {searchQuery && (
-                      <Badge variant="outline" className="bg-slate-800 text-slate-300 border-slate-600 w-fit">
-                        Search: "{searchQuery}"
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <motion.div 
-                    className="text-sm text-slate-400 flex items-center space-x-2"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.1 }}
-                  >
-                    <TrendingUp className="h-4 w-4" />
-                    <span>Sorted by {sortOptions.find(s => s.value === sortBy)?.label}</span>
-                  </motion.div>
-                </motion.div>
-
-                {/* Vault Display - Table or Cards */}
-                {viewMode === 'table' ? (
-                  <TableView />
-                ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                    {filteredStrategies.map((strategy, index) => (
-                      <motion.div
-                        key={strategy.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                      >
-                        <StrategyCard 
-                          strategy={strategy}
-                          onViewStrategy={onViewStrategy}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
+          {filteredStrategies.length > 0 ? (
+            <TableView />
+          ) : (
+            <motion.div
+              className="text-center py-16 space-y-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="w-20 h-20 mx-auto bg-slate-800/60 rounded-full flex items-center justify-center border-2 border-slate-700">
+                <Search className="h-10 w-10 text-slate-400" />
               </div>
-            ) : (
-              <motion.div
-                className="text-center py-16 space-y-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
+              <div>
+                <h3 className="text-xl font-medium text-white mb-3">No vaults found</h3>
+                <p className="text-slate-400 max-w-md mx-auto">
+                  {searchQuery 
+                    ? `No results found for "${searchQuery}". Try adjusting your search terms or filters.`
+                    : 'No vaults match your current filters. Try adjusting your filter criteria.'
+                  }
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchQuery('')
+                  setAssetTypeFilter('all')
+                  setRiskLevelFilter('all')
+                  setAvailabilityFilter('all')
+                }}
+                className="mt-6 border-slate-600 text-slate-300 hover:bg-slate-800 hover:border-slate-500"
               >
-                <div className="w-20 h-20 mx-auto bg-slate-800/60 rounded-full flex items-center justify-center border-2 border-slate-700">
-                  <Search className="h-10 w-10 text-slate-400" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-medium text-white mb-3">No vaults found</h3>
-                  <p className="text-slate-400 max-w-md mx-auto">
-                    {searchQuery 
-                      ? `No results found for "${searchQuery}". Try adjusting your search terms or filters.`
-                      : 'No vaults match your current filters. Try selecting a different category.'
-                    }
-                  </p>
-                </div>
-                {(searchQuery || activeCategory !== 'all') && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSearchQuery('')
-                      setActiveCategory('all')
-                    }}
-                    className="mt-6 border-slate-600 text-slate-300 hover:bg-slate-800 hover:border-slate-500"
-                  >
-                    <Filter className="h-4 w-4 mr-2" />
-                    Clear all filters
-                  </Button>
-                )}
-              </motion.div>
-            )}
-          </motion.div>
+                Clear all filters
+              </Button>
+            </motion.div>
+          )}
         </AnimatePresence>
       </motion.div>
     </motion.div>
