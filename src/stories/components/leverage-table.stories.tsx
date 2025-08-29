@@ -20,7 +20,7 @@ const mockLeverageTokens: Array<LeverageToken> = [
     apy: 28.94,
     leverage: 20,
     supplyCap: 1000000,
-    currentSupply: 972000,
+    currentSupply: 750000, // 75% - normal state
     chainId: 8453,
     chainName: 'Base',
     chainLogo: BaseLogo,
@@ -42,7 +42,7 @@ const mockLeverageTokens: Array<LeverageToken> = [
     apy: 26.34,
     leverage: 14,
     supplyCap: 3000,
-    currentSupply: 2781,
+    currentSupply: 2850, // 95% - warning state
     chainId: 1,
     chainName: 'Ethereum',
     chainLogo: EthereumLogo,
@@ -64,7 +64,7 @@ const mockLeverageTokens: Array<LeverageToken> = [
     apy: 24.61,
     leverage: 13,
     supplyCap: 2500,
-    currentSupply: 2365,
+    currentSupply: 1250, // 50% - normal state
     chainId: 1,
     chainName: 'Ethereum',
     chainLogo: EthereumLogo,
@@ -86,7 +86,7 @@ const mockLeverageTokens: Array<LeverageToken> = [
     apy: 18.67,
     leverage: 17,
     supplyCap: 10000,
-    currentSupply: 9650,
+    currentSupply: 9200, // 92% - warning state
     chainId: 8453,
     chainName: 'Base',
     chainLogo: BaseLogo,

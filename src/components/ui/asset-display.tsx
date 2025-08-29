@@ -28,6 +28,10 @@ interface AssetDisplayProps {
   showBadge?: boolean
   // Logo options
   showLogos?: boolean
+  // Tooltip options
+  tooltipContent?: React.ReactNode
+  // Variant options
+  variant?: 'default' | 'logo-only'
 }
 
 const sizeClasses = {
@@ -96,6 +100,8 @@ export function AssetDisplay({
   isPopular = false,
   showBadge = true,
   showLogos = true,
+  tooltipContent,
+  variant = 'default',
 }: AssetDisplayProps) {
   const sizeConfig = sizeClasses[size]
 
@@ -104,7 +110,39 @@ export function AssetDisplay({
   const isMultipleAssets = assets.length > 0
 
   if (isSingleAsset && asset) {
-    // Single asset mode (original AssetDisplay behavior)
+    // Single asset mode
+    if (variant === 'logo-only') {
+      // Logo-only variant for single asset
+      const logoContent = (
+        <button
+          type="button"
+          className={cn(
+            'rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center cursor-pointer hover:border-slate-600 transition-colors',
+            sizeConfig.container,
+            className,
+          )}
+          onClick={onClick}
+          aria-label={`View ${asset.name || asset.symbol} details`}
+        >
+          {renderAssetLogo(asset, sizeConfig.logo)}
+        </button>
+      )
+
+      if (tooltipContent) {
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>{logoContent}</TooltipTrigger>
+            <TooltipContent className="bg-black border-slate-600 text-white shadow-lg shadow-black/25">
+              {tooltipContent}
+            </TooltipContent>
+          </Tooltip>
+        )
+      }
+
+      return logoContent
+    }
+
+    // Default single asset mode (original AssetDisplay behavior)
     const content = (
       <div className={cn('flex items-center space-x-2', className)}>
         <div
@@ -145,7 +183,7 @@ export function AssetDisplay({
 
   if (isMultipleAssets) {
     // Multiple assets mode (TokenName behavior)
-    return (
+    const content = (
       <div className={cn('flex flex-col space-y-1', className)}>
         <div className="flex items-center space-x-3">
           {/* Asset Logos - only render if showLogos is true and assets exist */}
@@ -184,6 +222,22 @@ export function AssetDisplay({
         </div>
       </div>
     )
+
+    // Wrap with tooltip if tooltipContent is provided
+    if (tooltipContent) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="cursor-help">{content}</div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{tooltipContent}</p>
+          </TooltipContent>
+        </Tooltip>
+      )
+    }
+
+    return content
   }
 
   // Fallback for invalid state

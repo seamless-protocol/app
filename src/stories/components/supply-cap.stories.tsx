@@ -13,21 +13,6 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {
-  args: {
-    currentSupply: 750000,
-    supplyCap: 1000000,
-  },
-  render: (args) => (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <span className="text-sm text-slate-400 w-16">Default:</span>
-        <SupplyCap {...args} />
-      </div>
-    </div>
-  ),
-}
-
 export const AllVariations: Story = {
   args: {
     currentSupply: 750000,
@@ -44,8 +29,8 @@ export const AllVariations: Story = {
         <SupplyCap currentSupply={500000} supplyCap={1000000} />
       </div>
       <div className="flex items-center space-x-4">
-        <span className="text-sm text-slate-400 w-16">99%:</span>
-        <SupplyCap currentSupply={990000} supplyCap={1000000} />
+        <span className="text-sm text-slate-400 w-16">90%:</span>
+        <SupplyCap currentSupply={900000} supplyCap={1000000} />
       </div>
     </div>
   ),

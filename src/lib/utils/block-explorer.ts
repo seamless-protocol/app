@@ -24,3 +24,13 @@ export function getBlockExplorerName(chainId: number): string {
       return 'Block Explorer'
   }
 }
+
+export function getTokenExplorerInfo(
+  chainId: number,
+  tokenAddress: string,
+): { url: string; name: string } {
+  return {
+    url: getTokenExplorerUrl(chainId, tokenAddress),
+    name: getBlockExplorerName(chainId),
+  }
+}
