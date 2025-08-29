@@ -1,13 +1,15 @@
 import { motion } from 'framer-motion'
-import { Info, Search, TrendingUp } from 'lucide-react'
+import { Info, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { cn } from '@/lib/utils/cn'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
-import { filterByRange, filterBySearch, parseSortString, sortData } from '@/lib/utils/table-utils'
+import { filterBySearch, parseSortString, sortData } from '@/lib/utils/table-utils'
 import { APYBreakdown, type APYBreakdownData } from './APYBreakdown'
+import { SortArrowDown, SortArrowNeutral, SortArrowUp } from './icons'
 import { LeverageBadge } from './LeverageBadge'
 import { SupplyCap } from './SupplyCap'
-import { Badge } from './ui/badge'
+import { AssetDisplay } from './ui/asset-display'
 import { FilterDropdown } from './ui/filter-dropdown'
 import {
   Table,
@@ -54,16 +56,69 @@ interface LeverageTableProps {
 export function LeverageTable({ tokens, onTokenClick, className }: LeverageTableProps) {
   const [sortBy, setSortBy] = useState('apy-desc')
   const [filters, setFilters] = useState({
-    leverageRange: 'all',
+    collateralAsset: 'all',
+    debtAsset: 'all',
+    supplyCap: 'both',
   })
   const [searchQuery, setSearchQuery] = useState('')
+
+  const handleSort = (field: string) => {
+    const currentField = sortBy.split('-')[0]
+    const currentDirection = sortBy.split('-')[1]
+
+    if (currentField === field) {
+      // Toggle direction if same field
+      const newDirection = currentDirection === 'asc' ? 'desc' : 'asc'
+      setSortBy(`${field}-${newDirection}`)
+    } else {
+      // Default to desc for new field
+      setSortBy(`${field}-desc`)
+    }
+  }
+
+  const getSortIcon = (field: string) => {
+    const currentField = sortBy.split('-')[0]
+    const currentDirection = sortBy.split('-')[1]
+
+    if (currentField !== field) {
+      // Not currently sorting by this field - show double arrow
+      return <SortArrowNeutral />
+    }
+
+    // Currently sorting by this field - show single arrow
+    if (currentDirection === 'asc') {
+      return <SortArrowUp />
+    } else {
+      return <SortArrowDown />
+    }
+  }
 
   const sortedAndFilteredData = useMemo(() => {
     // Apply search filter
     let filtered = filterBySearch(tokens, searchQuery, (token) => [token.name])
 
-    // Apply leverage range filter
-    filtered = filterByRange(filtered, 'leverage', filters.leverageRange)
+    // Apply collateral asset filter
+    if (filters.collateralAsset !== 'all') {
+      filtered = filtered.filter(
+        (token) => token.collateralAsset.symbol === filters.collateralAsset,
+      )
+    }
+
+    // Apply debt asset filter
+    if (filters.debtAsset !== 'all') {
+      filtered = filtered.filter((token) => token.debtAsset.symbol === filters.debtAsset)
+    }
+
+    // Apply supply cap filter
+    if (filters.supplyCap !== 'both') {
+      const isNearCapacity = (token: LeverageToken) =>
+        (token.currentSupply / token.supplyCap) * 100 >= 90
+      if (filters.supplyCap === 'near-capacity') {
+        filtered = filtered.filter(isNearCapacity)
+      } else if (filters.supplyCap === 'available') {
+        filtered = filtered.filter((token) => !isNearCapacity(token))
+      }
+    }
 
     // Sort the filtered data
     const sortConfig = parseSortString(sortBy)
@@ -102,34 +157,40 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
     }
   }
 
-  const getLeverageOptions = () => {
-    const ranges = [
-      { value: '1-5', label: '1x-5x', min: 1, max: 5 },
-      { value: '5-10', label: '5x-10x', min: 5, max: 10 },
-      { value: '10+', label: '10x+', min: 10, max: Infinity },
-    ]
-
-    const rangeCounts = ranges.map((range) => ({
-      ...range,
-      count: tokens.filter((token) => {
-        const leverage = token.leverage
-        return leverage >= range.min && (range.max === Infinity ? true : leverage <= range.max)
-      }).length,
+  const getCollateralAssetOptions = () => {
+    const assets = Array.from(new Set(tokens.map((token) => token.collateralAsset.symbol)))
+    const options = assets.map((asset) => ({
+      value: asset,
+      label: asset,
+      count: tokens.filter((token) => token.collateralAsset.symbol === asset).length,
     }))
 
-    return [{ value: 'all', label: 'All Leverage', count: tokens.length }, ...rangeCounts]
+    return [{ value: 'all', label: 'All Assets', count: tokens.length }, ...options]
   }
 
-  const getSortOptions = () => [
-    { value: 'apy-desc', label: 'Highest APY' },
-    { value: 'apy-asc', label: 'Lowest APY' },
-    { value: 'tvl-desc', label: 'Highest TVL' },
-    { value: 'tvl-asc', label: 'Lowest TVL' },
-    { value: 'leverage-desc', label: 'Highest Leverage' },
-    { value: 'leverage-asc', label: 'Lowest Leverage' },
-    { value: 'name-asc', label: 'Name A-Z' },
-    { value: 'name-desc', label: 'Name Z-A' },
-  ]
+  const getDebtAssetOptions = () => {
+    const assets = Array.from(new Set(tokens.map((token) => token.debtAsset.symbol)))
+    const options = assets.map((asset) => ({
+      value: asset,
+      label: asset,
+      count: tokens.filter((token) => token.debtAsset.symbol === asset).length,
+    }))
+
+    return [{ value: 'all', label: 'All Debt Assets', count: tokens.length }, ...options]
+  }
+
+  const getSupplyCapOptions = () => {
+    const nearCapacityCount = tokens.filter(
+      (token) => (token.currentSupply / token.supplyCap) * 100 >= 90,
+    ).length
+    const availableCount = tokens.length - nearCapacityCount
+
+    return [
+      { value: 'both', label: 'Both', count: tokens.length },
+      { value: 'available', label: 'Available', count: availableCount },
+      { value: 'near-capacity', label: 'Near Capacity', count: nearCapacityCount },
+    ]
+  }
 
   return (
     <div className={cn('max-w-7xl mx-auto space-y-6', className)}>
@@ -141,24 +202,29 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
-            {/* Leverage Range Filter */}
+            {/* Collateral Asset Filter */}
             <FilterDropdown
-              label="Leverage"
-              value={filters.leverageRange}
-              options={getLeverageOptions()}
-              onValueChange={(value) => setFilters((prev) => ({ ...prev, leverageRange: value }))}
+              label="Collateral"
+              value={filters.collateralAsset}
+              options={getCollateralAssetOptions()}
+              onValueChange={(value) => setFilters((prev) => ({ ...prev, collateralAsset: value }))}
             />
 
-            {/* Sort By Dropdown */}
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-4 w-4 text-slate-400" />
-              <FilterDropdown
-                label="Sort by"
-                value={sortBy}
-                options={getSortOptions()}
-                onValueChange={setSortBy}
-              />
-            </div>
+            {/* Debt Asset Filter */}
+            <FilterDropdown
+              label="Debt Asset"
+              value={filters.debtAsset}
+              options={getDebtAssetOptions()}
+              onValueChange={(value) => setFilters((prev) => ({ ...prev, debtAsset: value }))}
+            />
+
+            {/* Supply Cap Filter */}
+            <FilterDropdown
+              label="Supply Cap"
+              value={filters.supplyCap}
+              options={getSupplyCapOptions()}
+              onValueChange={(value) => setFilters((prev) => ({ ...prev, supplyCap: value }))}
+            />
           </div>
 
           {/* Search */}
@@ -166,10 +232,10 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
-                placeholder="Filter items"
+                placeholder="Search leverage tokens..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-64 bg-slate-800 border border-slate-600 text-white h-8 px-3 py-1 text-sm rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 flex min-w-0 rounded-md border px-3 py-1 text-base outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive pl-10 w-64 bg-slate-800 border-slate-600 text-white h-8 transition-all duration-200 focus:w-80"
               />
             </div>
           </div>
@@ -187,25 +253,63 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
             <TableHeader>
               <TableRow className="border-slate-700 hover:bg-slate-800/50">
                 <TableHead className="text-slate-300 font-medium py-4 px-6 min-w-[200px]">
-                  <span>Leverage Token Name</span>
+                  <button
+                    type="button"
+                    className="flex items-center space-x-2 hover:text-white transition-colors"
+                    onClick={() => handleSort('name')}
+                  >
+                    <span>Leverage Token Name</span>
+                    {getSortIcon('name')}
+                  </button>
                 </TableHead>
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
-                  <span>TVL</span>
+                  <button
+                    type="button"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    onClick={() => handleSort('tvl')}
+                  >
+                    <span>TVL</span>
+                    {getSortIcon('tvl')}
+                  </button>
                 </TableHead>
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
-                  <span>APY</span>
+                  <button
+                    type="button"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    onClick={() => handleSort('apy')}
+                  >
+                    <span>APY</span>
+                    {getSortIcon('apy')}
+                  </button>
                 </TableHead>
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-center">
-                  <span>Leverage</span>
+                  <button
+                    type="button"
+                    className="flex items-center space-x-2 hover:text-white transition-colors mx-auto"
+                    onClick={() => handleSort('leverage')}
+                  >
+                    <span>Leverage</span>
+                    {getSortIcon('leverage')}
+                  </button>
+                </TableHead>
+                <TableHead className="text-slate-300 font-medium py-4 px-6 text-center">
+                  <span>Network</span>
                 </TableHead>
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right min-w-[140px]">
-                  <span>Supply Cap Available</span>
+                  <button
+                    type="button"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    onClick={() => handleSort('available')}
+                  >
+                    <span>Supply Cap</span>
+                    {getSortIcon('available')}
+                  </button>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedAndFilteredData.length === 0 ? (
-                <TableEmpty colSpan={5} />
+                <TableEmpty colSpan={6} />
               ) : (
                 sortedAndFilteredData.map((token, index) => (
                   <motion.tr
@@ -217,17 +321,62 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
                     onClick={() => onTokenClick?.(token)}
                   >
                     <TableCell className="py-4 px-6">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex -space-x-1">
+                          <AssetDisplay
+                            asset={token.collateralAsset}
+                            size="md"
+                            variant="logo-only"
+                            tooltipContent={
+                              <p className="font-medium">
+                                {token.collateralAsset.name || token.collateralAsset.symbol}{' '}
+                                (Collateral)
+                                <br />
+                                <span className="text-slate-400 text-sm">
+                                  Click to view on{' '}
+                                  {
+                                    getTokenExplorerInfo(
+                                      token.chainId,
+                                      token.collateralAsset.address,
+                                    ).name
+                                  }
+                                </span>
+                              </p>
+                            }
+                            onClick={() =>
+                              window.open(
+                                getTokenExplorerInfo(token.chainId, token.collateralAsset.address)
+                                  .url,
+                                '_blank',
+                              )
+                            }
+                          />
+                          <AssetDisplay
+                            asset={token.debtAsset}
+                            size="md"
+                            variant="logo-only"
+                            tooltipContent={
+                              <p className="font-medium">
+                                {token.debtAsset.name || token.debtAsset.symbol} (Debt)
+                                <br />
+                                <span className="text-slate-400 text-sm">
+                                  Click to view on{' '}
+                                  {
+                                    getTokenExplorerInfo(token.chainId, token.debtAsset.address)
+                                      .name
+                                  }
+                                </span>
+                              </p>
+                            }
+                            onClick={() =>
+                              window.open(
+                                getTokenExplorerInfo(token.chainId, token.debtAsset.address).url,
+                                '_blank',
+                              )
+                            }
+                          />
+                        </div>
                         <span className="text-slate-300 font-medium text-sm">{token.name}</span>
-                        <Badge
-                          variant="secondary"
-                          className="text-xs bg-slate-800/60 hover:bg-slate-700/60 border-slate-600/50 text-slate-300"
-                        >
-                          <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center mr-1">
-                            <token.chainLogo className="w-3 h-3" />
-                          </div>
-                          {token.chainName}
-                        </Badge>
                       </div>
                     </TableCell>
 
@@ -260,6 +409,17 @@ export function LeverageTable({ tokens, onTokenClick, className }: LeverageTable
 
                     <TableCell className="py-4 px-6 text-center">
                       <LeverageBadge leverage={token.leverage} size="md" />
+                    </TableCell>
+
+                    <TableCell className="py-4 px-6 text-center">
+                      <div className="inline-flex items-center space-x-1 bg-slate-800/60 hover:bg-slate-700/60 px-2 py-1 rounded-full border border-slate-600/50 transition-colors">
+                        <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center">
+                          <token.chainLogo className="w-3 h-3" />
+                        </div>
+                        <span className="text-xs text-slate-300 font-medium">
+                          {token.chainName}
+                        </span>
+                      </div>
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-right">

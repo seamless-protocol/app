@@ -1,5 +1,4 @@
-import { BaseLogo } from '../../components/icons/base-logo'
-import { EthereumLogo } from '../../components/icons/ethereum-logo'
+import { BaseLogo, EthereumLogo } from '../../components/icons'
 
 // Chain ID constants
 export const CHAIN_IDS = {
