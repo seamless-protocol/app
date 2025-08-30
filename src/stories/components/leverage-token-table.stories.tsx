@@ -39,6 +39,8 @@ const mockTokens = [
     chainId: 137,
     chainName: 'Polygon',
     chainLogo: EthereumLogo,
+    baseYield: 8.2,
+    borrowRate: 4.3,
   },
   {
     id: 'usdc-3x',
@@ -61,6 +63,8 @@ const mockTokens = [
     chainId: 137,
     chainName: 'Polygon',
     chainLogo: USDCLogo,
+    baseYield: 12.1,
+    borrowRate: 6.1,
   },
   {
     id: 'weeth-1.5x',
@@ -83,6 +87,8 @@ const mockTokens = [
     chainId: 137,
     chainName: 'Polygon',
     chainLogo: weETHLogo,
+    baseYield: 5.8,
+    borrowRate: 2.9,
   },
 ]
 
