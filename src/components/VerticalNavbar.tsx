@@ -1,10 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ChevronRight, Github } from 'lucide-react'
+import { ChevronRight, Github, Menu } from 'lucide-react'
 import type * as React from 'react'
+import { useId, useState } from 'react'
 import { SeamlessLogo } from './icons'
 import { Badge } from './ui/badge'
+import { Button } from './ui/button'
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from './ui/sheet'
 import { cn } from './ui/utils'
 
 // Types
@@ -35,7 +38,6 @@ interface NavbarProps {
   communitySection: CommunitySection
   platformTVL: string
   isMobile?: boolean
-  className?: string
 }
 
 // Animation variants
@@ -68,6 +70,18 @@ const chevronVariants = {
   rest: { x: -10, opacity: 0 },
   hover: { x: 0, opacity: 1, transition: { duration: 0.2 } },
   active: { x: 0, opacity: 1, transition: { duration: 0.2 } },
+}
+
+// Mobile menu animation variants
+const mobileMenuVariants = {
+  closed: {
+    x: '-100%',
+    transition: { duration: 0.3 },
+  },
+  open: {
+    x: 0,
+    transition: { duration: 0.4 },
+  },
 }
 
 // Navigation Item Component
@@ -188,21 +202,26 @@ function SocialLink({ social }: { social: SocialLink }) {
   )
 }
 
-// Main Vertical Navbar Component
-export function VerticalNavbar({
+// Navbar Content Component
+function NavbarContent({
   currentPage,
   onPageChange,
   navigationItems,
   communitySection,
   platformTVL,
-  isMobile = false,
   className,
-}: NavbarProps) {
+}: {
+  currentPage: string
+  onPageChange: (pageId: string) => void
+  navigationItems: Array<NavigationItem>
+  communitySection: CommunitySection
+  platformTVL: string
+  className?: string
+}) {
   return (
     <motion.nav
       className={cn(
-        'bg-slate-900 w-full border-r border-slate-700 flex flex-col',
-        isMobile ? 'h-full' : 'h-screen',
+        'bg-slate-900 w-full border-r border-slate-700 flex flex-col h-full',
         className,
       )}
       initial={{ opacity: 0 }}
@@ -251,7 +270,20 @@ export function VerticalNavbar({
 
       {/* Footer Section */}
       <div className="px-3 sm:px-4 py-3 border-t border-slate-700">
-        <div className="flex items-center justify-between">
+        {/* Desktop Layout */}
+        <div className="hidden sm:flex items-center justify-between">
+          <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+            {communitySection.title}
+          </h3>
+          <div className="flex space-x-2">
+            {communitySection.links.map((social) => (
+              <SocialLink key={social.id} social={social} />
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Layout - Centered */}
+        <div className="sm:hidden flex flex-col items-center space-y-3">
           <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide">
             {communitySection.title}
           </h3>
@@ -280,5 +312,90 @@ export function VerticalNavbar({
         </div>
       </div>
     </motion.nav>
+  )
+}
+
+// Mobile hamburger button component
+function MobileMenuButton({ onClick }: { onClick: () => void }) {
+  return (
+    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-slate-400 hover:text-white hover:bg-slate-800 transition-colors p-2 h-10 w-10"
+        onClick={onClick}
+        aria-label="Open mobile navigation menu"
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+    </motion.div>
+  )
+}
+
+// Main Vertical Navbar Component
+export function VerticalNavbar({
+  currentPage,
+  onPageChange,
+  navigationItems,
+  communitySection,
+  platformTVL,
+  isMobile = false,
+}: NavbarProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const mobileNavDescriptionId = useId()
+
+  const handlePageChange = (pageId: string) => {
+    onPageChange(pageId)
+    setIsMobileMenuOpen(false) // Close mobile menu when page changes
+  }
+
+  // Mobile view - only render hamburger button
+  if (isMobile) {
+    return (
+      <>
+        <MobileMenuButton onClick={() => setIsMobileMenuOpen(true)} />
+
+        {/* Mobile Navigation Sheet */}
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetContent
+            side="left"
+            className="w-[280px] xs:w-[300px] sm:w-80 p-0 bg-slate-900 border-slate-700"
+            aria-describedby={mobileNavDescriptionId}
+          >
+            <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
+            <SheetDescription id={mobileNavDescriptionId} className="sr-only">
+              Navigate through the Seamless Protocol application pages including Portfolio, Vaults,
+              Leverage Tokens, Analytics, Staking, and Governance.
+            </SheetDescription>
+
+            <motion.div
+              variants={mobileMenuVariants}
+              initial="closed"
+              animate={isMobileMenuOpen ? 'open' : 'closed'}
+            >
+              <NavbarContent
+                currentPage={currentPage}
+                onPageChange={handlePageChange}
+                navigationItems={navigationItems}
+                communitySection={communitySection}
+                platformTVL={platformTVL}
+              />
+            </motion.div>
+          </SheetContent>
+        </Sheet>
+      </>
+    )
+  }
+
+  // Desktop view - render full navbar
+  return (
+    <NavbarContent
+      currentPage={currentPage}
+      onPageChange={handlePageChange}
+      navigationItems={navigationItems}
+      communitySection={communitySection}
+      platformTVL={platformTVL}
+      className="h-screen"
+    />
   )
 }
