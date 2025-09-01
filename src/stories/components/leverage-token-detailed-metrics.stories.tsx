@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { LeverageTokenDetailedMetrics } from '../../components/LeverageTokenDetailedMetrics'
 
-const meta = {
+const meta: Meta<typeof LeverageTokenDetailedMetrics> = {
   title: 'Components/LeverageToken/LeverageTokenDetailedMetrics',
   component: LeverageTokenDetailedMetrics,
   parameters: {
