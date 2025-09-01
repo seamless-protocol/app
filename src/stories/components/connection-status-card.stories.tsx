@@ -9,7 +9,7 @@ import { config } from '../../lib/config/wagmi.config'
 const queryClient = new QueryClient()
 
 const meta = {
-  title: 'Components/General/ConnectionStatusCard',
+  title: 'Components/ConnectionStatusCard',
   component: ConnectionStatusCard,
   parameters: {
     layout: 'fullscreen',
@@ -25,7 +25,7 @@ const meta = {
               <Alert
                 type="info"
                 title="💡 To see the full connection status card"
-                description="Navigate to Components/General/WalletConnectButton story, disconnect your wallet, then return here to see the complete functionality!"
+                description="Navigate to Components/WalletConnectButton story, disconnect your wallet, then return here to see the complete functionality!"
               />
             </div>
           </RainbowKitProvider>

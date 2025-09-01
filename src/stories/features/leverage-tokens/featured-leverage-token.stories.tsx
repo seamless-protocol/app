@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { FeaturedLeverageTokens } from '../../../features/leverage-tokens/components/FeaturedLeverageToken'
 import { EthereumLogo } from '../../../components/icons/logos'
+import { FeaturedLeverageTokens } from '../../../features/leverage-tokens/components/FeaturedLeverageToken'
 
 const meta: Meta<typeof FeaturedLeverageTokens> = {
   title: 'Features/Leverage Tokens/FeaturedLeverageTokens',

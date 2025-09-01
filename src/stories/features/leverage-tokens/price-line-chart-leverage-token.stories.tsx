@@ -179,9 +179,12 @@ const LeverageTokenWrapper = () => {
       yAxisLabel="Price (USD)"
       height={400}
       timeframes={['1H', '1D', '1W', '1M', '3M', '1Y']}
-      xAxisFormatter={(value: any) => new Date(value).toLocaleDateString()}
-      yAxisFormatter={(value: any) => `$${Number(value).toFixed(2)}`}
-      tooltipFormatter={(value: any, name: any) => [`$${Number(value).toFixed(2)}`, name || 'Price']}
+      xAxisFormatter={(value: string | number) => new Date(value).toLocaleDateString()}
+      yAxisFormatter={(value: string | number) => `$${Number(value).toFixed(2)}`}
+      tooltipFormatter={(value: string | number, name: string | undefined) => [
+        `$${Number(value).toFixed(2)}`,
+        name || 'Price',
+      ]}
     />
   )
 }

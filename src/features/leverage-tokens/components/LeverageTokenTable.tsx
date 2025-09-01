@@ -8,8 +8,6 @@ import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
 import { filterBySearch, parseSortString, sortData } from '@/lib/utils/table-utils'
 import { APYBreakdown } from '../../../components/APYBreakdown'
 import { SortArrowDown, SortArrowNeutral, SortArrowUp } from '../../../components/icons'
-import { LeverageBadge } from './LeverageBadge'
-import { SupplyCap } from './SupplyCap'
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { FilterDropdown } from '../../../components/ui/filter-dropdown'
 import {
@@ -24,6 +22,8 @@ import {
   usePagination,
 } from '../../../components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip'
+import { LeverageBadge } from './LeverageBadge'
+import { SupplyCap } from './SupplyCap'
 
 interface LeverageToken {
   id: string

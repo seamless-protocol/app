@@ -195,7 +195,7 @@ function NavbarWrapper({ currentPage }: { currentPage: string }) {
 }
 
 const meta = {
-  title: 'Components/General/VerticalNavbar',
+  title: 'Components/VerticalNavbar',
   component: VerticalNavbar,
   parameters: {
     layout: 'fullscreen',

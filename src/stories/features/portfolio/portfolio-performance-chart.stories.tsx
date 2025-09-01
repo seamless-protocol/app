@@ -3,11 +3,11 @@ import { useState } from 'react'
 import type {
   PortfolioDataPoint,
   PortfolioPerformanceChartProps,
-} from '../../components/ui/portfolio-performance-chart'
-import { PortfolioPerformanceChart } from '../../components/ui/portfolio-performance-chart'
+} from '../../../features/portfolio/components/portfolio-performance-chart'
+import { PortfolioPerformanceChart } from '../../../features/portfolio/components/portfolio-performance-chart'
 
 const meta: Meta<typeof PortfolioPerformanceChart> = {
-  title: 'Components/Portfolio/PerformanceChart',
+  title: 'Features/Portfolio/PerformanceChart',
   component: PortfolioPerformanceChart,
   parameters: {
     layout: 'centered',

@@ -4,8 +4,17 @@ import { ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../../components/ui/collapsible'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '../../../components/ui/collapsible'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../../../components/ui/tooltip'
 
 export interface MetricItem {
   label: string

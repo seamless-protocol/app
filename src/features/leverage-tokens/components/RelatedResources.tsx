@@ -2,7 +2,11 @@ import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent, CardHeader } from '../../../components/ui/card'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../../components/ui/collapsible'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '../../../components/ui/collapsible'
 
 interface ResourceItem {
   id: string
