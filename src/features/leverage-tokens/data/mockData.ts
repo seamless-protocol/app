@@ -36,13 +36,24 @@ export const mockLeverageTokenData = {
     address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
     name: 'weETH / WETH 17x Leverage Token',
     symbol: 'WEETH-WETH-17x',
+    description:
+      'weETH / WETH 17x leverage token that amplifies the performance difference between wrapped Ether.fi ETH and Wrapped Ether, providing enhanced returns from relative price movements',
     decimals: 18,
-    underlying: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address, // WETH
     leverageRatio: 17,
     totalSupply: BigInt('1000000000000000000000'), // 1000 tokens
     chainId: 1,
     chainName: 'Ethereum',
     chainLogo: EthereumLogo,
+    collateralAsset: {
+      symbol: 'weETH',
+      name: 'Wrapped Ether.fi ETH',
+      address: '0xCd5fE23C85820F7B08D4D8A6c35929B5d900B527' as Address,
+    },
+    debtAsset: {
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
+    },
   },
 
   // Price and market data

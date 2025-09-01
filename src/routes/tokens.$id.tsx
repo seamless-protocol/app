@@ -26,8 +26,7 @@ export const Route = createFileRoute('/tokens/$id')({
 
     // Use the comprehensive mock data
     const tokenData = leverageTokenPageData
-    const { token, userPosition, keyMetrics, detailedMetrics, relatedResources, faqData } =
-      tokenData
+    const { token, userPosition, detailedMetrics, relatedResources, faqData } = tokenData
 
     // Generate price history data
     const priceHistoryData = generatePriceHistory(selectedTimeframe)
@@ -51,17 +50,17 @@ export const Route = createFileRoute('/tokens/$id')({
     const keyMetricsCards = [
       {
         title: 'TVL',
-        stat: formatCurrency(keyMetrics.tvl, { millionDecimals: 2, thousandDecimals: 0 }),
+        stat: formatCurrency(tokenData.keyMetrics.tvl, { millionDecimals: 2, thousandDecimals: 0 }),
       },
       {
         title: 'Total Collateral',
-        stat: `${formatNumber(keyMetrics.totalCollateral.amount, { thousandDecimals: 2 })} weETH`,
-        caption: `~${formatCurrency(keyMetrics.totalCollateral.amountUSD, { millionDecimals: 2, thousandDecimals: 0 })}`,
+        stat: `${formatNumber(tokenData.keyMetrics.totalCollateral.amount, { thousandDecimals: 2 })} weETH`,
+        caption: `~${formatCurrency(tokenData.keyMetrics.totalCollateral.amountUSD, { millionDecimals: 2, thousandDecimals: 0 })}`,
       },
       {
         title: 'Target Leverage',
-        stat: `${keyMetrics.targetLeverage.target}x`,
-        caption: `Current: ${keyMetrics.targetLeverage.current}x`,
+        stat: `${tokenData.keyMetrics.targetLeverage.target}x`,
+        caption: `Current: ${tokenData.keyMetrics.targetLeverage.current}x`,
       },
     ]
 
@@ -100,28 +99,25 @@ export const Route = createFileRoute('/tokens/$id')({
                     style={{ zIndex: 2 }}
                   >
                     <AssetDisplay
-                      asset={{ symbol: 'SEAM', name: 'Seamless Protocol' }}
+                      asset={token.collateralAsset}
                       size="lg"
                       variant="logo-only"
                       tooltipContent={
                         <p className="font-medium">
-                          Seamless Protocol (SEAM)
+                          {token.collateralAsset.name} ({token.collateralAsset.symbol})
                           <br />
                           <span className="text-slate-400 text-sm">
                             Click to view on{' '}
                             {
-                              getTokenExplorerInfo(
-                                8453,
-                                '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85',
-                              ).name
+                              getTokenExplorerInfo(token.chainId, token.collateralAsset.address)
+                                .name
                             }
                           </span>
                         </p>
                       }
                       onClick={() =>
                         window.open(
-                          getTokenExplorerInfo(8453, '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85')
-                            .url,
+                          getTokenExplorerInfo(token.chainId, token.collateralAsset.address).url,
                           '_blank',
                         )
                       }
@@ -132,28 +128,22 @@ export const Route = createFileRoute('/tokens/$id')({
                     style={{ zIndex: 1 }}
                   >
                     <AssetDisplay
-                      asset={{ symbol: 'USDC', name: 'USD Coin' }}
+                      asset={token.debtAsset}
                       size="lg"
                       variant="logo-only"
                       tooltipContent={
                         <p className="font-medium">
-                          USD Coin (USDC)
+                          {token.debtAsset.name} ({token.debtAsset.symbol})
                           <br />
                           <span className="text-slate-400 text-sm">
                             Click to view on{' '}
-                            {
-                              getTokenExplorerInfo(
-                                8453,
-                                '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-                              ).name
-                            }
+                            {getTokenExplorerInfo(token.chainId, token.debtAsset.address).name}
                           </span>
                         </p>
                       }
                       onClick={() =>
                         window.open(
-                          getTokenExplorerInfo(8453, '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913')
-                            .url,
+                          getTokenExplorerInfo(token.chainId, token.debtAsset.address).url,
                           '_blank',
                         )
                       }
@@ -162,7 +152,7 @@ export const Route = createFileRoute('/tokens/$id')({
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-white">{token.name}</h1>
                 <Badge className="bg-green-500/10 text-green-400 border-green-400/20 cursor-help flex items-center gap-1">
-                  28.94% APY
+                  {tokenData.apy.total.toFixed(1)}% APY
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -182,9 +172,7 @@ export const Route = createFileRoute('/tokens/$id')({
                   </svg>
                 </Badge>
               </div>
-              <p className="text-slate-400 leading-relaxed">
-                Seamless Protocol token leverage with 20x amplification for governance exposure
-              </p>
+              <p className="text-slate-400 leading-relaxed">{token.description}</p>
             </motion.div>
 
             {/* Key Metrics */}
@@ -211,7 +199,7 @@ export const Route = createFileRoute('/tokens/$id')({
                 chartLines={[
                   {
                     key: 'weethPrice',
-                    name: 'weETH Price',
+                    name: `${token.collateralAsset.symbol} Price`,
                     dataKey: 'weethPrice',
                     color: '#10B981',
                   },
@@ -227,7 +215,7 @@ export const Route = createFileRoute('/tokens/$id')({
                   leverageTokenPrice: true,
                 }}
                 title="Price History"
-                subtitle="Compare leverage token performance vs underlying asset"
+                subtitle={`Compare leverage token performance vs ${token.collateralAsset.symbol}`}
                 height={320}
                 className="bg-slate-900/80 border border-slate-700"
               />
