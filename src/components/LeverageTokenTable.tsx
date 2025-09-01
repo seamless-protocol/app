@@ -19,7 +19,9 @@ import {
   TableEmpty,
   TableHead,
   TableHeader,
+  TablePagination,
   TableRow,
+  usePagination,
 } from './ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
@@ -67,6 +69,7 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
     supplyCap: 'both',
   })
   const [searchQuery, setSearchQuery] = useState('')
+  const [pageSize] = useState(10) // Default page size, could be made configurable
 
   const handleSort = (field: string) => {
     const currentField = sortBy.split('-')[0]
@@ -145,6 +148,12 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
     return sorted
   }, [tokens, sortBy, filters, searchQuery])
 
+  // Apply pagination to the filtered data
+  const { currentItems, currentPage, totalPages, goToPage } = usePagination(
+    sortedAndFilteredData,
+    pageSize,
+  )
+
   const getCollateralAssetOptions = () => {
     const assets = Array.from(new Set(tokens.map((token) => token.collateralAsset.symbol)))
     const options = assets.map((asset) => ({
@@ -153,7 +162,7 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
       count: tokens.filter((token) => token.collateralAsset.symbol === asset).length,
     }))
 
-    return [{ value: 'all', label: 'All Assets', count: tokens.length }, ...options]
+    return [{ value: 'all', label: 'All Assets', count: sortedAndFilteredData.length }, ...options]
   }
 
   const getDebtAssetOptions = () => {
@@ -164,7 +173,10 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
       count: tokens.filter((token) => token.debtAsset.symbol === asset).length,
     }))
 
-    return [{ value: 'all', label: 'All Debt Assets', count: tokens.length }, ...options]
+    return [
+      { value: 'all', label: 'All Debt Assets', count: sortedAndFilteredData.length },
+      ...options,
+    ]
   }
 
   const getSupplyCapOptions = () => {
@@ -174,7 +186,7 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
     const availableCount = tokens.length - nearCapacityCount
 
     return [
-      { value: 'both', label: 'Both', count: tokens.length },
+      { value: 'both', label: 'Both', count: sortedAndFilteredData.length },
       { value: 'available', label: 'Available', count: availableCount },
       { value: 'near-capacity', label: 'Near Capacity', count: nearCapacityCount },
     ]
@@ -296,10 +308,10 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedAndFilteredData.length === 0 ? (
+              {currentItems.length === 0 ? (
                 <TableEmpty colSpan={6} />
               ) : (
-                sortedAndFilteredData.map((token, index) => (
+                currentItems.map((token, index) => (
                   <motion.tr
                     key={token.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -418,6 +430,15 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination Footer - Always visible */}
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={sortedAndFilteredData.length}
+            pageSize={pageSize}
+            onPageChange={goToPage}
+          />
         </div>
       </motion.div>
     </div>
