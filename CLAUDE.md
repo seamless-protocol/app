@@ -233,7 +233,7 @@ When building new UI components, always follow this workflow to ensure design co
 grep -r "Current Holdings" _figma/
 
 # 2. Extract to reusable component
-# Create: src/features/leverage-tokens/components/LeverageTokenHoldingsCard.tsx
+# Create: src/features/leverage-tokens/Features/LeverageTokenHoldingsCard.tsx
 
 # 3. Create Storybook story
 # Create: src/stories/features/leverage-tokens/leveragetokenholdingscard.stories.tsx

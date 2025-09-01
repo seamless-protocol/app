@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { EthereumLogo, USDCLogo, weETHLogo } from '../../components/icons/logos'
-import { LeverageTokenTable } from '../../components/LeverageTokenTable'
+import { EthereumLogo, USDCLogo, weETHLogo } from '../../../components/icons/logos'
+import { LeverageTokenTable } from '../../../features/leverage-tokens/components/LeverageTokenTable'
 
 const meta: Meta<typeof LeverageTokenTable> = {
-  title: 'Components/LeverageToken/LeverageTokenTable',
+  title: 'Features/Leverage Tokens/LeverageTokenTable',
   component: LeverageTokenTable,
   parameters: {
     layout: 'padded',

@@ -6,7 +6,7 @@ Created a new `LeverageTokenHoldingsCard` component for the leverage token pages
 ## Components Created/Modified
 
 ### 1. LeverageTokenHoldingsCard Component
-- **File**: `src/features/leverage-tokens/components/LeverageTokenHoldingsCard.tsx`
+- **File**: `src/features/leverage-tokens/Features/LeverageTokenHoldingsCard.tsx`
 - **Purpose**: Display user's current holdings and provide mint/redeem actions
 - **Key Features**:
   - Shows connected/disconnected states
@@ -85,7 +85,7 @@ The Zap icon in the disconnect state needs visual refinement:
 - **Integration**: Successfully integrated into leverage token pages
 
 ## Files Modified
-1. `src/features/leverage-tokens/components/LeverageTokenHoldingsCard.tsx` (new)
+1. `src/features/leverage-tokens/Features/LeverageTokenHoldingsCard.tsx` (new)
 2. `src/components/ui/card.tsx` (enhanced with variants)
 3. `src/components/ui/button.tsx` (gradient fix + cursor pointer)
 4. `src/routes/tokens.$id.tsx` (integration + removed redundant mint section)

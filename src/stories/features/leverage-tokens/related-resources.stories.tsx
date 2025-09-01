@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
-import { RelatedResources } from '../../components/RelatedResources'
+import { RelatedResources } from '../../../features/leverage-tokens/components/RelatedResources'
 
 const meta: Meta<typeof RelatedResources> = {
-  title: 'Components/LeverageToken/RelatedResources',
+  title: 'Features/Leverage Tokens/RelatedResources',
   component: RelatedResources,
   parameters: {
     layout: 'padded',

@@ -6,12 +6,12 @@ import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { cn } from '@/lib/utils/cn'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
 import { filterBySearch, parseSortString, sortData } from '@/lib/utils/table-utils'
-import { APYBreakdown } from './APYBreakdown'
-import { SortArrowDown, SortArrowNeutral, SortArrowUp } from './icons'
+import { APYBreakdown } from '../../../components/APYBreakdown'
+import { SortArrowDown, SortArrowNeutral, SortArrowUp } from '../../../components/icons'
 import { LeverageBadge } from './LeverageBadge'
 import { SupplyCap } from './SupplyCap'
-import { AssetDisplay } from './ui/asset-display'
-import { FilterDropdown } from './ui/filter-dropdown'
+import { AssetDisplay } from '../../../components/ui/asset-display'
+import { FilterDropdown } from '../../../components/ui/filter-dropdown'
 import {
   Table,
   TableBody,
@@ -22,8 +22,8 @@ import {
   TablePagination,
   TableRow,
   usePagination,
-} from './ui/table'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+} from '../../../components/ui/table'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip'
 
 interface LeverageToken {
   id: string

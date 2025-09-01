@@ -2,9 +2,9 @@ import { motion } from 'framer-motion'
 import { Zap } from 'lucide-react'
 import { getPointsPerDay, getRewardAPY } from '@/lib/utils/apy-calculations'
 import type { LeverageToken } from './LeverageTokenTable'
-import { AssetDisplay } from './ui/asset-display'
-import { Badge } from './ui/badge'
-import { Card, CardContent } from './ui/card'
+import { AssetDisplay } from '../../../components/ui/asset-display'
+import { Badge } from '../../../components/ui/badge'
+import { Card, CardContent } from '../../../components/ui/card'
 
 export type { LeverageToken }
 

@@ -4,11 +4,11 @@ import type {
   ChartLine,
   PriceDataPoint,
   PriceLineChartProps,
-} from '../../components/ui/price-line-chart'
-import { PriceLineChart } from '../../components/ui/price-line-chart'
+} from '../../../components/ui/price-line-chart'
+import { PriceLineChart } from '../../../components/ui/price-line-chart'
 
 const meta: Meta<typeof PriceLineChart> = {
-  title: 'Components/LeverageToken/PriceHistory',
+  title: 'Features/Leverage Tokens/PriceHistory',
   component: PriceLineChart,
   parameters: {
     layout: 'centered',
@@ -177,7 +177,11 @@ const LeverageTokenWrapper = () => {
       title="Leverage Token Price History"
       subtitle="Token price vs underlying weETH asset"
       yAxisLabel="Price (USD)"
-      tooltipFormatter={(value, name) => [`$${Number(value).toFixed(2)}`, name || 'Price']}
+      height={400}
+      timeframes={['1H', '1D', '1W', '1M', '3M', '1Y']}
+      xAxisFormatter={(value: any) => new Date(value).toLocaleDateString()}
+      yAxisFormatter={(value: any) => `$${Number(value).toFixed(2)}`}
+      tooltipFormatter={(value: any, name: any) => [`$${Number(value).toFixed(2)}`, name || 'Price']}
     />
   )
 }
