@@ -3,9 +3,9 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { formatCurrency, getRiskLevelColor } from '@/lib/utils/formatting'
 import { type SortConfig, sortData, toggleSortDirection } from '@/lib/utils/table-utils'
-import { CHAIN_IDS, type ChainId, getChainLogo } from '../lib/utils/chain-logos'
-import { AssetDisplay } from './ui/asset-display'
-import { Badge } from './ui/badge'
+import { CHAIN_IDS, type ChainId, getChainLogo } from '../../../lib/utils/chain-logos'
+import { AssetDisplay } from '../../../components/ui/asset-display'
+import { Badge } from '../../../components/ui/badge'
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from './ui/table'
+} from '../../../components/ui/table'
 
 export interface VaultStrategy {
   id: string

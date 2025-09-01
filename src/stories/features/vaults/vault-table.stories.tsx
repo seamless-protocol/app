@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { type VaultStrategy, VaultTable } from '../../components/VaultTable'
-import { CHAIN_IDS } from '../../lib/utils/chain-logos'
+import { type VaultStrategy, VaultTable } from '../../../features/components/vaults/VaultTable'
+import { CHAIN_IDS } from '../../../lib/utils/chain-logos'
 
 const meta: Meta<typeof VaultTable> = {
-  title: 'Components/Vault/VaultTable',
+  title: 'Features/Vaults/VaultTable',
   component: VaultTable,
   parameters: {
     layout: 'padded',

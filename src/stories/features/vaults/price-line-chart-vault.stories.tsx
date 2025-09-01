@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { useState } from 'react'
-import type { PriceDataPoint, PriceLineChartProps } from '../../components/ui/price-line-chart'
-import { PriceLineChart } from '../../components/ui/price-line-chart'
+import type { PriceDataPoint, PriceLineChartProps } from '../../../components/ui/price-line-chart'
+import { PriceLineChart } from '../../../components/ui/price-line-chart'
 
 const meta: Meta<typeof PriceLineChart> = {
-  title: 'Components/Vault/PricePerformance',
+  title: 'Features/Vaults/PricePerformance',
   component: PriceLineChart,
   parameters: {
     layout: 'centered',
