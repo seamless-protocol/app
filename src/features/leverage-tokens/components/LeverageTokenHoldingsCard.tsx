@@ -27,11 +27,7 @@ export function LeverageTokenHoldingsCard({
   className = '',
 }: LeverageTokenHoldingsCardProps) {
   return (
-    <Card
-      variant="gradient"
-      className={className}
-      data-testid="leverage-token-holdings-card"
-    >
+    <Card variant="gradient" className={className} data-testid="leverage-token-holdings-card">
       <CardHeader className="pb-4">
         <CardTitle className="text-lg text-white">Current Holdings</CardTitle>
       </CardHeader>

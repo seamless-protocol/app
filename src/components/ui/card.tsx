@@ -3,33 +3,24 @@ import type * as React from 'react'
 
 import { cn } from '@/lib/utils/cn'
 
-const cardVariants = cva(
-  'flex flex-col gap-6 rounded-xl border',
-  {
-    variants: {
-      variant: {
-        default: 'bg-card text-card-foreground',
-        gradient: 'border-slate-700 bg-slate-800/50 backdrop-blur-sm',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
+const cardVariants = cva('flex flex-col gap-6 rounded-xl border', {
+  variants: {
+    variant: {
+      default: 'bg-card text-card-foreground',
+      gradient: 'border-slate-700 bg-slate-800/50 backdrop-blur-sm',
     },
   },
-)
+  defaultVariants: {
+    variant: 'default',
+  },
+})
 
-function Card({ 
-  className, 
-  variant, 
-  ...props 
+function Card({
+  className,
+  variant,
+  ...props
 }: React.ComponentProps<'div'> & VariantProps<typeof cardVariants>) {
-  return (
-    <div
-      data-slot="card"
-      className={cn(cardVariants({ variant, className }))}
-      {...props}
-    />
-  )
+  return <div data-slot="card" className={cn(cardVariants({ variant, className }))} {...props} />
 }
 
 function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {

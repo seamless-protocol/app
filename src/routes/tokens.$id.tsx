@@ -39,7 +39,6 @@ export const Route = createFileRoute('/tokens/$id')({
       console.log('Connect wallet clicked')
     }
 
-
     return (
       <div className="space-y-8">
         {/* Page Header */}
