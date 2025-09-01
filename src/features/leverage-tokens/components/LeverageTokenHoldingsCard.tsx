@@ -36,12 +36,16 @@ interface UserPosition {
 interface LeverageTokenHoldingsCardProps {
   userPosition: UserPosition
   onConnectWallet?: () => void
+  onMint?: () => void
+  onRedeem?: () => void
   className?: string
 }
 
 export function LeverageTokenHoldingsCard({
   userPosition,
   onConnectWallet,
+  onMint,
+  onRedeem,
   className = '',
 }: LeverageTokenHoldingsCardProps) {
   const [showKyberSwapWidget, setShowKyberSwapWidget] = useState(false)
@@ -51,8 +55,12 @@ export function LeverageTokenHoldingsCard({
 
   const handleMintClick = () => {
     if (isConnected) {
-      // TODO: Update KyberSwap widget params once they support leverage tokens
-      setShowKyberSwapWidget(true)
+      if (onMint) {
+        onMint()
+      } else {
+        // TODO: Update KyberSwap widget params once they support leverage tokens
+        setShowKyberSwapWidget(true)
+      }
     } else {
       onConnectWallet?.()
     }
@@ -60,8 +68,12 @@ export function LeverageTokenHoldingsCard({
 
   const handleRedeemClick = () => {
     if (isConnected) {
-      // TODO: Update KyberSwap widget params once they support leverage tokens
-      setShowKyberSwapWidget(true)
+      if (onRedeem) {
+        onRedeem()
+      } else {
+        // TODO: Update KyberSwap widget params once they support leverage tokens
+        setShowKyberSwapWidget(true)
+      }
     } else {
       onConnectWallet?.()
     }
