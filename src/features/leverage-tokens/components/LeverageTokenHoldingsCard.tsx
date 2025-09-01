@@ -1,4 +1,5 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { motion } from 'framer-motion'
 import { Minus, Plus, Zap } from 'lucide-react'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -113,7 +114,11 @@ export function LeverageTokenHoldingsCard({
   }
 
   return (
-    <>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <Card
         className={`bg-slate-900/80 border-slate-700 ${className}`}
         data-testid="leverage-token-holdings-card"
@@ -239,6 +244,6 @@ export function LeverageTokenHoldingsCard({
           </div>,
           document.body,
         )}
-    </>
+    </motion.div>
   )
 }

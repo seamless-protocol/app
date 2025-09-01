@@ -1,28 +1,34 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { motion } from 'framer-motion'
+import { useState } from 'react'
 import { useAccount } from 'wagmi'
+import { StatCardList } from '@/components/StatCardList'
+import { AssetDisplay } from '@/components/ui/asset-display'
+import { Badge } from '@/components/ui/badge'
+import { BreadcrumbNavigation } from '@/components/ui/breadcrumb'
+import { PriceLineChart } from '@/components/ui/price-line-chart'
+import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
+import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
+import {
+  generatePriceHistory,
+  leverageTokenPageData,
+} from '@/features/leverage-tokens/data/mockData'
+import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
+import { formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
 export const Route = createFileRoute('/tokens/$id')({
   component: () => {
-    const { id } = Route.useParams()
     const { isConnected } = useAccount()
+    const navigate = useNavigate()
+    const [selectedTimeframe, setSelectedTimeframe] = useState('1W')
 
-    // For now, hardcode the token info - in production this would come from an API
-    const weETHToken = {
-      address: id as `0x${string}`,
-      name: 'weETH / WETH 17x Leverage Token',
-      symbol: 'WEETH-WETH-17x',
-    }
+    // Use the comprehensive mock data
+    const tokenData = leverageTokenPageData
+    const { token, userPosition, keyMetrics, detailedMetrics, relatedResources } = tokenData
 
-    // Mock user position data - in production this would come from hooks/API
-    const mockUserPosition = {
-      hasPosition: true,
-      balance: '0.00',
-      balanceUSD: '$0.00',
-      allTimePercentage: '0.0000',
-      shareToken: 'WEETH-WETH-17x',
-      isConnected,
-    }
+    // Generate price history data
+    const priceHistoryData = generatePriceHistory(selectedTimeframe)
 
     const handleMint = () => {
       // TODO: Implement mint modal/functionality
@@ -39,47 +45,237 @@ export const Route = createFileRoute('/tokens/$id')({
       console.log('Connect wallet clicked')
     }
 
-    return (
-      <div className="space-y-8">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold mb-2">{weETHToken.name}</h1>
-          <p className="text-muted-foreground">Manage your leverage token position</p>
-        </div>
+    // Create StatCard data for key metrics
+    const keyMetricsCards = [
+      {
+        title: 'TVL',
+        stat: formatCurrency(keyMetrics.tvl, { millionDecimals: 2, thousandDecimals: 0 }),
+      },
+      {
+        title: 'Total Collateral',
+        stat: `${formatNumber(keyMetrics.totalCollateral.amount, { thousandDecimals: 2 })} weETH`,
+        caption: `~${formatCurrency(keyMetrics.totalCollateral.amountUSD, { millionDecimals: 2, thousandDecimals: 0 })}`,
+      },
+      {
+        title: 'Target Leverage',
+        stat: `${keyMetrics.targetLeverage.target}x`,
+        caption: `Current: ${keyMetrics.targetLeverage.current}x`,
+      },
+    ]
 
-        {/* Current Holdings */}
-        <LeverageTokenHoldingsCard
-          userPosition={mockUserPosition}
-          onMint={handleMint}
-          onRedeem={handleRedeem}
-          onConnectWallet={handleConnectWallet}
+    return (
+      <div className="max-w-7xl mx-auto">
+        {/* Breadcrumb Navigation */}
+        <BreadcrumbNavigation
+          items={[
+            {
+              label: 'Leverage Tokens',
+              onClick: () => navigate({ to: '/tokens' }),
+            },
+            {
+              label: token.name,
+              isActive: true,
+            },
+          ]}
+          onBack={() => navigate({ to: '/tokens' })}
         />
 
-        {/* Token Info */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Token Information</h2>
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium">Name</h3>
-              <p className="text-muted-foreground">{weETHToken.name}</p>
-            </div>
-            <div>
-              <h3 className="font-medium">Symbol</h3>
-              <p className="text-muted-foreground">{weETHToken.symbol}</p>
-            </div>
-            <div>
-              <h3 className="font-medium">Address</h3>
-              <p className="text-muted-foreground font-mono text-sm">{weETHToken.address}</p>
-            </div>
-            <div>
-              <h3 className="font-medium">Leverage Ratio</h3>
-              <p className="text-muted-foreground">17x</p>
-            </div>
-            <div>
-              <h3 className="font-medium">Underlying Asset</h3>
-              <p className="text-muted-foreground">WETH</p>
-            </div>
+        {/* Two-Column Grid Layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Left Column - Main Content */}
+          <div className="xl:col-span-2 space-y-6">
+            {/* Page Header */}
+            <motion.div
+              className="space-y-4 pb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="flex -space-x-1">
+                  <div
+                    className="w-8 h-8 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden"
+                    style={{ zIndex: 2 }}
+                  >
+                    <AssetDisplay
+                      asset={{ symbol: 'SEAM', name: 'Seamless Protocol' }}
+                      size="sm"
+                      variant="logo-only"
+                      tooltipContent={
+                        <p className="font-medium">
+                          Seamless Protocol (SEAM)
+                          <br />
+                          <span className="text-slate-400 text-sm">
+                            Click to view on{' '}
+                            {
+                              getTokenExplorerInfo(
+                                8453,
+                                '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85',
+                              ).name
+                            }
+                          </span>
+                        </p>
+                      }
+                      onClick={() =>
+                        window.open(
+                          getTokenExplorerInfo(8453, '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85')
+                            .url,
+                          '_blank',
+                        )
+                      }
+                    />
+                  </div>
+                  <div
+                    className="w-8 h-8 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden"
+                    style={{ zIndex: 1 }}
+                  >
+                    <AssetDisplay
+                      asset={{ symbol: 'USDC', name: 'USD Coin' }}
+                      size="sm"
+                      variant="logo-only"
+                      tooltipContent={
+                        <p className="font-medium">
+                          USD Coin (USDC)
+                          <br />
+                          <span className="text-slate-400 text-sm">
+                            Click to view on{' '}
+                            {
+                              getTokenExplorerInfo(
+                                8453,
+                                '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+                              ).name
+                            }
+                          </span>
+                        </p>
+                      }
+                      onClick={() =>
+                        window.open(
+                          getTokenExplorerInfo(8453, '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913')
+                            .url,
+                          '_blank',
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white">{token.name}</h1>
+                <Badge className="bg-green-500/10 text-green-400 border-green-400/20 cursor-help flex items-center gap-1">
+                  28.94% APY
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-3 h-3"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 16v-4"></path>
+                    <path d="M12 8h.01"></path>
+                  </svg>
+                </Badge>
+              </div>
+              <p className="text-slate-400 leading-relaxed">
+                Seamless Protocol token leverage with 20x amplification for governance exposure
+              </p>
+            </motion.div>
+
+            {/* Key Metrics */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <StatCardList cards={keyMetricsCards} maxColumns={3} />
+            </motion.div>
+
+            {/* Price History Chart */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
+              <PriceLineChart
+                data={priceHistoryData}
+                selectedTimeframe={selectedTimeframe}
+                onTimeframeChange={setSelectedTimeframe}
+                timeframes={['1H', '1D', '1W', '1M', '3M']}
+                chartType="comparison"
+                chartLines={[
+                  {
+                    key: 'weethPrice',
+                    name: 'weETH Price',
+                    dataKey: 'weethPrice',
+                    color: '#10B981',
+                  },
+                  {
+                    key: 'leverageTokenPrice',
+                    name: 'Leverage Token Price',
+                    dataKey: 'leverageTokenPrice',
+                    color: '#8B5CF6',
+                  },
+                ]}
+                visibleLines={{
+                  weethPrice: true,
+                  leverageTokenPrice: true,
+                }}
+                title="Price History"
+                subtitle="Compare leverage token performance vs underlying asset"
+                height={320}
+                className="bg-slate-900/80 border border-slate-700"
+              />
+            </motion.div>
+
+            {/* Detailed Metrics */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.4 }}
+            >
+              <LeverageTokenDetailedMetrics
+                metrics={detailedMetrics}
+                title="Token Details & Risk Parameters"
+                description="Comprehensive leverage token parameters and settings"
+                defaultOpen={false}
+              />
+            </motion.div>
+
+            {/* Related Resources */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.5 }}
+            >
+              <RelatedResources
+                underlyingPlatforms={relatedResources.underlyingPlatforms}
+                additionalRewards={relatedResources.additionalRewards}
+              />
+            </motion.div>
           </div>
+
+          {/* Right Column - Current Holdings */}
+          <motion.div
+            className="xl:col-span-1 space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.6 }}
+          >
+            {/* Current Holdings */}
+            <LeverageTokenHoldingsCard
+              userPosition={{
+                ...userPosition,
+                isConnected,
+              }}
+              onMint={handleMint}
+              onRedeem={handleRedeem}
+              onConnectWallet={handleConnectWallet}
+            />
+          </motion.div>
         </div>
       </div>
     )
