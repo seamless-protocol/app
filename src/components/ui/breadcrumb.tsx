@@ -57,8 +57,6 @@ const BreadcrumbPage = React.forwardRef<HTMLSpanElement, React.ComponentPropsWit
   ({ className, ...props }, ref) => (
     <span
       ref={ref}
-      role="link"
-      aria-disabled="true"
       aria-current="page"
       className={cn('font-normal text-foreground', className)}
       {...props}
@@ -100,7 +98,7 @@ export interface BreadcrumbItem {
 }
 
 export interface BreadcrumbNavigationProps {
-  items: BreadcrumbItem[]
+  items: Array<BreadcrumbItem>
   onBack?: () => void
   showBackButton?: boolean
   animated?: boolean
@@ -161,11 +159,10 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
                   {item.isActive ? (
                     <BreadcrumbPage className="text-white font-medium">{item.label}</BreadcrumbPage>
                   ) : (
-                    <BreadcrumbLink
+                    <button
+                      type="button"
                       onClick={item.onClick}
-                      className="text-slate-400 hover:text-purple-400 transition-colors font-medium"
-                      role="button"
-                      tabIndex={0}
+                      className="text-slate-400 hover:text-purple-400 transition-colors font-medium bg-transparent border-none p-0 cursor-pointer"
                       onKeyDown={(e) => {
                         if ((e.key === 'Enter' || e.key === ' ') && item.onClick) {
                           e.preventDefault()
@@ -174,7 +171,7 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
                       }}
                     >
                       {item.label}
-                    </BreadcrumbLink>
+                    </button>
                   )}
                 </BreadcrumbItem>
 

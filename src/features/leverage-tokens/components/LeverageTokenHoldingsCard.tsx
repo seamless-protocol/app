@@ -170,34 +170,38 @@ export function LeverageTokenHoldingsCard({
             <div className="flex space-x-3">
               {isConnected ? (
                 <>
-                  <Button
-                    onClick={handleMintClick}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white flex-1"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Mint
-                  </Button>
-                  <Button
-                    onClick={handleRedeemClick}
-                    variant="outline"
-                    disabled={!userPosition.hasPosition}
-                    className="border-slate-600 text-slate-300 hover:bg-slate-800 flex-1"
-                  >
-                    <Minus className="w-4 h-4 mr-2" />
-                    Redeem
-                  </Button>
+                  <div className="flex-1 min-w-0">
+                    <Button
+                      onClick={handleMintClick}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white w-full"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Mint
+                    </Button>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <Button
+                      onClick={handleRedeemClick}
+                      variant="outline"
+                      disabled={!userPosition.hasPosition}
+                      className="border-slate-600 text-slate-300 hover:bg-slate-800 w-full"
+                    >
+                      <Minus className="w-4 h-4 mr-2" />
+                      Redeem
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <>
                   {renderConnectButton(
-                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2">
+                    <div className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2">
                       <Plus className="w-4 h-4 mr-2" />
                       Mint
                     </div>,
                     onConnectWallet,
                   )}
                   {renderConnectButton(
-                    <div className="border border-slate-600 text-slate-300 hover:bg-slate-800 flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-transparent">
+                    <div className="w-full border border-slate-600 text-slate-300 hover:bg-slate-800 flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-transparent">
                       <Minus className="w-4 h-4 mr-2" />
                       Redeem
                     </div>,

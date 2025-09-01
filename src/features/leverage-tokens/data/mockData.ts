@@ -1,5 +1,6 @@
 import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
 import type { Address } from 'viem'
+import type { FAQItem } from '@/components/FAQ'
 import { EthereumLogo } from '@/components/icons/logos'
 import type { PriceDataPoint } from '@/components/ui/price-line-chart'
 import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
@@ -236,13 +237,13 @@ export const mockRelatedResources = {
     },
   ],
 } satisfies {
-  underlyingPlatforms: ResourceItem[]
-  additionalRewards: ResourceItem[]
+  underlyingPlatforms: Array<ResourceItem>
+  additionalRewards: Array<ResourceItem>
 }
 
 // Price history data generation
-export const generatePriceHistory = (selectedTimeframe: string): PriceDataPoint[] => {
-  const data: PriceDataPoint[] = []
+export const generatePriceHistory = (selectedTimeframe: string): Array<PriceDataPoint> => {
+  const data: Array<PriceDataPoint> = []
   const now = Date.now()
   const days =
     selectedTimeframe === '1H'
@@ -276,9 +277,26 @@ export const generatePriceHistory = (selectedTimeframe: string): PriceDataPoint[
   return data
 }
 
+// FAQ data for leverage tokens
+export const mockFAQData: Array<FAQItem> = [
+  {
+    id: 'how-leverage-token-works',
+    question: 'How does this Leverage Token work?',
+    answer:
+      'This 17x leverage token amplifies the performance difference between weETH and WETH, allowing traders to benefit from relative price movements with enhanced returns. The token automatically rebalances to maintain the target leverage ratio.',
+  },
+  {
+    id: 'risks',
+    question: 'What are the risks involved?',
+    answer:
+      'Leverage tokens carry amplified risks including higher volatility, potential for significant losses during adverse price movements, rebalancing costs, and smart contract risks. The 17x leverage means small price movements are magnified significantly.',
+  },
+]
+
 // Export all mock data
 export const leverageTokenPageData = {
   ...mockLeverageTokenData,
   detailedMetrics: mockDetailedMetrics,
   relatedResources: mockRelatedResources,
+  faqData: mockFAQData,
 }

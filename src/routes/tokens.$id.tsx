@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
+import { FAQ } from '@/components/FAQ'
 import { StatCardList } from '@/components/StatCardList'
 import { AssetDisplay } from '@/components/ui/asset-display'
 import { Badge } from '@/components/ui/badge'
@@ -25,7 +26,8 @@ export const Route = createFileRoute('/tokens/$id')({
 
     // Use the comprehensive mock data
     const tokenData = leverageTokenPageData
-    const { token, userPosition, keyMetrics, detailedMetrics, relatedResources } = tokenData
+    const { token, userPosition, keyMetrics, detailedMetrics, relatedResources, faqData } =
+      tokenData
 
     // Generate price history data
     const priceHistoryData = generatePriceHistory(selectedTimeframe)
@@ -94,12 +96,12 @@ export const Route = createFileRoute('/tokens/$id')({
               <div className="flex items-center space-x-3">
                 <div className="flex -space-x-1">
                   <div
-                    className="w-8 h-8 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden"
+                    className="w-8 h-8 flex items-center justify-center overflow-hidden"
                     style={{ zIndex: 2 }}
                   >
                     <AssetDisplay
                       asset={{ symbol: 'SEAM', name: 'Seamless Protocol' }}
-                      size="sm"
+                      size="lg"
                       variant="logo-only"
                       tooltipContent={
                         <p className="font-medium">
@@ -126,12 +128,12 @@ export const Route = createFileRoute('/tokens/$id')({
                     />
                   </div>
                   <div
-                    className="w-8 h-8 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden"
+                    className="w-8 h-8 flex items-center justify-center overflow-hidden"
                     style={{ zIndex: 1 }}
                   >
                     <AssetDisplay
                       asset={{ symbol: 'USDC', name: 'USD Coin' }}
-                      size="sm"
+                      size="lg"
                       variant="logo-only"
                       tooltipContent={
                         <p className="font-medium">
@@ -255,6 +257,15 @@ export const Route = createFileRoute('/tokens/$id')({
                 underlyingPlatforms={relatedResources.underlyingPlatforms}
                 additionalRewards={relatedResources.additionalRewards}
               />
+            </motion.div>
+
+            {/* FAQ Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.7 }}
+            >
+              <FAQ items={faqData} />
             </motion.div>
           </div>
 
