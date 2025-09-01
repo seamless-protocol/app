@@ -124,7 +124,7 @@ export function PriceLineChart({
 
   return (
     <Card className={`bg-slate-900/80 border-slate-700 ${className}`}>
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 space-y-3 sm:space-y-0">
         <div>
           <CardTitle className="text-lg text-white">{title}</CardTitle>
           <p className="text-sm text-slate-400 mt-1">{subtitle}</p>

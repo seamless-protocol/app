@@ -175,11 +175,29 @@ export const Route = createFileRoute('/tokens/$id')({
               <p className="text-slate-400 leading-relaxed">{token.description}</p>
             </motion.div>
 
+            {/* Current Holdings - Mobile Only */}
+            <motion.div
+              className="xl:hidden"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <LeverageTokenHoldingsCard
+                userPosition={{
+                  ...userPosition,
+                  isConnected,
+                }}
+                onMint={handleMint}
+                onRedeem={handleRedeem}
+                onConnectWallet={handleConnectWallet}
+              />
+            </motion.div>
+
             {/* Key Metrics */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
             >
               <StatCardList cards={keyMetricsCards} maxColumns={3} />
             </motion.div>
@@ -257,14 +275,13 @@ export const Route = createFileRoute('/tokens/$id')({
             </motion.div>
           </div>
 
-          {/* Right Column - Current Holdings */}
+          {/* Right Column - Current Holdings (Desktop Only) */}
           <motion.div
-            className="xl:col-span-1 space-y-6"
+            className="hidden xl:block xl:col-span-1 space-y-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.6 }}
           >
-            {/* Current Holdings */}
             <LeverageTokenHoldingsCard
               userPosition={{
                 ...userPosition,

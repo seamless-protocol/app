@@ -214,7 +214,7 @@ export function RelatedResources({
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
             <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 cursor-pointer hover:bg-slate-800/30 transition-colors rounded-t-lg px-6 py-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <div className="space-y-2">
                   <h4 className="leading-none text-white">Related Resources</h4>
                   <p className="text-slate-400 text-sm">

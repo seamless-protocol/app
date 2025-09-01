@@ -56,7 +56,7 @@ export function LeverageTokenDetailedMetrics({
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
             <CardHeader className="cursor-pointer hover:bg-slate-800/30 transition-colors rounded-t-lg px-6 py-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <div className="space-y-2">
                   <CardTitle className="text-white">{title}</CardTitle>
                   <p className="text-slate-400 text-sm">{description}</p>
