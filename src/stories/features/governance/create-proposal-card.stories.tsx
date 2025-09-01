@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { CreateProposalCard } from '../../components/CreateProposalCard'
+import { CreateProposalCard } from '../../../features/governance/components/CreateProposalCard'
 
 // Wrapper to simulate the governance page context
 function GovernanceWrapper() {
@@ -24,7 +24,7 @@ function CenteredWrapper() {
 }
 
 const meta = {
-  title: 'Components/Governance/CreateProposalCard',
+  title: 'Features/Governance/CreateProposalCard',
   component: CreateProposalCard,
   parameters: {
     layout: 'fullscreen',

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { APYBreakdown, type APYBreakdownData } from '../../components/APYBreakdown'
 
 const meta: Meta<typeof APYBreakdown> = {
-  title: 'Components/General/APYBreakdown',
+  title: 'Components/APYBreakdown',
   component: APYBreakdown,
   parameters: {
     layout: 'padded',

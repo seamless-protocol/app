@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { LeverageBadge } from '../../components/LeverageBadge'
+import { LeverageBadge } from '../../../features/leverage-tokens/components/LeverageBadge'
 
 const meta = {
-  title: 'Components/LeverageToken/LeverageBadge',
+  title: 'Features/Leverage Tokens/LeverageBadge',
   component: LeverageBadge,
   parameters: {
     layout: 'centered',

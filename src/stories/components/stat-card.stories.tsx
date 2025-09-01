@@ -3,7 +3,7 @@ import { Activity, DollarSign, TrendingUp } from 'lucide-react'
 import { StatCard } from '../../components/StatCard'
 
 const meta = {
-  title: 'Components/General/StatCard',
+  title: 'Components/StatCard',
   component: StatCard,
   parameters: {
     layout: 'centered',

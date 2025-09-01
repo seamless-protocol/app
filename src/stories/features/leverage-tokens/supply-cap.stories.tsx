@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { SupplyCap } from '../../components/SupplyCap'
+import { SupplyCap } from '../../../features/leverage-tokens/components/SupplyCap'
 
 const meta = {
-  title: 'Components/LeverageToken/SupplyCap',
+  title: 'Features/Leverage Tokens/SupplyCap',
   component: SupplyCap,
   parameters: {
     layout: 'centered',

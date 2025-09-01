@@ -1,4 +1,4 @@
-import type { LeverageToken } from '@/components/LeverageTokenTable'
+import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
 
 export interface APYBreakdownData {
   baseYield: number

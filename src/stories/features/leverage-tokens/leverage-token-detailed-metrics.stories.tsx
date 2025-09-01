@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
   LeverageTokenDetailedMetrics,
   type LeverageTokenMetrics,
-} from '../../components/LeverageTokenDetailedMetrics'
+} from '../../../features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 
 const meta = {
-  title: 'Components/LeverageToken/LeverageTokenDetailedMetrics',
+  title: 'Features/Leverage Tokens/LeverageTokenDetailedMetrics',
   component: LeverageTokenDetailedMetrics,
   parameters: {
     layout: 'padded',

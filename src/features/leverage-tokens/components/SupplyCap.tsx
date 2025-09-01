@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils/cn'
-import { WarningIcon } from './icons'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { WarningIcon } from '../../../components/icons'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip'
 
 interface SupplyCapProps {
   currentSupply: number
