@@ -117,7 +117,7 @@ export function AssetDisplay({
         <button
           type="button"
           className={cn(
-            'rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center cursor-pointer hover:border-slate-600 transition-colors',
+            'rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center cursor-pointer hover:border-slate-600 transition-colors min-h-5 asset-display-button',
             sizeConfig.container,
             className,
           )}

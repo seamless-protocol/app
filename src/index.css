@@ -420,6 +420,12 @@ body,
     min-width: 44px;
   }
 
+  /* Override for asset display buttons to maintain intended size */
+  .asset-display-button {
+    min-height: unset !important;
+    min-width: unset !important;
+  }
+
   /* Improve text readability on mobile */
   p,
   span,
