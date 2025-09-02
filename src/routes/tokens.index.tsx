@@ -98,10 +98,10 @@ export const Route = createFileRoute('/tokens/')({
     }
 
     return (
-      <div className="min-h-screen w-full overflow-x-hidden">
+      <div className="min-h-screen w-full overflow-hidden">
         <div className="w-100 sm:w-full max-w-7xl mx-auto space-y-6 sm:space-y-8 sm:px-4 lg:px-8">
           {/* Featured Leverage Tokens Section */}
-          <div className="overflow-x-hidden w-full">
+          <div className="overflow-hidden w-full p-1">
             <FeaturedLeverageTokens
               tokens={leverageTokens.slice(0, 3)} // Show top 3 tokens
               onTokenClick={handleTokenClick}
@@ -113,7 +113,7 @@ export const Route = createFileRoute('/tokens/')({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="overflow-x-hidden w-full"
+            className="overflow-hidden w-full"
           >
             <LeverageTokenTable tokens={leverageTokens} onTokenClick={handleTokenClick} />
           </motion.div>

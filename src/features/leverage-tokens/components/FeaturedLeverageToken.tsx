@@ -31,7 +31,7 @@ export function FeaturedLeverageToken({
       className={className}
     >
       <Card
-        className="bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-slate-700 hover:border-purple-500/50 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10 w-full min-w-0"
+        className="bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-slate-700 hover:border-purple-500/50 transition-all duration-300 cursor-pointer transform hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10 w-full min-w-0"
         onClick={handleClick}
       >
         <CardContent className="p-3 sm:p-4">
