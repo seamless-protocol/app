@@ -18,24 +18,11 @@ export function getTokenLogo(asset: string) {
   }
 }
 
-export function getTokenLogoComponent(asset: string, size: number = 20) {
+export function getTokenLogoComponent(asset: string) {
   const LogoComponent = getTokenLogo(asset)
 
   if (LogoComponent) {
-    const sizeClass =
-      size === 16
-        ? 'w-4 h-4'
-        : size === 20
-          ? 'w-5 h-5'
-          : size === 24
-            ? 'w-6 h-6'
-            : size === 32
-              ? 'w-8 h-8'
-              : 'w-5 h-5'
-
-    return React.createElement(LogoComponent, {
-      className: sizeClass,
-    })
+    return React.createElement(LogoComponent)
   }
 
   return React.createElement(

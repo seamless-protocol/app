@@ -95,7 +95,7 @@ export const Route = createFileRoute('/tokens/$id')({
               <div className="flex items-center space-x-3">
                 <div className="flex -space-x-1">
                   <div
-                    className="w-8 h-8 flex items-center justify-center overflow-hidden"
+                    className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
                     style={{ zIndex: 2 }}
                   >
                     <AssetDisplay
@@ -124,7 +124,7 @@ export const Route = createFileRoute('/tokens/$id')({
                     />
                   </div>
                   <div
-                    className="w-8 h-8 flex items-center justify-center overflow-hidden"
+                    className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
                     style={{ zIndex: 1 }}
                   >
                     <AssetDisplay

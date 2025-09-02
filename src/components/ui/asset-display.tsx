@@ -58,12 +58,12 @@ const sizeClasses = {
   },
 }
 
-function renderAssetLogo(asset: Asset, size: number) {
+function renderAssetLogo(asset: Asset) {
   // Try to get the token logo component first
   const LogoComponent = getTokenLogo(asset.symbol)
 
   if (LogoComponent) {
-    return getTokenLogoComponent(asset.symbol, size)
+    return getTokenLogoComponent(asset.symbol)
   }
 
   // Fallback to URL logo if provided
@@ -124,7 +124,7 @@ export function AssetDisplay({
           onClick={onClick}
           aria-label={`View ${asset.name || asset.symbol} details`}
         >
-          {renderAssetLogo(asset, sizeConfig.logo)}
+          {renderAssetLogo(asset)}
         </button>
       )
 
@@ -151,7 +151,7 @@ export function AssetDisplay({
             sizeConfig.container,
           )}
         >
-          {renderAssetLogo(asset, sizeConfig.logo)}
+          {renderAssetLogo(asset)}
         </div>
         <span className={cn('text-slate-300 font-medium', sizeConfig.text)}>{asset.symbol}</span>
         {showLink && <ExternalLink className={cn('text-slate-400', sizeConfig.icon)} />}
@@ -198,7 +198,7 @@ export function AssetDisplay({
                   )}
                   style={{ zIndex: assets.length - index }}
                 >
-                  {renderAssetLogo(asset, sizeConfig.logo)}
+                  {renderAssetLogo(asset)}
                 </div>
               ))}
             </div>
