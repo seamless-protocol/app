@@ -31,21 +31,21 @@ export function FeaturedLeverageToken({
       className={className}
     >
       <Card
-        className="bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-slate-700 hover:border-purple-500/50 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10"
+        className="bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-slate-700 hover:border-purple-500/50 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10 w-full min-w-0"
         onClick={handleClick}
       >
-        <CardContent className="p-4">
+        <CardContent className="p-3 sm:p-4">
           {/* Header with Asset Display and Rank Badge */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 min-w-0">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
-              <div className="flex -space-x-1">
+              <div className="flex -space-x-1 flex-shrink-0">
                 <AssetDisplay asset={token.collateralAsset} size="sm" variant="logo-only" />
                 <AssetDisplay asset={token.debtAsset} size="sm" variant="logo-only" />
               </div>
-              <h3 className="font-medium text-white text-sm truncate">{token.name}</h3>
+              <h3 className="font-medium text-white text-sm truncate min-w-0">{token.name}</h3>
             </div>
             {token.rank && (
-              <Badge className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+              <Badge className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 border-yellow-500/30 text-xs flex-shrink-0">
                 #{token.rank}
               </Badge>
             )}
@@ -115,7 +115,7 @@ export function FeaturedLeverageTokens({
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 w-full">
         {tokens.map((token, index) => (
           <FeaturedLeverageToken
             key={token.id}

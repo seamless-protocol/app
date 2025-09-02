@@ -246,9 +246,9 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900/80 border border-slate-700 rounded-lg overflow-hidden"
+        className="bg-slate-900/80 border border-slate-700 rounded-lg overflow-hidden w-full"
       >
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto w-full max-w-full">
           <Table>
             <TableHeader>
               <TableRow className="border-slate-700 hover:bg-slate-800/50">
