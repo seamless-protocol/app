@@ -155,7 +155,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="flex-1 flex flex-col bg-slate-950">
         {/* Top Bar with Actions */}
         <div className="border-b border-slate-700 bg-slate-900 backdrop-blur-sm shrink-0">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-[19.2px]">
             <div className="flex items-center justify-between">
               {/* Page Header with Mobile Menu */}
               <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
