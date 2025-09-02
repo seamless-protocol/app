@@ -67,7 +67,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
         <p className="text-slate-400">Browse and invest in curated DeFi strategies</p>
       </div>
 
-      <div className="bg-slate-900/80 border border-slate-700 rounded-lg overflow-hidden">
+      <div className="bg-slate-900/80 border border-slate-700 rounded overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
