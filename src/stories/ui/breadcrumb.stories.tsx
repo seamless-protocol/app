@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { Breadcrumb } from '../../components/ui/breadcrumb'
+import { BreadcrumbNavigation } from '../../components/ui/breadcrumb'
 
-const meta: Meta<typeof Breadcrumb> = {
+const meta: Meta<typeof BreadcrumbNavigation> = {
   title: 'UI/Breadcrumb',
-  component: Breadcrumb,
+  component: BreadcrumbNavigation,
   parameters: {
     layout: 'padded',
     backgrounds: {
@@ -23,6 +23,8 @@ const meta: Meta<typeof Breadcrumb> = {
   tags: ['autodocs'],
   argTypes: {
     onBack: { action: 'back clicked' },
+    showBackButton: { control: 'boolean' },
+    animated: { control: 'boolean' },
     className: { control: 'text' },
   },
 }
@@ -124,7 +126,6 @@ export const DefaultVariant: Story = {
       { label: 'Leverage Tokens', onClick: () => console.log('Leverage Tokens clicked') },
       { label: 'WEETH-WETH-17x', isActive: true },
     ],
-    variant: 'default',
     onBack: () => console.log('Back clicked'),
   },
   parameters: {

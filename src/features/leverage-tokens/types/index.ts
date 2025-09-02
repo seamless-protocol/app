@@ -8,11 +8,23 @@ export interface LeverageToken {
   address: Address
   name: string
   symbol: string
+  description: string
   decimals: number
-  underlying: Address
   leverageRatio: number
   totalSupply: bigint
   chainId: number
+  chainName: string
+  chainLogo: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  collateralAsset: {
+    symbol: string
+    name: string
+    address: Address
+  }
+  debtAsset: {
+    symbol: string
+    name: string
+    address: Address
+  }
 }
 
 export interface TokenMetadata {

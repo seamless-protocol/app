@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '../../../components/ui/badge'
@@ -202,42 +203,48 @@ export function RelatedResources({
   ].filter((category) => category.items.length > 0)
 
   return (
-    <Card
-      className={`text-card-foreground flex flex-col gap-6 rounded-xl border bg-slate-900/80 border-slate-700 ${className}`}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
     >
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 cursor-pointer hover:bg-slate-800/30 transition-colors rounded-t-lg px-6 py-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <h4 className="leading-none text-white">Related Resources</h4>
-                <p className="text-slate-400 text-sm">
-                  Explore external platforms and tools related to this strategy
-                </p>
+      <Card
+        className={`text-card-foreground flex flex-col gap-6 rounded-xl border bg-slate-900/80 border-slate-700 ${className}`}
+      >
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 cursor-pointer hover:bg-slate-800/30 transition-colors rounded-t-lg px-6 py-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                <div className="space-y-2">
+                  <h4 className="leading-none text-white">Related Resources</h4>
+                  <p className="text-slate-400 text-sm">
+                    Explore external platforms and tools related to this strategy
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge
+                    variant="outline"
+                    className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden [a&]:hover:bg-accent [a&]:hover:text-accent-foreground bg-slate-800/50 text-slate-400 border-slate-600 text-xs"
+                  >
+                    {isOpen ? 'Hide Resources' : 'Show Resources'}
+                  </Badge>
+                  {isOpen ? (
+                    <ChevronUp className="w-5 h-5 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                  )}
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Badge
-                  variant="outline"
-                  className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden [a&]:hover:bg-accent [a&]:hover:text-accent-foreground bg-slate-800/50 text-slate-400 border-slate-600 text-xs"
-                >
-                  {isOpen ? 'Hide Resources' : 'Show Resources'}
-                </Badge>
-                {isOpen ? (
-                  <ChevronUp className="w-5 h-5 text-slate-400" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-slate-400" />
-                )}
-              </div>
-            </div>
-          </CardHeader>
-        </CollapsibleTrigger>
+            </CardHeader>
+          </CollapsibleTrigger>
 
-        <CollapsibleContent>
-          <CardContent className="px-6 [&:last-child]:pb-6 space-y-6 pt-0">
-            {categories.map(renderCategory)}
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
+          <CollapsibleContent>
+            <CardContent className="px-6 [&:last-child]:pb-6 space-y-6 pt-0">
+              {categories.map(renderCategory)}
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+    </motion.div>
   )
 }

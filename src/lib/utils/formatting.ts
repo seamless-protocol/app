@@ -12,18 +12,25 @@ export function formatCurrency(
   options: {
     includeDollarSign?: boolean
     decimals?: number
+    millionDecimals?: number
+    thousandDecimals?: number
   } = {},
 ): string {
-  const { includeDollarSign = false, decimals = 1 } = options
+  const {
+    includeDollarSign = true,
+    decimals = 0,
+    millionDecimals = 2,
+    thousandDecimals = 0,
+  } = options
   const prefix = includeDollarSign ? '$' : ''
 
   if (value >= 1000000) {
-    return `${prefix}${(value / 1000000).toFixed(decimals)}M`
+    return `${prefix}${(value / 1000000).toFixed(millionDecimals)}M`
   }
   if (value >= 1000) {
-    return `${prefix}${(value / 1000).toFixed(decimals)}K`
+    return `${prefix}${(value / 1000).toFixed(thousandDecimals)}K`
   }
-  return `${prefix}${value.toLocaleString()}`
+  return `${prefix}${value.toFixed(decimals)}`
 }
 
 /**
@@ -39,10 +46,19 @@ export function formatPercentage(
     isDecimal?: boolean
   } = {},
 ): string {
-  const { decimals = 2, showSign = false, isDecimal = false } = options
+  const { decimals = 1, showSign = true, isDecimal = true } = options
   const percentage = isDecimal ? value * 100 : value
   const sign = showSign && percentage >= 0 ? '+' : ''
   return `${sign}${percentage.toFixed(decimals)}%`
+}
+
+/**
+ * Format a price from bigint (wei) to USD string
+ * @param price - The price in wei (bigint)
+ * @param decimals - Number of decimal places
+ */
+export function formatPrice(price: bigint, decimals: number = 2): string {
+  return `$${(Number(price) / 1e18).toFixed(decimals)}`
 }
 
 /**
@@ -82,17 +98,27 @@ export function getRiskLevelColor(riskLevel: string): string {
 /**
  * Format a large number with appropriate suffixes
  * @param value - The number to format
- * @param decimals - Number of decimal places
+ * @param options - Formatting options
  */
-export function formatNumber(value: number, decimals: number = 1): string {
+export function formatNumber(
+  value: number,
+  options: {
+    decimals?: number
+    thousandDecimals?: number
+    millionDecimals?: number
+    billionDecimals?: number
+  } = {},
+): string {
+  const { decimals = 0, thousandDecimals = 2, millionDecimals = 1, billionDecimals = 1 } = options
+
   if (value >= 1000000000) {
-    return `${(value / 1000000000).toFixed(decimals)}B`
+    return `${(value / 1000000000).toFixed(billionDecimals)}B`
   }
   if (value >= 1000000) {
-    return `${(value / 1000000).toFixed(decimals)}M`
+    return `${(value / 1000000).toFixed(millionDecimals)}M`
   }
   if (value >= 1000) {
-    return `${(value / 1000).toFixed(decimals)}K`
+    return `${(value / 1000).toFixed(thousandDecimals)}K`
   }
-  return value.toLocaleString()
+  return value.toFixed(decimals)
 }
