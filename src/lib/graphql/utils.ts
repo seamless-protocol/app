@@ -1,17 +1,17 @@
 import { getEnvVar } from '@/lib/env'
 
-export interface GraphQLResponse<T = any> {
+export interface GraphQLResponse<T = unknown> {
   data?: T
   errors?: Array<{
     message: string
     locations?: Array<{ line: number; column: number }>
-    path?: string[]
+    path?: Array<string>
   }>
 }
 
 export interface GraphQLRequest {
   query: string
-  variables?: Record<string, any>
+  variables?: Record<string, unknown>
 }
 
 // Network-specific subgraph endpoints
@@ -61,7 +61,9 @@ export async function graphqlRequest<T>(chainId: number, request: GraphQLRequest
   const result = await response.json()
 
   if (result.errors && result.errors.length > 0) {
-    throw new Error(`GraphQL errors: ${result.errors.map((e: any) => e.message).join(', ')}`)
+    throw new Error(
+      `GraphQL errors: ${result.errors.map((e: { message: string }) => e.message).join(', ')}`,
+    )
   }
 
   return result.data

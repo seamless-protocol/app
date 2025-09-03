@@ -6,10 +6,10 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
+import type { PriceDataPoint } from '@/components/ui/price-line-chart'
+import { fetchLeverageTokenPriceComparison } from '@/lib/graphql/fetchers/leverage-tokens'
 import { STALE_TIME } from '../utils/constants'
 import { ltKeys } from '../utils/queryKeys'
-import { fetchLeverageTokenPriceComparison } from '@/lib/graphql/fetchers/leverage-tokens'
-import type { PriceDataPoint } from '@/components/ui/price-line-chart'
 
 export interface UseLeverageTokenPriceComparisonOptions {
   tokenAddress: Address
@@ -26,7 +26,7 @@ export function useLeverageTokenPriceComparison({
 }: UseLeverageTokenPriceComparisonOptions) {
   return useQuery({
     queryKey: [...ltKeys.token(tokenAddress), 'price-comparison', chainId, timeframe],
-    queryFn: async (): Promise<PriceDataPoint[]> => {
+    queryFn: async (): Promise<Array<PriceDataPoint>> => {
       const result = await fetchLeverageTokenPriceComparison(tokenAddress, chainId)
 
       if (!result.leverageToken) {
@@ -42,9 +42,13 @@ export function useLeverageTokenPriceComparison({
       // Convert timestamps from microseconds to milliseconds and sort by timestamp
       const leverageTokenData = stateHistory
         .map((item) => {
-          const timestamp = parseInt(item.timestamp) / 1000 // Convert microseconds to milliseconds
+          const timestamp = parseInt(item.timestamp, 10) / 1000 // Convert microseconds to milliseconds
           // Validate timestamp is reasonable (not too old or future)
-          if (isNaN(timestamp) || timestamp <= 0 || timestamp > Date.now() + 24 * 60 * 60 * 1000) {
+          if (
+            Number.isNaN(timestamp) ||
+            timestamp <= 0 ||
+            timestamp > Date.now() + 24 * 60 * 60 * 1000
+          ) {
             return null
           }
           return {
@@ -58,15 +62,19 @@ export function useLeverageTokenPriceComparison({
 
       const collateralPriceData = lendingAdapter.oracle.priceUpdates
         .map((item) => {
-          const timestamp = parseInt(item.timestamp) / 1000 // Convert microseconds to milliseconds
+          const timestamp = parseInt(item.timestamp, 10) / 1000 // Convert microseconds to milliseconds
           // Validate timestamp is reasonable (not too old or future)
-          if (isNaN(timestamp) || timestamp <= 0 || timestamp > Date.now() + 24 * 60 * 60 * 1000) {
+          if (
+            Number.isNaN(timestamp) ||
+            timestamp <= 0 ||
+            timestamp > Date.now() + 24 * 60 * 60 * 1000
+          ) {
             return null
           }
           return {
             ...item,
             timestamp,
-            price: parseFloat(item.price) / Math.pow(10, lendingAdapter.oracle.decimals), // Convert from raw decimals
+            price: parseFloat(item.price) / 10 ** lendingAdapter.oracle.decimals, // Convert from raw decimals
           }
         })
         .filter((item): item is NonNullable<typeof item> => item !== null) // Remove invalid entries
@@ -78,10 +86,10 @@ export function useLeverageTokenPriceComparison({
       const cutoffTime = now - timeframeMs
 
       const filteredLeverageTokenData = leverageTokenData.filter(
-        (item) => item.timestamp > cutoffTime,
+        (item) => item.timestamp >= cutoffTime,
       )
       const filteredCollateralPriceData = collateralPriceData.filter(
-        (item) => item.timestamp > cutoffTime,
+        (item) => item.timestamp >= cutoffTime,
       )
 
       // Create a map of timestamps to prices for efficient lookup
@@ -91,17 +99,19 @@ export function useLeverageTokenPriceComparison({
       })
 
       // Combine the data, matching timestamps as closely as possible
-      const combinedData: PriceDataPoint[] = []
+      const combinedData: Array<PriceDataPoint> = []
 
-      filteredLeverageTokenData.forEach((leverageItem, index) => {
+      filteredLeverageTokenData.forEach((leverageItem) => {
         // Find the closest collateral price within a reasonable time window (24 hours)
         const timeWindow = 24 * 60 * 60 * 1000 // 24 hours
         let closestCollateralPrice: number | undefined
+        let closestTimeDiff = Infinity
 
         for (const [timestamp, price] of collateralPriceMap.entries()) {
-          if (Math.abs(timestamp - leverageItem.timestamp) <= timeWindow) {
+          const timeDiff = Math.abs(timestamp - leverageItem.timestamp)
+          if (timeDiff <= timeWindow && timeDiff < closestTimeDiff) {
             closestCollateralPrice = price
-            break
+            closestTimeDiff = timeDiff
           }
         }
 
@@ -109,7 +119,7 @@ export function useLeverageTokenPriceComparison({
           combinedData.push({
             date: new Date(leverageItem.timestamp).toISOString(),
             weethPrice: closestCollateralPrice,
-            leverageTokenPrice: leverageItem.equityPerTokenInDebt / Math.pow(10, 18), // Convert from wei to decimal
+            leverageTokenPrice: leverageItem.equityPerTokenInDebt / 10 ** 18, // Convert from wei to decimal
           })
         }
       })

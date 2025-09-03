@@ -49,18 +49,18 @@ describe('useLeverageTokenPriceComparison', () => {
 
   describe('successful data fetching', () => {
     it('should fetch and transform data correctly', async () => {
-      const now = Math.floor(Date.now() / 1000)
-      const oneDayAgo = now - 24 * 60 * 60
+      const now = Math.floor(Date.now() * 1000) // Current time in microseconds
+      const oneDayAgo = now - 24 * 60 * 60 * 1000 * 1000 // 1 day ago in microseconds
 
       const mockData = {
         leverageToken: {
           stateHistory: [
             {
-              equityPerTokenInDebt: '1.25',
+              equityPerTokenInDebt: '1250000000000000000', // 1.25 in wei (18 decimals)
               timestamp: now.toString(),
             },
             {
-              equityPerTokenInDebt: '1.30',
+              equityPerTokenInDebt: '1300000000000000000', // 1.30 in wei (18 decimals)
               timestamp: oneDayAgo.toString(),
             },
           ],
@@ -114,23 +114,23 @@ describe('useLeverageTokenPriceComparison', () => {
     })
 
     it('should filter data based on timeframe', async () => {
-      const now = Math.floor(Date.now() / 1000) // Current time in seconds
-      const oneDayAgo = now - 12 * 60 * 60 // 12 hours ago in seconds (clearly within 1 day)
-      const oneWeekAgo = now - 7 * 24 * 60 * 60 // 1 week ago in seconds
+      const now = Math.floor(Date.now() * 1000) // Current time in microseconds
+      const oneDayAgo = now - 12 * 60 * 60 * 1000 * 1000 // 12 hours ago in microseconds
+      const oneWeekAgo = now - 6 * 24 * 60 * 60 * 1000 * 1000 // 6 days ago in microseconds (clearly within 1 week)
 
       const mockData = {
         leverageToken: {
           stateHistory: [
             {
-              equityPerTokenInDebt: '1.25',
+              equityPerTokenInDebt: '1250000000000000000', // 1.25 in wei (18 decimals)
               timestamp: now.toString(),
             },
             {
-              equityPerTokenInDebt: '1.20',
+              equityPerTokenInDebt: '1200000000000000000', // 1.20 in wei (18 decimals)
               timestamp: oneDayAgo.toString(),
             },
             {
-              equityPerTokenInDebt: '1.10',
+              equityPerTokenInDebt: '1100000000000000000', // 1.10 in wei (18 decimals)
               timestamp: oneWeekAgo.toString(),
             },
           ],
@@ -162,7 +162,7 @@ describe('useLeverageTokenPriceComparison', () => {
         useLeverageTokenPriceComparison({
           tokenAddress,
           chainId,
-          timeframe: '1D', // Only 1 day
+          timeframe: '1W', // Only 1 week
         }),
       )
 
@@ -173,10 +173,11 @@ describe('useLeverageTokenPriceComparison', () => {
       // Debug: check if the mock was called
       expect(mockFetchLeverageTokenPriceComparison).toHaveBeenCalledWith(tokenAddress, chainId)
 
-      // Should only include data from the last day (2 entries: now, 1 day ago)
-      expect(result.current.data).toHaveLength(2)
-      expect(result.current.data?.[0]?.leverageTokenPrice).toBe(1.2) // oldest (1 day ago)
-      expect(result.current.data?.[1]?.leverageTokenPrice).toBe(1.25) // newest (now)
+      // Should include all data from the last week (3 entries: now, 1 day ago, 1 week ago)
+      expect(result.current.data).toHaveLength(3)
+      expect(result.current.data?.[0]?.leverageTokenPrice).toBe(1.1) // oldest (1 week ago)
+      expect(result.current.data?.[1]?.leverageTokenPrice).toBe(1.2) // middle (1 day ago)
+      expect(result.current.data?.[2]?.leverageTokenPrice).toBe(1.25) // newest (now)
     })
   })
 

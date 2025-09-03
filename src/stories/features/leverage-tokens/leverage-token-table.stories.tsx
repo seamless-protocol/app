@@ -115,9 +115,8 @@ const mockTokens = [
     borrowRate: 10.1,
   },
   {
-    id: 'btc-4x',
+    id: '0x4444444444444444444444444444444444444444' as `0x${string}`,
     name: 'BTC 4x Leverage Token',
-    leverageTokenAddress: '0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6' as `0x${string}`,
     collateralAsset: {
       symbol: 'WBTC',
       name: 'Wrapped Bitcoin',
@@ -140,9 +139,8 @@ const mockTokens = [
     borrowRate: 3.6,
   },
   {
-    id: 'matic-2.5x',
+    id: '0x5555555555555555555555555555555555555555' as `0x${string}`,
     name: 'MATIC 2.5x Leverage Token',
-    leverageTokenAddress: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270' as `0x${string}`,
     collateralAsset: {
       symbol: 'MATIC',
       name: 'Polygon',
@@ -165,9 +163,8 @@ const mockTokens = [
     borrowRate: 5.6,
   },
   {
-    id: 'link-3.5x',
+    id: '0x6666666666666666666666666666666666666666' as `0x${string}`,
     name: 'LINK 3.5x Leverage Token',
-    leverageTokenAddress: '0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39' as `0x${string}`,
     collateralAsset: {
       symbol: 'LINK',
       name: 'Chainlink',
@@ -190,9 +187,8 @@ const mockTokens = [
     borrowRate: 5.4,
   },
   {
-    id: 'aave-2x',
+    id: '0x7777777777777777777777777777777777777777' as `0x${string}`,
     name: 'AAVE 2x Leverage Token',
-    leverageTokenAddress: '0xd6df932a45c0f255f85145f286ea0b292b21c90b' as `0x${string}`,
     collateralAsset: {
       symbol: 'AAVE',
       name: 'Aave',
@@ -215,9 +211,8 @@ const mockTokens = [
     borrowRate: 4.4,
   },
   {
-    id: 'uni-3x',
+    id: '0x2222222222222222222222222222222222222222' as `0x${string}`,
     name: 'UNI 3x Leverage Token',
-    leverageTokenAddress: '0xb33eaad8d922b1083446dc23f610c2567fb5180f' as `0x${string}`,
     collateralAsset: {
       symbol: 'UNI',
       name: 'Uniswap',
@@ -240,9 +235,8 @@ const mockTokens = [
     borrowRate: 4.7,
   },
   {
-    id: 'sushi-2.5x',
+    id: '0x1111111111111111111111111111111111111111' as `0x${string}`,
     name: 'SUSHI 2.5x Leverage Token',
-    leverageTokenAddress: '0x0b3f868e0be5597d5db7feb9839de74c76867b58' as `0x${string}`,
     collateralAsset: {
       symbol: 'SUSHI',
       name: 'SushiSwap',
@@ -265,9 +259,8 @@ const mockTokens = [
     borrowRate: 4.9,
   },
   {
-    id: 'comp-2x',
+    id: '0x3333333333333333333333333333333333333333' as `0x${string}`,
     name: 'COMP 2x Leverage Token',
-    leverageTokenAddress: '0x8505b9d2254a7ae876c3cbb50a7cd71b7a8ddf81' as `0x${string}`,
     collateralAsset: {
       symbol: 'COMP',
       name: 'Compound',

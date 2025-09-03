@@ -11,8 +11,8 @@ import { PriceLineChart } from '@/components/ui/price-line-chart'
 import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
-import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
 import { leverageTokenPageData } from '@/features/leverage-tokens/data/mockData'
+import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     const { isConnected } = useAccount()
     const navigate = useNavigate()
     const [selectedTimeframe, setSelectedTimeframe] = useState<'1W' | '1M' | '3M' | '6M' | '1Y'>(
-      '1W',
+      '3M',
     )
 
     // Parse chainId from route parameter

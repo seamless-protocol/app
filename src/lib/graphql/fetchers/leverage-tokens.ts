@@ -1,6 +1,6 @@
 import { LEVERAGE_TOKEN_PRICE_COMPARISON_QUERY } from '../queries/leverage-tokens'
-import { graphqlRequest } from '../utils'
 import type { LeverageTokenPriceComparisonResponse } from '../types'
+import { graphqlRequest } from '../utils'
 
 export async function fetchLeverageTokenPriceComparison(
   address: string,

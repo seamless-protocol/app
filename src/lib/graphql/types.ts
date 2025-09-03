@@ -9,7 +9,7 @@ export interface LeverageTokenHistoricalData {
 
 export interface LeverageTokenPriceComparisonResponse {
   leverageToken?: {
-    stateHistory: LeverageTokenHistoricalData[]
+    stateHistory: Array<LeverageTokenHistoricalData>
     lendingAdapter: {
       oracle: {
         decimals: number
