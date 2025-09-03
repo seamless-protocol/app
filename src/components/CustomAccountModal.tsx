@@ -9,14 +9,18 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Switch } from './ui/switch'
 
 interface CustomAccountModalProps {
-  account?: {
-    address: string
-    displayName: string
-  }
-  chain?: {
-    id: number
-    name: string
-  }
+  account?:
+    | {
+        address: string
+        displayName: string
+      }
+    | undefined
+  chain?:
+    | {
+        id: number
+        name: string
+      }
+    | undefined
   isOpen: boolean
   onClose: () => void
 }

@@ -31,9 +31,10 @@ type Story = StoryObj<typeof meta>
 export const Basic: Story = {
   render: () => {
     const [checked, setChecked] = useState(false)
+    const id = useId()
     return (
       <div className="p-6 bg-white rounded-lg">
-        <Switch id="basic" checked={checked} onCheckedChange={setChecked} />
+        <Switch id={id} checked={checked} onCheckedChange={setChecked} />
       </div>
     )
   },
@@ -43,10 +44,11 @@ export const Basic: Story = {
 export const WithText: Story = {
   render: () => {
     const [checked, setChecked] = useState(false)
+    const id = useId()
     return (
       <div className="p-6 bg-white rounded-lg">
         <div className="flex items-center space-x-2">
-          <Switch id="airplane-mode" checked={checked} onCheckedChange={setChecked} />
+          <Switch id={id} checked={checked} onCheckedChange={setChecked} />
           <span className="text-sm text-gray-900">Airplane mode</span>
         </div>
       </div>
@@ -61,19 +63,23 @@ export const MultipleSwitches: Story = {
     const [smsChecked, setSmsChecked] = useState(true)
     const [pushChecked, setPushChecked] = useState(false)
 
+    const emailId = useId()
+    const smsId = useId()
+    const pushId = useId()
+
     return (
       <div className="p-6 bg-white rounded-lg">
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <Switch id="email" checked={emailChecked} onCheckedChange={setEmailChecked} />
+            <Switch id={emailId} checked={emailChecked} onCheckedChange={setEmailChecked} />
             <span className="text-sm text-gray-900">Email notifications</span>
           </div>
           <div className="flex items-center space-x-2">
-            <Switch id="sms" checked={smsChecked} onCheckedChange={setSmsChecked} />
+            <Switch id={smsId} checked={smsChecked} onCheckedChange={setSmsChecked} />
             <span className="text-sm text-gray-900">SMS notifications</span>
           </div>
           <div className="flex items-center space-x-2">
-            <Switch id="push" checked={pushChecked} onCheckedChange={setPushChecked} />
+            <Switch id={pushId} checked={pushChecked} onCheckedChange={setPushChecked} />
             <span className="text-sm text-gray-900">Push notifications</span>
           </div>
         </div>
