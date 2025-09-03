@@ -26,7 +26,7 @@ import { LeverageBadge } from './LeverageBadge'
 import { SupplyCap } from './SupplyCap'
 
 interface LeverageToken {
-  id: string
+  id: `0x${string}` // The actual leverage token contract address
   name: string
   collateralAsset: {
     symbol: string

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
@@ -11,25 +11,36 @@ import { PriceLineChart } from '@/components/ui/price-line-chart'
 import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
-import {
-  generatePriceHistory,
-  leverageTokenPageData,
-} from '@/features/leverage-tokens/data/mockData'
+import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
+import { leverageTokenPageData } from '@/features/leverage-tokens/data/mockData'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
-export const Route = createFileRoute('/tokens/$id')({
+export const Route = createFileRoute('/tokens/$chainId/$id')({
   component: () => {
+    const { chainId: routeChainId, id: tokenAddress } = useParams({ strict: false })
     const { isConnected } = useAccount()
     const navigate = useNavigate()
-    const [selectedTimeframe, setSelectedTimeframe] = useState('1W')
+    const [selectedTimeframe, setSelectedTimeframe] = useState<'1W' | '1M' | '3M' | '6M' | '1Y'>(
+      '1W',
+    )
+
+    // Parse chainId from route parameter
+    const chainId = parseInt(routeChainId || '8453', 10) // Default to Base if not provided
 
     // Use the comprehensive mock data
     const tokenData = leverageTokenPageData
     const { token, userPosition, detailedMetrics, relatedResources, faqData } = tokenData
 
-    // Generate price history data
-    const priceHistoryData = generatePriceHistory(selectedTimeframe)
+    const {
+      data: priceHistoryData,
+      isLoading: isPriceDataLoading,
+      error: priceDataError,
+    } = useLeverageTokenPriceComparison({
+      tokenAddress: tokenAddress as `0x${string}`,
+      chainId,
+      timeframe: selectedTimeframe,
+    })
 
     const handleMint = () => {
       // TODO: Implement mint modal/functionality
@@ -208,35 +219,53 @@ export const Route = createFileRoute('/tokens/$id')({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.3 }}
             >
-              <PriceLineChart
-                data={priceHistoryData}
-                selectedTimeframe={selectedTimeframe}
-                onTimeframeChange={setSelectedTimeframe}
-                timeframes={['1H', '1D', '1W', '1M', '3M']}
-                chartType="comparison"
-                chartLines={[
-                  {
-                    key: 'weethPrice',
-                    name: `${token.collateralAsset.symbol} Price`,
-                    dataKey: 'weethPrice',
-                    color: '#10B981',
-                  },
-                  {
-                    key: 'leverageTokenPrice',
-                    name: 'Leverage Token Price',
-                    dataKey: 'leverageTokenPrice',
-                    color: '#8B5CF6',
-                  },
-                ]}
-                visibleLines={{
-                  weethPrice: true,
-                  leverageTokenPrice: true,
-                }}
-                title="Price History"
-                subtitle={`Compare leverage token performance vs ${token.collateralAsset.symbol}`}
-                height={320}
-                className="bg-slate-900/80 border border-slate-700"
-              />
+              {isPriceDataLoading ? (
+                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                  <p className="text-slate-400">Loading price data...</p>
+                </div>
+              ) : priceDataError ? (
+                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8 text-center">
+                  <p className="text-red-400 mb-2">Failed to load price data</p>
+                  <p className="text-slate-400 text-sm">{priceDataError.message}</p>
+                </div>
+              ) : !priceHistoryData || priceHistoryData.length === 0 ? (
+                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8 text-center">
+                  <p className="text-slate-400">No price data available</p>
+                </div>
+              ) : (
+                <PriceLineChart
+                  data={priceHistoryData}
+                  selectedTimeframe={selectedTimeframe}
+                  onTimeframeChange={(timeframe) =>
+                    setSelectedTimeframe(timeframe as typeof selectedTimeframe)
+                  }
+                  timeframes={['1W', '1M', '3M', '6M', '1Y']}
+                  chartType="comparison"
+                  chartLines={[
+                    {
+                      key: 'weethPrice',
+                      name: `${token.collateralAsset.symbol} Price`,
+                      dataKey: 'weethPrice',
+                      color: '#10B981',
+                    },
+                    {
+                      key: 'leverageTokenPrice',
+                      name: 'Leverage Token Price',
+                      dataKey: 'leverageTokenPrice',
+                      color: '#8B5CF6',
+                    },
+                  ]}
+                  visibleLines={{
+                    weethPrice: true,
+                    leverageTokenPrice: true,
+                  }}
+                  title="Price History"
+                  subtitle={`Compare leverage token performance vs ${token.collateralAsset.symbol}`}
+                  height={320}
+                  className="bg-slate-900/80 border border-slate-700"
+                />
+              )}
             </motion.div>
 
             {/* Detailed Metrics */}

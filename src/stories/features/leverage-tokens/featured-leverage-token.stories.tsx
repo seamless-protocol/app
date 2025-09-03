@@ -24,7 +24,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const mockToken = {
-  id: 'seam-usdc-20x',
+  id: '0x1234567890123456789012345678901234567890' as `0x${string}`,
   name: 'SEAM / USDC 20x Leverage Token',
   apy: 28.94,
   tvl: 12500000,
@@ -54,7 +54,7 @@ const mockToken = {
 const mockTokens = [
   {
     ...mockToken,
-    id: 'weeth-2x',
+    id: '0xCd5fE23C85820F7B08D4D8A6c35929B5d900B527' as `0x${string}`,
     name: 'weETH 2x Leverage Token',
     apy: 12.5,
     leverage: 2,
@@ -62,7 +62,7 @@ const mockTokens = [
   },
   {
     ...mockToken,
-    id: 'usdc-3x',
+    id: '0xa0b86a33e6441b8c4c8c8c8c8c8c8c8c8c8c8c8c' as `0x${string}`,
     name: 'USDC 3x Leverage Token',
     apy: 18.2,
     leverage: 3,
@@ -91,7 +91,7 @@ const mockTokens = [
   },
   {
     ...mockToken,
-    id: 'weeth-1.5x',
+    id: '0xCd5fE23C85820F7B08D4D8A6c35929B5d900B527' as `0x${string}`,
     name: 'weETH 1.5x Leverage Token',
     apy: 8.7,
     leverage: 1.5,

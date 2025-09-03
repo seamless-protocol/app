@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
-import { EthereumLogo } from '@/components/icons/logos'
 import { FeaturedLeverageTokens } from '@/features/leverage-tokens/components/FeaturedLeverageToken'
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
 import { LeverageTokenTable } from '@/features/leverage-tokens/components/LeverageTokenTable'
@@ -13,7 +12,7 @@ export const Route = createFileRoute('/tokens/')({
     // Convert our single token mock data to the format expected by the table
     const leverageTokens: Array<LeverageToken> = [
       {
-        id: 'weeth-weth-17x',
+        id: mockLeverageTokenData.token.address, // Use leverage token address as ID
         name: mockLeverageTokenData.token.name,
         collateralAsset: {
           symbol: mockLeverageTokenData.token.collateralAsset.symbol,
@@ -37,64 +36,14 @@ export const Route = createFileRoute('/tokens/')({
         borrowRate: mockLeverageTokenData.apy.borrowRate,
         rewardMultiplier: mockLeverageTokenData.apy.rewardMultiplier,
       },
-      // Add a second mock token for demonstration
-      {
-        id: 'usdc-dai-10x',
-        name: 'USDC / DAI 10x Leverage Token',
-        collateralAsset: {
-          symbol: 'USDC',
-          name: 'USD Coin',
-          address: '0xA0b86a33E6441b8c4C8C8C8C8C8C8C8C8C8C8C8' as `0x${string}`,
-        },
-        debtAsset: {
-          symbol: 'DAI',
-          name: 'Dai Stablecoin',
-          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F' as `0x${string}`,
-        },
-        tvl: 2500000,
-        apy: 12.8,
-        leverage: 10,
-        supplyCap: 500000,
-        currentSupply: 320000,
-        chainId: 1,
-        chainName: 'Ethereum',
-        chainLogo: EthereumLogo,
-        baseYield: 7.2,
-        borrowRate: -2.1,
-        rewardMultiplier: 1.2,
-      },
-      // Add a third mock token
-      {
-        id: 'wbtc-eth-15x',
-        name: 'WBTC / ETH 15x Leverage Token',
-        collateralAsset: {
-          symbol: 'WBTC',
-          name: 'Wrapped Bitcoin',
-          address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599' as `0x${string}`,
-        },
-        debtAsset: {
-          symbol: 'ETH',
-          name: 'Ethereum',
-          address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as `0x${string}`,
-        },
-        tvl: 4200000,
-        apy: 18.5,
-        leverage: 15,
-        supplyCap: 800000,
-        currentSupply: 650000,
-        chainId: 1,
-        chainName: 'Ethereum',
-        chainLogo: EthereumLogo,
-        baseYield: 9.8,
-        borrowRate: -3.5,
-        rewardMultiplier: 1.8,
-      },
     ]
 
-    const handleTokenClick = (_token: LeverageToken) => {
-      // For now, navigate to the weETH token page since that's what we have implemented
-      // In the future, this would navigate to the specific token's page
-      navigate({ to: '/tokens/$id', params: { id: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' } })
+    const handleTokenClick = (token: LeverageToken) => {
+      // Navigate to the specific token's page using the new chain ID-based route
+      navigate({
+        to: '/tokens/$chainId/$id',
+        params: { chainId: token.chainId.toString(), id: token.id },
+      })
     }
 
     return (
@@ -103,7 +52,7 @@ export const Route = createFileRoute('/tokens/')({
           {/* Featured Leverage Tokens Section */}
           <div className="overflow-hidden w-full p-1">
             <FeaturedLeverageTokens
-              tokens={leverageTokens.slice(0, 3)} // Show top 3 tokens
+              tokens={leverageTokens} // Show the single weETH token
               onTokenClick={handleTokenClick}
             />
           </div>
