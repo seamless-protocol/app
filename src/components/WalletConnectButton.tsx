@@ -2,20 +2,16 @@
 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Wallet } from 'lucide-react'
+import { useState } from 'react'
+import { CustomAccountModal } from './CustomAccountModal'
 import { Button } from './ui/button'
 
 export function WalletConnectButton() {
+  const [customAccountModalOpen, setCustomAccountModalOpen] = useState(false)
+
   return (
     <ConnectButton.Custom>
-      {({
-        account,
-        chain,
-        openAccountModal,
-        openChainModal,
-        openConnectModal,
-        authenticationStatus,
-        mounted,
-      }) => {
+      {({ account, chain, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
         // Note: If your app doesn't use authentication, you
         // can remove all 'authenticationStatus' checks
         const ready = mounted && authenticationStatus !== 'loading'
@@ -93,7 +89,7 @@ export function WalletConnectButton() {
                   {/* Wallet Button */}
                   <button
                     type="button"
-                    onClick={openAccountModal}
+                    onClick={() => setCustomAccountModalOpen(true)}
                     className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border text-foreground hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 h-9 sm:h-10 bg-slate-800 hover:bg-slate-700 border-slate-600"
                   >
                     <div className="flex items-center space-x-2">
@@ -109,6 +105,18 @@ export function WalletConnectButton() {
                 </div>
               )
             })()}
+            {/* Custom Account Modal */}
+            {connected && (
+              <CustomAccountModal
+                isOpen={customAccountModalOpen}
+                onClose={() => setCustomAccountModalOpen(false)}
+                account={account}
+                chain={{
+                  id: chain.id,
+                  name: chain.name || `Chain ${chain.id}`,
+                }}
+              />
+            )}
           </div>
         )
       }}
