@@ -12,6 +12,24 @@ export function getTokenExplorerUrl(chainId: number, tokenAddress: string): stri
   }
 }
 
+export function getAddressExplorerUrl(chainId: number, address: string): string {
+  const cleanAddress = address.toLowerCase()
+
+  switch (chainId) {
+    case 1: // Ethereum Mainnet
+      return `https://etherscan.io/address/${cleanAddress}`
+    case 8453: // Base Mainnet
+      return `https://basescan.org/address/${cleanAddress}`
+    case 11155111: // Sepolia Testnet
+      return `https://sepolia.etherscan.io/address/${cleanAddress}`
+    case 84532: // Base Sepolia Testnet
+      return `https://sepolia.basescan.org/address/${cleanAddress}`
+    default:
+      // Fallback to Ethereum mainnet for unknown chains
+      return `https://etherscan.io/address/${cleanAddress}`
+  }
+}
+
 export function getBlockExplorerName(chainId: number): string {
   switch (chainId) {
     case 1: // Ethereum Mainnet
