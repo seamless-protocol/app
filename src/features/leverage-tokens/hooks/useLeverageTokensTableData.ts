@@ -8,7 +8,6 @@ import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
 import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
 import { STALE_TIME } from '../utils/constants'
-import { ltKeys } from '../utils/queryKeys'
 
 function toNumber(value: bigint, decimals = 18): number {
   // Convert bigint to JS number scaled by decimals. For UI only.
@@ -43,7 +42,6 @@ export function useLeverageTokensTableData() {
       enabled: Boolean(managerAddress && configs.length > 0),
       staleTime: STALE_TIME.supply,
       refetchInterval: 30_000,
-      queryKey: ltKeys.tableData(),
     },
   })
 

@@ -49,7 +49,7 @@ export function useLeverageTokenState(tokenAddress: Address) {
 
   const [stateRes, supplyRes] = data
 
-  if (stateRes.status !== 'success' || supplyRes.status !== 'success') {
+  if (!stateRes || !supplyRes || stateRes.status !== 'success' || supplyRes.status !== 'success') {
     return { data: undefined, isLoading, isError: true, error }
   }
 
