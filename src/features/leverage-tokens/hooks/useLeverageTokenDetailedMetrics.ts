@@ -7,7 +7,6 @@ import { getLeverageManagerAddress } from '../../../lib/contracts/addresses'
 import { STALE_TIME } from '../utils/constants'
 import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
 
-
 // Helper to convert collateral ratio to leverage
 const collateralRatioToLeverage = (collateralRatio: bigint): bigint => {
   const BASE_RATIO = 10n ** 18n // 1e18
@@ -23,19 +22,24 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   const managerAddress = getLeverageManagerAddress(chainId)
 
   // Step 1: Get leverage token config and state from LeverageManager
-  const { data: managerData, isLoading: isManagerLoading, isError: isManagerError, error: managerError } = useReadContracts({
+  const {
+    data: managerData,
+    isLoading: isManagerLoading,
+    isError: isManagerError,
+    error: managerError,
+  } = useReadContracts({
     contracts: [
-      { 
-        address: managerAddress, 
-        abi: leverageManagerAbi, 
-        functionName: 'getLeverageTokenConfig', 
-        args: tokenAddress ? [tokenAddress] : undefined 
+      {
+        address: managerAddress,
+        abi: leverageManagerAbi,
+        functionName: 'getLeverageTokenConfig',
+        args: tokenAddress ? [tokenAddress] : undefined,
       },
-      { 
-        address: managerAddress, 
-        abi: leverageManagerAbi, 
-        functionName: 'getLeverageTokenState', 
-        args: tokenAddress ? [tokenAddress] : undefined 
+      {
+        address: managerAddress,
+        abi: leverageManagerAbi,
+        functionName: 'getLeverageTokenState',
+        args: tokenAddress ? [tokenAddress] : undefined,
       },
     ],
     query: {
@@ -45,52 +49,59 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   })
 
   // Extract rebalance adapter address from config
-  const rebalanceAdapterAddress = managerData?.[0]?.status === 'success' 
-    ? (managerData[0].result as any).rebalanceAdapter 
-    : undefined
+  const rebalanceAdapterAddress =
+    managerData?.[0]?.status === 'success'
+      ? (managerData[0].result as any).rebalanceAdapter
+      : undefined
 
   // Extract lending adapter address from config
-  const lendingAdapterAddress = managerData?.[0]?.status === 'success' 
-    ? (managerData[0].result as any).lendingAdapter 
-    : undefined
+  const lendingAdapterAddress =
+    managerData?.[0]?.status === 'success'
+      ? (managerData[0].result as any).lendingAdapter
+      : undefined
 
   // Step 2: Get detailed metrics from RebalanceAdapter
-  const { data: adapterData, isLoading: isAdapterLoading, isError: isAdapterError, error: adapterError } = useReadContracts({
+  const {
+    data: adapterData,
+    isLoading: isAdapterLoading,
+    isError: isAdapterError,
+    error: adapterError,
+  } = useReadContracts({
     contracts: [
-      { 
-        address: rebalanceAdapterAddress, 
-        abi: rebalanceAdapterAbi, 
-        functionName: 'getLeverageTokenMinCollateralRatio' 
+      {
+        address: rebalanceAdapterAddress,
+        abi: rebalanceAdapterAbi,
+        functionName: 'getLeverageTokenMinCollateralRatio',
       },
-      { 
-        address: rebalanceAdapterAddress, 
-        abi: rebalanceAdapterAbi, 
-        functionName: 'getLeverageTokenMaxCollateralRatio' 
+      {
+        address: rebalanceAdapterAddress,
+        abi: rebalanceAdapterAbi,
+        functionName: 'getLeverageTokenMaxCollateralRatio',
       },
-      { 
-        address: rebalanceAdapterAddress, 
-        abi: rebalanceAdapterAbi, 
-        functionName: 'getAuctionDuration' 
+      {
+        address: rebalanceAdapterAddress,
+        abi: rebalanceAdapterAbi,
+        functionName: 'getAuctionDuration',
       },
-      { 
-        address: rebalanceAdapterAddress, 
-        abi: rebalanceAdapterAbi, 
-        functionName: 'getCollateralRatioThreshold' 
+      {
+        address: rebalanceAdapterAddress,
+        abi: rebalanceAdapterAbi,
+        functionName: 'getCollateralRatioThreshold',
       },
-      { 
-        address: rebalanceAdapterAddress, 
-        abi: rebalanceAdapterAbi, 
-        functionName: 'getRebalanceReward' 
+      {
+        address: rebalanceAdapterAddress,
+        abi: rebalanceAdapterAbi,
+        functionName: 'getRebalanceReward',
       },
-      { 
-        address: rebalanceAdapterAddress, 
-        abi: rebalanceAdapterAbi, 
-        functionName: 'getInitialPriceMultiplier' 
+      {
+        address: rebalanceAdapterAddress,
+        abi: rebalanceAdapterAbi,
+        functionName: 'getInitialPriceMultiplier',
       },
-      { 
-        address: rebalanceAdapterAddress, 
-        abi: rebalanceAdapterAbi, 
-        functionName: 'getMinPriceMultiplier' 
+      {
+        address: rebalanceAdapterAddress,
+        abi: rebalanceAdapterAbi,
+        functionName: 'getMinPriceMultiplier',
       },
     ],
     query: {
@@ -100,12 +111,17 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   })
 
   // Step 3: Get liquidation penalty from LendingAdapter
-  const { data: lendingData, isLoading: isLendingLoading, isError: isLendingError, error: lendingError } = useReadContracts({
+  const {
+    data: lendingData,
+    isLoading: isLendingLoading,
+    isError: isLendingError,
+    error: lendingError,
+  } = useReadContracts({
     contracts: [
-      { 
-        address: lendingAdapterAddress, 
-        abi: lendingAdapterAbi, 
-        functionName: 'getLiquidationPenalty' 
+      {
+        address: lendingAdapterAddress,
+        abi: lendingAdapterAbi,
+        functionName: 'getLiquidationPenalty',
       },
     ],
     query: {
@@ -118,7 +134,7 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   const isError = isManagerError || isAdapterError || isLendingError
   const error = managerError || adapterError || lendingError
 
-  const transformedData: LeverageTokenMetrics | undefined = 
+  const transformedData: LeverageTokenMetrics | undefined =
     managerData && adapterData && lendingData
       ? transformDetailedMetricsData(managerData, adapterData, lendingData)
       : undefined
@@ -141,12 +157,12 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
 function transformDetailedMetricsData(
   managerData: readonly any[],
   adapterData: readonly any[],
-  lendingData: readonly any[]
+  lendingData: readonly any[],
 ): LeverageTokenMetrics {
   // Extract data from manager calls
   const configResult = managerData[0]
   const stateResult = managerData[1]
-  
+
   // Extract data from adapter calls
   const minCollateralRatioResult = adapterData[0]
   const maxCollateralRatioResult = adapterData[1]
@@ -155,7 +171,7 @@ function transformDetailedMetricsData(
   const rebalanceRewardResult = adapterData[4]
   const initialPriceMultiplierResult = adapterData[5]
   const minPriceMultiplierResult = adapterData[6]
-  
+
   // Extract data from lending calls
   const liquidationPenaltyResult = lendingData[0]
 
@@ -184,48 +200,60 @@ function transformDetailedMetricsData(
   }
 
   // Extract values with error handling
-  const currentLeverage = stateResult?.status === 'success' 
-    ? formatLeverage(collateralRatioToLeverage((stateResult.result as any).collateralRatio))
-    : 'N/A'
+  const currentLeverage =
+    stateResult?.status === 'success'
+      ? formatLeverage(collateralRatioToLeverage((stateResult.result as any).collateralRatio))
+      : 'N/A'
 
-  const minLeverage = maxCollateralRatioResult?.status === 'success' 
-    ? formatLeverage(collateralRatioToLeverage(maxCollateralRatioResult.result as bigint))
-    : 'N/A'
+  const minLeverage =
+    maxCollateralRatioResult?.status === 'success'
+      ? formatLeverage(collateralRatioToLeverage(maxCollateralRatioResult.result as bigint))
+      : 'N/A'
 
-  const maxLeverage = minCollateralRatioResult?.status === 'success' 
-    ? formatLeverage(collateralRatioToLeverage(minCollateralRatioResult.result as bigint))
-    : 'N/A'
+  const maxLeverage =
+    minCollateralRatioResult?.status === 'success'
+      ? formatLeverage(collateralRatioToLeverage(minCollateralRatioResult.result as bigint))
+      : 'N/A'
 
-  const mintTokenFee = configResult?.status === 'success' 
-    ? formatFee((configResult.result as any).mintTokenFee)
-    : 'N/A'
+  const mintTokenFee =
+    configResult?.status === 'success'
+      ? formatFee((configResult.result as any).mintTokenFee)
+      : 'N/A'
 
-  const redeemTokenFee = configResult?.status === 'success' 
-    ? formatFee((configResult.result as any).redeemTokenFee)
-    : 'N/A'
+  const redeemTokenFee =
+    configResult?.status === 'success'
+      ? formatFee((configResult.result as any).redeemTokenFee)
+      : 'N/A'
 
-  const dutchAuctionDuration = auctionDurationResult?.status === 'success' 
-    ? formatDuration(auctionDurationResult.result as bigint)
-    : 'N/A'
+  const dutchAuctionDuration =
+    auctionDurationResult?.status === 'success'
+      ? formatDuration(auctionDurationResult.result as bigint)
+      : 'N/A'
 
-  const preLiquidationLeverage = collateralRatioThresholdResult?.status === 'success' 
-    ? formatLeverage(collateralRatioToLeverage(collateralRatioThresholdResult.result as bigint))
-    : 'N/A'
+  const preLiquidationLeverage =
+    collateralRatioThresholdResult?.status === 'success'
+      ? formatLeverage(collateralRatioToLeverage(collateralRatioThresholdResult.result as bigint))
+      : 'N/A'
 
   // Calculate rebalance reward: liquidationPenalty * preLiquidationRebalanceReward
-  const rebalanceReward = 
+  const rebalanceReward =
     liquidationPenaltyResult?.status === 'success' && rebalanceRewardResult?.status === 'success'
-      ? formatFee((liquidationPenaltyResult.result as bigint) * (rebalanceRewardResult.result as bigint) / (10n ** 18n))
+      ? formatFee(
+          ((liquidationPenaltyResult.result as bigint) * (rebalanceRewardResult.result as bigint)) /
+            10n ** 18n,
+        )
       : 'N/A'
 
   // Extract price multipliers
-  const initialPriceMultiplier = initialPriceMultiplierResult?.status === 'success' 
-    ? formatMultiplier(initialPriceMultiplierResult.result as bigint)
-    : 'N/A'
+  const initialPriceMultiplier =
+    initialPriceMultiplierResult?.status === 'success'
+      ? formatMultiplier(initialPriceMultiplierResult.result as bigint)
+      : 'N/A'
 
-  const minPriceMultiplier = minPriceMultiplierResult?.status === 'success' 
-    ? formatMultiplier(minPriceMultiplierResult.result as bigint)
-    : 'N/A'
+  const minPriceMultiplier =
+    minPriceMultiplierResult?.status === 'success'
+      ? formatMultiplier(minPriceMultiplierResult.result as bigint)
+      : 'N/A'
 
   return {
     'Leverage Settings': [

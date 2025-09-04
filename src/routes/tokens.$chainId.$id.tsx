@@ -100,7 +100,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           onBack={() => navigate({ to: '/tokens' })}
         />
 
-
         {/* Two-Column Grid Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left Column - Main Content */}

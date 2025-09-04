@@ -7,30 +7,32 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
   it('should handle the expected data structure from two-contract calls', () => {
     // Mock manager data (config and state)
     const mockManagerData = [
-      { // getLeverageTokenConfig
+      {
+        // getLeverageTokenConfig
         status: 'success',
         result: {
           lendingAdapter: '0x9558B339Bb03246C44c57fCee184645DBfAb253F',
           rebalanceAdapter: '0xA530e6eA09eb118a1549aCA73731379ba546DD32',
           mintTokenFee: 0n,
-          redeemTokenFee: 10n // 0.1% (10/1e18 * 100)
-        }
+          redeemTokenFee: 10n, // 0.1% (10/1e18 * 100)
+        },
       },
-      { // getLeverageTokenState
+      {
+        // getLeverageTokenState
         status: 'success',
         result: {
           collateralInDebtAsset: 2934111698526499205144n,
           debt: 2761208199198842946313n,
           equity: 172903499327656258831n,
-          collateralRatio: 1062618783827247702n // ~16.97x leverage
-        }
-      }
+          collateralRatio: 1062618783827247702n, // ~16.97x leverage
+        },
+      },
     ]
 
     // Mock adapter data (detailed metrics)
     const mockAdapterData = [
       { status: 'success', result: 1061350000000000000n }, // minCollateralRatio
-      { status: 'success', result: 1062893082000000000n }, // maxCollateralRatio  
+      { status: 'success', result: 1062893082000000000n }, // maxCollateralRatio
       { status: 'success', result: 1062500000000000000n }, // targetCollateralRatio
       { status: 'success', result: 3600n }, // auctionDuration (1 hour)
       { status: 'success', result: 1060000000000000000n }, // collateralRatioThreshold
@@ -41,20 +43,22 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
 
     // Mock lending data (liquidation penalty)
     const mockLendingData = [
-      { status: 'success', result: 16776817488561260n } // liquidationPenalty
+      { status: 'success', result: 16776817488561260n }, // liquidationPenalty
     ]
 
     // Test the expected data structure
     expect(mockManagerData).toHaveLength(2)
     expect(mockAdapterData).toHaveLength(8)
     expect(mockLendingData).toHaveLength(1)
-    
+
     // Test manager data structure
     expect(mockManagerData[0]?.status).toBe('success')
-    expect(mockManagerData[0]?.result.rebalanceAdapter).toBe('0xA530e6eA09eb118a1549aCA73731379ba546DD32')
+    expect(mockManagerData[0]?.result.rebalanceAdapter).toBe(
+      '0xA530e6eA09eb118a1549aCA73731379ba546DD32',
+    )
     expect(mockManagerData[0]?.result.mintTokenFee).toBe(0n)
     expect(mockManagerData[0]?.result.redeemTokenFee).toBe(10n)
-    
+
     expect(mockManagerData[1]?.status).toBe('success')
     expect(mockManagerData[1]?.result.collateralRatio).toBe(1062618783827247702n)
 
@@ -146,7 +150,15 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
 
   it('should handle error states in contract responses', () => {
     const mockManagerDataWithErrors = [
-      { status: 'success', result: { lendingAdapter: '0x...', rebalanceAdapter: '0x...', mintTokenFee: 0n, redeemTokenFee: 10n } },
+      {
+        status: 'success',
+        result: {
+          lendingAdapter: '0x...',
+          rebalanceAdapter: '0x...',
+          mintTokenFee: 0n,
+          redeemTokenFee: 10n,
+        },
+      },
       { status: 'failure', error: new Error('Manager call failed') },
     ]
     const mockAdapterDataWithErrors = [
