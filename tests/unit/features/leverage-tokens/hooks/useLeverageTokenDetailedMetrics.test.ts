@@ -34,11 +34,20 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
       { status: 'success', result: 1062500000000000000n }, // targetCollateralRatio
       { status: 'success', result: 3600n }, // auctionDuration (1 hour)
       { status: 'success', result: 1060000000000000000n }, // collateralRatioThreshold
+      { status: 'success', result: 3000n }, // rebalanceReward
+      { status: 'success', result: 1010000000000000000n }, // initialPriceMultiplier
+      { status: 'success', result: 999000000000000000n }, // minPriceMultiplier
+    ]
+
+    // Mock lending data (liquidation penalty)
+    const mockLendingData = [
+      { status: 'success', result: 16776817488561260n } // liquidationPenalty
     ]
 
     // Test the expected data structure
     expect(mockManagerData).toHaveLength(2)
-    expect(mockAdapterData).toHaveLength(5)
+    expect(mockAdapterData).toHaveLength(8)
+    expect(mockLendingData).toHaveLength(1)
     
     // Test manager data structure
     expect(mockManagerData[0]?.status).toBe('success')
@@ -48,24 +57,36 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
     
     expect(mockManagerData[1]?.status).toBe('success')
     expect(mockManagerData[1]?.result.collateralRatio).toBe(1062618783827247702n)
-    
+
     // Test adapter data structure
     expect(mockAdapterData[0]?.result).toBe(1061350000000000000n) // minCollateralRatio
     expect(mockAdapterData[1]?.result).toBe(1062893082000000000n) // maxCollateralRatio
     expect(mockAdapterData[2]?.result).toBe(1062500000000000000n) // targetCollateralRatio
     expect(mockAdapterData[3]?.result).toBe(3600n) // auctionDuration
     expect(mockAdapterData[4]?.result).toBe(1060000000000000000n) // collateralRatioThreshold
+    expect(mockAdapterData[5]?.result).toBe(3000n) // rebalanceReward
+    expect(mockAdapterData[6]?.result).toBe(1010000000000000000n) // initialPriceMultiplier
+    expect(mockAdapterData[7]?.result).toBe(999000000000000000n) // minPriceMultiplier
+
+    // Test lending data structure
+    expect(mockLendingData[0]?.result).toBe(16776817488561260n) // liquidationPenalty
   })
 
   it('should format leverage values correctly', () => {
+    // Helper to convert collateral ratio to leverage (copied from hook for isolated testing)
+    const collateralRatioToLeverage = (collateralRatio: bigint): bigint => {
+      const BASE_RATIO = 10n ** 18n // 1e18
+      return (collateralRatio * BASE_RATIO) / (collateralRatio - BASE_RATIO)
+    }
+
     const formatLeverage = (value: bigint): string => {
       const leverage = Number(value) / 1e18
       return `${leverage.toFixed(2)}x`
     }
-    
-    expect(formatLeverage(17n * 10n ** 18n)).toBe('17.00x')
-    expect(formatLeverage(16n * 10n ** 18n + 9n * 10n ** 17n)).toBe('16.90x')
-    expect(formatLeverage(17n * 10n ** 18n + 3n * 10n ** 17n)).toBe('17.30x')
+
+    expect(formatLeverage(collateralRatioToLeverage(1062618783827247702n))).toBe('16.97x')
+    expect(formatLeverage(collateralRatioToLeverage(1061350000000000000n))).toBe('17.30x') // max leverage from min collateral ratio
+    expect(formatLeverage(collateralRatioToLeverage(1062893082000000000n))).toBe('16.90x') // min leverage from max collateral ratio
   })
 
   it('should format fee values correctly', () => {
@@ -73,7 +94,7 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
       const fee = (Number(value) / 1e18) * 100
       return `${fee.toFixed(2)}%`
     }
-    
+
     expect(formatFee(0n)).toBe('0.00%')
     expect(formatFee(1n * 10n ** 15n)).toBe('0.10%') // 0.1%
     expect(formatFee(5n * 10n ** 16n)).toBe('5.00%') // 5%
@@ -84,24 +105,24 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
       const hours = Number(value) / 3600
       return hours === 1 ? '1 hour' : `${hours} hours`
     }
-    
+
     expect(formatDuration(3600n)).toBe('1 hour')
     expect(formatDuration(7200n)).toBe('2 hours')
     expect(formatDuration(0n)).toBe('0 hours')
   })
 
   it('should convert collateral ratio to leverage correctly', () => {
+    // Helper to convert collateral ratio to leverage (copied from hook for isolated testing)
     const collateralRatioToLeverage = (collateralRatio: bigint): bigint => {
       const BASE_RATIO = 10n ** 18n // 1e18
       return (collateralRatio * BASE_RATIO) / (collateralRatio - BASE_RATIO)
     }
-    
-    // Test with real values from our contract test
-    const collateralRatio = 1062618783827247702n // ~16.97x leverage
-    const leverage = collateralRatioToLeverage(collateralRatio)
-    const leverageFormatted = (Number(leverage) / 1e18).toFixed(2)
-    
-    expect(leverageFormatted).toBe('16.97')
+
+    // Example: 1.062618783827247702 collateral ratio -> ~16.97x leverage
+    const collateralRatio = 1062618783827247702n
+    const actualLeverage = collateralRatioToLeverage(collateralRatio)
+    const expectedLeverage = 16969649023506965051n // Actual calculated value
+    expect(actualLeverage).toBe(expectedLeverage)
   })
 
   it('should handle edge cases in formatting', () => {
@@ -124,39 +145,29 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
   })
 
   it('should handle error states in contract responses', () => {
-    // Mock data with some errors
     const mockManagerDataWithErrors = [
-      { // getLeverageTokenConfig - success
-        status: 'success',
-        result: {
-          lendingAdapter: '0x9558B339Bb03246C44c57fCee184645DBfAb253F',
-          rebalanceAdapter: '0xA530e6eA09eb118a1549aCA73731379ba546DD32',
-          mintTokenFee: 0n,
-          redeemTokenFee: 10n
-        }
-      },
-      { // getLeverageTokenState - error
-        status: 'failure',
-        error: new Error('Contract call failed')
-      }
+      { status: 'success', result: { lendingAdapter: '0x...', rebalanceAdapter: '0x...', mintTokenFee: 0n, redeemTokenFee: 10n } },
+      { status: 'failure', error: new Error('Manager call failed') },
     ]
-
     const mockAdapterDataWithErrors = [
       { status: 'success', result: 1061350000000000000n }, // minCollateralRatio - success
-      { status: 'failure', error: new Error('Rate limited') }, // maxCollateralRatio - error
+      { status: 'failure', error: new Error('Adapter call failed') }, // maxCollateralRatio - error
       { status: 'success', result: 1062500000000000000n }, // targetCollateralRatio - success
       { status: 'success', result: 3600n }, // auctionDuration - success
-      { status: 'failure', error: new Error('Contract call failed') }, // collateralRatioThreshold - error
+      { status: 'failure', error: new Error('Adapter call failed') }, // collateralRatioThreshold - error
+      { status: 'success', result: 3000n }, // rebalanceReward - success
+      { status: 'success', result: 1010000000000000000n }, // initialPriceMultiplier - success
+      { status: 'success', result: 999000000000000000n }, // minPriceMultiplier - success
+    ]
+    const mockLendingDataWithErrors = [
+      { status: 'failure', error: new Error('Lending call failed') }, // liquidationPenalty - error
     ]
 
-    // Test that we can handle mixed success/error states
+    // Test that error states are properly handled
     expect(mockManagerDataWithErrors[0]?.status).toBe('success')
     expect(mockManagerDataWithErrors[1]?.status).toBe('failure')
-    
     expect(mockAdapterDataWithErrors[0]?.status).toBe('success')
     expect(mockAdapterDataWithErrors[1]?.status).toBe('failure')
-    expect(mockAdapterDataWithErrors[2]?.status).toBe('success')
-    expect(mockAdapterDataWithErrors[3]?.status).toBe('success')
-    expect(mockAdapterDataWithErrors[4]?.status).toBe('failure')
+    expect(mockLendingDataWithErrors[0]?.status).toBe('failure')
   })
 })

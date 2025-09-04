@@ -79,6 +79,29 @@ vi.mock('@/features/leverage-tokens/utils/constants', () => ({
   },
 }))
 
+// Mock governance utilities
+vi.mock('@/features/governance/utils/tally', () => ({
+  getProposals: vi.fn(),
+}))
+
+// Mock governance constants
+vi.mock('@/features/governance/utils/constants', () => ({
+  TALLY_CONFIG: {
+    ORGANIZATION_ID: 'test-org-id',
+  },
+  STALE_TIME: {
+    proposals: 60000,
+  },
+  QUERY_SETTINGS: {
+    gcTime: 300000,
+  },
+}))
+
+// Mock GraphQL fetchers
+vi.mock('@/lib/graphql/fetchers/leverage-tokens', () => ({
+  fetchLeverageTokenPriceComparison: vi.fn(),
+}))
+
 // Mock window.ethereum
 Object.defineProperty(window, 'ethereum', {
   value: {

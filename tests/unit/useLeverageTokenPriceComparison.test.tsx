@@ -4,11 +4,7 @@ import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hook
 import { fetchLeverageTokenPriceComparison } from '@/lib/graphql/fetchers/leverage-tokens'
 import { hookTestUtils } from '../utils'
 
-// Mock the fetcher module
-vi.mock('@/lib/graphql/fetchers/leverage-tokens', () => ({
-  fetchLeverageTokenPriceComparison: vi.fn(),
-}))
-
+// Use the global mocks from tests/setup.ts
 const mockFetchLeverageTokenPriceComparison = vi.mocked(fetchLeverageTokenPriceComparison)
 
 describe('useLeverageTokenPriceComparison', () => {
