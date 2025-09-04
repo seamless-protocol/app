@@ -1,13 +1,16 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
+import { Info } from 'lucide-react'
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
+import { APYBreakdown } from '@/components/APYBreakdown'
 import { FAQ } from '@/components/FAQ'
 import { StatCardList } from '@/components/StatCardList'
 import { AssetDisplay } from '@/components/ui/asset-display'
 import { Badge } from '@/components/ui/badge'
 import { BreadcrumbNavigation } from '@/components/ui/breadcrumb'
 import { PriceLineChart } from '@/components/ui/price-line-chart'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
@@ -15,11 +18,13 @@ import {
   createMockUserPosition,
   mockAPY,
   mockKeyMetrics,
+  mockSupply,
 } from '@/features/leverage-tokens/data/mockData'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
+import { calculateAPYBreakdown } from '@/lib/utils/apy-calculations'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
@@ -75,6 +80,25 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
 
     // Mock user position data (this would come from a hook in real implementation)
     const userPosition = createMockUserPosition(tokenConfig.symbol)
+
+    // Create mock token data for APY breakdown calculation
+    const mockTokenForAPY = {
+      id: tokenConfig.address,
+      name: tokenConfig.name,
+      collateralAsset: tokenConfig.collateralAsset,
+      debtAsset: tokenConfig.debtAsset,
+      tvl: mockKeyMetrics.tvl,
+      apy: mockAPY.total,
+      leverage: tokenConfig.leverageRatio,
+      supplyCap: mockSupply.supplyCap,
+      currentSupply: mockSupply.currentSupply,
+      chainId: tokenConfig.chainId,
+      chainName: tokenConfig.chainName,
+      chainLogo: tokenConfig.chainLogo,
+      baseYield: mockAPY.baseYield,
+      borrowRate: mockAPY.borrowRate,
+      rewardMultiplier: mockAPY.rewardMultiplier || 1.5,
+    }
 
     const handleMint = () => {
       // TODO: Implement mint modal/functionality
@@ -202,26 +226,24 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                   </div>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-white">{tokenConfig.name}</h1>
-                <Badge className="bg-green-500/10 text-green-400 border-green-400/20 cursor-help flex items-center gap-1">
-                  {mockAPY.total.toFixed(1)}% APY
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-3 h-3"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M12 16v-4"></path>
-                    <path d="M12 8h.01"></path>
-                  </svg>
-                </Badge>
+                <div className="flex items-center space-x-1">
+                  <Badge className="bg-green-500/10 text-green-400 border-green-400/20">
+                    {mockAPY.total.toFixed(1)}% APY
+                  </Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-slate-400 hover:text-slate-300 transition-colors"
+                      >
+                        <Info className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
+                      <APYBreakdown data={calculateAPYBreakdown(mockTokenForAPY)} compact />
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
               <p className="text-slate-400 leading-relaxed">{tokenConfig.description}</p>
             </motion.div>
