@@ -36,7 +36,6 @@ interface UserPosition {
 
 interface LeverageTokenHoldingsCardProps {
   userPosition: UserPosition
-  onConnectWallet?: () => void
   onMint?: () => void
   onRedeem?: () => void
   className?: string
@@ -44,7 +43,6 @@ interface LeverageTokenHoldingsCardProps {
 
 export function LeverageTokenHoldingsCard({
   userPosition,
-  onConnectWallet,
   onMint,
   onRedeem,
   className = '',
@@ -62,9 +60,8 @@ export function LeverageTokenHoldingsCard({
         // TODO: Update KyberSwap widget params once they support leverage tokens
         setShowKyberSwapWidget(true)
       }
-    } else {
-      onConnectWallet?.()
     }
+    // If not connected, the button will be replaced with ConnectButton automatically
   }
 
   const handleRedeemClick = () => {
@@ -75,9 +72,8 @@ export function LeverageTokenHoldingsCard({
         // TODO: Update KyberSwap widget params once they support leverage tokens
         setShowKyberSwapWidget(true)
       }
-    } else {
-      onConnectWallet?.()
     }
+    // If not connected, the button will be replaced with ConnectButton automatically
   }
 
   // Try to load KyberSwapWidget, fallback to mock for Storybook
@@ -92,7 +88,7 @@ export function LeverageTokenHoldingsCard({
   }
 
   // Render ConnectButton with proper RainbowKit integration
-  const renderConnectButton = (children: React.ReactNode, onClick?: () => void) => {
+  const renderConnectButton = (children: React.ReactNode) => {
     return (
       <ConnectButton.Custom>
         {({ openConnectModal }) => (
@@ -101,8 +97,6 @@ export function LeverageTokenHoldingsCard({
             onClick={() => {
               // Always use RainbowKit's openConnectModal for wallet connection
               openConnectModal()
-              // Also call the custom onClick if provided (for analytics, etc.)
-              onClick?.()
             }}
             className="cursor-pointer bg-transparent border-none p-0 w-full"
           >
@@ -161,7 +155,6 @@ export function LeverageTokenHoldingsCard({
                       <p className="text-sm text-slate-400">View holdings and start minting</p>
                     </div>
                   </div>,
-                  onConnectWallet,
                 )}
               </div>
             )}
@@ -198,14 +191,12 @@ export function LeverageTokenHoldingsCard({
                       <Plus className="w-4 h-4 mr-2" />
                       Mint
                     </div>,
-                    onConnectWallet,
                   )}
                   {renderConnectButton(
                     <div className="w-full border border-slate-600 text-slate-300 hover:bg-slate-800 flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-transparent">
                       <Minus className="w-4 h-4 mr-2" />
                       Redeem
                     </div>,
-                    onConnectWallet,
                   )}
                 </>
               )}

@@ -10,12 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../../../components/ui/collapsible'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '../../../components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip'
 
 export interface MetricItem {
   label: string
@@ -115,19 +110,24 @@ export function LeverageTokenDetailedMetrics({
                           }`}
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <TooltipProvider>
+                            <div className="flex items-center space-x-1">
+                              <span className="text-slate-400 text-sm">{metric.label}</span>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="flex items-center space-x-1 cursor-help">
-                                    <span className="text-slate-400 text-sm">{metric.label}</span>
-                                    <Info className="w-3 h-3 text-slate-500" />
-                                  </div>
+                                  <button
+                                    type="button"
+                                    className="text-slate-400 hover:text-slate-300 transition-colors"
+                                  >
+                                    <Info className="h-3 w-3" />
+                                  </button>
                                 </TooltipTrigger>
-                                <TooltipContent className="max-w-xs bg-slate-800 border border-slate-600 text-white">
-                                  <p className="text-sm">{metric.tooltip}</p>
+                                <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
+                                  <div className="p-3 max-w-xs">
+                                    <p className="text-white text-sm">{metric.tooltip}</p>
+                                  </div>
                                 </TooltipContent>
                               </Tooltip>
-                            </TooltipProvider>
+                            </div>
                           </div>
                           <p className={`text-lg font-semibold ${metric.color || 'text-white'}`}>
                             {metric.value}

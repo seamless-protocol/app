@@ -31,7 +31,6 @@ const meta: Meta<typeof LeverageTokenHoldingsCard> = {
   },
   tags: ['autodocs'],
   argTypes: {
-    onConnectWallet: { action: 'connect wallet clicked' },
     onMint: {
       action: 'mint clicked',
       description: 'Function called when mint button is clicked (when wallet is connected)',
