@@ -3,40 +3,39 @@ import { motion } from 'framer-motion'
 import { FeaturedLeverageTokens } from '@/features/leverage-tokens/components/FeaturedLeverageToken'
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
 import { LeverageTokenTable } from '@/features/leverage-tokens/components/LeverageTokenTable'
-import { mockLeverageTokenData } from '@/features/leverage-tokens/data/mockData'
+import { mockAPY, mockKeyMetrics, mockSupply } from '@/features/leverage-tokens/data/mockData'
+import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 
 export const Route = createFileRoute('/tokens/')({
   component: () => {
     const navigate = useNavigate()
 
-    // Convert our single token mock data to the format expected by the table
-    const leverageTokens: Array<LeverageToken> = [
-      {
-        id: mockLeverageTokenData.token.address, // Use leverage token address as ID
-        name: mockLeverageTokenData.token.name,
-        collateralAsset: {
-          symbol: mockLeverageTokenData.token.collateralAsset.symbol,
-          name: mockLeverageTokenData.token.collateralAsset.name,
-          address: mockLeverageTokenData.token.collateralAsset.address,
-        },
-        debtAsset: {
-          symbol: mockLeverageTokenData.token.debtAsset.symbol,
-          name: mockLeverageTokenData.token.debtAsset.name,
-          address: mockLeverageTokenData.token.debtAsset.address,
-        },
-        tvl: mockLeverageTokenData.keyMetrics.tvl,
-        apy: mockLeverageTokenData.apy.total,
-        leverage: mockLeverageTokenData.token.leverageRatio,
-        supplyCap: mockLeverageTokenData.supply.supplyCap,
-        currentSupply: mockLeverageTokenData.supply.currentSupply,
-        chainId: mockLeverageTokenData.token.chainId,
-        chainName: mockLeverageTokenData.token.chainName,
-        chainLogo: mockLeverageTokenData.token.chainLogo,
-        baseYield: mockLeverageTokenData.apy.baseYield,
-        borrowRate: mockLeverageTokenData.apy.borrowRate,
-        rewardMultiplier: mockLeverageTokenData.apy.rewardMultiplier,
+    // Convert leverage token configs to the format expected by the table
+    const leverageTokens: Array<LeverageToken> = getAllLeverageTokenConfigs().map((config) => ({
+      id: config.address, // Use leverage token address as ID
+      name: config.name,
+      collateralAsset: {
+        symbol: config.collateralAsset.symbol,
+        name: config.collateralAsset.name,
+        address: config.collateralAsset.address,
       },
-    ]
+      debtAsset: {
+        symbol: config.debtAsset.symbol,
+        name: config.debtAsset.name,
+        address: config.debtAsset.address,
+      },
+      tvl: mockKeyMetrics.tvl,
+      apy: mockAPY.total,
+      leverage: config.leverageRatio,
+      supplyCap: mockSupply.supplyCap,
+      currentSupply: mockSupply.currentSupply,
+      chainId: config.chainId,
+      chainName: config.chainName,
+      chainLogo: config.chainLogo,
+      baseYield: mockAPY.baseYield,
+      borrowRate: mockAPY.borrowRate,
+      rewardMultiplier: mockAPY.rewardMultiplier,
+    }))
 
     const handleTokenClick = (token: LeverageToken) => {
       // Navigate to the specific token's page using the new chain ID-based route
