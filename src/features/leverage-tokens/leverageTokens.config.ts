@@ -37,7 +37,7 @@ export interface LeverageTokenConfig {
   leverageRatio: number
   chainId: number
   chainName: string
-  chainLogo: React.ComponentType<{ className?: string }>
+  chainLogo: React.ComponentType<React.SVGProps<SVGSVGElement>>
 
   // Asset configuration
   collateralAsset: {
