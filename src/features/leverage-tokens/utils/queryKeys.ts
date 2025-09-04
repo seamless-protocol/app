@@ -11,6 +11,11 @@ export const ltKeys = {
     [...ltKeys.token(addr), 'user', owner] as const,
   supply: (addr: `0x${string}`) => [...ltKeys.token(addr), 'supply'] as const,
   price: (addr: `0x${string}`) => [...ltKeys.token(addr), 'price'] as const,
+  // Live state and TVL keys
+  state: (addr: `0x${string}`) => [...ltKeys.token(addr), 'state'] as const,
+  tvl: (addr: `0x${string}`) => [...ltKeys.token(addr), 'tvl'] as const,
+  protocolTvl: () => [...ltKeys.all, 'protocol-tvl'] as const,
+  tableData: () => [...ltKeys.all, 'table-data'] as const,
   rebalancing: (addr: `0x${string}`) => [...ltKeys.token(addr), 'rebalancing'] as const,
   metadata: (addr: `0x${string}`) => [...ltKeys.token(addr), 'metadata'] as const,
   detailedMetrics: (addr: `0x${string}`) => [...ltKeys.token(addr), 'detailed-metrics'] as const,
