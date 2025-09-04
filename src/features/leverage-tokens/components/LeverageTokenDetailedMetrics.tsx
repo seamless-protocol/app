@@ -10,11 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../../../components/ui/collapsible'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '../../../components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip'
 
 export interface MetricItem {
   label: string

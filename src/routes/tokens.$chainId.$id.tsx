@@ -86,11 +86,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       console.log('Redeem clicked')
     }
 
-    const handleConnectWallet = () => {
-      // TODO: Implement wallet connection
-      console.log('Connect wallet clicked')
-    }
-
     // Create StatCard data for key metrics (using mock data for now)
     const keyMetricsCards = [
       {
@@ -245,7 +240,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 }}
                 onMint={handleMint}
                 onRedeem={handleRedeem}
-                onConnectWallet={handleConnectWallet}
               />
             </motion.div>
 
@@ -365,7 +359,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
               }}
               onMint={handleMint}
               onRedeem={handleRedeem}
-              onConnectWallet={handleConnectWallet}
             />
           </motion.div>
         </div>
