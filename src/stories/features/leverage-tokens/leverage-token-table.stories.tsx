@@ -19,7 +19,7 @@ type Story = StoryObj<typeof meta>
 
 const mockTokens = [
   {
-    id: 'weeth-2x',
+    id: '0xCd5fE23C85820F7B08D4D8A6c35929B5d900B527' as `0x${string}`,
     name: 'weETH 2x Leverage Token',
     collateralAsset: {
       symbol: 'weETH',
@@ -43,7 +43,7 @@ const mockTokens = [
     borrowRate: 4.3,
   },
   {
-    id: 'usdc-3x',
+    id: '0xa0b86a33e6441b8c4c8c8c8c8c8c8c8c8c8c8c8c' as `0x${string}`,
     name: 'USDC 3x Leverage Token',
     collateralAsset: {
       symbol: 'USDC',
@@ -67,7 +67,7 @@ const mockTokens = [
     borrowRate: 6.1,
   },
   {
-    id: 'weeth-1.5x',
+    id: '0xCd5fE23C85820F7B08D4D8A6c35929B5d900B527' as `0x${string}`,
     name: 'weETH 1.5x Leverage Token',
     collateralAsset: {
       symbol: 'weETH',
@@ -91,7 +91,7 @@ const mockTokens = [
     borrowRate: 2.9,
   },
   {
-    id: 'eth-5x',
+    id: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619' as `0x${string}`,
     name: 'ETH 5x Leverage Token',
     collateralAsset: {
       symbol: 'ETH',
@@ -115,7 +115,7 @@ const mockTokens = [
     borrowRate: 10.1,
   },
   {
-    id: 'btc-4x',
+    id: '0x4444444444444444444444444444444444444444' as `0x${string}`,
     name: 'BTC 4x Leverage Token',
     collateralAsset: {
       symbol: 'WBTC',
@@ -139,7 +139,7 @@ const mockTokens = [
     borrowRate: 3.6,
   },
   {
-    id: 'matic-2.5x',
+    id: '0x5555555555555555555555555555555555555555' as `0x${string}`,
     name: 'MATIC 2.5x Leverage Token',
     collateralAsset: {
       symbol: 'MATIC',
@@ -163,7 +163,7 @@ const mockTokens = [
     borrowRate: 5.6,
   },
   {
-    id: 'link-3.5x',
+    id: '0x6666666666666666666666666666666666666666' as `0x${string}`,
     name: 'LINK 3.5x Leverage Token',
     collateralAsset: {
       symbol: 'LINK',
@@ -187,7 +187,7 @@ const mockTokens = [
     borrowRate: 5.4,
   },
   {
-    id: 'aave-2x',
+    id: '0x7777777777777777777777777777777777777777' as `0x${string}`,
     name: 'AAVE 2x Leverage Token',
     collateralAsset: {
       symbol: 'AAVE',
@@ -211,7 +211,7 @@ const mockTokens = [
     borrowRate: 4.4,
   },
   {
-    id: 'uni-3x',
+    id: '0x2222222222222222222222222222222222222222' as `0x${string}`,
     name: 'UNI 3x Leverage Token',
     collateralAsset: {
       symbol: 'UNI',
@@ -235,7 +235,7 @@ const mockTokens = [
     borrowRate: 4.7,
   },
   {
-    id: 'sushi-2.5x',
+    id: '0x1111111111111111111111111111111111111111' as `0x${string}`,
     name: 'SUSHI 2.5x Leverage Token',
     collateralAsset: {
       symbol: 'SUSHI',
@@ -259,7 +259,7 @@ const mockTokens = [
     borrowRate: 4.9,
   },
   {
-    id: 'comp-2x',
+    id: '0x3333333333333333333333333333333333333333' as `0x${string}`,
     name: 'COMP 2x Leverage Token',
     collateralAsset: {
       symbol: 'COMP',

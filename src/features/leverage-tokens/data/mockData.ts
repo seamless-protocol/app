@@ -1,8 +1,7 @@
 import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
 import type { Address } from 'viem'
 import type { FAQItem } from '@/components/FAQ'
-import { EthereumLogo } from '@/components/icons/logos'
-import type { PriceDataPoint } from '@/components/ui/price-line-chart'
+import { BaseLogo } from '@/components/icons/logos'
 import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
 
 // Define ResourceItem interface locally since it's not exported
@@ -41,9 +40,9 @@ export const mockLeverageTokenData = {
     decimals: 18,
     leverageRatio: 17,
     totalSupply: BigInt('1000000000000000000000'), // 1000 tokens
-    chainId: 1,
-    chainName: 'Ethereum',
-    chainLogo: EthereumLogo,
+    chainId: 8453,
+    chainName: 'Base',
+    chainLogo: BaseLogo,
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether.fi ETH',
@@ -250,42 +249,6 @@ export const mockRelatedResources = {
 } satisfies {
   underlyingPlatforms: Array<ResourceItem>
   additionalRewards: Array<ResourceItem>
-}
-
-// Price history data generation
-export const generatePriceHistory = (selectedTimeframe: string): Array<PriceDataPoint> => {
-  const data: Array<PriceDataPoint> = []
-  const now = Date.now()
-  const days =
-    selectedTimeframe === '1H'
-      ? 1
-      : selectedTimeframe === '1D'
-        ? 7
-        : selectedTimeframe === '1W'
-          ? 30
-          : selectedTimeframe === '1M'
-            ? 90
-            : 365
-  const interval = selectedTimeframe === '1H' ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000 // 1 hour or 1 day
-
-  let basePrice = 2.5
-  for (let i = days; i >= 0; i--) {
-    const timestamp = now - i * interval
-    const date = new Date(timestamp)
-
-    // Add some realistic price movement
-    const volatility = 0.05
-    const change = (Math.random() - 0.5) * volatility
-    basePrice = Math.max(0.1, basePrice + change)
-
-    data.push({
-      date: date.toISOString(),
-      price: basePrice,
-      weethPrice: basePrice * 0.8 + Math.random() * 0.4, // weETH price variation
-      leverageTokenPrice: basePrice,
-    })
-  }
-  return data
 }
 
 // FAQ data for leverage tokens

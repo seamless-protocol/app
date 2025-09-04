@@ -79,7 +79,7 @@ export function PriceLineChart({
     if (value >= 1000) {
       return `$${(value / 1000).toFixed(1)}K`
     }
-    return `$${value.toFixed(0)}`
+    return `$${value.toFixed(3)}` // Show 3 decimal places for price data
   }
 
   const defaultTooltipFormatter = (value: number | string, name?: string): [string, string] => {
@@ -183,11 +183,12 @@ export function PriceLineChart({
                 tickFormatter={formatChartDate}
               />
               <YAxis
-                dataKey={chartConfig.dataKey}
+                dataKey={chartType === 'comparison' ? undefined : chartConfig.dataKey}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: '#64748B', fontSize: 12 }}
                 tickFormatter={chartConfig.yAxisFormatter}
+                domain={chartType === 'comparison' ? ['dataMin', 'dataMax'] : undefined}
                 label={{
                   value: chartConfig.yAxisLabel,
                   angle: -90,
