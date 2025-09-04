@@ -90,3 +90,11 @@ export function hasDeployedContracts(chainId: number): boolean {
   const addresses = contractAddresses[chainId]
   return addresses ? Object.keys(addresses).length > 0 : false
 }
+
+/**
+ * Get leverage manager address for a specific chain
+ */
+export function getLeverageManagerAddress(chainId: number): Address | undefined {
+  const addresses = contractAddresses[chainId]
+  return addresses?.leverageManager
+}

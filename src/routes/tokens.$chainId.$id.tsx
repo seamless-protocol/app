@@ -13,6 +13,7 @@ import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
 import { leverageTokenPageData } from '@/features/leverage-tokens/data/mockData'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
+import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
@@ -28,9 +29,16 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     // Parse chainId from route parameter
     const chainId = parseInt(routeChainId || '8453', 10) // Default to Base if not provided
 
-    // Use the comprehensive mock data
+    // Use the comprehensive mock data for most components
     const tokenData = leverageTokenPageData
-    const { token, userPosition, detailedMetrics, relatedResources, faqData } = tokenData
+    const { token, userPosition, relatedResources, faqData } = tokenData
+
+    // Use live data for detailed metrics
+    const {
+      data: detailedMetrics,
+      isLoading: isDetailedMetricsLoading,
+      isError: isDetailedMetricsError,
+    } = useLeverageTokenDetailedMetrics(tokenAddress as `0x${string}`)
 
     const {
       data: priceHistoryData,
@@ -91,6 +99,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           ]}
           onBack={() => navigate({ to: '/tokens' })}
         />
+
 
         {/* Two-Column Grid Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -279,6 +288,8 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 title="Token Details & Risk Parameters"
                 description="Comprehensive leverage token parameters and settings"
                 defaultOpen={false}
+                isLoading={isDetailedMetricsLoading}
+                isError={isDetailedMetricsError}
               />
             </motion.div>
 

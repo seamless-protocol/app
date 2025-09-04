@@ -30,11 +30,13 @@ export interface LeverageTokenMetrics {
 }
 
 interface LeverageTokenDetailedMetricsProps {
-  metrics: LeverageTokenMetrics
+  metrics?: LeverageTokenMetrics | undefined
   title?: string
   description?: string
   defaultOpen?: boolean
   className?: string
+  isLoading?: boolean
+  isError?: boolean
 }
 
 export function LeverageTokenDetailedMetrics({
@@ -43,6 +45,8 @@ export function LeverageTokenDetailedMetrics({
   description = 'Comprehensive leverage token parameters and settings',
   defaultOpen = false,
   className = '',
+  isLoading = false,
+  isError = false,
 }: LeverageTokenDetailedMetricsProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
@@ -80,50 +84,64 @@ export function LeverageTokenDetailedMetrics({
 
           <CollapsibleContent>
             <CardContent className="space-y-6 pt-0">
-              {Object.entries(metrics).map(([category, categoryMetrics]) => (
-                <div key={category} className="space-y-4">
-                  {/* Category Header */}
-                  <div className="flex items-center space-x-2">
-                    <h3 className="text-white font-medium text-sm uppercase tracking-wide">
-                      {category}
-                    </h3>
-                    <div className="flex-1 h-px bg-slate-700" />
-                  </div>
-
-                  {/* Metrics Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {categoryMetrics.map((metric, index) => (
-                      <div
-                        key={`${category}-${metric.label}-${index}`}
-                        className={`p-4 rounded-lg border transition-colors ${
-                          metric.highlight
-                            ? 'bg-slate-800/70 border-slate-600'
-                            : 'bg-slate-800/50 border-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex items-center space-x-1 cursor-help">
-                                  <span className="text-slate-400 text-sm">{metric.label}</span>
-                                  <Info className="w-3 h-3 text-slate-500" />
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs bg-slate-800 border border-slate-600 text-white">
-                                <p className="text-sm">{metric.tooltip}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                        <p className={`text-lg font-semibold ${metric.color || 'text-white'}`}>
-                          {metric.value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-slate-400">Loading detailed metrics...</div>
                 </div>
-              ))}
+              ) : isError ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-red-400">Failed to load detailed metrics</div>
+                </div>
+              ) : metrics ? (
+                Object.entries(metrics).map(([category, categoryMetrics]) => (
+                  <div key={category} className="space-y-4">
+                    {/* Category Header */}
+                    <div className="flex items-center space-x-2">
+                      <h3 className="text-white font-medium text-sm uppercase tracking-wide">
+                        {category}
+                      </h3>
+                      <div className="flex-1 h-px bg-slate-700" />
+                    </div>
+
+                    {/* Metrics Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {categoryMetrics.map((metric, index) => (
+                        <div
+                          key={`${category}-${metric.label}-${index}`}
+                          className={`p-4 rounded-lg border transition-colors ${
+                            metric.highlight
+                              ? 'bg-slate-800/70 border-slate-600'
+                              : 'bg-slate-800/50 border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center space-x-1 cursor-help">
+                                    <span className="text-slate-400 text-sm">{metric.label}</span>
+                                    <Info className="w-3 h-3 text-slate-500" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs bg-slate-800 border border-slate-600 text-white">
+                                  <p className="text-sm">{metric.tooltip}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                          <p className={`text-lg font-semibold ${metric.color || 'text-white'}`}>
+                            {metric.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-slate-400">No detailed metrics available</div>
+                </div>
+              )}
             </CardContent>
           </CollapsibleContent>
         </Collapsible>
