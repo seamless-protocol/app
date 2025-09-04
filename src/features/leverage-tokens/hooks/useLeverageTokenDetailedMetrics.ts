@@ -1,11 +1,11 @@
-import { useReadContracts, useChainId } from 'wagmi'
 import type { Address } from 'viem'
+import { useChainId, useReadContracts } from 'wagmi'
+import { lendingAdapterAbi } from '../../../lib/contracts/abis/lendingAdapter'
 import { leverageManagerAbi } from '../../../lib/contracts/abis/leverageManager'
 import { rebalanceAdapterAbi } from '../../../lib/contracts/abis/rebalanceAdapter'
-import { lendingAdapterAbi } from '../../../lib/contracts/abis/lendingAdapter'
 import { getLeverageManagerAddress } from '../../../lib/contracts/addresses'
-import { STALE_TIME } from '../utils/constants'
 import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
+import { STALE_TIME } from '../utils/constants'
 
 // Helper to convert collateral ratio to leverage
 const collateralRatioToLeverage = (collateralRatio: bigint): bigint => {
@@ -155,9 +155,9 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
  * Transform raw contract data into UI-friendly format
  */
 function transformDetailedMetricsData(
-  managerData: readonly any[],
-  adapterData: readonly any[],
-  lendingData: readonly any[],
+  managerData: ReadonlyArray<any>,
+  adapterData: ReadonlyArray<any>,
+  lendingData: ReadonlyArray<any>,
 ): LeverageTokenMetrics {
   // Extract data from manager calls
   const configResult = managerData[0]
@@ -181,9 +181,15 @@ function transformDetailedMetricsData(
     return `${leverage.toFixed(2)}x`
   }
 
-  // Helper function to format fee values
+  // Helper function to format fee values (18 decimals)
   const formatFee = (value: bigint): string => {
     const fee = (Number(value) / 1e18) * 100
+    return `${fee.toFixed(2)}%`
+  }
+
+  // Helper function to format fee values (4 decimals)
+  const formatFee4Decimals = (value: bigint): string => {
+    const fee = (Number(value) / 1e4) * 100
     return `${fee.toFixed(2)}%`
   }
 
@@ -217,12 +223,12 @@ function transformDetailedMetricsData(
 
   const mintTokenFee =
     configResult?.status === 'success'
-      ? formatFee((configResult.result as any).mintTokenFee)
+      ? formatFee4Decimals((configResult.result as any).mintTokenFee)
       : 'N/A'
 
   const redeemTokenFee =
     configResult?.status === 'success'
-      ? formatFee((configResult.result as any).redeemTokenFee)
+      ? formatFee4Decimals((configResult.result as any).redeemTokenFee)
       : 'N/A'
 
   const dutchAuctionDuration =
@@ -235,11 +241,15 @@ function transformDetailedMetricsData(
       ? formatLeverage(collateralRatioToLeverage(collateralRatioThresholdResult.result as bigint))
       : 'N/A'
 
-  // Calculate rebalance reward: liquidationPenalty * preLiquidationRebalanceReward
+  // Calculate rebalance reward: liquidationPenalty * rebalanceReward
+  // liquidationPenalty is in 18 decimals, rebalanceReward is in 4 decimals
+  // So we need to convert rebalanceReward to 18 decimals first, then divide by 1e18
   const rebalanceReward =
     liquidationPenaltyResult?.status === 'success' && rebalanceRewardResult?.status === 'success'
       ? formatFee(
-          ((liquidationPenaltyResult.result as bigint) * (rebalanceRewardResult.result as bigint)) /
+          ((liquidationPenaltyResult.result as bigint) *
+            (rebalanceRewardResult.result as bigint) *
+            10n ** 14n) /
             10n ** 18n,
         )
       : 'N/A'

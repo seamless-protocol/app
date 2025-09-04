@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 // Test the transformation logic by importing the hook and testing the transform function
 // Since the transform function is not exported, we'll test the hook's behavior indirectly
@@ -33,7 +33,6 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
     const mockAdapterData = [
       { status: 'success', result: 1061350000000000000n }, // minCollateralRatio
       { status: 'success', result: 1062893082000000000n }, // maxCollateralRatio
-      { status: 'success', result: 1062500000000000000n }, // targetCollateralRatio
       { status: 'success', result: 3600n }, // auctionDuration (1 hour)
       { status: 'success', result: 1060000000000000000n }, // collateralRatioThreshold
       { status: 'success', result: 3000n }, // rebalanceReward
@@ -48,7 +47,7 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
 
     // Test the expected data structure
     expect(mockManagerData).toHaveLength(2)
-    expect(mockAdapterData).toHaveLength(8)
+    expect(mockAdapterData).toHaveLength(7)
     expect(mockLendingData).toHaveLength(1)
 
     // Test manager data structure
@@ -65,12 +64,11 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
     // Test adapter data structure
     expect(mockAdapterData[0]?.result).toBe(1061350000000000000n) // minCollateralRatio
     expect(mockAdapterData[1]?.result).toBe(1062893082000000000n) // maxCollateralRatio
-    expect(mockAdapterData[2]?.result).toBe(1062500000000000000n) // targetCollateralRatio
-    expect(mockAdapterData[3]?.result).toBe(3600n) // auctionDuration
-    expect(mockAdapterData[4]?.result).toBe(1060000000000000000n) // collateralRatioThreshold
-    expect(mockAdapterData[5]?.result).toBe(3000n) // rebalanceReward
-    expect(mockAdapterData[6]?.result).toBe(1010000000000000000n) // initialPriceMultiplier
-    expect(mockAdapterData[7]?.result).toBe(999000000000000000n) // minPriceMultiplier
+    expect(mockAdapterData[2]?.result).toBe(3600n) // auctionDuration
+    expect(mockAdapterData[3]?.result).toBe(1060000000000000000n) // collateralRatioThreshold
+    expect(mockAdapterData[4]?.result).toBe(3000n) // rebalanceReward
+    expect(mockAdapterData[5]?.result).toBe(1010000000000000000n) // initialPriceMultiplier
+    expect(mockAdapterData[6]?.result).toBe(999000000000000000n) // minPriceMultiplier
 
     // Test lending data structure
     expect(mockLendingData[0]?.result).toBe(16776817488561260n) // liquidationPenalty
@@ -94,14 +92,27 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
   })
 
   it('should format fee values correctly', () => {
+    // Test 18-decimal fees (for rebalance reward calculation)
     const formatFee = (value: bigint): string => {
       const fee = (Number(value) / 1e18) * 100
       return `${fee.toFixed(2)}%`
     }
 
+    // Test 4-decimal fees (for mint/redeem fees)
+    const formatFee4Decimals = (value: bigint): string => {
+      const fee = (Number(value) / 1e4) * 100
+      return `${fee.toFixed(2)}%`
+    }
+
+    // Test 18-decimal fees
     expect(formatFee(0n)).toBe('0.00%')
     expect(formatFee(1n * 10n ** 15n)).toBe('0.10%') // 0.1%
     expect(formatFee(5n * 10n ** 16n)).toBe('5.00%') // 5%
+
+    // Test 4-decimal fees
+    expect(formatFee4Decimals(0n)).toBe('0.00%')
+    expect(formatFee4Decimals(10n)).toBe('0.10%') // 0.1%
+    expect(formatFee4Decimals(100n)).toBe('1.00%') // 1%
   })
 
   it('should format duration correctly', () => {
@@ -127,6 +138,30 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
     const actualLeverage = collateralRatioToLeverage(collateralRatio)
     const expectedLeverage = 16969649023506965051n // Actual calculated value
     expect(actualLeverage).toBe(expectedLeverage)
+  })
+
+  it('should calculate rebalance reward correctly', () => {
+    // Test the rebalance reward calculation with real values
+    const liquidationPenalty = 16776817488561260n // 18 decimals
+    const rebalanceReward = 3000n // 4 decimals
+
+    // Calculate: (liquidationPenalty * rebalanceReward * 10^14) / 10^18
+    // This converts rebalanceReward from 4 decimals to 18 decimals, then divides by 1e18
+    const rebalanceReward4 = rebalanceReward * 10n ** 14n // Convert 4 to 18 decimals
+    const result = (liquidationPenalty * rebalanceReward4) / 10n ** 18n
+
+    // Format as percentage
+    const formatFee = (value: bigint): string => {
+      const fee = (Number(value) / 1e18) * 100
+      return `${fee.toFixed(2)}%`
+    }
+
+    const formattedResult = formatFee(result)
+
+    // Test passes with correct calculation
+
+    // Should be approximately 0.50%
+    expect(formattedResult).toBe('0.50%')
   })
 
   it('should handle edge cases in formatting', () => {
@@ -164,7 +199,6 @@ describe('useLeverageTokenDetailedMetrics - Data Transformation', () => {
     const mockAdapterDataWithErrors = [
       { status: 'success', result: 1061350000000000000n }, // minCollateralRatio - success
       { status: 'failure', error: new Error('Adapter call failed') }, // maxCollateralRatio - error
-      { status: 'success', result: 1062500000000000000n }, // targetCollateralRatio - success
       { status: 'success', result: 3600n }, // auctionDuration - success
       { status: 'failure', error: new Error('Adapter call failed') }, // collateralRatioThreshold - error
       { status: 'success', result: 3000n }, // rebalanceReward - success
