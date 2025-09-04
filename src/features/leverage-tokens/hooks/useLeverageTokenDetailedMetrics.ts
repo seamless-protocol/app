@@ -5,13 +5,8 @@ import { leverageManagerAbi } from '../../../lib/contracts/abis/leverageManager'
 import { rebalanceAdapterAbi } from '../../../lib/contracts/abis/rebalanceAdapter'
 import { getLeverageManagerAddress } from '../../../lib/contracts/addresses'
 import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
+import { collateralRatioToLeverage } from '../utils/apy-calculations/leverage-ratios'
 import { STALE_TIME } from '../utils/constants'
-
-// Helper to convert collateral ratio to leverage
-const collateralRatioToLeverage = (collateralRatio: bigint): bigint => {
-  const BASE_RATIO = 10n ** 18n // 1e18
-  return (collateralRatio * BASE_RATIO) / (collateralRatio - BASE_RATIO)
-}
 
 /**
  * Hook to fetch detailed metrics for a leverage token using two-contract architecture

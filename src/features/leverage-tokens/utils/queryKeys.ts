@@ -19,10 +19,19 @@ export const ltKeys = {
   rebalancing: (addr: `0x${string}`) => [...ltKeys.token(addr), 'rebalancing'] as const,
   metadata: (addr: `0x${string}`) => [...ltKeys.token(addr), 'metadata'] as const,
   detailedMetrics: (addr: `0x${string}`) => [...ltKeys.token(addr), 'detailed-metrics'] as const,
+  apy: (addr: `0x${string}`) => [...ltKeys.token(addr), 'apy'] as const,
   simulation: {
     mint: (addr: `0x${string}`, amount: bigint) =>
       [...ltKeys.token(addr), 'simulate', 'mint', amount.toString()] as const,
     redeem: (addr: `0x${string}`, amount: bigint) =>
       [...ltKeys.token(addr), 'simulate', 'redeem', amount.toString()] as const,
+  },
+  // External data sources (shared across all tokens)
+  external: {
+    etherFiApr: () => [...ltKeys.all, 'external', 'etherfi-apr'] as const,
+    borrowApy: (addr: `0x${string}`) => [...ltKeys.all, 'external', 'borrow-apy', addr] as const,
+    leverageRatios: (addr: `0x${string}`) =>
+      [...ltKeys.all, 'external', 'leverage-ratios', addr] as const,
+    rewardsApr: (addr: `0x${string}`) => [...ltKeys.all, 'external', 'rewards-apr', addr] as const,
   },
 } as const

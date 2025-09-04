@@ -2,6 +2,13 @@ import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
 import type { Address } from 'viem'
 import { BaseLogo } from '@/components/icons/logos'
 
+// Leverage token keys enum for type safety
+export enum LeverageTokenKey {
+  WEETH_WETH_17X = 'weeth-weth-17x',
+  // Add more token keys here as they are added
+  // ANOTHER_TOKEN = 'another-token',
+}
+
 // Define ResourceItem interface
 interface ResourceItem {
   id: string
@@ -53,8 +60,8 @@ export interface LeverageTokenConfig {
     decimals: number
   }
 
-  // Related resources
-  relatedResources: {
+  // Related resources (optional)
+  relatedResources?: {
     underlyingPlatforms: Array<ResourceItem>
     additionalRewards: Array<ResourceItem>
   }
@@ -62,7 +69,7 @@ export interface LeverageTokenConfig {
 
 // Leverage token configurations
 export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
-  'weeth-weth-17x': {
+  [LeverageTokenKey.WEETH_WETH_17X]: {
     address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
     name: 'weETH / WETH 17x Leverage Token',
     symbol: 'WEETH-WETH-17x',
@@ -91,7 +98,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           id: 'morpho-lending',
           title: 'Morpho Lending Market',
           description: 'View the underlying lending market powering this leverage token',
-          url: 'https://app.morpho.org/market?id=0xfd0895ba253889c243bf59bc4b96fd1e06d68631241383947b04d1c293a0cfea',
+          url: 'https://app.morpho.org/base/market/0xfd0895ba253889c243bf59bc4b96fd1e06d68631241383947b04d1c293a0cfea',
           icon: Building2,
           badge: {
             text: 'Primary Market',

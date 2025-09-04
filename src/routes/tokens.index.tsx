@@ -4,6 +4,7 @@ import { FeaturedLeverageTokens } from '@/features/leverage-tokens/components/Fe
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
 import { LeverageTokenTable } from '@/features/leverage-tokens/components/LeverageTokenTable'
 import { useLeverageTokensTableData } from '@/features/leverage-tokens/hooks/useLeverageTokensTableData'
+import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 
 export const Route = createFileRoute('/tokens/')({
   component: () => {
@@ -12,11 +13,23 @@ export const Route = createFileRoute('/tokens/')({
     // Fetch live leverage token table data
     const { data: leverageTokens = [], isLoading, isError, error } = useLeverageTokensTableData()
 
+    // Pre-load APY data for the first token (currently only one token)
+    const firstToken = leverageTokens[0]
+    const {
+      data: apyData,
+      isLoading: isApyLoading,
+      isError: isApyError,
+    } = useLeverageTokenAPY({
+      ...(firstToken?.address && { tokenAddress: firstToken.address }),
+      ...(firstToken && { leverageToken: firstToken }),
+      enabled: !!firstToken,
+    })
+
     const handleTokenClick = (token: LeverageToken) => {
       // Navigate to the specific token's page using the new chain ID-based route
       navigate({
         to: '/tokens/$chainId/$id',
-        params: { chainId: token.chainId.toString(), id: token.id },
+        params: { chainId: token.chainId.toString(), id: token.address },
       })
     }
 
@@ -28,6 +41,9 @@ export const Route = createFileRoute('/tokens/')({
             <FeaturedLeverageTokens
               tokens={leverageTokens.slice(0, 3)} // Show top 3 tokens
               onTokenClick={handleTokenClick}
+              apyData={apyData}
+              isApyLoading={isApyLoading}
+              isApyError={isApyError}
             />
           </div>
 
@@ -46,8 +62,11 @@ export const Route = createFileRoute('/tokens/')({
               </div>
             ) : (
               <LeverageTokenTable
-                tokens={leverageTokens as Array<LeverageToken>}
+                tokens={leverageTokens}
                 onTokenClick={handleTokenClick}
+                apyData={apyData}
+                isApyLoading={isApyLoading}
+                isApyError={isApyError}
               />
             )}
           </motion.div>
