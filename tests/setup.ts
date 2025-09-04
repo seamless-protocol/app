@@ -11,6 +11,7 @@ vi.mock('wagmi', () => ({
   useAccount: vi.fn(),
   useChainId: vi.fn(),
   useConfig: vi.fn(() => ({})),
+  useReadContracts: vi.fn(),
   createConfig: vi.fn(),
   http: vi.fn(),
 }))
@@ -53,6 +54,7 @@ vi.mock('@/lib/contracts/generated', () => ({
 // Mock contract addresses
 vi.mock('@/lib/contracts/addresses', () => ({
   getContractAddresses: vi.fn(),
+  getLeverageManagerAddress: vi.fn(),
 }))
 
 // Mock query keys
@@ -62,6 +64,7 @@ vi.mock('@/features/leverage-tokens/utils/queryKeys', () => ({
     metadata: (addr: string) => ['leverage-tokens', 'tokens', addr, 'metadata'],
     user: (addr: string, owner: string) => ['leverage-tokens', 'tokens', addr, 'user', owner],
     supply: (addr: string) => ['leverage-tokens', 'tokens', addr, 'supply'],
+    detailedMetrics: (addr: string) => ['leverage-tokens', 'tokens', addr, 'detailed-metrics'],
   },
 }))
 
@@ -72,7 +75,31 @@ vi.mock('@/features/leverage-tokens/utils/constants', () => ({
   },
   STALE_TIME: {
     metadata: 30000,
+    detailedMetrics: 300000,
   },
+}))
+
+// Mock governance utilities
+vi.mock('@/features/governance/utils/tally', () => ({
+  getProposals: vi.fn(),
+}))
+
+// Mock governance constants
+vi.mock('@/features/governance/utils/constants', () => ({
+  TALLY_CONFIG: {
+    ORGANIZATION_ID: 'test-org-id',
+  },
+  STALE_TIME: {
+    proposals: 60000,
+  },
+  QUERY_SETTINGS: {
+    gcTime: 300000,
+  },
+}))
+
+// Mock GraphQL fetchers
+vi.mock('@/lib/graphql/fetchers/leverage-tokens', () => ({
+  fetchLeverageTokenPriceComparison: vi.fn(),
 }))
 
 // Mock window.ethereum

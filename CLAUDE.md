@@ -231,6 +231,49 @@ tests/e2e/
 
 Use `VITE_ENABLE_*` environment variables to control feature visibility for phased releases.
 
+## Component Development Workflow
+
+When building new UI components, always follow this workflow to ensure design consistency and proper implementation:
+
+### 1. Find Component in Figma Make
+- **Source**: All components should be extracted from the `_figma` folder
+- **Location**: Look in `_figma/src/components/` for existing component implementations
+- **Context**: Components are organized by feature (pages, ui, modals, etc.)
+
+### 2. Extract and Create Reusable Component
+- **Structure**: Create components in appropriate feature folders (`src/features/*/components/`)
+- **Naming**: Use descriptive names that match the Figma component purpose
+- **Props**: Design clean, typed interfaces that make components reusable
+- **Styling**: Preserve exact Figma styling including colors, spacing, and animations
+
+### 3. Create Storybook Stories
+- **Location**: Place stories in `src/stories/features/` mirroring the component structure
+- **Variants**: Create multiple story variants showing different states
+- **Controls**: Add proper controls for interactive props
+- **Documentation**: Use `tags: ['autodocs']` for automatic documentation
+
+### 4. Integration
+- **Import**: Import the new component into the relevant pages/features
+- **Props**: Map real data to component props appropriately
+- **Testing**: Ensure the component works in different states and screen sizes
+
+### Example Workflow
+```bash
+# 1. Find component in _figma folder
+grep -r "Current Holdings" _figma/
+
+# 2. Extract to reusable component
+# Create: src/features/leverage-tokens/Features/LeverageTokenHoldingsCard.tsx
+
+# 3. Create Storybook story
+# Create: src/stories/features/leverage-tokens/leveragetokenholdingscard.stories.tsx
+
+# 4. Integrate into application
+# Import and use in relevant route/page files
+```
+
+**Important**: Never create components from scratch when a Figma design exists. Always extract and adapt from the `_figma` folder to maintain design consistency.
+
 ## Working Principles
 
 When making changes to this codebase:
@@ -258,6 +301,7 @@ Always run these commands before committing any changes:
 - **IPFS constraints first** - Every feature must work client-side only
 - **Bundle size matters** - Check impact of new dependencies
 - **Type safety** - If TypeScript complains, fix it properly
+- **Components from Figma Make** - All UI components should be derived from designs in the `_figma` folder, not created from scratch
 
 ### Common Pitfalls to Avoid
 - Don't add server-side features

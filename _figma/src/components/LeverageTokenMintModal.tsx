@@ -615,10 +615,10 @@ export function LeverageTokenMintModal({ isOpen, onClose, strategyId }: Leverage
                 <div className="flex justify-between">
                   <span className="text-slate-400">Transaction</span>
                   <button
-                    onClick={() => window.open(`https://basescan.org/tx/${transactionHash}`, '_blank')}
+                    onClick={() => window.open(`https://etherscan.io/tx/${transactionHash}`, '_blank')}
                     className="text-purple-400 hover:underline flex items-center"
                   >
-                    View on Basescan
+                    View on Etherscan
                     <ExternalLink className="h-3 w-3 ml-1" />
                   </button>
                 </div>

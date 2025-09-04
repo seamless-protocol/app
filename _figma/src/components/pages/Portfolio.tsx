@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Button } from "../ui/button"
 import { Badge } from "../ui/badge"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 
@@ -25,9 +26,10 @@ import {
   Shield,
   AlertTriangle,
   Settings,
-  CheckCircle,
-  Clock,
-  MoreHorizontal
+  Info,
+  Lock,
+  Unlock,
+  ExternalLink
 } from "lucide-react"
 import { AddFundsModal } from "../AddFundsModal"
 import { BridgeSwapModal } from "../BridgeSwapModal"
@@ -35,15 +37,18 @@ import { RemoveFundsModal } from "../RemoveFundsModal"
 import { ClaimModal } from "../ClaimModal"
 import { StrategyDepositModal } from "../StrategyDepositModal"
 import { StrategyWithdrawModal } from "../StrategyWithdrawModal"
+import { StakeModal } from "../StakeModal"
 import { ConnectionStatusCard } from "../ConnectionStatusCard"
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Area, AreaChart } from "recharts"
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip, Area, AreaChart } from "recharts"
 import { Network } from "../NetworkSelector"
-import { USDCLogo, EthereumLogo, weETHLogo } from "../ui/crypto-logos"
+import { USDCLogo, EthereumLogo, weETHLogo as WeETHLogo, SEAMLogo } from "../ui/crypto-logos"
 
 interface PortfolioProps {
   currentNetwork: Network
   isConnected: boolean
   onConnectWallet?: () => void
+  onViewStrategy?: (strategyId: string) => void
+  onNavigateToStaking?: () => void
 }
 
 // Mock portfolio data generator
@@ -66,13 +71,14 @@ const generatePortfolioData = () => {
   })
 }
 
-export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: PortfolioProps) {
+export function Portfolio({ currentNetwork, isConnected, onConnectWallet, onViewStrategy, onNavigateToStaking }: PortfolioProps) {
   const [showAddFundsModal, setShowAddFundsModal] = useState(false)
   const [showBridgeSwapModal, setShowBridgeSwapModal] = useState(false)
   const [showRemoveFundsModal, setShowRemoveFundsModal] = useState(false)
   const [showClaimModal, setShowClaimModal] = useState(false)
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [showStakeModal, setShowStakeModal] = useState(false)
   const [selectedPosition, setSelectedPosition] = useState<any>(null)
   const [portfolioData, setPortfolioData] = useState(generatePortfolioData())
   const [selectedTimeframe, setSelectedTimeframe] = useState('30D')
@@ -86,6 +92,16 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
 
   const timeframes = ['7D', '30D', '90D', '1Y']
 
+  // Mock staking data
+  const stakingData = {
+    hasStakingPosition: true, // Toggle this to test both states
+    stakedAmount: '1,247.83',
+    stakingAPY: '15.67%',
+    rewards: '82.34',
+    totalStaked: '1,247.83',
+    availableToStake: '247.83' // This comes from available rewards
+  }
+
   // Render crypto logo component
   const renderAssetLogo = (asset: { symbol: string; logo: React.ComponentType<any> }, size: number = 32) => {
     const LogoComponent = asset.logo
@@ -98,60 +114,63 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
       id: '1',
       asset: { symbol: 'USDC', logo: USDCLogo },
       strategy: 'Seamless USDC Vault',
-      deposited: '25,000.00',
-      depositedUSD: '$25,000.00',
       currentValue: '25,618.45',
       currentValueUSD: '$25,618.45',
+      unrealizedGain: '+618.45',
+      unrealizedGainUSD: '+$618.45',
+      unrealizedGainPercent: '+2.47%',
       apy: '12.34%',
-      earned: '+618.45',
-      earnedUSD: '+$618.45',
-      pnl: '+2.47%',
+      apyBreakdown: {
+        baseRate: '8.2%',
+        rewards: '2.8%',
+        compounding: '1.34%'
+      },
       riskLevel: 'Low',
       riskColor: 'text-green-400',
       riskIcon: Shield,
       isPositive: true,
-      status: 'Active',
-      lastUpdate: '2 min ago',
       category: 'Vaults'
     },
     {
       id: '2',
       asset: { symbol: 'WETH', logo: EthereumLogo },
       strategy: 'Seamless WETH Vault',
-      deposited: '8.50',
-      depositedUSD: '$20,740.00',
       currentValue: '8.72',
       currentValueUSD: '$21,276.80',
+      unrealizedGain: '+0.22',
+      unrealizedGainUSD: '+$536.80',
+      unrealizedGainPercent: '+2.59%',
       apy: '8.92%',
-      earned: '+0.22',
-      earnedUSD: '+$536.80',
-      pnl: '+2.59%',
+      apyBreakdown: {
+        baseRate: '6.1%',
+        rewards: '1.9%',
+        compounding: '0.92%'
+      },
       riskLevel: 'Medium',
       riskColor: 'text-yellow-400',
       riskIcon: AlertTriangle,
       isPositive: true,
-      status: 'Active',
-      lastUpdate: '1 min ago',
       category: 'Vaults'
     },
     {
       id: '3',
-      asset: { symbol: 'weETH', logo: weETHLogo },
+      asset: { symbol: 'weETH', logo: WeETHLogo },
       strategy: 'weETH / WETH 17x Leverage Token',
-      deposited: '5.50',
-      depositedUSD: '$13,420.00',
       currentValue: '6.12',
       currentValueUSD: '$14,932.80',
+      unrealizedGain: '+0.62',
+      unrealizedGainUSD: '+$1,512.80',
+      unrealizedGainPercent: '+11.27%',
       apy: '18.67%',
-      earned: '+0.62',
-      earnedUSD: '+$1,512.80',
-      pnl: '+11.27%',
+      apyBreakdown: {
+        baseRate: '12.4%',
+        leverage: '4.8%',
+        rewards: '1.47%'
+      },
       riskLevel: 'High',
       riskColor: 'text-red-400',
       riskIcon: AlertTriangle,
       isPositive: true,
-      status: 'Active',
-      lastUpdate: '5 min ago',
       category: 'Leverage Tokens'
     }
   ]
@@ -206,10 +225,7 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
       >
-        <div>
-          <h1 className="text-2xl font-bold text-white">Portfolio Overview</h1>
-          <p className="text-slate-400 mt-1">Track your investments, earnings, and manage positions</p>
-        </div>
+
       </motion.div>
 
       {/* Portfolio Value Cards */}
@@ -319,9 +335,10 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#64748B', fontSize: 12 }}
-                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                    label={{ value: 'Portfolio Value ($)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' } }}
                   />
-                  <Tooltip 
+                  <RechartsTooltip 
                     contentStyle={{
                       backgroundColor: '#1E293B',
                       border: '1px solid #334155',
@@ -345,12 +362,14 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
         </Card>
       </motion.div>
 
-      {/* Available Rewards Section */}
+      {/* Available Rewards & Staking Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
       >
+        {/* Available Rewards - Left Half */}
         <Card className="bg-slate-900/80 border-slate-700 hover:bg-slate-900/90 transition-all duration-300">
           <CardHeader className="pb-4">
             <CardTitle className="text-white flex items-center">
@@ -360,6 +379,27 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-4">
+              <div className="flex justify-between items-center py-2">
+                <span className="text-slate-400">Accruing</span>
+                <div className="flex items-center space-x-3">
+                  {/* Overlapping cryptocurrency icons */}
+                  <div className="flex items-center relative">
+                    <div className="w-6 h-6 rounded-full border-2 border-slate-900 relative z-10">
+                      <USDCLogo size={24} />
+                    </div>
+                    <div className="w-6 h-6 rounded-full border-2 border-slate-900 relative -ml-2 z-20">
+                      <EthereumLogo size={24} />
+                    </div>
+                    <div className="w-6 h-6 rounded-full border-2 border-slate-900 relative -ml-2 z-30">
+                      <WeETHLogo size={24} />
+                    </div>
+                    <div className="w-6 h-6 rounded-full border-2 border-slate-900 relative -ml-2 z-40">
+                      <SEAMLogo size={24} />
+                    </div>
+                  </div>
+                  <span className="text-white font-semibold">$1,294.34</span>
+                </div>
+              </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-slate-400">SEAM Tokens</span>
                 <span className="text-white font-semibold">247.83 SEAM</span>
@@ -378,6 +418,97 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
             </div>
           </CardContent>
         </Card>
+
+        {/* Staking Module - Right Half */}
+        <Card className="bg-slate-900/80 border-slate-700 hover:bg-slate-900/90 transition-all duration-300">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-white flex items-center">
+              <Lock className="h-5 w-5 mr-2 text-purple-400" />
+              SEAM Staking
+              <Badge variant="secondary" className="ml-2 bg-purple-500/20 text-purple-300 border-purple-500/30">
+                {stakingData.stakingAPY} APY
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {stakingData.hasStakingPosition ? (
+              /* User has staking position */
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-slate-400">Staked Amount</span>
+                  <span className="text-white font-semibold">{stakingData.stakedAmount} SEAM</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-slate-400">Earned Rewards</span>
+                  <span className="text-green-400 font-semibold">+{stakingData.rewards} SEAM</span>
+                </div>
+                <div className="flex justify-between items-center py-2 pb-4 border-b border-slate-700">
+                  <span className="text-slate-400">APY</span>
+                  <span className="text-purple-400 font-semibold">{stakingData.stakingAPY}</span>
+                </div>
+                
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    size="sm"
+                    onClick={() => setShowStakeModal(true)}
+                    className="bg-green-600 hover:bg-green-500 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Stake
+                  </Button>
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onNavigateToStaking?.()}
+                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Manage
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* User has no staking position */
+              <div className="space-y-4">
+                <div className="text-center py-4">
+                  <Lock className="h-12 w-12 text-purple-400 mx-auto mb-3 opacity-60" />
+                  <p className="text-slate-400 text-sm mb-2">Start earning {stakingData.stakingAPY} APY by staking SEAM tokens</p>
+                  <p className="text-xs text-slate-500">Secure the protocol and earn rewards</p>
+                </div>
+                
+                <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Available to stake</span>
+                    <span className="text-white">{stakingData.availableToStake} SEAM</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Potential APY</span>
+                    <span className="text-purple-400 font-medium">{stakingData.stakingAPY}</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    onClick={() => setShowStakeModal(true)}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
+                  >
+                    <Zap className="h-4 w-4 mr-1" />
+                    Stake Now
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => onNavigateToStaking?.()}
+                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Learn More
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Position Management Section - Integrated from ManagePositions */}
@@ -387,18 +518,16 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
         transition={{ duration: 0.4, delay: 0.5 }}
       >
         <Card className="bg-slate-900/80 border-slate-700">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-white">Position Management</CardTitle>
-              <Badge variant="secondary" className="bg-slate-800 text-slate-300">
-                {positions.length} Active Position{positions.length !== 1 ? 's' : ''}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
+
+          <CardContent className="p-6">
             {/* Active Positions */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white mb-4">Active Positions</h3>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Active Positions</h3>
+                <Badge variant="secondary" className="bg-slate-800 text-slate-300">
+                  {positions.length} Active Position{positions.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
               <AnimatePresence>
                 {positions.map((position, index) => (
                   <motion.div
@@ -408,17 +537,21 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                     whileHover={{ scale: 1.01 }}
-                    className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 transition-all duration-200"
+                    className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 hover:border-purple-500/50 transition-all duration-200 cursor-pointer group"
+                    onClick={() => onViewStrategy?.(position.id)}
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
-                      {/* Strategy Info */}
-                      <div className="flex items-center space-x-4 flex-1">
-                        <div className="w-12 h-12 rounded-full bg-slate-700/50 border border-slate-600 flex items-center justify-center p-1">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+                      {/* Group 1: Strategy Info - Token image, title, tags */}
+                      <div className="lg:col-span-4 flex items-center space-x-4">
+                        <div className="w-12 h-12 rounded-full bg-slate-700/50 border border-slate-600 flex items-center justify-center p-1 shrink-0">
                           {renderAssetLogo(position.asset, 32)}
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-white truncate">{position.strategy}</h3>
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-medium text-white truncate group-hover:text-purple-300 transition-colors">{position.strategy}</h3>
+                            <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 lg:hidden" />
+                          </div>
                           <div className="flex items-center space-x-2 mt-1">
                             <Badge variant="outline" className={getRiskColor(position.riskLevel)}>
                               {position.riskLevel} Risk
@@ -430,89 +563,109 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
                         </div>
                       </div>
 
-                      {/* Performance Metrics */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-                        <div className="text-center lg:text-left">
-                          <p className="text-xs text-slate-400">Deposited</p>
-                          <p className="font-medium text-white">{position.deposited} {position.asset.symbol}</p>
-                        </div>
-                        
-                        <div className="text-center lg:text-left">
+                      {/* Group 2: Performance Metrics - Current Value, Unrealized Gain, APY */}
+                      <div className="lg:col-span-5 grid grid-cols-3 gap-4">
+                        <div className="text-left">
                           <p className="text-xs text-slate-400">Current Value</p>
                           <p className="font-medium text-white">{position.currentValue} {position.asset.symbol}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">{position.currentValueUSD}</p>
                         </div>
                         
-                        <div className="text-center lg:text-left">
-                          <p className="text-xs text-slate-400">P&L</p>
+                        <div className="text-left">
+                          <p className="text-xs text-slate-400">Unrealized Gain</p>
                           <p className={`font-medium ${
-                            position.earned.startsWith('+') ? 'text-green-400' : 'text-red-400'
+                            position.unrealizedGain.startsWith('+') ? 'text-green-400' : 'text-red-400'
                           }`}>
-                            {position.earned} {position.asset.symbol}
+                            {position.unrealizedGain} {position.asset.symbol}
                           </p>
                           <p className={`text-xs ${
-                            position.earned.startsWith('+') ? 'text-green-400' : 'text-red-400'
+                            position.unrealizedGain.startsWith('+') ? 'text-green-400' : 'text-red-400'
                           }`}>
-                            {position.pnl}
+                            {position.unrealizedGainPercent}
                           </p>
                         </div>
                         
-                        <div className="text-center lg:text-left">
-                          <p className="text-xs text-slate-400">APY</p>
-                          <p className="font-medium text-purple-400">{position.apy}</p>
+                        <div className="text-left">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="cursor-help">
+                                <div className="flex items-center">
+                                  <p className="text-xs text-slate-400 mr-1">APY</p>
+                                  <Info className="h-3 w-3 text-slate-400" />
+                                </div>
+                                <p className="font-medium text-purple-400">{position.apy}</p>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent 
+                              side="top" 
+                              className="bg-slate-800 border-slate-600 text-sm p-3 max-w-xs"
+                            >
+                              <div className="space-y-2">
+                                <p className="font-medium text-white mb-2">APY Breakdown:</p>
+                                {position.category === 'Leverage Tokens' ? (
+                                  <>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Base Rate:</span>
+                                      <span className="text-white">{position.apyBreakdown.baseRate}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Leverage Multiplier:</span>
+                                      <span className="text-white">{position.apyBreakdown.leverage}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Protocol Rewards:</span>
+                                      <span className="text-white">{position.apyBreakdown.rewards}</span>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Base Rate:</span>
+                                      <span className="text-white">{position.apyBreakdown.baseRate}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Protocol Rewards:</span>
+                                      <span className="text-white">{position.apyBreakdown.rewards}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Auto-compounding:</span>
+                                      <span className="text-white">{position.apyBreakdown.compounding}</span>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                       </div>
 
-                      {/* Actions */}
-                      <div className="flex items-center space-x-2 lg:ml-4">
+                      {/* Group 3: CTA Buttons */}
+                      <div className="lg:col-span-3 flex items-center justify-start lg:justify-end space-x-2">
                         <Button
                           size="sm"
-                          onClick={() => handlePositionAction(position, 'deposit')}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handlePositionAction(position, 'deposit')
+                          }}
                           className="bg-green-600 hover:bg-green-500 text-white"
                         >
                           <Plus className="h-4 w-4 mr-1" />
-                          Add
+                          {position.category === 'Leverage Tokens' ? 'Mint' : 'Deposit'}
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handlePositionAction(position, 'withdraw')}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handlePositionAction(position, 'withdraw')
+                          }}
                           className="border-slate-600 text-slate-300 hover:bg-slate-700"
                         >
                           <Minus className="h-4 w-4 mr-1" />
-                          Remove
+                          {position.category === 'Leverage Tokens' ? 'Redeem' : 'Withdraw'}
                         </Button>
-                        
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-slate-400 hover:text-white"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
+                        <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 hidden lg:block ml-2" />
                       </div>
-                    </div>
-                    
-                    {/* Additional Info */}
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-                      <div className="flex items-center space-x-4 text-xs text-slate-400">
-                        <span className="flex items-center">
-                          <CheckCircle className="h-3 w-3 mr-1 text-green-400" />
-                          {position.status}
-                        </span>
-                        <span className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          Updated {position.lastUpdate}
-                        </span>
-                      </div>
-                      
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-xs text-slate-400 hover:text-white"
-                      >
-                        View Details
-                        <ArrowUpRight className="h-3 w-3 ml-1" />
-                      </Button>
                     </div>
                   </motion.div>
                 ))}
@@ -554,6 +707,11 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet }: Port
         isOpen={showWithdrawModal}
         onClose={() => setShowWithdrawModal(false)}
         strategy={selectedPosition}
+      />
+
+      <StakeModal
+        isOpen={showStakeModal}
+        onClose={() => setShowStakeModal(false)}
       />
     </motion.div>
   )

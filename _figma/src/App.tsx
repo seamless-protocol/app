@@ -11,14 +11,15 @@ import { Staking } from "./components/pages/Staking"
 import { ViewStrategy } from "./components/pages/ViewStrategy"
 import { OnboardingModal } from "./components/OnboardingModal"
 import { SettingsModal } from "./components/SettingsModal"
-import { WalletConnectModal } from "./components/WalletConnectModal"
 import { BridgeSwapModal } from "./components/BridgeSwapModal"
+import { WalletConnectModal } from "./components/WalletConnectModal"
+import { getStrategyData } from "./components/data/mockStrategyData"
 import { NetworkSelector, getDefaultNetwork, Network } from "./components/NetworkSelector"
 import { Button } from "./components/ui/button"
 import { Badge } from "./components/ui/badge"
-import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "./components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "./components/ui/sheet"
 import { SkipNavigation, LiveRegion, announceToScreenReader } from "./components/ui/accessibility"
-import { Settings, Menu, X, Wallet, ArrowUpDown } from "lucide-react"
+import { Settings, Menu, Wallet, ArrowUpDown } from "lucide-react"
 import { toast } from "sonner@2.0.3"
 import { Toaster } from "sonner@2.0.3"
 import { motion, AnimatePresence } from "motion/react"
@@ -82,56 +83,29 @@ const mobileMenuVariants = {
   }
 }
 
-// Connection status animation
-const connectionVariants = {
-  connected: {
-    scale: 1,
-    rotate: 0,
-    transition: { duration: 0.3 }
-  },
-  disconnected: {
-    scale: [1, 1.1, 1],
-    rotate: [0, -5, 5, 0],
-    transition: { 
-      duration: 0.5,
-      repeat: Infinity,
-      repeatDelay: 2
-    }
-  }
-}
-
-export default function App() {
+function AppContent() {
   const [currentPage, setCurrentPage] = useState('explore')
   const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null)
+  const [previousPage, setPreviousPage] = useState<string>('explore') // Track the page user came from
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [showWalletConnect, setShowWalletConnect] = useState(false)
   const [showBridgeSwap, setShowBridgeSwap] = useState(false)
-  const [isWalletConnected, setIsWalletConnected] = useState(false) // Set to false to show wallet connection
+  const [showWalletConnect, setShowWalletConnect] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(true)
-  const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [currentNetwork, setCurrentNetwork] = useState<Network>(getDefaultNetwork())
   const [isNetworkSwitching, setIsNetworkSwitching] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [announcement, setAnnouncement] = useState('')
   const [isPageTransitioning, setIsPageTransitioning] = useState(false)
+  const [walletAddress, setWalletAddress] = useState<string>('')
+  const [isConnected, setIsConnected] = useState(false)
   const mainContentRef = useRef<HTMLElement>(null)
 
-
-
   // Handle successful wallet connection
-  const handleWalletConnect = (address: string) => {
+  const handleConnectWallet = (address: string) => {
     setWalletAddress(address)
-    setIsWalletConnected(true)
+    setIsConnected(true)
     setShowWalletConnect(false)
-    
-    // Show onboarding after wallet connection for new users
-    const hasSeenOnboarding = localStorage.getItem('seamless-onboarding-seen')
-    if (!hasSeenOnboarding) {
-      setTimeout(() => {
-        setShowOnboarding(true)
-      }, 500)
-    }
     
     announceToScreenReader('Wallet connected successfully', 'assertive')
   }
@@ -151,9 +125,8 @@ export default function App() {
 
   // Handle wallet disconnect
   const handleDisconnectWallet = () => {
-    setIsWalletConnected(false)
-    setWalletAddress(null)
-    setShowWalletConnect(true)
+    setWalletAddress('')
+    setIsConnected(false)
     announceToScreenReader('Wallet disconnected', 'assertive')
   }
 
@@ -205,11 +178,10 @@ export default function App() {
 
   // Handle Bridge/Swap modal with accessibility
   const handleOpenBridgeSwap = () => {
-    if (!isWalletConnected) {
+    if (!isConnected) {
       toast.error('Please connect your wallet first', {
         description: 'You need to connect a wallet to use swap and bridge features'
       })
-      setShowWalletConnect(true)
       return
     }
     
@@ -217,8 +189,9 @@ export default function App() {
     announceToScreenReader('Opening swap and bridge interface', 'polite')
   }
 
-  // Function to navigate to strategy view with accessibility
+  // Function to navigate to strategy view with accessibility and breadcrumb tracking
   const handleViewStrategy = (strategyId: string) => {
+    setPreviousPage(currentPage) // Track where user came from
     setSelectedStrategyId(strategyId)
     setCurrentPage('view-strategy')
     setIsMobileMenuOpen(false)
@@ -235,10 +208,27 @@ export default function App() {
   // Function to go back from strategy view with accessibility
   const handleBackFromStrategy = () => {
     setSelectedStrategyId(null)
-    setCurrentPage('explore')
+    setCurrentPage(previousPage) // Go back to the page user came from
     
     // Announce navigation to screen readers
-    announceToScreenReader('Navigating back to leverage tokens', 'polite')
+    const pageInfo = getPageInfo(previousPage)
+    announceToScreenReader(`Navigating back to ${pageInfo.title}`, 'polite')
+    
+    // Focus main content after navigation
+    setTimeout(() => {
+      mainContentRef.current?.focus()
+    }, 100)
+  }
+
+  // Function to navigate to specific page from breadcrumb
+  const handleNavigateToPage = (page: string) => {
+    setCurrentPage(page)
+    setSelectedStrategyId(null)
+    setIsMobileMenuOpen(false)
+    
+    // Announce navigation to screen readers
+    const pageInfo = getPageInfo(page)
+    announceToScreenReader(`Navigated to ${pageInfo.title} page`, 'polite')
     
     // Focus main content after navigation
     setTimeout(() => {
@@ -315,7 +305,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentPage, isMobileMenuOpen, isWalletConnected])
+  }, [currentPage, isMobileMenuOpen, isConnected])
 
   const renderCurrentPage = () => {
     const pageComponent = (() => {
@@ -324,8 +314,10 @@ export default function App() {
           return (
             <Portfolio 
               currentNetwork={currentNetwork}
-              isConnected={isWalletConnected}
+              isConnected={isConnected}
               onConnectWallet={() => setShowWalletConnect(true)}
+              onViewStrategy={handleViewStrategy}
+              onNavigateToStaking={() => handlePageChange('staking')}
             />
           )
         case 'vaults':
@@ -343,6 +335,10 @@ export default function App() {
             <ViewStrategy 
               strategyId={selectedStrategyId || undefined}
               onBack={handleBackFromStrategy}
+              previousPage={previousPage}
+              onNavigateToPage={handleNavigateToPage}
+              isConnected={isConnected}
+              onConnectWallet={() => setShowWalletConnect(true)}
             />
           )
         default:
@@ -402,6 +398,15 @@ export default function App() {
           description: 'Stake SEAM tokens to earn protocol rewards'
         }
       case 'view-strategy':
+        // Get strategy data to show actual strategy name for both leverage tokens and vaults
+        if (selectedStrategyId) {
+          const strategyData = getStrategyData(selectedStrategyId)
+          const isLeverageToken = strategyData.category === 'Leverage Tokens'
+          return {
+            title: strategyData.name,
+            description: isLeverageToken ? 'Amplified exposure to asset pairs with automated position management and liquidation protection' : `Detailed information about ${strategyData.name}`
+          }
+        }
         return {
           title: 'Strategy Details',
           description: 'Detailed information about this strategy'
@@ -510,6 +515,7 @@ export default function App() {
                     </Button>
                   </motion.div>
                   
+                  {/* Page Title and Description */}
                   <motion.div 
                     className="min-w-0 flex-1"
                     key={pageInfo.title}
@@ -542,7 +548,6 @@ export default function App() {
                   >
                     <NetworkSelector 
                       currentNetwork={currentNetwork}
-                      onNetworkChange={handleNetworkChange}
                       isConnecting={isNetworkSwitching}
                     />
                   </motion.div>
@@ -568,30 +573,32 @@ export default function App() {
                     </Button>
                   </motion.div>
                   
-                  {/* Connection Status / Connect Button */}
-                  {isWalletConnected ? (
-                    <motion.div 
-                      className="flex items-center space-x-1"
-                      role="status"
-                      aria-live="polite"
-                      aria-label="Wallet connected"
-                      variants={connectionVariants}
-                      animate="connected"
-                    >
-                      <Wallet className="h-4 w-4 text-green-500" />
-                      <Badge 
-                        variant="secondary" 
-                        className="text-xs bg-slate-800 text-white hidden sm:inline-flex"
+                  {/* Wallet Connect Button */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.5 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isConnected ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowSettings(true)}
+                        className="h-9 sm:h-10 bg-slate-800 hover:bg-slate-700 border-slate-600"
                       >
-                        Connected
-                      </Badge>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
+                        <div className="flex items-center space-x-2">
+                          <Wallet className="h-4 w-4 text-green-500" />
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs bg-slate-700 text-white hidden sm:inline-flex"
+                          >
+                            {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                          </Badge>
+                        </div>
+                      </Button>
+                    ) : (
                       <Button
                         onClick={() => setShowWalletConnect(true)}
                         className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0 h-9 px-3 sm:h-10 sm:px-4"
@@ -600,8 +607,8 @@ export default function App() {
                         <Wallet className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">Connect Wallet</span>
                       </Button>
-                    </motion.div>
-                  )}
+                    )}
+                  </motion.div>
                   
                   {/* Settings Button - Always visible */}
                   <motion.div 
@@ -628,7 +635,7 @@ export default function App() {
           
           {/* Main Content - Mobile Optimized */}
           <main 
-            className="flex-1 overflow-auto bg-slate-950 p-3 sm:p-4 lg:p-8"
+            className="flex-1 overflow-auto bg-slate-950"
             id="main-content"
             role="main"
             aria-labelledby="page-title"
@@ -636,17 +643,17 @@ export default function App() {
             tabIndex={-1}
             ref={mainContentRef}
           >
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 lg:py-8">
               {renderCurrentPage()}
             </div>
           </main>
         </div>
         
-        {/* Wallet Connect Modal - Mobile Optimized */}
+        {/* Wallet Connect Modal */}
         <WalletConnectModal
           isOpen={showWalletConnect}
           onClose={() => setShowWalletConnect(false)}
-          onConnect={handleWalletConnect}
+          onConnect={handleConnectWallet}
         />
         
         {/* Bridge/Swap Modal - Global Access */}
@@ -668,11 +675,11 @@ export default function App() {
         <SettingsModal
           isOpen={showSettings}
           onClose={() => setShowSettings(false)}
-          walletAddress={walletAddress || ''}
+          walletAddress={walletAddress}
           isDarkMode={isDarkMode}
           onThemeToggle={handleThemeToggle}
           onDisconnectWallet={handleDisconnectWallet}
-          isWalletConnected={isWalletConnected}
+          isWalletConnected={isConnected}
         />
         
         {/* Toast Notifications - Mobile Positioned */}
@@ -695,4 +702,8 @@ export default function App() {
       </motion.div>
     </>
   )
+}
+
+export default function App() {
+  return <AppContent />
 }

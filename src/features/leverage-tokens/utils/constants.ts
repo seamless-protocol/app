@@ -10,6 +10,8 @@ export const STALE_TIME = {
   balance: 30_000, // 30 seconds - balances change with user actions
   supply: 30_000, // 30 seconds - supply changes with mints/redeems
   rebalancing: 60_000, // 1 minute - rebalancing status
+  detailedMetrics: 300_000, // 5 minutes - detailed metrics are relatively static
+  historical: 300_000, // 5 minutes - historical data doesn't change often
 } as const
 
 // Retry configuration

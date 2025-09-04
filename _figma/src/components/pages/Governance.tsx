@@ -18,7 +18,8 @@ import {
   Zap,
   TrendingUp,
   Calendar,
-  Target
+  Target,
+  Network
 } from "lucide-react"
 import { DelegationModal } from "../DelegationModal"
 
@@ -168,26 +169,32 @@ export function Governance() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Header */}
-      <motion.div 
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0"
-        initial={{ opacity: 0, y: -20 }}
+      {/* Base Chain Network Requirement Notice */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
+        transition={{ duration: 0.4 }}
+        className="bg-blue-950/30 border border-blue-500/30 rounded-lg p-4"
       >
-        <div>
-          <h1 className="text-2xl font-bold text-white">Governance</h1>
-          <p className="text-slate-400 mt-1">Participate in protocol governance and shape the future of Seamless</p>
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+            <Network className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center space-x-2">
+              <h3 className="font-semibold text-white">Base Chain Required</h3>
+              <Badge variant="outline" className="border-blue-500/50 text-blue-300 bg-blue-500/10">
+                Base
+              </Badge>
+            </div>
+            <p className="text-sm text-blue-200/80 mt-1">
+              Governance participation, voting, and delegation are only available on Base Chain. Please ensure your wallet is connected to Base to participate in protocol governance.
+            </p>
+          </div>
         </div>
-        
-        <Button
-          onClick={() => setShowDelegationModal(true)}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
-        >
-          <Users className="h-4 w-4 mr-2" />
-          Delegate Votes
-        </Button>
       </motion.div>
+
+
 
       {/* Governance Stats */}
       <motion.div 
@@ -198,15 +205,26 @@ export function Governance() {
       >
         <Card className="bg-slate-900/80 border-slate-700">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">Your Voting Power</p>
-                <p className="text-2xl font-bold text-white">{userGovernanceData.votingPower}</p>
-                <p className="text-xs text-slate-400 mt-1">SEAM tokens</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-400">Your Voting Power</p>
+                  <p className="text-2xl font-bold text-white">{userGovernanceData.votingPower}</p>
+                  <p className="text-xs text-slate-400 mt-1">SEAM tokens</p>
+                </div>
+                <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                  <Vote className="h-5 w-5 text-purple-400" />
+                </div>
               </div>
-              <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                <Vote className="h-5 w-5 text-purple-400" />
-              </div>
+              
+              <Button
+                onClick={() => setShowDelegationModal(true)}
+                size="sm"
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white h-8"
+              >
+                <Users className="h-3 w-3 mr-2" />
+                Delegate Votes
+              </Button>
             </div>
           </CardContent>
         </Card>

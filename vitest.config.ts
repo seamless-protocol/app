@@ -15,7 +15,10 @@ export default defineConfig({
       jsdom: {
         resources: 'usable'
       }
-    }
+    },
+    mockReset: true,
+    clearMocks: true,
+    restoreMocks: true
   },
   resolve: {
     alias: {

@@ -66,4 +66,86 @@ export const leverageManagerAbi = [
     inputs: [{ name: 'token', internalType: 'contract ILeverageToken', type: 'address' }],
     outputs: [{ name: 'debtAsset', internalType: 'contract IERC20', type: 'address' }],
   },
+  {
+    type: 'function',
+    name: 'getLeverageTokenConfig',
+    inputs: [
+      {
+        name: 'token',
+        type: 'address',
+        internalType: 'contract ILeverageToken',
+      },
+    ],
+    outputs: [
+      {
+        name: 'config',
+        type: 'tuple',
+        internalType: 'struct LeverageTokenConfig',
+        components: [
+          {
+            name: 'lendingAdapter',
+            type: 'address',
+            internalType: 'contract ILendingAdapter',
+          },
+          {
+            name: 'rebalanceAdapter',
+            type: 'address',
+            internalType: 'contract IRebalanceAdapterBase',
+          },
+          {
+            name: 'mintTokenFee',
+            type: 'uint256',
+            internalType: 'uint256',
+          },
+          {
+            name: 'redeemTokenFee',
+            type: 'uint256',
+            internalType: 'uint256',
+          },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'getLeverageTokenState',
+    inputs: [
+      {
+        name: 'token',
+        type: 'address',
+        internalType: 'contract ILeverageToken',
+      },
+    ],
+    outputs: [
+      {
+        name: 'state',
+        type: 'tuple',
+        internalType: 'struct LeverageTokenState',
+        components: [
+          {
+            name: 'collateralInDebtAsset',
+            type: 'uint256',
+            internalType: 'uint256',
+          },
+          {
+            name: 'debt',
+            type: 'uint256',
+            internalType: 'uint256',
+          },
+          {
+            name: 'equity',
+            type: 'uint256',
+            internalType: 'uint256',
+          },
+          {
+            name: 'collateralRatio',
+            type: 'uint256',
+            internalType: 'uint256',
+          },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
 ] as const

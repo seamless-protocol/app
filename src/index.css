@@ -398,6 +398,14 @@ body,
   color: var(--text-primary);
 }
 
+/* Remove focus outline from chart components */
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-responsive-container,
+.recharts-responsive-container * {
+  outline: none !important;
+}
+
 /* Mobile-specific enhancements */
 @media (max-width: 768px) {
   /* Adjust base font size for mobile */
@@ -410,6 +418,12 @@ body,
   [role="button"] {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  /* Override for asset display buttons to maintain intended size */
+  .asset-display-button {
+    min-height: unset !important;
+    min-width: unset !important;
   }
 
   /* Improve text readability on mobile */

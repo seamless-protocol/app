@@ -126,32 +126,67 @@ const pageContent = {
   },
 }
 
-// Wrapper component to handle state
-function NavbarWrapper({ currentPage, isMobile }: { currentPage: string; isMobile?: boolean }) {
+// Main wrapper component that handles both desktop and mobile
+function NavbarWrapper({ currentPage }: { currentPage: string }) {
   const [page, setPage] = useState(currentPage)
   const content = pageContent[page as keyof typeof pageContent] || pageContent.portfolio
 
   return (
     <div className="h-screen flex">
-      <div className="w-80 flex-shrink-0">
+      {/* Desktop Navigation - Hidden on mobile */}
+      <div className="hidden lg:block w-80 flex-shrink-0">
         <VerticalNavbar
           currentPage={page}
           onPageChange={setPage}
           navigationItems={navigationItems}
           communitySection={communitySection}
           platformTVL="$142.8M"
-          isMobile={isMobile ?? false}
         />
       </div>
-      <div className="flex-1 overflow-auto bg-slate-950 p-3 sm:p-4 lg:p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white mb-2">{content.title}</h1>
-            <p className="text-lg text-purple-400">{content.subtitle}</p>
-          </div>
 
-          <div className="bg-slate-900 border border-slate-700 rounded-lg p-6">
-            <p className="text-slate-300 leading-relaxed">{content.content}</p>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col bg-slate-950">
+        {/* Header with Mobile Menu */}
+        <div className="border-b border-slate-700 bg-slate-900 backdrop-blur-sm shrink-0">
+          <div className="px-3 sm:px-4 py-3 sm:py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+                {/* Mobile Menu Button - Only visible on mobile */}
+                <div className="lg:hidden">
+                  <VerticalNavbar
+                    currentPage={page}
+                    onPageChange={setPage}
+                    navigationItems={navigationItems}
+                    communitySection={communitySection}
+                    platformTVL="$142.8M"
+                    isMobile={true}
+                  />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-base sm:text-lg font-semibold text-white truncate">
+                    {content.title}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-400 hidden sm:block truncate">
+                    {content.subtitle}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-3 sm:p-4 lg:p-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-white mb-2">{content.title}</h1>
+              <p className="text-lg text-purple-400">{content.subtitle}</p>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-700 rounded-lg p-6">
+              <p className="text-slate-300 leading-relaxed">{content.content}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -161,12 +196,12 @@ function NavbarWrapper({ currentPage, isMobile }: { currentPage: string; isMobil
 
 const meta = {
   title: 'Components/VerticalNavbar',
-  component: NavbarWrapper,
+  component: VerticalNavbar,
   parameters: {
     layout: 'fullscreen',
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof NavbarWrapper>
+} satisfies Meta<typeof VerticalNavbar>
 
 export default meta
 type Story = StoryObj<typeof meta>
@@ -174,17 +209,10 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   args: {
     currentPage: 'portfolio',
+    onPageChange: () => {},
+    navigationItems,
+    communitySection,
+    platformTVL: '$142.8M',
   },
-}
-
-export const Mobile: Story = {
-  args: {
-    currentPage: 'portfolio',
-    isMobile: true,
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1',
-    },
-  },
+  render: (_args) => <NavbarWrapper currentPage="portfolio" />,
 }

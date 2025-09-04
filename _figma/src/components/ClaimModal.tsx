@@ -10,14 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Alert, AlertDescription } from "./ui/alert"
 import { Progress } from "./ui/progress"
 import { ScrollArea } from "./ui/scroll-area"
-import { Switch } from "./ui/switch"
-import { Label } from "./ui/label"
 import { Separator } from "./ui/separator"
 import { 
   Gift,
   ExternalLink, 
   Check, 
-  AlertCircle, 
+  AlertTriangle, 
   Copy,
   TrendingUp,
   Clock,
@@ -36,12 +34,13 @@ import {
   Sparkles,
   CircleCheck,
   Info,
-  ArrowUpRight
+  ArrowUpRight,
+  ArrowRight
 } from "lucide-react"
 import { toast } from "sonner@2.0.3"
 
 interface ClaimableReward {
-  id: string // Added unique identifier
+  id: string
   token: string
   symbol: string
   amount: string
@@ -70,10 +69,11 @@ interface ClaimModalProps {
   pendingRewards?: number
 }
 
+type ClaimFlowState = 'idle' | 'claiming' | 'success-waiting' | 'complete' | 'error'
+
 export function ClaimModal({ isOpen, onClose, pendingRewards = 247.83 }: ClaimModalProps) {
   const context: 'governance' | 'portfolio' = 'portfolio'
   
-  // Enhanced mock data with unique IDs
   const rewards: ClaimableReward[] = [
     {
       id: 'seam-staking',
@@ -122,18 +122,24 @@ export function ClaimModal({ isOpen, onClose, pendingRewards = 247.83 }: ClaimMo
     }
   ]
 
+  // State management
   const [selectedRewards, setSelectedRewards] = useState<string[]>([])
-  const [isTransacting, setIsTransacting] = useState(false)
+  const [claimFlowState, setClaimFlowState] = useState<ClaimFlowState>('idle')
   const [transactionStep, setTransactionStep] = useState(0)
-  const [transactionComplete, setTransactionComplete] = useState(false)
-  const [transactionError, setTransactionError] = useState<string | null>(null)
   const [showBreakdown, setShowBreakdown] = useState(false)
-  const [autoCompound, setAutoCompound] = useState(false)
+  const [claimedRewards, setClaimedRewards] = useState<string[]>([])
+  const [failedRewards, setFailedRewards] = useState<string[]>([])
+  const [claimTransactionHashes, setClaimTransactionHashes] = useState<{[key: string]: string}>({})
   const [claimHistory, setClaimHistory] = useState<ClaimHistory[]>([])
   const [estimatedGas, setEstimatedGas] = useState("0.0035")
   const [selectedTab, setSelectedTab] = useState("claim")
+  const [transactionError, setTransactionError] = useState<string | null>(null)
+  
+  // Multi-step claim management
+  const [remainingRewardsToProcess, setRemainingRewardsToProcess] = useState<string[]>([])
+  const [currentlyProcessingReward, setCurrentlyProcessingReward] = useState<ClaimableReward | null>(null)
+  const [lastSuccessfulClaim, setLastSuccessfulClaim] = useState<ClaimableReward | null>(null)
 
-  // Enhanced mock claim history
   const mockClaimHistory: ClaimHistory[] = [
     {
       date: "2024-01-28",
@@ -172,21 +178,27 @@ export function ClaimModal({ isOpen, onClose, pendingRewards = 247.83 }: ClaimMo
   useEffect(() => {
     if (isOpen) {
       setClaimHistory(mockClaimHistory)
-      // Auto-select all immediate rewards using unique IDs
       const immediateRewardIds = rewards.filter(r => r.type === 'immediate').map(r => r.id)
       setSelectedRewards(immediateRewardIds)
-      // Reset states
-      setTransactionComplete(false)
-      setIsTransacting(false)
-      setTransactionError(null)
-      setTransactionStep(0)
+      resetClaimState()
     }
   }, [isOpen])
+
+  const resetClaimState = () => {
+    setClaimFlowState('idle')
+    setTransactionStep(0)
+    setTransactionError(null)
+    setClaimedRewards([])
+    setFailedRewards([])
+    setClaimTransactionHashes({})
+    setRemainingRewardsToProcess([])
+    setCurrentlyProcessingReward(null)
+    setLastSuccessfulClaim(null)
+  }
 
   const handleRewardToggle = (rewardId: string) => {
     const reward = rewards.find(r => r.id === rewardId)
     if (reward?.type !== 'immediate') return
-
     setSelectedRewards(prev => 
       prev.includes(rewardId) 
         ? prev.filter(id => id !== rewardId)
@@ -203,90 +215,149 @@ export function ClaimModal({ isOpen, onClose, pendingRewards = 247.83 }: ClaimMo
     setSelectedRewards([])
   }
 
-  const handleClaim = async () => {
-    setIsTransacting(true)
-    setTransactionStep(0)
-    setTransactionError(null)
+  const handleStartClaiming = async () => {
+    const selectedRewardData = rewards.filter(r => selectedRewards.includes(r.id))
+    if (selectedRewardData.length === 0) return
+
+    // Set up the queue of rewards to process
+    setRemainingRewardsToProcess([...selectedRewards])
+    setClaimFlowState('claiming')
+    
+    // Start with the first reward
+    await processNextReward([...selectedRewards])
+  }
+
+  const processNextReward = async (rewardsQueue: string[]) => {
+    if (rewardsQueue.length === 0) {
+      // All rewards processed, show final completion
+      setClaimFlowState('complete')
+      showFinalSummary()
+      return
+    }
+
+    const nextRewardId = rewardsQueue[0]
+    const reward = rewards.find(r => r.id === nextRewardId)
+    if (!reward) return
 
     try {
-      // Step 1: Preparing transaction
-      setTransactionStep(1)
-      await new Promise(resolve => setTimeout(resolve, 1200))
-
-      // Step 2: Estimating gas
-      setTransactionStep(2)
-      await new Promise(resolve => setTimeout(resolve, 800))
-
-      // Step 3: Waiting for wallet signature
-      setTransactionStep(3)
-      await new Promise(resolve => setTimeout(resolve, 2500))
-
-      // Simulate random failure for demo (3% chance)
-      if (Math.random() < 0.03) {
-        throw new Error("Transaction failed: Insufficient gas for execution")
-      }
-
-      // Step 4: Broadcasting transaction
-      setTransactionStep(4)
-      await new Promise(resolve => setTimeout(resolve, 1800))
-
-      // Step 5: Confirming transaction
-      setTransactionStep(5)
-      await new Promise(resolve => setTimeout(resolve, 2200))
-
-      setTransactionComplete(true)
+      setCurrentlyProcessingReward(reward)
+      setClaimFlowState('claiming')
       
-      const claimedTokens = rewards.filter(r => selectedRewards.includes(r.id))
-      const totalUsdValue = claimedTokens.reduce((sum, r) => sum + parseFloat(r.usdValue.replace('$', '').replace(',', '')), 0)
+      // Process the transaction
+      await claimSingleReward(reward)
       
-      toast.success("🎉 Rewards claimed successfully!", {
-        description: `Claimed ${claimedTokens.length} reward${claimedTokens.length > 1 ? 's' : ''} worth $${totalUsdValue.toLocaleString()}`,
+      // Mark as successful
+      setClaimedRewards(prev => [...prev, reward.id])
+      const mockHash = '0x' + Math.random().toString(16).substr(2, 64)
+      setClaimTransactionHashes(prev => ({...prev, [reward.id]: mockHash}))
+      
+      // Show success toast
+      toast.success(`✅ ${reward.symbol} claimed successfully!`, {
+        description: `${reward.amount} ${reward.symbol} worth $${parseFloat(reward.usdValue).toLocaleString()}`,
         action: {
           label: "View Transaction",
-          onClick: () => window.open("https://etherscan.io/tx/0x...", "_blank")
+          onClick: () => window.open(`https://etherscan.io/tx/${mockHash}`, "_blank")
         }
       })
-
-      // Auto-close after success animation
-      setTimeout(() => {
-        onClose()
-        setTransactionComplete(false)
-        setIsTransacting(false)
-        setTransactionStep(0)
-        setTransactionError(null)
-        setSelectedRewards([])
-      }, 3500)
-
-    } catch (error: any) {
-      setIsTransacting(false)
-      setTransactionStep(0)
-      setTransactionError(error.message)
       
-      toast.error("Claim failed", {
-        description: error.message || "Please try again or check your wallet connection"
+      // Update remaining queue
+      const updatedQueue = rewardsQueue.slice(1)
+      setRemainingRewardsToProcess(updatedQueue)
+      setLastSuccessfulClaim(reward)
+      
+      // Check if there are more rewards to process
+      if (updatedQueue.length > 0) {
+        // Show success waiting state - user must click to continue
+        setClaimFlowState('success-waiting')
+      } else {
+        // This was the last reward, complete the flow
+        setClaimFlowState('complete')
+        showFinalSummary()
+      }
+      
+    } catch (error: any) {
+      // Handle failed claim
+      setFailedRewards(prev => [...prev, reward.id])
+      toast.error(`❌ Failed to claim ${reward.symbol}`, {
+        description: error.message || "Transaction failed"
       })
+      
+      // Update remaining queue and continue with next reward if any
+      const updatedQueue = rewardsQueue.slice(1)
+      setRemainingRewardsToProcess(updatedQueue)
+      
+      if (updatedQueue.length > 0) {
+        // Continue with next reward after a brief pause
+        setTimeout(() => {
+          processNextReward(updatedQueue)
+        }, 1000)
+      } else {
+        // No more rewards to process
+        setClaimFlowState('complete')
+        showFinalSummary()
+      }
     }
   }
 
-  const handleRetryTransaction = () => {
+  const handleContinueWithNextClaim = () => {
+    // User clicked to continue with next claim
+    processNextReward(remainingRewardsToProcess)
+  }
+
+  const claimSingleReward = async (reward: ClaimableReward) => {
+    setTransactionStep(1)
+    await new Promise(resolve => setTimeout(resolve, 800))
+    setTransactionStep(2)
+    await new Promise(resolve => setTimeout(resolve, 600))
+    setTransactionStep(3)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    if (Math.random() < 0.05) {
+      throw new Error(`Failed to claim ${reward.symbol}: Transaction reverted`)
+    }
+    setTransactionStep(4)
+    await new Promise(resolve => setTimeout(resolve, 1200))
+    setTransactionStep(5)
+    await new Promise(resolve => setTimeout(resolve, 1500))
+  }
+
+  const showFinalSummary = () => {
+    const successCount = claimedRewards.length
+    const totalCount = selectedRewards.length
+    
+    if (successCount === totalCount && successCount > 1) {
+      toast.success("🎉 All rewards claimed successfully!", {
+        description: `Successfully claimed ${successCount} rewards`
+      })
+    } else if (successCount > 0 && failedRewards.length > 0) {
+      toast.success(`✅ ${successCount}/${totalCount} rewards claimed`, {
+        description: `${failedRewards.length} failed - you can retry failed claims`
+      })
+    }
+    
+    setTimeout(() => {
+      onClose()
+      resetClaimState()
+    }, 4000)
+  }
+
+  const retryFailedClaims = () => {
+    const failedRewardIds = [...failedRewards]
+    setFailedRewards([])
+    setSelectedRewards(failedRewardIds)
     setTransactionError(null)
-    handleClaim()
+    handleStartClaiming()
   }
 
   const getTransactionStepText = () => {
+    const rewardInfo = currentlyProcessingReward ? ` ${currentlyProcessingReward.symbol}` : ''
     switch (transactionStep) {
-      case 1: return "Preparing claim transaction..."
-      case 2: return "Estimating gas costs..."
-      case 3: return "Waiting for wallet signature..."
-      case 4: return "Broadcasting to network..."
-      case 5: return "Confirming on blockchain..."
+      case 1: return `Preparing${rewardInfo} claim transaction...`
+      case 2: return `Estimating gas costs for${rewardInfo}...`
+      case 3: return `Waiting for wallet signature for${rewardInfo}...`
+      case 4: return `Broadcasting${rewardInfo} transaction...`
+      case 5: return `Confirming${rewardInfo} on blockchain...`
       default: return "Starting transaction..."
     }
-  }
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success("Copied to clipboard")
   }
 
   const selectedRewardData = rewards.filter(r => selectedRewards.includes(r.id))
@@ -294,7 +365,75 @@ export function ClaimModal({ isOpen, onClose, pendingRewards = 247.83 }: ClaimMo
   const immediateRewards = rewards.filter(r => r.type === 'immediate')
   const totalRewardsUsd = immediateRewards.reduce((sum, r) => sum + parseFloat(r.usdValue.replace('$', '').replace(',', '')), 0)
 
-  // Transaction Error State
+  // Show success interstitial between multiple claims
+  if (claimFlowState === 'success-waiting' && lastSuccessfulClaim) {
+    const remainingCount = remainingRewardsToProcess.length
+    const nextReward = remainingRewardsToProcess.length > 0 ? rewards.find(r => r.id === remainingRewardsToProcess[0]) : null
+    
+    return (
+      <Dialog open={isOpen} onOpenChange={() => {}}>
+        <DialogContent className="bg-slate-900/90 border-slate-700 max-w-md backdrop-blur-sm">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Claim Successful</DialogTitle>
+            <DialogDescription>Ready for next claim</DialogDescription>
+          </DialogHeader>
+          <motion.div className="text-center py-4" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
+            <motion.div className="relative w-12 h-12 mx-auto mb-3" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }}>
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center">
+                <CircleCheck className="h-6 w-6 text-white" />
+              </div>
+              <motion.div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 rounded-full opacity-30" animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }} />
+            </motion.div>
+            
+            <motion.h2 className="font-semibold text-white mb-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
+              ✅ {lastSuccessfulClaim.symbol} Claimed!
+            </motion.h2>
+            
+            <motion.div className="bg-slate-800/50 rounded-lg p-2 mb-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.4 }}>
+              <div className="flex items-center justify-center space-x-2 mb-1">
+                <span>{lastSuccessfulClaim.icon}</span>
+                <span className="text-white font-medium text-sm">{lastSuccessfulClaim.amount} {lastSuccessfulClaim.symbol}</span>
+              </div>
+              <div className="text-slate-400 text-xs">${parseFloat(lastSuccessfulClaim.usdValue).toLocaleString()}</div>
+              {claimTransactionHashes[lastSuccessfulClaim.id] && (
+                <Button variant="ghost" size="sm" className="mt-1 h-5 px-2 text-purple-400 hover:text-purple-300 text-xs" onClick={() => window.open(`https://etherscan.io/tx/${claimTransactionHashes[lastSuccessfulClaim.id]}`, "_blank")}>
+                  <ExternalLink className="h-2 w-2 mr-1" />
+                  View Tx
+                </Button>
+              )}
+            </motion.div>
+
+            {nextReward && (
+              <motion.div className="mb-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.5 }}>
+                <div className="text-slate-400 text-xs mb-1">{remainingCount} more reward{remainingCount !== 1 ? 's' : ''} remaining</div>
+                <div className="text-slate-300 text-xs">Next: {nextReward.symbol} ({nextReward.amount})</div>
+              </motion.div>
+            )}
+
+            <motion.div className="space-y-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.6 }}>
+              <Button 
+                onClick={handleContinueWithNextClaim}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white h-8 text-sm"
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                Continue
+                <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+              
+              <Button variant="outline" onClick={onClose} className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 h-8 text-sm">
+                Finish Later
+              </Button>
+            </motion.div>
+            
+            <div className="mt-2 text-xs text-slate-500">
+              Claimed {claimedRewards.length + 1} of {selectedRewards.length} rewards
+            </div>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
   if (transactionError) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -303,58 +442,22 @@ export function ClaimModal({ isOpen, onClose, pendingRewards = 247.83 }: ClaimMo
             <DialogTitle>Claim Failed</DialogTitle>
             <DialogDescription>An error occurred while claiming rewards</DialogDescription>
           </DialogHeader>
-          
-          <motion.div 
-            className="text-center py-6"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <motion.div 
-              className="w-14 h-14 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-red-500/30"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <X className="h-7 w-7 text-red-400" />
+          <motion.div className="text-center py-4" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
+            <motion.div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-red-500/30" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.4, delay: 0.1 }}>
+              <X className="h-6 w-6 text-red-400" />
             </motion.div>
-            
-            <motion.h2 
-              className="text-lg font-semibold text-white mb-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-            >
+            <motion.h2 className="font-semibold text-white mb-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
               Transaction Failed
             </motion.h2>
-            
-            <motion.p 
-              className="text-slate-400 mb-4 text-sm leading-relaxed"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-            >
+            <motion.p className="text-slate-400 mb-3 text-xs leading-relaxed" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
               {transactionError}
             </motion.p>
-            
-            <motion.div 
-              className="flex space-x-3"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-            >
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800"
-              >
+            <motion.div className="flex space-x-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.4 }}>
+              <Button variant="outline" onClick={onClose} className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800 h-8 text-sm">
                 Close
               </Button>
-              <Button
-                onClick={handleRetryTransaction}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
+              <Button onClick={() => { setTransactionError(null); handleStartClaiming() }} className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white h-8 text-sm">
+                <RefreshCw className="h-3 w-3 mr-1" />
                 Retry
               </Button>
             </motion.div>
@@ -364,107 +467,107 @@ export function ClaimModal({ isOpen, onClose, pendingRewards = 247.83 }: ClaimMo
     )
   }
 
-  // Transaction Complete State
-  if (transactionComplete) {
+  if (claimFlowState === 'complete') {
+    const completedRewards = rewards.filter(r => claimedRewards.includes(r.id))
+    const failedRewardsList = rewards.filter(r => failedRewards.includes(r.id))
+    const totalClaimedValue = completedRewards.reduce((sum, r) => sum + parseFloat(r.usdValue.replace('$', '').replace(',', '')), 0)
+    const hasFailures = failedRewardsList.length > 0
+    
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="bg-slate-900/90 border-slate-700 max-w-md backdrop-blur-sm">
           <DialogHeader className="sr-only">
             <DialogTitle>Claim Complete</DialogTitle>
-            <DialogDescription>Your rewards have been successfully claimed</DialogDescription>
+            <DialogDescription>Your rewards have been processed</DialogDescription>
           </DialogHeader>
-          
-          <motion.div 
-            className="text-center py-6"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <motion.div 
-              className="relative w-16 h-16 mx-auto mb-4"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center">
-                <CircleCheck className="h-8 w-8 text-white" />
+          <motion.div className="text-center py-4" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
+            <motion.div className="relative w-12 h-12 mx-auto mb-3" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }}>
+              <div className={`absolute inset-0 rounded-full flex items-center justify-center ${hasFailures ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-green-400 to-green-600'}`}>
+                {hasFailures ? <AlertTriangle className="h-6 w-6 text-white" /> : <CircleCheck className="h-6 w-6 text-white" />}
               </div>
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 rounded-full opacity-30"
-                animate={{ scale: [1, 1.3, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
+              <motion.div className={`absolute inset-0 rounded-full opacity-30 ${hasFailures ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-green-400 to-green-600'}`} animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }} />
             </motion.div>
-            
-            <motion.h2 
-              className="text-lg font-semibold text-white mb-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-            >
-              🎉 Rewards Claimed!
+            <motion.h2 className="font-semibold text-white mb-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
+              {hasFailures ? '⚠️ Claims Processed' : '🎉 Rewards Claimed!'}
             </motion.h2>
-            
-            <motion.div 
-              className="bg-slate-800/50 rounded-lg p-3 mb-4 space-y-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-            >
-              {selectedRewardData.map((reward, index) => (
-                <motion.div 
-                  key={reward.id} 
-                  className="flex items-center justify-between text-sm"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xl">{reward.icon}</span>
-                    <span className="text-slate-300">{reward.symbol}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-white font-medium">{reward.amount}</div>
-                    <div className="text-slate-400 text-xs">${parseFloat(reward.usdValue).toLocaleString()}</div>
-                  </div>
-                </motion.div>
-              ))}
-              
-              <Separator className="my-2 bg-slate-700" />
-              
-              <motion.div 
-                className="flex items-center justify-between font-semibold"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: 0.8 }}
-              >
-                <span className="text-slate-300">Total Value</span>
-                <span className="text-green-400 text-lg">${totalSelectedUsd.toLocaleString()}</span>
+            {hasFailures && (
+              <motion.p className="text-yellow-400 text-xs mb-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.4 }}>
+                {completedRewards.length} of {completedRewards.length + failedRewardsList.length} claims succeeded
+              </motion.p>
+            )}
+            {completedRewards.length > 0 && (
+              <motion.div className="bg-slate-800/50 rounded-lg p-2 mb-2 space-y-1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.4 }}>
+                <div className="text-xs text-green-400 font-medium mb-1 flex items-center justify-center">
+                  <Check className="h-2 w-2 mr-1" />
+                  Successfully Claimed
+                </div>
+                {completedRewards.map((reward, index) => (
+                  <motion.div key={reward.id} className="flex items-center justify-between text-xs" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm">{reward.icon}</span>
+                      <span className="text-slate-300">{reward.symbol}</span>
+                      {claimTransactionHashes[reward.id] && (
+                        <Button variant="ghost" size="sm" className="h-4 px-1 text-purple-400 hover:text-purple-300" onClick={() => window.open(`https://etherscan.io/tx/${claimTransactionHashes[reward.id]}`, "_blank")}>
+                          <ExternalLink className="h-2 w-2" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-white font-medium text-xs">{reward.amount}</div>
+                      <div className="text-slate-400 text-xs">${parseFloat(reward.usdValue).toLocaleString()}</div>
+                    </div>
+                  </motion.div>
+                ))}
+                {completedRewards.length > 0 && (
+                  <>
+                    <Separator className="my-1 bg-slate-700" />
+                    <motion.div className="flex items-center justify-between font-semibold text-xs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.8 }}>
+                      <span className="text-slate-300">Total Claimed</span>
+                      <span className="text-green-400">${totalClaimedValue.toLocaleString()}</span>
+                    </motion.div>
+                  </>
+                )}
               </motion.div>
-            </motion.div>
-            
-            <motion.div
-              className="flex space-x-3"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.9 }}
-            >
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800"
-              >
+            )}
+            {failedRewardsList.length > 0 && (
+              <motion.div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 mb-2 space-y-1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.6 }}>
+                <div className="text-xs text-red-400 font-medium mb-1 flex items-center justify-center">
+                  <X className="h-2 w-2 mr-1" />
+                  Failed Claims
+                </div>
+                {failedRewardsList.map((reward, index) => (
+                  <motion.div key={reward.id} className="flex items-center justify-between text-xs" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.7 + index * 0.1 }}>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm">{reward.icon}</span>
+                      <span className="text-slate-300">{reward.symbol}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-red-400 font-medium text-xs">{reward.amount}</div>
+                      <div className="text-slate-400 text-xs">${parseFloat(reward.usdValue).toLocaleString()}</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+            <motion.div className="flex space-x-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.9 }}>
+              <Button variant="outline" onClick={onClose} className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800 h-8 text-sm">
                 Close
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-slate-600 text-slate-300 hover:bg-slate-800"
-                onClick={() => window.open("https://etherscan.io/tx/0x...", "_blank")}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View Tx
-              </Button>
+              {hasFailures && (
+                <Button onClick={retryFailedClaims} className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white h-8 text-sm">
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Retry Failed
+                </Button>
+              )}
+              {!hasFailures && Object.keys(claimTransactionHashes).length === 1 && (
+                <Button variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:bg-slate-800 h-8 text-xs" onClick={() => {
+                  const txHash = Object.values(claimTransactionHashes)[0]
+                  window.open(`https://etherscan.io/tx/${txHash}`, "_blank")
+                }}>
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  View Tx
+                </Button>
+              )}
             </motion.div>
           </motion.div>
         </DialogContent>
@@ -472,8 +575,13 @@ export function ClaimModal({ isOpen, onClose, pendingRewards = 247.83 }: ClaimMo
     )
   }
 
-  // Transaction Processing State
-  if (isTransacting) {
+  if (claimFlowState === 'claiming') {
+    const totalRewards = selectedRewards.length
+    const completedCount = claimedRewards.length
+    const currentProgress = totalRewards > 1 ? 
+      ((completedCount * 5 + transactionStep) / (totalRewards * 5)) * 100 : 
+      (transactionStep / 5) * 100
+
     return (
       <Dialog open={isOpen} onOpenChange={() => {}}>
         <DialogContent className="bg-slate-900/90 border-slate-700 max-w-md backdrop-blur-sm">
@@ -481,56 +589,41 @@ export function ClaimModal({ isOpen, onClose, pendingRewards = 247.83 }: ClaimMo
             <DialogTitle>Processing Claim</DialogTitle>
             <DialogDescription>Your reward claim is being processed</DialogDescription>
           </DialogHeader>
-          
-          <motion.div 
-            className="text-center py-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <motion.div 
-              className="relative w-16 h-16 mx-auto mb-4"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            >
+          <motion.div className="text-center py-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+            <motion.div className="relative w-12 h-12 mx-auto mb-3" animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                <Sparkles className="h-8 w-8 text-white" />
+                <Sparkles className="h-6 w-6 text-white" />
               </div>
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full opacity-30"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
+              <motion.div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full opacity-30" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity }} />
             </motion.div>
-            
-            <h2 className="text-lg font-semibold text-white mb-3">Processing Claim</h2>
-            
-            <div className="mb-3 px-4">
-              <Progress 
-                value={(transactionStep / 5) * 100} 
-                className="h-2 bg-slate-800"
-              />
-            </div>
-            
-            <motion.p 
-              className="text-slate-400 mb-2"
-              key={transactionStep}
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {getTransactionStepText()}
-            </motion.p>
-            
-            {transactionStep === 2 && (
-              <div className="flex items-center justify-center text-xs text-slate-500">
-                <Fuel className="h-3 w-3 mr-1" />
-                Estimated gas: {estimatedGas} ETH (~$8.42)
+            <h2 className="font-semibold text-white mb-2">
+              {totalRewards > 1 ? 'Processing Claims' : 'Processing Claim'}
+            </h2>
+            {totalRewards > 1 && (
+              <div className="mb-2 px-4">
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                  <span>Claiming {completedCount + 1} of {totalRewards}</span>
+                  <span>{Math.round(currentProgress)}% complete</span>
+                </div>
+                <Progress value={currentProgress} className="h-1 bg-slate-800" />
               </div>
             )}
-            
-            <div className="mt-4 text-xs text-slate-500">
-              Step {transactionStep} of 5
+            {totalRewards === 1 && (
+              <div className="mb-2 px-4">
+                <Progress value={(transactionStep / 5) * 100} className="h-1 bg-slate-800" />
+              </div>
+            )}
+            {currentlyProcessingReward && (
+              <div className="mb-2 bg-slate-800/50 rounded-lg p-2">
+                <div className="flex items-center justify-center space-x-2">
+                  <span className="text-sm">{currentlyProcessingReward.icon}</span>
+                  <span className="text-white font-medium text-sm">{currentlyProcessingReward.symbol}</span>
+                </div>
+                <div className="text-slate-400 text-xs mt-1">{currentlyProcessingReward.amount} {currentlyProcessingReward.symbol}</div>
+              </div>
+            )}
+            <div className="text-slate-400 text-xs px-4">
+              {getTransactionStepText()}
             </div>
           </motion.div>
         </DialogContent>
@@ -540,319 +633,311 @@ export function ClaimModal({ isOpen, onClose, pendingRewards = 247.83 }: ClaimMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-900/95 border-slate-700 max-w-3xl max-h-[85vh] overflow-hidden backdrop-blur-sm">
-        <DialogHeader className="pb-3">
-          <DialogTitle className="flex items-center space-x-3 text-white">
-            <div className="w-7 h-7 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-              <Gift className="h-4 w-4 text-white" />
-            </div>
-            <span>Claim Rewards</span>
-          </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Claim your {context === 'governance' ? 'governance' : 'portfolio'} rewards and view claim history
+      <DialogContent className="bg-slate-900/90 border-slate-700 max-w-2xl backdrop-blur-sm max-h-[85vh] flex flex-col">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Claim Rewards</DialogTitle>
+          <DialogDescription>
+            Claim your available rewards from protocol activities
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="h-full">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-800 mb-4">
-            <TabsTrigger 
-              value="claim" 
-              className="text-slate-400 data-[state=active]:text-white data-[state=active]:bg-slate-700"
-            >
-              <Gift className="h-4 w-4 mr-2" />
-              Claim Rewards
-            </TabsTrigger>
-            <TabsTrigger 
-              value="history" 
-              className="text-slate-400 data-[state=active]:text-white data-[state=active]:bg-slate-700"
-            >
-              <History className="h-4 w-4 mr-2" />
-              Claim History
-            </TabsTrigger>
+        {/* Compact Header */}
+        <motion.div 
+          className="border-b border-slate-700 pb-3 flex-shrink-0"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="flex items-center space-x-2 mb-1">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+              <Gift className="h-4 w-4 text-white" />
+            </div>
+            <h1 className="text-lg font-bold text-white">Claim Rewards</h1>
+          </div>
+          <p className="text-slate-400 text-xs">
+            Review and claim your earned rewards from staking and protocol activities
+          </p>
+        </motion.div>
+
+        {/* Compact Tabs */}
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full flex flex-col min-h-0 flex-1">
+          <TabsList className="grid w-full grid-cols-2 mb-3 flex-shrink-0 h-8">
+            <TabsTrigger value="claim" className="text-xs">Claim Rewards</TabsTrigger>
+            <TabsTrigger value="history" className="text-xs">Claim History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="claim" className="space-y-4">
-            {/* Condensed Summary Card */}
+          {/* Claim Tab */}
+          <TabsContent value="claim" className="flex flex-col min-h-0 flex-1 space-y-3">
+            {/* Compact Summary */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="flex-shrink-0"
             >
-              <Card className="bg-gradient-to-r from-slate-800/50 to-slate-800/30 border-slate-700 overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-4">
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
                     <div>
-                      <p className="text-xs text-slate-400 mb-1">Total Claimable Value</p>
-                      <p className="text-2xl font-bold text-white">${totalRewardsUsd.toLocaleString()}</p>
-                      <p className="text-xs text-slate-500">Immediate rewards only</p>
+                      <h3 className="font-semibold text-white text-sm">Available Rewards</h3>
+                      <p className="text-slate-400 text-xs">Total value ready to claim</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-slate-400 mb-1">Selected Value</p>
-                      <p className="text-xl font-bold text-green-400">${totalSelectedUsd.toLocaleString()}</p>
-                      <p className="text-xs text-slate-500">{selectedRewards.length} rewards selected</p>
+                      <div className="text-lg font-bold text-white">
+                        ${totalRewardsUsd.toLocaleString()}
+                      </div>
+                      <div className="text-slate-400 text-xs">
+                        {immediateRewards.length} reward{immediateRewards.length !== 1 ? 's' : ''} available
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-between">
+                    <div className="text-slate-400 text-xs">
+                      Selected: ${totalSelectedUsd.toLocaleString()} ({selectedRewards.length} reward{selectedRewards.length !== 1 ? 's' : ''})
+                    </div>
+                    <div className="flex space-x-1">
                       <Button
-                        variant="outline"
+                        variant="outline" 
                         size="sm"
                         onClick={handleClaimAll}
-                        className="border-slate-600 text-slate-300 hover:bg-slate-800 text-xs h-8"
+                        className="border-slate-600 text-slate-300 hover:bg-slate-700 h-6 px-2 text-xs"
                       >
-                        <Check className="h-3 w-3 mr-1" />
                         Select All
                       </Button>
                       <Button
-                        variant="outline"
+                        variant="outline" 
                         size="sm"
                         onClick={handleClearSelection}
-                        className="border-slate-600 text-slate-300 hover:bg-slate-800 text-xs h-8"
+                        className="border-slate-600 text-slate-300 hover:bg-slate-700 h-6 px-2 text-xs"
                       >
-                        <X className="h-3 w-3 mr-1" />
-                        Clear All
+                        Clear
                       </Button>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="auto-compound"
-                          checked={autoCompound}
-                          onCheckedChange={setAutoCompound}
-                          className="scale-90"
-                        />
-                        <Label htmlFor="auto-compound" className="text-xs text-slate-400">
-                          Auto-compound
-                        </Label>
-                      </div>
-                      <div className="flex items-center text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded">
-                        <Fuel className="h-3 w-3 mr-1" />
-                        ~{estimatedGas} ETH
-                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
 
-            {/* Condensed Rewards List */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-semibold text-white">Available Rewards</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowBreakdown(!showBreakdown)}
-                  className="text-slate-400 hover:text-white text-xs h-8"
-                >
-                  {showBreakdown ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                  Details
-                </Button>
-              </div>
-
-              <ScrollArea className="h-60 pr-4">
-                <div className="space-y-2">
-                  <AnimatePresence>
-                    {rewards.map((reward, index) => (
-                      <motion.div
-                        key={reward.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                        whileHover={{ scale: reward.type === 'immediate' ? 1.01 : 1 }}
+            {/* Compact Rewards List */}
+            <ScrollArea className="flex-1 pr-2">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.2 }}
+                className="space-y-2"
+              >
+                {rewards.map((reward, index) => {
+                  const isSelected = selectedRewards.includes(reward.id)
+                  const isSelectable = reward.type === 'immediate'
+                  
+                  return (
+                    <motion.div
+                      key={reward.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.3 + index * 0.05 }}
+                    >
+                      <Card 
+                        className={`transition-all duration-200 cursor-pointer ${
+                          isSelectable
+                            ? isSelected 
+                              ? 'bg-purple-500/20 border-purple-500/50 shadow-lg shadow-purple-500/10' 
+                              : 'bg-slate-800/50 border-slate-700 hover:bg-slate-800/70 hover:border-slate-600'
+                            : 'bg-slate-800/30 border-slate-700/50 opacity-60'
+                        }`}
+                        onClick={() => isSelectable && handleRewardToggle(reward.id)}
                       >
-                        <Card 
-                          className={`cursor-pointer transition-all duration-200 border ${
-                            selectedRewards.includes(reward.id) && reward.type === 'immediate'
-                              ? 'bg-purple-500/10 border-purple-500/30 shadow-lg shadow-purple-500/10' 
-                              : reward.type === 'immediate'
-                              ? 'bg-slate-800/70 border-slate-700 hover:bg-slate-800/90 hover:border-slate-600'
-                              : 'bg-slate-800/30 border-slate-700/50 opacity-60'
-                          }`}
-                          onClick={() => reward.type === 'immediate' && handleRewardToggle(reward.id)}
-                        >
-                          <CardContent className="p-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
-                                  reward.type === 'immediate' ? 'bg-gradient-to-r from-purple-600 to-pink-600' :
-                                  reward.type === 'vesting' ? 'bg-yellow-500/20' : 'bg-slate-600/50'
-                                }`}>
-                                  {reward.icon || <Coins className="h-5 w-5 text-white" />}
+                        <CardContent className="p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              {/* Token Icon and Selection */}
+                              <div className="relative">
+                                <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-sm">
+                                  {reward.icon}
                                 </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center space-x-2 mb-1">
-                                    <h4 className="font-medium text-white text-sm">{reward.symbol}</h4>
-                                    <Badge 
-                                      variant="secondary" 
-                                      className={`text-xs font-medium ${
-                                        reward.type === 'immediate' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                                        reward.type === 'vesting' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-                                        'bg-red-500/20 text-red-400 border-red-500/30'
-                                      }`}
-                                    >
-                                      {reward.type === 'immediate' ? '✓ Ready' :
-                                       reward.type === 'vesting' ? '⏰ Vesting' : '🔒 Locked'}
-                                    </Badge>
-                                    {reward.apr && (
-                                      <Badge variant="outline" className="text-xs text-purple-400 border-purple-500/30">
-                                        {reward.apr} APR
-                                      </Badge>
-                                    )}
+                                {isSelectable && (
+                                  <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                    isSelected 
+                                      ? 'bg-purple-500 border-purple-400' 
+                                      : 'bg-slate-600 border-slate-500'
+                                  }`}>
+                                    {isSelected && <Check className="h-2 w-2 text-white" />}
                                   </div>
-                                  <p className="text-xs text-slate-400">{reward.source}</p>
-                                  
-                                  {showBreakdown && (
-                                    <AnimatePresence>
-                                      <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="mt-2 pt-2 border-t border-slate-700"
-                                      >
-                                        {reward.type === 'vesting' && reward.nextVest && (
-                                          <div className="flex items-center text-xs text-yellow-400 mb-1">
-                                            <Clock className="h-3 w-3 mr-1" />
-                                            Next: {reward.nextVest}
-                                          </div>
-                                        )}
-                                        {reward.type === 'locked' && reward.lockDuration && (
-                                          <div className="flex items-center text-xs text-red-400 mb-1">
-                                            <Lock className="h-3 w-3 mr-1" />
-                                            Locked for {reward.lockDuration}
-                                          </div>
-                                        )}
-                                        {reward.vestingEnd && (
-                                          <div className="flex items-center text-xs text-slate-500">
-                                            <Calendar className="h-3 w-3 mr-1" />
-                                            Fully vested: {reward.vestingEnd}
-                                          </div>
-                                        )}
-                                      </motion.div>
-                                    </AnimatePresence>
-                                  )}
-                                </div>
+                                )}
                               </div>
-                              <div className="text-right">
-                                <div className="text-white font-medium text-sm">{reward.amount}</div>
-                                <div className="text-slate-400 text-xs">${parseFloat(reward.usdValue).toLocaleString()}</div>
+                              
+                              {/* Reward Details */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <h4 className="font-medium text-white text-sm">{reward.symbol}</h4>
+                                  <Badge variant="outline" className={`text-xs ${
+                                    reward.type === 'immediate' 
+                                      ? 'text-green-400 border-green-400/30' 
+                                      : reward.type === 'vesting'
+                                      ? 'text-yellow-400 border-yellow-400/30'
+                                      : 'text-slate-400 border-slate-400/30'
+                                  }`}>
+                                    {reward.type === 'immediate' ? 'Available' : 
+                                     reward.type === 'vesting' ? 'Vesting' : 'Locked'}
+                                  </Badge>
+                                </div>
+                                <div className="text-slate-400 text-xs">{reward.source}</div>
+                                {reward.type === 'vesting' && reward.nextVest && (
+                                  <div className="text-xs text-slate-400 mt-1">Next: {reward.nextVest}</div>
+                                )}
+                                {reward.type === 'locked' && reward.lockDuration && (
+                                  <div className="text-xs text-slate-400 mt-1">Unlocks in {reward.lockDuration}</div>
+                                )}
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </ScrollArea>
-            </motion.div>
-
-            {/* Condensed Action Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            >
-              <Separator className="mb-4" />
-              
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-slate-400">
-                  {selectedRewards.length > 0 ? (
-                    <>Selected {selectedRewards.length} reward{selectedRewards.length > 1 ? 's' : ''} worth ${totalSelectedUsd.toLocaleString()}</>
-                  ) : (
-                    'Select rewards to claim'
-                  )}
-                </div>
-                
-                <Button 
-                  onClick={handleClaim}
-                  disabled={selectedRewards.length === 0}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Zap className="h-4 w-4 mr-2" />
-                  Claim Selected
-                </Button>
-              </div>
-            </motion.div>
+                            
+                            {/* Amount and Value */}
+                            <div className="text-right">
+                              <div className="font-semibold text-white text-sm">
+                                {reward.amount} {reward.symbol}
+                              </div>
+                              <div className="text-slate-400 text-xs">
+                                ${parseFloat(reward.usdValue.replace('$', '').replace(',', '')).toLocaleString()}
+                              </div>
+                              {reward.apr && (
+                                <div className="text-xs text-green-400 mt-1">
+                                  {reward.apr} APR
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-4">
-            <Card className="bg-slate-900/80 border-slate-700">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-white text-base">Your Claim History</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <ScrollArea className="h-80">
-                  <div className="space-y-3">
-                    {claimHistory.map((claim, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="bg-slate-800/50 border border-slate-700 rounded-lg p-3"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <Badge 
-                              variant="secondary" 
-                              className={`text-xs ${
-                                claim.status === 'success' ? 'bg-green-500/20 text-green-400' :
-                                claim.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-red-500/20 text-red-400'
-                              }`}
-                            >
-                              {claim.status}
-                            </Badge>
-                            <span className="text-xs text-slate-400">{claim.date}</span>
-                          </div>
-                          <span className="text-white font-medium text-sm">{claim.usdValue}</span>
+          {/* History Tab */}
+          <TabsContent value="history" className="flex flex-col min-h-0 flex-1">
+            <ScrollArea className="flex-1 pr-2">
+              <div>
+                <h3 className="text-white text-sm font-semibold mb-3">Your Claim History</h3>
+                <div className="space-y-2">
+                  {claimHistory.map((claim, index) => (
+                    <motion.div
+                      key={claim.txHash}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      className="bg-slate-900/50 border border-slate-700 rounded-lg p-3"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="outline" className="text-green-400 border-green-400/30 text-xs">
+                            Success
+                          </Badge>
+                          <span className="text-slate-400 text-xs">{claim.date}</span>
                         </div>
-                        
-                        <div className="flex flex-wrap gap-2 mb-2">
-                          {claim.tokens.map((token, tokenIndex) => (
-                            <div key={tokenIndex} className="text-xs text-slate-300">
-                              {token.amount} {token.symbol}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 px-2 text-purple-400 hover:text-purple-300 text-xs"
+                          onClick={() => window.open(`https://etherscan.io/tx/${claim.txHash}`, "_blank")}
+                        >
+                          <ExternalLink className="h-2 w-2 mr-1" />
+                          View
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        {claim.tokens.map((token, tokenIndex) => (
+                          <div key={tokenIndex} className="flex items-center justify-between text-xs">
+                            <span className="text-slate-300">{token.symbol}</span>
+                            <div className="text-right">
+                              <div className="text-white">{token.amount}</div>
+                              <div className="text-slate-400">{token.usdValue}</div>
                             </div>
-                          ))}
-                        </div>
-                        
-                        <div className="flex items-center justify-between text-xs text-slate-500">
-                          <div className="flex items-center space-x-2">
-                            <span>Gas: {claim.gasUsed} ETH</span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyToClipboard(claim.txHash)}
-                              className="p-1 h-auto hover:bg-slate-700"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-1 h-auto text-slate-500 hover:text-white"
-                            onClick={() => window.open(`https://etherscan.io/tx/${claim.txHash}`, '_blank')}
-                          >
-                            <ArrowUpRight className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                        ))}
+                      </div>
+                      
+                      <Separator className="my-2 bg-slate-700" />
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400">Total Value</span>
+                        <span className="text-green-400 font-medium">{claim.usdValue}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                        <span>Gas Used: {claim.gasUsed} ETH</span>
+                        <span>{claim.txHash.substring(0, 10)}...</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </ScrollArea>
           </TabsContent>
         </Tabs>
+
+        {/* Compact Footer */}
+        <div className="border-t border-slate-700 pt-3 flex-shrink-0">
+          {/* Transaction Summary */}
+          {selectedRewards.length > 0 && selectedTab === "claim" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+              className="mb-3"
+            >
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardContent className="p-3">
+                  <div className="grid grid-cols-3 gap-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Selected rewards</span>
+                      <span className="text-white font-medium">{selectedRewards.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Total value</span>
+                      <span className="text-white font-semibold">${totalSelectedUsd.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Estimated gas</span>
+                      <span className="text-white font-medium">${estimatedGas} ETH</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Action Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            className="flex space-x-3"
+          >
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800 h-8 text-sm"
+            >
+              Cancel
+            </Button>
+            {selectedTab === "claim" && (
+              <Button
+                onClick={handleStartClaiming}
+                disabled={selectedRewards.length === 0}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 disabled:cursor-not-allowed h-8 text-sm"
+              >
+                <Gift className="h-3 w-3 mr-1" />
+                {selectedRewards.length === 0 
+                  ? 'Select Rewards to Claim' 
+                  : `Claim ${selectedRewards.length} Reward${selectedRewards.length > 1 ? 's' : ''}`
+                }
+              </Button>
+            )}
+          </motion.div>
+        </div>
       </DialogContent>
     </Dialog>
   )

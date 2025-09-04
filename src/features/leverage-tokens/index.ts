@@ -4,7 +4,6 @@
  */
 
 // Components will be exported as they're created
-export { MintForm } from './components/MintForm'
 // Export hooks
 export { useMintWithRouter } from './hooks/useMintWithRouter'
 // Export types
