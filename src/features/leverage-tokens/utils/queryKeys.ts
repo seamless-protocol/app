@@ -13,6 +13,7 @@ export const ltKeys = {
   price: (addr: `0x${string}`) => [...ltKeys.token(addr), 'price'] as const,
   rebalancing: (addr: `0x${string}`) => [...ltKeys.token(addr), 'rebalancing'] as const,
   metadata: (addr: `0x${string}`) => [...ltKeys.token(addr), 'metadata'] as const,
+  detailedMetrics: (addr: `0x${string}`) => [...ltKeys.token(addr), 'detailed-metrics'] as const,
   simulation: {
     mint: (addr: `0x${string}`, amount: bigint) =>
       [...ltKeys.token(addr), 'simulate', 'mint', amount.toString()] as const,

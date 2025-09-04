@@ -2,7 +2,6 @@ import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
 import type { Address } from 'viem'
 import type { FAQItem } from '@/components/FAQ'
 import { BaseLogo } from '@/components/icons/logos'
-import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
 
 // Define ResourceItem interface locally since it's not exported
 interface ResourceItem {
@@ -126,74 +125,6 @@ export const mockLeverageTokenData = {
   },
 }
 
-// Detailed metrics for the collapsible section
-export const mockDetailedMetrics: LeverageTokenMetrics = {
-  'Leverage Settings': [
-    {
-      label: 'Target Leverage',
-      value: '17.00x',
-      highlight: true,
-      color: 'text-white',
-      tooltip: 'The target leverage ratio for this token.',
-    },
-    {
-      label: 'Min - Max Leverage',
-      value: '16.90x - 17.30x',
-      color: 'text-white',
-      tooltip: 'The minimum and maximum leverage range allowed.',
-    },
-  ],
-  Fees: [
-    {
-      label: 'Mint Token Fee',
-      value: '0.00%',
-      highlight: true,
-      color: 'text-green-400',
-      tooltip: 'Fee charged when minting new leverage tokens.',
-    },
-    {
-      label: 'Redeem Token Fee',
-      value: '0.10%',
-      color: 'text-white',
-      tooltip: 'Fee charged when redeeming leverage tokens.',
-    },
-  ],
-  'Auction Parameters': [
-    {
-      label: 'Dutch Auction Duration',
-      value: '1 hour',
-      color: 'text-white',
-      tooltip: 'Duration of the Dutch auction for token redemptions.',
-    },
-    {
-      label: 'Initial Price Multiplier',
-      value: '1.01x',
-      color: 'text-white',
-      tooltip: 'Initial price multiplier for the auction.',
-    },
-    {
-      label: 'Min Price Multiplier',
-      value: '0.99x',
-      color: 'text-white',
-      tooltip: 'Minimum price multiplier for the auction.',
-    },
-  ],
-  'Risk Management': [
-    {
-      label: 'Pre-liquidation Leverage',
-      value: '17.50x',
-      color: 'text-white',
-      tooltip: 'Leverage threshold before liquidation is triggered.',
-    },
-    {
-      label: 'Rebalance Reward',
-      value: '0.50%',
-      color: 'text-white',
-      tooltip: 'Reward percentage for successful rebalancing.',
-    },
-  ],
-}
-
 // Related resources data
 export const mockRelatedResources = {
   underlyingPlatforms: [
@@ -270,7 +201,6 @@ export const mockFAQData: Array<FAQItem> = [
 // Export all mock data
 export const leverageTokenPageData = {
   ...mockLeverageTokenData,
-  detailedMetrics: mockDetailedMetrics,
   relatedResources: mockRelatedResources,
   faqData: mockFAQData,
 }

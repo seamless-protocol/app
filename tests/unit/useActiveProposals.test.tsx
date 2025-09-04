@@ -5,24 +5,7 @@ import type { TallyProposal } from '@/features/governance/types'
 import { getProposals } from '@/features/governance/utils/tally'
 import { hookTestUtils, mockSetup } from '../utils'
 
-// Mock the Tally API
-vi.mock('@/features/governance/utils/tally', () => ({
-  getProposals: vi.fn(),
-}))
-
-// Mock the governance constants
-vi.mock('@/features/governance/utils/constants', () => ({
-  TALLY_CONFIG: {
-    ORGANIZATION_ID: 'test-org-id',
-  },
-  STALE_TIME: {
-    proposals: 60000,
-  },
-  QUERY_SETTINGS: {
-    gcTime: 300000,
-  },
-}))
-
+// Use the global mocks from tests/setup.ts
 const mockGetProposals = vi.mocked(getProposals)
 
 // Mock data matching the actual TallyProposal type
