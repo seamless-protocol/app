@@ -13,8 +13,9 @@ export interface LeverageTokenStateData {
   equity: bigint
   collateralRatio: bigint
 }
-export function useLeverageTokenState(tokenAddress: Address) {
-  const chainId = useChainId()
+export function useLeverageTokenState(tokenAddress: Address, chainIdOverride?: number) {
+  const walletChainId = useChainId()
+  const chainId = chainIdOverride ?? walletChainId
   const managerAddress = getLeverageManagerAddress(chainId)
 
   const contracts = useMemo(() => {
@@ -25,14 +26,16 @@ export function useLeverageTokenState(tokenAddress: Address) {
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenState' as const,
         args: [tokenAddress],
+        chainId,
       },
       {
         address: tokenAddress as Address,
         abi: leverageTokenAbi,
         functionName: 'totalSupply' as const,
+        chainId,
       },
     ]
-  }, [managerAddress, tokenAddress])
+  }, [managerAddress, tokenAddress, chainId])
 
   const { data, isLoading, isError, error } = useReadContracts({
     contracts,

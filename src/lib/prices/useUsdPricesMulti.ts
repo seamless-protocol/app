@@ -52,4 +52,3 @@ function createKey(byChain: Record<number, Array<string>>) {
     .map(([chainId, addrs]) => [chainId, [...new Set(addrs.map((a) => a.toLowerCase()))].sort()])
   return sorted
 }
-

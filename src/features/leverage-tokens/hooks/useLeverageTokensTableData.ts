@@ -8,8 +8,8 @@ import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageT
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
 import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
-import { STALE_TIME } from '../utils/constants'
 import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
+import { STALE_TIME } from '../utils/constants'
 
 // Remove custom conversion - use viem's formatUnits instead
 
@@ -17,7 +17,6 @@ export function useLeverageTokensTableData() {
   const chainId = useChainId()
   const managerAddress = getLeverageManagerAddress(chainId)
   const configs = getAllLeverageTokenConfigs()
-  
 
   const contracts = useMemo(() => {
     if (!managerAddress) return []
@@ -51,7 +50,7 @@ export function useLeverageTokensTableData() {
     for (const cfg of configs) {
       const key = cfg.chainId
       if (!map.has(key)) map.set(key, new Set<string>())
-      map.get(key)!.add(cfg.debtAsset.address.toLowerCase())
+      map.get(key)?.add(cfg.debtAsset.address.toLowerCase())
     }
     const out: Record<number, Array<string>> = {}
     for (const [cid, set] of map.entries()) {
@@ -60,11 +59,10 @@ export function useLeverageTokensTableData() {
     return out
   }, [configs])
 
-  const {
-    data: usdPricesByChain = {},
-    isLoading: isUsdLoading,
-    isError: isUsdError,
-  } = useUsdPricesMultiChain({ byChain: addressesByChain, enabled: Object.keys(addressesByChain).length > 0 })
+  const { data: usdPricesByChain = {} } = useUsdPricesMultiChain({
+    byChain: addressesByChain,
+    enabled: Object.keys(addressesByChain).length > 0,
+  })
 
   const tokens: Array<LeverageToken> = useMemo(() => {
     if (!data || data.length === 0) return []
@@ -97,9 +95,8 @@ export function useLeverageTokensTableData() {
       // Convert BigInt to numbers for UI using debt asset decimals
       const tvl = Number(formatUnits(equity, cfg.debtAsset.decimals))
       const priceUsd = usdPricesByChain[cfg.chainId]?.[cfg.debtAsset.address.toLowerCase()]
-      const tvlUsd = typeof priceUsd === 'number' && Number.isFinite(priceUsd)
-        ? tvl * priceUsd
-        : undefined
+      const tvlUsd =
+        typeof priceUsd === 'number' && Number.isFinite(priceUsd) ? tvl * priceUsd : undefined
       const currentSupply = Number(formatUnits(totalSupply, cfg.decimals ?? 18))
 
       return {
@@ -129,7 +126,7 @@ export function useLeverageTokensTableData() {
         rewardMultiplier: mockAPY.rewardMultiplier,
       }
     })
-  }, [configs, data])
+  }, [configs, data, usdPricesByChain])
 
   return { data: tokens, isLoading, isError, error }
 }

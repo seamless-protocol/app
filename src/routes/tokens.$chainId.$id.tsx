@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Info } from 'lucide-react'
 import { useState } from 'react'
+import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
 import { APYBreakdown } from '@/components/APYBreakdown'
 import { FAQ } from '@/components/FAQ'
@@ -22,8 +23,10 @@ import {
 } from '@/features/leverage-tokens/data/mockData'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
+import { useLeverageTokenState } from '@/features/leverage-tokens/hooks/useLeverageTokenState'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
+import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 import { calculateAPYBreakdown } from '@/lib/utils/apy-calculations'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { formatCurrency, formatNumber } from '@/lib/utils/formatting'
@@ -47,6 +50,34 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       isError: isDetailedMetricsError,
     } = useLeverageTokenDetailedMetrics(tokenAddress as `0x${string}`)
 
+    // Get leverage token config (used for decimals, addresses, etc.)
+    const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`)
+
+    // Live on-chain state for TVL (equity) in debt asset units
+    const { data: stateData } = useLeverageTokenState(tokenAddress as `0x${string}`, chainId)
+
+    // USD price for debt asset (guard when config is missing)
+    const { data: usdPriceMap } = useUsdPrices({
+      chainId,
+      addresses: tokenConfig ? [tokenConfig.debtAsset.address] : [],
+      enabled: Boolean(tokenConfig),
+    })
+
+    const tvlDebtUnits =
+      stateData && tokenConfig
+        ? Number(formatUnits(stateData.equity, tokenConfig.debtAsset.decimals))
+        : undefined
+    const debtPriceUsd = tokenConfig
+      ? usdPriceMap[tokenConfig.debtAsset.address.toLowerCase()]
+      : undefined
+    const tvlUsd =
+      typeof tvlDebtUnits === 'number' &&
+      Number.isFinite(tvlDebtUnits) &&
+      typeof debtPriceUsd === 'number' &&
+      Number.isFinite(debtPriceUsd)
+        ? tvlDebtUnits * debtPriceUsd
+        : undefined
+
     const {
       data: priceHistoryData,
       isLoading: isPriceDataLoading,
@@ -56,9 +87,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       chainId,
       timeframe: selectedTimeframe,
     })
-
-    // Get leverage token config
-    const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`)
 
     if (!tokenConfig) {
       return (
@@ -110,11 +138,18 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       console.log('Redeem clicked')
     }
 
-    // Create StatCard data for key metrics (using mock data for now)
+    // Create StatCard data for key metrics (TVL uses live state + USD approximation)
     const keyMetricsCards = [
       {
         title: 'TVL',
-        stat: formatCurrency(mockKeyMetrics.tvl, { millionDecimals: 2, thousandDecimals: 0 }),
+        stat:
+          typeof tvlDebtUnits === 'number' && Number.isFinite(tvlDebtUnits)
+            ? `${formatNumber(tvlDebtUnits, { decimals: 2, thousandDecimals: 2, millionDecimals: 2, billionDecimals: 2 })} ${tokenConfig.debtAsset.symbol}`
+            : '—',
+        caption:
+          typeof tvlUsd === 'number' && Number.isFinite(tvlUsd)
+            ? `${formatCurrency(tvlUsd, { millionDecimals: 2, thousandDecimals: 0 })}`
+            : undefined,
       },
       {
         title: 'Total Collateral',
