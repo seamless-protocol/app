@@ -41,6 +41,8 @@ const mockToken = {
   },
   supplyCap: 1000000,
   currentSupply: 750000,
+  collateralAmount: 850000,
+  debtAmount: 425000,
   chainId: 137,
   chainName: 'Polygon',
   chainLogo: EthereumLogo,

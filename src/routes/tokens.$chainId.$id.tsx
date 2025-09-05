@@ -11,6 +11,7 @@ import { AssetDisplay } from '@/components/ui/asset-display'
 import { Badge } from '@/components/ui/badge'
 import { BreadcrumbNavigation } from '@/components/ui/breadcrumb'
 import { PriceLineChart } from '@/components/ui/price-line-chart'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
@@ -21,6 +22,7 @@ import {
   mockKeyMetrics,
   mockSupply,
 } from '@/features/leverage-tokens/data/mockData'
+import { useLeverageTokenCollateral } from '@/features/leverage-tokens/hooks/useLeverageTokenCollateral'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
 import { useLeverageTokenState } from '@/features/leverage-tokens/hooks/useLeverageTokenState'
@@ -56,10 +58,12 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     // Live on-chain state for TVL (equity) in debt asset units
     const { data: stateData } = useLeverageTokenState(tokenAddress as `0x${string}`, chainId)
 
-    // USD price for debt asset (guard when config is missing)
-    const { data: usdPriceMap } = useUsdPrices({
+    // USD price map for debt and collateral assets (guard when config is missing)
+    const { data: usdPriceMap, isLoading: isUsdLoading } = useUsdPrices({
       chainId,
-      addresses: tokenConfig ? [tokenConfig.debtAsset.address] : [],
+      addresses: tokenConfig
+        ? [tokenConfig.debtAsset.address, tokenConfig.collateralAsset.address]
+        : [],
       enabled: Boolean(tokenConfig),
     })
 
@@ -76,6 +80,24 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       typeof debtPriceUsd === 'number' &&
       Number.isFinite(debtPriceUsd)
         ? tvlDebtUnits * debtPriceUsd
+        : undefined
+
+    // Live total collateral via lending adapter
+    const { collateral: collateralWei, isLoading: isCollateralLoading } =
+      useLeverageTokenCollateral(tokenAddress as `0x${string}`, chainId)
+    const totalCollateralUnits =
+      collateralWei && tokenConfig
+        ? Number(formatUnits(collateralWei, tokenConfig.collateralAsset.decimals))
+        : undefined
+    const collateralPriceUsd = tokenConfig
+      ? usdPriceMap[tokenConfig.collateralAsset.address.toLowerCase()]
+      : undefined
+    const totalCollateralUsd =
+      typeof totalCollateralUnits === 'number' &&
+      Number.isFinite(totalCollateralUnits) &&
+      typeof collateralPriceUsd === 'number' &&
+      Number.isFinite(collateralPriceUsd)
+        ? totalCollateralUnits * collateralPriceUsd
         : undefined
 
     const {
@@ -116,6 +138,8 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       collateralAsset: tokenConfig.collateralAsset,
       debtAsset: tokenConfig.debtAsset,
       tvl: mockKeyMetrics.tvl,
+      collateralAmount: totalCollateralUnits ?? 0,
+      debtAmount: tvlDebtUnits ?? 0,
       apy: mockAPY.total,
       leverage: tokenConfig.leverageRatio,
       supplyCap: mockSupply.supplyCap,
@@ -153,8 +177,19 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       },
       {
         title: 'Total Collateral',
-        stat: `${formatNumber(mockKeyMetrics.totalCollateral.amount, { thousandDecimals: 2 })} ${tokenConfig.collateralAsset.symbol}`,
-        caption: `~${formatCurrency(mockKeyMetrics.totalCollateral.amountUSD, { millionDecimals: 2, thousandDecimals: 0 })}`,
+        stat: isCollateralLoading ? (
+          <Skeleton className="h-6 w-36" />
+        ) : typeof totalCollateralUnits === 'number' && Number.isFinite(totalCollateralUnits) ? (
+          `${formatNumber(totalCollateralUnits, { thousandDecimals: 2, decimals: 2, millionDecimals: 2 })} ${tokenConfig.collateralAsset.symbol}`
+        ) : (
+          '—'
+        ),
+        caption:
+          isCollateralLoading || (typeof totalCollateralUnits === 'number' && isUsdLoading) ? (
+            <Skeleton className="h-4 w-24 mt-1" />
+          ) : typeof totalCollateralUsd === 'number' && Number.isFinite(totalCollateralUsd) ? (
+            `~${formatCurrency(totalCollateralUsd, { millionDecimals: 2, thousandDecimals: 0 })}`
+          ) : undefined,
       },
       {
         title: 'Target Leverage',

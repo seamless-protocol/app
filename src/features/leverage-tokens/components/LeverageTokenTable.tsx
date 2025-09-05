@@ -9,6 +9,7 @@ import { filterBySearch, parseSortString, sortData } from '@/lib/utils/table-uti
 import { APYBreakdown } from '../../../components/APYBreakdown'
 import { SortArrowDown, SortArrowNeutral, SortArrowUp } from '../../../components/icons'
 import { AssetDisplay } from '../../../components/ui/asset-display'
+import { Badge } from '../../../components/ui/badge'
 import { FilterDropdown } from '../../../components/ui/filter-dropdown'
 import {
   Table,
@@ -41,6 +42,11 @@ interface LeverageToken {
   tvl: number
   // Optional: USD equivalent of TVL (computed via price hook)
   tvlUsd?: number
+  // Raw collateral and debt amounts in native asset units
+  collateralAmount: number
+  collateralAmountUsd?: number
+  debtAmount: number
+  debtAmountUsd?: number
   apy: number
   leverage: number
   supplyCap: number
@@ -53,6 +59,8 @@ interface LeverageToken {
   borrowRate: number
   rewardMultiplier?: number
   rank?: number
+  // Optional: warning/note when data is partial (e.g., manager not deployed)
+  dataWarning?: string
 }
 
 export type { LeverageToken }
@@ -145,8 +153,22 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
         case 'tvl':
           // Prefer USD value for sorting when available for cross-asset comparability
           return item.tvlUsd ?? 0
+        case 'collateralAmount':
+          // Prefer USD value for sorting when available for cross-asset comparability
+          return item.collateralAmountUsd ?? item.collateralAmount ?? 0
+        case 'name':
+          return item.name
+        case 'apy':
+          return item.apy
+        case 'leverage':
+          return item.leverage
+        case 'currentSupply':
+          return item.currentSupply
+        case 'supplyCap':
+          return item.supplyCap
         default:
-          return (item as unknown as Record<string, unknown>)[key]
+          console.warn(`Unknown sort key: ${key}`)
+          return 0
       }
     })
 
@@ -281,6 +303,16 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                   <button
                     type="button"
                     className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    onClick={() => handleSort('collateralAmount')}
+                  >
+                    <span>Total Collateral</span>
+                    {getSortIcon('collateralAmount')}
+                  </button>
+                </TableHead>
+                <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
+                  <button
+                    type="button"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
                     onClick={() => handleSort('apy')}
                   >
                     <span>APY</span>
@@ -314,7 +346,7 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
             </TableHeader>
             <TableBody>
               {currentItems.length === 0 ? (
-                <TableEmpty colSpan={6} />
+                <TableEmpty colSpan={7} />
               ) : (
                 currentItems.map((token, index) => (
                   <motion.tr
@@ -381,7 +413,18 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                             }
                           />
                         </div>
-                        <span className="text-slate-300 font-medium text-sm">{token.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-300 font-medium text-sm">{token.name}</span>
+                          {token.dataWarning && (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-500/10 text-amber-400 border-amber-400/30 text-[10px] px-1.5 py-0.5"
+                              title={token.dataWarning}
+                            >
+                              Partial data
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
 
@@ -393,6 +436,26 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                       ) : (
                         <span className="text-slate-500 text-sm">—</span>
                       )}
+                    </TableCell>
+
+                    <TableCell className="py-4 px-6 text-right">
+                      <div className="text-right">
+                        <div className="text-slate-300 font-medium text-sm">
+                          {token.collateralAmount > 0
+                            ? `${
+                                token.collateralAmount >= 1000
+                                  ? `${(token.collateralAmount / 1000).toFixed(2)}K`
+                                  : token.collateralAmount.toFixed(2)
+                              } ${token.collateralAsset.symbol}`
+                            : '—'}
+                        </div>
+                        {typeof token.collateralAmountUsd === 'number' &&
+                          Number.isFinite(token.collateralAmountUsd) && (
+                            <div className="text-slate-500 text-xs mt-1">
+                              {formatCurrency(token.collateralAmountUsd)}
+                            </div>
+                          )}
+                      </div>
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-right">

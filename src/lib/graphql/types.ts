@@ -21,3 +21,10 @@ export interface LeverageTokenPriceComparisonResponse {
     }
   } | null
 }
+
+export interface LeverageTokenCapsResponse {
+  leverageTokens?: Array<{
+    id: string
+    supplyCap: string | null
+  }>
+}
