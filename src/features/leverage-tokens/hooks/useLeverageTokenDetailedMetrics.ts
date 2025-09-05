@@ -7,6 +7,9 @@ import { getLeverageManagerAddress } from '../../../lib/contracts/addresses'
 import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
 import { STALE_TIME } from '../utils/constants'
 
+// Type definitions
+type ReadResult<T> = { status: 'success'; result: T } | { status: 'failure'; error: unknown }
+
 // Helper to convert collateral ratio to leverage
 const collateralRatioToLeverage = (collateralRatio: bigint): bigint => {
   const BASE_RATIO = 10n ** 18n // 1e18
@@ -22,9 +25,6 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   const managerAddress = getLeverageManagerAddress(chainId)
 
   // Step 1: Get leverage token config and state from LeverageManager
-  type ReadResult<T> =
-    | { status: 'success'; result: T }
-    | { status: 'failure'; error: unknown }
 
   type ManagerConfig = {
     lendingAdapter: Address

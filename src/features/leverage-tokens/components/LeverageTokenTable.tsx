@@ -425,7 +425,6 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                       )}
                     </TableCell>
 
-
                     <TableCell className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end space-x-1">
                         <span className="text-green-400 font-medium text-sm">

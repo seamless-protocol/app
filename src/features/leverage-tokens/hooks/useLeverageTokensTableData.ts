@@ -12,7 +12,6 @@ import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
 import { STALE_TIME } from '../utils/constants'
 // Supply caps are defined in the leverage token config
 
-
 export function useLeverageTokensTableData() {
   const configs = getAllLeverageTokenConfigs()
 
@@ -97,8 +96,6 @@ export function useLeverageTokensTableData() {
   })
 
   // No lending adapter reads for table now (we don't show total collateral in table)
-  const isLendingLoading = false
-
 
   // Collect unique asset addresses (both collateral and debt) grouped by chain for USD pricing
   const addressesByChain = useMemo(() => {
