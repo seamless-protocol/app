@@ -2,6 +2,11 @@ import type { Address } from 'viem'
 import { base, mainnet } from 'wagmi/chains'
 
 /**
+ * Supported chain IDs for the protocol
+ */
+export type SupportedChainId = typeof mainnet.id | typeof base.id
+
+/**
  * Contract addresses for each supported chain
  * Will be populated as contracts are deployed
  */

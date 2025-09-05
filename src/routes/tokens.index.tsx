@@ -3,39 +3,14 @@ import { motion } from 'framer-motion'
 import { FeaturedLeverageTokens } from '@/features/leverage-tokens/components/FeaturedLeverageToken'
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
 import { LeverageTokenTable } from '@/features/leverage-tokens/components/LeverageTokenTable'
-import { mockAPY, mockKeyMetrics, mockSupply } from '@/features/leverage-tokens/data/mockData'
-import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
+import { useLeverageTokensTableData } from '@/features/leverage-tokens/hooks/useLeverageTokensTableData'
 
 export const Route = createFileRoute('/tokens/')({
   component: () => {
     const navigate = useNavigate()
 
-    // Convert leverage token configs to the format expected by the table
-    const leverageTokens: Array<LeverageToken> = getAllLeverageTokenConfigs().map((config) => ({
-      id: config.address, // Use leverage token address as ID
-      name: config.name,
-      collateralAsset: {
-        symbol: config.collateralAsset.symbol,
-        name: config.collateralAsset.name,
-        address: config.collateralAsset.address,
-      },
-      debtAsset: {
-        symbol: config.debtAsset.symbol,
-        name: config.debtAsset.name,
-        address: config.debtAsset.address,
-      },
-      tvl: mockKeyMetrics.tvl,
-      apy: mockAPY.total,
-      leverage: config.leverageRatio,
-      supplyCap: mockSupply.supplyCap,
-      currentSupply: mockSupply.currentSupply,
-      chainId: config.chainId,
-      chainName: config.chainName,
-      chainLogo: config.chainLogo,
-      baseYield: mockAPY.baseYield,
-      borrowRate: mockAPY.borrowRate,
-      rewardMultiplier: mockAPY.rewardMultiplier,
-    }))
+    // Fetch live leverage token table data
+    const { data: leverageTokens = [], isLoading, isError, error } = useLeverageTokensTableData()
 
     const handleTokenClick = (token: LeverageToken) => {
       // Navigate to the specific token's page using the new chain ID-based route
@@ -51,7 +26,7 @@ export const Route = createFileRoute('/tokens/')({
           {/* Featured Leverage Tokens Section */}
           <div className="overflow-hidden w-full p-1">
             <FeaturedLeverageTokens
-              tokens={leverageTokens} // Show the single weETH token
+              tokens={leverageTokens.slice(0, 3)} // Show top 3 tokens
               onTokenClick={handleTokenClick}
             />
           </div>
@@ -63,7 +38,18 @@ export const Route = createFileRoute('/tokens/')({
             transition={{ duration: 0.5, delay: 0.2 }}
             className="overflow-hidden w-full"
           >
-            <LeverageTokenTable tokens={leverageTokens} onTokenClick={handleTokenClick} />
+            {isLoading ? (
+              <div className="p-8 text-center text-slate-400">Loading leverage tokens…</div>
+            ) : isError ? (
+              <div className="p-8 text-center text-red-400">
+                Failed to load tokens{error?.message ? `: ${error.message}` : ''}
+              </div>
+            ) : (
+              <LeverageTokenTable
+                tokens={leverageTokens as Array<LeverageToken>}
+                onTokenClick={handleTokenClick}
+              />
+            )}
           </motion.div>
         </div>
       </div>

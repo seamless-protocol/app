@@ -44,11 +44,13 @@ export interface LeverageTokenConfig {
     symbol: string
     name: string
     address: Address
+    decimals: number
   }
   debtAsset: {
     symbol: string
     name: string
     address: Address
+    decimals: number
   }
 
   // Related resources
@@ -74,12 +76,14 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether.fi ETH',
-      address: '0xCd5fE23C85820F7B08D4D8A6c35929B5d900B527' as Address,
+      address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
+      decimals: 18,
     },
     debtAsset: {
       symbol: 'WETH',
       name: 'Wrapped Ether',
-      address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
+      address: '0x4200000000000000000000000000000000000006' as Address,
+      decimals: 18,
     },
     relatedResources: {
       underlyingPlatforms: [
