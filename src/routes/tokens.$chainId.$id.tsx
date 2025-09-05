@@ -56,7 +56,10 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`)
 
     // Live on-chain state for TVL (equity) in debt asset units
-    const { data: stateData } = useLeverageTokenState(tokenAddress as `0x${string}`, chainId)
+    const { data: stateData, isLoading: isStateLoading } = useLeverageTokenState(
+      tokenAddress as `0x${string}`,
+      chainId,
+    )
 
     // USD price map for debt and collateral assets (guard when config is missing)
     const { data: usdPriceMap, isLoading: isUsdLoading } = useUsdPrices({
@@ -166,14 +169,19 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     const keyMetricsCards = [
       {
         title: 'TVL',
-        stat:
-          typeof tvlDebtUnits === 'number' && Number.isFinite(tvlDebtUnits)
-            ? `${formatNumber(tvlDebtUnits, { decimals: 2, thousandDecimals: 2, millionDecimals: 2, billionDecimals: 2 })} ${tokenConfig.debtAsset.symbol}`
-            : '—',
+        stat: isStateLoading ? (
+          <Skeleton className="h-6 w-36" />
+        ) : typeof tvlDebtUnits === 'number' && Number.isFinite(tvlDebtUnits) ? (
+          `${formatNumber(tvlDebtUnits, { decimals: 2, thousandDecimals: 2, millionDecimals: 2, billionDecimals: 2 })} ${tokenConfig.debtAsset.symbol}`
+        ) : (
+          '—'
+        ),
         caption:
-          typeof tvlUsd === 'number' && Number.isFinite(tvlUsd)
-            ? `${formatCurrency(tvlUsd, { millionDecimals: 2, thousandDecimals: 2 })}`
-            : undefined,
+          isStateLoading || (typeof tvlDebtUnits === 'number' && isUsdLoading) ? (
+            <Skeleton className="h-4 w-24 mt-1" />
+          ) : typeof tvlUsd === 'number' && Number.isFinite(tvlUsd) ? (
+            `${formatCurrency(tvlUsd, { millionDecimals: 2, thousandDecimals: 2 })}`
+          ) : undefined,
       },
       {
         title: 'Total Collateral',
