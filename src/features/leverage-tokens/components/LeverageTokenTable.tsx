@@ -153,9 +153,6 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
         case 'tvl':
           // Prefer USD value for sorting when available for cross-asset comparability
           return item.tvlUsd ?? 0
-        case 'collateralAmount':
-          // Prefer USD value for sorting when available for cross-asset comparability
-          return item.collateralAmountUsd ?? item.collateralAmount ?? 0
         case 'name':
           return item.name
         case 'apy':
@@ -303,16 +300,6 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                   <button
                     type="button"
                     className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
-                    onClick={() => handleSort('collateralAmount')}
-                  >
-                    <span>Total Collateral</span>
-                    {getSortIcon('collateralAmount')}
-                  </button>
-                </TableHead>
-                <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
-                  <button
-                    type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
                     onClick={() => handleSort('apy')}
                   >
                     <span>APY</span>
@@ -346,7 +333,7 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
             </TableHeader>
             <TableBody>
               {currentItems.length === 0 ? (
-                <TableEmpty colSpan={7} />
+                <TableEmpty colSpan={6} />
               ) : (
                 currentItems.map((token, index) => (
                   <motion.tr
@@ -438,25 +425,6 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                       )}
                     </TableCell>
 
-                    <TableCell className="py-4 px-6 text-right">
-                      <div className="text-right">
-                        <div className="text-slate-300 font-medium text-sm">
-                          {token.collateralAmount > 0
-                            ? `${
-                                token.collateralAmount >= 1000
-                                  ? `${(token.collateralAmount / 1000).toFixed(2)}K`
-                                  : token.collateralAmount.toFixed(2)
-                              } ${token.collateralAsset.symbol}`
-                            : '—'}
-                        </div>
-                        {typeof token.collateralAmountUsd === 'number' &&
-                          Number.isFinite(token.collateralAmountUsd) && (
-                            <div className="text-slate-500 text-xs mt-1">
-                              {formatCurrency(token.collateralAmountUsd)}
-                            </div>
-                          )}
-                      </div>
-                    </TableCell>
 
                     <TableCell className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end space-x-1">

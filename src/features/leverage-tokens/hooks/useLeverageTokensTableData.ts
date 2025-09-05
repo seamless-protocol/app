@@ -5,7 +5,6 @@ import { useReadContracts } from 'wagmi'
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
 import { mockAPY, mockSupply } from '@/features/leverage-tokens/data/mockData'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
-import { lendingAdapterAbi } from '@/lib/contracts/abis/lendingAdapter'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
@@ -76,63 +75,9 @@ export function useLeverageTokensTableData() {
     },
   })
 
-  // Extract lending adapter addresses from configs for collateral/debt calls
-  // Build lending adapter calls per token (collateral & debt), aligned by token index
-  const lendingPlan = useMemo(() => {
-    type LIdx = { collIdx: number; debtIdx: number }
-    const indexMap: Array<LIdx | undefined> = []
-    const contracts: Array<any> = []
-
-    if (!managerData) return { contracts, indexMap }
-
-    let callIndex = 0
-    configs.forEach((cfg, i) => {
-      const idx = managerPlan.indexMap[i]
-      if (!idx) {
-        indexMap[i] = undefined
-        return
-      }
-      const configRes = managerData[idx.configIdx]
-      if (!configRes || configRes.status !== 'success') {
-        indexMap[i] = undefined
-        return
-      }
-      const lendingAdapter = (configRes.result as { lendingAdapter: Address }).lendingAdapter
-      if (!lendingAdapter) {
-        indexMap[i] = undefined
-        return
-      }
-
-      // getCollateral() and getDebt() on lending adapter for this token's chain
-      contracts.push({
-        address: lendingAdapter,
-        abi: lendingAdapterAbi,
-        functionName: 'getCollateral' as const,
-        chainId: cfg.chainId as SupportedChainId,
-      })
-      contracts.push({
-        address: lendingAdapter,
-        abi: lendingAdapterAbi,
-        functionName: 'getDebt' as const,
-        chainId: cfg.chainId as SupportedChainId,
-      })
-
-      indexMap[i] = { collIdx: callIndex, debtIdx: callIndex + 1 }
-      callIndex += 2
-    })
-
-    return { contracts, indexMap }
-  }, [configs, managerData, managerPlan.indexMap])
-
-  // Second batch of contracts for lending adapter calls
-  const { data: lendingData, isLoading: isLendingLoading } = useReadContracts({
-    contracts: lendingPlan.contracts,
-    query: {
-      enabled: lendingPlan.contracts.length > 0,
-      staleTime: STALE_TIME.supply,
-      refetchInterval: 30_000,
-    },
-  })
+  // No lending adapter reads for table now (we don't show total collateral in table)
+  const lendingData: undefined = undefined as any
+  const isLendingLoading = false
 
   // Supply caps via subgraph (per-chain). For now, our catalog is Base-only.
   const tokenAddresses = useMemo(() => configs.map((c) => c.address as Address), [configs])
@@ -149,7 +94,6 @@ export function useLeverageTokensTableData() {
       const key = cfg.chainId
       if (!map.has(key)) map.set(key, new Set<string>())
       map.get(key)?.add(cfg.debtAsset.address.toLowerCase())
-      map.get(key)?.add(cfg.collateralAsset.address.toLowerCase())
     }
     const out: Record<number, Array<string>> = {}
     for (const [cid, set] of map.entries()) {
@@ -190,45 +134,17 @@ export function useLeverageTokensTableData() {
         // Missing or failed supply read; keep defaults
       }
 
-      // Get raw collateral and debt amounts from lending adapter calls
-      let collateralAmount = 0n
-      let debtAmount = 0n
-      const lendIdx = lendingPlan.indexMap[i]
-      if (lendingData && lendIdx) {
-        const collateralRes = lendingData[lendIdx.collIdx]
-        const debtRes = lendingData[lendIdx.debtIdx]
-        if (collateralRes && collateralRes.status === 'success') {
-          collateralAmount = collateralRes.result as bigint
-        }
-        if (debtRes && debtRes.status === 'success') {
-          debtAmount = debtRes.result as bigint
-        }
-      }
-
       // Convert BigInt to numbers for UI using appropriate asset decimals
       const tvl = Number(formatUnits(equity, cfg.debtAsset.decimals))
-      const collateralAmountNum = Number(
-        formatUnits(collateralAmount, cfg.collateralAsset.decimals),
-      )
-      const debtAmountNum = Number(formatUnits(debtAmount, cfg.debtAsset.decimals))
+      const collateralAmountNum = 0
+      const debtAmountNum = 0
       const currentSupply = Number(formatUnits(totalSupply, cfg.decimals ?? 18))
 
       // Calculate USD values
       const debtPriceUsd = usdPricesByChain[cfg.chainId]?.[cfg.debtAsset.address.toLowerCase()]
-      const collateralPriceUsd =
-        usdPricesByChain[cfg.chainId]?.[cfg.collateralAsset.address.toLowerCase()]
-
       const tvlUsd =
         typeof debtPriceUsd === 'number' && Number.isFinite(debtPriceUsd)
           ? tvl * debtPriceUsd
-          : undefined
-      const collateralAmountUsd =
-        typeof collateralPriceUsd === 'number' && Number.isFinite(collateralPriceUsd)
-          ? collateralAmountNum * collateralPriceUsd
-          : undefined
-      const debtAmountUsd =
-        typeof debtPriceUsd === 'number' && Number.isFinite(debtPriceUsd)
-          ? debtAmountNum * debtPriceUsd
           : undefined
 
       // Resolve supply cap (default to mock if unavailable)
@@ -274,28 +190,14 @@ export function useLeverageTokensTableData() {
       if (tvlUsd !== undefined) {
         result.tvlUsd = tvlUsd
       }
-      if (collateralAmountUsd !== undefined) {
-        result.collateralAmountUsd = collateralAmountUsd
-      }
-      if (debtAmountUsd !== undefined) {
-        result.debtAmountUsd = debtAmountUsd
-      }
 
       return result
     })
-  }, [
-    configs,
-    managerData,
-    lendingData,
-    usdPricesByChain,
-    capsMap,
-    managerPlan.indexMap,
-    lendingPlan.indexMap,
-  ])
+  }, [configs, managerData, usdPricesByChain, capsMap, managerPlan.indexMap])
 
   return {
     data: tokens,
-    isLoading: isManagerLoading || isLendingLoading,
+    isLoading: isManagerLoading,
     isError: isManagerError,
     error: managerError,
   }
