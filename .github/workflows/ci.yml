@@ -113,7 +113,7 @@ jobs:
       - name: Prepare integration env
         run: |
           cp tests/integration/.env.example tests/integration/.env
-          sed -n '1,120p' tests/integration/.env
+          echo "Integration test environment prepared"
 
       - name: Start Anvil Base Fork
         run: |
