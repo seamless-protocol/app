@@ -49,7 +49,7 @@ export function useLeverageTokenCollateral(
 
   const lendingAdapterAddress =
     managerData?.[0]?.status === 'success'
-      ? ((managerData[0].result as any).lendingAdapter as Address)
+      ? (managerData[0].result as { lendingAdapter: Address }).lendingAdapter
       : undefined
 
   // Step 2: Read collateral from lending adapter

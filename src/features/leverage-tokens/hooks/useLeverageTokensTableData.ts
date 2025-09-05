@@ -10,7 +10,7 @@ import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
 import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
 import { STALE_TIME } from '../utils/constants'
-import { useLeverageTokenCaps } from './useLeverageTokenCaps'
+// Supply caps are defined in the leverage token config
 
 
 export function useLeverageTokensTableData() {
@@ -18,9 +18,30 @@ export function useLeverageTokensTableData() {
 
   // Build per-token manager + token calls, using each token's chainId & manager address
   const managerPlan = useMemo(() => {
+    type ManagerContractDescriptor =
+      | {
+          address: Address
+          abi: typeof leverageManagerAbi
+          functionName: 'getLeverageTokenConfig'
+          args: [Address]
+          chainId: SupportedChainId
+        }
+      | {
+          address: Address
+          abi: typeof leverageManagerAbi
+          functionName: 'getLeverageTokenState'
+          args: [Address]
+          chainId: SupportedChainId
+        }
+      | {
+          address: Address
+          abi: typeof leverageTokenAbi
+          functionName: 'totalSupply'
+          chainId: SupportedChainId
+        }
     type Idx = { configIdx: number; stateIdx: number; supplyIdx: number }
     const indexMap: Array<Idx | undefined> = []
-    const contracts: Array<any> = []
+    const contracts: Array<ManagerContractDescriptor> = []
 
     let callIndex = 0
     configs.forEach((cfg, i) => {
@@ -76,16 +97,8 @@ export function useLeverageTokensTableData() {
   })
 
   // No lending adapter reads for table now (we don't show total collateral in table)
-  const lendingData: undefined = undefined as any
   const isLendingLoading = false
 
-  // Supply caps via subgraph (per-chain). For now, our catalog is Base-only.
-  const tokenAddresses = useMemo(() => configs.map((c) => c.address as Address), [configs])
-  const { data: capsMap = {} } = useLeverageTokenCaps({
-    chainId: 8453, // Base chainId - all leverage tokens are on Base
-    addresses: tokenAddresses,
-    enabled: tokenAddresses.length > 0,
-  })
 
   // Collect unique asset addresses (both collateral and debt) grouped by chain for USD pricing
   const addressesByChain = useMemo(() => {
@@ -147,11 +160,8 @@ export function useLeverageTokensTableData() {
           ? tvl * debtPriceUsd
           : undefined
 
-      // Resolve supply cap (default to mock if unavailable)
-      const capWei = capsMap[cfg.address.toLowerCase()]
-      const supplyCap = capWei
-        ? Number(formatUnits(capWei, cfg.decimals ?? 18))
-        : mockSupply.supplyCap
+      // Resolve supply cap from config (token units)
+      const supplyCap = cfg.supplyCap ?? mockSupply.supplyCap
 
       const result: LeverageToken = {
         id: cfg.address,
@@ -193,7 +203,7 @@ export function useLeverageTokensTableData() {
 
       return result
     })
-  }, [configs, managerData, usdPricesByChain, capsMap, managerPlan.indexMap])
+  }, [configs, managerData, usdPricesByChain, managerPlan.indexMap])
 
   return {
     data: tokens,
