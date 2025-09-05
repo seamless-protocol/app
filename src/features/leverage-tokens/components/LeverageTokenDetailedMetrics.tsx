@@ -11,6 +11,7 @@ import {
   CollapsibleTrigger,
 } from '../../../components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip'
+import { Skeleton } from '../../../components/ui/skeleton'
 
 export interface MetricItem {
   label: string
@@ -80,8 +81,19 @@ export function LeverageTokenDetailedMetrics({
           <CollapsibleContent>
             <CardContent className="space-y-6 pt-0">
               {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-slate-400">Loading detailed metrics...</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={`metric-skel-${i}`}
+                      className="p-4 rounded-lg border bg-slate-800/50 border-slate-700"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <Skeleton className="h-3 w-28" />
+                        <div className="h-3 w-3" />
+                      </div>
+                      <Skeleton className="h-5 w-24" />
+                    </div>
+                  ))}
                 </div>
               ) : isError ? (
                 <div className="flex items-center justify-center py-8">
