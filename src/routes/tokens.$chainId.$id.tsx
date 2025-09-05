@@ -148,7 +148,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
             : '—',
         caption:
           typeof tvlUsd === 'number' && Number.isFinite(tvlUsd)
-            ? `${formatCurrency(tvlUsd, { millionDecimals: 2, thousandDecimals: 0 })}`
+            ? `${formatCurrency(tvlUsd, { millionDecimals: 2, thousandDecimals: 2 })}`
             : undefined,
       },
       {
