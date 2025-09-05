@@ -15,7 +15,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:integration": "vitest --config tests/integration/vitest.config.ts",
-    "anvil:base": "ANVIL_PORT=${ANVIL_PORT:-8545} anvil --fork-url \"$ANVIL_BASE_FORK_URL\" --port $ANVIL_PORT --chain-id 8453 --block-time 1 --no-rate-limit ${ANVIL_FORK_BLOCK:+--fork-block-number $ANVIL_FORK_BLOCK}",
+    "anvil:base": "bash ./scripts/anvil-base.sh",
     "test:e2e": "bunx playwright test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
