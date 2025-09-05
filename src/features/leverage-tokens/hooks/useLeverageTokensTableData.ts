@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { Address } from 'viem'
+import { formatUnits } from 'viem'
 import { useChainId, useReadContracts } from 'wagmi'
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
 import { mockAPY, mockSupply } from '@/features/leverage-tokens/data/mockData'
@@ -8,16 +9,15 @@ import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
 import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
 import { STALE_TIME } from '../utils/constants'
+import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
 
-function toNumber(value: bigint, decimals = 18): number {
-  // Convert bigint to JS number scaled by decimals. For UI only.
-  return Number(value) / 10 ** decimals
-}
+// Remove custom conversion - use viem's formatUnits instead
 
 export function useLeverageTokensTableData() {
   const chainId = useChainId()
   const managerAddress = getLeverageManagerAddress(chainId)
   const configs = getAllLeverageTokenConfigs()
+  
 
   const contracts = useMemo(() => {
     if (!managerAddress) return []
@@ -45,6 +45,27 @@ export function useLeverageTokensTableData() {
     },
   })
 
+  // Collect unique debt asset addresses grouped by chain for USD pricing
+  const addressesByChain = useMemo(() => {
+    const map = new Map<number, Set<string>>()
+    for (const cfg of configs) {
+      const key = cfg.chainId
+      if (!map.has(key)) map.set(key, new Set<string>())
+      map.get(key)!.add(cfg.debtAsset.address.toLowerCase())
+    }
+    const out: Record<number, Array<string>> = {}
+    for (const [cid, set] of map.entries()) {
+      out[cid] = Array.from(set)
+    }
+    return out
+  }, [configs])
+
+  const {
+    data: usdPricesByChain = {},
+    isLoading: isUsdLoading,
+    isError: isUsdError,
+  } = useUsdPricesMultiChain({ byChain: addressesByChain, enabled: Object.keys(addressesByChain).length > 0 })
+
   const tokens: Array<LeverageToken> = useMemo(() => {
     if (!data || data.length === 0) return []
 
@@ -63,14 +84,23 @@ export function useLeverageTokensTableData() {
           collateralRatio: bigint
         }
         equity = state.equity
+      } else {
+        console.log(`Token ${cfg.symbol} - State call failed:`, stateRes)
       }
 
       if (supplyRes && supplyRes.status === 'success') {
         totalSupply = supplyRes.result as bigint
+      } else {
+        console.log(`Token ${cfg.symbol} - Supply call failed:`, supplyRes)
       }
 
-      const tvl = toNumber(equity, 18)
-      const currentSupply = toNumber(totalSupply, cfg.decimals ?? 18)
+      // Convert BigInt to numbers for UI using debt asset decimals
+      const tvl = Number(formatUnits(equity, cfg.debtAsset.decimals))
+      const priceUsd = usdPricesByChain[cfg.chainId]?.[cfg.debtAsset.address.toLowerCase()]
+      const tvlUsd = typeof priceUsd === 'number' && Number.isFinite(priceUsd)
+        ? tvl * priceUsd
+        : undefined
+      const currentSupply = Number(formatUnits(totalSupply, cfg.decimals ?? 18))
 
       return {
         id: cfg.address,
@@ -86,6 +116,7 @@ export function useLeverageTokensTableData() {
           address: cfg.debtAsset.address,
         },
         tvl,
+        tvlUsd,
         apy: mockAPY.total,
         leverage: cfg.leverageRatio,
         supplyCap: mockSupply.supplyCap,

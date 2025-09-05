@@ -1,4 +1,4 @@
-# Leverage Tokens: Live TVL & Table Data Plan
+# Leverage Tokens: Live TVL, Pricing, and Table Data
 
 This document describes how leverage token data (TVL, supply, and related metrics) is fetched, cached, and rendered across the app. It reflects the current implementation and outlines the next phases.
 
@@ -7,14 +7,14 @@ This document describes how leverage token data (TVL, supply, and related metric
 - Surface live TVL and current supply in the Leverage Tokens table.
 - Keep a single source of truth per data shape; avoid duplicate reads and per-row hooks.
 - Provide a protocol-wide TVL derived from the aggregated data.
-- Add USD pricing later with minimal surface changes.
+- Add USD pricing via a small, batched provider (CoinGecko) without a heavy pricing module.
 
 ## Key Definitions
 
 - TVL (token): Uses Manager-reported equity (in debt-asset units) as the token’s TVL base.
   - Rationale: TVL = pricePerShare × totalSupply = equity; using equity directly avoids rounding.
 - Share price (debt units): equity / totalSupply.
-- Phase 1 USD: Placeholder multiplier = 1 (i.e., display numeric equity; USD wiring deferred to Phase 2).
+- USD display: Use CoinGecko spot prices for debt assets; treat USD as a convenience layer over native units.
 
 ## Data Sources (On-Chain and GraphQL)
 
@@ -23,6 +23,15 @@ This document describes how leverage token data (TVL, supply, and related metric
   - `LeverageToken.totalSupply()`
 - GraphQL (historical / comparison):
   - Charts and comparisons use existing subgraph queries (not part of table TVL path).
+
+- Pricing (CoinGecko, batched):
+  - `GET /api/v3/simple/token_price/{platform}?contract_addresses=...&vs_currencies=usd`.
+  - Platform mapping: `1 → ethereum`, `8453 → base` (extendable).
+  - Returned map (lowercased address → usd) drives simple conversions for table and cards.
+
+## Configuration
+
+- CoinGecko endpoint is configurable via environment (no code changes required). Refer to your local `.env.local`.
 
 ## Query Keys (TanStack Query)
 
@@ -38,7 +47,7 @@ File: `src/features/leverage-tokens/utils/queryKeys.ts`
 1) `useLeverageTokensTableData`
 - File: `src/features/leverage-tokens/hooks/useLeverageTokensTableData.ts`
 - Purpose: Aggregated read for all configured tokens using a single multicall: `[getLeverageTokenState, totalSupply]` per token.
-- Returns array shaped for `LeverageTokenTable` with live `tvl` (equity) and `currentSupply` (scaled decimals).
+- Returns array shaped for `LeverageTokenTable` with live `tvl` (equity), optional `tvlUsd` (if price available), and `currentSupply` (scaled decimals).
 - Refresh: `staleTime = STALE_TIME.supply` (30s), `refetchInterval = 30_000`.
 - Supply cap: still mock/config (no on-chain field yet).
 
@@ -53,14 +62,17 @@ File: `src/features/leverage-tokens/utils/queryKeys.ts`
 - Purpose: Derives protocol TVL by summing token `tvl` from `useLeverageTokensTableData`.
 - Avoids extra RPC calls; consumers can render total at nav/analytics.
 
-Planned (Phase 2):
+4) `useUsdPrices`
+- File: `src/lib/prices/useUsdPrices.ts`
+- Purpose: Batched CoinGecko USD prices for a set of addresses on a chain.
+- Returns `{ [addressLower]: usd }` with `staleTime = 15s`, `refetchInterval = 15s`.
+- Used by `useLeverageTokensTableData` to compute `tvlUsd`.
 
-4) `useDebtAssetUsdPrice(chainId)`
-- Chainlink WETH/USD feed on Base (or subgraph-provided price).
-- Replace placeholder multiplier (1) with live USD.
+Previously planned (revised):
 
-5) `useLeverageTokenPrice(token)`
-- Computes price per share (debt units) from `equity / totalSupply`; multiplies by USD price for display.
+• Potential future extensions
+- Subgraph-backed price source as an alternative provider, behind the same hook interface.
+- `useLeverageTokenPrice(token)`: price per share (debt units) × USD price for detail views.
 
 ## Data Flow & UI Wiring
 
@@ -75,6 +87,7 @@ Planned (Phase 2):
 
 - Query cache keys are hierarchical (see `ltKeys`).
 - Supply/state data: `staleTime` and `refetchInterval` both at ~30s for consistent refresh frequency.
+- USD prices (CoinGecko): `staleTime` and `refetchInterval` at ~15s; batched per chain to avoid rate limits.
 - Invalidation: mint/redeem flows should invalidate `ltKeys.tableData()` and `ltKeys.state(token)` precisely.
 
 ## Error & Loading
@@ -86,18 +99,16 @@ Planned (Phase 2):
 
 - Multicall batching via `useReadContracts` for all tokens.
 - Avoid per-row hooks; use a single aggregated call on the tokens page.
+- Price fetch is batched (one call per chain per interval) and cached by key.
 - Optional: prefetch table data on route enter; prefetch per-token state on navigation to detail.
 
 ## Phases
 
 Phase 1 (implemented):
 - Aggregated hook for live TVL and supply; table wiring; protocol TVL derived from table data.
+- USD pricing via CoinGecko for debt assets with 15s cadence; table displays native units and an approximate USD line.
 
 Phase 2 (planned):
-- USD pricing with Chainlink WETH/USD; `useDebtAssetUsdPrice` and `useLeverageTokenPrice`.
-- Replace placeholder USD multiplier in table and protocol totals.
-
-Phase 3 (planned):
 - Supply cap from Manager/Factory or subgraph.
 - Background prefetch and event-based invalidation (mint/burn transfers).
 - Optional historical TVL aggregation.
@@ -106,7 +117,7 @@ Phase 3 (planned):
 
 - Table shows live equity-derived TVL and current supply.
 - Protocol TVL aggregates across all configured tokens.
-- Data refreshes every 30 seconds without hook rule violations.
+- Data refreshes every 30 seconds (state) and 15 seconds (USD prices) without hook rule violations.
 - Clear loading/error states.
 
 ## Testing & Verification
@@ -122,10 +133,13 @@ Phase 3 (planned):
 - `src/features/leverage-tokens/hooks/useLeverageTokenState.ts` (new)
 - `src/features/leverage-tokens/hooks/useProtocolTVL.ts` (new)
 - `src/routes/tokens.index.tsx` (wired to aggregated hook; loading/error)
+ - `src/lib/prices/coingecko.ts` (new) — CoinGecko USD pricing fetcher with platform mapping
+ - `src/lib/prices/useUsdPrices.ts` (new) — React Query hook for batched USD prices
+ - `src/features/leverage-tokens/components/LeverageTokenTable.tsx` (TVL display updated: native units + optional USD)
 
 ## Open Questions / TODOs
 
 - Confirm Manager/Factory exposure of supply caps; otherwise move supply caps to config or subgraph.
-- Finalize USD pricing source (Chainlink vs subgraph) and add environment/config addresses.
+- Confirm environments: Base (8453) in production; Ethereum mainnet (1) mapping is ready if/when deployed.
+- Optional secondary provider (subgraph) behind the same interface for redundancy.
 - Decide on event watching strategy (mint/burn Transfer events) for instant UI refresh.
-

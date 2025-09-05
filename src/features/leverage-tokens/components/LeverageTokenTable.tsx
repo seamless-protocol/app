@@ -39,6 +39,8 @@ interface LeverageToken {
     address: string
   }
   tvl: number
+  // Optional: USD equivalent of TVL (computed via subgraph-based price hook)
+  tvlUsd?: number
   apy: number
   leverage: number
   supplyCap: number
@@ -140,6 +142,9 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
           return item.debtAsset.symbol
         case 'available':
           return item.supplyCap - item.currentSupply
+        case 'tvl':
+          // Prefer USD value for sorting when available for cross-asset comparability
+          return item.tvlUsd ?? 0
         default:
           return (item as unknown as Record<string, unknown>)[key]
       }
@@ -268,7 +273,7 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                     className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
                     onClick={() => handleSort('tvl')}
                   >
-                    <span>TVL</span>
+                    <span>TVL (USD)</span>
                     {getSortIcon('tvl')}
                   </button>
                 </TableHead>
@@ -381,9 +386,13 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-right">
-                      <span className="text-slate-300 font-medium text-sm">
-                        {formatCurrency(token.tvl)}
-                      </span>
+                      {typeof token.tvlUsd === 'number' && Number.isFinite(token.tvlUsd) ? (
+                        <span className="text-slate-300 font-medium text-sm">
+                          {formatCurrency(token.tvlUsd)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500 text-sm">—</span>
+                      )}
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-right">
