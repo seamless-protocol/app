@@ -99,7 +99,7 @@ export function useLeverageTokensTableData() {
         typeof priceUsd === 'number' && Number.isFinite(priceUsd) ? tvl * priceUsd : undefined
       const currentSupply = Number(formatUnits(totalSupply, cfg.decimals ?? 18))
 
-      return {
+      const result: LeverageToken = {
         id: cfg.address,
         name: cfg.name,
         collateralAsset: {
@@ -113,7 +113,6 @@ export function useLeverageTokensTableData() {
           address: cfg.debtAsset.address,
         },
         tvl,
-        tvlUsd,
         apy: mockAPY.total,
         leverage: cfg.leverageRatio,
         supplyCap: mockSupply.supplyCap,
@@ -125,6 +124,13 @@ export function useLeverageTokensTableData() {
         borrowRate: mockAPY.borrowRate,
         rewardMultiplier: mockAPY.rewardMultiplier,
       }
+
+      // Only add tvlUsd if we have a valid price
+      if (tvlUsd !== undefined) {
+        result.tvlUsd = tvlUsd
+      }
+
+      return result
     })
   }, [configs, data, usdPricesByChain])
 

@@ -39,7 +39,7 @@ interface LeverageToken {
     address: string
   }
   tvl: number
-  // Optional: USD equivalent of TVL (computed via subgraph-based price hook)
+  // Optional: USD equivalent of TVL (computed via price hook)
   tvlUsd?: number
   apy: number
   leverage: number

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { Address } from 'viem'
 import { useChainId, useReadContracts } from 'wagmi'
+import { base, mainnet } from 'wagmi/chains'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
 import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
@@ -26,13 +27,13 @@ export function useLeverageTokenState(tokenAddress: Address, chainIdOverride?: n
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenState' as const,
         args: [tokenAddress],
-        chainId,
+        chainId: chainId as typeof mainnet.id | typeof base.id,
       },
       {
         address: tokenAddress as Address,
         abi: leverageTokenAbi,
         functionName: 'totalSupply' as const,
-        chainId,
+        chainId: chainId as typeof mainnet.id | typeof base.id,
       },
     ]
   }, [managerAddress, tokenAddress, chainId])
