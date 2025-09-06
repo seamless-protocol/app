@@ -16,16 +16,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
-import {
-  createMockUserPosition,
-  mockAPY,
-  mockKeyMetrics,
-  mockSupply,
-} from '@/features/leverage-tokens/data/mockData'
+import { mockAPY, mockKeyMetrics, mockSupply } from '@/features/leverage-tokens/data/mockData'
 import { useLeverageTokenCollateral } from '@/features/leverage-tokens/hooks/useLeverageTokenCollateral'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
 import { useLeverageTokenState } from '@/features/leverage-tokens/hooks/useLeverageTokenState'
+import { useLeverageTokenUserPosition } from '@/features/leverage-tokens/hooks/useLeverageTokenUserPosition'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
@@ -45,15 +41,15 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     // Parse chainId from route parameter
     const chainId = parseInt(routeChainId || '8453', 10) // Default to Base if not provided
 
-    // Use live data for detailed metrics (hooks must be called at top level)
+    // Get leverage token config (used for decimals, addresses, etc.)
+    const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`)
+
+    // All hooks must be called at top level before any conditional returns
     const {
       data: detailedMetrics,
       isLoading: isDetailedMetricsLoading,
       isError: isDetailedMetricsError,
     } = useLeverageTokenDetailedMetrics(tokenAddress as `0x${string}`)
-
-    // Get leverage token config (used for decimals, addresses, etc.)
-    const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`)
 
     // Live on-chain state for TVL (equity) in debt asset units
     const { data: stateData, isLoading: isStateLoading } = useLeverageTokenState(
@@ -70,6 +66,28 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       enabled: Boolean(tokenConfig),
     })
 
+    // Live user holdings (shares + USD) via on-chain state and price
+    const { data: userPosData } = useLeverageTokenUserPosition({
+      tokenAddress: tokenAddress as `0x${string}`,
+      chainIdOverride: chainId,
+      debtAssetAddress: tokenConfig?.debtAsset.address as `0x${string}` | undefined,
+      debtAssetDecimals: tokenConfig?.debtAsset.decimals,
+    })
+
+    // Live total collateral via lending adapter
+    const { collateral: collateralWei, isLoading: isCollateralLoading } =
+      useLeverageTokenCollateral(tokenAddress as `0x${string}`, chainId)
+
+    const {
+      data: priceHistoryData,
+      isLoading: isPriceDataLoading,
+      error: priceDataError,
+    } = useLeverageTokenPriceComparison({
+      tokenAddress: tokenAddress as `0x${string}`,
+      chainId,
+      timeframe: selectedTimeframe,
+    })
+
     const tvlDebtUnits =
       stateData && tokenConfig
         ? Number(formatUnits(stateData.equity, tokenConfig.debtAsset.decimals))
@@ -84,10 +102,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       Number.isFinite(debtPriceUsd)
         ? tvlDebtUnits * debtPriceUsd
         : undefined
-
-    // Live total collateral via lending adapter
-    const { collateral: collateralWei, isLoading: isCollateralLoading } =
-      useLeverageTokenCollateral(tokenAddress as `0x${string}`, chainId)
     const totalCollateralUnits =
       collateralWei && tokenConfig
         ? Number(formatUnits(collateralWei, tokenConfig.collateralAsset.decimals))
@@ -102,16 +116,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       Number.isFinite(collateralPriceUsd)
         ? totalCollateralUnits * collateralPriceUsd
         : undefined
-
-    const {
-      data: priceHistoryData,
-      isLoading: isPriceDataLoading,
-      error: priceDataError,
-    } = useLeverageTokenPriceComparison({
-      tokenAddress: tokenAddress as `0x${string}`,
-      chainId,
-      timeframe: selectedTimeframe,
-    })
 
     if (!tokenConfig) {
       return (
@@ -131,8 +135,22 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       debtSymbol: tokenConfig.debtAsset.symbol,
     })
 
-    // Mock user position data (this would come from a hook in real implementation)
-    const userPosition = createMockUserPosition(tokenConfig.symbol)
+    const userShares = userPosData?.balance
+    const hasPosition = Boolean(userShares && userShares > 0n)
+
+    const userSharesFormatted =
+      typeof userShares === 'bigint'
+        ? formatNumber(Number(formatUnits(userShares, tokenConfig.decimals)), {
+            decimals: 2,
+            thousandDecimals: 2,
+          })
+        : '0.00'
+
+    const userEquityUsd = userPosData?.equityUsd
+    const userEquityUsdFormatted =
+      typeof userEquityUsd === 'number' && Number.isFinite(userEquityUsd)
+        ? formatCurrency(userEquityUsd, { decimals: 2, thousandDecimals: 2 })
+        : `~${formatCurrency(0, { decimals: 2, thousandDecimals: 2 })}`
 
     // Create mock token data for APY breakdown calculation
     const mockTokenForAPY = {
@@ -335,9 +353,14 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
             >
               <LeverageTokenHoldingsCard
                 userPosition={{
-                  ...userPosition,
+                  hasPosition,
+                  balance: userSharesFormatted,
+                  balanceUSD: userEquityUsdFormatted,
+                  shareToken: tokenConfig.symbol,
                   isConnected,
                 }}
+                collateralAsset={tokenConfig.collateralAsset}
+                debtAsset={tokenConfig.debtAsset}
                 onMint={handleMint}
                 onRedeem={handleRedeem}
               />
@@ -454,9 +477,14 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           >
             <LeverageTokenHoldingsCard
               userPosition={{
-                ...userPosition,
+                hasPosition,
+                balance: userSharesFormatted,
+                balanceUSD: userEquityUsdFormatted,
+                shareToken: tokenConfig.symbol,
                 isConnected,
               }}
+              collateralAsset={tokenConfig.collateralAsset}
+              debtAsset={tokenConfig.debtAsset}
               onMint={handleMint}
               onRedeem={handleRedeem}
             />

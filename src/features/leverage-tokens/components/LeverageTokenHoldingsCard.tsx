@@ -4,6 +4,7 @@ import { Minus, Plus, Zap } from 'lucide-react'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAccount } from 'wagmi'
+import { AssetDisplay } from '@/components/ui/asset-display'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -29,7 +30,7 @@ interface UserPosition {
   hasPosition: boolean
   balance: string
   balanceUSD: string
-  allTimePercentage: string
+  allTimePercentage?: string
   shareToken: string
   isConnected?: boolean // Optional since we use real wallet state
 }
@@ -39,6 +40,8 @@ interface LeverageTokenHoldingsCardProps {
   onMint?: () => void
   onRedeem?: () => void
   className?: string
+  collateralAsset?: { symbol: string; name: string; address: string }
+  debtAsset?: { symbol: string; name: string; address: string }
 }
 
 export function LeverageTokenHoldingsCard({
@@ -46,6 +49,8 @@ export function LeverageTokenHoldingsCard({
   onMint,
   onRedeem,
   className = '',
+  collateralAsset,
+  debtAsset,
 }: LeverageTokenHoldingsCardProps) {
   const [showKyberSwapWidget, setShowKyberSwapWidget] = useState(false)
 
@@ -126,9 +131,16 @@ export function LeverageTokenHoldingsCard({
             {isConnected ? (
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden">
-                    <Zap className="w-4 h-4 text-purple-400" />
-                  </div>
+                  {collateralAsset && debtAsset ? (
+                    <div className="flex -space-x-1">
+                      <AssetDisplay asset={collateralAsset} size="md" variant="logo-only" />
+                      <AssetDisplay asset={debtAsset} size="md" variant="logo-only" />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden">
+                      <Zap className="w-4 h-4 text-purple-400" />
+                    </div>
+                  )}
                   <div className="text-xl font-medium text-white">
                     {userPosition.balance} {userPosition.shareToken}
                   </div>
@@ -136,20 +148,29 @@ export function LeverageTokenHoldingsCard({
 
                 <div className="text-slate-400">{userPosition.balanceUSD}</div>
 
-                <div className="text-white">
-                  <span className="font-medium">{userPosition.balanceUSD}</span>
-                  <span className="text-slate-400 ml-2">({userPosition.allTimePercentage}%)</span>
-                  <span className="text-slate-500 ml-2">All time</span>
-                </div>
+                {userPosition.allTimePercentage && (
+                  <div className="text-white">
+                    <span className="font-medium">{userPosition.balanceUSD}</span>
+                    <span className="text-slate-400 ml-2">({userPosition.allTimePercentage})</span>
+                    <span className="text-slate-500 ml-2">All time</span>
+                  </div>
+                )}
               </div>
             ) : (
               /* Wallet Not Connected - Holdings Preview */
               <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
                 {renderConnectButton(
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
-                      <Zap className="w-5 h-5 text-purple-400" />
-                    </div>
+                    {collateralAsset && debtAsset ? (
+                      <div className="flex -space-x-1">
+                        <AssetDisplay asset={collateralAsset} size="md" variant="logo-only" />
+                        <AssetDisplay asset={debtAsset} size="md" variant="logo-only" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
+                        <Zap className="w-5 h-5 text-purple-400" />
+                      </div>
+                    )}
                     <div>
                       <h3 className="font-medium text-white">Connect Your Wallet</h3>
                       <p className="text-sm text-slate-400">View holdings and start minting</p>
