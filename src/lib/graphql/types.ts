@@ -22,9 +22,4 @@ export interface LeverageTokenPriceComparisonResponse {
   } | null
 }
 
-export interface LeverageTokenCapsResponse {
-  leverageTokens?: Array<{
-    id: string
-    supplyCap: string | null
-  }>
-}
+// Note: Supply caps are sourced from app config; no GraphQL type needed here.
