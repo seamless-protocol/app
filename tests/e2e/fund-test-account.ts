@@ -201,13 +201,25 @@ async function fundTestAccount() {
 
 export { fundTestAccount }
 
-// Run the function
-fundTestAccount()
-  .then((success) => {
-    console.log('\n🎯 Funding result:', success ? 'SUCCESS' : 'FAILED')
-    process.exit(success ? 0 : 1)
-  })
-  .catch((error) => {
-    console.error('❌ Unexpected error:', error)
-    process.exit(1)
-  })
+// Only auto-run when executed directly, not when imported by global setup
+try {
+  // import.meta.url is the absolute file:// URL for this module in ESM
+  // process.argv[1] is the path of the executed file
+  if (typeof import.meta !== 'undefined' && typeof process !== 'undefined') {
+    const executedPath = `file://${process.argv[1]}`
+    if (import.meta.url === executedPath) {
+      // Run as a CLI helper
+      fundTestAccount()
+        .then((success) => {
+          console.log('\n🎯 Funding result:', success ? 'SUCCESS' : 'FAILED')
+          process.exit(success ? 0 : 1)
+        })
+        .catch((error) => {
+          console.error('❌ Unexpected error:', error)
+          process.exit(1)
+        })
+    }
+  }
+} catch {
+  // Ignore if environment doesn't support import.meta or process (shouldn't happen in Node)
+}
