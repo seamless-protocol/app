@@ -18,4 +18,3 @@ export const LEVERAGE_TOKEN_PRICE_COMPARISON_QUERY = `
   }
 `
 
-// Query supply caps for a set of leverage tokens by IDs (addresses)
