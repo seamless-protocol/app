@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address, GetFunctionReturnType } from 'viem'
 import { useChainId, useReadContracts } from 'wagmi'
 import { lendingAdapterAbi } from '@/lib/contracts/abis/lendingAdapter'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
@@ -47,10 +47,14 @@ export function useLeverageTokenCollateral(
     },
   })
 
+  type ReadResult<T> =
+    | { status: 'success'; result: T }
+    | { status: 'failure'; error: unknown }
+  type ManagerConfig = GetFunctionReturnType<typeof leverageManagerAbi, 'getLeverageTokenConfig'>
+
+  const managerConfigRes = managerData?.[0] as ReadResult<ManagerConfig> | undefined
   const lendingAdapterAddress =
-    managerData?.[0]?.status === 'success'
-      ? (managerData[0].result as { lendingAdapter: Address }).lendingAdapter
-      : undefined
+    managerConfigRes?.status === 'success' ? managerConfigRes.result.lendingAdapter : undefined
 
   // Step 2: Read collateral from lending adapter
   const {
