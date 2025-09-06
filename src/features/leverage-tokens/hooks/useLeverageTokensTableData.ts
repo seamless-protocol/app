@@ -55,7 +55,7 @@ export function useLeverageTokensTableData() {
         address: managerAddress,
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenConfig' as const,
-        args: [cfg.address as Address],
+        args: [cfg.address],
         chainId: cfg.chainId as SupportedChainId,
       })
       // getLeverageTokenState(token)
@@ -63,12 +63,12 @@ export function useLeverageTokensTableData() {
         address: managerAddress,
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenState' as const,
-        args: [cfg.address as Address],
+        args: [cfg.address],
         chainId: cfg.chainId as SupportedChainId,
       })
       // totalSupply()
       contracts.push({
-        address: cfg.address as Address,
+        address: cfg.address,
         abi: leverageTokenAbi,
         functionName: 'totalSupply' as const,
         chainId: cfg.chainId as SupportedChainId,
