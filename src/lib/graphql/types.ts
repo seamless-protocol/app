@@ -21,5 +21,3 @@ export interface LeverageTokenPriceComparisonResponse {
     }
   } | null
 }
-
-// Note: Supply caps are sourced from app config; no GraphQL type needed here.

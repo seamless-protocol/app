@@ -17,4 +17,3 @@ export const LEVERAGE_TOKEN_PRICE_COMPARISON_QUERY = `
     }
   }
 `
-
