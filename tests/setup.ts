@@ -76,6 +76,8 @@ vi.mock('@/features/leverage-tokens/utils/constants', () => ({
   STALE_TIME: {
     metadata: 30000,
     detailedMetrics: 300000,
+    supply: 30000,
+    historical: 300000,
   },
 }))
 
