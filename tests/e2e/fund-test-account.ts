@@ -163,8 +163,8 @@ async function fundTestAccount() {
     }
 
     if (hash) {
-      // Wait for transaction
-      const receipt = await publicClient.waitForTransactionReceipt({ hash })
+      // Wait for transaction with an explicit timeout so CI won't hang indefinitely
+      const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 60_000 })
       console.log(`Transaction confirmed in block ${receipt.blockNumber}`)
     }
 
