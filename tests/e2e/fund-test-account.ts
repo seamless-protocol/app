@@ -69,16 +69,28 @@ async function fundTestAccount() {
       throw new Error(`Wrong chain ID: ${chainId}, expected 8453 (Base)`)
     }
 
-    // Step 2: Fund test account with ETH (for gas)
+    // Step 2: Fund test account with ETH (for gas) if needed
     console.log('1. Funding test account with ETH...')
     await testClient.setBalance({
       address: TEST_ACCOUNT.address,
       value: parseEther('100'),
     })
 
-    // Step 3: Fund test account with weETH using whale impersonation
+    // Step 3: Fund test account with weETH using whale impersonation (idempotent)
     console.log('2. Funding test account with weETH via whale impersonation...')
     const weETHAmount = parseEther('10') // 10 weETH - plenty for testing
+
+    // Idempotency: if already funded, skip
+    const existingBalance = (await publicClient.readContract({
+      address: WEETH_ADDRESS,
+      abi: WETH_ABI,
+      functionName: 'balanceOf',
+      args: [TEST_ACCOUNT.address],
+    })) as bigint
+    if (existingBalance >= weETHAmount) {
+      console.log('✅ Test account already has sufficient weETH; skipping transfer')
+      return true
+    }
 
     // Check whale's weETH balance first
     const whaleBalance = (await publicClient.readContract({
@@ -124,13 +136,37 @@ async function fundTestAccount() {
       transport: http(ANVIL_RPC_URL),
       account: TEST_ACCOUNT,
     })
+    let hash: `0x${string}` | undefined
+    try {
+      hash = await walletClient.writeContract(request)
+      console.log(`Transfer transaction hash: ${hash}`)
+    } catch (err: any) {
+      const msg = err?.message ?? ''
+      const alreadyImported =
+        /Nonce provided/.test(msg) || /transaction already imported/i.test(msg)
+      if (alreadyImported) {
+        // Another parallel job likely sent the same tx. Re-check recipient balance.
+        const postBalance = (await publicClient.readContract({
+          address: WEETH_ADDRESS,
+          abi: WETH_ABI,
+          functionName: 'balanceOf',
+          args: [TEST_ACCOUNT.address],
+        })) as bigint
+        if (postBalance >= weETHAmount) {
+          console.log('ℹ️ Detected duplicate funding tx; balance is sufficient, continuing')
+        } else {
+          throw err
+        }
+      } else {
+        throw err
+      }
+    }
 
-    const hash = await walletClient.writeContract(request)
-    console.log(`Transfer transaction hash: ${hash}`)
-
-    // Wait for transaction
-    const receipt = await publicClient.waitForTransactionReceipt({ hash })
-    console.log(`Transaction confirmed in block ${receipt.blockNumber}`)
+    if (hash) {
+      // Wait for transaction
+      const receipt = await publicClient.waitForTransactionReceipt({ hash })
+      console.log(`Transaction confirmed in block ${receipt.blockNumber}`)
+    }
 
     // Stop impersonating
     await testClient.stopImpersonatingAccount({
