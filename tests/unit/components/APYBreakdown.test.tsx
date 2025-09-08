@@ -28,12 +28,12 @@ describe('APYBreakdown', () => {
     render(<APYBreakdown data={mockData} />)
 
     // Check that values are displayed with proper formatting
-    expect(screen.getByText('+520.0%')).toBeInTheDocument() // Staking Yield
-    expect(screen.getByText('+210.0%')).toBeInTheDocument() // Restaking Yield
-    expect(screen.getByText('-150.0%')).toBeInTheDocument() // Borrow Rate (negative)
-    expect(screen.getByText('+80.0%')).toBeInTheDocument() // Rewards APR
+    expect(screen.getByText('+520.00%')).toBeInTheDocument() // Staking Yield
+    expect(screen.getByText('+210.00%')).toBeInTheDocument() // Restaking Yield
+    expect(screen.getByText('-150.00%')).toBeInTheDocument() // Borrow Rate (negative)
+    expect(screen.getByText('+80.00%')).toBeInTheDocument() // Rewards APR
     expect(screen.getByText('6 x')).toBeInTheDocument() // Points
-    expect(screen.getByText('+660.0%')).toBeInTheDocument() // Total APY
+    expect(screen.getByText('+660.00%')).toBeInTheDocument() // Total APY
   })
 
   it('should render in compact mode', () => {

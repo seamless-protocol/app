@@ -5,7 +5,7 @@
 
 // Components will be exported as they're created
 // Export hooks
-export { useMintViaRouter } from './hooks/useMintViaRouter'
+// (hooks will be exported as they're created)
 // Export types
 export * from './types'
 export * from './utils/constants'
