@@ -2,10 +2,10 @@ import { formatPercentage, formatPoints } from '@/lib/utils/formatting'
 import { cn } from './ui/utils'
 
 export interface APYBreakdownData {
-  baseYield: number
-  leverageMultiplier: number
-  borrowCost: number
-  rewardAPY: number
+  stakingYield: number
+  restakingYield: number
+  borrowRate: number
+  rewardsAPR: number
   points: number
   totalAPY: number
 }
@@ -28,33 +28,35 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
 
       {/* Breakdown Items */}
       <div className={cn('space-y-3', itemClass)}>
-        {/* Base Yield */}
+        {/* Staking Yield */}
         <div className="flex justify-between">
-          <span className="text-slate-300">Base Yield:</span>
+          <span className="text-slate-300">Staking Yield:</span>
           <span className="text-green-400 font-medium">
-            {formatPercentage(data.baseYield, { showSign: true })}
+            {formatPercentage(data.stakingYield, { decimals: 2, showSign: true })}
           </span>
         </div>
 
-        {/* Leverage Multiplier */}
+        {/* Restaking Yield */}
         <div className="flex justify-between">
-          <span className="text-slate-300">Leverage Multiplier:</span>
-          <span className="text-purple-400 font-medium">{data.leverageMultiplier}x</span>
+          <span className="text-slate-300">Restaking Yield:</span>
+          <span className="text-blue-400 font-medium">
+            {formatPercentage(data.restakingYield, { decimals: 2, showSign: true })}
+          </span>
         </div>
 
-        {/* Borrow Cost */}
+        {/* Borrow Rate */}
         <div className="flex justify-between">
-          <span className="text-slate-300">Borrow Cost:</span>
+          <span className="text-slate-300">Borrow Rate:</span>
           <span className="text-red-400 font-medium">
-            {formatPercentage(data.borrowCost, { showSign: true })}
+            {formatPercentage(data.borrowRate, { decimals: 2, showSign: true })}
           </span>
         </div>
 
-        {/* Reward APY */}
+        {/* Rewards APR */}
         <div className="flex justify-between">
-          <span className="text-slate-300">Reward APY:</span>
+          <span className="text-slate-300">Rewards APR:</span>
           <span className="text-cyan-400 font-medium">
-            {formatPercentage(data.rewardAPY, { showSign: true })}
+            {formatPercentage(data.rewardsAPR, { decimals: 2, showSign: true })}
           </span>
         </div>
 
@@ -69,7 +71,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
           <div className="flex justify-between font-semibold">
             <span className="text-white">Total APY:</span>
             <span className="text-green-400">
-              {formatPercentage(data.totalAPY, { showSign: true })}
+              {formatPercentage(data.totalAPY, { decimals: 2, showSign: true })}
             </span>
           </div>
         </div>

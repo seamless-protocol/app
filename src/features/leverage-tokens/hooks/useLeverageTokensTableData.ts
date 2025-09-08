@@ -3,14 +3,12 @@ import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 import { useReadContracts } from 'wagmi'
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
-import { mockAPY, mockSupply } from '@/features/leverage-tokens/data/mockData'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
 import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
 import { STALE_TIME } from '../utils/constants'
-// Supply caps are defined in the leverage token config
 
 export function useLeverageTokensTableData() {
   const configs = getAllLeverageTokenConfigs()
@@ -161,41 +159,10 @@ export function useLeverageTokensTableData() {
       const supplyCap = cfg.supplyCap ?? mockSupply.supplyCap
 
       const result: LeverageToken = {
-        id: cfg.address,
-        name: cfg.name,
-        collateralAsset: {
-          symbol: cfg.collateralAsset.symbol,
-          name: cfg.collateralAsset.name,
-          address: cfg.collateralAsset.address,
-        },
-        debtAsset: {
-          symbol: cfg.debtAsset.symbol,
-          name: cfg.debtAsset.name,
-          address: cfg.debtAsset.address,
-        },
-        tvl,
-        collateralAmount: collateralAmountNum,
-        debtAmount: debtAmountNum,
-        apy: mockAPY.total,
-        leverage: cfg.leverageRatio,
-        supplyCap,
+        ...cfg,
         currentSupply,
-        chainId: cfg.chainId,
-        chainName: cfg.chainName,
-        chainLogo: cfg.chainLogo,
-        baseYield: mockAPY.baseYield,
-        borrowRate: mockAPY.borrowRate,
-        rewardMultiplier: mockAPY.rewardMultiplier,
-      }
-
-      // Mark partial data when manager is not available on this chain
-      if (!idx) {
-        result.dataWarning = 'Manager address unavailable on this chain; showing partial data.'
-      }
-
-      // Only add USD values if we have valid prices
-      if (tvlUsd !== undefined) {
-        result.tvlUsd = tvlUsd
+        tvl,
+        ...(tvlUsd !== undefined && { tvlUsd }),
       }
 
       return result

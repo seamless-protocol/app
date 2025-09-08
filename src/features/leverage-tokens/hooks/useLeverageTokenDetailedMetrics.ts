@@ -5,17 +5,11 @@ import { leverageManagerAbi } from '../../../lib/contracts/abis/leverageManager'
 import { rebalanceAdapterAbi } from '../../../lib/contracts/abis/rebalanceAdapter'
 import { getLeverageManagerAddress } from '../../../lib/contracts/addresses'
 import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
+import { collateralRatioToLeverage } from '../utils/apy-calculations/leverage-ratios'
 import { STALE_TIME } from '../utils/constants'
 
-// Type definitions
-type ReadResult<T> = { status: 'success'; result: T } | { status: 'failure'; error: unknown }
-
-// Helper to convert collateral ratio to leverage
-const collateralRatioToLeverage = (collateralRatio: bigint): bigint => {
-  const BASE_RATIO = 10n ** 18n // 1e18
-  return (collateralRatio * BASE_RATIO) / (collateralRatio - BASE_RATIO)
-}
-
+// Type definitions used by wagmi read results
+export type ReadResult<T> = { status: 'success'; result: T } | { status: 'failure'; error: unknown }
 /**
  * Hook to fetch detailed metrics for a leverage token using two-contract architecture
  * First fetches config from LeverageManager, then fetches detailed metrics from RebalanceAdapter

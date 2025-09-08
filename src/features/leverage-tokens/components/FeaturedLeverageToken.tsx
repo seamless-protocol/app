@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Zap } from 'lucide-react'
-import { getPointsPerDay, getRewardAPY } from '@/lib/utils/apy-calculations'
+import type { APYBreakdownData } from '@/components/APYBreakdown'
+import { formatAPY } from '@/lib/utils/formatting'
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent } from '../../../components/ui/card'
@@ -12,12 +13,14 @@ interface FeaturedLeverageTokenProps {
   token: LeverageToken
   onClick?: (token: LeverageToken) => void
   className?: string
+  apyData?: APYBreakdownData
 }
 
 export function FeaturedLeverageToken({
   token,
   onClick,
   className = '',
+  apyData,
 }: FeaturedLeverageTokenProps) {
   const handleClick = () => {
     onClick?.(token)
@@ -56,27 +59,35 @@ export function FeaturedLeverageToken({
             {/* APY Row */}
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">APY</span>
-              <span className="text-green-400 font-medium">{token.apy.toFixed(2)}%</span>
+              <span className="text-green-400 font-medium">
+                {apyData?.totalAPY !== undefined ? formatAPY(apyData.totalAPY, 2) : 'Loading...'}
+              </span>
             </div>
 
-            {/* Reward APY Row */}
+            {/* Reward APR Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">Reward APY</span>
-              <span className="text-cyan-400 font-medium">+{getRewardAPY(token).toFixed(2)}%</span>
+              <span className="text-slate-400 text-sm">Reward APR</span>
+              <span className="text-cyan-400 font-medium">
+                {apyData?.rewardsAPR !== undefined
+                  ? formatAPY(apyData.rewardsAPR, 2)
+                  : 'Loading...'}
+              </span>
             </div>
 
             {/* Points Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">Points/Day</span>
+              <span className="text-slate-400 text-sm">Points</span>
               <span className="text-yellow-400 font-medium">
-                {getPointsPerDay(token).toLocaleString()}
+                {apyData?.points !== undefined
+                  ? `${apyData.points.toLocaleString()} x`
+                  : 'Loading...'}
               </span>
             </div>
 
             {/* Leverage Row with Divider */}
             <div className="flex justify-between items-center pt-2 border-t border-slate-700">
               <span className="text-slate-400 text-sm">Leverage</span>
-              <span className="text-purple-400 font-medium">{token.leverage}x</span>
+              <span className="text-purple-400 font-medium">{token.leverageRatio}x</span>
             </div>
           </div>
         </CardContent>
@@ -89,12 +100,18 @@ interface FeaturedLeverageTokensProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
+  apyData?: APYBreakdownData // APY data for the first token
+  isApyLoading?: boolean
+  isApyError?: boolean
 }
 
 export function FeaturedLeverageTokens({
   tokens,
   onTokenClick,
   className = '',
+  apyData,
+  isApyLoading: _isApyLoading,
+  isApyError: _isApyError,
 }: FeaturedLeverageTokensProps) {
   return (
     <motion.div
@@ -118,11 +135,12 @@ export function FeaturedLeverageTokens({
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 w-full">
         {tokens.map((token, index) => (
           <FeaturedLeverageToken
-            key={token.id}
+            key={token.address}
             token={{
               ...token,
               rank: index + 1,
             }}
+            {...(apyData && { apyData })} // Pass APY data to all tokens
             {...(onTokenClick && { onClick: onTokenClick })}
           />
         ))}

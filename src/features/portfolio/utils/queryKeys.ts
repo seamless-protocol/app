@@ -1,0 +1,14 @@
+/**
+ * Hierarchical query keys for portfolio feature
+ * Follows TanStack Query best practices for cache invalidation
+ */
+export const portfolioKeys = {
+  all: ['portfolio'] as const,
+  data: () => [...portfolioKeys.all, 'data'] as const,
+  performance: (timeframe: string, currentValue: number) =>
+    [...portfolioKeys.all, 'performance', timeframe, currentValue] as const,
+  rewards: () => [...portfolioKeys.all, 'rewards'] as const,
+  staking: () => [...portfolioKeys.all, 'staking'] as const,
+  positions: () => [...portfolioKeys.all, 'positions'] as const,
+  summary: () => [...portfolioKeys.all, 'summary'] as const,
+} as const
