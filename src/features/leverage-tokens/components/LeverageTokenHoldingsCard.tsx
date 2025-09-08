@@ -232,7 +232,7 @@ export function LeverageTokenHoldingsCard({
           <div
             data-state="open"
             data-slot="dialog-overlay"
-            className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50"
+            className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
             style={{ pointerEvents: 'auto' }}
             data-aria-hidden="true"
             aria-hidden="true"
@@ -243,12 +243,12 @@ export function LeverageTokenHoldingsCard({
               }
             }}
           >
-            <div className="flex items-center justify-center min-h-screen p-4 relative">
-              {/* Close Button - positioned relative to screen */}
+            <div className="relative">
+              {/* Close Button - positioned relative to widget container */}
               <button
                 type="button"
                 onClick={() => setShowKyberSwapWidget(false)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-50 flex items-center justify-center text-xl font-light"
+                className="cursor-pointer absolute -top-4 -right-4 w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-50 flex items-center justify-center text-xl font-light shadow-lg"
                 aria-label="Close swap widget"
               >
                 ×
