@@ -28,11 +28,15 @@ export async function invalidateAfterReceipt(
   }: InvalidateAfterReceiptParams,
 ): Promise<void> {
   await client.waitForTransactionReceipt({ hash, confirmations })
-  await invalidateLeverageTokenQueries(qc, {
+  const payload: Parameters<typeof invalidateLeverageTokenQueries>[1] = {
     token,
     chainId: _chainId,
-    owner,
     includeUser,
     refetchType: 'active',
-  })
+  }
+  if (owner) {
+    // Only include owner when defined to satisfy exactOptionalPropertyTypes
+    ;(payload as any).owner = owner
+  }
+  await invalidateLeverageTokenQueries(qc, payload)
 }
