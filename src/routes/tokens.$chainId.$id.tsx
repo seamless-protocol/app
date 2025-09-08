@@ -98,20 +98,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       Number.isFinite(debtPriceUsd)
         ? tvlDebtUnits * debtPriceUsd
         : undefined
-<<<<<<< HEAD
     // No collateral read in this route for now
-=======
-
-    const {
-      data: priceHistoryData,
-      isLoading: isPriceDataLoading,
-      error: priceDataError,
-    } = useLeverageTokenPriceComparison({
-      tokenAddress: tokenAddress as Address,
-      chainId,
-      timeframe: selectedTimeframe,
-    })
->>>>>>> origin/feat/leverage-token-supply-caps
 
     // Pre-load APY data for the tooltip
     const {
@@ -145,7 +132,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     const userShares = userPosData?.balance
     const hasPosition = Boolean(userShares && userShares > 0n)
 
-<<<<<<< HEAD
     const userSharesFormatted =
       typeof userShares === 'bigint'
         ? formatNumber(Number(formatUnits(userShares, tokenConfig.decimals)), {
@@ -161,8 +147,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
         : `~${formatCurrency(0, { decimals: 2, thousandDecimals: 2 })}`
 
     // No mock token; APY hook is wired to config
-=======
->>>>>>> origin/feat/leverage-token-supply-caps
     const handleMint = () => {
       // TODO: Implement mint modal/functionality
       console.log('Mint clicked')
