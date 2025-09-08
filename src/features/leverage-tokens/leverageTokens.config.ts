@@ -45,6 +45,8 @@ export interface LeverageTokenConfig {
   chainId: number
   chainName: string
   chainLogo: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  // Supply cap (token units)
+  supplyCap?: number
 
   // Asset configuration
   collateralAsset: {
@@ -80,6 +82,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainId: 8453,
     chainName: 'Base',
     chainLogo: BaseLogo,
+    supplyCap: 150,
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether.fi ETH',

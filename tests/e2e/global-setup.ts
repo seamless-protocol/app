@@ -67,17 +67,24 @@ async function globalSetup() {
   // Don't keep the process alive when parent exits
   anvilProcess.unref()
 
-  // Wait a moment for Anvil to start up
+  // Wait for Anvil to start up with a short poll loop
   console.log('⏳ Waiting for Anvil to start...')
-  await new Promise((resolve) => setTimeout(resolve, 3000))
-
-  // Verify Anvil is now running
-  const isNowRunning = await checkAnvilRunning()
+  const start = Date.now()
+  let isNowRunning = false
+  for (let i = 0; i < 15; i++) {
+    // try up to ~7.5s
+    // eslint-disable-next-line no-await-in-loop
+    isNowRunning = await checkAnvilRunning()
+    if (isNowRunning) break
+    // eslint-disable-next-line no-await-in-loop
+    await new Promise((r) => setTimeout(r, 500))
+  }
   if (!isNowRunning) {
     throw new Error(
       'Failed to start Anvil. Please check your ANVIL_BASE_FORK_URL and ensure Foundry is installed.',
     )
   }
+  console.log(`✅ Anvil Base fork is running and ready for E2E tests (in ${Date.now() - start}ms)`)
 
   console.log('✅ Anvil Base fork is running and ready for E2E tests')
 

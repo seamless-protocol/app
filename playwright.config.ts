@@ -4,8 +4,12 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // Fail fast in CI to avoid long timeouts stacking up
+  maxFailures: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 0 : 0,
   workers: process.env.CI ? 1 : undefined,
+  // Keep tests short by default; individual expects can override
+  timeout: 30_000,
   reporter: 'html',
 
   // Global setup to start Anvil before tests
@@ -13,6 +17,9 @@ export default defineConfig({
 
   use: {
     baseURL: 'http://localhost:3000',
+    // Tighter default timeouts to reduce hang time
+    navigationTimeout: 15_000,
+    actionTimeout: 10_000,
     trace: 'on-first-retry',
   },
 

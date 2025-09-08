@@ -69,16 +69,28 @@ async function fundTestAccount() {
       throw new Error(`Wrong chain ID: ${chainId}, expected 8453 (Base)`)
     }
 
-    // Step 2: Fund test account with ETH (for gas)
+    // Step 2: Fund test account with ETH (for gas) if needed
     console.log('1. Funding test account with ETH...')
     await testClient.setBalance({
       address: TEST_ACCOUNT.address,
       value: parseEther('100'),
     })
 
-    // Step 3: Fund test account with weETH using whale impersonation
+    // Step 3: Fund test account with weETH using whale impersonation (idempotent)
     console.log('2. Funding test account with weETH via whale impersonation...')
     const weETHAmount = parseEther('10') // 10 weETH - plenty for testing
+
+    // Idempotency: if already funded, skip
+    const existingBalance = (await publicClient.readContract({
+      address: WEETH_ADDRESS,
+      abi: WETH_ABI,
+      functionName: 'balanceOf',
+      args: [TEST_ACCOUNT.address],
+    })) as bigint
+    if (existingBalance >= weETHAmount) {
+      console.log('✅ Test account already has sufficient weETH; skipping transfer')
+      return true
+    }
 
     // Check whale's weETH balance first
     const whaleBalance = (await publicClient.readContract({
@@ -124,13 +136,37 @@ async function fundTestAccount() {
       transport: http(ANVIL_RPC_URL),
       account: TEST_ACCOUNT,
     })
+    let hash: `0x${string}` | undefined
+    try {
+      hash = await walletClient.writeContract(request)
+      console.log(`Transfer transaction hash: ${hash}`)
+    } catch (err: any) {
+      const msg = err?.message ?? ''
+      const alreadyImported =
+        /Nonce provided/.test(msg) || /transaction already imported/i.test(msg)
+      if (alreadyImported) {
+        // Another parallel job likely sent the same tx. Re-check recipient balance.
+        const postBalance = (await publicClient.readContract({
+          address: WEETH_ADDRESS,
+          abi: WETH_ABI,
+          functionName: 'balanceOf',
+          args: [TEST_ACCOUNT.address],
+        })) as bigint
+        if (postBalance >= weETHAmount) {
+          console.log('ℹ️ Detected duplicate funding tx; balance is sufficient, continuing')
+        } else {
+          throw err
+        }
+      } else {
+        throw err
+      }
+    }
 
-    const hash = await walletClient.writeContract(request)
-    console.log(`Transfer transaction hash: ${hash}`)
-
-    // Wait for transaction
-    const receipt = await publicClient.waitForTransactionReceipt({ hash })
-    console.log(`Transaction confirmed in block ${receipt.blockNumber}`)
+    if (hash) {
+      // Wait for transaction with an explicit timeout so CI won't hang indefinitely
+      const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 60_000 })
+      console.log(`Transaction confirmed in block ${receipt.blockNumber}`)
+    }
 
     // Stop impersonating
     await testClient.stopImpersonatingAccount({
@@ -165,13 +201,25 @@ async function fundTestAccount() {
 
 export { fundTestAccount }
 
-// Run the function
-fundTestAccount()
-  .then((success) => {
-    console.log('\n🎯 Funding result:', success ? 'SUCCESS' : 'FAILED')
-    process.exit(success ? 0 : 1)
-  })
-  .catch((error) => {
-    console.error('❌ Unexpected error:', error)
-    process.exit(1)
-  })
+// Only auto-run when executed directly, not when imported by global setup
+try {
+  // import.meta.url is the absolute file:// URL for this module in ESM
+  // process.argv[1] is the path of the executed file
+  if (typeof import.meta !== 'undefined' && typeof process !== 'undefined') {
+    const executedPath = `file://${process.argv[1]}`
+    if (import.meta.url === executedPath) {
+      // Run as a CLI helper
+      fundTestAccount()
+        .then((success) => {
+          console.log('\n🎯 Funding result:', success ? 'SUCCESS' : 'FAILED')
+          process.exit(success ? 0 : 1)
+        })
+        .catch((error) => {
+          console.error('❌ Unexpected error:', error)
+          process.exit(1)
+        })
+    }
+  }
+} catch {
+  // Ignore if environment doesn't support import.meta or process (shouldn't happen in Node)
+}

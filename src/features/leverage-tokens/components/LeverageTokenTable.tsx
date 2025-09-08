@@ -9,6 +9,7 @@ import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
 import { filterBySearch, parseSortString, sortData } from '@/lib/utils/table-utils'
 import { SortArrowDown, SortArrowNeutral, SortArrowUp } from '../../../components/icons'
 import { AssetDisplay } from '../../../components/ui/asset-display'
+import { Badge } from '../../../components/ui/badge'
 import { FilterDropdown } from '../../../components/ui/filter-dropdown'
 import {
   Table,
@@ -30,9 +31,10 @@ interface LeverageToken extends LeverageTokenConfig {
   // Optional metrics (can be undefined if not available)
   tvl?: number
   tvlUsd?: number
-  supplyCap?: number
   currentSupply?: number
   rank?: number
+  // Optional: warning/note when data is partial (e.g., manager not deployed)
+  dataWarning?: string
 }
 
 export type { LeverageToken }
@@ -137,8 +139,20 @@ export function LeverageTokenTable({
         case 'tvl':
           // Prefer USD value for sorting when available for cross-asset comparability
           return item.tvlUsd ?? 0
+        case 'name':
+          return item.name
+        case 'apy':
+          // APY per-token not available here; sorted as 0 for now
+          return 0
+        case 'leverage':
+          return item.leverageRatio
+        case 'currentSupply':
+          return item.currentSupply
+        case 'supplyCap':
+          return item.supplyCap
         default:
-          return (item as unknown as Record<string, unknown>)[key]
+          console.warn(`Unknown sort key: ${key}`)
+          return 0
       }
     })
 
@@ -375,7 +389,18 @@ export function LeverageTokenTable({
                             }
                           />
                         </div>
-                        <span className="text-slate-300 font-medium text-sm">{token.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-300 font-medium text-sm">{token.name}</span>
+                          {token.dataWarning && (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-500/10 text-amber-400 border-amber-400/30 text-[10px] px-1.5 py-0.5"
+                              title={token.dataWarning}
+                            >
+                              Partial data
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
 

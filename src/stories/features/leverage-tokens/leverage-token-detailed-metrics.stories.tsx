@@ -1,14 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import {
-  LeverageTokenDetailedMetrics,
-  type LeverageTokenMetrics,
-} from '../../../features/leverage-tokens/components/LeverageTokenDetailedMetrics'
+import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 
 const meta = {
   title: 'Features/Leverage Tokens/LeverageTokenDetailedMetrics',
   component: LeverageTokenDetailedMetrics,
   parameters: {
-    layout: 'padded',
+    layout: 'centered',
   },
   tags: ['autodocs'],
 } satisfies Meta<typeof LeverageTokenDetailedMetrics>
@@ -16,170 +13,98 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-// Sample data for 17x leverage token
-const leverage17xMetrics: LeverageTokenMetrics = {
+const sampleMetrics = {
   'Leverage Settings': [
     {
-      label: 'Target Leverage',
-      value: '17.00x',
-      highlight: false,
-      tooltip: 'The target leverage ratio of the token',
+      label: 'Current Leverage',
+      value: '12.34x',
+      highlight: true,
+      color: 'text-white',
+      tooltip: 'The current leverage ratio for this token.',
     },
     {
       label: 'Min - Max Leverage',
-      value: '16.90x - 17.30x',
-      highlight: false,
-      tooltip: 'Allowed leverage range before rebalancing',
+      value: '8.00x - 20.00x',
+      color: 'text-white',
+      tooltip: 'The minimum and maximum leverage range allowed.',
     },
   ],
   Fees: [
     {
       label: 'Mint Token Fee',
-      value: '0.00%',
+      value: '0.25%',
       highlight: true,
       color: 'text-green-400',
-      tooltip: 'Fee charged when minting new leverage tokens',
+      tooltip: 'Fee charged when minting new leverage tokens.',
     },
     {
       label: 'Redeem Token Fee',
       value: '0.10%',
-      highlight: false,
-      tooltip: 'Fee charged when redeeming leverage tokens',
+      color: 'text-white',
+      tooltip: 'Fee charged when redeeming leverage tokens.',
     },
   ],
   'Auction Parameters': [
     {
       label: 'Dutch Auction Duration',
-      value: '1 hour',
-      highlight: false,
-      tooltip: 'Duration of the Dutch auction process for rebalancing',
+      value: '4 hours',
+      color: 'text-white',
+      tooltip: 'Duration of the Dutch auction for token redemptions.',
     },
     {
       label: 'Initial Price Multiplier',
-      value: '1.01x',
-      highlight: false,
-      tooltip: 'Starting price multiplier for the Dutch auction',
-    },
-    {
-      label: 'Min Price Multiplier',
-      value: '0.99x',
-      highlight: false,
-      tooltip: 'Minimum price multiplier during Dutch auction',
+      value: '1.050x',
+      color: 'text-white',
+      tooltip: 'Initial price multiplier for the auction.',
     },
   ],
   'Risk Management': [
     {
       label: 'Pre-liquidation Leverage',
-      value: '17.50x',
-      highlight: false,
-      tooltip: 'Leverage threshold that triggers liquidation protection',
+      value: '16.00x',
+      color: 'text-white',
+      tooltip: 'Leverage threshold before liquidation is triggered.',
     },
     {
       label: 'Rebalance Reward',
-      value: '0.50%',
-      highlight: false,
-      tooltip: 'Reward for triggering pre-liquidation rebalance',
+      value: '0.35%',
+      color: 'text-white',
+      tooltip: 'Reward percentage for successful rebalancing.',
     },
   ],
 }
 
-// Sample data for 10x leverage token
-const leverage10xMetrics: LeverageTokenMetrics = {
-  'Leverage Settings': [
-    {
-      label: 'Target Leverage',
-      value: '10.00x',
-      highlight: false,
-      tooltip: 'The current leverage ratio of the token',
-    },
-    {
-      label: 'Target Leverage Range',
-      value: '9.50x - 10.50x',
-      highlight: false,
-      tooltip: 'Target leverage range for this token',
-    },
-  ],
-  Fees: [
-    {
-      label: 'Mint Fee',
-      value: '0.05%',
-      highlight: false,
-      tooltip: 'Fee charged when minting new leverage tokens',
-    },
-    {
-      label: 'Redeem Fee',
-      value: '0.10%',
-      highlight: false,
-      tooltip: 'Fee charged when redeeming leverage tokens',
-    },
-    {
-      label: 'Performance Fee',
-      value: '15%',
-      highlight: false,
-      tooltip: 'Fee charged on profits above benchmark',
-    },
-  ],
-  Operations: [
-    {
-      label: 'Rebalance Frequency',
-      value: '4 hours',
-      highlight: false,
-      tooltip: 'Maximum time between rebalancing events',
-    },
-    {
-      label: 'Liquidation Threshold',
-      value: '11.00x',
-      highlight: false,
-      tooltip: 'Leverage threshold that triggers liquidation protection',
-    },
-  ],
+export const Loading: Story = {
+  render: () => (
+    <LeverageTokenDetailedMetrics
+      metrics={undefined}
+      isLoading
+      title="Token Details & Risk Parameters"
+      description="Comprehensive leverage token parameters and settings"
+      defaultOpen
+    />
+  ),
 }
 
 export const Default: Story = {
-  args: {
-    metrics: leverage17xMetrics,
-  },
-  render: (args) => (
-    <div className="w-full">
-      <LeverageTokenDetailedMetrics {...args} />
-    </div>
+  render: () => (
+    <LeverageTokenDetailedMetrics
+      metrics={sampleMetrics}
+      title="Token Details & Risk Parameters"
+      description="Comprehensive leverage token parameters and settings"
+      defaultOpen
+    />
   ),
 }
 
-export const TenTimesLeverage: Story = {
-  args: {
-    metrics: leverage10xMetrics,
-    title: '10x Leverage Token Metrics',
-    description: 'Lower leverage token with different fee structure',
-  },
-  render: (args) => (
-    <div className="w-full">
-      <LeverageTokenDetailedMetrics {...args} />
-    </div>
-  ),
-}
-
-export const DefaultOpen: Story = {
-  args: {
-    metrics: leverage17xMetrics,
-    defaultOpen: true,
-  },
-  render: (args) => (
-    <div className="w-full">
-      <LeverageTokenDetailedMetrics {...args} />
-    </div>
-  ),
-}
-
-export const CustomTitle: Story = {
-  args: {
-    metrics: leverage17xMetrics,
-    title: 'Strategy Parameters',
-    description: 'Detailed breakdown of all strategy settings and fees',
-  },
-  render: (args) => (
-    <div className="w-full">
-      <LeverageTokenDetailedMetrics {...args} />
-    </div>
+export const ErrorState: Story = {
+  render: () => (
+    <LeverageTokenDetailedMetrics
+      metrics={undefined}
+      isError
+      title="Token Details & Risk Parameters"
+      description="Comprehensive leverage token parameters and settings"
+      defaultOpen
+    />
   ),
 }

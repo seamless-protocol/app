@@ -8,6 +8,8 @@ import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMe
 import { collateralRatioToLeverage } from '../utils/apy-calculations/leverage-ratios'
 import { STALE_TIME } from '../utils/constants'
 
+// Type definitions used by wagmi read results
+export type ReadResult<T> = { status: 'success'; result: T } | { status: 'failure'; error: unknown }
 /**
  * Hook to fetch detailed metrics for a leverage token using two-contract architecture
  * First fetches config from LeverageManager, then fetches detailed metrics from RebalanceAdapter
@@ -17,6 +19,21 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   const managerAddress = getLeverageManagerAddress(chainId)
 
   // Step 1: Get leverage token config and state from LeverageManager
+
+  type ManagerConfig = {
+    lendingAdapter: Address
+    rebalanceAdapter: Address
+    mintTokenFee: bigint
+    redeemTokenFee: bigint
+  }
+
+  type ManagerState = {
+    collateralInDebtAsset: bigint
+    debt: bigint
+    equity: bigint
+    collateralRatio: bigint
+  }
+
   const {
     data: managerData,
     isLoading: isManagerLoading,
@@ -43,17 +60,13 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
     },
   })
 
-  // Extract rebalance adapter address from config
+  // Extract adapter addresses from typed manager config result
+  const managerConfigRes = managerData?.[0] as ReadResult<ManagerConfig> | undefined
+  const managerStateRes = managerData?.[1] as ReadResult<ManagerState> | undefined
   const rebalanceAdapterAddress =
-    managerData?.[0]?.status === 'success'
-      ? (managerData[0].result as { rebalanceAdapter: Address }).rebalanceAdapter
-      : undefined
-
-  // Extract lending adapter address from config
+    managerConfigRes?.status === 'success' ? managerConfigRes.result.rebalanceAdapter : undefined
   const lendingAdapterAddress =
-    managerData?.[0]?.status === 'success'
-      ? (managerData[0].result as { lendingAdapter: Address }).lendingAdapter
-      : undefined
+    managerConfigRes?.status === 'success' ? managerConfigRes.result.lendingAdapter : undefined
 
   // Step 2: Get detailed metrics from RebalanceAdapter
   const {
@@ -129,9 +142,24 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   const isError = isManagerError || isAdapterError || isLendingError
   const error = managerError || adapterError || lendingError
 
+  type AdapterData = readonly [
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+  ]
+  type LendData = readonly [ReadResult<bigint>]
+
   const transformedData: LeverageTokenMetrics | undefined =
-    managerData && adapterData && lendingData
-      ? transformDetailedMetricsData(managerData, adapterData, lendingData)
+    managerConfigRes && managerStateRes && adapterData && lendingData
+      ? transformDetailedMetricsData(
+          [managerConfigRes, managerStateRes],
+          adapterData as AdapterData,
+          lendingData as LendData,
+        )
       : undefined
 
   return {
@@ -150,9 +178,30 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
  * Transform raw contract data into UI-friendly format
  */
 function transformDetailedMetricsData(
-  managerData: ReadonlyArray<{ status: string; result?: unknown }>,
-  adapterData: ReadonlyArray<{ status: string; result?: unknown }>,
-  lendingData: ReadonlyArray<{ status: string; result?: unknown }>,
+  managerData: readonly [
+    ReadResult<{
+      lendingAdapter: Address
+      rebalanceAdapter: Address
+      mintTokenFee: bigint
+      redeemTokenFee: bigint
+    }>,
+    ReadResult<{
+      collateralInDebtAsset: bigint
+      debt: bigint
+      equity: bigint
+      collateralRatio: bigint
+    }>,
+  ],
+  adapterData: readonly [
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+  ],
+  lendingData: readonly [ReadResult<bigint>],
 ): LeverageTokenMetrics {
   // Extract data from manager calls
   const configResult = managerData[0]
@@ -203,11 +252,7 @@ function transformDetailedMetricsData(
   // Extract values with error handling
   const currentLeverage =
     stateResult?.status === 'success'
-      ? formatLeverage(
-          collateralRatioToLeverage(
-            (stateResult.result as { collateralRatio: bigint }).collateralRatio,
-          ),
-        )
+      ? formatLeverage(collateralRatioToLeverage(stateResult.result.collateralRatio))
       : 'N/A'
 
   const minLeverage =
@@ -222,12 +267,12 @@ function transformDetailedMetricsData(
 
   const mintTokenFee =
     configResult?.status === 'success'
-      ? formatFee4Decimals((configResult.result as { mintTokenFee: bigint }).mintTokenFee)
+      ? formatFee4Decimals(configResult.result.mintTokenFee)
       : 'N/A'
 
   const redeemTokenFee =
     configResult?.status === 'success'
-      ? formatFee4Decimals((configResult.result as { redeemTokenFee: bigint }).redeemTokenFee)
+      ? formatFee4Decimals(configResult.result.redeemTokenFee)
       : 'N/A'
 
   const dutchAuctionDuration =

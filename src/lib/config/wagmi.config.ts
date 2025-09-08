@@ -10,14 +10,21 @@ if (!walletConnectProjectId) {
   )
 }
 
+// Resolve RPC URLs with sensible fallbacks and support both naming conventions
+const baseRpc = import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org'
+const mainnetRpc =
+  import.meta.env['VITE_MAINNET_RPC_URL'] ||
+  import.meta.env['VITE_ETHEREUM_RPC_URL'] ||
+  'https://eth.llamarpc.com'
+
 // Use RainbowKit's getDefaultConfig which handles connectors automatically
 export const config = getDefaultConfig({
   appName: 'Seamless Protocol',
   projectId: walletConnectProjectId || 'YOUR_PROJECT_ID',
   chains: [base, mainnet],
   transports: {
-    [base.id]: http(import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org'),
-    [mainnet.id]: http(import.meta.env['VITE_MAINNET_RPC_URL'] || 'https://eth.llamarpc.com'),
+    [base.id]: http(baseRpc),
+    [mainnet.id]: http(mainnetRpc),
   },
   ssr: false, // Critical for IPFS deployment - we're a pure client-side app
   // Improve wallet connection behavior
