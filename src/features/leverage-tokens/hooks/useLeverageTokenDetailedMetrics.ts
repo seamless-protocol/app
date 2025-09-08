@@ -9,7 +9,7 @@ import { collateralRatioToLeverage } from '../utils/apy-calculations/leverage-ra
 import { STALE_TIME } from '../utils/constants'
 
 // Typed read result helper
-type ReadResult<T> = { status: 'success'; result: T } | { status: 'failure'; error: unknown }
+export type ReadResult<T> = { status: 'success'; result: T } | { status: 'failure'; error: unknown }
 /**
  * Hook to fetch detailed metrics for a leverage token using two-contract architecture
  * First fetches config from LeverageManager, then fetches detailed metrics from RebalanceAdapter
