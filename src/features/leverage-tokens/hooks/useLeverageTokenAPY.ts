@@ -24,7 +24,7 @@ export function useLeverageTokenAPY({
   enabled = true,
 }: UseLeverageTokenAPYOptions) {
   const config = useConfig()
-  const queryKey = tokenAddress ? ltKeys.apy(tokenAddress as `0x${string}`) : []
+  const queryKey = tokenAddress ? ltKeys.apy(tokenAddress) : []
 
   return useQuery({
     queryKey,

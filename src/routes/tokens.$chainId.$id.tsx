@@ -47,10 +47,10 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     } = useLeverageTokenDetailedMetrics(tokenAddress as Address)
 
     // Get leverage token config (used for decimals, addresses, etc.)
-    const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`)
+    const tokenConfig = getLeverageTokenConfig(tokenAddress as Address)
 
     // Live on-chain state for TVL (equity) in debt asset units
-    const { data: stateData } = useLeverageTokenState(tokenAddress as `0x${string}`, chainId)
+    const { data: stateData } = useLeverageTokenState(tokenAddress as Address, chainId)
 
     // USD price for debt asset (guard when config is missing)
     const { data: usdPriceMap } = useUsdPrices({

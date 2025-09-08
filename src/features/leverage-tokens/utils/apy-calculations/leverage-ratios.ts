@@ -36,10 +36,10 @@ export async function fetchLeverageRatios(
   const managerResults = await readContracts(config, {
     contracts: [
       {
-        address: managerAddress as `0x${string}`,
+        address: managerAddress!,
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenConfig',
-        args: [tokenAddress as `0x${string}`],
+        args: [tokenAddress],
       },
     ],
   })
@@ -50,7 +50,7 @@ export async function fetchLeverageRatios(
     throw new Error('Failed to get leverage token config')
   }
 
-  const rebalanceAdapterAddress = (managerResult.result as any).rebalanceAdapter as `0x${string}`
+  const rebalanceAdapterAddress = managerResult.result.rebalanceAdapter as Address
 
   // Step 2: Get collateral ratios from RebalanceAdapter
   const ratioResults = await readContracts(config, {
