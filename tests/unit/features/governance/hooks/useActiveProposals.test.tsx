@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useActiveProposals } from '@/features/governance/hooks/useActiveProposals'
 import type { TallyProposal } from '@/features/governance/types'
 import { getProposals } from '@/features/governance/utils/tally'
-import { hookTestUtils, mockSetup } from '../utils'
+import { hookTestUtils, mockSetup } from '../../../../utils'
 
 // Use the global mocks from tests/setup.ts
 const mockGetProposals = vi.mocked(getProposals)

@@ -3,15 +3,12 @@ import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 import { useChainId, useReadContracts } from 'wagmi'
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
-import { mockAPY, mockSupply } from '@/features/leverage-tokens/data/mockData'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
 import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
 import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
 import { STALE_TIME } from '../utils/constants'
-
-// Remove custom conversion - use viem's formatUnits instead
 
 export function useLeverageTokensTableData() {
   const chainId = useChainId()
@@ -100,34 +97,10 @@ export function useLeverageTokensTableData() {
       const currentSupply = Number(formatUnits(totalSupply, cfg.decimals ?? 18))
 
       const result: LeverageToken = {
-        id: cfg.address,
-        name: cfg.name,
-        collateralAsset: {
-          symbol: cfg.collateralAsset.symbol,
-          name: cfg.collateralAsset.name,
-          address: cfg.collateralAsset.address,
-        },
-        debtAsset: {
-          symbol: cfg.debtAsset.symbol,
-          name: cfg.debtAsset.name,
-          address: cfg.debtAsset.address,
-        },
-        tvl,
-        apy: mockAPY.total,
-        leverage: cfg.leverageRatio,
-        supplyCap: mockSupply.supplyCap,
+        ...cfg,
         currentSupply,
-        chainId: cfg.chainId,
-        chainName: cfg.chainName,
-        chainLogo: cfg.chainLogo,
-        baseYield: mockAPY.baseYield,
-        borrowRate: mockAPY.borrowRate,
-        rewardMultiplier: mockAPY.rewardMultiplier,
-      }
-
-      // Only add tvlUsd if we have a valid price
-      if (tvlUsd !== undefined) {
-        result.tvlUsd = tvlUsd
+        tvl,
+        ...(tvlUsd !== undefined && { tvlUsd }),
       }
 
       return result

@@ -22,30 +22,30 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const mockAPYData: APYBreakdownData = {
-  baseYield: 5.12,
-  leverageMultiplier: 20,
-  borrowCost: -3.67,
-  rewardAPY: 2.55,
+  stakingYield: 5.12,
+  restakingYield: 2.34,
+  borrowRate: -3.67,
+  rewardsAPR: 2.55,
   points: 1096,
-  totalAPY: 28.94,
+  totalAPY: 6.34,
 }
 
 const highAPYData: APYBreakdownData = {
-  baseYield: 8.45,
-  leverageMultiplier: 15,
-  borrowCost: -4.21,
-  rewardAPY: 3.89,
+  stakingYield: 8.45,
+  restakingYield: 3.21,
+  borrowRate: -4.21,
+  rewardsAPR: 3.89,
   points: 2340,
-  totalAPY: 45.67,
+  totalAPY: 11.34,
 }
 
 const lowAPYData: APYBreakdownData = {
-  baseYield: 2.34,
-  leverageMultiplier: 5,
-  borrowCost: -1.89,
-  rewardAPY: 0.95,
+  stakingYield: 2.34,
+  restakingYield: 1.12,
+  borrowRate: -1.89,
+  rewardsAPR: 0.95,
   points: 234,
-  totalAPY: 8.12,
+  totalAPY: 2.52,
 }
 
 export const Default: Story = {

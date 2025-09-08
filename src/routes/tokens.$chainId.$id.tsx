@@ -2,9 +2,10 @@ import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Info } from 'lucide-react'
 import { useState } from 'react'
+import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
-import { APYBreakdown } from '@/components/APYBreakdown'
+import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { FAQ } from '@/components/FAQ'
 import { StatCardList } from '@/components/StatCardList'
 import { AssetDisplay } from '@/components/ui/asset-display'
@@ -15,21 +16,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
-import {
-  createMockUserPosition,
-  mockAPY,
-  mockKeyMetrics,
-  mockSupply,
-} from '@/features/leverage-tokens/data/mockData'
+import { createMockUserPosition } from '@/features/leverage-tokens/data/mockData'
+import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
 import { useLeverageTokenState } from '@/features/leverage-tokens/hooks/useLeverageTokenState'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
-import { calculateAPYBreakdown } from '@/lib/utils/apy-calculations'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
-import { formatCurrency, formatNumber } from '@/lib/utils/formatting'
+import { formatAPY, formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
 export const Route = createFileRoute('/tokens/$chainId/$id')({
   component: () => {
@@ -48,13 +44,13 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       data: detailedMetrics,
       isLoading: isDetailedMetricsLoading,
       isError: isDetailedMetricsError,
-    } = useLeverageTokenDetailedMetrics(tokenAddress as `0x${string}`)
+    } = useLeverageTokenDetailedMetrics(tokenAddress as Address)
 
     // Get leverage token config (used for decimals, addresses, etc.)
-    const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`)
+    const tokenConfig = getLeverageTokenConfig(tokenAddress as Address)
 
     // Live on-chain state for TVL (equity) in debt asset units
-    const { data: stateData } = useLeverageTokenState(tokenAddress as `0x${string}`, chainId)
+    const { data: stateData } = useLeverageTokenState(tokenAddress as Address, chainId)
 
     // USD price for debt asset (guard when config is missing)
     const { data: usdPriceMap } = useUsdPrices({
@@ -83,9 +79,20 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       isLoading: isPriceDataLoading,
       error: priceDataError,
     } = useLeverageTokenPriceComparison({
-      tokenAddress: tokenAddress as `0x${string}`,
+      tokenAddress: tokenAddress as Address,
       chainId,
       timeframe: selectedTimeframe,
+    })
+
+    // Pre-load APY data for the tooltip
+    const {
+      data: apyData,
+      isLoading: isApyLoading,
+      isError: isApyError,
+    } = useLeverageTokenAPY({
+      tokenAddress: tokenAddress as Address,
+      ...(tokenConfig && { leverageToken: tokenConfig }),
+      enabled: !!tokenConfig, // Only enable if we have a valid config
     })
 
     if (!tokenConfig) {
@@ -109,25 +116,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     // Mock user position data (this would come from a hook in real implementation)
     const userPosition = createMockUserPosition(tokenConfig.symbol)
 
-    // Create mock token data for APY breakdown calculation
-    const mockTokenForAPY = {
-      id: tokenConfig.address,
-      name: tokenConfig.name,
-      collateralAsset: tokenConfig.collateralAsset,
-      debtAsset: tokenConfig.debtAsset,
-      tvl: mockKeyMetrics.tvl,
-      apy: mockAPY.total,
-      leverage: tokenConfig.leverageRatio,
-      supplyCap: mockSupply.supplyCap,
-      currentSupply: mockSupply.currentSupply,
-      chainId: tokenConfig.chainId,
-      chainName: tokenConfig.chainName,
-      chainLogo: tokenConfig.chainLogo,
-      baseYield: mockAPY.baseYield,
-      borrowRate: mockAPY.borrowRate,
-      rewardMultiplier: mockAPY.rewardMultiplier || 1.5,
-    }
-
     const handleMint = () => {
       // TODO: Implement mint modal/functionality
       console.log('Mint clicked')
@@ -138,7 +126,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       console.log('Redeem clicked')
     }
 
-    // Create StatCard data for key metrics (TVL uses live state + USD approximation)
+    // Create StatCard data for key metrics (using live data where available)
     const keyMetricsCards = [
       {
         title: 'TVL',
@@ -152,14 +140,14 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
             : undefined,
       },
       {
-        title: 'Total Collateral',
-        stat: `${formatNumber(mockKeyMetrics.totalCollateral.amount, { thousandDecimals: 2 })} ${tokenConfig.collateralAsset.symbol}`,
-        caption: `~${formatCurrency(mockKeyMetrics.totalCollateral.amountUSD, { millionDecimals: 2, thousandDecimals: 0 })}`,
+        title: 'Total APY',
+        stat: apyData?.totalAPY ? formatAPY(apyData.totalAPY, 2) : 'Loading...',
+        caption: apyData?.totalAPY ? 'Including rewards & leverage' : undefined,
       },
       {
         title: 'Target Leverage',
         stat: `${tokenConfig.leverageRatio}x`,
-        caption: `Current: ${mockKeyMetrics.targetLeverage.current}x`,
+        caption: `Max leverage ratio`,
       },
     ]
 
@@ -263,7 +251,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 <h1 className="text-2xl sm:text-3xl font-bold text-white">{tokenConfig.name}</h1>
                 <div className="flex items-center space-x-1">
                   <Badge className="bg-green-500/10 text-green-400 border-green-400/20">
-                    {mockAPY.total.toFixed(1)}% APY
+                    {apyData?.totalAPY ? `${formatAPY(apyData.totalAPY, 2)} APY` : 'Loading...'}
                   </Badge>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -275,7 +263,13 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                       </button>
                     </TooltipTrigger>
                     <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                      <APYBreakdown data={calculateAPYBreakdown(mockTokenForAPY)} compact />
+                      <APYBreakdownTooltip
+                        token={tokenConfig}
+                        {...(apyData && { apyData })}
+                        isLoading={isApyLoading ?? false}
+                        isError={isApyError ?? false}
+                        compact
+                      />
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -380,17 +374,21 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
               />
             </motion.div>
 
-            {/* Related Resources */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.5 }}
-            >
-              <RelatedResources
-                underlyingPlatforms={tokenConfig.relatedResources.underlyingPlatforms}
-                additionalRewards={tokenConfig.relatedResources.additionalRewards}
-              />
-            </motion.div>
+            {/* Related Resources - Only show if there are resources */}
+            {tokenConfig.relatedResources &&
+              (tokenConfig.relatedResources.underlyingPlatforms.length > 0 ||
+                tokenConfig.relatedResources.additionalRewards.length > 0) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.5 }}
+                >
+                  <RelatedResources
+                    underlyingPlatforms={tokenConfig.relatedResources.underlyingPlatforms}
+                    additionalRewards={tokenConfig.relatedResources.additionalRewards}
+                  />
+                </motion.div>
+              )}
 
             {/* FAQ Section */}
             <motion.div
