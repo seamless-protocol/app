@@ -60,6 +60,12 @@ describe('MorphoBorrowApyProvider', () => {
 
       const mockGraphQLResponse = {
         marketByUniqueKey: {
+          uniqueKey: mockMarketId,
+          id: 'market-id-123',
+          collateralAsset: {
+            address: '0x1234567890123456789012345678901234567890',
+            name: 'WETH',
+          },
           state: {
             borrowApy: 0.0387, // 3.87% as decimal
           },
@@ -236,6 +242,12 @@ describe('MorphoBorrowApyProvider', () => {
 
       const mockGraphQLResponse = {
         marketByUniqueKey: {
+          uniqueKey: mockMarketId,
+          id: 'market-id-123',
+          collateralAsset: {
+            address: '0x1234567890123456789012345678901234567890',
+            name: 'WETH',
+          },
           state: {
             borrowApy: 0, // Zero borrow APY
           },
@@ -267,6 +279,12 @@ describe('MorphoBorrowApyProvider', () => {
 
       const mockGraphQLResponse = {
         marketByUniqueKey: {
+          uniqueKey: mockMarketId,
+          id: 'market-id-123',
+          collateralAsset: {
+            address: '0x1234567890123456789012345678901234567890',
+            name: 'WETH',
+          },
           state: {
             borrowApy: 0.5, // 50% borrow APY
           },

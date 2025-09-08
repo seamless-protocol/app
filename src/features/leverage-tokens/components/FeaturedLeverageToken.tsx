@@ -140,7 +140,7 @@ export function FeaturedLeverageTokens({
               ...token,
               rank: index + 1,
             }}
-            apyData={apyData} // Pass APY data to all tokens
+            {...(apyData && { apyData })} // Pass APY data to all tokens
             {...(onTokenClick && { onClick: onTokenClick })}
           />
         ))}

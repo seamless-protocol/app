@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Info, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { cn } from '@/lib/utils/cn'
@@ -406,7 +407,7 @@ export function LeverageTokenTable({
                             <APYBreakdownTooltip
                               token={token}
                               compact
-                              apyData={apyData}
+                              {...(apyData && { apyData })}
                               isLoading={isApyLoading ?? false}
                               isError={isApyError ?? false}
                             />

@@ -41,7 +41,7 @@ export const Route = createFileRoute('/tokens/')({
             <FeaturedLeverageTokens
               tokens={leverageTokens.slice(0, 3)} // Show top 3 tokens
               onTokenClick={handleTokenClick}
-              apyData={apyData}
+              {...(apyData && { apyData })}
               isApyLoading={isApyLoading}
               isApyError={isApyError}
             />
@@ -64,7 +64,7 @@ export const Route = createFileRoute('/tokens/')({
               <LeverageTokenTable
                 tokens={leverageTokens}
                 onTokenClick={handleTokenClick}
-                apyData={apyData}
+                {...(apyData && { apyData })}
                 isApyLoading={isApyLoading}
                 isApyError={isApyError}
               />

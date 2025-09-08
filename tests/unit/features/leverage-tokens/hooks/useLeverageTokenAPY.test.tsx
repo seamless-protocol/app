@@ -79,7 +79,6 @@ describe('useLeverageTokenAPY', () => {
     it('should not fetch when tokenAddress is missing', () => {
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useLeverageTokenAPY({
-          tokenAddress: undefined,
           leverageToken: mockLeverageTokenConfig,
         }),
       )
@@ -174,7 +173,6 @@ describe('useLeverageTokenAPY', () => {
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useLeverageTokenAPY({
           tokenAddress,
-          leverageToken: undefined,
         }),
       )
 
@@ -255,7 +253,6 @@ describe('useLeverageTokenAPY', () => {
     it('should handle missing token address gracefully', async () => {
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useLeverageTokenAPY({
-          tokenAddress: undefined,
           leverageToken: mockLeverageTokenConfig,
         }),
       )
@@ -269,7 +266,6 @@ describe('useLeverageTokenAPY', () => {
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useLeverageTokenAPY({
           tokenAddress,
-          leverageToken: undefined,
         }),
       )
 

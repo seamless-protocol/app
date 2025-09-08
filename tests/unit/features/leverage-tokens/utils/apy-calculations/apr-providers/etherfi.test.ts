@@ -259,8 +259,8 @@ describe('EtherFiAprProvider', () => {
 
       const result = await provider.fetchApr()
 
-      expect(result.metadata.raw).toEqual(mockApiResponse)
-      expect(result.metadata.useRestakingApr).toBe(true)
+      expect((result as any).metadata.raw).toEqual(mockApiResponse)
+      expect((result as any).metadata.useRestakingApr).toBe(true)
     })
 
     it('should log debug information', async () => {

@@ -137,6 +137,8 @@ export const Default: Story = {
       rewardsAPR: 4.56,
       points: 1250,
       borrowRate: -2.1,
+      stakingYield: 8.78,
+      restakingYield: 0,
     },
     isApyLoading: false,
     isApyError: false,
