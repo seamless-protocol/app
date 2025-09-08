@@ -171,26 +171,31 @@ export function ActivePositions({ positions, onAction, className }: ActivePositi
                     </div>
 
                     {/* Position Stats */}
-                    <div className="lg:col-span-5 grid grid-cols-3 gap-4">
-                      <div className="text-left">
-                        <p className="text-xs text-slate-400">Current Value</p>
-                        <p className="font-medium text-white">
-                          {position.currentValue.amount} {position.currentValue.symbol}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          {position.currentValue.usdValue}
-                        </p>
+                    <div className="lg:col-span-5 space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4">
+                      {/* First row: Current Value and Unrealized Gain */}
+                      <div className="grid grid-cols-2 gap-4 lg:contents">
+                        <div className="text-left">
+                          <p className="text-xs text-slate-400">Current Value</p>
+                          <p className="font-medium text-white">
+                            {position.currentValue.amount} {position.currentValue.symbol}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {position.currentValue.usdValue}
+                          </p>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-xs text-slate-400">Unrealized Gain</p>
+                          <p className="font-medium text-green-400">
+                            +{position.unrealizedGain.amount} {position.unrealizedGain.symbol}
+                          </p>
+                          <p className="text-xs text-green-400">
+                            {position.unrealizedGain.percentage}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <p className="text-xs text-slate-400">Unrealized Gain</p>
-                        <p className="font-medium text-green-400">
-                          +{position.unrealizedGain.amount} {position.unrealizedGain.symbol}
-                        </p>
-                        <p className="text-xs text-green-400">
-                          +{position.unrealizedGain.percentage}
-                        </p>
-                      </div>
-                      <div className="text-left">
+
+                      {/* Second row: APY */}
+                      <div className="text-left lg:contents">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="cursor-help">
@@ -209,31 +214,33 @@ export function ActivePositions({ positions, onAction, className }: ActivePositi
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="lg:col-span-3 flex items-center justify-start lg:justify-end space-x-2">
-                      <Button
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-500 text-white"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onAction(primaryAction, position)
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        {primaryLabel}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onAction(secondaryAction, position)
-                        }}
-                      >
-                        <Minus className="h-4 w-4 mr-1" />
-                        {secondaryLabel}
-                      </Button>
-                      <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 hidden lg:block ml-2" />
+                    <div className="lg:col-span-3 w-full lg:flex lg:items-center lg:justify-end lg:space-x-2">
+                      <div className="grid grid-cols-2 gap-2 lg:flex lg:gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-500 text-white w-full lg:w-auto flex-1 lg:flex-none"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onAction(primaryAction, position)
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          {primaryLabel}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-slate-600 text-slate-300 hover:bg-slate-700 w-full lg:w-auto flex-1 lg:flex-none"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onAction(secondaryAction, position)
+                          }}
+                        >
+                          <Minus className="h-4 w-4 mr-1" />
+                          {secondaryLabel}
+                        </Button>
+                      </div>
+                      <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 hidden lg:block lg:ml-2" />
                     </div>
                   </div>
                 </div>
