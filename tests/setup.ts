@@ -14,6 +14,7 @@ vi.mock('wagmi', () => ({
   useReadContracts: vi.fn(),
   createConfig: vi.fn(),
   http: vi.fn(),
+  useConnectorClient: vi.fn(),
 }))
 
 // Mock wagmi chains
