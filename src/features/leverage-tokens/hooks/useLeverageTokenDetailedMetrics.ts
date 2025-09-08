@@ -8,7 +8,7 @@ import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMe
 import { collateralRatioToLeverage } from '../utils/apy-calculations/leverage-ratios'
 import { STALE_TIME } from '../utils/constants'
 
-// Type definitions used by wagmi read results
+// Typed read result helper
 export type ReadResult<T> = { status: 'success'; result: T } | { status: 'failure'; error: unknown }
 /**
  * Hook to fetch detailed metrics for a leverage token using two-contract architecture

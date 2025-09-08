@@ -31,6 +31,7 @@ interface LeverageToken extends LeverageTokenConfig {
   // Optional metrics (can be undefined if not available)
   tvl?: number
   tvlUsd?: number
+  supplyCap?: number
   currentSupply?: number
   rank?: number
   // Optional: warning/note when data is partial (e.g., manager not deployed)
@@ -142,7 +143,7 @@ export function LeverageTokenTable({
         case 'name':
           return item.name
         case 'apy':
-          // APY per-token not available here; sorted as 0 for now
+          // Per-row APY is not modeled here; neutral sort value
           return 0
         case 'leverage':
           return item.leverageRatio
