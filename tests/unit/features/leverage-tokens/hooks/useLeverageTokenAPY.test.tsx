@@ -1,6 +1,6 @@
 import { waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Address } from 'viem'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import { fetchAprForToken } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers'
 import { fetchBorrowApyForToken } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
@@ -130,9 +130,17 @@ describe('useLeverageTokenAPY', () => {
       })
 
       // Verify all external APIs were called
-      expect(mockFetchLeverageRatios).toHaveBeenCalledWith(tokenAddress, chainId, expect.any(Object))
+      expect(mockFetchLeverageRatios).toHaveBeenCalledWith(
+        tokenAddress,
+        chainId,
+        expect.any(Object),
+      )
       expect(mockFetchAprForToken).toHaveBeenCalledWith(tokenAddress, chainId)
-      expect(mockFetchBorrowApyForToken).toHaveBeenCalledWith(tokenAddress, chainId, expect.any(Object))
+      expect(mockFetchBorrowApyForToken).toHaveBeenCalledWith(
+        tokenAddress,
+        chainId,
+        expect.any(Object),
+      )
       expect(mockFetchGenericRewardsApr).toHaveBeenCalledWith({ chainId, tokenAddress })
 
       // Verify the calculated APY data

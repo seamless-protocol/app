@@ -100,7 +100,7 @@ interface FeaturedLeverageTokensProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
-  apyData?: any // APY data for the first token
+  apyData?: APYBreakdownData // APY data for the first token
   isApyLoading?: boolean
   isApyError?: boolean
 }

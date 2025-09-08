@@ -1,4 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// Mock the module to avoid global mock conflicts
+vi.mock('@/features/leverage-tokens/utils/apy-calculations/leverage-ratios', async () => {
+  const actual = await vi.importActual(
+    '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios',
+  )
+  return actual
+})
+
 import { collateralRatioToLeverage } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
 
 describe('leverage-ratios', () => {

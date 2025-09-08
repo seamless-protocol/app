@@ -46,13 +46,13 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   // Extract rebalance adapter address from config
   const rebalanceAdapterAddress =
     managerData?.[0]?.status === 'success'
-      ? (managerData[0].result as any).rebalanceAdapter
+      ? (managerData[0].result as { rebalanceAdapter: Address }).rebalanceAdapter
       : undefined
 
   // Extract lending adapter address from config
   const lendingAdapterAddress =
     managerData?.[0]?.status === 'success'
-      ? (managerData[0].result as any).lendingAdapter
+      ? (managerData[0].result as { lendingAdapter: Address }).lendingAdapter
       : undefined
 
   // Step 2: Get detailed metrics from RebalanceAdapter
@@ -150,9 +150,9 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
  * Transform raw contract data into UI-friendly format
  */
 function transformDetailedMetricsData(
-  managerData: ReadonlyArray<any>,
-  adapterData: ReadonlyArray<any>,
-  lendingData: ReadonlyArray<any>,
+  managerData: ReadonlyArray<{ status: string; result?: unknown }>,
+  adapterData: ReadonlyArray<{ status: string; result?: unknown }>,
+  lendingData: ReadonlyArray<{ status: string; result?: unknown }>,
 ): LeverageTokenMetrics {
   // Extract data from manager calls
   const configResult = managerData[0]
@@ -203,7 +203,11 @@ function transformDetailedMetricsData(
   // Extract values with error handling
   const currentLeverage =
     stateResult?.status === 'success'
-      ? formatLeverage(collateralRatioToLeverage((stateResult.result as any).collateralRatio))
+      ? formatLeverage(
+          collateralRatioToLeverage(
+            (stateResult.result as { collateralRatio: bigint }).collateralRatio,
+          ),
+        )
       : 'N/A'
 
   const minLeverage =
@@ -218,12 +222,12 @@ function transformDetailedMetricsData(
 
   const mintTokenFee =
     configResult?.status === 'success'
-      ? formatFee4Decimals((configResult.result as any).mintTokenFee)
+      ? formatFee4Decimals((configResult.result as { mintTokenFee: bigint }).mintTokenFee)
       : 'N/A'
 
   const redeemTokenFee =
     configResult?.status === 'success'
-      ? formatFee4Decimals((configResult.result as any).redeemTokenFee)
+      ? formatFee4Decimals((configResult.result as { redeemTokenFee: bigint }).redeemTokenFee)
       : 'N/A'
 
   const dutchAuctionDuration =

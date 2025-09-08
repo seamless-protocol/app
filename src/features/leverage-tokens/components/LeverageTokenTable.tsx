@@ -40,7 +40,7 @@ interface LeverageTokenTableProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
-  apyData?: any // APY data for the first token (can be extended for multiple tokens)
+  apyData?: APYBreakdownData // APY data for the first token (can be extended for multiple tokens)
   isApyLoading?: boolean
   isApyError?: boolean
 }

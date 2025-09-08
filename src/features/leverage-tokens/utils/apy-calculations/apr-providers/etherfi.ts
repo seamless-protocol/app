@@ -8,7 +8,7 @@ export interface EtherFiAprData extends BaseAprData {
   sevenDayRestakingApr: number
   bufferEth: number
   metadata: {
-    raw: any
+    raw: Record<string, unknown>
     useRestakingApr?: boolean
   }
 }
@@ -53,13 +53,6 @@ export class EtherFiAprProvider implements AprFetcher {
           useRestakingApr: true,
         },
       }
-
-      // Debug logging for EtherFi APR
-      console.log('=== ETHERFI APR DEBUG ===')
-      console.log('Raw API Response:', raw)
-      console.log('Calculated Staking APR:', sevenDayApr)
-      console.log('Calculated Restaking APR:', sevenDayRestakingApr)
-      console.log('========================')
 
       return result
     } catch (error) {

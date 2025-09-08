@@ -32,11 +32,15 @@ export async function fetchLeverageRatios(
 ): Promise<LeverageRatios> {
   const managerAddress = getLeverageManagerAddress(chainId)
 
+  if (!managerAddress) {
+    throw new Error(`No leverage manager address found for chain ID: ${chainId}`)
+  }
+
   // Step 1: Get leverage token config from LeverageManager
   const managerResults = await readContracts(config, {
     contracts: [
       {
-        address: managerAddress!,
+        address: managerAddress,
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenConfig',
         args: [tokenAddress],

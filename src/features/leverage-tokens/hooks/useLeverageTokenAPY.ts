@@ -58,13 +58,6 @@ export function useLeverageTokenAPY({
       const targetLeverage = leverageRatios.targetLeverage
 
       // Use the calculated leverage ratios
-      console.log('=== LEVERAGE TOKEN APY DEBUG ===')
-      console.log('Token Address:', tokenAddress)
-      console.log('Chain ID:', leverageToken.chainId)
-      console.log('Target Leverage:', targetLeverage)
-      console.log('Protocol APR Data:', aprData)
-      console.log('Staking APR:', aprData.stakingAPR)
-      console.log('Restaking APR:', aprData.restakingAPR)
 
       // Staking Yield = Protocol APR * leverage (convert from percentage to decimal)
       const stakingYield =
@@ -81,19 +74,6 @@ export function useLeverageTokenAPY({
       // Borrow Rate = negative cost based on leverage
       const borrowRate =
         (borrowAPY && targetLeverage ? borrowAPY * -1 * (targetLeverage - 1) : undefined) ?? 0
-
-      // Debug logging for borrow rate calculation
-      console.log('=== BORROW RATE CALCULATION DEBUG ===')
-      console.log('Token Address:', tokenAddress)
-      console.log('Raw Borrow APY from Morpho:', borrowAPY)
-      console.log('Target Leverage:', targetLeverage)
-      console.log('Borrow Rate Formula: borrowAPY * -1 * (targetLeverage - 1)')
-      console.log(
-        'Calculation:',
-        `${borrowAPY} * -1 * (${targetLeverage} - 1) = ${borrowAPY} * -1 * ${targetLeverage - 1} = ${borrowRate}`,
-      )
-      console.log('Final Borrow Rate:', borrowRate)
-      console.log('=====================================')
 
       // Rewards APR from external sources (Fuul, etc.)
       const rewardsAPR = rewardsAPRData?.rewardsAPR ?? 0

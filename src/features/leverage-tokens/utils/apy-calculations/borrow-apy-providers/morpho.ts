@@ -37,7 +37,7 @@ async function fetchMorphoMarketId(
     }
 
     // Step 2: Get lending adapter address from the config
-    const lendingAdapterAddress = (managerResult as any).lendingAdapter as Address
+    const lendingAdapterAddress = (managerResult as { lendingAdapter: Address }).lendingAdapter
 
     if (!lendingAdapterAddress) {
       throw new Error('No lending adapter found in leverage token config')
@@ -53,8 +53,6 @@ async function fetchMorphoMarketId(
     if (!marketId) {
       throw new Error('No market ID found from lending adapter')
     }
-
-    console.log('Fetched Morpho market ID:', marketId, 'for token:', tokenAddress)
 
     return marketId
   } catch (error) {
@@ -103,12 +101,6 @@ export class MorphoBorrowApyProvider implements BorrowApyFetcher {
       const result: BaseBorrowApyData = {
         borrowAPY,
       }
-
-      // Debug logging for Morpho borrow APY
-      console.log('=== MORPHO BORROW APY DEBUG ===')
-      console.log('Token Address:', tokenAddress)
-      console.log('Borrow APY:', result.borrowAPY)
-      console.log('================================')
 
       return result
     } catch (error) {

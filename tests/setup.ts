@@ -102,7 +102,7 @@ vi.mock('@/features/governance/utils/constants', () => ({
   },
 }))
 
-// Mock APY calculation functions
+// Mock APY calculation functions (only for the main hook test)
 vi.mock('@/features/leverage-tokens/utils/apy-calculations/apr-providers', () => ({
   fetchAprForToken: vi.fn(),
 }))
