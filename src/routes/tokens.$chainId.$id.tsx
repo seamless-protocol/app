@@ -80,7 +80,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
         ? tvlDebtUnits * debtPriceUsd
         : undefined
 
-
     const {
       data: priceHistoryData,
       isLoading: isPriceDataLoading,

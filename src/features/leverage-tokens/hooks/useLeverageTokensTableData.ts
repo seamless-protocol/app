@@ -144,8 +144,6 @@ export function useLeverageTokensTableData() {
 
       // Convert BigInt to numbers for UI using appropriate asset decimals
       const tvl = Number(formatUnits(equity, cfg.debtAsset.decimals))
-      const collateralAmountNum = 0
-      const debtAmountNum = 0
       const currentSupply = Number(formatUnits(totalSupply, cfg.decimals ?? 18))
 
       // Calculate USD values
@@ -154,9 +152,6 @@ export function useLeverageTokensTableData() {
         typeof debtPriceUsd === 'number' && Number.isFinite(debtPriceUsd)
           ? tvl * debtPriceUsd
           : undefined
-
-      // Resolve supply cap from config (token units)
-      const supplyCap = cfg.supplyCap ?? mockSupply.supplyCap
 
       const result: LeverageToken = {
         ...cfg,

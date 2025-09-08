@@ -46,7 +46,7 @@ export interface LeverageTokenConfig {
   chainName: string
   chainLogo: React.ComponentType<React.SVGProps<SVGSVGElement>>
   // Supply cap (token units)
-  supplyCap: number
+  supplyCap?: number
 
   // Asset configuration
   collateralAsset: {
