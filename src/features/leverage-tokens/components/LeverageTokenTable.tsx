@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion'
 import { Info, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { calculateAPYBreakdown } from '@/lib/utils/apy-calculations'
+import type { APYBreakdownData } from '@/components/APYBreakdown'
+import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { cn } from '@/lib/utils/cn'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
 import { filterBySearch, parseSortString, sortData } from '@/lib/utils/table-utils'
-import { APYBreakdown } from '../../../components/APYBreakdown'
 import { SortArrowDown, SortArrowNeutral, SortArrowUp } from '../../../components/icons'
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Badge } from '../../../components/ui/badge'
@@ -23,41 +23,16 @@ import {
   usePagination,
 } from '../../../components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip'
+import type { LeverageTokenConfig } from '../leverageTokens.config'
 import { LeverageBadge } from './LeverageBadge'
 import { SupplyCap } from './SupplyCap'
 
-interface LeverageToken {
-  id: `0x${string}` // The actual leverage token contract address
-  name: string
-  collateralAsset: {
-    symbol: string
-    name: string
-    address: string
-  }
-  debtAsset: {
-    symbol: string
-    name: string
-    address: string
-  }
-  tvl: number
-  // Optional: USD equivalent of TVL (computed via price hook)
+interface LeverageToken extends LeverageTokenConfig {
+  // Optional metrics (can be undefined if not available)
+  tvl?: number
   tvlUsd?: number
-  // Raw collateral and debt amounts in native asset units
-  collateralAmount: number
-  collateralAmountUsd?: number
-  debtAmount: number
-  debtAmountUsd?: number
-  apy: number
-  leverage: number
-  supplyCap: number
-  currentSupply: number
-  chainId: number
-  chainName: string
-  chainLogo: React.ComponentType<React.SVGProps<SVGSVGElement>>
-  // APY calculation properties
-  baseYield: number
-  borrowRate: number
-  rewardMultiplier?: number
+  supplyCap?: number
+  currentSupply?: number
   rank?: number
   // Optional: warning/note when data is partial (e.g., manager not deployed)
   dataWarning?: string
@@ -69,9 +44,19 @@ interface LeverageTokenTableProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
+  apyData?: APYBreakdownData // APY data for the first token (can be extended for multiple tokens)
+  isApyLoading?: boolean
+  isApyError?: boolean
 }
 
-export function LeverageTokenTable({ tokens, onTokenClick, className }: LeverageTokenTableProps) {
+export function LeverageTokenTable({
+  tokens,
+  onTokenClick,
+  className,
+  apyData,
+  isApyLoading,
+  isApyError,
+}: LeverageTokenTableProps) {
   const [sortBy, setSortBy] = useState('apy-desc')
   const [filters, setFilters] = useState({
     collateralAsset: 'all',
@@ -131,7 +116,9 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
     // Apply supply cap filter
     if (filters.supplyCap !== 'both') {
       const isNearCapacity = (token: LeverageToken) =>
-        (token.currentSupply / token.supplyCap) * 100 >= 90
+        token.currentSupply && token.supplyCap
+          ? (token.currentSupply / token.supplyCap) * 100 >= 90
+          : false
       if (filters.supplyCap === 'near-capacity') {
         filtered = filtered.filter(isNearCapacity)
       } else if (filters.supplyCap === 'available') {
@@ -149,16 +136,17 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
         case 'debtAsset':
           return item.debtAsset.symbol
         case 'available':
-          return item.supplyCap - item.currentSupply
+          return (item.supplyCap ?? 0) - (item.currentSupply ?? 0)
         case 'tvl':
           // Prefer USD value for sorting when available for cross-asset comparability
           return item.tvlUsd ?? 0
         case 'name':
           return item.name
         case 'apy':
-          return item.apy
+          // Per-row APY is not modeled here; neutral sort value
+          return 0
         case 'leverage':
-          return item.leverage
+          return item.leverageRatio
         case 'currentSupply':
           return item.currentSupply
         case 'supplyCap':
@@ -204,8 +192,10 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
   }
 
   const getSupplyCapOptions = () => {
-    const nearCapacityCount = tokens.filter(
-      (token) => (token.currentSupply / token.supplyCap) * 100 >= 90,
+    const nearCapacityCount = tokens.filter((token) =>
+      token.currentSupply && token.supplyCap
+        ? (token.currentSupply / token.supplyCap) * 100 >= 90
+        : false,
     ).length
     const availableCount = tokens.length - nearCapacityCount
 
@@ -337,7 +327,7 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
               ) : (
                 currentItems.map((token, index) => (
                   <motion.tr
-                    key={token.id}
+                    key={token.address}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -428,7 +418,7 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                     <TableCell className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end space-x-1">
                         <span className="text-green-400 font-medium text-sm">
-                          {formatAPY(token.apy)}
+                          {apyData?.totalAPY ? formatAPY(apyData.totalAPY, 2) : 'Loading...'}
                         </span>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -440,14 +430,20 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                             </button>
                           </TooltipTrigger>
                           <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                            <APYBreakdown data={calculateAPYBreakdown(token)} compact />
+                            <APYBreakdownTooltip
+                              token={token}
+                              compact
+                              {...(apyData && { apyData })}
+                              isLoading={isApyLoading ?? false}
+                              isError={isApyError ?? false}
+                            />
                           </TooltipContent>
                         </Tooltip>
                       </div>
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-center">
-                      <LeverageBadge leverage={token.leverage} size="md" />
+                      <LeverageBadge leverage={token.leverageRatio} size="md" />
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-center">
@@ -462,7 +458,10 @@ export function LeverageTokenTable({ tokens, onTokenClick, className }: Leverage
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-right">
-                      <SupplyCap currentSupply={token.currentSupply} supplyCap={token.supplyCap} />
+                      <SupplyCap
+                        currentSupply={token.currentSupply ?? 0}
+                        supplyCap={token.supplyCap ?? 0}
+                      />
                     </TableCell>
                   </motion.tr>
                 ))

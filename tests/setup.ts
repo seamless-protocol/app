@@ -65,6 +65,11 @@ vi.mock('@/features/leverage-tokens/utils/queryKeys', () => ({
     user: (addr: string, owner: string) => ['leverage-tokens', 'tokens', addr, 'user', owner],
     supply: (addr: string) => ['leverage-tokens', 'tokens', addr, 'supply'],
     detailedMetrics: (addr: string) => ['leverage-tokens', 'tokens', addr, 'detailed-metrics'],
+    apy: (addr: string) => ['leverage-tokens', 'tokens', addr, 'apy'],
+    external: {
+      borrowApy: (addr: string) => ['leverage-tokens', 'external', 'borrow-apy', addr],
+      rewardsApr: (addr: string) => ['leverage-tokens', 'external', 'rewards-apr', addr],
+    },
   },
 }))
 
@@ -97,6 +102,23 @@ vi.mock('@/features/governance/utils/constants', () => ({
   QUERY_SETTINGS: {
     gcTime: 300000,
   },
+}))
+
+// Mock APY calculation functions (only for the main hook test)
+vi.mock('@/features/leverage-tokens/utils/apy-calculations/apr-providers', () => ({
+  fetchAprForToken: vi.fn(),
+}))
+
+vi.mock('@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers', () => ({
+  fetchBorrowApyForToken: vi.fn(),
+}))
+
+vi.mock('@/features/leverage-tokens/utils/apy-calculations/leverage-ratios', () => ({
+  fetchLeverageRatios: vi.fn(),
+}))
+
+vi.mock('@/features/leverage-tokens/utils/apy-calculations/rewards-providers', () => ({
+  fetchGenericRewardsApr: vi.fn(),
 }))
 
 // Mock GraphQL fetchers

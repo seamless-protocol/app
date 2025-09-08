@@ -2,7 +2,7 @@ import { waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
 import { fetchLeverageTokenPriceComparison } from '@/lib/graphql/fetchers/leverage-tokens'
-import { hookTestUtils } from '../utils'
+import { hookTestUtils } from '../../../../utils'
 
 // Use the global mocks from tests/setup.ts
 const mockFetchLeverageTokenPriceComparison = vi.mocked(fetchLeverageTokenPriceComparison)

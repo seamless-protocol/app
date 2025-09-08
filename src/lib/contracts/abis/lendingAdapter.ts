@@ -40,4 +40,17 @@ export const lendingAdapterAbi = [
     ],
     stateMutability: 'view',
   },
+  {
+    type: 'function',
+    name: 'morphoMarketId',
+    inputs: [],
+    outputs: [
+      {
+        name: '',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
+    ],
+    stateMutability: 'view',
+  },
 ] as const satisfies Abi

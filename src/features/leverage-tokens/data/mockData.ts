@@ -24,14 +24,6 @@ export const mockKeyMetrics = {
   },
 }
 
-// Mock APY data
-export const mockAPY = {
-  total: 15.2,
-  baseYield: 8.5,
-  borrowRate: -3.2,
-  rewardMultiplier: 1.5,
-}
-
 // Mock supply data
 export const mockSupply = {
   currentSupply: 850000, // 850K tokens

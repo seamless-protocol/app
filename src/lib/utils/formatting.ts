@@ -75,7 +75,7 @@ export function formatAPY(apy: number, decimals: number = 2): string {
  * @param points - The points value to format
  */
 export function formatPoints(points: number): string {
-  return `${points.toLocaleString()}/day`
+  return `${points.toLocaleString()} x`
 }
 
 /**
