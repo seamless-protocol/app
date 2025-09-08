@@ -37,14 +37,13 @@ export class EtherFiAprProvider implements AprFetcher {
 
       const sevenDayApr = raw['7_day_apr']
       const sevenDayRestakingApr = raw['7_day_restaking_apr']
-      const { tvl, buffer_eth: bufferEth } = raw
+      const { buffer_eth: bufferEth } = raw
 
       const totalAPR = sevenDayApr + sevenDayRestakingApr
 
       const result: EtherFiAprData = {
         sevenDayApr,
         sevenDayRestakingApr,
-        tvl,
         bufferEth,
         totalAPR,
         stakingAPR: sevenDayApr,

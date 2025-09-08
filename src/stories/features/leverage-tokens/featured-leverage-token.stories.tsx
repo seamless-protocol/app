@@ -55,11 +55,13 @@ const mockToken = {
     symbol: 'SEAM',
     name: 'Seamless Protocol',
     address: '0x1234567890123456789012345678901234567890' as Address,
+    decimals: 18,
   },
   debtAsset: {
     symbol: 'USDC',
     name: 'USD Coin',
     address: '0xa0b86a33e6441b8c4c8c8c8c8c8c8c8c8c8c8c8c' as Address,
+    decimals: 6,
   },
   supplyCap: 1000000,
   currentSupply: 750000,
@@ -86,11 +88,13 @@ const mockTokens = [
       symbol: 'USDC',
       name: 'USD Coin',
       address: '0xa0b86a33e6441b8c4c8c8c8c8c8c8c8c8c8c8c8c' as Address,
+      decimals: 6,
     },
     debtAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether',
       address: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619' as Address,
+      decimals: 18,
     },
     leverageToken: {
       apyBreakdown: {

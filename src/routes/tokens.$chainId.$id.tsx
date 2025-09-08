@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Info } from 'lucide-react'
 import { useState } from 'react'
-import { formatUnits } from 'viem'
 import type { Address } from 'viem'
+import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { FAQ } from '@/components/FAQ'
@@ -16,11 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
-import {
-  createMockUserPosition,
-  mockKeyMetrics,
-  mockSupply,
-} from '@/features/leverage-tokens/data/mockData'
+import { createMockUserPosition } from '@/features/leverage-tokens/data/mockData'
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
@@ -120,15 +116,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     // Mock user position data (this would come from a hook in real implementation)
     const userPosition = createMockUserPosition(tokenConfig.symbol)
 
-    // Create mock token data for APY breakdown calculation
-    const mockTokenForAPY = {
-      ...tokenConfig,
-      // Optional metrics
-      tvl: mockKeyMetrics.tvl,
-      supplyCap: mockSupply.supplyCap,
-      currentSupply: mockSupply.currentSupply,
-    }
-
     const handleMint = () => {
       // TODO: Implement mint modal/functionality
       console.log('Mint clicked')
@@ -139,7 +126,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       console.log('Redeem clicked')
     }
 
-    // Create StatCard data for key metrics (TVL uses live state + USD approximation)
+    // Create StatCard data for key metrics (using live data where available)
     const keyMetricsCards = [
       {
         title: 'TVL',
@@ -153,14 +140,14 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
             : undefined,
       },
       {
-        title: 'Total Collateral',
-        stat: `${formatNumber(mockKeyMetrics.totalCollateral.amount, { thousandDecimals: 2 })} ${tokenConfig.collateralAsset.symbol}`,
-        caption: `~${formatCurrency(mockKeyMetrics.totalCollateral.amountUSD, { millionDecimals: 2, thousandDecimals: 0 })}`,
+        title: 'Total APY',
+        stat: apyData?.totalAPY ? formatAPY(apyData.totalAPY, 2) : 'Loading...',
+        caption: apyData?.totalAPY ? 'Including rewards & leverage' : undefined,
       },
       {
         title: 'Target Leverage',
         stat: `${tokenConfig.leverageRatio}x`,
-        caption: `Current: ${mockKeyMetrics.targetLeverage.current}x`,
+        caption: `Max leverage ratio`,
       },
     ]
 
@@ -264,7 +251,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 <h1 className="text-2xl sm:text-3xl font-bold text-white">{tokenConfig.name}</h1>
                 <div className="flex items-center space-x-1">
                   <Badge className="bg-green-500/10 text-green-400 border-green-400/20">
-                    {apyData?.totalAPY ? `${formatAPY(apyData.totalAPY, 1)} APY` : 'Loading...'}
+                    {apyData?.totalAPY ? `${formatAPY(apyData.totalAPY, 2)} APY` : 'Loading...'}
                   </Badge>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -277,7 +264,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     </TooltipTrigger>
                     <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
                       <APYBreakdownTooltip
-                        token={mockTokenForAPY}
+                        token={tokenConfig}
                         {...(apyData && { apyData })}
                         isLoading={isApyLoading ?? false}
                         isError={isApyError ?? false}

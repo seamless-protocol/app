@@ -391,7 +391,7 @@ export function LeverageTokenTable({
                     <TableCell className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end space-x-1">
                         <span className="text-green-400 font-medium text-sm">
-                          {apyData?.totalAPY ? formatAPY(apyData.totalAPY) : 'Loading...'}
+                          {apyData?.totalAPY ? formatAPY(apyData.totalAPY, 2) : 'Loading...'}
                         </span>
                         <Tooltip>
                           <TooltipTrigger asChild>

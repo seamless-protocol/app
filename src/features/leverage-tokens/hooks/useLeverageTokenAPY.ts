@@ -2,12 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import { useChainId, useConfig } from 'wagmi'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
+import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { fetchAprForToken } from '../utils/apy-calculations/apr-providers'
 import { fetchBorrowApyForToken } from '../utils/apy-calculations/borrow-apy-providers'
 import { fetchLeverageRatios } from '../utils/apy-calculations/leverage-ratios'
 import { fetchGenericRewardsApr } from '../utils/apy-calculations/rewards-providers'
 import { ltKeys } from '../utils/queryKeys'
-import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 
 interface UseLeverageTokenAPYOptions {
   tokenAddress?: Address

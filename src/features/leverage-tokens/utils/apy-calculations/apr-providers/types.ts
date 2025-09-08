@@ -8,10 +8,6 @@ export interface BaseAprData {
   restakingAPR?: number
   /** Total combined APR */
   totalAPR: number
-  /** Total Value Locked */
-  tvl?: number
-  /** Additional protocol-specific data */
-  metadata?: Record<string, any>
 }
 
 /**

@@ -32,7 +32,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
         <div className="flex justify-between">
           <span className="text-slate-300">Staking Yield:</span>
           <span className="text-green-400 font-medium">
-            {formatPercentage(data.stakingYield, { showSign: true })}
+            {formatPercentage(data.stakingYield, { decimals: 2, showSign: true })}
           </span>
         </div>
 
@@ -40,7 +40,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
         <div className="flex justify-between">
           <span className="text-slate-300">Restaking Yield:</span>
           <span className="text-blue-400 font-medium">
-            {formatPercentage(data.restakingYield, { showSign: true })}
+            {formatPercentage(data.restakingYield, { decimals: 2, showSign: true })}
           </span>
         </div>
 
@@ -48,7 +48,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
         <div className="flex justify-between">
           <span className="text-slate-300">Borrow Rate:</span>
           <span className="text-red-400 font-medium">
-            {formatPercentage(data.borrowRate, { showSign: true })}
+            {formatPercentage(data.borrowRate, { decimals: 2, showSign: true })}
           </span>
         </div>
 
@@ -56,7 +56,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
         <div className="flex justify-between">
           <span className="text-slate-300">Rewards APR:</span>
           <span className="text-cyan-400 font-medium">
-            {formatPercentage(data.rewardsAPR, { showSign: true })}
+            {formatPercentage(data.rewardsAPR, { decimals: 2, showSign: true })}
           </span>
         </div>
 
@@ -71,7 +71,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
           <div className="flex justify-between font-semibold">
             <span className="text-white">Total APY:</span>
             <span className="text-green-400">
-              {formatPercentage(data.totalAPY, { showSign: true })}
+              {formatPercentage(data.totalAPY, { decimals: 2, showSign: true })}
             </span>
           </div>
         </div>

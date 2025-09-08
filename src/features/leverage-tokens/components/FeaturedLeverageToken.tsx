@@ -60,7 +60,7 @@ export function FeaturedLeverageToken({
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">APY</span>
               <span className="text-green-400 font-medium">
-                {apyData?.totalAPY ? formatAPY(apyData.totalAPY, 2) : 'Loading...'}
+                {apyData?.totalAPY !== undefined ? formatAPY(apyData.totalAPY, 2) : 'Loading...'}
               </span>
             </div>
 
@@ -68,7 +68,9 @@ export function FeaturedLeverageToken({
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">Reward APR</span>
               <span className="text-cyan-400 font-medium">
-                {apyData?.rewardsAPR ? formatAPY(apyData.rewardsAPR, 2) : 'Loading...'}
+                {apyData?.rewardsAPR !== undefined
+                  ? formatAPY(apyData.rewardsAPR, 2)
+                  : 'Loading...'}
               </span>
             </div>
 
@@ -76,7 +78,9 @@ export function FeaturedLeverageToken({
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">Points</span>
               <span className="text-yellow-400 font-medium">
-                {apyData?.points.toLocaleString()} x
+                {apyData?.points !== undefined
+                  ? `${apyData.points.toLocaleString()} x`
+                  : 'Loading...'}
               </span>
             </div>
 

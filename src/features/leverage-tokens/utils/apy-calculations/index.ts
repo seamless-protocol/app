@@ -3,7 +3,6 @@ export { fetchAprForToken, fetchGenericApr } from './apr-providers'
 // APR provider implementations
 export { type EtherFiAprData, EtherFiAprProvider } from './apr-providers/etherfi'
 export type { AprFetcher, BaseAprData } from './apr-providers/types'
-
 // Borrow APY providers
 export { fetchBorrowApyForToken, fetchGenericBorrowApy } from './borrow-apy-providers'
 export { type MorphoBorrowApyData, MorphoBorrowApyProvider } from './borrow-apy-providers/morpho'
