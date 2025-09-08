@@ -35,7 +35,7 @@ export function KyberSwapWidget() {
         <button
           type="button"
           onClick={handleSwapClick}
-          className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-accent/50 rounded-md gap-1.5 has-[>svg]:px-2.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-3 h-9 sm:h-10 border border-slate-700 hover:border-purple-500/50"
+          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-accent/50 rounded-md gap-1.5 has-[>svg]:px-2.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-3 h-9 sm:h-10 border border-slate-700 hover:border-purple-500/50"
           aria-label="Open swap and bridge interface (Alt+S)"
           title="Swap & Bridge"
         >
@@ -65,7 +65,7 @@ export function KyberSwapWidget() {
         <button
           type="button"
           onClick={handleSwapClick}
-          className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-accent/50 rounded-md gap-1.5 has-[>svg]:px-2.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-3 h-9 sm:h-10 border border-slate-700 hover:border-purple-500/50"
+          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-accent/50 rounded-md gap-1.5 has-[>svg]:px-2.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-3 h-9 sm:h-10 border border-slate-700 hover:border-purple-500/50"
           aria-label="Open swap and bridge interface (Alt+S)"
           title="Swap & Bridge"
         >
@@ -80,7 +80,7 @@ export function KyberSwapWidget() {
           <div
             data-state="open"
             data-slot="dialog-overlay"
-            className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50"
+            className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
             style={{ pointerEvents: 'auto' }}
             data-aria-hidden="true"
             aria-hidden="true"
@@ -91,12 +91,12 @@ export function KyberSwapWidget() {
               }
             }}
           >
-            <div className="flex items-center justify-center min-h-screen p-4 relative">
-              {/* Close Button - positioned relative to screen */}
+            <div className="relative">
+              {/* Close Button - positioned relative to widget container */}
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-50 flex items-center justify-center text-xl font-light"
+                className="cursor-pointer absolute -top-4 -right-4 w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-50 flex items-center justify-center text-xl font-light shadow-lg"
                 aria-label="Close swap widget"
               >
                 ×
