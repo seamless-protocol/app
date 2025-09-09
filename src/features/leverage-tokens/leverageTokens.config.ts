@@ -45,7 +45,7 @@ export interface LeverageTokenConfig {
   chainId: number
   chainName: string
   chainLogo: React.ComponentType<React.SVGProps<SVGSVGElement>>
-  // Supply cap (token units)
+  // Supply cap (token units) - hardcoded until contract supports dynamic fetching
   supplyCap?: number
 
   // Asset configuration

@@ -33,10 +33,7 @@ export async function invalidateAfterReceipt(
     chainId: _chainId,
     includeUser,
     refetchType: 'active',
-  }
-  if (owner) {
-    // Only include owner when defined to satisfy exactOptionalPropertyTypes
-    ;(payload as any).owner = owner
+    ...(owner && { owner }),
   }
   await invalidateLeverageTokenQueries(qc, payload)
 }

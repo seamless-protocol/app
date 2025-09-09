@@ -90,6 +90,8 @@ export function useLeverageTokensTableData() {
       enabled: managerPlan.contracts.length > 0,
       staleTime: STALE_TIME.supply,
       refetchInterval: 30_000,
+      retry: 1, // Reduce retries to prevent excessive failed calls
+      retryDelay: 1000,
     },
   })
 
@@ -116,13 +118,25 @@ export function useLeverageTokensTableData() {
   })
 
   const tokens: Array<LeverageToken> = useMemo(() => {
+    // If there's a critical error, return empty array to prevent crashes
+    if (isManagerError && managerError) {
+      console.error('Critical error in useLeverageTokensTableData:', managerError)
+      return []
+    }
+
     return configs.map((cfg, i) => {
       const idx = managerPlan.indexMap[i]
+      const configRes = idx ? managerData?.[idx.configIdx] : undefined
       const stateRes = idx ? managerData?.[idx.stateIdx] : undefined
       const supplyRes = idx ? managerData?.[idx.supplyIdx] : undefined
 
       let equity = 0n
       let totalSupply = 0n
+
+      // Handle config call failure gracefully
+      if (configRes && configRes.status !== 'success') {
+        console.warn(`Token ${cfg.address} not registered in manager:`, configRes.error)
+      }
 
       if (stateRes && stateRes.status === 'success') {
         const state = stateRes.result as {
@@ -156,13 +170,14 @@ export function useLeverageTokensTableData() {
       const result: LeverageToken = {
         ...cfg,
         currentSupply,
+        supplyCap: cfg.supplyCap ?? 0,
         tvl,
         ...(tvlUsd !== undefined && { tvlUsd }),
       }
 
       return result
     })
-  }, [configs, managerData, usdPricesByChain, managerPlan.indexMap])
+  }, [configs, managerData, usdPricesByChain, managerPlan.indexMap, isManagerError, managerError])
 
   return {
     data: tokens,
