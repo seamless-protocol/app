@@ -61,25 +61,56 @@ jobs:
         with:
           bun-version: latest
       
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-      
       - name: Install dependencies
         run: bun install --frozen-lockfile
       
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
       
-      - name: Run E2E tests
+      - name: Decide E2E Backend
+        id: decide-e2e
+        run: |
+          if [ -n "${{ secrets.TENDERLY_ACCESS_KEY }}" ] && [ -n "${{ secrets.TENDERLY_ACCOUNT_SLUG }}" ] && [ -n "${{ secrets.TENDERLY_PROJECT_SLUG }}" ]; then
+            echo "mode=tenderly" >> $GITHUB_OUTPUT
+          else
+            echo "mode=anvil" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install Foundry (Anvil)
+        if: steps.decide-e2e.outputs.mode == 'anvil'
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Start Anvil Base Fork
+        if: steps.decide-e2e.outputs.mode == 'anvil'
+        run: |
+          nohup bun run anvil:base > anvil.log 2>&1 &
+          for i in {1..60}; do nc -z 127.0.0.1 8545 && break || sleep 1; done
+          curl -s -X POST -H "Content-Type: application/json" \
+            --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
+            http://127.0.0.1:8545
+        env:
+          ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
+
+      - name: Run E2E tests on Anvil
+        if: steps.decide-e2e.outputs.mode == 'anvil'
         run: bun run test:e2e
         env:
           VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
-          VITE_BASE_RPC_URL: ${{ vars.VITE_BASE_RPC_URL }}
+          VITE_BASE_RPC_URL: http://127.0.0.1:8545
           VITE_ETHEREUM_RPC_URL: ${{ vars.VITE_ETHEREUM_RPC_URL }}
-          # Dedicated RPC endpoint for Anvil fork (better reliability than public RPC)
           ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
+
+      - name: Run E2E tests on Tenderly (JIT fork)
+        if: steps.decide-e2e.outputs.mode == 'tenderly'
+        run: node scripts/run-e2e-on-tenderly-vnet.js
+        env:
+          TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
+          TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
+          TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_CHAIN_ID: 8453
+          VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
       
       - name: Upload test results
         uses: actions/upload-artifact@v4
