@@ -32,7 +32,7 @@ function StatCard({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-slate-400">{title}</p>
-            <p className="text-xl sm:text-2xl font-bold text-white">{stat}</p>
+            <div className="text-xl sm:text-2xl font-bold text-white">{stat}</div>
             {caption && <p className="text-xs text-slate-400 mt-1">{caption}</p>}
           </div>
           {icon && (

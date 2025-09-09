@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { stakingFAQData } from '@/features/staking/data/faqData'
-import { useStakingRewardsData, useStakingStats } from '@/features/staking/hooks/useStakingStats'
+import { useStakingProtocolStats } from '@/features/staking/hooks/useStakingProtocolStats'
+import { useStakingUserStats } from '@/features/staking/hooks/useStakingUserStats'
 
 export const Route = createFileRoute('/staking')({
   component: StakingPage,
@@ -14,8 +15,8 @@ export const Route = createFileRoute('/staking')({
 
 function StakingPage() {
   // Fetch staking data using hooks
-  const { data: stakingStats, isLoading: isStatsLoading } = useStakingStats()
-  const { data: rewardsData, isLoading: isRewardsLoading } = useStakingRewardsData()
+  const { data: protocolStats, isLoading: isProtocolStatsLoading } = useStakingProtocolStats()
+  const { data: userStats, isLoading: isUserStatsLoading } = useStakingUserStats()
 
   const handleClaimRewards = () => {
     console.log('Claim rewards to be implemented')
@@ -72,11 +73,11 @@ function StakingPage() {
                     <span className="text-white text-xs font-bold">S</span>
                   </div>
                   <span className="text-2xl font-bold text-white">
-                    {isStatsLoading ? 'Loading...' : stakingStats?.currentHoldings?.amount}
+                    {isUserStatsLoading ? 'Loading...' : userStats?.currentHoldingsAmount}
                   </span>
                 </div>
               }
-              caption={isStatsLoading ? 'Loading...' : stakingStats?.currentHoldings?.usdValue}
+              caption={isUserStatsLoading ? 'Loading...' : userStats?.currentHoldingsUsdValue}
             />
 
             {/* Claimable Rewards - Custom card with claim button */}
@@ -86,20 +87,16 @@ function StakingPage() {
                   <div>
                     <p className="text-lg font-medium text-white mb-2">Claimable rewards</p>
                     <p className="text-3xl font-bold text-white">
-                      {isRewardsLoading
-                        ? 'Loading...'
-                        : rewardsData?.claimableRewards
-                          ? `$${rewardsData.claimableRewards.value}`
-                          : undefined}
+                      {isUserStatsLoading ? 'Loading...' : userStats?.claimableRewardsAmount}
                     </p>
                     <p className="text-sm text-slate-400 mt-1">Stake SEAM to receive rewards.</p>
                   </div>
                   <Button
                     onClick={handleClaimRewards}
                     disabled={
-                      isRewardsLoading ||
-                      !rewardsData?.claimableRewards ||
-                      rewardsData.claimableRewards.value === '0.00'
+                      isUserStatsLoading ||
+                      !userStats?.claimableRewardsAmount ||
+                      userStats.claimableRewardsAmount === '$0.00'
                     }
                     className="bg-slate-600 hover:bg-slate-500 text-white px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -114,22 +111,18 @@ function StakingPage() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <StatCard
               title="Total Staked"
-              stat={isStatsLoading ? 'Loading...' : stakingStats?.keyMetrics?.totalStaked?.amount}
-              caption={
-                isStatsLoading ? 'Loading...' : stakingStats?.keyMetrics?.totalStaked?.usdValue
-              }
+              stat={isProtocolStatsLoading ? 'Loading...' : protocolStats?.totalStakedAmount}
+              caption={isProtocolStatsLoading ? 'Loading...' : protocolStats?.totalStakedUsdValue}
             />
 
             <StatCard
               title="Total APR"
-              stat={isStatsLoading ? 'Loading...' : stakingStats?.keyMetrics?.totalAPR?.percentage}
+              stat={isProtocolStatsLoading ? 'Loading...' : protocolStats?.totalAPR}
             />
 
             <StatCard
               title="Unstaking cooldown"
-              stat={
-                isStatsLoading ? 'Loading...' : stakingStats?.keyMetrics?.unstakingCooldown?.days
-              }
+              stat={isProtocolStatsLoading ? 'Loading...' : protocolStats?.unstakingCooldown}
             />
           </div>
 
