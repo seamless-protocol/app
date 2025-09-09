@@ -41,7 +41,8 @@ export default defineConfig({
       `VITE_BASE_RPC_URL=${BASE_RPC_URL}`,
       `VITE_ANVIL_RPC_URL=${BASE_RPC_URL}`,
       `VITE_TEST_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`,
-      `bun dev`,
+      // Ensure Vite listens on the URL Playwright expects
+      `bunx --bun vite --port 3000 --strictPort`,
     ].join(' '),
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
