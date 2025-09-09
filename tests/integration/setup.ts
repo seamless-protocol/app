@@ -81,11 +81,17 @@ export const walletClient = createWalletClient({
 }).extend(publicActions)
 
 // Optional admin client for Tenderly (for setBalance / setErc20Balance)
-const adminRpcUrl =
-  mode === 'tenderly' ? (Env.TENDERLY_ADMIN_RPC_URL ?? Env.TENDERLY_RPC_URL) : Env.ANVIL_RPC_URL
+let adminRpcUrl: string
+if (mode === 'tenderly') {
+  const primary = Env.TENDERLY_RPC_URL
+  if (!primary) throw new Error('TENDERLY_RPC_URL is required in tenderly mode')
+  adminRpcUrl = Env.TENDERLY_ADMIN_RPC_URL ?? primary
+} else {
+  adminRpcUrl = Env.ANVIL_RPC_URL
+}
 export const adminClient = createPublicClient({
   chain,
-  transport: http(adminRpcUrl!),
+  transport: http(adminRpcUrl),
 })
 
 // Test Actions (only available on Anvil)
@@ -159,8 +165,8 @@ export async function topUpNative(to: Address, ether: string) {
   })
 }
 
-  /** Set ERC20 balance directly via Tenderly admin, if available */
-  export async function setErc20Balance(token: Address, to: Address, humanUnits: string) {
+/** Set ERC20 balance directly via Tenderly admin, if available */
+export async function setErc20Balance(token: Address, to: Address, humanUnits: string) {
   // Convert human to hex via decimals read
   const decimals = (await publicClient.readContract({
     address: token,
