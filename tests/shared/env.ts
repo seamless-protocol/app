@@ -15,6 +15,7 @@ const Defaults = {
 // Unified env schema for tests (integration + E2E)
 const EnvSchema = z.object({
   // RPC selection
+  TEST_RPC_URL: z.string().url().optional(),
   TENDERLY_RPC_URL: z.string().url().optional(),
   TENDERLY_ADMIN_RPC_URL: z.string().url().optional(),
   ANVIL_RPC_URL: z.string().url().default(Defaults.ANVIL_RPC_URL),
@@ -59,13 +60,14 @@ const EnvSchema = z.object({
 
 export const Env = EnvSchema.parse(process.env)
 
-export const mode: Mode = Env.TENDERLY_RPC_URL ? 'tenderly' : 'anvil'
+const tenderlyPrimary = Env.TEST_RPC_URL ?? Env.TENDERLY_RPC_URL
+export const mode: Mode = tenderlyPrimary ? 'tenderly' : 'anvil'
 
 let primaryRpc: string
 let adminRpc: string
 if (mode === 'tenderly') {
-  const primary = Env.TENDERLY_RPC_URL
-  if (!primary) throw new Error('TENDERLY_RPC_URL required in tenderly mode')
+  const primary = tenderlyPrimary
+  if (!primary) throw new Error('TEST_RPC_URL or TENDERLY_RPC_URL required in tenderly mode')
   primaryRpc = primary
   adminRpc = Env.TENDERLY_ADMIN_RPC_URL ?? primary
 } else {

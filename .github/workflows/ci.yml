@@ -102,13 +102,23 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Decide Integration Backend
+        id: decide
+        run: |
+          if [ -n "${{ secrets.TENDERLY_ACCESS_KEY }}" ] && [ -n "${{ secrets.TENDERLY_ACCOUNT_SLUG }}" ] && [ -n "${{ secrets.TENDERLY_PROJECT_SLUG }}" ]; then
+            echo "mode=tenderly" >> $GITHUB_OUTPUT
+          else
+            echo "mode=anvil" >> $GITHUB_OUTPUT
+          fi
+
       - name: Install Foundry (Anvil)
+        if: steps.decide.outputs.mode == 'anvil'
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: stable
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
 
       - name: Prepare integration env
         run: |
@@ -116,6 +126,7 @@ jobs:
           echo "Integration test environment prepared"
 
       - name: Start Anvil Base Fork
+        if: steps.decide.outputs.mode == 'anvil'
         run: |
           nohup bun run anvil:base > anvil.log 2>&1 &
           for i in {1..60}; do nc -z 127.0.0.1 8545 && break || sleep 1; done
@@ -125,8 +136,18 @@ jobs:
         env:
           ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
 
-      - name: Run integration tests
+      - name: Run integration tests on Anvil
+        if: steps.decide.outputs.mode == 'anvil'
         run: bun run test:integration
+
+      - name: Run integration tests on Tenderly (JIT fork)
+        if: steps.decide.outputs.mode == 'tenderly'
+        run: node scripts/run-integration-on-tenderly-vnet.js
+        env:
+          TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
+          TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
+          TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_CHAIN_ID: 8453
 
 
   build:
