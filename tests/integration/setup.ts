@@ -94,6 +94,16 @@ export const adminClient = createPublicClient({
   transport: http(adminRpcUrl),
 })
 
+// Helper to call non-standard/admin RPC methods without type errors
+async function adminRequest<T = unknown>(method: string, params: Array<any> = []): Promise<T> {
+  const req = (
+    adminClient as unknown as {
+      request: (args: { method: string; params?: Array<any> }) => Promise<any>
+    }
+  ).request
+  return req({ method, params }) as Promise<T>
+}
+
 // Test Actions (only available on Anvil)
 export const testClient =
   mode === 'anvil'
@@ -136,8 +146,8 @@ export async function takeSnapshot(): Promise<Hash> {
     return await testClient.snapshot()
   }
   // Tenderly: use evm_snapshot (returns string id)
-  const id = (await adminClient.request({ method: 'evm_snapshot', params: [] })) as string
-  return id as Hash
+  const id = await adminRequest<string>('evm_snapshot', [])
+  return id as unknown as Hash
 }
 
 export async function revertSnapshot(id: Hash) {
@@ -145,7 +155,7 @@ export async function revertSnapshot(id: Hash) {
     await testClient.revert({ id })
     return
   }
-  await adminClient.request({ method: 'evm_revert', params: [id] })
+  await adminRequest('evm_revert', [id])
 }
 
 /** ──────────────────────────────────────────────────────────────────────
@@ -159,10 +169,7 @@ export async function topUpNative(to: Address, ether: string) {
   }
   // Tenderly admin method expects hex balance
   const value = toHex(parseEther(ether))
-  await adminClient.request({
-    method: 'tenderly_setBalance',
-    params: [to, value],
-  })
+  await adminRequest('tenderly_setBalance', [to, value])
 }
 
 /** Set ERC20 balance directly via Tenderly admin, if available */
@@ -187,8 +194,5 @@ export async function setErc20Balance(token: Address, to: Address, humanUnits: s
   const raw = parseUnits(humanUnits, decimals)
   const valueHex = toHex(raw)
 
-  await adminClient.request({
-    method: 'tenderly_setErc20Balance',
-    params: [token, to, valueHex],
-  })
+  await adminRequest('tenderly_setErc20Balance', [token, to, valueHex])
 }
