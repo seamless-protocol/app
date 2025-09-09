@@ -50,7 +50,9 @@ export function FAQ({ title = 'Frequently Asked Questions', items, className = '
                   variant="ghost"
                   className="w-full justify-between p-4 text-left bg-slate-800/50 hover:bg-slate-800/70 border border-slate-700 hover:border-slate-600 rounded-lg"
                 >
-                  <span className="text-white font-medium">{faq.question}</span>
+                  <span className="text-white font-medium text-left break-words pr-2">
+                    {faq.question}
+                  </span>
                   {openFAQs.includes(faq.id) ? (
                     <ChevronUp className="w-4 h-4 text-slate-400" />
                   ) : (

@@ -1,45 +1,24 @@
-export interface StakingMockData {
-  currentHoldings: {
-    amount: string
-    usdValue: string
-  }
-  claimableRewards: {
-    amount: string
-    description: string
-  }
-  keyMetrics: {
-    totalStaked: {
-      amount: string
-      usdValue: string
-    }
-    totalAPR: {
-      percentage: string
-    }
-    unstakingCooldown: {
-      days: string
-    }
-  }
-}
+import type { StakingStats } from '@/features/staking/hooks/useStakingStats'
 
-export const stakingMockData: StakingMockData = {
+export const stakingMockData: StakingStats = {
   currentHoldings: {
-    amount: "0.00 stkSEAM",
-    usdValue: "$0.00"
+    amount: '0.00 stkSEAM',
+    usdValue: '$0.00',
   },
   claimableRewards: {
-    amount: "$0.00",
-    description: "Stake SEAM to receive rewards"
+    amount: '$0.00',
+    description: 'Stake SEAM to receive rewards',
   },
   keyMetrics: {
     totalStaked: {
-      amount: "3.70M SEAM",
-      usdValue: "$7.96M"
+      amount: '3.70M SEAM',
+      usdValue: '$7.96M',
     },
     totalAPR: {
-      percentage: "35.72%",
+      percentage: '35.72%',
     },
     unstakingCooldown: {
-      days: "7 days"
-    }
-  }
+      days: '7 days',
+    },
+  },
 }

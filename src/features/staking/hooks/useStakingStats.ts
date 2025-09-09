@@ -18,11 +18,9 @@ export interface StakingStats {
     }
     totalAPR: {
       percentage: string
-      description: string
     }
     unstakingCooldown: {
       days: string
-      description: string
     }
   }
 }
@@ -36,10 +34,7 @@ export function useStakingStats() {
   return useQuery({
     queryKey: stakingKeys.stats(),
     queryFn: async (): Promise<StakingStats> => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 350))
-
-      return stakingMockData
+      return Promise.resolve(stakingMockData)
     },
     staleTime: 4 * 60 * 1000, // 4 minutes
     refetchInterval: 3 * 60 * 1000, // 3 minutes
@@ -55,20 +50,18 @@ export function useStakingTotalAssets() {
     queryKey: stakingKeys.stats(),
     queryFn: async () => {
       // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 200))
-
-      return {
+      return Promise.resolve({
         totalAssets: {
-          value: "3.70M",
-          symbol: "SEAM",
-          decimals: 18
+          value: '3.70M',
+          symbol: 'SEAM',
+          decimals: 18,
         },
         totalAssetsUSD: {
-          value: "7.96M",
-          symbol: "USD",
-          decimals: 2
-        }
-      }
+          value: '7.96M',
+          symbol: 'USD',
+          decimals: 2,
+        },
+      })
     },
     staleTime: 4 * 60 * 1000, // 4 minutes
     refetchInterval: 3 * 60 * 1000, // 3 minutes
@@ -83,21 +76,18 @@ export function useStakingRewardsData() {
   return useQuery({
     queryKey: stakingKeys.rewards(),
     queryFn: async () => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 250))
-
-      return {
+      return Promise.resolve({
         totalApr: {
-          value: "35.72",
-          symbol: "%",
-          decimals: 2
+          value: '35.72',
+          symbol: '%',
+          decimals: 2,
         },
         claimableRewards: {
-          value: "0.00",
-          symbol: "USD",
-          decimals: 2
-        }
-      }
+          value: '0.00',
+          symbol: 'USD',
+          decimals: 2,
+        },
+      })
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
     refetchInterval: 1 * 60 * 1000, // 1 minute

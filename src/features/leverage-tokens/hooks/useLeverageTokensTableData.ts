@@ -170,14 +170,14 @@ export function useLeverageTokensTableData() {
       const result: LeverageToken = {
         ...cfg,
         currentSupply,
-        supplyCap: cfg.supplyCap,
+        supplyCap: cfg.supplyCap ?? 0,
         tvl,
         ...(tvlUsd !== undefined && { tvlUsd }),
       }
 
       return result
     })
-  }, [configs, managerData, usdPricesByChain, managerPlan.indexMap])
+  }, [configs, managerData, usdPricesByChain, managerPlan.indexMap, isManagerError, managerError])
 
   return {
     data: tokens,
