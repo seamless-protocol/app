@@ -45,6 +45,6 @@ export default defineConfig({
     ].join(' '),
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 30000, // Allow more time for test mode startup
+    timeout: 90000, // Allow more time for test mode startup in CI
   },
 })
