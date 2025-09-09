@@ -17,6 +17,10 @@ concurrency:
 
 jobs:
   test:
+    # Only run when Tenderly secrets are available and PR is from same repo
+    if: >-
+      ${{ (secrets.TENDERLY_ACCESS_KEY != '' || secrets.TENDERLY_TOKEN != '')
+          && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.55.0-noble
