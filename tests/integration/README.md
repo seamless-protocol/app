@@ -1,6 +1,6 @@
-# Integration Tests with Anvil Base Fork
+# Integration Tests (Tenderly VNet or Anvil Fork)
 
-This directory contains integration tests that run against a local Anvil fork of Base mainnet, replacing the previous Tenderly-based setup.
+This directory contains integration tests that run against a Tenderly Virtual TestNet (default when configured) or a local Anvil fork of Base mainnet.
 
 ## Quick Start
 
@@ -14,31 +14,40 @@ foundryup
 
 ### Setup
 
-1. **Configure environment**:
+1. Configure environment:
    ```bash
    cp .env.example .env
-   # Edit .env with your Base RPC URL
+   # Choose mode via env. Tenderly is used automatically when TENDERLY_RPC_URL is set.
+   # For Tenderly (default when set):
+   #   TENDERLY_RPC_URL=https://rpc.tenderly.co/fork/<your-fork-id>
+   #   TENDERLY_ADMIN_RPC_URL=https://rpc.tenderly.co/fork/<your-fork-id>  # optional, often same as RPC
+   # For Anvil (fallback when Tenderly is not configured):
+   #   ANVIL_BASE_FORK_URL=https://mainnet.base.org
    ```
 
-2. **Start Anvil Base fork** (in one terminal):
+2. When using Anvil, start the Base fork (in one terminal):
    ```bash
    ANVIL_BASE_FORK_URL=https://mainnet.base.org bun run anvil:base
    ```
 
-3. **Run integration tests** (in another terminal):
+3. Run integration tests (in another terminal):
    ```bash
    bun run test:integration
    ```
 
 ## Architecture
 
-### Anvil Advantages over Tenderly
+### Modes
 
-- ✅ **No API limits** - Runs locally
-- ✅ **Faster execution** - No network latency
-- ✅ **Deterministic** - Consistent state across runs  
-- ✅ **Free** - No external service costs
-- ✅ **CI-friendly** - Easy to setup in GitHub Actions
+- Tenderly VNet (default when `TENDERLY_RPC_URL` is set):
+  - Pros: real hosted fork, easy admin balance methods, works without Foundry
+  - Funding: `tenderly_setBalance` / `tenderly_setErc20Balance`
+  - Snapshot: `evm_snapshot` / `evm_revert`
+
+- Anvil Base Fork (fallback):
+  - Pros: no external dependency, fast and free
+  - Funding: `setBalance`, WETH `deposit()`, or impersonation of rich holders
+  - Snapshot: `snapshot` / `revert` via Viem Test Actions
 
 ### Test Structure
 
@@ -53,10 +62,10 @@ tests/integration/
 
 ### Key Components
 
-#### Test Client (setup.ts)
-- **Public Client**: Read blockchain state
-- **Wallet Client**: Sign and send transactions  
-- **Test Client**: Anvil-specific actions (setBalance, impersonateAccount, snapshot/revert)
+#### Setup (setup.ts)
+- Mode: `tenderly` (when env present) or `anvil`
+- Clients: Public + Wallet; and an Admin client for funding/snapshots
+- Helpers: `topUpNative`, `setErc20Balance`, `takeSnapshot`, `revertSnapshot`
 
 #### Funding Strategy (utils.ts)
 1. **WETH**: Use `deposit()` function for deterministic funding
@@ -131,26 +140,9 @@ For GitHub Actions, add this step before running tests:
     ANVIL_BASE_FORK_URL: https://mainnet.base.org
 ```
 
-## Migration from Tenderly
+## Tenderly vs Anvil
 
-The following changes were made:
-
-### Removed
-- ❌ `TEST_TENDERLY_ADMIN_RPC_BASE` environment variable
-- ❌ `tenderly_setBalance` / `tenderly_setErc20Balance` RPC calls
-- ❌ External API dependencies
-
-### Added  
-- ✅ `ANVIL_BASE_FORK_URL` / `ANVIL_RPC_URL` configuration
-- ✅ Viem Test Client with `setBalance` / `impersonateAccount`
-- ✅ WETH deposit funding strategy
-- ✅ `anvil:base` package.json script
-
-### Preserved
-- ✅ All existing test logic and assertions
-- ✅ `withFork()` wrapper pattern
-- ✅ Snapshot/revert isolation
-- ✅ Contract address configuration
+Both modes share the same tests and helpers. Tenderly is preferred when configured; Anvil is provided for local/offline workflows and CI without secrets.
 
 ## Performance
 

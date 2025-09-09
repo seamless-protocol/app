@@ -10,6 +10,8 @@ import {
   testClient,
   topUpNative,
   walletClient,
+  mode,
+  setErc20Balance,
 } from './setup'
 
 // --------- Minimal ERC20 ABI slice ----------
@@ -79,6 +81,7 @@ async function fundErc20ViaImpersonation(
   to: Address,
   human: string,
 ): Promise<boolean> {
+  if (mode === 'tenderly') return false
   const holder = RICH_HOLDERS[getAddress(token)]
   if (!holder) return false
 
@@ -119,6 +122,11 @@ async function fundErc20ViaStorageWrite(): Promise<never> {
 /** Top up ERC-20 balance using safe funding strategies */
 export async function topUpErc20(token: Address, to: Address, human: string) {
   if (await fundErc20ViaWethDeposit(token, to, human)) return
+  // Prefer Tenderly admin if available
+  if (mode === 'tenderly') {
+    await setErc20Balance(token, to, human)
+    return
+  }
   if (await fundErc20ViaImpersonation(token, to, human)) return
   await fundErc20ViaStorageWrite()
 }
