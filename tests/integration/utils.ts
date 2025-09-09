@@ -4,14 +4,14 @@ import {
   account,
   extraAccounts,
   extraWallets,
+  mode,
   publicClient,
   revertSnapshot,
+  setErc20Balance,
   takeSnapshot,
   testClient,
   topUpNative,
   walletClient,
-  mode,
-  setErc20Balance,
 } from './setup'
 
 // --------- Minimal ERC20 ABI slice ----------
