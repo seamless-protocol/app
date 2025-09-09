@@ -70,7 +70,7 @@ jobs:
       - name: Decide E2E Backend
         id: decide-e2e
         run: |
-          if [ -n "${{ secrets.TENDERLY_ACCESS_KEY }}" ] && [ -n "${{ secrets.TENDERLY_ACCOUNT_SLUG }}" ] && [ -n "${{ secrets.TENDERLY_PROJECT_SLUG }}" ]; then
+          if [ -n "${{ secrets.TENDERLY_ACCESS_KEY }}" ] && { [ -n "${{ secrets.TENDERLY_ACCOUNT }}" ] || [ -n "${{ secrets.TENDERLY_ACCOUNT_SLUG }}" ]; } && { [ -n "${{ secrets.TENDERLY_PROJECT }}" ] || [ -n "${{ secrets.TENDERLY_PROJECT_SLUG }}" ]; }; then
             echo "mode=tenderly" >> $GITHUB_OUTPUT
           else
             echo "mode=anvil" >> $GITHUB_OUTPUT
@@ -106,7 +106,9 @@ jobs:
         if: steps.decide-e2e.outputs.mode == 'tenderly'
         run: node scripts/run-e2e-on-tenderly-vnet.js
         env:
+          TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
+          TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
           TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
           TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
           TENDERLY_CHAIN_ID: 8453
@@ -139,7 +141,7 @@ jobs:
       - name: Decide Integration Backend
         id: decide
         run: |
-          if [ -n "${{ secrets.TENDERLY_ACCESS_KEY }}" ] && [ -n "${{ secrets.TENDERLY_ACCOUNT_SLUG }}" ] && [ -n "${{ secrets.TENDERLY_PROJECT_SLUG }}" ]; then
+          if [ -n "${{ secrets.TENDERLY_ACCESS_KEY }}" ] && { [ -n "${{ secrets.TENDERLY_ACCOUNT }}" ] || [ -n "${{ secrets.TENDERLY_ACCOUNT_SLUG }}" ]; } && { [ -n "${{ secrets.TENDERLY_PROJECT }}" ] || [ -n "${{ secrets.TENDERLY_PROJECT_SLUG }}" ]; }; then
             echo "mode=tenderly" >> $GITHUB_OUTPUT
           else
             echo "mode=anvil" >> $GITHUB_OUTPUT
@@ -175,7 +177,9 @@ jobs:
         if: steps.decide.outputs.mode == 'tenderly'
         run: node scripts/run-integration-on-tenderly-vnet.js
         env:
+          TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
+          TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
           TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
           TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
           TENDERLY_CHAIN_ID: 8453

@@ -3,8 +3,8 @@ const { spawn } = require('node:child_process')
 const { createFork, deleteFork } = require('./tenderly-vnet')
 
 async function main() {
-  const account = process.env['TENDERLY_ACCOUNT_SLUG']
-  const project = process.env['TENDERLY_PROJECT_SLUG']
+  const account = process.env['TENDERLY_ACCOUNT'] || process.env['TENDERLY_ACCOUNT_SLUG']
+  const project = process.env['TENDERLY_PROJECT'] || process.env['TENDERLY_PROJECT_SLUG']
   const accessKey = process.env['TENDERLY_ACCESS_KEY']
   const chainId = process.env['TENDERLY_CHAIN_ID'] || '8453'
   if (!account || !project || !accessKey) {
@@ -38,4 +38,3 @@ main().catch(async (err) => {
   console.error('❌ Error in Tenderly integration runner:', err)
   process.exit(1)
 })
-
