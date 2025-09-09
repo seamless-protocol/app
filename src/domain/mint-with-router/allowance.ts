@@ -1,4 +1,4 @@
-import type { MintContext, MintParams, AllowanceResult } from './types'
+import type { AllowanceResult, MintContext, MintParams } from './types'
 
 /**
  * checkAllowance: slice 1 placeholder implementation.

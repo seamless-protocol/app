@@ -1,5 +1,4 @@
-import type { Address, Hash } from 'viem'
-import type { PublicClient, WalletClient } from 'viem'
+import type { Address, Hash, PublicClient, WalletClient } from 'viem'
 
 /**
  * Context required by domain functions. This keeps React/wagmi out of the domain
