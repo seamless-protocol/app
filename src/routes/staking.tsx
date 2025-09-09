@@ -133,6 +133,15 @@ function StakingPage() {
             />
           </div>
 
+          {/* Rewards Table */}
+          <Card className="bg-slate-900/80 border-slate-700">
+            <CardContent>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <h3 className="text-lg text-white">Implement Rewards Table</h3>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* FAQ Section */}
           <FAQ title="Staking Details" items={stakingFAQData} />
         </div>
