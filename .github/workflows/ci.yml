@@ -104,7 +104,7 @@ jobs:
 
       - name: Run E2E tests on Tenderly (JIT fork)
         if: steps.decide-e2e.outputs.mode == 'tenderly'
-        run: node scripts/run-e2e-on-tenderly-vnet.js
+        run: node scripts/run-e2e-on-tenderly-vnet.cjs
         env:
           TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
@@ -175,7 +175,7 @@ jobs:
 
       - name: Run integration tests on Tenderly (JIT fork)
         if: steps.decide.outputs.mode == 'tenderly'
-        run: node scripts/run-integration-on-tenderly-vnet.js
+        run: node scripts/run-integration-on-tenderly-vnet.cjs
         env:
           TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
