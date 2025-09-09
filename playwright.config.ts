@@ -20,7 +20,7 @@ export default defineConfig({
   globalSetup: './tests/e2e/global-setup.ts',
 
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://127.0.0.1:3000',
     // Tighter default timeouts to reduce hang time
     navigationTimeout: 15_000,
     actionTimeout: 10_000,
@@ -36,16 +36,18 @@ export default defineConfig({
 
   webServer: {
     // Run dev server in test mode with mock wallet; point to Tenderly or Anvil
-    command: [
-      `VITE_TEST_MODE=mock`,
-      `VITE_BASE_RPC_URL=${BASE_RPC_URL}`,
-      `VITE_ANVIL_RPC_URL=${BASE_RPC_URL}`,
-      `VITE_TEST_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`,
-      // Ensure Vite listens on the URL Playwright expects
-      `bunx --bun vite --port 3000 --strictPort`,
-    ].join(' '),
-    url: 'http://localhost:3000',
+    command: `bunx --bun vite --port 3000 --host 127.0.0.1 --strictPort`,
+    env: {
+      VITE_TEST_MODE: 'mock',
+      VITE_BASE_RPC_URL: BASE_RPC_URL,
+      VITE_ANVIL_RPC_URL: BASE_RPC_URL,
+      VITE_TEST_PRIVATE_KEY:
+        '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+    },
+    port: 3000, // Use port instead of url - fixes macOS hanging issue
     reuseExistingServer: !process.env.CI,
-    timeout: 90000, // Allow more time for test mode startup in CI
+    timeout: 120_000, // Give Vite + plugins extra time in CI
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 })
