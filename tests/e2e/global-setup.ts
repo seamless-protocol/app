@@ -1,5 +1,10 @@
 import { spawn } from 'node:child_process'
 
+// Test address used by mock connector (Anvil default account #0)
+const TEST_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+// weETH on Base (used for test funding)
+const WEETH_ADDRESS = '0x04C0599Ae5A44757c0af6f9eC3b93da8976c150A'
+
 /**
  * Global setup for Playwright E2E tests
  * Ensures Anvil Base fork is running before tests start
@@ -7,9 +12,16 @@ import { spawn } from 'node:child_process'
 async function globalSetup() {
   console.log('🔧 Setting up E2E test environment...')
 
+  // If Tenderly RPC is configured, skip starting Anvil and fund via admin RPC
+  const tenderlyRpc = process.env['TENDERLY_RPC_URL']
+  if (tenderlyRpc) {
+    console.log('🔗 TENDERLY_RPC_URL detected. Skipping Anvil startup.')
+    await fundViaTenderly(tenderlyRpc)
+    return
+  }
+
   // Check if Anvil is already running on port 8545
   const isAnvilRunning = await checkAnvilRunning()
-
   if (isAnvilRunning) {
     console.log('✅ Anvil is already running on port 8545')
     return
@@ -88,7 +100,7 @@ async function globalSetup() {
 
   console.log('✅ Anvil Base fork is running and ready for E2E tests')
 
-  // Fund the test account with WETH for testing
+  // Fund the test account with WETH for testing (Anvil path)
   try {
     const { fundTestAccount } = await import('./fund-test-account.js')
     const success = await fundTestAccount()
@@ -130,3 +142,33 @@ async function checkAnvilRunning(): Promise<boolean> {
 }
 
 export default globalSetup
+
+/**
+ * Fund via Tenderly admin RPC
+ */
+async function fundViaTenderly(rpcUrl: string) {
+  console.log('🔧 Funding mock account via Tenderly admin RPC...')
+  // Helper to POST JSON-RPC
+  async function rpc(method: string, params: Array<any>) {
+    const res = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+    })
+    if (!res.ok) throw new Error(`RPC ${method} failed: HTTP ${res.status}`)
+    const json = await res.json()
+    if (json.error) throw new Error(`RPC ${method} error: ${JSON.stringify(json.error)}`)
+    return json.result
+  }
+
+  // 1) Set ETH balance (10 ETH)
+  const eth = 10n * 10n ** 18n
+  const toHex = (x: bigint) => `0x${x.toString(16)}`
+  await rpc('tenderly_setBalance', [TEST_ADDRESS, toHex(eth)])
+  console.log('✅ Set ETH balance via Tenderly')
+
+  // 2) Set weETH ERC20 balance (10 weETH)
+  const weeth = 10n * 10n ** 18n
+  await rpc('tenderly_setErc20Balance', [WEETH_ADDRESS, TEST_ADDRESS, toHex(weeth)])
+  console.log('✅ Set weETH balance via Tenderly')
+}

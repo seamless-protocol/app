@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// Prefer Tenderly RPC if provided, else default to local Anvil
+const BASE_RPC_URL = process.env['TENDERLY_RPC_URL'] ?? 'http://127.0.0.1:8545'
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -12,7 +15,7 @@ export default defineConfig({
   timeout: 30_000,
   reporter: 'html',
 
-  // Global setup to start Anvil before tests
+  // Global setup to start Anvil before tests (skipped when Tenderly is set)
   globalSetup: './tests/e2e/global-setup.ts',
 
   use: {
@@ -31,9 +34,14 @@ export default defineConfig({
   ],
 
   webServer: {
-    // Run dev server in test mode with mock wallet and Anvil RPC
-    command:
-      'VITE_TEST_MODE=mock VITE_BASE_RPC_URL=http://127.0.0.1:8545 VITE_ANVIL_RPC_URL=http://127.0.0.1:8545 VITE_TEST_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 bun dev',
+    // Run dev server in test mode with mock wallet; point to Tenderly or Anvil
+    command: [
+      `VITE_TEST_MODE=mock`,
+      `VITE_BASE_RPC_URL=${BASE_RPC_URL}`,
+      `VITE_ANVIL_RPC_URL=${BASE_RPC_URL}`,
+      `VITE_TEST_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`,
+      `bun dev`,
+    ].join(' '),
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 30000, // Allow more time for test mode startup
