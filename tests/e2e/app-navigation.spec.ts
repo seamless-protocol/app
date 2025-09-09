@@ -9,8 +9,8 @@ test.describe('App Navigation & Wallet Connection', () => {
   test('should load tokens page', async ({ page }) => {
     // Verify we're on the tokens page (support with or without hash)
     await expect(page).toHaveURL(/\/tokens/)
-    await expect(page.locator('main h3:has-text("Leverage Tokens")')).toBeVisible()
-    await expect(page.locator('text=Browse and manage leverage tokens.')).toBeVisible()
+    await expect(page.locator('h2:has-text("Featured High-Reward Tokens")')).toBeVisible()
+    await expect(page.locator('text=Top Rewards')).toBeVisible()
   })
 
   test('should redirect from home to tokens', async ({ page }) => {
