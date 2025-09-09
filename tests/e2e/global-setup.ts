@@ -167,8 +167,8 @@ async function fundViaTenderly(rpcUrl: string) {
   await rpc('tenderly_setBalance', [TEST_ADDRESS, toHex(eth)])
   console.log('✅ Set ETH balance via Tenderly')
 
-  // 2) Set weETH ERC20 balance (10 weETH)
-  const weeth = 10n * 10n ** 18n
+  // 2) Set weETH ERC20 balance (5 weETH)
+  const weeth = 5n * 10n ** 18n
   await rpc('tenderly_setErc20Balance', [WEETH_ADDRESS, TEST_ADDRESS, toHex(weeth)])
   console.log('✅ Set weETH balance via Tenderly')
 }

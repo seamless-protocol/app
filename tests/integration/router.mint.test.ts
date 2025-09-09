@@ -84,8 +84,15 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
         functionName: 'previewMint',
         args: [leverageToken, equityAmount],
       })
-      // On VNets liquidity/fees may differ; use permissive guards to focus on SwapContext validity
-      const minShares = 0n
+
+      console.log('Preview result:')
+      console.log('  Expected shares:', preview.shares.toString())
+      console.log('  Token fee:', preview.tokenFee.toString())
+      console.log('  Treasury fee:', preview.treasuryFee.toString())
+
+      // Calculate minShares with slippage protection (2.5% slippage tolerance)
+      const slippageBps = 250n // 2.5%
+      const minShares = (preview.shares * (10000n - slippageBps)) / 10000n
 
       // Get debt asset (underlying asset for leverage exposure)
       const debtAsset = (await publicClient.readContract({

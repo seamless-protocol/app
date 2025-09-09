@@ -188,9 +188,9 @@ export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise
           return { account: acct, wallet }
         })
         .filter(Boolean) as Array<{
-          account: (typeof extraAccounts)[number]
-          wallet: (typeof extraWallets)[number]
-        }>,
+        account: (typeof extraAccounts)[number]
+        wallet: (typeof extraWallets)[number]
+      }>,
       fund: {
         native: async (addrs, ether) => {
           await Promise.all(addrs.map((a) => topUpNative(a, ether)))

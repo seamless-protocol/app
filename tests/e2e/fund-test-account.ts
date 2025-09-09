@@ -78,7 +78,7 @@ async function fundTestAccount() {
 
     // Step 3: Fund test account with weETH using whale impersonation (idempotent)
     console.log('2. Funding test account with weETH via whale impersonation...')
-    const weETHAmount = parseEther('10') // 10 weETH - plenty for testing
+    const weETHAmount = parseEther('5') // 5 weETH - sufficient for testing
 
     // Idempotency: if already funded, skip
     const existingBalance = (await publicClient.readContract({
