@@ -13,7 +13,7 @@ async function globalSetup() {
   console.log('🔧 Setting up E2E test environment...')
 
   // If Tenderly RPC is configured, skip starting Anvil and fund via admin RPC
-  const tenderlyRpc = process.env['TENDERLY_RPC_URL']
+  const tenderlyRpc = process.env['TEST_RPC_URL'] ?? process.env['TENDERLY_RPC_URL']
   if (tenderlyRpc) {
     console.log('🔗 TENDERLY_RPC_URL detected. Skipping Anvil startup.')
     await fundViaTenderly(tenderlyRpc)

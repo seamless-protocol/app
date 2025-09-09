@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// Prefer Tenderly RPC if provided, else default to local Anvil
-const BASE_RPC_URL = process.env['TENDERLY_RPC_URL'] ?? 'http://127.0.0.1:8545'
+// Prefer just-in-time RPC (TEST_RPC_URL), then Tenderly, else local Anvil
+const BASE_RPC_URL =
+  process.env['TEST_RPC_URL'] ?? process.env['TENDERLY_RPC_URL'] ?? 'http://127.0.0.1:8545'
 
 export default defineConfig({
   testDir: './tests/e2e',
