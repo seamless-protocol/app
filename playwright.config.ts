@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
+import { getTestRpcUrl } from './tests/shared/backend'
 
-// Prefer just-in-time RPC (TEST_RPC_URL), then Tenderly, else local Anvil
-const BASE_RPC_URL =
-  process.env['TEST_RPC_URL'] ?? process.env['TENDERLY_RPC_URL'] ?? 'http://127.0.0.1:8545'
+// Get RPC URL from centralized backend detection
+const BASE_RPC_URL = getTestRpcUrl()
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -16,7 +16,7 @@ export default defineConfig({
   timeout: 30_000,
   reporter: 'html',
 
-  // Global setup to start Anvil before tests (skipped when Tenderly is set)
+  // Global setup to start Anvil before tests (skipped when using non-Anvil backend)
   globalSetup: './tests/e2e/global-setup.ts',
 
   use: {
@@ -35,7 +35,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    // Run dev server in test mode with mock wallet; point to Tenderly or Anvil
+    // Run dev server in test mode with mock wallet; RPC URL is determined automatically
     command: `bunx --bun vite --port 3000 --host 127.0.0.1 --strictPort`,
     env: {
       VITE_TEST_MODE: 'mock',

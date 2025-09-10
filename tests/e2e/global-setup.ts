@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { shouldSkipAnvilStartup } from '../shared/backend'
 import { ADDR } from '../shared/env'
 import { topUpErc20, topUpNative } from '../shared/funding'
 
@@ -12,10 +13,9 @@ const TEST_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 async function globalSetup() {
   console.log('🔧 Setting up E2E test environment...')
 
-  // If Tenderly RPC is configured, skip starting Anvil; still perform funding
-  const tenderlyRpc = process.env['TEST_RPC_URL'] ?? process.env['TENDERLY_RPC_URL']
-  if (tenderlyRpc) {
-    console.log('🔗 TENDERLY_RPC_URL detected. Skipping Anvil startup.')
+  // Skip Anvil startup if using non-Anvil backend (e.g., explicit RPC URL or Tenderly)
+  if (shouldSkipAnvilStartup()) {
+    console.log('🔗 Non-Anvil backend detected. Skipping Anvil startup.')
     await fundForE2E()
     return
   }
