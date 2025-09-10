@@ -50,7 +50,7 @@ async function fundErc20ViaWethDeposit(
   to: Address,
   human: string,
 ): Promise<boolean> {
-  if (token.toLowerCase() !== BASE_WETH.toLowerCase()) return false
+  if (getAddress(token) !== getAddress(BASE_WETH)) return false
   const value = parseUnits(human, 18)
 
   // Deposit ETH to get WETH
@@ -63,7 +63,7 @@ async function fundErc20ViaWethDeposit(
   })
 
   // Transfer WETH to target if depositor != target
-  if (account.address.toLowerCase() !== to.toLowerCase()) {
+  if (getAddress(account.address) !== getAddress(to)) {
     await walletClient.writeContract({
       address: BASE_WETH,
       abi: erc20Abi,
