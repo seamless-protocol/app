@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useActiveProposals } from '@/features/governance/hooks/useActiveProposals'
 import type { TallyProposal } from '@/features/governance/types'
 import { getProposals } from '@/features/governance/utils/tally'
+import {
+  BASE_CHAIN_ID,
+  GOVERNOR_SHORT_ADDRESS,
+  TIMELOCK_SHORT_ADDRESS,
+} from '../../../../fixtures/addresses'
 import { hookTestUtils, mockSetup } from '../../../../utils'
 
 // Use the global mocks from tests/setup.ts
@@ -53,10 +58,10 @@ const mockProposals: Array<TallyProposal> = [
       timestamp: '2024-01-01T00:00:00Z',
     },
     governor: {
-      id: 'eip155:8453:0x8768c789C6df8AF1a92d96dE823b4F80010Db294',
+      id: `eip155:${BASE_CHAIN_ID}:${GOVERNOR_SHORT_ADDRESS}`,
       quorum: '1000000000000000000000',
       name: 'Seamless Protocol',
-      timelockId: '0x639d2dD24304aC2e6A691d8c1cFf4a2665925fee',
+      timelockId: TIMELOCK_SHORT_ADDRESS,
       token: {
         decimals: 18,
       },
@@ -105,10 +110,10 @@ const mockProposals: Array<TallyProposal> = [
       timestamp: '2024-01-02T00:00:00Z',
     },
     governor: {
-      id: 'eip155:8453:0x8768c789C6df8AF1a92d96dE823b4F80010Db294',
+      id: `eip155:${BASE_CHAIN_ID}:${GOVERNOR_SHORT_ADDRESS}`,
       quorum: '1000000000000000000000',
       name: 'Seamless Protocol',
-      timelockId: '0x639d2dD24304aC2e6A691d8c1cFf4a2665925fee',
+      timelockId: TIMELOCK_SHORT_ADDRESS,
       token: {
         decimals: 18,
       },
@@ -220,10 +225,10 @@ describe('useActiveProposals', () => {
             timestamp: '2024-01-03T00:00:00Z',
           },
           governor: {
-            id: 'eip155:8453:0x8768c789C6df8AF1a92d96dE823b4F80010Db294',
+            id: `eip155:${BASE_CHAIN_ID}:${GOVERNOR_SHORT_ADDRESS}`,
             quorum: '1000000000000000000000',
             name: 'Seamless Protocol',
-            timelockId: '0x639d2dD24304aC2e6A691d8c1cFf4a2665925fee',
+            timelockId: TIMELOCK_SHORT_ADDRESS,
             token: {
               decimals: 18,
             },

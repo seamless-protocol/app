@@ -7,8 +7,8 @@
     "dev": "bunx --bun vite",
     "build": "bunx @tanstack/router-cli generate --config vite.config.ts && tsc -b && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
-    "check": "bunx --bun biome check . && bunx --bun tsc --noEmit",
-    "check:fix": "bunx --bun biome check --write . && bunx --bun tsc --noEmit",
+    "check": "bunx --bun biome check . && bunx --bun tsc -b --noEmit",
+    "check:fix": "bunx --bun biome check --write . && bunx --bun tsc -b --noEmit",
     "format": "bunx --bun biome format --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
@@ -59,7 +59,7 @@
     "zod": "^4.0.17"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.2.3",
+    "@biomejs/biome": "2.2.3",
     "@chromatic-com/storybook": "^4.1.1",
     "@playwright/test": "^1.54.2",
     "@storybook/addon-a11y": "^9.1.3",

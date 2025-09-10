@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { type Address, formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
 
-import { CONTRACT_ADDRESSES } from '@/lib/constants'
+import { STAKED_SEAM } from '@/lib/contracts/addresses'
 import { useTokenBalance } from '@/lib/hooks/useTokenBalance'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 
@@ -26,17 +26,17 @@ export function useStakingUserStats() {
     isLoading: isBalanceLoading,
     isError: isBalanceError,
   } = useTokenBalance({
-    tokenAddress: CONTRACT_ADDRESSES.STAKED_SEAM.address,
+    tokenAddress: STAKED_SEAM.address,
     userAddress: user as Address,
-    chainId: CONTRACT_ADDRESSES.STAKED_SEAM.chainId,
+    chainId: STAKED_SEAM.chainId,
     enabled: Boolean(user),
   })
 
   // Get USD price for staked SEAM
   const { data: usdPriceMap } = useUsdPrices({
-    chainId: CONTRACT_ADDRESSES.STAKED_SEAM.chainId,
-    addresses: [CONTRACT_ADDRESSES.STAKED_SEAM.address],
-    enabled: Boolean(CONTRACT_ADDRESSES.STAKED_SEAM.address),
+    chainId: STAKED_SEAM.chainId,
+    addresses: [STAKED_SEAM.address],
+    enabled: Boolean(STAKED_SEAM.address),
   })
 
   return useQuery({
@@ -46,7 +46,7 @@ export function useStakingUserStats() {
       const formattedBalance = stakedBalance ? formatUnits(stakedBalance, 18) : '0.00'
 
       // Calculate USD value
-      const stakedSeamPrice = usdPriceMap?.[CONTRACT_ADDRESSES.STAKED_SEAM.address.toLowerCase()]
+      const stakedSeamPrice = usdPriceMap?.[STAKED_SEAM.address.toLowerCase()]
       const balanceNumber = parseFloat(formattedBalance)
       const usdValue =
         stakedSeamPrice && Number.isFinite(stakedSeamPrice) ? balanceNumber * stakedSeamPrice : 0

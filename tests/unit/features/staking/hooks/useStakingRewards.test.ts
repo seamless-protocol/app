@@ -1,25 +1,30 @@
 import { describe, expect, it } from 'vitest'
+import {
+  BASE_CHAIN_ID,
+  REWARDS_CONTROLLER_ADDRESS,
+  STAKED_SEAM_ADDRESS,
+} from '../../../../fixtures/addresses'
 
 // Test the useStakingRewards hook data transformation and contract interaction
 describe('useStakingRewards - Data Transformation', () => {
   it('should handle the expected contract call structure', () => {
     // Test the expected contract call parameters
     const mockUser = '0xAf5f2D7C1c02C6affEf67D3f9215e3E3b861CdaB'
-    const mockStakedSeamAddress = '0x73f0849756f6A79C1d536b7abAB1E6955f7172A4'
-    const mockRewardsControllerAddress = '0x2C6dC2CE7747E726A590082ADB3d7d08F52ADB93'
+    const mockStakedSeamAddress = STAKED_SEAM_ADDRESS
+    const mockRewardsControllerAddress = REWARDS_CONTROLLER_ADDRESS
 
     // Expected contract call structure
     const expectedContractCall = {
       address: mockRewardsControllerAddress,
       functionName: 'getAllUserRewards',
       args: [[mockStakedSeamAddress], mockUser],
-      chainId: 8453,
+      chainId: BASE_CHAIN_ID,
     }
 
     expect(expectedContractCall.address).toBe(mockRewardsControllerAddress)
     expect(expectedContractCall.functionName).toBe('getAllUserRewards')
     expect(expectedContractCall.args).toEqual([[mockStakedSeamAddress], mockUser])
-    expect(expectedContractCall.chainId).toBe(8453)
+    expect(expectedContractCall.chainId).toBe(BASE_CHAIN_ID)
   })
 
   it('should handle contract response data structure', () => {

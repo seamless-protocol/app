@@ -2,7 +2,7 @@ import type { Address } from 'viem'
 import { useReadContracts } from 'wagmi'
 import { STALE_TIME } from '@/features/leverage-tokens/utils/constants'
 import type { SupportedChainId } from '@/lib/contracts'
-import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
+import { leverageTokenAbi } from '@/lib/contracts'
 
 export interface UseTokenBalanceParams {
   tokenAddress?: Address

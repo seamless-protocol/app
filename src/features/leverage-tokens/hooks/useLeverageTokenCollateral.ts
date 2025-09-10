@@ -1,7 +1,6 @@
 import type { Address } from 'viem'
 import { useChainId, useReadContracts } from 'wagmi'
-import { lendingAdapterAbi } from '@/lib/contracts/abis/lendingAdapter'
-import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
+import { lendingAdapterAbi, leverageManagerAbi } from '@/lib/contracts'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
 import { STALE_TIME } from '../utils/constants'
 

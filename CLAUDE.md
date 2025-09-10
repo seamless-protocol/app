@@ -69,6 +69,15 @@ bunx --bun shadcn@latest add [component]  # Add new UI components
   2. Subgraph (historical data)
   3. External APIs (only when necessary)
 
+### Shared On-Chain Config
+- **Single source**: `src/lib/contracts` centralizes ABIs and addresses.
+- **Addresses**: `src/lib/contracts/addresses.ts` exports typed maps by `chainId` plus helpers like `STAKED_SEAM` and `getLeverageManagerAddress`.
+- **Governance helpers**: Use `getGovernanceAddresses(chainId)` or `getRequiredGovernanceAddresses(chainId)` for governor/timelock bundles.
+- **ABIs**: Minimal, pruned ABIs in `src/lib/contracts/abis/*` to keep bundle size small.
+- **Re-exports**: Import via `@/lib/contracts` to access addresses, ABIs, and wagmi codegen.
+- **Features**: Keep UI-only constants in `src/features/<feature>`, import on-chain config from `src/lib/contracts`.
+- **Tests**: Prefer mocking `@/lib/contracts/addresses` in unit tests; avoid duplicating addresses.
+
 ### Development Phases
 The app is designed for 7 incremental production releases:
 1. Foundation & Infrastructure (current)
@@ -119,7 +128,7 @@ src/
 ├── hooks/             # Custom React hooks
 ├── lib/               # Core utilities and configs
 │   ├── config/        # Chain, wagmi, rainbowkit configs
-│   ├── contracts/     # ABIs and addresses
+│   ├── contracts/     # ABIs and addresses (single source of truth)
 │   └── utils/         # Helper functions
 ├── routes/            # TanStack Router pages
 └── types/             # TypeScript type definitions

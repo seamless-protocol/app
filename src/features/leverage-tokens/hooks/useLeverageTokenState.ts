@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import type { Address } from 'viem'
 import { useChainId, useReadContracts } from 'wagmi'
-import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
-import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
+import { leverageManagerAbi, leverageTokenAbi } from '@/lib/contracts'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
 import { STALE_TIME } from '../utils/constants'
 

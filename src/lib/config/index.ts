@@ -3,4 +3,6 @@
  */
 
 export * from './api'
-export * from './contracts'
+export * from './features'
+export * from './query.config'
+export * from './sentry.config'

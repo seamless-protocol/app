@@ -1,6 +1,5 @@
 import type { Address } from 'viem'
-import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
-import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
+import { leverageManagerAbi, leverageRouterAbi } from '@/lib/contracts'
 import { ensureAllowance } from './allowance'
 import { previewMint } from './previewMint'
 import { BASE_TOKEN_ADDRESSES, createSwapContext, createWeETHSwapContext } from './swapContext'

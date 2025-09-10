@@ -1,38 +1,39 @@
 import { describe, expect, it } from 'vitest'
+import { BASE_CHAIN_ID, STAKED_SEAM_ADDRESS } from '../../../../fixtures/addresses'
 
 // Test the useStakingUserStats hook data transformation and balance calculation
 describe('useStakingUserStats - Data Transformation', () => {
   it('should handle the expected token balance call structure', () => {
     // Test the expected token balance call parameters
     const mockUser = '0xAf5f2D7C1c02C6affEf67D3f9215e3E3b861CdaB'
-    const mockStakedSeamAddress = '0x73f0849756f6A79C1d536b7abAB1E6955f7172A4'
+    const mockStakedSeamAddress = STAKED_SEAM_ADDRESS
 
     // Expected token balance call structure
     const expectedBalanceCall = {
       tokenAddress: mockStakedSeamAddress,
       userAddress: mockUser,
-      chainId: 8453,
+      chainId: BASE_CHAIN_ID,
       enabled: true,
     }
 
     expect(expectedBalanceCall.tokenAddress).toBe(mockStakedSeamAddress)
     expect(expectedBalanceCall.userAddress).toBe(mockUser)
-    expect(expectedBalanceCall.chainId).toBe(8453)
+    expect(expectedBalanceCall.chainId).toBe(BASE_CHAIN_ID)
     expect(expectedBalanceCall.enabled).toBe(true)
   })
 
   it('should handle the expected USD price call structure', () => {
     // Test the expected USD price call parameters
-    const mockStakedSeamAddress = '0x73f0849756f6A79C1d536b7abAB1E6955f7172A4'
+    const mockStakedSeamAddress = STAKED_SEAM_ADDRESS
 
     // Expected USD price call structure
     const expectedPriceCall = {
-      chainId: 8453,
+      chainId: BASE_CHAIN_ID,
       addresses: [mockStakedSeamAddress],
       enabled: true,
     }
 
-    expect(expectedPriceCall.chainId).toBe(8453)
+    expect(expectedPriceCall.chainId).toBe(BASE_CHAIN_ID)
     expect(expectedPriceCall.addresses).toEqual([mockStakedSeamAddress])
     expect(expectedPriceCall.enabled).toBe(true)
   })
@@ -97,8 +98,7 @@ describe('useStakingUserStats - Data Transformation', () => {
 
     const calculateUsdValue = (balance: bigint, usdPriceMap: Record<string, number>): string => {
       const balanceNumber = parseFloat(formatUnits(balance, 18))
-      const stakedSeamPrice =
-        usdPriceMap['0x73f0849756f6A79C1d536b7abAB1E6955f7172A4'.toLowerCase()]
+      const stakedSeamPrice = usdPriceMap[STAKED_SEAM_ADDRESS.toLowerCase()]
       const usdValue =
         stakedSeamPrice && Number.isFinite(stakedSeamPrice) ? balanceNumber * stakedSeamPrice : 0
       return `$${usdValue.toFixed(2)}`
@@ -110,7 +110,7 @@ describe('useStakingUserStats - Data Transformation', () => {
   it('should validate query key structure', () => {
     // Test the expected query key structure
     const mockBalance = 1000000000000000000000n
-    const mockUsdPriceMap = { '0x73f0849756f6A79C1d536b7abAB1E6955f7172A4': 1.5 }
+    const mockUsdPriceMap = { [STAKED_SEAM_ADDRESS]: 1.5 }
     const expectedQueryKey = ['staking', 'userPosition', mockBalance.toString(), mockUsdPriceMap]
 
     expect(expectedQueryKey).toEqual([
