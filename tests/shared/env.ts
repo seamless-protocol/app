@@ -22,7 +22,6 @@ const Defaults = {
 const EnvSchema = z.object({
   // RPC selection
   TEST_RPC_URL: z.string().url().optional(),
-  TENDERLY_ADMIN_RPC_URL: z.string().url().optional(),
   ANVIL_RPC_URL: z.string().url().default(Defaults.ANVIL_RPC_URL),
 
   // Keys
@@ -69,17 +68,15 @@ const tenderlyPrimary = Env.TEST_RPC_URL
 export const mode: Mode = tenderlyPrimary ? 'tenderly' : 'anvil'
 
 let primaryRpc: string
-let adminRpc: string
 if (mode === 'tenderly') {
   const primary = tenderlyPrimary
-  if (!primary) throw new Error('TEST_RPC_URL or TENDERLY_RPC_URL required in tenderly mode')
+  if (!primary) throw new Error('TEST_RPC_URL required in tenderly mode')
   primaryRpc = primary
-  adminRpc = Env.TENDERLY_ADMIN_RPC_URL ?? primary
 } else {
   primaryRpc = Env.ANVIL_RPC_URL
-  adminRpc = Env.ANVIL_RPC_URL
 }
-export const RPC = { primary: primaryRpc, admin: adminRpc }
+// For both Tenderly and Anvil, admin and primary are the same endpoint
+export const RPC = { primary: primaryRpc, admin: primaryRpc }
 
 export const ADDR = {
   factory: Env.TEST_LEVERAGE_FACTORY ? getAddress(Env.TEST_LEVERAGE_FACTORY) : (undefined as any),
