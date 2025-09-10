@@ -18,9 +18,6 @@ export function usePortfolioStaking() {
   return useQuery({
     queryKey: portfolioKeys.staking(),
     queryFn: async (): Promise<StakingData> => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 350))
-
       return mockStakingData
     },
     staleTime: 4 * 60 * 1000, // 4 minutes

@@ -1,10 +1,11 @@
 import type { Address } from 'viem'
-import { useChainId, useReadContracts } from 'wagmi'
+import { useReadContracts } from 'wagmi'
 import { lendingAdapterAbi } from '../../../lib/contracts/abis/lendingAdapter'
 import { leverageManagerAbi } from '../../../lib/contracts/abis/leverageManager'
 import { rebalanceAdapterAbi } from '../../../lib/contracts/abis/rebalanceAdapter'
-import { getLeverageManagerAddress } from '../../../lib/contracts/addresses'
+import { getLeverageManagerAddress, type SupportedChainId } from '../../../lib/contracts/addresses'
 import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
+import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { collateralRatioToLeverage } from '../utils/apy-calculations/leverage-ratios'
 import { STALE_TIME } from '../utils/constants'
 
@@ -15,8 +16,10 @@ export type ReadResult<T> = { status: 'success'; result: T } | { status: 'failur
  * First fetches config from LeverageManager, then fetches detailed metrics from RebalanceAdapter
  */
 export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
-  const chainId = useChainId()
-  const managerAddress = getLeverageManagerAddress(chainId)
+  // Get the token config to determine the correct chain ID
+  const tokenConfig = tokenAddress ? getLeverageTokenConfig(tokenAddress) : undefined
+  const chainId = tokenConfig?.chainId
+  const managerAddress = chainId ? getLeverageManagerAddress(chainId) : undefined
 
   // Step 1: Get leverage token config and state from LeverageManager
 
@@ -46,16 +49,18 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenConfig',
         args: tokenAddress ? [tokenAddress] : undefined,
+        chainId: chainId as SupportedChainId,
       },
       {
         address: managerAddress,
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenState',
         args: tokenAddress ? [tokenAddress] : undefined,
+        chainId: chainId as SupportedChainId,
       },
     ],
     query: {
-      enabled: !!tokenAddress && !!managerAddress,
+      enabled: !!tokenAddress && !!managerAddress && !!chainId,
       staleTime: STALE_TIME.detailedMetrics,
     },
   })
@@ -80,40 +85,47 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getLeverageTokenMinCollateralRatio',
+        chainId: chainId as SupportedChainId,
       },
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getLeverageTokenMaxCollateralRatio',
+        chainId: chainId as SupportedChainId,
       },
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getAuctionDuration',
+        chainId: chainId as SupportedChainId,
       },
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getCollateralRatioThreshold',
+        chainId: chainId as SupportedChainId,
       },
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getRebalanceReward',
+        chainId: chainId as SupportedChainId,
       },
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getInitialPriceMultiplier',
+        chainId: chainId as SupportedChainId,
       },
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getMinPriceMultiplier',
+        chainId: chainId as SupportedChainId,
       },
     ],
     query: {
-      enabled: !!rebalanceAdapterAddress,
+      enabled: !!rebalanceAdapterAddress && !!chainId,
       staleTime: STALE_TIME.detailedMetrics,
     },
   })
@@ -130,10 +142,11 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
         address: lendingAdapterAddress,
         abi: lendingAdapterAbi,
         functionName: 'getLiquidationPenalty',
+        chainId: chainId as SupportedChainId,
       },
     ],
     query: {
-      enabled: !!lendingAdapterAddress,
+      enabled: !!lendingAdapterAddress && !!chainId,
       staleTime: STALE_TIME.detailedMetrics,
     },
   })

@@ -5,6 +5,7 @@ import { formatAPY } from '@/lib/utils/formatting'
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent } from '../../../components/ui/card'
+import { Skeleton } from '../../../components/ui/skeleton'
 import type { LeverageToken } from './LeverageTokenTable'
 
 export type { LeverageToken }
@@ -59,29 +60,35 @@ export function FeaturedLeverageToken({
             {/* APY Row */}
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">APY</span>
-              <span className="text-green-400 font-medium">
-                {apyData?.totalAPY !== undefined ? formatAPY(apyData.totalAPY, 2) : 'Loading...'}
-              </span>
+              {apyData?.totalAPY !== undefined ? (
+                <span className="text-green-400 font-medium">{formatAPY(apyData.totalAPY, 2)}</span>
+              ) : (
+                <Skeleton className="h-4 w-16" />
+              )}
             </div>
 
             {/* Reward APR Row */}
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">Reward APR</span>
-              <span className="text-cyan-400 font-medium">
-                {apyData?.rewardsAPR !== undefined
-                  ? formatAPY(apyData.rewardsAPR, 2)
-                  : 'Loading...'}
-              </span>
+              {apyData?.rewardsAPR !== undefined ? (
+                <span className="text-cyan-400 font-medium">
+                  {formatAPY(apyData.rewardsAPR, 2)}
+                </span>
+              ) : (
+                <Skeleton className="h-4 w-16" />
+              )}
             </div>
 
             {/* Points Row */}
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">Points</span>
-              <span className="text-yellow-400 font-medium">
-                {apyData?.points !== undefined
-                  ? `${apyData.points.toLocaleString()} x`
-                  : 'Loading...'}
-              </span>
+              {apyData?.points !== undefined ? (
+                <span className="text-yellow-400 font-medium">
+                  {`${apyData.points.toLocaleString()} x`}
+                </span>
+              ) : (
+                <Skeleton className="h-4 w-16" />
+              )}
             </div>
 
             {/* Leverage Row with Divider */}

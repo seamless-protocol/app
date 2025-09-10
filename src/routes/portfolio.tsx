@@ -4,6 +4,7 @@ import { DollarSign, Target, TrendingUp } from 'lucide-react'
 import { useAccount } from 'wagmi'
 import { ConnectionStatusCard } from '@/components/ConnectionStatusCard'
 import { StatCardList } from '@/components/StatCardList'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Position } from '@/features/portfolio/components/active-positions'
 import { ActivePositions } from '@/features/portfolio/components/active-positions'
 import { AvailableRewards } from '@/features/portfolio/components/available-rewards'
@@ -27,7 +28,7 @@ function PortfolioPage() {
     isLoading: portfolioLoading,
     isError: portfolioError,
   } = usePortfolioData()
-  const performanceData = usePortfolioPerformance(portfolioData?.summary.totalValue || 0)
+  const performanceData = usePortfolioPerformance()
   const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
   const { data: stakingData, isLoading: stakingLoading } = usePortfolioStaking()
 
@@ -114,9 +115,13 @@ function PortfolioPage() {
           cards={[
             {
               title: 'Total Portfolio Value',
-              stat: portfolioLoading ? 'Loading...' : `$${summary.totalValue.toLocaleString()}`,
+              stat: portfolioLoading ? (
+                <Skeleton className="h-6 w-24" />
+              ) : (
+                `$${summary.totalValue.toLocaleString()}`
+              ),
               caption: portfolioLoading ? (
-                <div className="text-slate-400">Loading...</div>
+                <Skeleton className="h-4 w-16" />
               ) : (
                 <div
                   className={`flex items-center text-sm ${
@@ -138,20 +143,32 @@ function PortfolioPage() {
             },
             {
               title: 'Total Earnings',
-              stat: portfolioLoading ? 'Loading...' : `+$${summary.totalEarnings.toLocaleString()}`,
-              caption: portfolioLoading
-                ? 'Loading...'
-                : `+${summary.averageAPY.toFixed(1)}% avg APY`,
+              stat: portfolioLoading ? (
+                <Skeleton className="h-6 w-24" />
+              ) : (
+                `+$${summary.totalEarnings.toLocaleString()}`
+              ),
+              caption: portfolioLoading ? (
+                <Skeleton className="h-4 w-20" />
+              ) : (
+                `+${summary.averageAPY.toFixed(1)}% avg APY`
+              ),
               icon: <TrendingUp />,
               iconBgClass: 'bg-green-500/20',
               iconTextClass: 'text-green-400',
             },
             {
               title: 'Active Positions',
-              stat: portfolioLoading ? 'Loading...' : summary.activePositions.toString(),
-              caption: portfolioLoading
-                ? 'Loading...'
-                : `Across ${summary.activePositions} strategies`,
+              stat: portfolioLoading ? (
+                <Skeleton className="h-6 w-8" />
+              ) : (
+                summary.activePositions.toString()
+              ),
+              caption: portfolioLoading ? (
+                <Skeleton className="h-4 w-24" />
+              ) : (
+                `Across ${summary.activePositions} strategies`
+              ),
               icon: <Target />,
               iconBgClass: 'bg-cyan-500/20',
               iconTextClass: 'text-cyan-400',

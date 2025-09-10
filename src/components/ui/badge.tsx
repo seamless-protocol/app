@@ -84,7 +84,7 @@ function Badge({
 
     if (clickable && onClick) {
       return (
-        <button type="button" onClick={onClick} className="w-full text-left">
+        <button type="button" onClick={onClick} className="w-full text-left cursor-pointer">
           {content}
         </button>
       )

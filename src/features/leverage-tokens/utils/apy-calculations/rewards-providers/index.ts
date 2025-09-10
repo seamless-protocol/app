@@ -12,6 +12,7 @@ export async function fetchGenericRewardsApr(
   switch (config.chainId) {
     case 8453: // Base
       provider = new BaseRewardsAprProvider()
+      console.log('Fetching rewards APR for Base chain, token:', config.tokenAddress)
       break
     // Add more chains as needed
     // case 1: // Ethereum
@@ -28,10 +29,8 @@ export async function fetchGenericRewardsApr(
  * Base rewards APR provider - returns 0 for now
  */
 class BaseRewardsAprProvider implements RewardsAprProvider {
-  async fetchRewardsApr(tokenAddress: Address): Promise<BaseRewardsAprData> {
-    console.log('Fetching rewards APR for Base chain, token:', tokenAddress)
+  async fetchRewardsApr(_tokenAddress: Address): Promise<BaseRewardsAprData> {
     console.log('Returning 0% rewards APR (placeholder)')
-
     return {
       rewardsAPR: 0,
     }

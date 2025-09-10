@@ -1,8 +1,12 @@
 import type * as React from 'react'
 import { cn } from '@/lib/utils/cn'
 
-export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface SkeletonProps extends React.HTMLAttributes<HTMLElement> {
+  as?: React.ElementType
+}
 
-export function Skeleton({ className, ...props }: SkeletonProps) {
-  return <div className={cn('animate-pulse rounded-md bg-slate-700/40', className)} {...props} />
+export function Skeleton({ className, as: Component = 'div', ...props }: SkeletonProps) {
+  return (
+    <Component className={cn('animate-pulse rounded-sm bg-slate-500/70', className)} {...props} />
+  )
 }

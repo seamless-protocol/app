@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
+import { Skeleton } from '@/components/ui/skeleton'
 import { FeaturedLeverageTokens } from '@/features/leverage-tokens/components/FeaturedLeverageToken'
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
 import { LeverageTokenTable } from '@/features/leverage-tokens/components/LeverageTokenTable'
@@ -55,7 +56,46 @@ export const Route = createFileRoute('/tokens/')({
             className="overflow-hidden w-full"
           >
             {isLoading ? (
-              <div className="p-8 text-center text-slate-400">Loading leverage tokens…</div>
+              <div className="bg-slate-900/80 border border-slate-700 rounded-lg overflow-hidden w-full">
+                {/* Filters skeleton */}
+                <div className="p-4 border-b border-slate-700">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <Skeleton className="h-8 w-24" />
+                      <Skeleton className="h-8 w-24" />
+                      <Skeleton className="h-8 w-24" />
+                    </div>
+                    <Skeleton className="h-8 w-64" />
+                  </div>
+                </div>
+
+                {/* Table skeleton */}
+                <div className="p-6">
+                  <div className="space-y-4">
+                    {/* Table header skeleton */}
+                    <div className="flex justify-between items-center">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+
+                    {/* Table row skeleton */}
+                    <div className="flex justify-between items-center py-3">
+                      <div className="flex items-center space-x-3">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : isError ? (
               <div className="p-8 text-center text-red-400">
                 Failed to load tokens{error?.message ? `: ${error.message}` : ''}

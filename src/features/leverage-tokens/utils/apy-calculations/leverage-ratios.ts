@@ -3,7 +3,10 @@ import type { Config } from 'wagmi'
 import { readContracts } from 'wagmi/actions'
 import { leverageManagerAbi } from '../../../../lib/contracts/abis/leverageManager'
 import { rebalanceAdapterAbi } from '../../../../lib/contracts/abis/rebalanceAdapter'
-import { getLeverageManagerAddress } from '../../../../lib/contracts/addresses'
+import {
+  getLeverageManagerAddress,
+  type SupportedChainId,
+} from '../../../../lib/contracts/addresses'
 
 export interface LeverageRatios {
   minLeverage: number
@@ -44,6 +47,7 @@ export async function fetchLeverageRatios(
         abi: leverageManagerAbi,
         functionName: 'getLeverageTokenConfig',
         args: [tokenAddress],
+        chainId: chainId as SupportedChainId,
       },
     ],
   })
@@ -63,16 +67,19 @@ export async function fetchLeverageRatios(
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getLeverageTokenMinCollateralRatio',
+        chainId: chainId as SupportedChainId,
       },
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getLeverageTokenMaxCollateralRatio',
+        chainId: chainId as SupportedChainId,
       },
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getLeverageTokenTargetCollateralRatio',
+        chainId: chainId as SupportedChainId,
       },
     ],
   })

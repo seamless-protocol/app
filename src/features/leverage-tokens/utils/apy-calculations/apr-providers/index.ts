@@ -16,6 +16,7 @@ export async function fetchGenericApr(tokenAddress: string, chainId: number): Pr
       switch (lowerTokenAddress) {
         case leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address.toLowerCase():
           provider = new EtherFiAprProvider()
+          console.log(`Fetching APR for ${tokenAddress} on chain ${chainId} using Ether.fi`)
           break
         default:
           throw new Error(`Unsupported token address: ${tokenAddress}`)
@@ -24,8 +25,6 @@ export async function fetchGenericApr(tokenAddress: string, chainId: number): Pr
     default:
       throw new Error(`Unsupported chain ID: ${chainId}`)
   }
-
-  console.log(`Fetching APR for ${tokenAddress} on chain ${chainId} using ${provider.protocolName}`)
 
   return await provider.fetchApr()
 }

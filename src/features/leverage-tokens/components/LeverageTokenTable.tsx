@@ -11,6 +11,7 @@ import { SortArrowDown, SortArrowNeutral, SortArrowUp } from '../../../component
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Badge } from '../../../components/ui/badge'
 import { FilterDropdown } from '../../../components/ui/filter-dropdown'
+import { Skeleton } from '../../../components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -269,7 +270,7 @@ export function LeverageTokenTable({
                 <TableHead className="text-slate-300 font-medium py-4 px-6 min-w-[200px]">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors"
+                    className="flex items-center space-x-2 hover:text-white transition-colors cursor-pointer"
                     onClick={() => handleSort('name')}
                   >
                     <span>Leverage Token Name</span>
@@ -279,7 +280,7 @@ export function LeverageTokenTable({
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('tvl')}
                   >
                     <span>TVL (USD)</span>
@@ -289,7 +290,7 @@ export function LeverageTokenTable({
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('apy')}
                   >
                     <span>APY</span>
@@ -299,7 +300,7 @@ export function LeverageTokenTable({
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-center">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors mx-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors mx-auto cursor-pointer"
                     onClick={() => handleSort('leverage')}
                   >
                     <span>Leverage</span>
@@ -312,7 +313,7 @@ export function LeverageTokenTable({
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right min-w-[140px]">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('available')}
                   >
                     <span>Supply Cap</span>
@@ -417,9 +418,13 @@ export function LeverageTokenTable({
 
                     <TableCell className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end space-x-1">
-                        <span className="text-green-400 font-medium text-sm">
-                          {apyData?.totalAPY ? formatAPY(apyData.totalAPY, 2) : 'Loading...'}
-                        </span>
+                        {apyData?.totalAPY ? (
+                          <span className="text-green-400 font-medium text-sm">
+                            {formatAPY(apyData.totalAPY, 2)}
+                          </span>
+                        ) : (
+                          <Skeleton className="h-6 w-20" />
+                        )}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
