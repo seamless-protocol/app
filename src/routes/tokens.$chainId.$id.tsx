@@ -28,6 +28,7 @@ import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGe
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { formatAPY, formatCurrency, formatNumber } from '@/lib/utils/formatting'
+import { CHAIN_IDS } from '@/lib/utils/chain-logos'
 
 export const Route = createFileRoute('/tokens/$chainId/$id')({
   component: () => {
@@ -39,7 +40,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     )
 
     // Parse chainId from route parameter
-    const chainId = parseInt(routeChainId || '8453', 10) // Default to Base if not provided
+    const chainId = parseInt(routeChainId || CHAIN_IDS.BASE.toString(), 10)
 
     // Get leverage token config (used for decimals, addresses, etc.)
     const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`)
@@ -170,13 +171,13 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
         ),
         caption:
           isStateLoading || (typeof tvlDebtUnits === 'number' && isUsdLoading) ? (
-            <Skeleton className="h-4 w-24 mt-1" />
+            <Skeleton as="span" className="h-4 w-24 mt-1" />
           ) : typeof tvlUsd === 'number' && Number.isFinite(tvlUsd) ? (
             `${formatCurrency(tvlUsd, { millionDecimals: 2, thousandDecimals: 2 })}`
           ) : undefined,
       },
       {
-        title: 'Total APY',
+        title: 'Total Collateral',
         stat: apyData?.totalAPY ? formatAPY(apyData.totalAPY, 2) : 'Loading...',
         caption: apyData?.totalAPY ? 'Including rewards & leverage' : undefined,
       },

@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { useChainId, useConfig } from 'wagmi'
+import { useConfig } from 'wagmi'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
+import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { fetchAprForToken } from '../utils/apy-calculations/apr-providers'
 import { fetchBorrowApyForToken } from '../utils/apy-calculations/borrow-apy-providers'
 import { fetchLeverageRatios } from '../utils/apy-calculations/leverage-ratios'
@@ -150,18 +151,20 @@ export function useRewardsApr(tokenAddress?: Address, chainId?: number) {
 }
 
 export function useLeverageRatios(tokenAddress?: Address) {
-  const chainId = useChainId()
+  // Get the token config to determine the correct chain ID
+  const tokenConfig = tokenAddress ? getLeverageTokenConfig(tokenAddress) : undefined
+  const chainId = tokenConfig?.chainId
   const config = useConfig()
 
   return useQuery({
     queryKey: tokenAddress ? ['leverage-ratios', tokenAddress, chainId] : [],
     queryFn: () => {
-      if (!tokenAddress) {
-        throw new Error('Token address is required')
+      if (!tokenAddress || !chainId) {
+        throw new Error('Token address and chain ID are required')
       }
       return fetchLeverageRatios(tokenAddress, chainId, config)
     },
-    enabled: !!tokenAddress,
+    enabled: !!tokenAddress && !!chainId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   })

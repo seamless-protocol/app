@@ -3,7 +3,7 @@ import type { Config } from 'wagmi'
 import { readContract } from 'wagmi/actions'
 import { lendingAdapterAbi } from '@/lib/contracts/abis/lendingAdapter'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
-import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
+import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
 import { fetchMorphoMarketBorrowRate } from '@/lib/graphql/fetchers/morpho'
 import type { BaseBorrowApyData, BorrowApyFetcher } from './types'
 
@@ -30,6 +30,7 @@ async function fetchMorphoMarketId(
       abi: leverageManagerAbi,
       functionName: 'getLeverageTokenConfig',
       args: [tokenAddress],
+      chainId: chainId as SupportedChainId,
     })
 
     if (!managerResult) {
@@ -48,6 +49,7 @@ async function fetchMorphoMarketId(
       address: lendingAdapterAddress,
       abi: lendingAdapterAbi,
       functionName: 'morphoMarketId',
+      chainId: chainId as SupportedChainId,
     })
 
     if (!marketId) {
