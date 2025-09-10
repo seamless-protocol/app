@@ -182,7 +182,7 @@ export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise
       publicClient,
       ADDR,
       others: (extraAccounts || [])
-        .map((acct, i) => {
+        .map((acct: (typeof extraAccounts)[number], i: number) => {
           const wallet = extraWallets[i]
           if (!wallet) return undefined
           return { account: acct, wallet }

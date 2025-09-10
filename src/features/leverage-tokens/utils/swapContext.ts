@@ -39,7 +39,7 @@ const DEX_ADDRESSES: Record<number, SwapContext['exchangeAddresses']> = {
 function getPrimaryExchange(chainId: number): number {
   switch (chainId) {
     case base.id: // Base
-      return Exchange.AERODROME_V2 // Best liquidity on Base
+      return Exchange.AERODROME // Best liquidity on Base
     default:
       throw new Error(
         `Chain ${chainId} not supported yet. Currently only Base (${base.id}) is supported.`,
@@ -176,7 +176,7 @@ export function createWeETHSwapContext(): SwapContext {
     encodedPath: '0x', // V2 doesn't need encoded paths
     fees: [0], // V2 doesn't use fees in the same way
     tickSpacing: [0], // V2 doesn't use tick spacing
-    exchange: Exchange.AERODROME_V2, // Aerodrome has the best weETH liquidity on Base
+    exchange: Exchange.AERODROME, // Aerodrome has the best weETH liquidity on Base
     exchangeAddresses: addresses,
     additionalData: '0x',
   }

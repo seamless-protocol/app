@@ -1,6 +1,8 @@
 export {
   account,
   chain,
+  extraAccounts,
+  extraWallets,
   mode,
   publicClient,
   revertSnapshot,
