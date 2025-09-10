@@ -1,6 +1,9 @@
 import { type Address, erc20Abi, getAddress, maxUint256, parseAbi, parseUnits, toHex } from 'viem'
 import { account, adminRequest, mode, publicClient, testClient, walletClient } from './clients'
 
+// Re-export commonly used ABIs
+export { erc20Abi }
+
 // WETH ABI slice
 export const wethAbi = parseAbi(['function deposit() payable', 'function withdraw(uint256 wad)'])
 
