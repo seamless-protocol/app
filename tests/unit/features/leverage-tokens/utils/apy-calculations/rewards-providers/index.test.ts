@@ -2,12 +2,13 @@ import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock the module to avoid global mock conflicts
-vi.mock('@/features/leverage-tokens/utils/apy-calculations/rewards-providers', async () => {
-  const actual = await vi.importActual(
-    '@/features/leverage-tokens/utils/apy-calculations/rewards-providers',
-  )
-  return actual
-})
+vi.mock(
+  '@/features/leverage-tokens/utils/apy-calculations/rewards-providers',
+  async (importOriginal) => {
+    const actual = await importOriginal()
+    return actual
+  },
+)
 
 import { fetchGenericRewardsApr } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
 

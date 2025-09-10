@@ -1,22 +1,17 @@
 import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Mock the EtherFiAprProvider
-vi.mock('@/features/leverage-tokens/utils/apy-calculations/apr-providers/etherfi', () => ({
-  EtherFiAprProvider: vi.fn().mockImplementation(() => ({
-    protocolId: 'etherfi',
-    protocolName: 'Ether.fi',
-    fetchApr: vi.fn(),
-  })),
-}))
+// Mock the EtherFiAprProvider in setup
+vi.mock('@/features/leverage-tokens/utils/apy-calculations/apr-providers/etherfi')
 
 // Mock the module to avoid global mock conflicts
-vi.mock('@/features/leverage-tokens/utils/apy-calculations/apr-providers', async () => {
-  const actual = await vi.importActual(
-    '@/features/leverage-tokens/utils/apy-calculations/apr-providers',
-  )
-  return actual
-})
+vi.mock(
+  '@/features/leverage-tokens/utils/apy-calculations/apr-providers',
+  async (importOriginal) => {
+    const actual = await importOriginal()
+    return actual
+  },
+)
 
 import {
   LeverageTokenKey,
@@ -28,7 +23,12 @@ import {
 } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers'
 import { EtherFiAprProvider } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/etherfi'
 
-const mockEtherFiAprProvider = vi.mocked(EtherFiAprProvider)
+// Mock the EtherFiAprProvider
+vi.mocked(EtherFiAprProvider).mockImplementation(() => ({
+  protocolId: 'etherfi',
+  protocolName: 'Ether.fi',
+  fetchApr: vi.fn(),
+}))
 
 describe('APR Providers', () => {
   const chainId = 8453
@@ -60,12 +60,12 @@ describe('APR Providers', () => {
         fetchApr: vi.fn().mockResolvedValue(mockAprData),
       }
 
-      mockEtherFiAprProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
       const result = await fetchGenericApr(supportedTokenAddress, chainId)
 
       expect(result).toEqual(mockAprData)
-      expect(mockEtherFiAprProvider).toHaveBeenCalledTimes(1)
+      expect(EtherFiAprProvider).toHaveBeenCalledTimes(1)
       expect(mockProviderInstance.fetchApr).toHaveBeenCalledWith()
     })
 
@@ -92,7 +92,7 @@ describe('APR Providers', () => {
         fetchApr: vi.fn().mockResolvedValue(mockAprData),
       }
 
-      mockEtherFiAprProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
       const result = await fetchGenericApr(upperCaseTokenAddress, chainId)
 
@@ -129,7 +129,7 @@ describe('APR Providers', () => {
         fetchApr: vi.fn().mockRejectedValue(providerError),
       }
 
-      mockEtherFiAprProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
       await expect(fetchGenericApr(supportedTokenAddress, chainId)).rejects.toThrow(
         'Provider fetch failed',
@@ -160,7 +160,7 @@ describe('APR Providers', () => {
         fetchApr: vi.fn().mockResolvedValue(mockAprData),
       }
 
-      mockEtherFiAprProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
       const result = await fetchAprForToken(supportedTokenAddress, chainId)
 
@@ -190,7 +190,7 @@ describe('APR Providers', () => {
         fetchApr: vi.fn().mockResolvedValue(mockAprData),
       }
 
-      mockEtherFiAprProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
       await fetchAprForToken(supportedTokenAddress, chainId)
 
@@ -221,14 +221,14 @@ describe('APR Providers', () => {
         fetchApr: vi.fn().mockResolvedValue(mockAprData),
       }
 
-      mockEtherFiAprProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
       // Call multiple times
       await fetchGenericApr(supportedTokenAddress, chainId)
       await fetchGenericApr(supportedTokenAddress, chainId)
 
       // Should create new instance each time
-      expect(mockEtherFiAprProvider).toHaveBeenCalledTimes(2)
+      expect(EtherFiAprProvider).toHaveBeenCalledTimes(2)
     })
 
     it('should log provider selection', async () => {
@@ -253,7 +253,7 @@ describe('APR Providers', () => {
         fetchApr: vi.fn().mockResolvedValue(mockAprData),
       }
 
-      mockEtherFiAprProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
       // Mock console.log to verify logging
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})

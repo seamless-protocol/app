@@ -3,21 +3,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
 
 // Mock the MorphoBorrowApyProvider
-vi.mock('@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers/morpho', () => ({
-  MorphoBorrowApyProvider: vi.fn().mockImplementation(() => ({
-    protocolId: 'morpho',
-    protocolName: 'Morpho',
-    fetchBorrowApy: vi.fn(),
-  })),
-}))
+vi.mock('@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers/morpho')
 
 // Mock the module to avoid global mock conflicts
-vi.mock('@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers', async () => {
-  const actual = await vi.importActual(
-    '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers',
-  )
-  return actual
-})
+vi.mock(
+  '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers',
+  async (importOriginal) => {
+    const actual = await importOriginal()
+    return actual
+  },
+)
 
 import {
   LeverageTokenKey,
@@ -29,7 +24,12 @@ import {
 } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
 import { MorphoBorrowApyProvider } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers/morpho'
 
-const mockMorphoBorrowApyProvider = vi.mocked(MorphoBorrowApyProvider)
+// Mock the MorphoBorrowApyProvider
+vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => ({
+  protocolId: 'morpho',
+  protocolName: 'Morpho',
+  fetchBorrowApy: vi.fn(),
+}))
 
 describe('Borrow APY Providers', () => {
   const mockConfig = {} as Config
@@ -51,12 +51,12 @@ describe('Borrow APY Providers', () => {
         fetchBorrowApy: vi.fn().mockResolvedValue(mockBorrowApyData),
       }
 
-      mockMorphoBorrowApyProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
       const result = await fetchGenericBorrowApy(supportedTokenAddress, chainId, mockConfig)
 
       expect(result).toEqual(mockBorrowApyData)
-      expect(mockMorphoBorrowApyProvider).toHaveBeenCalledTimes(1)
+      expect(MorphoBorrowApyProvider).toHaveBeenCalledTimes(1)
       expect(mockProviderInstance.fetchBorrowApy).toHaveBeenCalledWith(
         supportedTokenAddress,
         chainId,
@@ -76,7 +76,7 @@ describe('Borrow APY Providers', () => {
         fetchBorrowApy: vi.fn().mockResolvedValue(mockBorrowApyData),
       }
 
-      mockMorphoBorrowApyProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
       const result = await fetchGenericBorrowApy(upperCaseTokenAddress, chainId, mockConfig)
 
@@ -119,7 +119,7 @@ describe('Borrow APY Providers', () => {
         fetchBorrowApy: vi.fn().mockRejectedValue(providerError),
       }
 
-      mockMorphoBorrowApyProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
       await expect(
         fetchGenericBorrowApy(supportedTokenAddress, chainId, mockConfig),
@@ -139,7 +139,7 @@ describe('Borrow APY Providers', () => {
         fetchBorrowApy: vi.fn().mockResolvedValue(mockBorrowApyData),
       }
 
-      mockMorphoBorrowApyProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
       const result = await fetchBorrowApyForToken(supportedTokenAddress, chainId, mockConfig)
 
@@ -162,7 +162,7 @@ describe('Borrow APY Providers', () => {
         fetchBorrowApy: vi.fn().mockResolvedValue(mockBorrowApyData),
       }
 
-      mockMorphoBorrowApyProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
       await fetchBorrowApyForToken(supportedTokenAddress, chainId, mockConfig)
 
@@ -186,14 +186,14 @@ describe('Borrow APY Providers', () => {
         fetchBorrowApy: vi.fn().mockResolvedValue(mockBorrowApyData),
       }
 
-      mockMorphoBorrowApyProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
       // Call multiple times
       await fetchGenericBorrowApy(supportedTokenAddress, chainId, mockConfig)
       await fetchGenericBorrowApy(supportedTokenAddress, chainId, mockConfig)
 
       // Should create new instance each time
-      expect(mockMorphoBorrowApyProvider).toHaveBeenCalledTimes(2)
+      expect(MorphoBorrowApyProvider).toHaveBeenCalledTimes(2)
     })
 
     it('should log provider selection', async () => {
@@ -207,7 +207,7 @@ describe('Borrow APY Providers', () => {
         fetchBorrowApy: vi.fn().mockResolvedValue(mockBorrowApyData),
       }
 
-      mockMorphoBorrowApyProvider.mockImplementation(() => mockProviderInstance)
+      vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
       // Mock console.log to verify logging
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})

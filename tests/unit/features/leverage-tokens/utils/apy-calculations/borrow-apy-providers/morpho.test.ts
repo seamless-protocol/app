@@ -3,19 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
 
 // Mock wagmi actions
-vi.mock('wagmi/actions', () => ({
-  readContract: vi.fn(),
-}))
+vi.mock('wagmi/actions')
 
 // Mock contract addresses
-vi.mock('@/lib/contracts/addresses', () => ({
-  getLeverageManagerAddress: vi.fn(),
-}))
+vi.mock('@/lib/contracts/addresses')
 
 // Mock GraphQL fetchers
-vi.mock('@/lib/graphql/fetchers/morpho', () => ({
-  fetchMorphoMarketBorrowRate: vi.fn(),
-}))
+vi.mock('@/lib/graphql/fetchers/morpho')
 
 import { readContract } from 'wagmi/actions'
 import { MorphoBorrowApyProvider } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers/morpho'
