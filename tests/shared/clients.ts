@@ -25,29 +25,29 @@ export const adminClient = createPublicClient({ chain, transport: http(RPC.admin
 
 /**
  * Administrative RPC request function for Tenderly VNet operations
- * 
+ *
  * This function provides access to Tenderly's administrative RPC methods that allow
  * modifying blockchain state during testing. These methods are only available on
  * Tenderly Virtual Networks (VNets) and provide capabilities not available on
  * standard RPC endpoints.
- * 
+ *
  * Key operations:
  * - `tenderly_setBalance(address, amount)` - Set native token balance for any address
  * - `tenderly_setErc20Balance(token, address, amount)` - Set ERC20 token balance
  * - `evm_snapshot()` - Create blockchain state snapshot for test isolation
  * - `evm_revert(id)` - Revert to previous snapshot state
- * 
+ *
  * @param method - The RPC method name (e.g., 'tenderly_setBalance', 'evm_snapshot')
  * @param params - Array of parameters for the RPC method
  * @returns Promise with the RPC response
- * 
+ *
  * @example
  * // Fund an address with 10 ETH on Tenderly VNet
  * await adminRequest('tenderly_setBalance', [address, '0x8ac7230489e80000'])
- * 
+ *
  * // Set ERC20 balance (5 tokens with 18 decimals)
  * await adminRequest('tenderly_setErc20Balance', [tokenAddress, userAddress, '0x4563918244f40000'])
- * 
+ *
  * // Create snapshot for test isolation
  * const snapshotId = await adminRequest<string>('evm_snapshot', [])
  */
@@ -72,25 +72,25 @@ export const extraWallets = extraAccounts.map((acct) =>
 
 /**
  * Create a blockchain state snapshot for test isolation
- * 
+ *
  * This function captures the current state of the blockchain (balances, contract storage,
  * transaction history, etc.) and returns a snapshot ID that can be used to revert back to
  * this exact state later. This is essential for test isolation - each test can start with
  * a clean, known state.
- * 
+ *
  * Implementation varies by backend:
  * - **Anvil**: Uses native `anvil_snapshot` RPC method
  * - **Tenderly VNet**: Uses `evm_snapshot` via adminRequest
- * 
+ *
  * @returns Promise<Hash> - Snapshot ID that can be used with revertSnapshot()
- * 
+ *
  * @example
  * ```typescript
  * // At start of test - capture clean state
  * const snapId = await takeSnapshot()
- * 
+ *
  * // ... run test logic that modifies blockchain state ...
- * 
+ *
  * // At end of test - restore clean state
  * await revertSnapshot(snapId)
  * ```
@@ -103,28 +103,28 @@ export async function takeSnapshot(): Promise<Hash> {
 
 /**
  * Revert blockchain state to a previous snapshot
- * 
+ *
  * This function restores the blockchain to the exact state it was in when the snapshot
  * was taken. All transactions, balance changes, contract deployments, and storage
  * modifications that occurred after the snapshot are undone.
- * 
+ *
  * This is used for test isolation - each test reverts to a clean snapshot state
  * afterwards, ensuring tests don't interfere with each other.
- * 
+ *
  * Implementation varies by backend:
  * - **Anvil**: Uses native `anvil_revert` RPC method
  * - **Tenderly VNet**: Uses `evm_revert` via adminRequest
- * 
+ *
  * @param id - Snapshot ID returned from takeSnapshot()
- * 
+ *
  * @example
  * ```typescript
  * const snapId = await takeSnapshot()
- * 
+ *
  * // Test makes changes: fund accounts, execute transactions, etc.
  * await fundAccount(address, '10')
  * await executeTransaction(...)
- * 
+ *
  * // Revert back to clean state
  * await revertSnapshot(snapId) // All changes are undone
  * ```

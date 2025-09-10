@@ -1,32 +1,21 @@
 import { expect, test } from '@playwright/test'
 
-test('debug server check', async ({ page }) => {
-  // Try to load the base URL
-  const response = await page.goto('/', { waitUntil: 'domcontentloaded' })
+test('verify dev server is responding', async ({ page }) => {
+  // Navigate to app root
+  await page.goto('/')
 
-  console.log('Response status:', response?.status())
-  console.log('Response URL:', response?.url())
+  // Wait for page to load
+  await page.waitForLoadState('networkidle')
 
-  // Get page content
-  const content = await page.content()
-  console.log('Page title:', await page.title())
+  // Get the response to verify server is working
+  const response = await page.request.get('http://127.0.0.1:3000/')
+  console.log('Server response status:', response.status())
 
-  // Check if we have the app root element
-  const hasRoot = await page.locator('#root').count()
-  console.log('Has #root element:', hasRoot > 0)
+  // Check if app loaded successfully
+  const hasRoot = await page.locator('#root').isVisible()
+  console.log('App has #root element:', hasRoot)
 
-  // Check for any error messages
-  if (content.includes('Not Found')) {
-    console.error('Page shows "Not Found"')
-  }
-
-  if (content.includes('Cannot GET')) {
-    console.error('Server error: Cannot GET')
-  }
-
-  // Take a screenshot for debugging
-  await page.screenshot({ path: 'test-results/debug-screenshot.png' })
-
-  // We expect the app to have a root element
+  // Basic assertions
+  expect(response.status()).toBe(200)
   await expect(page.locator('#root')).toBeVisible()
 })

@@ -10,13 +10,14 @@ export type SwapContext = ContractFunctionArgs<typeof leverageRouterAbi, 'nonpay
 
 /**
  * Exchange enum values for ISwapAdapter.Exchange
+ * Based on V1 implementation
  */
 export const Exchange = {
-  UNISWAP_V2: 0,
-  UNISWAP_V3: 1,
-  AERODROME_V2: 2,
-  AERODROME_SLIPSTREAM: 3,
-  ETHERFI: 4,
+  AERODROME: 0,
+  AERODROME_SLIPSTREAM: 1,
+  ETHERFI: 2,
+  UNISWAP_V2: 3,
+  UNISWAP_V3: 4,
 } as const
 
 /**

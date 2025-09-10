@@ -38,13 +38,13 @@ export default defineConfig({
   webServer: {
     // Run dev server in test mode with mock wallet; RPC URL is determined automatically
     command: `bunx --bun vite --port 3000 --host 127.0.0.1 --strictPort`,
+    url: 'http://127.0.0.1:3000', // Explicit URL for Playwright to wait for
     env: {
       VITE_TEST_MODE: 'mock',
       VITE_BASE_RPC_URL: BASE_RPC_URL,
       VITE_ANVIL_RPC_URL: BASE_RPC_URL,
       VITE_TEST_PRIVATE_KEY: ANVIL_DEFAULT_PRIVATE_KEY,
     },
-    port: 3000, // Use port instead of url - fixes macOS hanging issue
     reuseExistingServer: !process.env.CI,
     timeout: 120_000, // Give Vite + plugins extra time in CI
     stdout: 'pipe',

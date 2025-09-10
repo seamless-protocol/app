@@ -5,11 +5,11 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ command, mode }) => ({
   plugins: [TanStackRouterVite(), react(), tailwindcss()],
 
-  // CRITICAL for IPFS: Use relative paths
-  base: './',
+  // CRITICAL: Use absolute paths for development, relative for IPFS production builds
+  base: command === 'serve' ? '/' : './',
 
   // Path resolution for aliases
   resolve: {
