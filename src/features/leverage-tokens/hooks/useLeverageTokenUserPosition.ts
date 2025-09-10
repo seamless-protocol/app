@@ -1,9 +1,8 @@
 import { useMemo } from 'react'
 import type { Address } from 'viem'
-import { useAccount, useChainId, useReadContracts } from 'wagmi'
-import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
+import { useAccount, useChainId } from 'wagmi'
+import { useTokenBalance } from '@/lib/hooks/useTokenBalance'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
-import { STALE_TIME } from '../utils/constants'
 import { useLeverageTokenState } from './useLeverageTokenState'
 
 export interface UseLeverageTokenUserPositionParams {
@@ -40,32 +39,16 @@ export function useLeverageTokenUserPosition({
 
   // 2) Read user balance (shares)
   const {
-    data: balanceData,
+    balance,
     isLoading: isBalLoading,
     isError: isBalError,
     error: balError,
-  } = useReadContracts({
-    contracts:
-      tokenAddress && user
-        ? [
-            {
-              address: tokenAddress,
-              abi: leverageTokenAbi,
-              functionName: 'balanceOf' as const,
-              args: [user],
-              chainId: chainId as 1 | 8453,
-            },
-          ]
-        : [],
-    query: {
-      enabled: Boolean(tokenAddress && user && isConnected),
-      staleTime: STALE_TIME.supply,
-      refetchInterval: 30_000,
-    },
+  } = useTokenBalance({
+    tokenAddress: tokenAddress as Address,
+    userAddress: user as Address,
+    chainId,
+    enabled: Boolean(tokenAddress && user && isConnected),
   })
-
-  const balance =
-    balanceData?.[0]?.status === 'success' ? (balanceData[0].result as bigint) : undefined
 
   // 3) USD price for debt asset
   const { data: usdPriceMap } = useUsdPrices({
