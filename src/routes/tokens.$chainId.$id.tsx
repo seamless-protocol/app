@@ -19,6 +19,7 @@ import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
 // no mock imports; route uses live data
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
+import { useLeverageTokenCollateral } from '@/features/leverage-tokens/hooks/useLeverageTokenCollateral'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
 import { useLeverageTokenState } from '@/features/leverage-tokens/hooks/useLeverageTokenState'
@@ -84,6 +85,12 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       chainId,
       timeframe: selectedTimeframe,
     })
+
+    // Total collateral amount
+    const { collateral, isLoading: isCollateralLoading } = useLeverageTokenCollateral(
+      tokenAddress as Address,
+      chainId,
+    )
 
     const tvlDebtUnits =
       stateData && tokenConfig
@@ -167,7 +174,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
         ) : typeof tvlDebtUnits === 'number' && Number.isFinite(tvlDebtUnits) ? (
           `${formatNumber(tvlDebtUnits, { decimals: 2, thousandDecimals: 2, millionDecimals: 2, billionDecimals: 2 })} ${tokenConfig.debtAsset.symbol}`
         ) : (
-          '—'
+          'N/A'
         ),
         caption:
           isStateLoading || (typeof tvlDebtUnits === 'number' && isUsdLoading) ? (
@@ -178,12 +185,38 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       },
       {
         title: 'Total Collateral',
-        stat: apyData?.totalAPY ? (
-          formatAPY(apyData.totalAPY, 2)
-        ) : (
-          <Skeleton className="h-6 w-16" />
-        ),
-        caption: apyData?.totalAPY ? 'Including rewards & leverage' : undefined,
+        stat:
+          collateral && tokenConfig ? (
+            `${formatNumber(Number(formatUnits(collateral, tokenConfig.collateralAsset.decimals)), {
+              decimals: 2,
+              thousandDecimals: 2,
+              millionDecimals: 2,
+              billionDecimals: 2,
+            })} ${tokenConfig.collateralAsset.symbol}`
+          ) : isCollateralLoading ? (
+            <Skeleton className="h-6 w-24" />
+          ) : (
+            'N/A'
+          ),
+        caption:
+          collateral && tokenConfig ? (
+            (() => {
+              const collateralAmount = Number(
+                formatUnits(collateral, tokenConfig.collateralAsset.decimals),
+              )
+              const collateralPriceUsd =
+                usdPriceMap[tokenConfig.collateralAsset.address.toLowerCase()]
+              const collateralUsd =
+                typeof collateralPriceUsd === 'number' && Number.isFinite(collateralPriceUsd)
+                  ? collateralAmount * collateralPriceUsd
+                  : undefined
+              return collateralUsd
+                ? formatCurrency(collateralUsd, { millionDecimals: 2, thousandDecimals: 2 })
+                : undefined
+            })()
+          ) : isCollateralLoading ? (
+            <Skeleton className="h-4 w-20 mt-1" />
+          ) : undefined,
       },
       {
         title: 'Target Leverage',
