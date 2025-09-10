@@ -22,7 +22,6 @@ const Defaults = {
 const EnvSchema = z.object({
   // RPC selection
   TEST_RPC_URL: z.string().url().optional(),
-  TENDERLY_RPC_URL: z.string().url().optional(),
   TENDERLY_ADMIN_RPC_URL: z.string().url().optional(),
   ANVIL_RPC_URL: z.string().url().default(Defaults.ANVIL_RPC_URL),
 
@@ -66,7 +65,7 @@ const EnvSchema = z.object({
 
 export const Env = EnvSchema.parse(process.env)
 
-const tenderlyPrimary = Env.TEST_RPC_URL ?? Env.TENDERLY_RPC_URL
+const tenderlyPrimary = Env.TEST_RPC_URL
 export const mode: Mode = tenderlyPrimary ? 'tenderly' : 'anvil'
 
 let primaryRpc: string
