@@ -1,8 +1,8 @@
 import type { Address } from 'viem'
 import { describe, expect, it } from 'vitest'
-import { mintWithRouter, previewMint } from '../../src/domain/mint-with-router'
-import { leverageManagerAbi } from '../../src/lib/contracts/abis/leverageManager'
-import { withFork } from './utils'
+import { mintWithRouter, previewMint } from '@/domain/mint-with-router'
+import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
+import { withFork } from '../../utils'
 
 describe('Domain: mintWithRouter Integration Test', () => {
   it('should use domain logic for mint simulation (dry run)', async () =>

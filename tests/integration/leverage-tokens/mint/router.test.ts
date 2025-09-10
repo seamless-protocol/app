@@ -1,9 +1,9 @@
 import { type Address, erc20Abi, maxUint256 } from 'viem'
 import { describe, expect, it } from 'vitest'
-import { createSwapContext } from '../../src/features/leverage-tokens/utils/swapContext'
-import { leverageManagerAbi } from '../../src/lib/contracts/abis/leverageManager'
-import { leverageRouterAbi } from '../../src/lib/contracts/abis/leverageRouter'
-import { withFork } from './utils'
+import { createSwapContext } from '@/features/leverage-tokens/utils/swapContext'
+import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
+import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
+import { withFork } from '../../utils'
 
 describe('Router-Based Minting (Anvil Base fork / viem)', () => {
   it('previewMint and check collateral asset', async () =>

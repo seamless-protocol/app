@@ -82,11 +82,3 @@ export async function deleteVNet({ account, project, accessKey, token, id }: VNe
   }
 }
 
-// Back-compat names for importers that still call createFork/deleteFork
-export async function createFork(args: VNetConfig): Promise<VNetResult> {
-  return await createVNet(args)
-}
-
-export async function deleteFork(args: VNetConfig & { id: string }): Promise<void> {
-  return await deleteVNet(args)
-}

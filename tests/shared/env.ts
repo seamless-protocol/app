@@ -11,7 +11,8 @@ config({ path: resolve(__dirname, '../integration/.env') })
 export type Mode = 'tenderly' | 'anvil'
 
 // Well-known Anvil/Hardhat test account #0 (publicly known, not a secret)
-export const ANVIL_DEFAULT_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' as const
+export const ANVIL_DEFAULT_PRIVATE_KEY =
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' as const
 export const ANVIL_DEFAULT_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as const
 
 const Defaults = {

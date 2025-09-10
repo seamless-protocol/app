@@ -1,10 +1,5 @@
 import { spawn } from 'node:child_process'
 import { shouldSkipAnvilStartup } from '../shared/backend'
-import { ADDR, ANVIL_DEFAULT_ADDRESS } from '../shared/env'
-import { topUpErc20, topUpNative } from '../shared/funding'
-
-// Test address used by mock connector (Anvil default account #0)
-const TEST_ADDRESS = ANVIL_DEFAULT_ADDRESS
 
 /**
  * Global setup for Playwright E2E tests
@@ -16,7 +11,6 @@ async function globalSetup() {
   // Skip Anvil startup if using non-Anvil backend (e.g., explicit RPC URL or Tenderly)
   if (shouldSkipAnvilStartup()) {
     console.log('🔗 Non-Anvil backend detected. Skipping Anvil startup.')
-    await fundForE2E()
     return
   }
 
@@ -97,11 +91,6 @@ async function globalSetup() {
     )
   }
   console.log(`✅ Anvil Base fork is running and ready for E2E tests (in ${Date.now() - start}ms)`)
-
-  console.log('✅ Anvil Base fork is running and ready for E2E tests')
-
-  // Fund the test account with ETH (gas) and weETH (deposit asset)
-  await fundForE2E()
 }
 
 /**
@@ -134,14 +123,3 @@ async function checkAnvilRunning(): Promise<boolean> {
 }
 
 export default globalSetup
-
-async function fundForE2E() {
-  try {
-    console.log('🔧 Funding test account for E2E (ETH + weETH)...')
-    await topUpNative(TEST_ADDRESS as any, '10')
-    await topUpErc20(ADDR.weeth, TEST_ADDRESS as any, '5')
-    console.log('✅ Funding complete')
-  } catch (error) {
-    console.error('⚠️  Failed to fund test account for E2E:', error)
-  }
-}

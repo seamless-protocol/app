@@ -1,7 +1,7 @@
 import { createWalletClient, http, publicActions } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base } from 'viem/chains'
-import { ADDR, ANVIL_DEFAULT_PRIVATE_KEY, ANVIL_DEFAULT_ADDRESS } from '../shared/env'
+import { ADDR, ANVIL_DEFAULT_ADDRESS, ANVIL_DEFAULT_PRIVATE_KEY } from '../shared/env'
 import { topUpErc20, topUpNative } from '../shared/funding'
 
 // Test address used by mock connector (Anvil default account #0)

@@ -6,6 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Seamless Protocol - Frontend application for a DeFi protocol that wraps complex leverage strategies into simple ERC-20 tokens. Built for IPFS deployment as a fully static, client-side application.
 
+## Testing Backend Default
+
+**CRITICAL: Tenderly VNet is the default and preferred backend for all integration and E2E tests.** 
+- Always use Tenderly VNet approach unless explicitly debugging local issues
+- Anvil is only a fallback for local development when Tenderly is unavailable
+- Tests automatically create/delete VNet instances just-in-time (JIT)
+
 ## Essential Commands
 
 ```bash
@@ -24,12 +31,17 @@ bun typecheck          # Type-check only
 bun test               # Run unit tests with Vitest
 bun test:ui            # Run tests with UI
 bun test:coverage      # Run tests with coverage
-bun test:integration   # Run integration tests (requires Anvil)
-bun test:e2e           # Run E2E tests with Playwright
+bun test:integration   # Run integration tests (uses Tenderly VNet by default)
+bun test:e2e           # Run E2E tests with Playwright (uses Tenderly VNet by default)
 
-# Integration Testing (Anvil Base Fork)
-bun run anvil:base     # Start local Base fork (Terminal 1)
-# Then run integration tests (Terminal 2)
+# Testing Backend Configuration
+# DEFAULT: Tenderly VNet (just-in-time creation/deletion)
+# - Set TENDERLY_ACCESS_KEY, TENDERLY_ACCOUNT, TENDERLY_PROJECT environment variables
+# - Tests automatically create/delete VNet instances as needed
+# 
+# FALLBACK: Local Anvil Base Fork
+# bun run anvil:base     # Start local Base fork (Terminal 1) 
+# - Only use when Tenderly is unavailable or for local development
 
 # Component Development (needs setup)
 bun storybook          # Start Storybook on port 6006 (needs setup)
@@ -125,39 +137,50 @@ tests/
 └── utils/       # Test helpers
 ```
 
-### Integration Testing with Anvil
+### Integration Testing with Tenderly VNet (Default)
 
-Integration tests use a local Anvil fork of Base mainnet, replacing the previous Tenderly setup to eliminate API limits.
+**IMPORTANT: Tenderly VNet is the default and preferred approach for all integration and E2E tests.**
+
+Integration tests use Tenderly VirtualNet (VNet) for just-in-time blockchain test environments. This approach:
+- **Creates VNet instances automatically** - No manual setup required
+- **Eliminates API rate limits** - Each test gets a fresh, isolated environment  
+- **Provides admin RPC capabilities** - Direct balance/state manipulation for test setup
+- **Supports CI/CD environments** - No local infrastructure dependencies
+
+**Anvil is only a fallback** for local development when Tenderly is unavailable.
 
 **Prerequisites:**
 ```bash
-# Install Foundry (includes Anvil)
-curl -L https://foundry.paradigm.xyz | bash
-foundryup
+# Tenderly account with API access
+# Set environment variables:
+export TENDERLY_ACCESS_KEY="your_access_key"
+export TENDERLY_ACCOUNT="your_account_slug" 
+export TENDERLY_PROJECT="your_project_slug"
 ```
 
 **Setup:**
-1. Configure environment:
+1. **Tenderly VNet (Default):**
    ```bash
-   cd tests/integration
-   cp .env.example .env
-   # Edit .env with your Base RPC URL (required: ANVIL_BASE_FORK_URL)
+   # Tests automatically create/delete VNet instances
+   bun run test:integration  # Uses Tenderly VNet automatically
+   bun run test:e2e          # Uses Tenderly VNet automatically
    ```
 
-2. Run integration tests:
+2. **Anvil Fallback (Local Development Only):**
    ```bash
-   # Terminal 1: Start Anvil Base fork
+   # Terminal 1: Start Anvil Base fork (only if Tenderly unavailable)
    ANVIL_BASE_FORK_URL=https://mainnet.base.org bun run anvil:base
    
-   # Terminal 2: Run tests
-   bun run test:integration
+   # Terminal 2: Run tests against local Anvil
+   TEST_RPC_URL=http://127.0.0.1:8545 bun run test:integration
    ```
 
 **Key Features:**
-- **No API limits** - Tests run against local Anvil fork
-- **Fast execution** - <30s local test suite
+- **Just-in-time VNets** - Automatic creation/deletion of isolated test environments
+- **Admin RPC capabilities** - Direct balance manipulation via `tenderly_setBalance`, `tenderly_setErc20Balance`  
+- **No infrastructure dependencies** - Works in CI/CD without local blockchain nodes
 - **Deterministic** - Consistent state with snapshot/revert isolation
-- **Safe token funding** - WETH deposits + rich holder impersonation (no storage writes)
+- **Per-test funding** - Automatic token funding with `withFork()` helper
 
 **Test Architecture:**
 - **Public Client**: Read blockchain state from Base fork  
