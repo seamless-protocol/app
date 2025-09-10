@@ -96,6 +96,7 @@ describe('MorphoBorrowApyProvider', () => {
         abi: expect.any(Object), // leverageManagerAbi
         functionName: 'getLeverageTokenConfig',
         args: [tokenAddress],
+        chainId: chainId,
       })
 
       // Second call: get market ID from lending adapter
@@ -103,6 +104,7 @@ describe('MorphoBorrowApyProvider', () => {
         address: mockLendingAdapterAddress,
         abi: expect.any(Object), // lendingAdapterAbi
         functionName: 'morphoMarketId',
+        chainId: chainId,
       })
 
       // Verify GraphQL call

@@ -21,6 +21,7 @@ export async function fetchGenericBorrowApy(
       switch (lowerTokenAddress) {
         case leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address.toLowerCase():
           provider = new MorphoBorrowApyProvider()
+          console.log(`Fetching borrow APY for ${tokenAddress} on chain ${chainId} using Morpho`)
           break
         default:
           throw new Error(`Unsupported token address for borrow APY: ${tokenAddress}`)
