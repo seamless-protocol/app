@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 import { getTestRpcUrl } from './tests/shared/backend'
+import { ANVIL_DEFAULT_PRIVATE_KEY } from './tests/shared/env'
 
 // Get RPC URL from centralized backend detection
 const BASE_RPC_URL = getTestRpcUrl()
@@ -41,8 +42,7 @@ export default defineConfig({
       VITE_TEST_MODE: 'mock',
       VITE_BASE_RPC_URL: BASE_RPC_URL,
       VITE_ANVIL_RPC_URL: BASE_RPC_URL,
-      VITE_TEST_PRIVATE_KEY:
-        '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+      VITE_TEST_PRIVATE_KEY: ANVIL_DEFAULT_PRIVATE_KEY,
     },
     port: 3000, // Use port instead of url - fixes macOS hanging issue
     reuseExistingServer: !process.env.CI,

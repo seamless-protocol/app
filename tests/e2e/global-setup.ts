@@ -1,10 +1,10 @@
 import { spawn } from 'node:child_process'
 import { shouldSkipAnvilStartup } from '../shared/backend'
-import { ADDR } from '../shared/env'
+import { ADDR, ANVIL_DEFAULT_ADDRESS } from '../shared/env'
 import { topUpErc20, topUpNative } from '../shared/funding'
 
 // Test address used by mock connector (Anvil default account #0)
-const TEST_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+const TEST_ADDRESS = ANVIL_DEFAULT_ADDRESS
 
 /**
  * Global setup for Playwright E2E tests

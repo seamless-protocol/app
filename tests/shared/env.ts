@@ -10,6 +10,10 @@ config({ path: resolve(__dirname, '../integration/.env') })
 
 export type Mode = 'tenderly' | 'anvil'
 
+// Well-known Anvil/Hardhat test account #0 (publicly known, not a secret)
+export const ANVIL_DEFAULT_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' as const
+export const ANVIL_DEFAULT_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as const
+
 const Defaults = {
   ANVIL_RPC_URL: 'http://127.0.0.1:8545',
 }
@@ -26,7 +30,7 @@ const EnvSchema = z.object({
   TEST_PRIVATE_KEY: z
     .string()
     .regex(/^0x[0-9a-fA-F]{64}$/)
-    .default('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'),
+    .default(ANVIL_DEFAULT_PRIVATE_KEY),
   TEST_PRIVATE_KEYS_CSV: z.string().optional(),
 
   // Contract addresses (Base)
