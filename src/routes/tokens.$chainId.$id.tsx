@@ -171,14 +171,18 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
         ),
         caption:
           isStateLoading || (typeof tvlDebtUnits === 'number' && isUsdLoading) ? (
-            <Skeleton as="span" className="h-4 w-24 mt-1" />
+            <Skeleton className="h-4 w-24 mt-1" />
           ) : typeof tvlUsd === 'number' && Number.isFinite(tvlUsd) ? (
             `${formatCurrency(tvlUsd, { millionDecimals: 2, thousandDecimals: 2 })}`
           ) : undefined,
       },
       {
         title: 'Total Collateral',
-        stat: apyData?.totalAPY ? formatAPY(apyData.totalAPY, 2) : 'Loading...',
+        stat: apyData?.totalAPY ? (
+          formatAPY(apyData.totalAPY, 2)
+        ) : (
+          <Skeleton className="h-6 w-16" />
+        ),
         caption: apyData?.totalAPY ? 'Including rewards & leverage' : undefined,
       },
       {
@@ -288,7 +292,11 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 <h1 className="text-2xl sm:text-3xl font-bold text-white">{tokenConfig.name}</h1>
                 <div className="flex items-center space-x-1">
                   <Badge className="bg-green-500/10 text-green-400 border-green-400/20">
-                    {apyData?.totalAPY ? `${formatAPY(apyData.totalAPY, 2)} APY` : 'Loading...'}
+                    {apyData?.totalAPY ? (
+                      `${formatAPY(apyData.totalAPY, 2)} APY`
+                    ) : (
+                      <Skeleton className="h-4 w-20" />
+                    )}
                   </Badge>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -352,9 +360,17 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
               transition={{ duration: 0.4, delay: 0.3 }}
             >
               {isPriceDataLoading ? (
-                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-                  <p className="text-slate-400">Loading price data...</p>
+                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8">
+                  <div className="space-y-4">
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-64 w-full" />
+                    <div className="flex justify-center space-x-2">
+                      <Skeleton className="h-8 w-12" />
+                      <Skeleton className="h-8 w-12" />
+                      <Skeleton className="h-8 w-12" />
+                      <Skeleton className="h-8 w-12" />
+                    </div>
+                  </div>
                 </div>
               ) : priceDataError ? (
                 <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8 text-center">

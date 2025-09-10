@@ -1,5 +1,6 @@
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
+import { Skeleton } from './ui/skeleton'
 import type { APYBreakdownData } from './APYBreakdown'
 import { APYBreakdown } from './APYBreakdown'
 
@@ -43,7 +44,11 @@ export function APYBreakdownTooltip({
     return (
       <div className="p-4 min-w-[240px]">
         <div className="text-sm font-semibold text-white mb-3">APY Breakdown</div>
-        <div className="text-sm text-slate-400">Loading yield data...</div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-24" />
+        </div>
       </div>
     )
   }

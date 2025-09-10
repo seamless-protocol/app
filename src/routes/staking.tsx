@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Network } from 'lucide-react'
 import { FAQ } from '@/components/FAQ'
 import { StatCard } from '@/components/StatCard'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -73,11 +74,21 @@ function StakingPage() {
                     <span className="text-white text-xs font-bold">S</span>
                   </div>
                   <span className="text-2xl font-bold text-white">
-                    {isUserStatsLoading ? 'Loading...' : userStats?.currentHoldingsAmount}
+                    {isUserStatsLoading ? (
+                      <Skeleton className="h-8 w-24" />
+                    ) : (
+                      userStats?.currentHoldingsAmount
+                    )}
                   </span>
                 </div>
               }
-              caption={isUserStatsLoading ? 'Loading...' : userStats?.currentHoldingsUsdValue}
+              caption={
+                isUserStatsLoading ? (
+                  <Skeleton className="h-4 w-20" />
+                ) : (
+                  userStats?.currentHoldingsUsdValue
+                )
+              }
             />
 
             {/* Claimable Rewards - Custom card with claim button */}
@@ -87,7 +98,11 @@ function StakingPage() {
                   <div>
                     <p className="text-lg font-medium text-white mb-2">Claimable rewards</p>
                     <p className="text-3xl font-bold text-white">
-                      {isUserStatsLoading ? 'Loading...' : userStats?.claimableRewardsAmount}
+                      {isUserStatsLoading ? (
+                        <Skeleton className="h-8 w-20" />
+                      ) : (
+                        userStats?.claimableRewardsAmount
+                      )}
                     </p>
                     <p className="text-sm text-slate-400 mt-1">Stake SEAM to receive rewards.</p>
                   </div>
@@ -111,18 +126,38 @@ function StakingPage() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <StatCard
               title="Total Staked"
-              stat={isProtocolStatsLoading ? 'Loading...' : protocolStats?.totalStakedAmount}
-              caption={isProtocolStatsLoading ? 'Loading...' : protocolStats?.totalStakedUsdValue}
+              stat={
+                isProtocolStatsLoading ? (
+                  <Skeleton className="h-6 w-20" />
+                ) : (
+                  protocolStats?.totalStakedAmount
+                )
+              }
+              caption={
+                isProtocolStatsLoading ? (
+                  <Skeleton className="h-4 w-16" />
+                ) : (
+                  protocolStats?.totalStakedUsdValue
+                )
+              }
             />
 
             <StatCard
               title="Total APR"
-              stat={isProtocolStatsLoading ? 'Loading...' : protocolStats?.totalAPR}
+              stat={
+                isProtocolStatsLoading ? <Skeleton className="h-6 w-16" /> : protocolStats?.totalAPR
+              }
             />
 
             <StatCard
               title="Unstaking cooldown"
-              stat={isProtocolStatsLoading ? 'Loading...' : protocolStats?.unstakingCooldown}
+              stat={
+                isProtocolStatsLoading ? (
+                  <Skeleton className="h-6 w-20" />
+                ) : (
+                  protocolStats?.unstakingCooldown
+                )
+              }
             />
           </div>
 

@@ -1,4 +1,5 @@
 import { useAccount, useBalance, useChainId, useSwitchChain } from 'wagmi'
+import { Skeleton } from './ui/skeleton'
 
 export function WalletInfo() {
   const { address, isConnected } = useAccount()
@@ -28,7 +29,9 @@ export function WalletInfo() {
 
       <div>
         <strong>Balance:</strong>
-        <div>{balance ? `${balance.formatted} ${balance.symbol}` : 'Loading...'}</div>
+        <div>
+          {balance ? `${balance.formatted} ${balance.symbol}` : <Skeleton className="h-4 w-20" />}
+        </div>
       </div>
 
       <div>

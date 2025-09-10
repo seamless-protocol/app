@@ -10,6 +10,7 @@ import { filterBySearch, parseSortString, sortData } from '@/lib/utils/table-uti
 import { SortArrowDown, SortArrowNeutral, SortArrowUp } from '../../../components/icons'
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Badge } from '../../../components/ui/badge'
+import { Skeleton } from '../../../components/ui/skeleton'
 import { FilterDropdown } from '../../../components/ui/filter-dropdown'
 import {
   Table,
@@ -417,9 +418,13 @@ export function LeverageTokenTable({
 
                     <TableCell className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end space-x-1">
-                        <span className="text-green-400 font-medium text-sm">
-                          {apyData?.totalAPY ? formatAPY(apyData.totalAPY, 2) : 'Loading...'}
-                        </span>
+                        {apyData?.totalAPY ? (
+                          <span className="text-green-400 font-medium text-sm">
+                            {formatAPY(apyData.totalAPY, 2)}
+                          </span>
+                        ) : (
+                          <Skeleton className="h-6 w-20" />
+                        )}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
