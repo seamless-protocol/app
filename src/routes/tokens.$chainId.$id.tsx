@@ -17,7 +17,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
-// no mock imports; route uses live data
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import { useLeverageTokenCollateral } from '@/features/leverage-tokens/hooks/useLeverageTokenCollateral'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
@@ -154,7 +153,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
         ? formatCurrency(userEquityUsd, { decimals: 2, thousandDecimals: 2 })
         : `~${formatCurrency(0, { decimals: 2, thousandDecimals: 2 })}`
 
-    // No mock token; APY hook is wired to config
     const handleMint = () => {
       // TODO: Implement mint modal/functionality
       console.log('Mint clicked')

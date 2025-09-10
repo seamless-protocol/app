@@ -20,10 +20,10 @@ export function useStakingProtocolStats() {
       await new Promise((resolve) => setTimeout(resolve, 350))
 
       return {
-        totalStakedAmount: '3.70M SEAM',
-        totalStakedUsdValue: '$7.96M',
-        totalAPR: '35.72%',
-        unstakingCooldown: '7 days',
+        totalStakedAmount: '3.70M SEAM (todo)',
+        totalStakedUsdValue: '$7.96M (todo)',
+        totalAPR: '35.72% (todo)',
+        unstakingCooldown: '7 days (todo)',
       }
     },
     staleTime: 4 * 60 * 1000, // 4 minutes
