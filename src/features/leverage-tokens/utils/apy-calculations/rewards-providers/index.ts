@@ -28,10 +28,7 @@ export async function fetchGenericRewardsApr(
  * Base rewards APR provider - returns 0 for now
  */
 class BaseRewardsAprProvider implements RewardsAprProvider {
-  async fetchRewardsApr(tokenAddress: Address): Promise<BaseRewardsAprData> {
-    console.log('Fetching rewards APR for Base chain, token:', tokenAddress)
-    console.log('Returning 0% rewards APR (placeholder)')
-
+  async fetchRewardsApr(_tokenAddress: Address): Promise<BaseRewardsAprData> {
     return {
       rewardsAPR: 0,
     }

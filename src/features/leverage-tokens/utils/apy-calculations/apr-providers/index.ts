@@ -25,8 +25,6 @@ export async function fetchGenericApr(tokenAddress: string, chainId: number): Pr
       throw new Error(`Unsupported chain ID: ${chainId}`)
   }
 
-  console.log(`Fetching APR for ${tokenAddress} on chain ${chainId} using ${provider.protocolName}`)
-
   return await provider.fetchApr()
 }
 

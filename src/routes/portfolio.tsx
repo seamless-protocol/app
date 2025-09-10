@@ -27,7 +27,7 @@ function PortfolioPage() {
     isLoading: portfolioLoading,
     isError: portfolioError,
   } = usePortfolioData()
-  const performanceData = usePortfolioPerformance(portfolioData?.summary.totalValue || 0)
+  const performanceData = usePortfolioPerformance()
   const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
   const { data: stakingData, isLoading: stakingLoading } = usePortfolioStaking()
 

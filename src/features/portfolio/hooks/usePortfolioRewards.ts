@@ -17,9 +17,6 @@ export function usePortfolioRewards() {
   return useQuery({
     queryKey: portfolioKeys.rewards(),
     queryFn: async (): Promise<RewardsData> => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 400))
-
       return mockRewardsData
     },
     staleTime: 3 * 60 * 1000, // 3 minutes

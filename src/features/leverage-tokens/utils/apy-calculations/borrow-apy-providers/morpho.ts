@@ -79,8 +79,6 @@ export class MorphoBorrowApyProvider implements BorrowApyFetcher {
     config?: Config,
   ): Promise<BaseBorrowApyData> {
     try {
-      console.log('Fetching Morpho borrow APY...')
-
       if (!chainId || !config) {
         throw new Error('Chain ID and config are required for fetching Morpho market ID')
       }

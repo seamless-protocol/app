@@ -25,23 +25,9 @@ export function usePortfolioData() {
   return useQuery({
     queryKey: portfolioKeys.data(),
     queryFn: async (): Promise<PortfolioData> => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      // Calculate average APY from positions
-      const averageAPY =
-        mockPositions.length > 0
-          ? mockPositions.reduce((sum, position) => {
-              const apyValue = parseFloat(position.apy.replace('%', ''))
-              return sum + apyValue
-            }, 0) / mockPositions.length
-          : 0
-
+      // No setTimeout needed - just return static data immediately
       return {
-        summary: {
-          ...mockPortfolioSummary,
-          averageAPY,
-        },
+        summary: mockPortfolioSummary,
         positions: mockPositions,
       }
     },

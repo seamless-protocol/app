@@ -30,10 +30,6 @@ export async function fetchGenericBorrowApy(
       throw new Error(`Unsupported chain ID for borrow APY: ${chainId}`)
   }
 
-  console.log(
-    `Fetching borrow APY for ${tokenAddress} on chain ${chainId} using ${provider.protocolName}`,
-  )
-
   return await provider.fetchBorrowApy(tokenAddress, chainId, config)
 }
 

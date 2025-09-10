@@ -27,8 +27,8 @@ import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageToken
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
-import { formatAPY, formatCurrency, formatNumber } from '@/lib/utils/formatting'
 import { CHAIN_IDS } from '@/lib/utils/chain-logos'
+import { formatAPY, formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
 export const Route = createFileRoute('/tokens/$chainId/$id')({
   component: () => {
