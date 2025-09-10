@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { type Address, formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
+
 import { CONTRACT_ADDRESSES } from '@/lib/constants'
 import { useTokenBalance } from '@/lib/hooks/useTokenBalance'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
+
 import { stakingKeys } from '../utils/queryKeys'
 
 export interface StakingUserStats {
   currentHoldingsAmount: string
   currentHoldingsUsdValue: string
-  claimableRewardsAmount: string
 }
 
 /**
@@ -53,8 +54,6 @@ export function useStakingUserStats() {
       return {
         currentHoldingsAmount: `${formattedBalance} stkSEAM`,
         currentHoldingsUsdValue: `$${usdValue.toFixed(2)}`,
-        claimableRewardsAmount:
-          'TODO: getAllUserRewards @ 0x2C6dC2CE7747E726A590082ADB3d7d08F52ADB93',
       }
     },
     enabled: !isBalanceLoading && !isBalanceError,

@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { stakingFAQData } from '@/features/staking/data/faqData'
 import { useStakingProtocolStats } from '@/features/staking/hooks/useStakingProtocolStats'
+import { useStakingRewards } from '@/features/staking/hooks/useStakingRewards'
 import { useStakingUserStats } from '@/features/staking/hooks/useStakingUserStats'
 
 export const Route = createFileRoute('/staking')({
@@ -18,6 +19,7 @@ function StakingPage() {
   // Fetch staking data using hooks
   const { data: protocolStats, isLoading: isProtocolStatsLoading } = useStakingProtocolStats()
   const { data: userStats, isLoading: isUserStatsLoading } = useStakingUserStats()
+  const { data: rewardsData, isLoading: isRewardsLoading } = useStakingRewards()
 
   const handleClaimRewards = () => {
     console.log('Claim rewards to be implemented')
@@ -97,21 +99,21 @@ function StakingPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-lg font-medium text-white mb-2">Claimable rewards</p>
-                    <p className="text-3xl font-bold text-white">
-                      {isUserStatsLoading ? (
+                    <div className="text-3xl font-bold text-white">
+                      {isRewardsLoading ? (
                         <Skeleton className="h-8 w-20" />
                       ) : (
-                        userStats?.claimableRewardsAmount
+                        rewardsData?.claimableRewardsAmount
                       )}
-                    </p>
+                    </div>
                     <p className="text-sm text-slate-400 mt-1">Stake SEAM to receive rewards.</p>
                   </div>
                   <Button
                     onClick={handleClaimRewards}
                     disabled={
-                      isUserStatsLoading ||
-                      !userStats?.claimableRewardsAmount ||
-                      userStats.claimableRewardsAmount === '$0.00'
+                      isRewardsLoading ||
+                      !rewardsData?.claimableRewardsAmount ||
+                      rewardsData.claimableRewardsAmount === '0.00 SEAM'
                     }
                     className="bg-slate-600 hover:bg-slate-500 text-white px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
