@@ -1,8 +1,8 @@
 import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
-import { Skeleton } from './ui/skeleton'
 import type { APYBreakdownData } from './APYBreakdown'
 import { APYBreakdown } from './APYBreakdown'
+import { Skeleton } from './ui/skeleton'
 
 interface APYBreakdownTooltipProps {
   token: LeverageToken

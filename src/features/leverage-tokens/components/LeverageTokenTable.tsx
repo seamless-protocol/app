@@ -10,8 +10,8 @@ import { filterBySearch, parseSortString, sortData } from '@/lib/utils/table-uti
 import { SortArrowDown, SortArrowNeutral, SortArrowUp } from '../../../components/icons'
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Badge } from '../../../components/ui/badge'
-import { Skeleton } from '../../../components/ui/skeleton'
 import { FilterDropdown } from '../../../components/ui/filter-dropdown'
+import { Skeleton } from '../../../components/ui/skeleton'
 import {
   Table,
   TableBody,
