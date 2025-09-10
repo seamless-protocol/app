@@ -23,7 +23,14 @@ export async function topUpNative(to: Address, ether: string) {
     await testClient.setBalance({ address: to, value: parseUnits(ether, 18) })
     return
   }
-  await adminRequest('tenderly_setBalance', [to, toHex(parseUnits(ether, 18))])
+  // Tenderly expects array of addresses as first parameter
+  const amount = toHex(parseUnits(ether, 18))
+  console.log(`🔧 Funding ${to} with ${ether} ETH (${amount}) on Tenderly...`)
+  await adminRequest('tenderly_setBalance', [[to], amount])
+  
+  // Verify the balance was actually set
+  const balance = await publicClient.getBalance({ address: to })
+  console.log(`✅ Tenderly funding completed. New balance: ${balance} (${balance / 10n**18n} ETH)`)
 }
 
 /** Set ERC-20 balance via admin RPC (Tenderly) */
