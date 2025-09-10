@@ -64,7 +64,8 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
 
       // Fund account with collateral tokens (simulate)
       const equityAmount = 1000000000000000000n // 1 token
-      await fund.erc20(collateralAsset, [account.address], '1')
+      // Fund with extra tokens to account for potential swap costs and fees
+      await fund.erc20(collateralAsset, [account.address], '10')
 
       // Approve Router for collateral
       const { request: approveRequest } = await publicClient.simulateContract({

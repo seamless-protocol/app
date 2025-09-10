@@ -1,9 +1,11 @@
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { config } from 'dotenv'
 import { type Address, getAddress, type Hex } from 'viem'
 import { z } from 'zod'
 
 // Load local .env if present (used in integration/e2e runs)
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
 config({ path: resolve(__dirname, '../integration/.env') })
 
 export type Mode = 'tenderly' | 'anvil'

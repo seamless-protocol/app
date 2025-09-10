@@ -1,14 +1,22 @@
-import type { MintContext, MintPreview, PreviewParams } from './types'
+import type { Address } from 'viem'
+import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
+import type { Clients, PreviewMintResult } from './types'
 
-/**
- * previewMint: slice 1 placeholder implementation.
- * - No RPC calls
- * - Returns a trivial preview so types compile and tests can validate API shape.
- */
-export async function previewMint(_ctx: MintContext, params: PreviewParams): Promise<MintPreview> {
-  // For now, just echo input amount as the previewed output.
+export async function previewMint(
+  clients: Pick<Clients, 'publicClient'>,
+  manager: Address,
+  token: Address,
+  equityInCollateralAsset: bigint,
+): Promise<PreviewMintResult> {
+  const res = await clients.publicClient.readContract({
+    address: manager,
+    abi: leverageManagerAbi,
+    functionName: 'previewMint',
+    args: [token, equityInCollateralAsset],
+  })
   return {
-    expectedLeverageTokenOut: params.inputAmount,
-    routeHint: 'slice-1-placeholder',
+    shares: res.shares as bigint,
+    tokenFee: res.tokenFee as bigint,
+    treasuryFee: res.treasuryFee as bigint,
   }
 }

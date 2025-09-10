@@ -51,7 +51,9 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 3000,
     strictPort: false,
-    open: true,
+    // Ensure predictable binding for Playwright; disable auto-open in tests
+    host: process.env.VITE_TEST_MODE ? '127.0.0.1' : undefined,
+    open: process.env.VITE_TEST_MODE ? false : true,
   },
 
   // Preview server (for testing production builds)

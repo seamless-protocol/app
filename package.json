@@ -16,7 +16,8 @@
     "test:coverage": "vitest --coverage",
     "test:integration": "vitest --config tests/integration/vitest.config.ts",
     "anvil:base": "bash ./scripts/anvil-base.sh",
-    "test:e2e": "bunx playwright test",
+    "test:e2e": "node scripts/run-e2e-on-tenderly-vnet.cjs",
+    "test:e2e:local": "bunx playwright test",
     "test:e2e:tenderly": "node scripts/run-e2e-on-tenderly-vnet.cjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
@@ -56,7 +57,7 @@
     "zod": "^4.0.17"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.2.0",
+    "@biomejs/biome": "^2.2.3",
     "@chromatic-com/storybook": "^4.1.1",
     "@playwright/test": "^1.54.2",
     "@storybook/addon-a11y": "^9.1.3",

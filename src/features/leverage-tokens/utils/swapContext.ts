@@ -123,3 +123,32 @@ export function createSwapContext(
     additionalData: '0x',
   }
 }
+
+/**
+ * Base token addresses for common operations
+ */
+export const BASE_TOKEN_ADDRESSES = {
+  weETH: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150a' as Address,
+  WETH: '0x4200000000000000000000000000000000000006' as Address,
+} as const
+
+/**
+ * Create special weETH swap context optimized for EtherFi on Base
+ * This follows the V1 pattern for weETH -> WETH swaps using Aerodrome
+ */
+export function createWeETHSwapContext(): SwapContext {
+  const addresses = DEX_ADDRESSES[base.id]
+  if (!addresses) {
+    throw new Error(`Base chain not supported for weETH swap context`)
+  }
+
+  return {
+    path: [BASE_TOKEN_ADDRESSES.weETH, BASE_TOKEN_ADDRESSES.WETH],
+    encodedPath: '0x', // V2 doesn't need encoded paths
+    fees: [0], // V2 doesn't use fees in the same way
+    tickSpacing: [0], // V2 doesn't use tick spacing
+    exchange: Exchange.AERODROME_V2, // Aerodrome has the best weETH liquidity on Base
+    exchangeAddresses: addresses,
+    additionalData: '0x',
+  }
+}
