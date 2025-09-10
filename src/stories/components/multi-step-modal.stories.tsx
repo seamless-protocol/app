@@ -76,14 +76,20 @@ export const Interactive: Story = {
     const nextStep = () => {
       const currentIndex = mintSteps.findIndex((step) => step.id === currentStep)
       if (currentIndex < mintSteps.length - 1) {
-        setCurrentStep(mintSteps[currentIndex + 1].id)
+        const nextStep = mintSteps[currentIndex + 1]
+        if (nextStep) {
+          setCurrentStep(nextStep.id)
+        }
       }
     }
 
     const prevStep = () => {
       const currentIndex = mintSteps.findIndex((step) => step.id === currentStep)
       if (currentIndex > 0) {
-        setCurrentStep(mintSteps[currentIndex - 1].id)
+        const prevStep = mintSteps[currentIndex - 1]
+        if (prevStep) {
+          setCurrentStep(prevStep.id)
+        }
       }
     }
 

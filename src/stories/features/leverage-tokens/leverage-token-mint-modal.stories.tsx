@@ -59,9 +59,9 @@ const meta = {
       action: 'modal-closed',
       description: 'Callback when modal is closed',
     },
-    strategyId: {
+    leverageTokenAddress: {
       control: 'text',
-      description: 'ID of the leverage strategy',
+      description: 'Address of the leverage token',
     },
   },
 } satisfies Meta<typeof LeverageTokenMintModal>
@@ -74,7 +74,7 @@ export const Default: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X].address,
+    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
     apy: 18.67, // Example with APY
   },
   render: (args) => {
@@ -96,7 +96,7 @@ export const AllStates: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X].address,
+    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
     apy: 18.67,
   },
   render: (args) => {
@@ -133,7 +133,7 @@ export const DifferentStrategies: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X].address,
+    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
     apy: 18.67,
   },
   render: (args) => {
@@ -168,7 +168,7 @@ export const DifferentStrategies: Story = {
           {...args}
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
-          leverageTokenAddress={leverageTokenConfigs[strategyId].address}
+          leverageTokenAddress={leverageTokenConfigs[strategyId]!.address}
         />
       </div>
     )
@@ -180,7 +180,7 @@ export const WithoutAPY: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X].address,
+    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
     // No APY prop - will default to 0%
   },
   render: (args) => {
