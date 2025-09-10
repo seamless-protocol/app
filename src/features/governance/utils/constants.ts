@@ -2,10 +2,15 @@
  * Governance specific constants
  */
 
-// Seamless Protocol contract addresses
+import { base } from 'wagmi/chains'
+import { contractAddresses, getGovernanceAddresses } from '@/lib/contracts/addresses'
+
+// Seamless Protocol contract addresses (single source of truth via lib/contracts)
+const governance = getGovernanceAddresses(base.id)
+
 export const CONTRACTS = {
-  TOKEN: '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85',
-  TIMELOCK: '0x639d2dD24304aC2e6A691d8c1cFf4a2665925fee',
+  TOKEN: contractAddresses[base.id]?.seamlessToken ?? '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85',
+  TIMELOCK: governance.timelockShort ?? '0x639d2dD24304aC2e6A691d8c1cFf4a2665925fee',
 } as const
 
 // Governance parameters

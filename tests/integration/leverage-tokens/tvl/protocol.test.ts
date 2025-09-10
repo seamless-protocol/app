@@ -2,7 +2,7 @@ import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 import { describe, expect, it } from 'vitest'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
-import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
+import { leverageManagerAbi } from '@/lib/contracts'
 import { withFork } from '../../../shared/withFork'
 
 describe('Protocol TVL (Anvil Base fork / viem)', () => {

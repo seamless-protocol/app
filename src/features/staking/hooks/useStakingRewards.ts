@@ -2,8 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { type Address, formatUnits } from 'viem'
 import { useAccount, useReadContract } from 'wagmi'
 
-import { CONTRACT_ADDRESSES } from '@/lib/constants'
-import { seamlessContracts } from '@/lib/contracts/addresses'
+import { STAKED_SEAM, seamlessContracts } from '@/lib/contracts/addresses'
 
 import { stakingKeys } from '../utils/queryKeys'
 
@@ -19,8 +18,7 @@ export function useStakingRewards() {
   const { address: user } = useAccount()
 
   // Get user rewards from rewards controller
-  const rewardsControllerAddress =
-    seamlessContracts[CONTRACT_ADDRESSES.STAKED_SEAM.chainId]?.rewardsController
+  const rewardsControllerAddress = seamlessContracts[STAKED_SEAM.chainId]?.rewardsController
 
   if (!user) {
     throw new Error('User address is required to fetch staking rewards')
@@ -51,8 +49,8 @@ export function useStakingRewards() {
       },
     ] as const,
     functionName: 'getAllUserRewards',
-    args: [[CONTRACT_ADDRESSES.STAKED_SEAM.address], user],
-    chainId: CONTRACT_ADDRESSES.STAKED_SEAM.chainId,
+    args: [[STAKED_SEAM.address], user],
+    chainId: STAKED_SEAM.chainId,
     query: {
       enabled: true,
       staleTime: 2 * 60 * 1000, // 2 minutes

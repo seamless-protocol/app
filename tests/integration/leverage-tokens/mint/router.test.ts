@@ -1,8 +1,7 @@
 import { type Address, erc20Abi, maxUint256 } from 'viem'
 import { describe, expect, it } from 'vitest'
 import { createEtherFiSwapContext } from '@/features/leverage-tokens/utils/swapContext'
-import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
-import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
+import { leverageManagerAbi, leverageRouterAbi } from '@/lib/contracts'
 import { withFork } from '../../../shared/withFork'
 
 describe('Router-Based Minting (Anvil Base fork / viem)', () => {

@@ -1,5 +1,5 @@
 import type { Address } from 'viem'
-import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
+import { leverageManagerAbi } from '@/lib/contracts'
 import type { Clients, PreviewMintResult } from './types'
 
 export async function previewMint(

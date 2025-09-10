@@ -7,8 +7,13 @@
  * - Type-safe contract hooks (via wagmi-cli)
  */
 
-export * from './addresses'
+export * from './abis/lendingAdapter'
 
-// Future exports:
-// export * from './abis'
-// export * from './hooks'
+// Re-export ABIs and wagmi codegen for a stable import surface
+export * from './abis/leverageManager'
+export * from './abis/leverageRouter'
+export * from './abis/leverageToken'
+export * from './abis/leverageTokenFactory'
+export * from './abis/rebalanceAdapter'
+export * from './addresses'
+// Note: keep codegen exports separate to avoid name collisions with ABIs

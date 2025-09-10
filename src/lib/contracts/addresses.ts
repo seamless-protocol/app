@@ -17,16 +17,21 @@ export interface ContractAddresses {
   leverageManager?: Address
   leverageRouter?: Address
   morphoVaultFactory?: Address
-  stakingRewards?: Address
+  // Tokens
+  stakedSeam?: Address
   governance?: Address
-
-  // Token Contracts
   seamlessToken?: Address
   veSeamless?: Address
 
   // Helper Contracts
   multicall?: Address
   priceOracle?: Address
+
+  // Governance (detailed)
+  timelockShort?: Address
+  governorShort?: Address
+  timelockLong?: Address
+  governorLong?: Address
 }
 
 /**
@@ -43,12 +48,14 @@ export const contractAddresses: Record<number, ContractAddresses> = {
 
     // Tokens
     seamlessToken: '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85' as Address,
-
-    // Staking
-    stakingRewards: '0x73f0849756f6A79C1d536b7abAB1E6955f7172A4' as Address,
+    stakedSeam: '0x73f0849756f6A79C1d536b7abAB1E6955f7172A4' as Address,
 
     // Governance
-    governance: '0x8768c789C6df8AF1a92d96dE823b4F80010Db294' as Address,
+    governance: '0x8768c789C6df8AF1a92d96dE823b4F80010Db294' as Address, // governorShort
+    timelockShort: '0x639d2dD24304aC2e6A691d8c1cFf4a2665925fee' as Address,
+    governorShort: '0x8768c789C6df8AF1a92d96dE823b4F80010Db294' as Address,
+    timelockLong: '0xA96448469520666EDC351eff7676af2247b16718' as Address,
+    governorLong: '0x04faA2826DbB38a7A4E9a5E3dB26b9E389E761B6' as Address,
   },
 
   // Ethereum mainnet (future)
@@ -102,4 +109,40 @@ export function hasDeployedContracts(chainId: number): boolean {
 export function getLeverageManagerAddress(chainId: number): Address | undefined {
   const addresses = contractAddresses[chainId]
   return addresses?.leverageManager
+}
+
+/**
+ * Convenience export for commonly used token with chain context
+ * Mirrors previous CONTRACT_ADDRESSES.STAKED_SEAM shape for minimal churn
+ */
+export const STAKED_SEAM = {
+  address: contractAddresses[base.id]?.stakedSeam as Address,
+  chainId: base.id,
+} as const
+
+// Governance helpers
+export interface GovernanceAddresses {
+  timelockShort?: Address
+  governorShort?: Address
+  timelockLong?: Address
+  governorLong?: Address
+}
+
+export function getGovernanceAddresses(chainId: number): GovernanceAddresses {
+  const c = contractAddresses[chainId] ?? {}
+  return {
+    timelockShort: c.timelockShort,
+    governorShort: c.governorShort,
+    timelockLong: c.timelockLong,
+    governorLong: c.governorLong,
+  }
+}
+
+export function getRequiredGovernanceAddresses(chainId: number): Required<GovernanceAddresses> {
+  const gv = getGovernanceAddresses(chainId)
+  const required = ['timelockShort', 'governorShort', 'timelockLong', 'governorLong'] as const
+  for (const key of required) {
+    if (!gv[key]) throw new Error(`Missing governance address '${key}' for chain ${chainId}`)
+  }
+  return gv as Required<GovernanceAddresses>
 }

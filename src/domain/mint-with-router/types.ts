@@ -1,5 +1,5 @@
 import type { Address, ContractFunctionArgs, Hash, PublicClient, WalletClient } from 'viem'
-import type { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
+import type { leverageRouterAbi } from '@/lib/contracts'
 
 // Alias to avoid export name collision with swapContext.ts re-exports
 export type MintSwapContext = ContractFunctionArgs<
