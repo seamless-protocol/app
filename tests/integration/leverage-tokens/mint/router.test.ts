@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createEtherFiSwapContext } from '@/features/leverage-tokens/utils/swapContext'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
 import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
-import { withFork } from '../../utils'
+import { withFork } from '../../../shared/withFork'
 
 describe('Router-Based Minting (Anvil Base fork / viem)', () => {
   it('previewMint and check collateral asset', async () =>

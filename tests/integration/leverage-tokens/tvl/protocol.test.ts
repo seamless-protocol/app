@@ -3,7 +3,7 @@ import { formatUnits } from 'viem'
 import { describe, expect, it } from 'vitest'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
-import { withFork } from '../../utils'
+import { withFork } from '../../../shared/withFork'
 
 describe('Protocol TVL (Anvil Base fork / viem)', () => {
   it('aggregates equity across leverage tokens (debt units)', async () =>
