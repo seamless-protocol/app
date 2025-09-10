@@ -23,6 +23,34 @@ export const walletClient = createWalletClient({
 
 export const adminClient = createPublicClient({ chain, transport: http(RPC.admin) })
 
+/**
+ * Administrative RPC request function for Tenderly VNet operations
+ * 
+ * This function provides access to Tenderly's administrative RPC methods that allow
+ * modifying blockchain state during testing. These methods are only available on
+ * Tenderly Virtual Networks (VNets) and provide capabilities not available on
+ * standard RPC endpoints.
+ * 
+ * Key operations:
+ * - `tenderly_setBalance(address, amount)` - Set native token balance for any address
+ * - `tenderly_setErc20Balance(token, address, amount)` - Set ERC20 token balance
+ * - `evm_snapshot()` - Create blockchain state snapshot for test isolation
+ * - `evm_revert(id)` - Revert to previous snapshot state
+ * 
+ * @param method - The RPC method name (e.g., 'tenderly_setBalance', 'evm_snapshot')
+ * @param params - Array of parameters for the RPC method
+ * @returns Promise with the RPC response
+ * 
+ * @example
+ * // Fund an address with 10 ETH on Tenderly VNet
+ * await adminRequest('tenderly_setBalance', [address, '0x8ac7230489e80000'])
+ * 
+ * // Set ERC20 balance (5 tokens with 18 decimals)
+ * await adminRequest('tenderly_setErc20Balance', [tokenAddress, userAddress, '0x4563918244f40000'])
+ * 
+ * // Create snapshot for test isolation
+ * const snapshotId = await adminRequest<string>('evm_snapshot', [])
+ */
 export async function adminRequest<T = unknown>(method: string, params: Array<any> = []) {
   const req = (
     adminClient as unknown as {
