@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { spawn } from 'node:child_process'
 import process from 'node:process'
-import { createVNet, deleteVNet } from './tenderly-vnet.cjs'
+import { createVNet, deleteVNet } from './tenderly-vnet.js'
 
 type TestType = 'e2e' | 'integration'
 

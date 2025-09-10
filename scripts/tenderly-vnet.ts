@@ -1,7 +1,28 @@
 const API_BASE = 'https://api.tenderly.co/api/v1'
 
+export interface VNetConfig {
+  account: string
+  project: string
+  accessKey: string
+  token?: string
+  chainId?: string
+  block?: string
+}
+
+export interface VNetResult {
+  id: string
+  rpcUrl: string
+}
+
 /** Create a Tenderly VirtualNet (recommended for CI) */
-async function createVNet({ account, project, accessKey, token, chainId = '8453', block = 'latest' }) {
+export async function createVNet({ 
+  account, 
+  project, 
+  accessKey, 
+  token, 
+  chainId = '8453', 
+  block = 'latest' 
+}: VNetConfig): Promise<VNetResult> {
   const url = `${API_BASE}/account/${account}/project/${project}/vnets`
   let blockNumber = block
   if (block && block !== 'latest' && !String(block).startsWith('0x')) {
@@ -37,8 +58,8 @@ async function createVNet({ account, project, accessKey, token, chainId = '8453'
   const id = json.id || json.virtual_network?.id || json.vnet?.id
   let rpcUrl = json.rpc_url || json.endpoints?.rpc || json.virtual_network?.rpc_url
   if (!rpcUrl && Array.isArray(json.rpcs)) {
-    const admin = json.rpcs.find((r) => r?.name?.toLowerCase?.().includes('admin') && r.url)
-    const pub = json.rpcs.find((r) => r?.name?.toLowerCase?.().includes('public') && r.url)
+    const admin = json.rpcs.find((r: any) => r?.name?.toLowerCase?.().includes('admin') && r.url)
+    const pub = json.rpcs.find((r: any) => r?.name?.toLowerCase?.().includes('public') && r.url)
     rpcUrl = admin?.url || pub?.url || json.rpcs[0]?.url
   }
   if (!id || !rpcUrl) {
@@ -47,7 +68,7 @@ async function createVNet({ account, project, accessKey, token, chainId = '8453'
   return { id, rpcUrl }
 }
 
-async function deleteVNet({ account, project, accessKey, token, id }) {
+export async function deleteVNet({ account, project, accessKey, token, id }: VNetConfig & { id: string }): Promise<void> {
   const url = `${API_BASE}/account/${account}/project/${project}/vnets/${id}`
   const headers = {
     Accept: 'application/json',
@@ -62,11 +83,10 @@ async function deleteVNet({ account, project, accessKey, token, id }) {
 }
 
 // Back-compat names for importers that still call createFork/deleteFork
-async function createFork(args) {
+export async function createFork(args: VNetConfig): Promise<VNetResult> {
   return await createVNet(args)
 }
-async function deleteFork(args) {
+
+export async function deleteFork(args: VNetConfig & { id: string }): Promise<void> {
   return await deleteVNet(args)
 }
-
-module.exports = { createVNet, deleteVNet, createFork, deleteFork }
