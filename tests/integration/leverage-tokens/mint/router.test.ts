@@ -1,6 +1,6 @@
 import { type Address, erc20Abi, maxUint256 } from 'viem'
 import { describe, expect, it } from 'vitest'
-import { createSwapContext } from '@/features/leverage-tokens/utils/swapContext'
+import { createEtherFiSwapContext } from '@/features/leverage-tokens/utils/swapContext'
 import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
 import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
 import { withFork } from '../../utils'
@@ -105,12 +105,9 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
 
       console.log('Using debt asset (underlying):', debtAsset)
 
-      // Create real SwapContext for collateral → debt asset swap (chain-aware)
-      const swapContext = createSwapContext(
-        collateralAsset, // e.g., weETH (collateral)
-        debtAsset, // e.g., WETH (debt asset / underlying)
-        8453, // Base chain ID - will auto-select Aerodrome V2 for Base
-      )
+      // Create EtherFi swap context for weETH → WETH (like V1)
+      // This uses the actual swap mechanism that the protocol supports
+      const swapContext = createEtherFiSwapContext()
       // Allow up to 100% of equity as swap cost in test environment
       const maxSwapCost = equityAmount
 

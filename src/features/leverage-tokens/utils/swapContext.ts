@@ -16,6 +16,7 @@ export const Exchange = {
   UNISWAP_V3: 1,
   AERODROME_V2: 2,
   AERODROME_SLIPSTREAM: 3,
+  ETHERFI: 4,
 } as const
 
 /**
@@ -120,6 +121,33 @@ export function createSwapContext(
     tickSpacing: [0], // V2 doesn't use tick spacing
     exchange,
     exchangeAddresses: addresses,
+    additionalData: '0x',
+  }
+}
+
+/**
+ * Create EtherFi swap context for weETH → WETH
+ * This is a specialized swap context that uses EtherFi's native weETH liquidity
+ * Based on V1 implementation that was hardcoded for this specific pair
+ */
+export function createEtherFiSwapContext(): SwapContext {
+  // Zero addresses since EtherFi doesn't use traditional AMM routers
+  const zeroExchangeAddresses = {
+    aerodromeRouter: '0x0000000000000000000000000000000000000000' as Address,
+    aerodromePoolFactory: '0x0000000000000000000000000000000000000000' as Address,
+    aerodromeSlipstreamRouter: '0x0000000000000000000000000000000000000000' as Address,
+    uniswapSwapRouter02: '0x0000000000000000000000000000000000000000' as Address,
+    uniswapV2Router02: '0x0000000000000000000000000000000000000000' as Address,
+  }
+
+  return {
+    path: [],
+    encodedPath: '0x',
+    fees: [],
+    tickSpacing: [],
+    exchange: Exchange.ETHERFI,
+    exchangeAddresses: zeroExchangeAddresses,
+    // Empty additional data for now - would need EtherFi L2ModeSyncPool params in production
     additionalData: '0x',
   }
 }
