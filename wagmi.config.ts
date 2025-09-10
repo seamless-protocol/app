@@ -18,40 +18,35 @@ export default defineConfig({
     {
       name: 'LeverageTokenFactory',
       abi: leverageTokenFactoryAbi,
-      address: contractAddresses[base.id].leverageTokenFactory
-        ? { [base.id]: contractAddresses[base.id].leverageTokenFactory }
+      address: contractAddresses[base.id]?.leverageTokenFactory
+        ? { [base.id]: contractAddresses[base.id]?.leverageTokenFactory! }
         : undefined,
     },
     {
       name: 'LeverageRouter',
       abi: leverageRouterAbi,
-      address: contractAddresses[base.id].leverageRouter
-        ? { [base.id]: contractAddresses[base.id].leverageRouter }
+      address: contractAddresses[base.id]?.leverageRouter
+        ? { [base.id]: contractAddresses[base.id]?.leverageRouter! }
         : undefined,
     },
     {
       name: 'LeverageManager',
       abi: leverageManagerAbi,
-      address: contractAddresses[base.id].leverageManager
-        ? { [base.id]: contractAddresses[base.id].leverageManager }
+      address: contractAddresses[base.id]?.leverageManager
+        ? { [base.id]: contractAddresses[base.id]?.leverageManager! }
         : undefined,
     },
     {
       name: 'SeamToken',
       abi: seamTokenAbi,
-      address: contractAddresses[base.id].seamlessToken
-        ? { [base.id]: contractAddresses[base.id].seamlessToken }
+      address: contractAddresses[base.id]?.seamlessToken
+        ? { [base.id]: contractAddresses[base.id]?.seamlessToken! }
         : undefined,
     },
   ],
   plugins: [
     react({
       // Generate React hooks for read/write operations
-      useContractRead: true,
-      useContractWrite: true,
-      useContractEvent: true,
-      usePrepareContractWrite: true,
-      useContractReads: true,
     }),
   ],
 })
