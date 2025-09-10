@@ -7,11 +7,11 @@ const BASE_RPC_URL = process.env['TEST_RPC_URL'] || 'http://127.0.0.1:8545'
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
+  forbidOnly: !!process.env['CI'],
   // Fail fast in CI to avoid long timeouts stacking up
-  maxFailures: process.env.CI ? 1 : undefined,
-  retries: process.env.CI ? 0 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  maxFailures: process.env['CI'] ? 1 : 0,
+  retries: process.env['CI'] ? 0 : 0,
+  workers: process.env['CI'] ? 1 : 1,
   // Keep tests short by default; individual expects can override
   timeout: 30_000,
   reporter: 'html',
@@ -44,7 +44,7 @@ export default defineConfig({
       VITE_ANVIL_RPC_URL: BASE_RPC_URL,
       VITE_TEST_PRIVATE_KEY: ANVIL_DEFAULT_PRIVATE_KEY,
     },
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !process.env['CI'],
     timeout: 120_000, // Give Vite + plugins extra time in CI
     stdout: 'pipe',
     stderr: 'pipe',
