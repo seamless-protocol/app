@@ -5,11 +5,11 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ command, mode }) => ({
   plugins: [TanStackRouterVite(), react(), tailwindcss()],
 
-  // CRITICAL for IPFS: Use relative paths
-  base: './',
+  // CRITICAL: Use absolute paths for development, relative for IPFS production builds
+  base: command === 'serve' ? '/' : './',
 
   // Path resolution for aliases
   resolve: {
@@ -51,7 +51,9 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 3000,
     strictPort: false,
-    open: true,
+    // Ensure predictable binding for Playwright; disable auto-open in tests
+    host: process.env.VITE_TEST_MODE ? '127.0.0.1' : undefined,
+    open: process.env.VITE_TEST_MODE ? false : true,
   },
 
   // Preview server (for testing production builds)

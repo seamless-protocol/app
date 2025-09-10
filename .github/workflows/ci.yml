@@ -45,8 +45,11 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
       
+      - name: Generate route tree
+        run: bunx @tanstack/router-cli generate --config vite.config.ts
+      
       - name: Run unit tests
-        run: bun run test
+        run: bunx vitest --run tests/unit --config vitest.config.ts
 
   test-e2e:
     name: E2E Tests
@@ -61,25 +64,30 @@ jobs:
         with:
           bun-version: latest
       
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-      
       - name: Install dependencies
         run: bun install --frozen-lockfile
       
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
       
+      - name: Install Foundry (for Anvil fallback)
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
       - name: Run E2E tests
-        run: bun run test:e2e
+        run: bun scripts/run-tests.ts e2e
         env:
           VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
-          VITE_BASE_RPC_URL: ${{ vars.VITE_BASE_RPC_URL }}
           VITE_ETHEREUM_RPC_URL: ${{ vars.VITE_ETHEREUM_RPC_URL }}
-          # Dedicated RPC endpoint for Anvil fork (better reliability than public RPC)
           ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
+          TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
+          TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
+          TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
+          TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
+          TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
+          TENDERLY_CHAIN_ID: 8453
       
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -90,7 +98,7 @@ jobs:
           retention-days: 7
 
   test-integration:
-    name: Integration Tests (Anvil)
+    name: Integration Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -102,31 +110,30 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install Foundry (Anvil)
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Foundry (for Anvil fallback)
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: stable
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
 
       - name: Prepare integration env
         run: |
           cp tests/integration/.env.example tests/integration/.env
           echo "Integration test environment prepared"
 
-      - name: Start Anvil Base Fork
-        run: |
-          nohup bun run anvil:base > anvil.log 2>&1 &
-          for i in {1..60}; do nc -z 127.0.0.1 8545 && break || sleep 1; done
-          curl -s -X POST -H "Content-Type: application/json" \
-            --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
-            http://127.0.0.1:8545
+      - name: Run integration tests
+        run: bun scripts/run-tests.ts integration
         env:
           ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
-
-      - name: Run integration tests
-        run: bun run test:integration
+          TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
+          TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
+          TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
+          TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
+          TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
+          TENDERLY_CHAIN_ID: 8453
 
 
   build:

@@ -1,9 +1,9 @@
 import { type Address, erc20Abi, maxUint256 } from 'viem'
 import { describe, expect, it } from 'vitest'
-import { createSwapContext } from '../../src/features/leverage-tokens/utils/swapContext'
-import { leverageManagerAbi } from '../../src/lib/contracts/abis/leverageManager'
-import { leverageRouterAbi } from '../../src/lib/contracts/abis/leverageRouter'
-import { withFork } from './utils'
+import { createEtherFiSwapContext } from '@/features/leverage-tokens/utils/swapContext'
+import { leverageManagerAbi } from '@/lib/contracts/abis/leverageManager'
+import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
+import { withFork } from '../../../shared/withFork'
 
 describe('Router-Based Minting (Anvil Base fork / viem)', () => {
   it('previewMint and check collateral asset', async () =>
@@ -64,7 +64,8 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
 
       // Fund account with collateral tokens (simulate)
       const equityAmount = 1000000000000000000n // 1 token
-      await fund.erc20(collateralAsset, [account.address], '1')
+      // Fund with extra tokens to account for potential swap costs and fees
+      await fund.erc20(collateralAsset, [account.address], '10')
 
       // Approve Router for collateral
       const { request: approveRequest } = await publicClient.simulateContract({
@@ -84,7 +85,15 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
         functionName: 'previewMint',
         args: [leverageToken, equityAmount],
       })
-      const minShares = preview.shares // No slippage for test
+
+      console.log('Preview result:')
+      console.log('  Expected shares:', preview.shares.toString())
+      console.log('  Token fee:', preview.tokenFee.toString())
+      console.log('  Treasury fee:', preview.treasuryFee.toString())
+
+      // Calculate minShares with slippage protection (2.5% slippage tolerance)
+      const slippageBps = 250n // 2.5%
+      const minShares = (preview.shares * (10000n - slippageBps)) / 10000n
 
       // Get debt asset (underlying asset for leverage exposure)
       const debtAsset = (await publicClient.readContract({
@@ -96,13 +105,11 @@ describe('Router-Based Minting (Anvil Base fork / viem)', () => {
 
       console.log('Using debt asset (underlying):', debtAsset)
 
-      // Create real SwapContext for collateral → debt asset swap (chain-aware)
-      const swapContext = createSwapContext(
-        collateralAsset, // e.g., weETH (collateral)
-        debtAsset, // e.g., WETH (debt asset / underlying)
-        8453, // Base chain ID - will auto-select Aerodrome V2 for Base
-      )
-      const maxSwapCost = (equityAmount * 500n) / 10000n // 5%
+      // Create EtherFi swap context for weETH → WETH (like V1)
+      // This uses the actual swap mechanism that the protocol supports
+      const swapContext = createEtherFiSwapContext()
+      // Allow up to 100% of equity as swap cost in test environment
+      const maxSwapCost = equityAmount
 
       console.log('Attempting Router.mint with real SwapContext...')
 

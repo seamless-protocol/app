@@ -14,9 +14,13 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:integration": "vitest --config tests/integration/vitest.config.ts",
+    "test:integration": "vitest --run tests/integration",
     "anvil:base": "bash ./scripts/anvil-base.sh",
-    "test:e2e": "bunx playwright test",
+    "test:e2e": "bun scripts/run-tests.ts e2e",
+    "test:e2e:local": "TEST_RPC_URL=http://127.0.0.1:8545 bunx playwright test",
+    "test:e2e:anvil": "TEST_RPC_URL=http://127.0.0.1:8545 bun scripts/run-tests.ts e2e",
+    "test:e2e:tenderly": "bun scripts/run-tests.ts e2e",
+    "test:integration:tenderly": "bun scripts/run-tests.ts integration",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "wagmi": "wagmi generate"
@@ -55,7 +59,7 @@
     "zod": "^4.0.17"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.2.0",
+    "@biomejs/biome": "^2.2.3",
     "@chromatic-com/storybook": "^4.1.1",
     "@playwright/test": "^1.54.2",
     "@storybook/addon-a11y": "^9.1.3",

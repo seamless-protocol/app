@@ -1,42 +1,48 @@
-import type { Address, Hash, PublicClient, WalletClient } from 'viem'
+import type { Address, ContractFunctionArgs, Hash, PublicClient, WalletClient } from 'viem'
+import type { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
 
-/**
- * Context required by domain functions. This keeps React/wagmi out of the domain
- * and allows tests to inject pure viem clients.
- */
-export interface MintContext {
+// Alias to avoid export name collision with swapContext.ts re-exports
+export type MintSwapContext = ContractFunctionArgs<
+  typeof leverageRouterAbi,
+  'nonpayable',
+  'mint'
+>[4]
+
+export type Clients = {
   publicClient: PublicClient
   walletClient: WalletClient
-  chainId?: number
 }
 
-/**
- * Common parameters for preview/allowance/mint flows.
- * The set is intentionally broad so the same shape works across steps.
- */
-export interface MintParams {
-  managerAddress: Address
-  routerAddress: Address
-  tokenProxyAddress: Address
-  inputToken: Address
-  inputAmount: bigint
-  account: Address
+export type Addresses = {
+  router: Address
+  manager: Address
+  token: Address
 }
 
-export interface PreviewParams extends MintParams {}
-
-export interface MintPreview {
-  // Expected leverage token out (placeholder; replace with precise shape later)
-  expectedLeverageTokenOut: bigint
-  // Optional route metadata
-  routeHint?: string
+export type MintParams = {
+  equityInCollateralAsset: bigint
+  slippageBps?: number
+  maxSwapCostInCollateralAsset?: bigint
+  swapContext?: MintSwapContext
 }
 
-export interface AllowanceResult {
-  hasAllowance: boolean
-  approveTxHash?: Hash
+export type PreviewMintResult = {
+  shares: bigint
+  tokenFee: bigint
+  treasuryFee: bigint
 }
 
-export interface MintResult {
-  txHash: Hash
+export type MintResult = {
+  hash: Hash
+  receipt: Awaited<ReturnType<Clients['publicClient']['waitForTransactionReceipt']>>
+  preview: PreviewMintResult
+  minShares: bigint
+  slippageBps: number
+}
+
+// Optional IO overrides to support wrapper environments (e.g., wagmi core mocks in unit tests)
+export type IoOverrides = {
+  simulateContract?: Clients['publicClient']['simulateContract']
+  writeContract?: Clients['walletClient']['writeContract']
+  waitForTransactionReceipt?: Clients['publicClient']['waitForTransactionReceipt']
 }

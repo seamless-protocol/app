@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import { base, mainnet } from 'viem/chains'
 import { vi } from 'vitest'
 
 // Mock environment variables
@@ -18,8 +19,17 @@ vi.mock('wagmi', () => ({
 
 // Mock wagmi chains
 vi.mock('wagmi/chains', () => ({
-  base: { id: 8453, name: 'Base' },
-  mainnet: { id: 1, name: 'Ethereum' },
+  base: { id: base.id, name: 'Base' },
+  mainnet: { id: mainnet.id, name: 'Ethereum' },
+  anvil: {
+    id: 31337,
+    name: 'Anvil',
+    rpcUrls: {
+      default: {
+        http: ['http://127.0.0.1:8545'],
+      },
+    },
+  },
 }))
 
 // Mock wagmi connectors
@@ -53,6 +63,13 @@ vi.mock('@/lib/contracts/generated', () => ({
 
 // Mock contract addresses
 vi.mock('@/lib/contracts/addresses', () => ({
+  contractAddresses: {
+    [base.id]: {
+      leverageTokenFactory: '0xE0b2e40EDeb53B96C923381509a25a615c1Abe57',
+      leverageManager: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8',
+      leverageRouter: '0xDbA92fC3dc10a17b96b6E807a908155C389A887C',
+    },
+  },
   getContractAddresses: vi.fn(),
   getLeverageManagerAddress: vi.fn(),
 }))

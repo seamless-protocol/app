@@ -1,4 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
+import { ANVIL_DEFAULT_PRIVATE_KEY } from './tests/shared/env'
+
+// Simple RPC URL detection: Explicit > Tenderly VNet (empty = JIT) > Anvil fallback
+const BASE_RPC_URL = process.env['TEST_RPC_URL'] || 'http://127.0.0.1:8545'
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -12,11 +16,11 @@ export default defineConfig({
   timeout: 30_000,
   reporter: 'html',
 
-  // Global setup to start Anvil before tests
+  // Global setup to start Anvil before tests (skipped when using non-Anvil backend)
   globalSetup: './tests/e2e/global-setup.ts',
 
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://127.0.0.1:3000',
     // Tighter default timeouts to reduce hang time
     navigationTimeout: 15_000,
     actionTimeout: 10_000,
@@ -31,11 +35,18 @@ export default defineConfig({
   ],
 
   webServer: {
-    // Run dev server in test mode with mock wallet and Anvil RPC
-    command:
-      'VITE_TEST_MODE=mock VITE_BASE_RPC_URL=http://127.0.0.1:8545 VITE_ANVIL_RPC_URL=http://127.0.0.1:8545 VITE_TEST_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 bun dev',
-    url: 'http://localhost:3000',
+    // Run dev server in test mode with mock wallet; RPC URL is determined automatically
+    command: `bunx --bun vite --port 3000 --host 127.0.0.1 --strictPort`,
+    url: 'http://127.0.0.1:3000', // Explicit URL for Playwright to wait for
+    env: {
+      VITE_TEST_MODE: 'mock',
+      VITE_BASE_RPC_URL: BASE_RPC_URL,
+      VITE_ANVIL_RPC_URL: BASE_RPC_URL,
+      VITE_TEST_PRIVATE_KEY: ANVIL_DEFAULT_PRIVATE_KEY,
+    },
     reuseExistingServer: !process.env.CI,
-    timeout: 30000, // Allow more time for test mode startup
+    timeout: 120_000, // Give Vite + plugins extra time in CI
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 })

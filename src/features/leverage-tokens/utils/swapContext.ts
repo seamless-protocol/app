@@ -10,12 +10,14 @@ export type SwapContext = ContractFunctionArgs<typeof leverageRouterAbi, 'nonpay
 
 /**
  * Exchange enum values for ISwapAdapter.Exchange
+ * Based on V1 implementation
  */
 export const Exchange = {
-  UNISWAP_V2: 0,
-  UNISWAP_V3: 1,
-  AERODROME_V2: 2,
-  AERODROME_SLIPSTREAM: 3,
+  AERODROME: 0,
+  AERODROME_SLIPSTREAM: 1,
+  ETHERFI: 2,
+  UNISWAP_V2: 3,
+  UNISWAP_V3: 4,
 } as const
 
 /**
@@ -37,7 +39,7 @@ const DEX_ADDRESSES: Record<number, SwapContext['exchangeAddresses']> = {
 function getPrimaryExchange(chainId: number): number {
   switch (chainId) {
     case base.id: // Base
-      return Exchange.AERODROME_V2 // Best liquidity on Base
+      return Exchange.AERODROME // Best liquidity on Base
     default:
       throw new Error(
         `Chain ${chainId} not supported yet. Currently only Base (${base.id}) is supported.`,
@@ -119,6 +121,62 @@ export function createSwapContext(
     fees: [0], // V2 doesn't use fees in the same way
     tickSpacing: [0], // V2 doesn't use tick spacing
     exchange,
+    exchangeAddresses: addresses,
+    additionalData: '0x',
+  }
+}
+
+/**
+ * Create EtherFi swap context for weETH → WETH
+ * This is a specialized swap context that uses EtherFi's native weETH liquidity
+ * Based on V1 implementation that was hardcoded for this specific pair
+ */
+export function createEtherFiSwapContext(): SwapContext {
+  // Zero addresses since EtherFi doesn't use traditional AMM routers
+  const zeroExchangeAddresses = {
+    aerodromeRouter: '0x0000000000000000000000000000000000000000' as Address,
+    aerodromePoolFactory: '0x0000000000000000000000000000000000000000' as Address,
+    aerodromeSlipstreamRouter: '0x0000000000000000000000000000000000000000' as Address,
+    uniswapSwapRouter02: '0x0000000000000000000000000000000000000000' as Address,
+    uniswapV2Router02: '0x0000000000000000000000000000000000000000' as Address,
+  }
+
+  return {
+    path: [],
+    encodedPath: '0x',
+    fees: [],
+    tickSpacing: [],
+    exchange: Exchange.ETHERFI,
+    exchangeAddresses: zeroExchangeAddresses,
+    // Empty additional data for now - would need EtherFi L2ModeSyncPool params in production
+    additionalData: '0x',
+  }
+}
+
+/**
+ * Base token addresses for common operations
+ */
+export const BASE_TOKEN_ADDRESSES = {
+  weETH: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150a' as Address,
+  WETH: '0x4200000000000000000000000000000000000006' as Address,
+} as const
+
+/**
+ * Create special weETH swap context optimized for EtherFi on Base
+ * This follows the V1 pattern for weETH -> WETH swaps using Aerodrome
+ */
+export function createWeETHSwapContext(): SwapContext {
+  const addresses = DEX_ADDRESSES[base.id]
+  if (!addresses) {
+    throw new Error(`Base chain not supported for weETH swap context`)
+  }
+
+  return {
+    path: [BASE_TOKEN_ADDRESSES.weETH, BASE_TOKEN_ADDRESSES.WETH],
+    encodedPath: '0x', // V2 doesn't need encoded paths
+    fees: [0], // V2 doesn't use fees in the same way
+    tickSpacing: [0], // V2 doesn't use tick spacing
+    exchange: Exchange.AERODROME, // Aerodrome has the best weETH liquidity on Base
     exchangeAddresses: addresses,
     additionalData: '0x',
   }
