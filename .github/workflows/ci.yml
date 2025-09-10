@@ -49,7 +49,7 @@ jobs:
         run: bunx @tanstack/router-cli generate --config vite.config.ts
       
       - name: Run unit tests
-        run: bunx vitest --run --config vitest.config.ts
+        run: bunx vitest --run tests/unit --config vitest.config.ts
 
   test-e2e:
     name: E2E Tests
