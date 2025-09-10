@@ -29,7 +29,7 @@ export function FilterDropdown({
 
   return (
     <div className={cn('flex items-center space-x-2', className)}>
-      <span className="text-sm font-medium text-slate-300">{label}:</span>
+      {label && <span className="text-sm font-medium text-slate-300">{label}:</span>}
       <DropdownMenuPrimitive.Root>
         <DropdownMenuPrimitive.Trigger asChild>
           <button
