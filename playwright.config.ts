@@ -1,9 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
-import { getTestRpcUrl } from './tests/shared/backend'
 import { ANVIL_DEFAULT_PRIVATE_KEY } from './tests/shared/env'
 
-// Get RPC URL from centralized backend detection
-const BASE_RPC_URL = getTestRpcUrl()
+// Simple RPC URL detection: Explicit > Tenderly VNet (empty = JIT) > Anvil fallback
+const BASE_RPC_URL = process.env['TEST_RPC_URL'] || 'http://127.0.0.1:8545'
 
 export default defineConfig({
   testDir: './tests/e2e',

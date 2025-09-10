@@ -14,7 +14,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:integration": "vitest --config tests/integration/vitest.config.ts",
+    "test:integration": "vitest --run tests/integration",
     "anvil:base": "bash ./scripts/anvil-base.sh",
     "test:e2e": "bun scripts/run-tests.ts e2e",
     "test:e2e:local": "TEST_RPC_URL=http://127.0.0.1:8545 bunx playwright test",
