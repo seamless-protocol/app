@@ -108,14 +108,16 @@ curl -X POST -H "Content-Type: application/json" \
 
 ### Adding New Tokens
 
-To test with new ERC-20 tokens, add rich holder addresses to `RICH_HOLDERS` in `utils.ts`:
+To test with new ERC-20 tokens, add token constants and rich holder addresses to `RICH_HOLDERS` in `funding.ts`:
 
 ```typescript
-const RICH_HOLDERS: Record<string, Address | undefined> = {
-  // USDC on Base
-  '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913': '0x<rich-usdc-holder>',
-  // Add your token here
-  '0x<your-token-address>': '0x<rich-holder-address>',
+// Token addresses from Base network
+const YOUR_TOKEN_ADDRESS: Address = '0x<your-token-address>'
+
+// Rich holders for token funding via impersonation (Anvil only)  
+const RICH_HOLDERS: Record<Address, Address | undefined> = {
+  [USDC_ADDRESS]: '0x3304dd20f87a67ed649c3dF34aD6b19dFEC33877' as Address, // Coinbase custody wallet
+  [YOUR_TOKEN_ADDRESS]: '0x<rich-holder-address>' as Address, // Description of holder
 }
 ```
 

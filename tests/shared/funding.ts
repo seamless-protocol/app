@@ -52,13 +52,14 @@ async function fundErc20ViaWethDeposit(token: Address, to: Address, human: strin
   return true
 }
 
-const RICH_HOLDERS: Record<string, Address | undefined> = {
-  [getAddress('0x833589fcd6edb6e08f4c7c32d4f71b54bda02913')]: getAddress(
-    '0x3304dd20f87a67ed649c3dF34aD6b19dFEC33877',
-  ),
-  [getAddress('0x04c0599ae5a44757c0af6f9ec3b93da8976c150a')]: getAddress(
-    '0xb26ff591F44b04E78de18f43B46f8b70C6676984',
-  ),
+// Token addresses from Base network
+const USDC_ADDRESS: Address = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913'
+const weETH_ADDRESS: Address = '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a'
+
+// Rich holders for token funding via impersonation (Anvil only)
+const RICH_HOLDERS: Record<Address, Address | undefined> = {
+  [USDC_ADDRESS]: '0x3304dd20f87a67ed649c3dF34aD6b19dFEC33877' as Address, // Coinbase custody wallet
+  [weETH_ADDRESS]: '0xb26ff591F44b04E78de18f43B46f8b70C6676984' as Address, // Large weETH holder
 }
 
 async function fundErc20ViaImpersonation(token: Address, to: Address, human: string) {

@@ -53,6 +53,13 @@ vi.mock('@/lib/contracts/generated', () => ({
 
 // Mock contract addresses
 vi.mock('@/lib/contracts/addresses', () => ({
+  contractAddresses: {
+    8453: {
+      leverageTokenFactory: '0xE0b2e40EDeb53B96C923381509a25a615c1Abe57',
+      leverageManager: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8',
+      leverageRouter: '0xDbA92fC3dc10a17b96b6E807a908155C389A887C',
+    },
+  },
   getContractAddresses: vi.fn(),
   getLeverageManagerAddress: vi.fn(),
 }))
