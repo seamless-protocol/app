@@ -75,7 +75,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 <TableHead className="text-slate-300 font-medium py-4 px-6">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors"
+                    className="flex items-center space-x-2 hover:text-white transition-colors cursor-pointer"
                     onClick={() => handleSort('name')}
                   >
                     <span>Vault</span>
@@ -85,7 +85,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 <TableHead className="text-slate-300 font-medium py-4 px-6">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors"
+                    className="flex items-center space-x-2 hover:text-white transition-colors cursor-pointer"
                     onClick={() => handleSort('asset')}
                   >
                     <span>Assets</span>
@@ -95,7 +95,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('apy')}
                   >
                     <span>APY</span>
@@ -105,7 +105,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('tvl')}
                   >
                     <span>TVL</span>
@@ -115,7 +115,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-center">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors mx-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors mx-auto cursor-pointer"
                     onClick={() => handleSort('riskLevel')}
                   >
                     <span>Risk</span>
@@ -125,7 +125,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('participants')}
                   >
                     <span>Participants</span>

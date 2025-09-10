@@ -270,7 +270,7 @@ export function LeverageTokenTable({
                 <TableHead className="text-slate-300 font-medium py-4 px-6 min-w-[200px]">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors"
+                    className="flex items-center space-x-2 hover:text-white transition-colors cursor-pointer"
                     onClick={() => handleSort('name')}
                   >
                     <span>Leverage Token Name</span>
@@ -280,7 +280,7 @@ export function LeverageTokenTable({
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('tvl')}
                   >
                     <span>TVL (USD)</span>
@@ -290,7 +290,7 @@ export function LeverageTokenTable({
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('apy')}
                   >
                     <span>APY</span>
@@ -300,7 +300,7 @@ export function LeverageTokenTable({
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-center">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors mx-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors mx-auto cursor-pointer"
                     onClick={() => handleSort('leverage')}
                   >
                     <span>Leverage</span>
@@ -313,7 +313,7 @@ export function LeverageTokenTable({
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right min-w-[140px]">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto"
+                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('available')}
                   >
                     <span>Supply Cap</span>

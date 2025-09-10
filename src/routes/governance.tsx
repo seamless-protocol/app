@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useActiveProposals } from '@/features/governance/hooks/useActiveProposals'
 
 export const Route = createFileRoute('/governance')({
@@ -86,9 +87,13 @@ function GovernancePage() {
                       type="button"
                       onClick={() => fetchNextPage()}
                       disabled={isFetchingNextPage}
-                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                     >
-                      {isFetchingNextPage ? 'Loading more...' : 'Load More Proposals'}
+                      {isFetchingNextPage ? (
+                        <Skeleton className="h-4 w-24" />
+                      ) : (
+                        'Load More Proposals'
+                      )}
                     </button>
                   </div>
                 )}

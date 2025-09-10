@@ -41,7 +41,7 @@ export function WalletInfo() {
             <button
               key={chain.id}
               onClick={() => switchChain({ chainId: chain.id })}
-              className={`px-3 py-1 rounded ${
+              className={`px-3 py-1 rounded cursor-pointer ${
                 chain.id === chainId ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'
               }`}
               type="button"
