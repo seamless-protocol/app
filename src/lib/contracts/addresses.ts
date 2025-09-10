@@ -130,12 +130,14 @@ export interface GovernanceAddresses {
 
 export function getGovernanceAddresses(chainId: number): GovernanceAddresses {
   const c = contractAddresses[chainId] ?? {}
-  return {
-    timelockShort: c.timelockShort,
-    governorShort: c.governorShort,
-    timelockLong: c.timelockLong,
-    governorLong: c.governorLong,
-  }
+  const result: GovernanceAddresses = {}
+
+  if (c.timelockShort) result.timelockShort = c.timelockShort
+  if (c.governorShort) result.governorShort = c.governorShort
+  if (c.timelockLong) result.timelockLong = c.timelockLong
+  if (c.governorLong) result.governorLong = c.governorLong
+
+  return result
 }
 
 export function getRequiredGovernanceAddresses(chainId: number): Required<GovernanceAddresses> {
