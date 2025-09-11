@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
 export type MintStep = 'input' | 'approve' | 'confirm' | 'pending' | 'success' | 'error'
 
@@ -8,11 +8,11 @@ export function useMintSteps(initial: MintStep = 'input') {
   return {
     step,
     setStep,
-    toInput: () => setStep('input'),
-    toApprove: () => setStep('approve'),
-    toConfirm: () => setStep('confirm'),
-    toPending: () => setStep('pending'),
-    toSuccess: () => setStep('success'),
-    toError: () => setStep('error'),
+    toInput: useCallback(() => setStep('input'), []),
+    toApprove: useCallback(() => setStep('approve'), []),
+    toConfirm: useCallback(() => setStep('confirm'), []),
+    toPending: useCallback(() => setStep('pending'), []),
+    toSuccess: useCallback(() => setStep('success'), []),
+    toError: useCallback(() => setStep('error'), []),
   }
 }
