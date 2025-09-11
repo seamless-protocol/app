@@ -364,6 +364,52 @@ export const leverageRouterConfig = {
 } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// LeverageRouterV2
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const leverageRouterV2Abi = [
+  {
+    type: 'function',
+    inputs: [
+      { name: 'token', type: 'address' },
+      { name: 'equityInInputAsset', type: 'uint256' },
+      { name: 'minShares', type: 'uint256' },
+      { name: 'maxSwapCostInCollateralAsset', type: 'uint256' },
+      {
+        name: 'calls',
+        type: 'tuple[]',
+        components: [
+          { name: 'target', type: 'address' },
+          { name: 'data', type: 'bytes' },
+          { name: 'value', type: 'uint256' },
+        ],
+      },
+    ],
+    name: 'mintWithCalls',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+] as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const leverageRouterV2Address = {
+  8453: '0xDbA92fC3dc10a17b96b6E807a908155C389A887C',
+} as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const leverageRouterV2Config = {
+  address: leverageRouterV2Address,
+  abi: leverageRouterV2Abi,
+} as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LeverageToken
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1732,6 +1778,48 @@ export const useSimulateLeverageRouterRedeem = /*#__PURE__*/ createUseSimulateCo
 })
 
 /**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useWriteLeverageRouterV2 = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageRouterV2Abi,
+  address: leverageRouterV2Address,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useWriteLeverageRouterV2MintWithCalls = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageRouterV2Abi,
+  address: leverageRouterV2Address,
+  functionName: 'mintWithCalls',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useSimulateLeverageRouterV2 = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterV2Abi,
+  address: leverageRouterV2Address,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useSimulateLeverageRouterV2MintWithCalls = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterV2Abi,
+  address: leverageRouterV2Address,
+  functionName: 'mintWithCalls',
+})
+
+/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__
  */
 export const useReadLeverageToken = /*#__PURE__*/ createUseReadContract({
@@ -3095,6 +3183,48 @@ export const simulateLeverageRouterRedeem = /*#__PURE__*/ createSimulateContract
   abi: leverageRouterAbi,
   address: leverageRouterAddress,
   functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const writeLeverageRouterV2 = /*#__PURE__*/ createWriteContract({
+  abi: leverageRouterV2Abi,
+  address: leverageRouterV2Address,
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const writeLeverageRouterV2MintWithCalls = /*#__PURE__*/ createWriteContract({
+  abi: leverageRouterV2Abi,
+  address: leverageRouterV2Address,
+  functionName: 'mintWithCalls',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const simulateLeverageRouterV2 = /*#__PURE__*/ createSimulateContract({
+  abi: leverageRouterV2Abi,
+  address: leverageRouterV2Address,
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const simulateLeverageRouterV2MintWithCalls = /*#__PURE__*/ createSimulateContract({
+  abi: leverageRouterV2Abi,
+  address: leverageRouterV2Address,
+  functionName: 'mintWithCalls',
 })
 
 /**

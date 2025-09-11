@@ -4,6 +4,7 @@ import { base } from 'viem/chains'
 import { leverageManagerAbi } from './src/lib/contracts/abis/leverageManager'
 import { leverageRouterAbi } from './src/lib/contracts/abis/leverageRouter'
 import { leverageTokenAbi } from './src/lib/contracts/abis/leverageToken'
+import { leverageRouterV2Abi } from './src/lib/contracts/abis/leverageRouterV2'
 import { leverageTokenFactoryAbi } from './src/lib/contracts/abis/leverageTokenFactory'
 import { seamTokenAbi } from './src/lib/contracts/abis/seamToken'
 import { contractAddresses } from './src/lib/contracts/addresses'
@@ -25,6 +26,14 @@ export default defineConfig({
     {
       name: 'LeverageRouter',
       abi: leverageRouterAbi,
+      address: contractAddresses[base.id]?.leverageRouter
+        ? { [base.id]: contractAddresses[base.id]?.leverageRouter! }
+        : undefined,
+    },
+    {
+      name: 'LeverageRouterV2',
+      abi: leverageRouterV2Abi,
+      // V2 is an extension on the same router address (mintWithCalls)
       address: contractAddresses[base.id]?.leverageRouter
         ? { [base.id]: contractAddresses[base.id]?.leverageRouter! }
         : undefined,
