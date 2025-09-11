@@ -1,4 +1,4 @@
-// Re-export swap context helpers to provide a stable import surface for the domain lib
+// Re-export swap context helpers to provide a stable import surface
 export {
   BASE_TOKEN_ADDRESSES,
   createSwapContext,

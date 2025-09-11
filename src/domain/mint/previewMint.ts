@@ -1,6 +1,15 @@
 import type { Address } from 'viem'
 import { leverageManagerAbi } from '@/lib/contracts'
-import type { Clients, PreviewMintResult } from './types'
+import type { Clients } from './types'
+
+export type PreviewMintResult = {
+  collateral: bigint
+  debt: bigint
+  equity: bigint
+  shares: bigint
+  tokenFee: bigint
+  treasuryFee: bigint
+}
 
 export async function previewMint(
   clients: Pick<Clients, 'publicClient'>,
@@ -8,15 +17,18 @@ export async function previewMint(
   token: Address,
   equityInCollateralAsset: bigint,
 ): Promise<PreviewMintResult> {
-  const res = await clients.publicClient.readContract({
+  const res = (await clients.publicClient.readContract({
     address: manager,
     abi: leverageManagerAbi,
     functionName: 'previewMint',
     args: [token, equityInCollateralAsset],
-  })
-  return {
-    shares: res.shares as bigint,
-    tokenFee: res.tokenFee as bigint,
-    treasuryFee: res.treasuryFee as bigint,
+  })) as {
+    collateral: bigint
+    debt: bigint
+    equity: bigint
+    shares: bigint
+    tokenFee: bigint
+    treasuryFee: bigint
   }
+  return res
 }
