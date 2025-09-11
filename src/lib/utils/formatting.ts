@@ -122,3 +122,23 @@ export function formatNumber(
   }
   return value.toFixed(decimals)
 }
+
+/**
+ * Format a token amount from base units (bigint) to a fixed-decimal string.
+ * Caller chooses display precision; defaults to 6.
+ */
+export function formatTokenAmountFromBase(
+  value: bigint | undefined,
+  decimals: number,
+  displayDecimals: number = 6,
+): string {
+  if (!value) return '0'
+  try {
+    // Lazy import to avoid pulling viem in module scope for SSR
+    const { formatUnits } = require('viem') as { formatUnits: (v: bigint, d: number) => string }
+    const n = Number(formatUnits(value, decimals))
+    return Number.isFinite(n) ? n.toFixed(displayDecimals) : '0'
+  } catch {
+    return '0'
+  }
+}

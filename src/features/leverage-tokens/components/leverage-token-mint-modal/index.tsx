@@ -8,7 +8,12 @@ import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
-import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, MIN_MINT_AMOUNT_DISPLAY } from '../../constants'
+import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
+import {
+  DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+  MIN_MINT_AMOUNT_DISPLAY,
+  TOKEN_AMOUNT_DISPLAY_DECIMALS,
+} from '../../constants'
 import { useMintExecution } from '../../hooks/mint/useMintExecution'
 import { useMintForm } from '../../hooks/mint/useMintForm'
 import { useMintPreview } from '../../hooks/mint/useMintPreview'
@@ -201,12 +206,15 @@ export function LeverageTokenMintModal({
     }
   }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
 
-  const expectedTokens = useMemo(() => {
-    const shares = preview.data?.shares
-    if (!shares) return '0'
-    const tokens = formatUnits(shares, leverageTokenConfig.decimals)
-    return Number(tokens).toFixed(6)
-  }, [preview.data?.shares, leverageTokenConfig.decimals])
+  const expectedTokens = useMemo(
+    () =>
+      formatTokenAmountFromBase(
+        preview.data?.shares,
+        leverageTokenConfig.decimals,
+        TOKEN_AMOUNT_DISPLAY_DECIMALS,
+      ),
+    [preview.data?.shares, leverageTokenConfig.decimals],
+  )
 
   // Available tokens for minting (only collateral asset for now)
   const availableTokens: Array<Token> = [

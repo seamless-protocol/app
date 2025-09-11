@@ -9,3 +9,6 @@ export const DEFAULT_SLIPPAGE_PERCENT_DISPLAY = '0.5'
 
 // Preset slippage options (percent strings) shown in the advanced UI
 export const SLIPPAGE_PRESETS_PERCENT_DISPLAY = ['0.1', '0.5', '1.0'] as const
+
+// Default token display precision in the UI
+export const TOKEN_AMOUNT_DISPLAY_DECIMALS = 6
