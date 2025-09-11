@@ -38,6 +38,16 @@ interface LeverageTokenMintModalProps {
   userAddress?: `0x${string}` // Optional user address - if not provided, will use useAccount
 }
 
+// Hoisted to avoid re-creating on every render
+const MINT_STEPS: Array<StepConfig> = [
+  { id: 'input', label: 'Input', progress: 25 },
+  { id: 'approve', label: 'Approve', progress: 50 },
+  { id: 'confirm', label: 'Confirm', progress: 75 },
+  { id: 'pending', label: 'Processing', progress: 90 },
+  { id: 'success', label: 'Success', progress: 100 },
+  { id: 'error', label: 'Error', progress: 50 },
+]
+
 export function LeverageTokenMintModal({
   isOpen,
   onClose,
@@ -96,15 +106,8 @@ export function LeverageTokenMintModal({
     toError,
   } = useMintSteps('input')
 
-  // Step configuration for the multi-step modal
-  const steps: Array<StepConfig> = [
-    { id: 'input', label: 'Input', progress: 25 },
-    { id: 'approve', label: 'Approve', progress: 50 },
-    { id: 'confirm', label: 'Confirm', progress: 75 },
-    { id: 'pending', label: 'Processing', progress: 90 },
-    { id: 'success', label: 'Success', progress: 100 },
-    { id: 'error', label: 'Error', progress: 50 },
-  ]
+  // Step configuration (static)
+  const steps = MINT_STEPS
 
   const [selectedToken, setSelectedToken] = useState<Token>({
     symbol: leverageTokenConfig.collateralAsset.symbol,
