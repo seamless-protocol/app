@@ -2,51 +2,53 @@
  * React Query hook wrapping the domain-level orchestrateMint.
  *
  * Return type is discriminated by `routerVersion`:
- * - v1: { routerVersion: 'v1', hash, receipt, preview }
- * - v2: { routerVersion: 'v2', hash, receipt, plan }
+ * - v1: { routerVersion: 'v1', hash, preview }
+ * - v2: { routerVersion: 'v2', hash, plan }
  *
  * Optional params:
  * - `slippageBps`, `maxSwapCostInCollateralAsset` tune mint behavior
  * - V2 requires `quoteDebtToCollateral` and optionally `quoteInputToCollateral` if input != collateral
  */
-import { useMutation } from '@tanstack/react-query'
-import type { Address, Hash } from 'viem'
+import { useMutation } from "@tanstack/react-query";
+import type { Address } from "viem";
+import { useConfig } from "wagmi";
 import {
-  type Addresses,
-  type Clients,
-  type IoOverrides,
-  type MintPlanV2,
+  type OrchestrateMintResult,
   orchestrateMint,
-  type PreviewMintResult,
   type QuoteFn,
-} from '@/domain/mint'
+} from "@/domain/mint";
 
-export type OrchestrateMintResult =
-  | { routerVersion: 'v1'; hash: Hash; receipt: unknown; preview: PreviewMintResult }
-  | { routerVersion: 'v2'; hash: Hash; receipt: unknown; plan: MintPlanV2 }
+type Gen = typeof import("@/lib/contracts/generated");
+
+type TokenArg = Parameters<Gen["readLeverageManagerPreviewMint"]>[1]["args"][0];
+type AccountArg = Extract<
+  Parameters<Gen["writeLeverageRouterMint"]>[1]["account"],
+  `0x${string}`
+>;
+type EquityInInputAssetArg = Parameters<
+  Gen["writeLeverageRouterV2MintWithCalls"]
+>[1]["args"][1];
+type MaxSwapCostArg = Parameters<Gen["writeLeverageRouterMint"]>[1]["args"][3];
 
 export interface UseMintWithRouterParams {
-  clients: Clients
-  addresses: Addresses
-  account: Address
-  inputAsset: Address
-  equityInInputAsset: bigint
-  slippageBps?: number
-  maxSwapCostInCollateralAsset?: bigint
-  quoteDebtToCollateral?: QuoteFn
-  quoteInputToCollateral?: QuoteFn
-  io?: IoOverrides
+  token: TokenArg;
+  account: AccountArg;
+  inputAsset: Address;
+  equityInInputAsset: EquityInInputAssetArg;
+  slippageBps?: number;
+  maxSwapCostInCollateralAsset?: MaxSwapCostArg;
+  quoteDebtToCollateral?: QuoteFn;
+  quoteInputToCollateral?: QuoteFn;
 }
 
 /**
  * Thin hook wrapper around the domain-level mintWithRouter.
- * Note: Not wired into any UI in slice 1. Safe to export for future use.
  */
 export function useMintWithRouter() {
+  const config = useConfig();
   return useMutation<OrchestrateMintResult, Error, UseMintWithRouterParams>({
     mutationFn: async ({
-      clients,
-      addresses,
+      token,
       account,
       inputAsset,
       equityInInputAsset,
@@ -54,21 +56,23 @@ export function useMintWithRouter() {
       maxSwapCostInCollateralAsset,
       quoteDebtToCollateral,
       quoteInputToCollateral,
-      io,
     }) =>
-      (await orchestrateMint({
-        clients,
-        addresses,
+      orchestrateMint({
+        config,
         account,
+        token,
         inputAsset,
         equityInInputAsset,
-        ...(typeof slippageBps !== 'undefined' ? { slippageBps } : {}),
-        ...(typeof maxSwapCostInCollateralAsset !== 'undefined'
+        ...(typeof slippageBps !== "undefined" ? { slippageBps } : {}),
+        ...(typeof maxSwapCostInCollateralAsset !== "undefined"
           ? { maxSwapCostInCollateralAsset }
           : {}),
-        ...(typeof quoteDebtToCollateral !== 'undefined' ? { quoteDebtToCollateral } : {}),
-        ...(typeof quoteInputToCollateral !== 'undefined' ? { quoteInputToCollateral } : {}),
-        ...(typeof io !== 'undefined' ? { io } : {}),
-      })) as unknown as OrchestrateMintResult,
-  })
+        ...(typeof quoteDebtToCollateral !== "undefined"
+          ? { quoteDebtToCollateral }
+          : {}),
+        ...(typeof quoteInputToCollateral !== "undefined"
+          ? { quoteInputToCollateral }
+          : {}),
+      }),
+  });
 }
