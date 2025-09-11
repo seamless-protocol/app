@@ -1,20 +1,12 @@
-import type { Address, Hex, PublicClient, WalletClient } from 'viem'
+import type { Address, Hex } from 'viem'
 
-export type Clients = {
-  publicClient: PublicClient
-  walletClient: WalletClient
-}
+export type { Clients, IoOverrides } from '@/lib/web3/types'
 
+// Mint-specific address bundle for orchestrating a mint
 export type Addresses = {
   router: Address
   manager: Address
   token: Address
-}
-
-export type IoOverrides = {
-  simulateContract?: Clients['publicClient']['simulateContract']
-  writeContract?: Clients['walletClient']['writeContract']
-  waitForTransactionReceipt?: Clients['publicClient']['waitForTransactionReceipt']
 }
 
 export type Quote = {

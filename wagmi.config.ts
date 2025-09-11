@@ -1,5 +1,5 @@
 import { defineConfig } from '@wagmi/cli'
-import { react } from '@wagmi/cli/plugins'
+import { react, actions } from '@wagmi/cli/plugins'
 import { base } from 'viem/chains'
 import { leverageManagerAbi } from './src/lib/contracts/abis/leverageManager'
 import { leverageRouterAbi } from './src/lib/contracts/abis/leverageRouter'
@@ -48,5 +48,6 @@ export default defineConfig({
     react({
       // Generate React hooks for read/write operations
     }),
+    actions(), // Generate non-React viem actions for domain usage
   ],
 })

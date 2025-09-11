@@ -11,7 +11,7 @@ export async function getCollateralAsset(
     abi: leverageManagerAbi,
     functionName: 'getLeverageTokenCollateralAsset',
     args: [token],
-  }) as Promise<Address>
+  })
 }
 
 export async function getDebtAsset(
@@ -24,5 +24,5 @@ export async function getDebtAsset(
     abi: leverageManagerAbi,
     functionName: 'getLeverageTokenDebtAsset',
     args: [token],
-  }) as Promise<Address>
+  })
 }

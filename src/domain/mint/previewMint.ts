@@ -17,18 +17,12 @@ export async function previewMint(
   token: Address,
   equityInCollateralAsset: bigint,
 ): Promise<PreviewMintResult> {
-  const res = (await clients.publicClient.readContract({
-    address: manager,
-    abi: leverageManagerAbi,
-    functionName: 'previewMint',
-    args: [token, equityInCollateralAsset],
-  })) as {
-    collateral: bigint
-    debt: bigint
-    equity: bigint
-    shares: bigint
-    tokenFee: bigint
-    treasuryFee: bigint
-  }
-  return res
+  const { collateral, debt, equity, shares, tokenFee, treasuryFee } =
+    await clients.publicClient.readContract({
+      address: manager,
+      abi: leverageManagerAbi,
+      functionName: 'previewMint',
+      args: [token, equityInCollateralAsset],
+    })
+  return { collateral, debt, equity, shares, tokenFee, treasuryFee }
 }
