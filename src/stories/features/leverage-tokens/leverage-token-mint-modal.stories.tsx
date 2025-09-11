@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { WagmiProvider } from 'wagmi'
 import { Button } from '../../../components/ui/button'
-import { LeverageTokenMintModal } from '../../../features/leverage-tokens/components/LeverageTokenMintModal'
+import { LeverageTokenMintModal } from '../../../features/leverage-tokens/components/leverage-token-mint-modal'
 import { Toaster } from '../../../components/ui/sonner'
 import {
   leverageTokenConfigs,
