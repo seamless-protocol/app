@@ -8,6 +8,7 @@ import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
+import { MIN_MINT_AMOUNT_DISPLAY } from '../../constants'
 import { useMintExecution } from '../../hooks/mint/useMintExecution'
 import { useMintForm } from '../../hooks/mint/useMintForm'
 import { useMintPreview } from '../../hooks/mint/useMintPreview'
@@ -125,7 +126,7 @@ export function LeverageTokenMintModal({
   const form = useMintForm({
     decimals: leverageTokenConfig.collateralAsset.decimals,
     walletBalanceFormatted: collateralBalanceFormatted,
-    minAmountFormatted: '0.01',
+    minAmountFormatted: MIN_MINT_AMOUNT_DISPLAY,
   })
 
   const preview = useMintPreview({

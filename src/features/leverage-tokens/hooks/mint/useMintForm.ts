@@ -4,7 +4,7 @@ import { parseUnits } from 'viem'
 export function useMintForm(params: {
   decimals: number
   walletBalanceFormatted: string // display string like '12.3456'
-  minAmountFormatted?: string // e.g. '0.01'
+  minAmountFormatted?: string // e.g. '0.01' (pass from MIN_MINT_AMOUNT_DISPLAY)
 }) {
   const { decimals, walletBalanceFormatted, minAmountFormatted = '0.01' } = params
 
