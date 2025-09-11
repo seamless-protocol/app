@@ -4,11 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { WagmiProvider } from 'wagmi'
 import { Button } from '../../../components/ui/button'
-import { LeverageTokenMintModal } from '../../../features/leverage-tokens/components/leverage-token-mint-modal'
 import { Toaster } from '../../../components/ui/sonner'
+import { LeverageTokenMintModal } from '../../../features/leverage-tokens/components/leverage-token-mint-modal'
 import {
-  leverageTokenConfigs,
   LeverageTokenKey,
+  leverageTokenConfigs,
 } from '../../../features/leverage-tokens/leverageTokens.config'
 import { config } from '../../../lib/config/wagmi.config'
 
@@ -78,7 +78,7 @@ export const Default: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
+    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address,
     apy: 18.67, // Example with APY
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
@@ -101,7 +101,7 @@ export const AllStates: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
+    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address,
     apy: 18.67,
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
@@ -139,7 +139,7 @@ export const DifferentStrategies: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
+    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address,
     apy: 18.67,
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
@@ -175,7 +175,7 @@ export const DifferentStrategies: Story = {
           {...args}
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
-          leverageTokenAddress={leverageTokenConfigs[strategyId]!.address}
+          leverageTokenAddress={leverageTokenConfigs[strategyId]?.address}
         />
       </div>
     )
@@ -187,7 +187,7 @@ export const WithoutAPY: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
+    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address,
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
     // No APY prop - will default to 0%
   },

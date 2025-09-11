@@ -1,12 +1,13 @@
-import { Button } from '../../../../components/ui/button'
-import { Input } from '../../../../components/ui/input'
-import { Card } from '../../../../components/ui/card'
-import { AssetDisplay } from '../../../../components/ui/asset-display'
-import { FilterDropdown } from '../../../../components/ui/filter-dropdown'
-import { Skeleton } from '../../../../components/ui/skeleton'
-import { Separator } from '../../../../components/ui/separator'
+import { ArrowDownUp, Percent, RefreshCw, Settings, TrendingUp } from 'lucide-react'
+import { useId } from 'react'
 import { Alert } from '../../../../components/ui/alert'
-import { ArrowDownUp, Settings, Percent, RefreshCw, TrendingUp } from 'lucide-react'
+import { AssetDisplay } from '../../../../components/ui/asset-display'
+import { Button } from '../../../../components/ui/button'
+import { Card } from '../../../../components/ui/card'
+import { FilterDropdown } from '../../../../components/ui/filter-dropdown'
+import { Input } from '../../../../components/ui/input'
+import { Separator } from '../../../../components/ui/separator'
+import { Skeleton } from '../../../../components/ui/skeleton'
 import { formatAPY } from '../../../../lib/utils/formatting'
 
 interface Token {
@@ -32,7 +33,7 @@ interface LeverageTokenConfig {
 interface InputStepProps {
   // Token data
   selectedToken: Token
-  availableTokens: Token[]
+  availableTokens: Array<Token>
   amount: string
   onAmountChange: (value: string) => void
   onTokenChange: (token: Token) => void
@@ -95,12 +96,16 @@ export function InputStep({
   leverageTokenConfig,
   apy,
 }: InputStepProps) {
+  const mintAmountId = useId()
+
   return (
     <div className="space-y-6">
       {/* Token Selection and Amount Input */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-white">Mint Amount</label>
+          <label htmlFor={mintAmountId} className="text-sm font-medium text-white">
+            Mint Amount
+          </label>
           <div className="text-xs text-slate-400">
             Balance:{' '}
             {isCollateralBalanceLoading ? (
@@ -116,6 +121,7 @@ export function InputStep({
             <div className="flex-1">
               <div className="flex">
                 <Input
+                  id={mintAmountId}
                   type="text"
                   placeholder="0"
                   value={amount}
@@ -184,7 +190,7 @@ export function InputStep({
         {showAdvanced && (
           <Card variant="gradient" className="p-4 gap-0">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-white">Slippage Tolerance</label>
+              <div className="text-xs font-medium text-white">Slippage Tolerance</div>
               <div className="flex items-center space-x-2">
                 {['0.1', '0.5', '1.0'].map((value) => (
                   <Button
@@ -227,7 +233,7 @@ export function InputStep({
 
         <Card variant="gradient" className="p-4 gap-0">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm text-slate-400">You will receive</label>
+            <div className="text-sm text-slate-400">You will receive</div>
             {isCalculating && (
               <div className="flex items-center text-xs text-slate-400">
                 <RefreshCw className="h-3 w-3 animate-spin mr-1" />

@@ -1,7 +1,7 @@
+import { CheckCircle, ExternalLink } from 'lucide-react'
+import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
-import { Alert } from '../../../../components/ui/alert'
-import { CheckCircle, ExternalLink } from 'lucide-react'
 
 interface Token {
   symbol: string
@@ -54,6 +54,7 @@ export function SuccessStep({
           <div className="flex justify-between">
             <span className="text-slate-400">Transaction</span>
             <button
+              type="button"
               onClick={() => window.open(`https://etherscan.io/tx/${transactionHash}`, '_blank')}
               className="text-purple-400 hover:underline flex items-center"
             >

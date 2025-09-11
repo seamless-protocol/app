@@ -1,5 +1,5 @@
-import { Card } from '../../../../components/ui/card'
 import { Loader2 } from 'lucide-react'
+import { Card } from '../../../../components/ui/card'
 
 interface Token {
   symbol: string

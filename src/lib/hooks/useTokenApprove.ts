@@ -1,9 +1,9 @@
 import type { Address } from 'viem'
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { parseUnits, maxUint256 } from 'viem'
+import { maxUint256, parseUnits } from 'viem'
+import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { TX_SETTINGS } from '@/features/leverage-tokens/utils/constants'
 import type { SupportedChainId } from '@/lib/contracts'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
-import { TX_SETTINGS } from '@/features/leverage-tokens/utils/constants'
 
 export interface UseTokenApproveParams {
   tokenAddress?: Address

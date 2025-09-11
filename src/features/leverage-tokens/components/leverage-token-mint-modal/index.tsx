@@ -1,24 +1,23 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
-import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { getLeverageTokenConfig } from '../../leverageTokens.config'
+import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
-import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
+import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
+import { getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
+import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
-import { formatUnits } from 'viem'
-import { getContractAddresses } from '../../../../lib/contracts/addresses'
-
-// Import step components
-import { InputStep } from './InputStep'
+import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { ApproveStep } from './ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
+import { ErrorStep } from './ErrorStep'
+// Import step components
+import { InputStep } from './InputStep'
 import { PendingStep } from './PendingStep'
 import { SuccessStep } from './SuccessStep'
-import { ErrorStep } from './ErrorStep'
 
 interface Token {
   symbol: string
@@ -97,7 +96,7 @@ export function LeverageTokenMintModal({
   const [currentStep, setCurrentStep] = useState<MintStep>('input')
 
   // Step configuration for the multi-step modal
-  const steps: StepConfig[] = [
+  const steps: Array<StepConfig> = [
     { id: 'input', label: 'Input', progress: 25 },
     { id: 'approve', label: 'Approve', progress: 50 },
     { id: 'confirm', label: 'Confirm', progress: 75 },
@@ -138,7 +137,7 @@ export function LeverageTokenMintModal({
   })
 
   // Available tokens for minting (only collateral asset for now)
-  const availableTokens: Token[] = [
+  const availableTokens: Array<Token> = [
     {
       symbol: leverageTokenConfig.collateralAsset.symbol,
       name: leverageTokenConfig.collateralAsset.name,
@@ -193,32 +192,29 @@ export function LeverageTokenMintModal({
   }, [isApprovalError, approvalError, currentStep])
 
   // Calculate expected leverage tokens based on input amount
-  const calculateExpectedTokens = useCallback(
-    async (inputAmount: string) => {
-      if (!inputAmount || parseFloat(inputAmount) <= 0) {
-        setExpectedTokens('0')
-        return
-      }
+  const calculateExpectedTokens = useCallback(async (inputAmount: string) => {
+    if (!inputAmount || parseFloat(inputAmount) <= 0) {
+      setExpectedTokens('0')
+      return
+    }
 
-      setIsCalculating(true)
+    setIsCalculating(true)
 
-      try {
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 800))
+    try {
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 800))
 
-        const input = parseFloat(inputAmount)
-        // Mock calculation: leverage token minting ratio
-        const tokens = input * 0.97 // Account for fees and slippage
-        setExpectedTokens(tokens.toFixed(6))
-      } catch (error) {
-        console.error('Failed to calculate tokens:', error)
-        setExpectedTokens('0')
-      } finally {
-        setIsCalculating(false)
-      }
-    },
-    [selectedToken.symbol],
-  )
+      const input = parseFloat(inputAmount)
+      // Mock calculation: leverage token minting ratio
+      const tokens = input * 0.97 // Account for fees and slippage
+      setExpectedTokens(tokens.toFixed(6))
+    } catch (error) {
+      console.error('Failed to calculate tokens:', error)
+      setExpectedTokens('0')
+    } finally {
+      setIsCalculating(false)
+    }
+  }, [])
 
   // Handle amount input changes
   const handleAmountChange = (value: string) => {
@@ -244,7 +240,7 @@ export function LeverageTokenMintModal({
 
     const inputAmount = parseFloat(amount)
     const inputAmountWei = BigInt(
-      Math.floor(inputAmount * Math.pow(10, leverageTokenConfig.collateralAsset.decimals)),
+      Math.floor(inputAmount * 10 ** leverageTokenConfig.collateralAsset.decimals),
     )
 
     return tokenAllowance < inputAmountWei
@@ -279,7 +275,7 @@ export function LeverageTokenMintModal({
 
     try {
       approve()
-    } catch (error) {
+    } catch (_error) {
       setError('Approval failed. Please try again.')
       setCurrentStep('error')
     }
@@ -295,7 +291,7 @@ export function LeverageTokenMintModal({
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // Mock transaction hash
-      const mockHash = '0x' + Math.random().toString(16).substr(2, 64)
+      const mockHash = `0x${Math.random().toString(16).substr(2, 64)}`
       setTransactionHash(mockHash)
 
       toast.success('Leverage tokens minted successfully!', {
@@ -303,7 +299,7 @@ export function LeverageTokenMintModal({
       })
 
       setCurrentStep('success')
-    } catch (error) {
+    } catch (_error) {
       setError('Mint failed. Please try again.')
       setCurrentStep('error')
     }

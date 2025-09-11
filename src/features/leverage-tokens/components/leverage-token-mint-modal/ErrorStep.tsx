@@ -1,5 +1,5 @@
-import { Button } from '../../../../components/ui/button'
 import { AlertTriangle } from 'lucide-react'
+import { Button } from '../../../../components/ui/button'
 
 interface ErrorStepProps {
   error?: string

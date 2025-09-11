@@ -518,7 +518,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           isOpen={isMintModalOpen}
           onClose={() => setIsMintModalOpen(false)}
           leverageTokenAddress={tokenAddress as Address}
-          userAddress={userAddress!}
+          {...(userAddress && { userAddress })}
           {...(apyData?.totalAPY && { apy: apyData.totalAPY })}
         />
       </div>

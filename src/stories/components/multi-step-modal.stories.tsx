@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { AlertTriangle, ArrowRight, CheckCircle, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { MultiStepModal, type StepConfig } from '../../components/multi-step-modal'
 import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
 import { Card } from '../../components/ui/card'
-import { CheckCircle, Loader2, AlertTriangle, ArrowRight } from 'lucide-react'
+import { Input } from '../../components/ui/input'
 
 const meta: Meta<typeof MultiStepModal> = {
   title: 'Components/MultiStepModal',
@@ -38,7 +38,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 // Example step configurations
-const mintSteps: StepConfig[] = [
+const mintSteps: Array<StepConfig> = [
   { id: 'input', label: 'Input', progress: 25 },
   { id: 'confirm', label: 'Confirm', progress: 50 },
   { id: 'pending', label: 'Pending', progress: 75 },
@@ -46,7 +46,7 @@ const mintSteps: StepConfig[] = [
   { id: 'error', label: 'Error', progress: 50 },
 ]
 
-const redeemSteps: StepConfig[] = [
+const redeemSteps: Array<StepConfig> = [
   { id: 'input', label: 'Input', progress: 33 },
   { id: 'confirm', label: 'Confirm', progress: 66 },
   { id: 'pending', label: 'Pending', progress: 90 },
@@ -54,7 +54,7 @@ const redeemSteps: StepConfig[] = [
   { id: 'error', label: 'Error', progress: 50 },
 ]
 
-const simpleSteps: StepConfig[] = [
+const simpleSteps: Array<StepConfig> = [
   { id: 'step1', label: 'Step 1', progress: 33 },
   { id: 'step2', label: 'Step 2', progress: 66 },
   { id: 'step3', label: 'Step 3', progress: 100 },
@@ -103,7 +103,7 @@ export const Interactive: Story = {
           return (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-white mb-2 block">Enter Amount</label>
+                <div className="text-sm font-medium text-white mb-2 block">Enter Amount</div>
                 <Input placeholder="0.00" className="bg-slate-800 border-slate-700 text-white" />
               </div>
               <div className="flex space-x-2">
@@ -254,7 +254,7 @@ export const InputStep: Story = {
     <MultiStepModal {...args}>
       <div className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-white mb-2 block">Enter Amount</label>
+          <div className="text-sm font-medium text-white mb-2 block">Enter Amount</div>
           <Input placeholder="0.00" className="bg-slate-800 border-slate-700 text-white" />
         </div>
         <Button className="w-full">
@@ -400,9 +400,7 @@ export const RedeemSteps: Story = {
     <MultiStepModal {...args}>
       <div className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-white mb-2 block">
-            Enter Amount to Redeem
-          </label>
+          <div className="text-sm font-medium text-white mb-2 block">Enter Amount to Redeem</div>
           <Input placeholder="0.00" className="bg-slate-800 border-slate-700 text-white" />
         </div>
         <Button className="w-full">

@@ -1,7 +1,7 @@
+import { ArrowDownUp, TrendingUp, Zap } from 'lucide-react'
+import { AssetDisplay } from '../../../../components/ui/asset-display'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
-import { AssetDisplay } from '../../../../components/ui/asset-display'
-import { ArrowDownUp, TrendingUp, Zap } from 'lucide-react'
 
 interface Token {
   symbol: string

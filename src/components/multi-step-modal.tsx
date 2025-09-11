@@ -1,7 +1,7 @@
 'use client'
 
-import { type ReactNode } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog'
+import type { ReactNode } from 'react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
 import { Progress } from './ui/progress'
 
 export interface StepConfig {
@@ -16,7 +16,7 @@ export interface MultiStepModalProps {
   title: string
   description: string
   currentStep: string
-  steps: StepConfig[]
+  steps: Array<StepConfig>
   children: ReactNode
   className?: string
 }
