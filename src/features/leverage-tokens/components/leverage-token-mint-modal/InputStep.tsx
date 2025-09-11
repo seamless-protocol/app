@@ -7,6 +7,7 @@ import { Skeleton } from '../../../../components/ui/skeleton'
 import { Separator } from '../../../../components/ui/separator'
 import { Alert } from '../../../../components/ui/alert'
 import { ArrowDownUp, Settings, Percent, RefreshCw, TrendingUp } from 'lucide-react'
+import { formatAPY } from '../../../../lib/utils/formatting'
 
 interface Token {
   symbol: string
@@ -277,7 +278,7 @@ export function InputStep({
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Current APY</span>
-            <span className="text-green-400">{apy ? `${apy}%` : '0%'}</span>
+            <span className="text-green-400">{apy ? formatAPY(apy, 2) : '0%'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Management Fee</span>

@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
+import { LeverageTokenMintModal } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import { useLeverageTokenCollateral } from '@/features/leverage-tokens/hooks/useLeverageTokenCollateral'
@@ -33,11 +34,12 @@ import { formatAPY, formatCurrency, formatNumber } from '@/lib/utils/formatting'
 export const Route = createFileRoute('/tokens/$chainId/$id')({
   component: () => {
     const { chainId: routeChainId, id: tokenAddress } = useParams({ strict: false })
-    const { isConnected } = useAccount()
+    const { isConnected, address: userAddress } = useAccount()
     const navigate = useNavigate()
     const [selectedTimeframe, setSelectedTimeframe] = useState<'1W' | '1M' | '3M' | '6M' | '1Y'>(
       '3M',
     )
+    const [isMintModalOpen, setIsMintModalOpen] = useState(false)
 
     // Parse chainId from route parameter
     const chainId = parseInt(routeChainId || CHAIN_IDS.BASE.toString(), 10)
@@ -154,8 +156,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
         : `~${formatCurrency(0, { decimals: 2, thousandDecimals: 2 })}`
 
     const handleMint = () => {
-      // TODO: Implement mint modal/functionality
-      console.log('Mint clicked')
+      setIsMintModalOpen(true)
     }
 
     const handleRedeem = () => {
@@ -511,6 +512,15 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
             />
           </motion.div>
         </div>
+
+        {/* Mint Modal */}
+        <LeverageTokenMintModal
+          isOpen={isMintModalOpen}
+          onClose={() => setIsMintModalOpen(false)}
+          leverageTokenAddress={tokenAddress as Address}
+          userAddress={userAddress!}
+          {...(apyData?.totalAPY && { apy: apyData.totalAPY })}
+        />
       </div>
     )
   },
