@@ -31,7 +31,7 @@ export function useMintPreview(params: {
     // Only executes when enabled=true
     queryFn: () =>
       readLeverageManagerPreviewMint(config, {
-        args: [token, debounced as bigint],
+        args: [token, debounced ?? 0n],
       }),
     enabled,
     retry: false,
