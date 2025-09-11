@@ -1,4 +1,5 @@
 export { ensureAllowance } from './allowance'
+export type { OrchestrateMintResult } from './orchestrate'
 export { orchestrateMint } from './orchestrate'
 export type { MintPlanV2 } from './plan.v2'
 export type { PreviewMintResult } from './previewMint'

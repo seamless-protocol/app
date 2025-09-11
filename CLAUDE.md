@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Note: This document must be kept in strict sync with `AGENTS.md`. Any change here should be mirrored there verbatim.
+
 ## Project Overview
 
 Seamless Protocol - Frontend application for a DeFi protocol that wraps complex leverage strategies into simple ERC-20 tokens. Built for IPFS deployment as a fully static, client-side application.
@@ -96,6 +98,11 @@ The app is designed for 7 incremental production releases:
 ### Code Quality
 - **Biome** for linting and formatting
 - Run `bun check:fix` after changes
+
+### Function Style
+- **Function declarations**: Prefer for exported utilities and domain-layer helpers when hoisting improves readability (main flow first, helpers below). Useful if overloads are expected or to keep stack names clear.
+- **Arrow functions**: Prefer inside React components/hooks and for callbacks/handlers. Use for small, module-local helpers that capture lexical scope. Always use arrows for array methods, event handlers, and React props.
+- **Consistency**: Within a file, choose the dominant style that best serves readability. If the file tells a top-down “story”, place the main function first and define helper declarations below; otherwise, use arrows consistently for local helpers.
 
 ### Provider Hierarchy (planned)
 ```

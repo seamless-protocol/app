@@ -20,12 +20,8 @@ import {
   simulateLeverageRouterMint,
   writeLeverageRouterMint,
 } from '@/lib/contracts/generated'
+import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from './constants'
 import { BASE_TOKEN_ADDRESSES, createSwapContext, createWeETHSwapContext } from './swapContext'
-
-// Basis points and fee defaults
-const BPS_DENOMINATOR = 10_000n
-// Default router swap cost cap: 500 bps = 5% of equity
-const DEFAULT_MAX_SWAP_COST_BPS = 500n
 
 /**
  * @param config Wagmi Config used to resolve active chain and contract addresses

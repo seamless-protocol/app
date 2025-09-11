@@ -1,3 +1,6 @@
+/**
+ * Domain types for mint orchestration (version-agnostic).
+ */
 import type { Address, Hex } from 'viem'
 
 export type { Clients, IoOverrides } from '@/lib/web3/types'

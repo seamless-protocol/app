@@ -11,6 +11,7 @@ export type PreviewMintResult = {
   treasuryFee: bigint
 }
 
+// Legacy helper retained for tests/compatibility. Domain now prefers Wagmi actions.
 export async function previewMint(
   clients: Pick<Clients, 'publicClient'>,
   manager: Address,
