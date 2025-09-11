@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { LeverageTokenDetailedMetrics } from '@/features/leverage-tokens/components/LeverageTokenDetailedMetrics'
 import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components/LeverageTokenHoldingsCard'
 import { LeverageTokenMintModal } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
+import { LeverageTokenRedeemModal } from '@/features/leverage-tokens/components/leverage-token-redeem-modal'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import { useLeverageTokenCollateral } from '@/features/leverage-tokens/hooks/useLeverageTokenCollateral'
@@ -40,6 +41,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       '3M',
     )
     const [isMintModalOpen, setIsMintModalOpen] = useState(false)
+    const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false)
 
     // Parse chainId from route parameter
     const chainId = parseInt(routeChainId || CHAIN_IDS.BASE.toString(), 10)
@@ -160,8 +162,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     }
 
     const handleRedeem = () => {
-      // TODO: Implement redeem modal/functionality
-      console.log('Redeem clicked')
+      setIsRedeemModalOpen(true)
     }
 
     // Create StatCard data for key metrics (using live data where available)
@@ -520,6 +521,14 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           leverageTokenAddress={tokenAddress as Address}
           {...(userAddress && { userAddress })}
           {...(apyData?.totalAPY && { apy: apyData.totalAPY })}
+        />
+
+        {/* Redeem Modal */}
+        <LeverageTokenRedeemModal
+          isOpen={isRedeemModalOpen}
+          onClose={() => setIsRedeemModalOpen(false)}
+          leverageTokenAddress={tokenAddress as Address}
+          {...(userAddress && { userAddress })}
         />
       </div>
     )
