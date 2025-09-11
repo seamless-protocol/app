@@ -24,7 +24,11 @@ export function useMintPreview(params: {
   const chainId = getPublicClient(config)?.chain?.id
 
   const amountForKey = enabled && typeof debounced === 'bigint' ? (debounced as bigint) : 0n
-  const queryKey = ltKeys.simulation.mintKey({ chainId, addr: token, amount: amountForKey })
+  const queryKey = ltKeys.simulation.mintKey({
+    chainId,
+    addr: token,
+    amount: amountForKey,
+  })
 
   const query = useQuery<Preview, Error>({
     queryKey,
@@ -44,6 +48,17 @@ export function useMintPreview(params: {
   const isLoading = enabled ? query.isPending || query.isFetching : false
   const data = query.data
   const error = query.error
+
+  useEffect(() => {
+    console.log('[mintPreview]', {
+      chainId,
+      token,
+      equityInCollateralAsset: debounced,
+      enabled,
+      data,
+      error,
+    })
+  }, [chainId, token, debounced, enabled, data, error])
 
   return { data, isLoading, error }
 }

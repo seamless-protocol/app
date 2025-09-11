@@ -1,6 +1,7 @@
 /**
  * Utility functions for formatting numbers, currency, percentages, and other display values
  */
+import { formatUnits } from 'viem'
 
 /**
  * Format a number as currency with appropriate suffixes (K, M)
@@ -132,13 +133,7 @@ export function formatTokenAmountFromBase(
   decimals: number,
   displayDecimals: number = 6,
 ): string {
-  if (!value) return '0'
-  try {
-    // Lazy import to avoid pulling viem in module scope for SSR
-    const { formatUnits } = require('viem') as { formatUnits: (v: bigint, d: number) => string }
-    const n = Number(formatUnits(value, decimals))
-    return Number.isFinite(n) ? n.toFixed(displayDecimals) : '0'
-  } catch {
-    return '0'
-  }
+  if (typeof value !== 'bigint') return '0'
+  const n = Number(formatUnits(value, decimals))
+  return Number.isFinite(n) ? n.toFixed(displayDecimals) : '0'
 }
