@@ -47,14 +47,18 @@ export function LeverageTokenMintModal({
   // Get leverage token configuration by address
   const leverageTokenConfig = getLeverageTokenConfig(leverageTokenAddress)
 
+  // Early return if no configuration found
   if (!leverageTokenConfig) {
-    console.error(`No configuration found for token address: ${leverageTokenAddress}`)
-    return null
+    throw new Error(`No configuration found for token address: ${leverageTokenAddress}`)
   }
 
   // Get user account information
   const { address: hookUserAddress, isConnected } = useAccount()
   const userAddress = propUserAddress || hookUserAddress
+
+  // Get leverage router address for allowance check
+  const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
+  const leverageRouterAddress = contractAddresses.leverageRouter
 
   // Get real wallet balance for collateral asset
   const { balance: collateralBalance, isLoading: isCollateralBalanceLoading } = useTokenBalance({
@@ -63,10 +67,6 @@ export function LeverageTokenMintModal({
     chainId: leverageTokenConfig.chainId,
     enabled: Boolean(userAddress && isConnected),
   })
-
-  // Get leverage router address for allowance check
-  const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
-  const leverageRouterAddress = contractAddresses.leverageRouter
 
   // Get token allowance for the leverage router
   const { allowance: tokenAllowance, isLoading: isAllowanceLoading } = useTokenAllowance({
@@ -136,16 +136,6 @@ export function LeverageTokenMintModal({
     useMaxApproval: true, // Use max approval for better UX
   })
 
-  // Available tokens for minting (only collateral asset for now)
-  const availableTokens: Array<Token> = [
-    {
-      symbol: leverageTokenConfig.collateralAsset.symbol,
-      name: leverageTokenConfig.collateralAsset.name,
-      balance: collateralBalanceFormatted,
-      price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
-    },
-  ]
-
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
@@ -166,12 +156,7 @@ export function LeverageTokenMintModal({
         price: collateralUsdPrice || 0,
       }))
     }
-  }, [
-    collateralBalanceFormatted,
-    collateralUsdPrice,
-    selectedToken.symbol,
-    leverageTokenConfig.collateralAsset.symbol,
-  ])
+  }, [collateralBalanceFormatted, collateralUsdPrice, selectedToken.symbol, leverageTokenConfig])
 
   // Handle approval confirmation
   useEffect(() => {
@@ -215,6 +200,16 @@ export function LeverageTokenMintModal({
       setIsCalculating(false)
     }
   }, [])
+
+  // Available tokens for minting (only collateral asset for now)
+  const availableTokens: Array<Token> = [
+    {
+      symbol: leverageTokenConfig.collateralAsset.symbol,
+      name: leverageTokenConfig.collateralAsset.name,
+      balance: collateralBalanceFormatted,
+      price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
+    },
+  ]
 
   // Handle amount input changes
   const handleAmountChange = (value: string) => {

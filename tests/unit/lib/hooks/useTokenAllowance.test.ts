@@ -1,3 +1,4 @@
+import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useReadContracts } from 'wagmi'
 import { useTokenAllowance } from '@/lib/hooks/useTokenAllowance'

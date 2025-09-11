@@ -78,7 +78,9 @@ export const Default: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address,
+    leverageTokenAddress:
+      leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address ||
+      '0x3f5b831fc2c82685d66cea65346128348116f064',
     apy: 18.67, // Example with APY
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
@@ -101,7 +103,9 @@ export const AllStates: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address,
+    leverageTokenAddress:
+      leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address ||
+      '0x3f5b831fc2c82685d66cea65346128348116f064',
     apy: 18.67,
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
@@ -139,7 +143,9 @@ export const DifferentStrategies: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address,
+    leverageTokenAddress:
+      leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address ||
+      '0x3f5b831fc2c82685d66cea65346128348116f064',
     apy: 18.67,
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
@@ -175,7 +181,10 @@ export const DifferentStrategies: Story = {
           {...args}
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
-          leverageTokenAddress={leverageTokenConfigs[strategyId]?.address}
+          leverageTokenAddress={
+            leverageTokenConfigs[strategyId]?.address ||
+            '0x3f5b831fc2c82685d66cea65346128348116f064'
+          }
         />
       </div>
     )
@@ -187,7 +196,9 @@ export const WithoutAPY: Story = {
   args: {
     isOpen: false,
     onClose: () => {},
-    leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address,
+    leverageTokenAddress:
+      leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address ||
+      '0x3f5b831fc2c82685d66cea65346128348116f064',
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
     // No APY prop - will default to 0%
   },
