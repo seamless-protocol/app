@@ -6,9 +6,13 @@ import type { Address } from 'viem'
  */
 export const ltKeys = {
   all: ['leverage-tokens'] as const,
+  // Chain scoping (optional; use when the same address can exist across chains)
+  chain: (chainId: number) => [...ltKeys.all, 'chain', chainId] as const,
   factory: () => [...ltKeys.all, 'factory'] as const,
   tokens: () => [...ltKeys.all, 'tokens'] as const,
   token: (addr: Address) => [...ltKeys.tokens(), addr] as const,
+  tokenOnChain: (chainId: number, addr: Address) =>
+    [...ltKeys.chain(chainId), 'token', addr] as const,
   user: (addr: Address, owner: Address) => [...ltKeys.token(addr), 'user', owner] as const,
   supply: (addr: Address) => [...ltKeys.token(addr), 'supply'] as const,
   price: (addr: Address) => [...ltKeys.token(addr), 'price'] as const,
@@ -24,6 +28,12 @@ export const ltKeys = {
   simulation: {
     mint: (addr: Address, amount: bigint) =>
       [...ltKeys.token(addr), 'simulate', 'mint', amount.toString()] as const,
+    mintOnChain: (chainId: number, addr: Address, amount: bigint) =>
+      [...ltKeys.tokenOnChain(chainId, addr), 'simulate', 'mint', amount.toString()] as const,
+    mintKey: (params: { chainId: number | undefined; addr: Address; amount: bigint }) =>
+      typeof params.chainId === 'number'
+        ? ltKeys.simulation.mintOnChain(params.chainId, params.addr, params.amount)
+        : ltKeys.simulation.mint(params.addr, params.amount),
     redeem: (addr: Address, amount: bigint) =>
       [...ltKeys.token(addr), 'simulate', 'redeem', amount.toString()] as const,
   },

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
@@ -8,7 +8,7 @@ import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
-import { MIN_MINT_AMOUNT_DISPLAY } from '../../constants'
+import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, MIN_MINT_AMOUNT_DISPLAY } from '../../constants'
 import { useMintExecution } from '../../hooks/mint/useMintExecution'
 import { useMintForm } from '../../hooks/mint/useMintForm'
 import { useMintPreview } from '../../hooks/mint/useMintPreview'
@@ -116,9 +116,9 @@ export function LeverageTokenMintModal({
     balance: collateralBalanceFormatted,
     price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
   })
-  const { slippage, setSlippage, slippageBps } = useSlippage('0.5')
+  const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [expectedTokens, setExpectedTokens] = useState('0')
+  // Derive expected tokens from preview data (no local state needed)
   const [transactionHash, setTransactionHash] = useState('')
   const [error, setError] = useState('')
 
@@ -158,54 +158,54 @@ export function LeverageTokenMintModal({
     slippageBps,
   })
 
-  // Reset state when modal opens/closes
-  useEffect(() => {
-    if (isOpen) {
-      toInput()
-      form.setAmount('')
-      setError('')
-      setTransactionHash('')
-      setExpectedTokens('0')
-    }
-  }, [isOpen, toInput, form.setAmount])
+  // Reset state when modal opens
+  const resetModal = useCallback(() => {
+    toInput()
+    form.setAmount('')
+    setError('')
+    setTransactionHash('')
+  }, [toInput, form.setAmount])
 
-  // Update selected token balance and price when wallet balance or price changes
   useEffect(() => {
-    if (selectedToken.symbol === leverageTokenConfig.collateralAsset.symbol) {
-      setSelectedToken((prev) => ({
-        ...prev,
-        balance: collateralBalanceFormatted,
-        price: collateralUsdPrice || 0,
-      }))
-    }
-  }, [collateralBalanceFormatted, collateralUsdPrice, selectedToken.symbol, leverageTokenConfig])
+    if (isOpen) resetModal()
+  }, [isOpen, resetModal])
 
-  // Handle approval confirmation
+  // View model for selected token: inject live balance/price when it's the collateral asset
+  const selectedTokenView = useMemo(() => {
+    if (selectedToken.symbol !== leverageTokenConfig.collateralAsset.symbol) return selectedToken
+    return {
+      ...selectedToken,
+      balance: collateralBalanceFormatted,
+      price: collateralUsdPrice || 0,
+    }
+  }, [
+    selectedToken,
+    leverageTokenConfig.collateralAsset.symbol,
+    collateralBalanceFormatted,
+    collateralUsdPrice,
+  ])
+
+  // Handle approval side-effects in one place
   useEffect(() => {
-    if (isApprovedFlag && currentStep === 'approve') {
+    if (currentStep !== 'approve') return
+    if (isApprovedFlag) {
       toast.success('Token approval confirmed', {
         description: `${selectedToken.symbol} spending approved`,
       })
       toConfirm()
+      return
     }
-  }, [isApprovedFlag, currentStep, selectedToken.symbol, toConfirm])
-
-  // Handle approval errors
-  useEffect(() => {
-    if (approveErr && currentStep === 'approve') {
+    if (approveErr) {
       setError(approveErr?.message || 'Approval failed. Please try again.')
       toError()
     }
-  }, [approveErr, currentStep, toError])
+  }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
 
-  // Calculate expected leverage tokens based on input amount
-  useEffect(() => {
-    if (preview.data?.shares) {
-      const tokens = formatUnits(preview.data.shares, leverageTokenConfig.decimals)
-      setExpectedTokens(Number(tokens).toFixed(6))
-    } else {
-      setExpectedTokens('0')
-    }
+  const expectedTokens = useMemo(() => {
+    const shares = preview.data?.shares
+    if (!shares) return '0'
+    const tokens = formatUnits(shares, leverageTokenConfig.decimals)
+    return Number(tokens).toFixed(6)
   }, [preview.data?.shares, leverageTokenConfig.decimals])
 
   // Available tokens for minting (only collateral asset for now)
@@ -298,7 +298,7 @@ export function LeverageTokenMintModal({
       case 'input':
         return (
           <InputStep
-            selectedToken={selectedToken}
+            selectedToken={selectedTokenView}
             availableTokens={availableTokens}
             amount={form.amount}
             onAmountChange={handleAmountChange}
@@ -327,7 +327,7 @@ export function LeverageTokenMintModal({
       case 'approve':
         return (
           <ApproveStep
-            selectedToken={selectedToken}
+            selectedToken={selectedTokenView}
             amount={form.amount}
             isApproving={!!isApprovingPending}
           />
@@ -336,7 +336,7 @@ export function LeverageTokenMintModal({
       case 'confirm':
         return (
           <ConfirmStep
-            selectedToken={selectedToken}
+            selectedToken={selectedTokenView}
             amount={form.amount}
             expectedTokens={expectedTokens}
             leverageTokenConfig={leverageTokenConfig}
@@ -347,7 +347,7 @@ export function LeverageTokenMintModal({
       case 'pending':
         return (
           <PendingStep
-            selectedToken={selectedToken}
+            selectedToken={selectedTokenView}
             amount={form.amount}
             leverageTokenConfig={leverageTokenConfig}
           />
@@ -356,7 +356,7 @@ export function LeverageTokenMintModal({
       case 'success':
         return (
           <SuccessStep
-            selectedToken={selectedToken}
+            selectedToken={selectedTokenView}
             amount={form.amount}
             expectedTokens={expectedTokens}
             transactionHash={transactionHash}
