@@ -12,8 +12,7 @@ import {
   readLeverageManagerGetLeverageTokenDebtAsset,
   readLeverageManagerPreviewMint,
 } from '@/lib/contracts/generated'
-import { BPS_DENOMINATOR } from './constants'
-import { mulDivFloor } from './math'
+import { applySlippageFloor, mulDivFloor } from './math'
 import type { Quote, QuoteFn } from './types'
 
 // Reuse generated types for stronger inference and future-proofing
@@ -134,7 +133,7 @@ export async function planMintV2(params: {
   if (previewWithTotalCollateral.debt < debtIn)
     throw new Error('Reprice: manager preview debt < planned flash loan')
 
-  const minShares = computeMinShares(previewWithTotalCollateral.shares, slippageBps)
+  const minShares = applySlippageFloor(previewWithTotalCollateral.shares, slippageBps)
   const excessDebt =
     previewWithTotalCollateral.debt > debtIn ? previewWithTotalCollateral.debt - debtIn : 0n
 
@@ -169,9 +168,9 @@ async function prepareInputConversion(args: {
   collateralAsset: Address
   equityInInputAsset: EquityInInputAssetArg
   quoteInputToCollateral?: QuoteFn
-}): Promise<{ calls: V2Call[]; userCollateralOut: bigint }> {
+}): Promise<{ calls: Array<V2Call>; userCollateralOut: bigint }> {
   const { inputAsset, collateralAsset, equityInInputAsset, quoteInputToCollateral } = args
-  const calls: V2Call[] = []
+  const calls: Array<V2Call> = []
   if (getAddress(inputAsset) === getAddress(collateralAsset)) {
     return { calls, userCollateralOut: equityInInputAsset }
   }
@@ -227,15 +226,13 @@ async function planDebtSwap(args: {
   return { debtIn, debtQuote }
 }
 
-function computeMinShares(expectedShares: bigint, slippageBps: number) {
-  return (expectedShares * (BPS_DENOMINATOR - BigInt(slippageBps))) / BPS_DENOMINATOR
-}
+// minShares computation centralized via applySlippageFloor in math.ts
 
 function buildDebtSwapCalls(args: {
   debtAsset: Address
   debtQuote: Quote
   debtIn: bigint
-}): V2Call[] {
+}): Array<V2Call> {
   const { debtAsset, debtQuote, debtIn } = args
   return [
     {

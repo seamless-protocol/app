@@ -10,7 +10,7 @@
  */
 
 import { getPublicClient } from '@wagmi/core'
-import { type Address, type Hash, getAddress } from 'viem'
+import { type Address, getAddress, type Hash } from 'viem'
 import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
 import {
@@ -21,6 +21,7 @@ import {
   writeLeverageRouterMint,
 } from '@/lib/contracts/generated'
 import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from './constants'
+import { applySlippageFloor } from './math'
 import { BASE_TOKEN_ADDRESSES, createSwapContext, createWeETHSwapContext } from './swapContext'
 
 /**
@@ -56,7 +57,7 @@ export async function executeMintV1(params: {
   assertInputIsCollateral(inputAsset, collateralAsset)
 
   const preview = await fetchPreview(config, token, equityInCollateralAsset)
-  const minShares = computeMinShares(preview.shares, slippageBps)
+  const minShares = applySlippageFloor(preview.shares, slippageBps)
   const maxSwapCost = computeMaxSwapCost(
     equityInCollateralAsset,
     params.maxSwapCostInCollateralAsset,
@@ -87,9 +88,7 @@ function getActiveChainId(config: Config): number | undefined {
   return pc?.chain?.id
 }
 
-function computeMinShares(previewShares: bigint, slippageBps: number): bigint {
-  return (previewShares * (BPS_DENOMINATOR - BigInt(slippageBps))) / BPS_DENOMINATOR
-}
+// computeMinShares now centralized via applySlippageFloor in math.ts
 
 function computeMaxSwapCost(
   equityInCollateralAsset: bigint,
@@ -132,7 +131,8 @@ async function simulateAndSendMint(args: {
   maxSwapCost: bigint
   swapContext: ReturnType<typeof createSwapContext> | ReturnType<typeof createWeETHSwapContext>
 }): Promise<Hash> {
-  const { config, account, token, equityInCollateralAsset, minShares, maxSwapCost, swapContext } = args
+  const { config, account, token, equityInCollateralAsset, minShares, maxSwapCost, swapContext } =
+    args
   const { request } = await simulateLeverageRouterMint(config, {
     args: [token, equityInCollateralAsset, minShares, maxSwapCost, swapContext],
     account,
@@ -140,11 +140,7 @@ async function simulateAndSendMint(args: {
   return writeLeverageRouterMint(config, { ...request })
 }
 
-function buildSwapContext(
-  collateralAsset: Address,
-  debtAsset: Address,
-  activeChainId?: number,
-) {
+function buildSwapContext(collateralAsset: Address, debtAsset: Address, activeChainId?: number) {
   const isBaseChain = activeChainId === base.id
   const isWeETHCollateral = getAddress(collateralAsset) === getAddress(BASE_TOKEN_ADDRESSES.weETH)
   return isBaseChain && isWeETHCollateral

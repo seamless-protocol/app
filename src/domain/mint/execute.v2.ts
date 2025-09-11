@@ -36,6 +36,7 @@ export async function executeMintV2(params: {
     equityInInputAsset: bigint
     minShares: bigint
     calls: V2Calls
+    expectedTotalCollateral: bigint
   }
   maxSwapCostInCollateralAsset?: bigint
 }) {
@@ -43,9 +44,10 @@ export async function executeMintV2(params: {
 
   // No allowance handling here; UI should perform approvals beforehand
 
+  // Default to sizing swap cost cap from total collateral (collateral units)
   const maxSwapCost =
     maxSwapCostInCollateralAsset ??
-    (plan.equityInInputAsset * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
+    (plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
 
   const { request } = await simulateLeverageRouterV2MintWithCalls(config, {
     args: [token, plan.equityInInputAsset, plan.minShares, maxSwapCost, plan.calls],

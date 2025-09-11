@@ -1,9 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { formatUnits } from 'viem'
-import { useAccount } from 'wagmi'
+import { type Address, formatUnits, parseUnits } from 'viem'
+import { useAccount, useConfig, usePublicClient } from 'wagmi'
+import { orchestrateMint } from '@/domain/mint'
+import { readLeverageManagerPreviewMint } from '@/lib/contracts/generated'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
@@ -54,6 +56,8 @@ export function LeverageTokenMintModal({
 
   // Get user account information
   const { address: hookUserAddress, isConnected } = useAccount()
+  const wagmiConfig = useConfig()
+  const publicClient = usePublicClient()
   const userAddress = propUserAddress || hookUserAddress
 
   // Get leverage router address for allowance check
@@ -112,7 +116,7 @@ export function LeverageTokenMintModal({
     price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
   })
   const [amount, setAmount] = useState('')
-  const [slippage, setSlippage] = useState('0.5')
+  const [slippage, setSlippage] = useState('0.5') // percent string (e.g. "0.5")
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [isCalculating, setIsCalculating] = useState(false)
   const [expectedTokens, setExpectedTokens] = useState('0')
@@ -177,29 +181,38 @@ export function LeverageTokenMintModal({
   }, [isApprovalError, approvalError, currentStep])
 
   // Calculate expected leverage tokens based on input amount
-  const calculateExpectedTokens = useCallback(async (inputAmount: string) => {
-    if (!inputAmount || parseFloat(inputAmount) <= 0) {
-      setExpectedTokens('0')
-      return
-    }
+  const calculateExpectedTokens = useCallback(
+    async (inputAmount: string) => {
+      if (!inputAmount || parseFloat(inputAmount) <= 0) {
+        setExpectedTokens('0')
+        return
+      }
 
-    setIsCalculating(true)
-
-    try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 800))
-
-      const input = parseFloat(inputAmount)
-      // Mock calculation: leverage token minting ratio
-      const tokens = input * 0.97 // Account for fees and slippage
-      setExpectedTokens(tokens.toFixed(6))
-    } catch (error) {
-      console.error('Failed to calculate tokens:', error)
-      setExpectedTokens('0')
-    } finally {
-      setIsCalculating(false)
-    }
-  }, [])
+      setIsCalculating(true)
+      try {
+        const equityInCollateral = parseUnits(
+          inputAmount,
+          leverageTokenConfig.collateralAsset.decimals,
+        )
+        const preview = await readLeverageManagerPreviewMint(wagmiConfig, {
+          args: [leverageTokenAddress as Address, equityInCollateral],
+        })
+        const tokens = formatUnits(preview.shares, leverageTokenConfig.decimals)
+        setExpectedTokens(Number(tokens).toFixed(6))
+      } catch (error) {
+        console.error('Failed to calculate tokens:', error)
+        setExpectedTokens('0')
+      } finally {
+        setIsCalculating(false)
+      }
+    },
+    [
+      leverageTokenAddress,
+      leverageTokenConfig.collateralAsset.decimals,
+      leverageTokenConfig.decimals,
+      wagmiConfig,
+    ],
+  )
 
   // Available tokens for minting (only collateral asset for now)
   const availableTokens: Array<Token> = [
@@ -276,26 +289,36 @@ export function LeverageTokenMintModal({
     }
   }
 
+  // Convert slippage percent string to BPS number
+  const slippageBps = useMemo(() => {
+    const pct = Number(slippage || '0')
+    return Number.isFinite(pct) ? Math.max(0, Math.round(pct * 100)) : 50
+  }, [slippage])
+
   // Handle mint confirmation
   const handleConfirm = async () => {
-    // Set to pending state first
+    if (!userAddress || !isConnected) return
     setCurrentStep('pending')
-
     try {
-      // TODO: add actual mint transaction
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Mock transaction hash
-      const mockHash = `0x${Math.random().toString(16).substr(2, 64)}`
-      setTransactionHash(mockHash)
-
-      toast.success('Leverage tokens minted successfully!', {
-        description: `${amount} ${selectedToken.symbol} minted to ${expectedTokens} leverage tokens`,
+      const equityInInput = parseUnits(amount, leverageTokenConfig.collateralAsset.decimals)
+      const { hash } = await orchestrateMint({
+        config: wagmiConfig,
+        account: userAddress as Address,
+        token: leverageTokenAddress as Address,
+        inputAsset: leverageTokenConfig.collateralAsset.address,
+        equityInInputAsset: equityInInput,
+        slippageBps,
       })
-
+      setTransactionHash(hash)
+      // Wait for receipt so Pending step reflects actual processing
+      await publicClient?.waitForTransactionReceipt({ hash })
+      toast.success('Leverage tokens minted successfully!', {
+        description: `${amount} ${selectedToken.symbol} -> ~${expectedTokens} tokens`,
+      })
       setCurrentStep('success')
-    } catch (_error) {
-      setError('Mint failed. Please try again.')
+    } catch (e: any) {
+      console.error('Mint failed', e)
+      setError(e?.message || 'Mint failed. Please try again.')
       setCurrentStep('error')
     }
   }

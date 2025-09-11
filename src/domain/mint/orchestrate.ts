@@ -97,7 +97,7 @@ export async function orchestrateMint(params: {
     quoteInputToCollateral,
   } = params
 
-  const version = await detectRouterVersion()
+  const version = detectRouterVersion()
 
   if (version === RouterVersion.V2) {
     if (!quoteDebtToCollateral) throw new Error('quoteDebtToCollateral is required for router v2')
@@ -120,6 +120,7 @@ export async function orchestrateMint(params: {
         equityInInputAsset: plan.equityInInputAsset,
         minShares: plan.minShares,
         calls: plan.calls,
+        expectedTotalCollateral: plan.expectedTotalCollateral,
       },
       ...(typeof maxSwapCostInCollateralAsset !== 'undefined'
         ? { maxSwapCostInCollateralAsset }
