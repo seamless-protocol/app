@@ -6,13 +6,7 @@ import { FilterDropdown } from '../../../../components/ui/filter-dropdown'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import { Separator } from '../../../../components/ui/separator'
 import { Alert } from '../../../../components/ui/alert'
-import {
-  ArrowDownUp,
-  Settings,
-  Percent,
-  RefreshCw,
-  TrendingUp,
-} from 'lucide-react'
+import { ArrowDownUp, Settings, Percent, RefreshCw, TrendingUp } from 'lucide-react'
 
 interface Token {
   symbol: string
@@ -42,34 +36,34 @@ interface InputStepProps {
   onAmountChange: (value: string) => void
   onTokenChange: (token: Token) => void
   onPercentageClick: (percentage: number) => void
-  
+
   // UI state
   showAdvanced: boolean
   onToggleAdvanced: () => void
   slippage: string
   onSlippageChange: (value: string) => void
-  
+
   // Loading states
   isCollateralBalanceLoading: boolean
   isUsdPriceLoading: boolean
   isCalculating: boolean
   isAllowanceLoading: boolean
   isApproving: boolean
-  
+
   // Calculations
   expectedTokens: string
-  
+
   // Validation
   canProceed: boolean
   needsApproval: boolean
   isConnected: boolean
-  
+
   // Actions
   onApprove: () => void
-  
+
   // Error
   error?: string | undefined
-  
+
   // Config
   leverageTokenConfig: LeverageTokenConfig
   apy?: number | undefined
@@ -148,13 +142,10 @@ export function InputStep({
                 {isUsdPriceLoading ? (
                   <Skeleton className="h-4 w-20" />
                 ) : (
-                  `≈ $${(parseFloat(amount || '0') * selectedToken.price).toLocaleString(
-                    'en-US',
-                    {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    },
-                  )}`
+                  `≈ $${(parseFloat(amount || '0') * selectedToken.price).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}`
                 )}
               </div>
             </div>
@@ -256,9 +247,7 @@ export function InputStep({
               <div className="w-6 h-6 bg-purple-600/20 rounded-full flex items-center justify-center">
                 <TrendingUp className="h-3 w-3 text-purple-400" />
               </div>
-              <span className="text-sm font-medium text-white">
-                {leverageTokenConfig.symbol}
-              </span>
+              <span className="text-sm font-medium text-white">{leverageTokenConfig.symbol}</span>
             </div>
           </div>
 

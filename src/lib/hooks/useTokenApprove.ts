@@ -29,11 +29,7 @@ export function useTokenApprove({
   useMaxApproval = false,
 }: UseTokenApproveParams) {
   // Calculate approval amount
-  const approvalAmount = useMaxApproval 
-    ? maxUint256 
-    : amount 
-      ? parseUnits(amount, decimals)
-      : 0n
+  const approvalAmount = useMaxApproval ? maxUint256 : amount ? parseUnits(amount, decimals) : 0n
 
   // Write contract for approval
   const {
@@ -76,23 +72,23 @@ export function useTokenApprove({
   return {
     // Actions
     approve,
-    
+
     // Transaction state
     hash,
     receipt,
-    
+
     // Loading states
     isApproving,
     isConfirming,
     isPending: isApproving || isConfirming,
-    
+
     // Success state
     isApproved,
-    
+
     // Error states
     isError: isApproveError || isConfirmError,
     error: approveError || confirmError,
-    
+
     // Approval details
     approvalAmount,
     useMaxApproval,

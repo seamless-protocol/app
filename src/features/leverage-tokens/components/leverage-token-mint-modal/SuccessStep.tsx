@@ -34,8 +34,8 @@ export function SuccessStep({
         </div>
         <h3 className="text-lg font-medium text-white mb-2">Mint Successful!</h3>
         <p className="text-slate-400 text-center max-w-sm">
-          Your {amount} {selectedToken.symbol} has been successfully minted into{' '}
-          {expectedTokens} leverage tokens.
+          Your {amount} {selectedToken.symbol} has been successfully minted into {expectedTokens}{' '}
+          leverage tokens.
         </p>
       </div>
 
@@ -54,9 +54,7 @@ export function SuccessStep({
           <div className="flex justify-between">
             <span className="text-slate-400">Transaction</span>
             <button
-              onClick={() =>
-                window.open(`https://etherscan.io/tx/${transactionHash}`, '_blank')
-              }
+              onClick={() => window.open(`https://etherscan.io/tx/${transactionHash}`, '_blank')}
               className="text-purple-400 hover:underline flex items-center"
             >
               View on Etherscan

@@ -63,7 +63,7 @@ export function LeverageTokenMintModal({
     userAddress: userAddress as `0x${string}`,
     chainId: leverageTokenConfig.chainId,
     enabled: Boolean(userAddress && isConnected),
-  })  
+  })
 
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
@@ -101,10 +101,11 @@ export function LeverageTokenMintModal({
     { id: 'input', label: 'Input', progress: 25 },
     { id: 'approve', label: 'Approve', progress: 50 },
     { id: 'confirm', label: 'Confirm', progress: 75 },
+    { id: 'pending', label: 'Processing', progress: 90 },
     { id: 'success', label: 'Success', progress: 100 },
     { id: 'error', label: 'Error', progress: 50 },
   ]
-  
+
   const [selectedToken, setSelectedToken] = useState<Token>({
     symbol: leverageTokenConfig.collateralAsset.symbol,
     name: leverageTokenConfig.collateralAsset.name,
@@ -240,10 +241,12 @@ export function LeverageTokenMintModal({
   // Check if approval is needed
   const needsApproval = () => {
     if (!amount || parseFloat(amount) <= 0) return false
-    
+
     const inputAmount = parseFloat(amount)
-    const inputAmountWei = BigInt(Math.floor(inputAmount * Math.pow(10, leverageTokenConfig.collateralAsset.decimals)))
-    
+    const inputAmountWei = BigInt(
+      Math.floor(inputAmount * Math.pow(10, leverageTokenConfig.collateralAsset.decimals)),
+    )
+
     return tokenAllowance < inputAmountWei
   }
 
@@ -284,6 +287,9 @@ export function LeverageTokenMintModal({
 
   // Handle mint confirmation
   const handleConfirm = async () => {
+    // Set to pending state first
+    setCurrentStep('pending')
+
     try {
       // TODO: add actual mint transaction
       await new Promise((resolve) => setTimeout(resolve, 2000))
@@ -349,11 +355,7 @@ export function LeverageTokenMintModal({
 
       case 'approve':
         return (
-          <ApproveStep
-            selectedToken={selectedToken}
-            amount={amount}
-            isApproving={isApproving}
-          />
+          <ApproveStep selectedToken={selectedToken} amount={amount} isApproving={isApproving} />
         )
 
       case 'confirm':
@@ -388,13 +390,7 @@ export function LeverageTokenMintModal({
         )
 
       case 'error':
-        return (
-          <ErrorStep
-            error={error}
-            onRetry={handleRetry}
-            onClose={handleClose}
-          />
-        )
+        return <ErrorStep error={error} onRetry={handleRetry} onClose={handleClose} />
 
       default:
         return null

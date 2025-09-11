@@ -48,7 +48,8 @@ export function useTokenAllowance({
     },
   })
 
-  const allowance = allowanceData?.[0]?.status === 'success' ? (allowanceData[0].result as bigint) : 0n
+  const allowance =
+    allowanceData?.[0]?.status === 'success' ? (allowanceData[0].result as bigint) : 0n
 
   return {
     allowance,

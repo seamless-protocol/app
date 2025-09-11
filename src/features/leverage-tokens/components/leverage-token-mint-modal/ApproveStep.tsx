@@ -24,10 +24,11 @@ export function ApproveStep({ selectedToken, amount, isApproving }: ApproveStepP
         </div>
         <h3 className="text-lg font-medium text-white mb-2">Approve Token Spending</h3>
         <p className="text-slate-400 text-center max-w-sm">
-          {isApproving 
+          {isApproving
             ? 'Confirm the approval transaction in your wallet...'
-            : 'Approve the contract to spend your ' + selectedToken.symbol + '. This is a one-time approval for this token.'
-          }
+            : 'Approve the contract to spend your ' +
+              selectedToken.symbol +
+              '. This is a one-time approval for this token.'}
         </p>
       </div>
 
