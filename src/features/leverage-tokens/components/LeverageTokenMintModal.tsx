@@ -26,8 +26,10 @@ import { toast } from 'sonner'
 import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { useAccount } from 'wagmi'
 import { useTokenBalance } from '../../../lib/hooks/useTokenBalance'
+import { useTokenAllowance } from '../../../lib/hooks/useTokenAllowance'
 import { useUsdPrices } from '../../../lib/prices/useUsdPrices'
 import { formatUnits } from 'viem'
+import { getContractAddresses } from '../../../lib/contracts/addresses'
 
 interface Token {
   symbol: string
@@ -42,6 +44,7 @@ interface LeverageTokenMintModalProps {
   onClose: () => void
   leverageTokenAddress: `0x${string}` // Token address to look up config
   apy?: number // Optional APY prop - if not provided, will default to 0
+  userAddress?: `0x${string}` // Optional user address - if not provided, will use useAccount
 }
 
 type MintStep = 'input' | 'approve' | 'confirm' | 'pending' | 'success' | 'error'
@@ -51,6 +54,7 @@ export function LeverageTokenMintModal({
   onClose,
   leverageTokenAddress,
   apy,
+  userAddress: propUserAddress,
 }: LeverageTokenMintModalProps) {
   // Get leverage token configuration by address
   const leverageTokenConfig = getLeverageTokenConfig(leverageTokenAddress)
@@ -61,7 +65,8 @@ export function LeverageTokenMintModal({
   }
 
   // Get user account information
-  const { address: userAddress, isConnected } = useAccount()
+  const { address: hookUserAddress, isConnected } = useAccount()
+  const userAddress = propUserAddress || hookUserAddress
 
   // Get real wallet balance for collateral asset
   const { balance: collateralBalance, isLoading: isCollateralBalanceLoading } = useTokenBalance({
@@ -69,6 +74,19 @@ export function LeverageTokenMintModal({
     userAddress: userAddress as `0x${string}`,
     chainId: leverageTokenConfig.chainId,
     enabled: Boolean(userAddress && isConnected),
+  })
+
+  // Get leverage router address for allowance check
+  const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
+  const leverageRouterAddress = contractAddresses.leverageRouter
+
+  // Get token allowance for the leverage router
+  const { allowance: tokenAllowance, isLoading: isAllowanceLoading } = useTokenAllowance({
+    tokenAddress: leverageTokenConfig.collateralAsset.address,
+    owner: userAddress as `0x${string}`,
+    spender: leverageRouterAddress as `0x${string}`,
+    chainId: leverageTokenConfig.chainId,
+    enabled: Boolean(userAddress && isConnected && leverageRouterAddress),
   })
 
   // Get USD price for collateral asset
@@ -94,7 +112,6 @@ export function LeverageTokenMintModal({
     { id: 'input', label: 'Input', progress: 25 },
     { id: 'approve', label: 'Approve', progress: 50 },
     { id: 'confirm', label: 'Confirm', progress: 75 },
-    { id: 'pending', label: 'Pending', progress: 90 },
     { id: 'success', label: 'Success', progress: 100 },
     { id: 'error', label: 'Error', progress: 50 },
   ]
@@ -195,6 +212,16 @@ export function LeverageTokenMintModal({
     calculateExpectedTokens(newAmount)
   }
 
+  // Check if approval is needed
+  const needsApproval = () => {
+    if (!amount || parseFloat(amount) <= 0) return false
+    
+    const inputAmount = parseFloat(amount)
+    const inputAmountWei = BigInt(Math.floor(inputAmount * Math.pow(10, leverageTokenConfig.collateralAsset.decimals)))
+    
+    return tokenAllowance < inputAmountWei
+  }
+
   // Validate mint
   const canProceed = () => {
     const inputAmount = parseFloat(amount)
@@ -207,12 +234,19 @@ export function LeverageTokenMintModal({
       inputAmount >= minMint &&
       !isCalculating &&
       parseFloat(expectedTokens) > 0 &&
-      isConnected
-    ) // User must be connected
+      isConnected &&
+      !isAllowanceLoading
+    ) // User must be connected and allowance must be loaded
   }
 
   // Handle approval step
   const handleApprove = async () => {
+    // Skip approval if not needed
+    if (!needsApproval()) {
+      setCurrentStep('confirm')
+      return
+    }
+
     setCurrentStep('approve')
 
     try {
@@ -232,11 +266,9 @@ export function LeverageTokenMintModal({
 
   // Handle mint confirmation
   const handleConfirm = async () => {
-    setCurrentStep('pending')
-
     try {
       // Simulate mint transaction
-      await new Promise((resolve) => setTimeout(resolve, 4000))
+      await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // Mock transaction hash
       const mockHash = '0x' + Math.random().toString(16).substr(2, 64)
@@ -467,6 +499,18 @@ export function LeverageTokenMintModal({
                   <span className="text-slate-400">Slippage Tolerance</span>
                   <span className="text-white">{slippage}%</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Approval Status</span>
+                  <span className={needsApproval() ? 'text-yellow-400' : 'text-green-400'}>
+                    {isAllowanceLoading ? (
+                      <Skeleton className="inline-block h-3 w-16" />
+                    ) : needsApproval() ? (
+                      'Approval Required'
+                    ) : (
+                      'Approved'
+                    )}
+                  </span>
+                </div>
                 <Separator className="my-2 bg-slate-700" />
                 <div className="flex justify-between font-medium">
                   <span className="text-white">You will receive</span>
@@ -495,7 +539,11 @@ export function LeverageTokenMintModal({
                       ? 'Minimum mint: 0.01'
                       : isCalculating
                         ? 'Calculating...'
-                        : `Approve ${selectedToken.symbol}`}
+                        : isAllowanceLoading
+                          ? 'Checking allowance...'
+                          : needsApproval()
+                            ? `Approve ${selectedToken.symbol}`
+                            : `Mint ${leverageTokenConfig.symbol}`}
             </Button>
           </div>
         )

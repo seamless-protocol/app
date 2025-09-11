@@ -63,6 +63,10 @@ const meta = {
       control: 'text',
       description: 'Address of the leverage token',
     },
+    userAddress: {
+      control: 'text',
+      description: 'User address (optional)',
+    },
   },
 } satisfies Meta<typeof LeverageTokenMintModal>
 
@@ -76,6 +80,7 @@ export const Default: Story = {
     onClose: () => {},
     leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
     apy: 18.67, // Example with APY
+    userAddress: '0x3f5b831fc2c82685d66cea65346128348116f064',
   },
   render: (args) => {
     const [isOpen, setIsOpen] = useState(false)
@@ -98,6 +103,7 @@ export const AllStates: Story = {
     onClose: () => {},
     leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
     apy: 18.67,
+    userAddress: '0x3f5b831fc2c82685d66cea65346128348116f064',
   },
   render: (args) => {
     const [isOpen, setIsOpen] = useState(false)
@@ -135,6 +141,7 @@ export const DifferentStrategies: Story = {
     onClose: () => {},
     leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
     apy: 18.67,
+    userAddress: '0x3f5b831fc2c82685d66cea65346128348116f064',
   },
   render: (args) => {
     const [isOpen, setIsOpen] = useState(false)
@@ -181,6 +188,7 @@ export const WithoutAPY: Story = {
     isOpen: false,
     onClose: () => {},
     leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
+    userAddress: '0x3f5b831fc2c82685d66cea65346128348116f064',
     // No APY prop - will default to 0%
   },
   render: (args) => {
