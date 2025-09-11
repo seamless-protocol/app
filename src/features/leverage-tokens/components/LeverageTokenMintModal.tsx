@@ -27,6 +27,7 @@ import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { useAccount } from 'wagmi'
 import { useTokenBalance } from '../../../lib/hooks/useTokenBalance'
 import { useTokenAllowance } from '../../../lib/hooks/useTokenAllowance'
+import { useTokenApprove } from '../../../lib/hooks/useTokenApprove'
 import { useUsdPrices } from '../../../lib/prices/useUsdPrices'
 import { formatUnits } from 'viem'
 import { getContractAddresses } from '../../../lib/contracts/addresses'
@@ -129,6 +130,23 @@ export function LeverageTokenMintModal({
   const [transactionHash, setTransactionHash] = useState('')
   const [error, setError] = useState('')
 
+  // Token approval hook
+  const {
+    approve,
+    isPending: isApproving,
+    isApproved: isApprovalConfirmed,
+    isError: isApprovalError,
+    error: approvalError,
+  } = useTokenApprove({
+    tokenAddress: leverageTokenConfig.collateralAsset.address,
+    spender: leverageRouterAddress as `0x${string}`,
+    amount: amount, // Use the input amount for approval
+    decimals: leverageTokenConfig.collateralAsset.decimals,
+    chainId: leverageTokenConfig.chainId,
+    enabled: Boolean(leverageRouterAddress && amount && parseFloat(amount) > 0),
+    useMaxApproval: true, // Use max approval for better UX
+  })
+
   // Available tokens for minting (only collateral asset for now)
   const availableTokens: Token[] = [
     {
@@ -165,6 +183,24 @@ export function LeverageTokenMintModal({
     selectedToken.symbol,
     leverageTokenConfig.collateralAsset.symbol,
   ])
+
+  // Handle approval confirmation
+  useEffect(() => {
+    if (isApprovalConfirmed && currentStep === 'approve') {
+      toast.success('Token approval confirmed', {
+        description: `${selectedToken.symbol} spending approved`,
+      })
+      setCurrentStep('confirm')
+    }
+  }, [isApprovalConfirmed, currentStep, selectedToken.symbol])
+
+  // Handle approval errors
+  useEffect(() => {
+    if (isApprovalError && currentStep === 'approve') {
+      setError(approvalError?.message || 'Approval failed. Please try again.')
+      setCurrentStep('error')
+    }
+  }, [isApprovalError, approvalError, currentStep])
 
   // Calculate expected leverage tokens based on input amount
   const calculateExpectedTokens = useCallback(
@@ -250,14 +286,7 @@ export function LeverageTokenMintModal({
     setCurrentStep('approve')
 
     try {
-      // Simulate approval transaction
-      await new Promise((resolve) => setTimeout(resolve, 3000))
-
-      toast.success('Token approval confirmed', {
-        description: `${selectedToken.symbol} spending approved`,
-      })
-
-      setCurrentStep('confirm')
+      approve()
     } catch (error) {
       setError('Approval failed. Please try again.')
       setCurrentStep('error')
@@ -267,7 +296,7 @@ export function LeverageTokenMintModal({
   // Handle mint confirmation
   const handleConfirm = async () => {
     try {
-      // Simulate mint transaction
+      // TODO: add actual mint transaction
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // Mock transaction hash
@@ -541,9 +570,11 @@ export function LeverageTokenMintModal({
                         ? 'Calculating...'
                         : isAllowanceLoading
                           ? 'Checking allowance...'
-                          : needsApproval()
-                            ? `Approve ${selectedToken.symbol}`
-                            : `Mint ${leverageTokenConfig.symbol}`}
+                          : isApproving
+                            ? 'Approving...'
+                            : needsApproval()
+                              ? `Approve ${selectedToken.symbol}`
+                              : `Mint ${leverageTokenConfig.symbol}`}
             </Button>
           </div>
         )
@@ -557,8 +588,10 @@ export function LeverageTokenMintModal({
               </div>
               <h3 className="text-lg font-medium text-white mb-2">Approve Token Spending</h3>
               <p className="text-slate-400 text-center max-w-sm">
-                Approve the contract to spend your {selectedToken.symbol}. This is a one-time
-                approval for this token.
+                {isApproving 
+                  ? 'Confirm the approval transaction in your wallet...'
+                  : 'Approve the contract to spend your ' + selectedToken.symbol + '. This is a one-time approval for this token.'
+                }
               </p>
             </div>
 
@@ -571,9 +604,15 @@ export function LeverageTokenMintModal({
                 <div className="flex justify-between">
                   <span className="text-slate-400">Amount to approve</span>
                   <span className="text-white">
-                    {amount} {selectedToken.symbol}
+                    {isApproving ? 'Max' : amount} {selectedToken.symbol}
                   </span>
                 </div>
+                {isApproving && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Status</span>
+                    <span className="text-yellow-400">Confirming...</span>
+                  </div>
+                )}
               </div>
             </Card>
           </div>

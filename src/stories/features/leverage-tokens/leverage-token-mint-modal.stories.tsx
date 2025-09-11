@@ -80,7 +80,7 @@ export const Default: Story = {
     onClose: () => {},
     leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
     apy: 18.67, // Example with APY
-    userAddress: '0x3f5b831fc2c82685d66cea65346128348116f064',
+    userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
   render: (args) => {
     const [isOpen, setIsOpen] = useState(false)
@@ -103,7 +103,7 @@ export const AllStates: Story = {
     onClose: () => {},
     leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
     apy: 18.67,
-    userAddress: '0x3f5b831fc2c82685d66cea65346128348116f064',
+    userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
   render: (args) => {
     const [isOpen, setIsOpen] = useState(false)
@@ -141,7 +141,7 @@ export const DifferentStrategies: Story = {
     onClose: () => {},
     leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
     apy: 18.67,
-    userAddress: '0x3f5b831fc2c82685d66cea65346128348116f064',
+    userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
   render: (args) => {
     const [isOpen, setIsOpen] = useState(false)
@@ -188,7 +188,7 @@ export const WithoutAPY: Story = {
     isOpen: false,
     onClose: () => {},
     leverageTokenAddress: leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]!.address,
-    userAddress: '0x3f5b831fc2c82685d66cea65346128348116f064',
+    userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
     // No APY prop - will default to 0%
   },
   render: (args) => {
