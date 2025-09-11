@@ -1,17 +1,18 @@
-'use client'
-
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { type Address, formatUnits, parseUnits } from 'viem'
-import { useAccount, useConfig, usePublicClient } from 'wagmi'
-import { orchestrateMint } from '@/domain/mint'
-import { readLeverageManagerPreviewMint } from '@/lib/contracts/generated'
+import { formatUnits } from 'viem'
+import { useAccount, useConfig } from 'wagmi'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
+import { useMintExecution } from '../../hooks/mint/useMintExecution'
+import { useMintForm } from '../../hooks/mint/useMintForm'
+import { useMintPreview } from '../../hooks/mint/useMintPreview'
+import { useMintSteps } from '../../hooks/mint/useMintSteps'
+import { useSlippage } from '../../hooks/mint/useSlippage'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { ApproveStep } from './ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
@@ -37,8 +38,6 @@ interface LeverageTokenMintModalProps {
   userAddress?: `0x${string}` // Optional user address - if not provided, will use useAccount
 }
 
-type MintStep = 'input' | 'approve' | 'confirm' | 'pending' | 'success' | 'error'
-
 export function LeverageTokenMintModal({
   isOpen,
   onClose,
@@ -57,7 +56,6 @@ export function LeverageTokenMintModal({
   // Get user account information
   const { address: hookUserAddress, isConnected } = useAccount()
   const wagmiConfig = useConfig()
-  const publicClient = usePublicClient()
   const userAddress = propUserAddress || hookUserAddress
 
   // Get leverage router address for allowance check
@@ -70,15 +68,6 @@ export function LeverageTokenMintModal({
     userAddress: userAddress as `0x${string}`,
     chainId: leverageTokenConfig.chainId,
     enabled: Boolean(userAddress && isConnected),
-  })
-
-  // Get token allowance for the leverage router
-  const { allowance: tokenAllowance, isLoading: isAllowanceLoading } = useTokenAllowance({
-    tokenAddress: leverageTokenConfig.collateralAsset.address,
-    owner: userAddress as `0x${string}`,
-    spender: leverageRouterAddress as `0x${string}`,
-    chainId: leverageTokenConfig.chainId,
-    enabled: Boolean(userAddress && isConnected && leverageRouterAddress),
   })
 
   // Get USD price for collateral asset
@@ -97,7 +86,15 @@ export function LeverageTokenMintModal({
     ? formatUnits(collateralBalance, leverageTokenConfig.collateralAsset.decimals)
     : '0'
 
-  const [currentStep, setCurrentStep] = useState<MintStep>('input')
+  const {
+    step: currentStep,
+    toInput,
+    toApprove,
+    toConfirm,
+    toPending,
+    toSuccess,
+    toError,
+  } = useMintSteps('input')
 
   // Step configuration for the multi-step modal
   const steps: Array<StepConfig> = [
@@ -115,41 +112,58 @@ export function LeverageTokenMintModal({
     balance: collateralBalanceFormatted,
     price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
   })
-  const [amount, setAmount] = useState('')
-  const [slippage, setSlippage] = useState('0.5') // percent string (e.g. "0.5")
+  const { slippage, setSlippage, slippageBps } = useSlippage('0.5')
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [isCalculating, setIsCalculating] = useState(false)
   const [expectedTokens, setExpectedTokens] = useState('0')
   const [transactionHash, setTransactionHash] = useState('')
   const [error, setError] = useState('')
 
-  // Token approval hook
+  // Hooks: form, preview, allowance, execution
+  const form = useMintForm({
+    decimals: leverageTokenConfig.collateralAsset.decimals,
+    walletBalanceFormatted: collateralBalanceFormatted,
+    minAmountFormatted: '0.01',
+  })
+
+  const preview = useMintPreview({
+    config: wagmiConfig,
+    token: leverageTokenAddress,
+    equityInCollateralAsset: form.amountRaw,
+  })
+
   const {
-    approve,
-    isPending: isApproving,
-    isApproved: isApprovalConfirmed,
-    isError: isApprovalError,
-    error: approvalError,
-  } = useTokenApprove({
+    isAllowanceLoading,
+    needsApproval: needsApprovalFlag,
+    approve: approveAction,
+    isPending: isApprovingPending,
+    isApproved: isApprovedFlag,
+    error: approveErr,
+  } = useApprovalFlow({
     tokenAddress: leverageTokenConfig.collateralAsset.address,
-    spender: leverageRouterAddress as `0x${string}`,
-    amount: amount, // Use the input amount for approval
+    ...(userAddress ? { owner: userAddress } : {}),
+    ...(leverageRouterAddress ? { spender: leverageRouterAddress } : {}),
+    ...(typeof form.amountRaw !== 'undefined' ? { amountRaw: form.amountRaw } : {}),
     decimals: leverageTokenConfig.collateralAsset.decimals,
     chainId: leverageTokenConfig.chainId,
-    enabled: Boolean(leverageRouterAddress && amount && parseFloat(amount) > 0),
-    useMaxApproval: true, // Use max approval for better UX
+  })
+
+  const exec = useMintExecution({
+    token: leverageTokenAddress,
+    ...(userAddress ? { account: userAddress } : {}),
+    inputAsset: leverageTokenConfig.collateralAsset.address,
+    slippageBps,
   })
 
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      setCurrentStep('input')
-      setAmount('')
+      toInput()
+      form.setAmount('')
       setError('')
       setTransactionHash('')
       setExpectedTokens('0')
     }
-  }, [isOpen])
+  }, [isOpen, toInput, form.setAmount])
 
   // Update selected token balance and price when wallet balance or price changes
   useEffect(() => {
@@ -164,55 +178,31 @@ export function LeverageTokenMintModal({
 
   // Handle approval confirmation
   useEffect(() => {
-    if (isApprovalConfirmed && currentStep === 'approve') {
+    if (isApprovedFlag && currentStep === 'approve') {
       toast.success('Token approval confirmed', {
         description: `${selectedToken.symbol} spending approved`,
       })
-      setCurrentStep('confirm')
+      toConfirm()
     }
-  }, [isApprovalConfirmed, currentStep, selectedToken.symbol])
+  }, [isApprovedFlag, currentStep, selectedToken.symbol, toConfirm])
 
   // Handle approval errors
   useEffect(() => {
-    if (isApprovalError && currentStep === 'approve') {
-      setError(approvalError?.message || 'Approval failed. Please try again.')
-      setCurrentStep('error')
+    if (approveErr && currentStep === 'approve') {
+      setError(approveErr?.message || 'Approval failed. Please try again.')
+      toError()
     }
-  }, [isApprovalError, approvalError, currentStep])
+  }, [approveErr, currentStep, toError])
 
   // Calculate expected leverage tokens based on input amount
-  const calculateExpectedTokens = useCallback(
-    async (inputAmount: string) => {
-      if (!inputAmount || parseFloat(inputAmount) <= 0) {
-        setExpectedTokens('0')
-        return
-      }
-
-      setIsCalculating(true)
-      try {
-        const equityInCollateral = parseUnits(
-          inputAmount,
-          leverageTokenConfig.collateralAsset.decimals,
-        )
-        const preview = await readLeverageManagerPreviewMint(wagmiConfig, {
-          args: [leverageTokenAddress as Address, equityInCollateral],
-        })
-        const tokens = formatUnits(preview.shares, leverageTokenConfig.decimals)
-        setExpectedTokens(Number(tokens).toFixed(6))
-      } catch (error) {
-        console.error('Failed to calculate tokens:', error)
-        setExpectedTokens('0')
-      } finally {
-        setIsCalculating(false)
-      }
-    },
-    [
-      leverageTokenAddress,
-      leverageTokenConfig.collateralAsset.decimals,
-      leverageTokenConfig.decimals,
-      wagmiConfig,
-    ],
-  )
+  useEffect(() => {
+    if (preview.data?.shares) {
+      const tokens = formatUnits(preview.data.shares, leverageTokenConfig.decimals)
+      setExpectedTokens(Number(tokens).toFixed(6))
+    } else {
+      setExpectedTokens('0')
+    }
+  }, [preview.data?.shares, leverageTokenConfig.decimals])
 
   // Available tokens for minting (only collateral asset for now)
   const availableTokens: Array<Token> = [
@@ -226,106 +216,69 @@ export function LeverageTokenMintModal({
 
   // Handle amount input changes
   const handleAmountChange = (value: string) => {
-    // Only allow numbers and decimals
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setAmount(value)
-      setError('')
-      calculateExpectedTokens(value)
-    }
+    form.onAmountChange(value)
+    setError('')
   }
 
   // Handle percentage shortcuts
   const handlePercentageClick = (percentage: number) => {
-    const balance = parseFloat(selectedToken.balance)
-    const newAmount = ((balance * percentage) / 100).toFixed(6)
-    setAmount(newAmount)
-    calculateExpectedTokens(newAmount)
+    form.onPercent(percentage)
   }
 
   // Check if approval is needed
-  const needsApproval = () => {
-    if (!amount || parseFloat(amount) <= 0) return false
-
-    const inputAmount = parseFloat(amount)
-    const inputAmountWei = BigInt(
-      Math.floor(inputAmount * 10 ** leverageTokenConfig.collateralAsset.decimals),
-    )
-
-    return tokenAllowance < inputAmountWei
-  }
+  const needsApproval = () => Boolean(needsApprovalFlag)
 
   // Validate mint
   const canProceed = () => {
-    const inputAmount = parseFloat(amount)
-    const balance = parseFloat(selectedToken.balance)
-    const minMint = 0.01 // Minimum mint amount
-
     return (
-      inputAmount > 0 &&
-      inputAmount <= balance &&
-      inputAmount >= minMint &&
-      !isCalculating &&
+      form.isAmountValid &&
+      form.hasBalance &&
+      form.minAmountOk &&
+      !preview.isLoading &&
       parseFloat(expectedTokens) > 0 &&
       isConnected &&
       !isAllowanceLoading
-    ) // User must be connected and allowance must be loaded
+    )
   }
 
   // Handle approval step
   const handleApprove = async () => {
     // Skip approval if not needed
     if (!needsApproval()) {
-      setCurrentStep('confirm')
+      toConfirm()
       return
     }
 
-    setCurrentStep('approve')
-
+    toApprove()
     try {
-      approve()
+      approveAction()
     } catch (_error) {
       setError('Approval failed. Please try again.')
-      setCurrentStep('error')
+      toError()
     }
   }
 
-  // Convert slippage percent string to BPS number
-  const slippageBps = useMemo(() => {
-    const pct = Number(slippage || '0')
-    return Number.isFinite(pct) ? Math.max(0, Math.round(pct * 100)) : 50
-  }, [slippage])
-
   // Handle mint confirmation
   const handleConfirm = async () => {
-    if (!userAddress || !isConnected) return
-    setCurrentStep('pending')
+    if (!userAddress || !isConnected || !form.amountRaw) return
+    toPending()
     try {
-      const equityInInput = parseUnits(amount, leverageTokenConfig.collateralAsset.decimals)
-      const { hash } = await orchestrateMint({
-        config: wagmiConfig,
-        account: userAddress as Address,
-        token: leverageTokenAddress as Address,
-        inputAsset: leverageTokenConfig.collateralAsset.address,
-        equityInInputAsset: equityInInput,
-        slippageBps,
-      })
+      const hash = await exec.mint(form.amountRaw)
       setTransactionHash(hash)
-      // Wait for receipt so Pending step reflects actual processing
-      await publicClient?.waitForTransactionReceipt({ hash })
       toast.success('Leverage tokens minted successfully!', {
-        description: `${amount} ${selectedToken.symbol} -> ~${expectedTokens} tokens`,
+        description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} tokens`,
       })
-      setCurrentStep('success')
-    } catch (e: any) {
+      toSuccess()
+    } catch (e: unknown) {
       console.error('Mint failed', e)
-      setError(e?.message || 'Mint failed. Please try again.')
-      setCurrentStep('error')
+      setError((e as Error)?.message || 'Mint failed. Please try again.')
+      toError()
     }
   }
 
   // Handle retry from error state
   const handleRetry = () => {
-    setCurrentStep('input')
+    toInput()
     setError('')
   }
 
@@ -343,7 +296,7 @@ export function LeverageTokenMintModal({
           <InputStep
             selectedToken={selectedToken}
             availableTokens={availableTokens}
-            amount={amount}
+            amount={form.amount}
             onAmountChange={handleAmountChange}
             onTokenChange={setSelectedToken}
             onPercentageClick={handlePercentageClick}
@@ -353,9 +306,9 @@ export function LeverageTokenMintModal({
             onSlippageChange={setSlippage}
             isCollateralBalanceLoading={isCollateralBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
-            isCalculating={isCalculating}
+            isCalculating={preview.isLoading}
             isAllowanceLoading={isAllowanceLoading}
-            isApproving={isApproving}
+            isApproving={!!isApprovingPending}
             expectedTokens={expectedTokens}
             canProceed={canProceed()}
             needsApproval={needsApproval()}
@@ -369,14 +322,18 @@ export function LeverageTokenMintModal({
 
       case 'approve':
         return (
-          <ApproveStep selectedToken={selectedToken} amount={amount} isApproving={isApproving} />
+          <ApproveStep
+            selectedToken={selectedToken}
+            amount={form.amount}
+            isApproving={!!isApprovingPending}
+          />
         )
 
       case 'confirm':
         return (
           <ConfirmStep
             selectedToken={selectedToken}
-            amount={amount}
+            amount={form.amount}
             expectedTokens={expectedTokens}
             leverageTokenConfig={leverageTokenConfig}
             onConfirm={handleConfirm}
@@ -387,7 +344,7 @@ export function LeverageTokenMintModal({
         return (
           <PendingStep
             selectedToken={selectedToken}
-            amount={amount}
+            amount={form.amount}
             leverageTokenConfig={leverageTokenConfig}
           />
         )
@@ -396,7 +353,7 @@ export function LeverageTokenMintModal({
         return (
           <SuccessStep
             selectedToken={selectedToken}
-            amount={amount}
+            amount={form.amount}
             expectedTokens={expectedTokens}
             transactionHash={transactionHash}
             onClose={handleClose}
@@ -428,4 +385,45 @@ export function LeverageTokenMintModal({
       {renderStepContent()}
     </MultiStepModal>
   )
+}
+
+// Local hook: wraps token allowance + approval flow
+function useApprovalFlow(params: {
+  tokenAddress: `0x${string}`
+  owner?: `0x${string}`
+  spender?: `0x${string}`
+  amountRaw?: bigint
+  decimals: number
+  chainId: number
+}) {
+  const { tokenAddress, owner, spender, amountRaw, decimals, chainId } = params
+
+  const { isLoading, needsApproval, amountFormatted } = useTokenAllowance({
+    tokenAddress,
+    ...(owner ? { owner } : {}),
+    ...(spender ? { spender } : {}),
+    chainId,
+    enabled: Boolean(owner && spender),
+    ...(typeof amountRaw !== 'undefined' ? { amountRaw } : {}),
+    decimals,
+  })
+
+  const approveState = useTokenApprove({
+    tokenAddress,
+    ...(spender ? { spender } : {}),
+    ...(amountFormatted ? { amount: amountFormatted } : {}),
+    decimals,
+    chainId,
+    enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
+    useMaxApproval: true,
+  })
+
+  return {
+    isAllowanceLoading: isLoading,
+    needsApproval,
+    approve: approveState.approve,
+    isPending: approveState.isPending,
+    isApproved: approveState.isApproved,
+    error: approveState.error,
+  }
 }

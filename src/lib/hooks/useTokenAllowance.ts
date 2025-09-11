@@ -1,4 +1,5 @@
 import type { Address } from 'viem'
+import { formatUnits } from 'viem'
 import { useReadContracts } from 'wagmi'
 import { STALE_TIME } from '@/features/leverage-tokens/utils/constants'
 import type { SupportedChainId } from '@/lib/contracts'
@@ -10,6 +11,9 @@ export interface UseTokenAllowanceParams {
   spender?: Address
   chainId: number
   enabled?: boolean
+  // Optional helpers to compute derived UI state
+  amountRaw?: bigint
+  decimals?: number
 }
 
 /**
@@ -22,6 +26,8 @@ export function useTokenAllowance({
   spender,
   chainId,
   enabled = true,
+  amountRaw,
+  decimals,
 }: UseTokenAllowanceParams) {
   const {
     data: allowanceData,
@@ -51,10 +57,18 @@ export function useTokenAllowance({
   const allowance =
     allowanceData?.[0]?.status === 'success' ? (allowanceData[0].result as bigint) : 0n
 
+  const needsApproval = typeof amountRaw === 'bigint' ? allowance < amountRaw : undefined
+  const amountFormatted =
+    typeof amountRaw === 'bigint' && typeof decimals === 'number'
+      ? formatUnits(amountRaw, decimals)
+      : undefined
+
   return {
     allowance,
     isLoading,
     isError,
     error,
+    needsApproval,
+    amountFormatted,
   }
 }
