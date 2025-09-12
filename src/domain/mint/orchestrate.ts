@@ -11,13 +11,13 @@
 // import { getPublicClient } from '@wagmi/core'
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
+import { DEFAULT_SLIPPAGE_BPS } from './constants'
 // Addresses inferred by actions from config
 import { detectRouterVersion } from './detectVersion'
 import { executeMintV1 } from './execute.v1'
 import { executeMintV2 } from './execute.v2'
 import { planMintV2 } from './plan.v2'
 import { type QuoteFn, RouterVersion } from './types'
-import { DEFAULT_SLIPPAGE_BPS } from './constants'
 
 // Reuse generated Wagmi action types for stronger inference
 type Gen = typeof import('@/lib/contracts/generated')
