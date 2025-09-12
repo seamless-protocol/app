@@ -1,9 +1,10 @@
-import { type Address, parseUnits } from 'viem'
+import { type Address, erc20Abi, parseUnits } from 'viem'
 import { base } from 'viem/chains'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createLifiQuoteAdapter } from '@/domain/mint/adapters/lifi'
 import { executeMintV2 } from '@/domain/mint/execute.v2'
 import { planMintV2 } from '@/domain/mint/plan.v2'
+import { leverageManagerV2Abi } from '@/lib/contracts/abis/leverageManagerV2'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -14,6 +15,7 @@ import { approveIfNeeded, topUpErc20, topUpNative } from '../../../shared/fundin
 // Use shared Wagmi config (wired to TEST_RPC_URL / VNet)
 import { wagmiConfig as config } from '../../../shared/wagmi'
 import { withFork } from '../../../shared/withFork'
+import { prettyViemError } from '../../../utils/decodeError'
 
 // Adapter returns { out, approvalTarget, calldata }
 
@@ -74,21 +76,35 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
       await approveIfNeeded(collateralAsset, router, equityInCollateral)
 
       // Execute via generated actions through domain executor
-      const { hash } = await executeMintV2({
-        config,
-        token,
-        account: account.address as Address,
-        plan: {
-          inputAsset: plan.inputAsset,
+      try {
+        const { hash } = await executeMintV2({
+          config,
+          token,
+          account: account.address as Address,
+          plan: {
+            inputAsset: plan.inputAsset,
+            equityInInputAsset: plan.equityInInputAsset,
+            minShares: plan.minShares,
+            calls: plan.calls,
+            expectedTotalCollateral: plan.expectedTotalCollateral,
+          },
+          routerAddress: router,
+        })
+
+        const receipt = await publicClient.waitForTransactionReceipt({ hash })
+        expect(receipt.status).toBe('success')
+      } catch (e) {
+        const msg = prettyViemError(e, [leverageManagerV2Abi, erc20Abi])
+        console.error('MintV2 failed:', msg, {
+          token,
           equityInInputAsset: plan.equityInInputAsset,
           minShares: plan.minShares,
-          calls: plan.calls,
           expectedTotalCollateral: plan.expectedTotalCollateral,
-        },
-        routerAddress: router,
-      })
-
-      const receipt = await publicClient.waitForTransactionReceipt({ hash })
-      expect(receipt.status).toBe('success')
+          calls: plan.calls.length,
+          router,
+          manager,
+        })
+        throw e
+      }
     }))
 })
