@@ -1626,26 +1626,234 @@ export const leverageRouterConfig = {
 
 export const leverageRouterV2Abi = [
   {
+    type: 'constructor',
+    inputs: [
+      {
+        name: '_leverageManager',
+        internalType: 'contract ILeverageManager',
+        type: 'address',
+      },
+      { name: '_morpho', internalType: 'contract IMorpho', type: 'address' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'receive', stateMutability: 'payable' },
+  {
     type: 'function',
     inputs: [
-      { name: 'token', type: 'address' },
-      { name: 'equityInInputAsset', type: 'uint256' },
-      { name: 'minShares', type: 'uint256' },
-      { name: 'maxSwapCostInCollateralAsset', type: 'uint256' },
       {
-        name: 'calls',
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'equityInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    name: 'convertEquityToCollateral',
+    outputs: [{ name: 'collateral', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'leverageToken',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'collateralFromSender',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'flashLoanAmount', internalType: 'uint256', type: 'uint256' },
+      { name: 'minShares', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'swapCalls',
+        internalType: 'struct ILeverageRouter.Call[]',
         type: 'tuple[]',
         components: [
-          { name: 'target', type: 'address' },
-          { name: 'data', type: 'bytes' },
-          { name: 'value', type: 'uint256' },
+          { name: 'target', internalType: 'address', type: 'address' },
+          { name: 'value', internalType: 'uint256', type: 'uint256' },
+          { name: 'data', internalType: 'bytes', type: 'bytes' },
         ],
       },
     ],
-    name: 'mintWithCalls',
+    name: 'deposit',
     outputs: [],
     stateMutability: 'nonpayable',
   },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'leverageManager',
+    outputs: [{ name: '', internalType: 'contract ILeverageManager', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'morpho',
+    outputs: [{ name: '', internalType: 'contract IMorpho', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'loanAmount', internalType: 'uint256', type: 'uint256' },
+      { name: 'data', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'onMorphoFlashLoan',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'collateralFromSender',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    name: 'previewDeposit',
+    outputs: [
+      {
+        name: 'previewData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'shares', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minCollateralForSender',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      {
+        name: 'swapCalls',
+        internalType: 'struct ILeverageRouter.Call[]',
+        type: 'tuple[]',
+        components: [
+          { name: 'target', internalType: 'address', type: 'address' },
+          { name: 'value', internalType: 'uint256', type: 'uint256' },
+          { name: 'data', internalType: 'bytes', type: 'bytes' },
+        ],
+      },
+    ],
+    name: 'redeem',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'shares', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minCollateralForSender',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      {
+        name: 'veloraAdapter',
+        internalType: 'contract IVeloraAdapter',
+        type: 'address',
+      },
+      { name: 'augustus', internalType: 'address', type: 'address' },
+      {
+        name: 'offsets',
+        internalType: 'struct IVeloraAdapter.Offsets',
+        type: 'tuple',
+        components: [
+          { name: 'exactAmount', internalType: 'uint256', type: 'uint256' },
+          { name: 'limitAmount', internalType: 'uint256', type: 'uint256' },
+          { name: 'quotedAmount', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+      { name: 'swapData', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'redeemWithVelora',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'target', internalType: 'address', type: 'address' }],
+    name: 'AddressEmptyCode',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'remainingCollateral', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minCollateralForSender',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    name: 'CollateralSlippageTooHigh',
+  },
+  { type: 'error', inputs: [], name: 'FailedCall' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'balance', internalType: 'uint256', type: 'uint256' },
+      { name: 'needed', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InsufficientBalance',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'available', internalType: 'uint256', type: 'uint256' },
+      { name: 'required', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InsufficientCollateralForDeposit',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'actualCost', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxCost', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'MaxSwapCostExceeded',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
+    name: 'SafeERC20FailedOperation',
+  },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3739,6 +3947,47 @@ export const useSimulateLeverageRouterRedeem = /*#__PURE__*/ createUseSimulateCo
 })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
+ */
+export const useReadLeverageRouterV2 = /*#__PURE__*/ createUseReadContract({
+  abi: leverageRouterV2Abi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"convertEquityToCollateral"`
+ */
+export const useReadLeverageRouterV2ConvertEquityToCollateral = /*#__PURE__*/ createUseReadContract(
+  {
+    abi: leverageRouterV2Abi,
+    functionName: 'convertEquityToCollateral',
+  },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"leverageManager"`
+ */
+export const useReadLeverageRouterV2LeverageManager = /*#__PURE__*/ createUseReadContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'leverageManager',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"morpho"`
+ */
+export const useReadLeverageRouterV2Morpho = /*#__PURE__*/ createUseReadContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'morpho',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"previewDeposit"`
+ */
+export const useReadLeverageRouterV2PreviewDeposit = /*#__PURE__*/ createUseReadContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'previewDeposit',
+})
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
  */
 export const useWriteLeverageRouterV2 = /*#__PURE__*/ createUseWriteContract({
@@ -3746,11 +3995,35 @@ export const useWriteLeverageRouterV2 = /*#__PURE__*/ createUseWriteContract({
 })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"deposit"`
  */
-export const useWriteLeverageRouterV2MintWithCalls = /*#__PURE__*/ createUseWriteContract({
+export const useWriteLeverageRouterV2Deposit = /*#__PURE__*/ createUseWriteContract({
   abi: leverageRouterV2Abi,
-  functionName: 'mintWithCalls',
+  functionName: 'deposit',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"onMorphoFlashLoan"`
+ */
+export const useWriteLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'onMorphoFlashLoan',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeem"`
+ */
+export const useWriteLeverageRouterV2Redeem = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeemWithVelora"`
+ */
+export const useWriteLeverageRouterV2RedeemWithVelora = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'redeemWithVelora',
 })
 
 /**
@@ -3761,11 +4034,37 @@ export const useSimulateLeverageRouterV2 = /*#__PURE__*/ createUseSimulateContra
 })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"deposit"`
  */
-export const useSimulateLeverageRouterV2MintWithCalls = /*#__PURE__*/ createUseSimulateContract({
+export const useSimulateLeverageRouterV2Deposit = /*#__PURE__*/ createUseSimulateContract({
   abi: leverageRouterV2Abi,
-  functionName: 'mintWithCalls',
+  functionName: 'deposit',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"onMorphoFlashLoan"`
+ */
+export const useSimulateLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ createUseSimulateContract(
+  {
+    abi: leverageRouterV2Abi,
+    functionName: 'onMorphoFlashLoan',
+  },
+)
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeem"`
+ */
+export const useSimulateLeverageRouterV2Redeem = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeemWithVelora"`
+ */
+export const useSimulateLeverageRouterV2RedeemWithVelora = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'redeemWithVelora',
 })
 
 /**
@@ -5844,6 +6143,45 @@ export const simulateLeverageRouterRedeem = /*#__PURE__*/ createSimulateContract
 })
 
 /**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
+ */
+export const readLeverageRouterV2 = /*#__PURE__*/ createReadContract({
+  abi: leverageRouterV2Abi,
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"convertEquityToCollateral"`
+ */
+export const readLeverageRouterV2ConvertEquityToCollateral = /*#__PURE__*/ createReadContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'convertEquityToCollateral',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"leverageManager"`
+ */
+export const readLeverageRouterV2LeverageManager = /*#__PURE__*/ createReadContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'leverageManager',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"morpho"`
+ */
+export const readLeverageRouterV2Morpho = /*#__PURE__*/ createReadContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'morpho',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"previewDeposit"`
+ */
+export const readLeverageRouterV2PreviewDeposit = /*#__PURE__*/ createReadContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'previewDeposit',
+})
+
+/**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
  */
 export const writeLeverageRouterV2 = /*#__PURE__*/ createWriteContract({
@@ -5851,11 +6189,35 @@ export const writeLeverageRouterV2 = /*#__PURE__*/ createWriteContract({
 })
 
 /**
- * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"deposit"`
  */
-export const writeLeverageRouterV2MintWithCalls = /*#__PURE__*/ createWriteContract({
+export const writeLeverageRouterV2Deposit = /*#__PURE__*/ createWriteContract({
   abi: leverageRouterV2Abi,
-  functionName: 'mintWithCalls',
+  functionName: 'deposit',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"onMorphoFlashLoan"`
+ */
+export const writeLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ createWriteContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'onMorphoFlashLoan',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeem"`
+ */
+export const writeLeverageRouterV2Redeem = /*#__PURE__*/ createWriteContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeemWithVelora"`
+ */
+export const writeLeverageRouterV2RedeemWithVelora = /*#__PURE__*/ createWriteContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'redeemWithVelora',
 })
 
 /**
@@ -5866,11 +6228,35 @@ export const simulateLeverageRouterV2 = /*#__PURE__*/ createSimulateContract({
 })
 
 /**
- * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"deposit"`
  */
-export const simulateLeverageRouterV2MintWithCalls = /*#__PURE__*/ createSimulateContract({
+export const simulateLeverageRouterV2Deposit = /*#__PURE__*/ createSimulateContract({
   abi: leverageRouterV2Abi,
-  functionName: 'mintWithCalls',
+  functionName: 'deposit',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"onMorphoFlashLoan"`
+ */
+export const simulateLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ createSimulateContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'onMorphoFlashLoan',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeem"`
+ */
+export const simulateLeverageRouterV2Redeem = /*#__PURE__*/ createSimulateContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeemWithVelora"`
+ */
+export const simulateLeverageRouterV2RedeemWithVelora = /*#__PURE__*/ createSimulateContract({
+  abi: leverageRouterV2Abi,
+  functionName: 'redeemWithVelora',
 })
 
 /**

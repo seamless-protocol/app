@@ -46,7 +46,8 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     chainId = base.id,
     router,
     slippageBps = DEFAULT_SLIPPAGE_BPS,
-    baseUrl = process.env['LIFI_API_BASE'] ?? 'https://li.quest',
+    // Always use li.quest as documented by LiFi for /v1/quote
+    baseUrl = opts.baseUrl ?? 'https://li.quest',
     apiKey = process.env['LIFI_API_KEY'],
     order = 'CHEAPEST',
     integrator = process.env['LIFI_INTEGRATOR'],
@@ -69,6 +70,14 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       ...(allowBridges ? { allowBridges } : {}),
     })
 
+    if (process.env['LIFI_DEBUG'] === '1') {
+      // Intentionally avoid logging the API key value
+      console.info('[LiFi] quote', {
+        baseUrl,
+        hasApiKey: Boolean(apiKey),
+        url: url.toString(),
+      })
+    }
     const res = await fetch(url.toString(), { method: 'GET', headers })
     if (!res.ok) throw new Error(`LiFi quote failed: ${res.status} ${res.statusText}`)
     const step = (await res.json()) as Step

@@ -127,6 +127,7 @@ export async function orchestrateMint(params: {
         minShares: plan.minShares,
         calls: plan.calls,
         expectedTotalCollateral: plan.expectedTotalCollateral,
+        expectedDebt: plan.expectedDebt,
       },
       routerAddress:
         params.routerAddressV2 ||

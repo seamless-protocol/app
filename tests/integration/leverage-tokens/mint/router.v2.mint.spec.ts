@@ -5,6 +5,7 @@ import { createLifiQuoteAdapter } from '@/domain/mint/adapters/lifi'
 import { executeMintV2 } from '@/domain/mint/execute.v2'
 import { planMintV2 } from '@/domain/mint/plan.v2'
 import { leverageManagerV2Abi } from '@/lib/contracts/abis/leverageManagerV2'
+import { leverageRouterV2Abi } from '@/lib/contracts/abis/leverageRouterV2'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -87,6 +88,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
             minShares: plan.minShares,
             calls: plan.calls,
             expectedTotalCollateral: plan.expectedTotalCollateral,
+            expectedDebt: plan.expectedDebt,
           },
           routerAddress: router,
         })
@@ -94,7 +96,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
         const receipt = await publicClient.waitForTransactionReceipt({ hash })
         expect(receipt.status).toBe('success')
       } catch (e) {
-        const msg = prettyViemError(e, [leverageManagerV2Abi, erc20Abi])
+        const msg = prettyViemError(e, [leverageRouterV2Abi, leverageManagerV2Abi, erc20Abi])
         console.error('MintV2 failed:', msg, {
           token,
           equityInInputAsset: plan.equityInInputAsset,

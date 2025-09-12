@@ -18,7 +18,8 @@ type Gen = typeof import('@/lib/contracts/generated')
 
 type TokenArg = Parameters<Gen['readLeverageManagerPreviewMint']>[1]['args'][0]
 type AccountArg = Extract<Parameters<Gen['writeLeverageRouterMint']>[1]['account'], `0x${string}`>
-type EquityInInputAssetArg = Parameters<Gen['writeLeverageRouterV2MintWithCalls']>[1]['args'][1]
+// For v2 deposit, arg[1] is collateralFromSender
+type EquityInInputAssetArg = Parameters<Gen['writeLeverageRouterV2Deposit']>[1]['args'][1]
 type MaxSwapCostArg = Parameters<Gen['writeLeverageRouterMint']>[1]['args'][3]
 
 export interface UseMintWithRouterParams {

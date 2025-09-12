@@ -10,13 +10,13 @@
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import {
-  simulateLeverageRouterV2MintWithCalls,
-  writeLeverageRouterV2MintWithCalls,
+  simulateLeverageRouterV2Deposit,
+  writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
 
 // Infer call array type directly from generated action signature
-type MintWithCallsParams = Parameters<typeof simulateLeverageRouterV2MintWithCalls>[1]
-type V2Calls = MintWithCallsParams['args'][4]
+type DepositParams = Parameters<typeof simulateLeverageRouterV2Deposit>[1]
+type V2Calls = DepositParams['args'][4]
 
 import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from './constants'
 
@@ -37,6 +37,7 @@ export async function executeMintV2(params: {
     minShares: bigint
     calls: V2Calls
     expectedTotalCollateral: bigint
+    expectedDebt: bigint
   }
   maxSwapCostInCollateralAsset?: bigint
   /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
@@ -47,17 +48,21 @@ export async function executeMintV2(params: {
   // No allowance handling here; UI should perform approvals beforehand
 
   // Default to sizing swap cost cap from total collateral (collateral units)
-  const maxSwapCost =
+  // maxSwapCost previously used with mintWithCalls; deposit uses explicit flashLoanAmount instead.
+  // Keeping computation here documented for future use (e.g., if router API evolves).
+  void (
     maxSwapCostInCollateralAsset ??
     (plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
+  )
 
-  const { request } = await simulateLeverageRouterV2MintWithCalls(config, {
+  const { request } = await simulateLeverageRouterV2Deposit(config, {
     address: routerAddress,
-    args: [token, plan.equityInInputAsset, plan.minShares, maxSwapCost, plan.calls],
+    // deposit(token, collateralFromSender, flashLoanAmount, minShares, swapCalls)
+    args: [token, plan.equityInInputAsset, plan.expectedDebt, plan.minShares, plan.calls],
     account,
   })
 
-  const hash = await writeLeverageRouterV2MintWithCalls(config, {
+  const hash = await writeLeverageRouterV2Deposit(config, {
     ...request,
   })
   // Do not wait here — UI should use useWaitForTransactionReceipt on the hash

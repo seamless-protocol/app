@@ -4,10 +4,10 @@ import { executeMintV2 } from '@/domain/mint/execute.v2'
 
 vi.mock('@/lib/contracts/generated', async () => {
   return {
-    simulateLeverageRouterV2MintWithCalls: vi.fn(async (_config: any, { args, account }: any) => {
+    simulateLeverageRouterV2Deposit: vi.fn(async (_config: any, { args, account }: any) => {
       return { request: { args, account } }
     }),
-    writeLeverageRouterV2MintWithCalls: vi.fn(async (_config: any) => {
+    writeLeverageRouterV2Deposit: vi.fn(async (_config: any) => {
       // echo back a deterministic hash-like string for assertions
       return '0xhash' as any
     }),
@@ -30,9 +30,9 @@ describe('executeMintV2', () => {
       minShares: 900n,
       calls: [],
       expectedTotalCollateral: 10_000n,
+      expectedDebt: 5_000n,
     }
-    const expectedMaxSwapCost =
-      (plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
+    void ((plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR)
 
     const res = await executeMintV2({
       config: cfg,
@@ -43,13 +43,14 @@ describe('executeMintV2', () => {
     })
     expect(res.hash).toBe('0xhash')
 
-    const { simulateLeverageRouterV2MintWithCalls } = await import('@/lib/contracts/generated')
-    expect(simulateLeverageRouterV2MintWithCalls).toHaveBeenCalledTimes(1)
-    const callArgs = (simulateLeverageRouterV2MintWithCalls as any).mock.calls[0][1].args
+    const { simulateLeverageRouterV2Deposit } = await import('@/lib/contracts/generated')
+    expect(simulateLeverageRouterV2Deposit).toHaveBeenCalledTimes(1)
+    const callArgs = (simulateLeverageRouterV2Deposit as any).mock.calls[0][1].args
+    // deposit(token, collateralFromSender, flashLoanAmount, minShares, swapCalls)
     expect(callArgs[0]).toBe(token)
     expect(callArgs[1]).toBe(plan.equityInInputAsset)
-    expect(callArgs[2]).toBe(plan.minShares)
-    expect(callArgs[3]).toBe(expectedMaxSwapCost)
+    expect(callArgs[2]).toBe(plan.expectedDebt)
+    expect(callArgs[3]).toBe(plan.minShares)
     expect(callArgs[4]).toEqual(plan.calls)
   })
 
@@ -60,6 +61,7 @@ describe('executeMintV2', () => {
       minShares: 1_800n,
       calls: [],
       expectedTotalCollateral: 10_000n,
+      expectedDebt: 5_000n,
     }
     const overrideMaxSwapCost = 1234n
     await executeMintV2({
@@ -70,8 +72,9 @@ describe('executeMintV2', () => {
       maxSwapCostInCollateralAsset: overrideMaxSwapCost,
       routerAddress: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as `0x${string}`,
     })
-    const { simulateLeverageRouterV2MintWithCalls } = await import('@/lib/contracts/generated')
-    const callArgs = (simulateLeverageRouterV2MintWithCalls as any).mock.calls[0][1].args
-    expect(callArgs[3]).toBe(overrideMaxSwapCost)
+    const { simulateLeverageRouterV2Deposit } = await import('@/lib/contracts/generated')
+    const callArgs = (simulateLeverageRouterV2Deposit as any).mock.calls[0][1].args
+    // position of maxSwapCost no longer present in deposit; ensure args unaffected by override
+    expect(callArgs[2]).toBe(plan.expectedDebt)
   })
 })
