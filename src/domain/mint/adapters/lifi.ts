@@ -1,0 +1,122 @@
+import type { Address } from 'viem'
+import { getAddress } from 'viem'
+import { base } from 'viem/chains'
+import type { QuoteFn } from '../types'
+import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from '../constants'
+
+export type LifiOrder = 'CHEAPEST' | 'FASTEST'
+
+export interface LifiAdapterOptions {
+  chainId?: number
+  router: Address
+  slippageBps?: number
+  baseUrl?: string
+  apiKey?: string
+  order?: LifiOrder
+  integrator?: string
+}
+
+type StepEstimate = {
+  toAmount?: string
+  toAmountMin?: string
+  approvalAddress?: string
+}
+
+type TransactionRequest = {
+  to?: string
+  data?: `0x${string}`
+}
+
+type Step = {
+  estimate?: StepEstimate
+  toolDetails?: { approvalAddress?: string }
+  transactionRequest?: TransactionRequest
+}
+
+/**
+ * Create a QuoteFn adapter backed by LiFi's /v1/quote.
+ * - Quotes are same-chain (Base -> Base) by default.
+ * - Uses router as fromAddress since router executes the swap inside mintWithCalls.
+ */
+export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
+  const {
+    chainId = base.id,
+    router,
+    slippageBps = DEFAULT_SLIPPAGE_BPS,
+    baseUrl = process.env['LIFI_API_BASE'] ?? 'https://li.quest',
+    apiKey = process.env['LIFI_API_KEY'],
+    order = 'CHEAPEST',
+    integrator = 'seamless-protocol',
+  } = opts
+
+  const headers = buildHeaders(apiKey)
+  const slippage = bpsToDecimalString(slippageBps)
+
+  return async ({ inToken, outToken, amountIn }) => {
+    const url = buildQuoteUrl(baseUrl, {
+      chainId,
+      inToken,
+      outToken,
+      amountIn,
+      router,
+      slippage,
+      integrator,
+      order,
+    })
+
+    const res = await fetch(url.toString(), { method: 'GET', headers })
+    if (!res.ok) throw new Error(`LiFi quote failed: ${res.status} ${res.statusText}`)
+    const step = (await res.json()) as Step
+    return mapStepToQuote(step)
+  }
+}
+
+// Internal helpers for clarity and testability
+function bpsToDecimalString(bps: number): string {
+  return (bps / Number(BPS_DENOMINATOR)).toString()
+}
+
+function buildHeaders(apiKey?: string): Record<string, string> {
+  const headers: Record<string, string> = { 'content-type': 'application/json' }
+  if (apiKey) headers['x-lifi-api-key'] = apiKey
+  return headers
+}
+
+function buildQuoteUrl(
+  baseUrl: string,
+  params: {
+    chainId: number
+    inToken: Address
+    outToken: Address
+    amountIn: bigint
+    router: Address
+    slippage: string
+    integrator: string
+    order: LifiOrder
+  },
+): URL {
+  const url = new URL('/v1/quote', baseUrl)
+  url.searchParams.set('fromChain', String(params.chainId))
+  url.searchParams.set('toChain', String(params.chainId))
+  url.searchParams.set('fromToken', getAddress(params.inToken))
+  url.searchParams.set('toToken', getAddress(params.outToken))
+  url.searchParams.set('fromAmount', params.amountIn.toString())
+  url.searchParams.set('fromAddress', getAddress(params.router))
+  url.searchParams.set('slippage', params.slippage)
+  url.searchParams.set('integrator', params.integrator)
+  url.searchParams.set('order', params.order)
+  return url
+}
+
+function mapStepToQuote(step: Step) {
+  const tx = step.transactionRequest
+  const approvalTarget = step.estimate?.approvalAddress || tx?.to
+  if (!approvalTarget) throw new Error('LiFi quote missing approval target')
+  const data = tx?.data
+  if (!data) throw new Error('LiFi quote missing transaction data')
+
+  const outStr = step.estimate?.toAmountMin || step.estimate?.toAmount
+  const out = outStr ? BigInt(outStr) : 0n
+
+  return { out, approvalTarget: getAddress(approvalTarget), calldata: data }
+}
