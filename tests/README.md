@@ -7,19 +7,19 @@ This document explains the testing setup for the Seamless Protocol frontend appl
 ### 1. Unit Tests (`tests/unit/`)
 - **Purpose**: Test individual functions and components in isolation
 - **Framework**: Vitest with jsdom environment
-- **Command**: `bun test`
+- **Command**: `bun run test`
 - **No blockchain interaction**: Mocks and fixtures only
 
 ### 2. Integration Tests (`tests/integration/`)
 - **Purpose**: Test blockchain interactions against Base fork
 - **Framework**: Vitest with custom setup
-- **Command**: `bun test:integration`
+- **Command**: `bun run test:integration`
 - **Backend**: Tenderly VNet (default) or Anvil (local development)
 
 ### 3. End-to-End Tests (`tests/e2e/`)
 - **Purpose**: Test complete user workflows through the UI
 - **Framework**: Playwright
-- **Command**: `bun test:e2e`
+- **Command**: `bun run test:e2e`
 - **Backend**: Tenderly VNet (default) or Anvil (local development)
 
 ## Backend Configuration
@@ -39,14 +39,14 @@ When Tenderly config is missing, tests fall back to local Anvil:
 bun run anvil:base
 
 # Terminal 2: Run tests  
-bun test:integration
-bun test:e2e
+bun run test:integration
+bun run test:e2e
 ```
 
 ### Override: Explicit RPC URL
 Force tests to use a specific RPC URL:
 ```bash
-TEST_RPC_URL=https://your-rpc.com bun test:integration
+TEST_RPC_URL=https://your-rpc.com bun run test:integration
 ```
 
 ## Integration Test Pattern
@@ -132,16 +132,16 @@ tests/
 
 ```bash
 # Unit tests (fast, no blockchain)
-bun test
+bun run test
 
 # Integration tests (blockchain interactions)
-bun test:integration
+bun run test:integration
 
 # E2E tests (full UI workflows)  
-bun test:e2e
+bun run test:e2e
 
 # All tests with coverage
-bun test:coverage
+bun run test:coverage
 ```
 
 ## Troubleshooting

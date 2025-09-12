@@ -30,11 +30,11 @@ bun format             # Format code with Biome
 bun typecheck          # Type-check only
 
 # Testing
-bun test               # Run unit tests with Vitest
-bun test:ui            # Run tests with UI
-bun test:coverage      # Run tests with coverage
-bun test:integration   # Run integration tests (uses Tenderly VNet by default)
-bun test:e2e           # Run E2E tests with Playwright (uses Tenderly VNet by default)
+bun run test               # Run unit tests with Vitest
+bun run test:ui            # Run tests with UI
+bun run test:coverage      # Run tests with coverage
+bun run test:integration   # Run integration tests (uses Tenderly VNet by default)
+bun run test:e2e           # Run E2E tests with Playwright (uses Tenderly VNet by default)
 
 # Testing Backend Configuration
 # DEFAULT: Tenderly VNet (just-in-time creation/deletion)
