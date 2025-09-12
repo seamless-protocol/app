@@ -20,7 +20,7 @@ import {
   simulateLeverageRouterMint,
   writeLeverageRouterMint,
 } from '@/lib/contracts/generated'
-import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from './constants'
+import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS, DEFAULT_SLIPPAGE_BPS } from './constants'
 import { applySlippageFloor } from './math'
 import { BASE_TOKEN_ADDRESSES, createSwapContext, createWeETHSwapContext } from './swapContext'
 
@@ -51,7 +51,7 @@ export async function executeMintV1(params: {
   maxSwapCostInCollateralAsset?: MaxSwapCostArg
 }): Promise<{ hash: Hash; preview: Preview }> {
   const { config, account, token, inputAsset, equityInCollateralAsset } = params
-  const slippageBps = params.slippageBps ?? 50
+  const slippageBps = params.slippageBps ?? DEFAULT_SLIPPAGE_BPS
 
   const collateralAsset = await fetchCollateralAsset(config, token)
   assertInputIsCollateral(inputAsset, collateralAsset)

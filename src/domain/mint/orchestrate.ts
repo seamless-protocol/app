@@ -17,6 +17,7 @@ import { executeMintV1 } from './execute.v1'
 import { executeMintV2 } from './execute.v2'
 import { planMintV2 } from './plan.v2'
 import { type QuoteFn, RouterVersion } from './types'
+import { DEFAULT_SLIPPAGE_BPS } from './constants'
 
 // Reuse generated Wagmi action types for stronger inference
 type Gen = typeof import('@/lib/contracts/generated')
@@ -91,7 +92,7 @@ export async function orchestrateMint(params: {
     token,
     inputAsset,
     equityInInputAsset,
-    slippageBps = 50,
+    slippageBps = DEFAULT_SLIPPAGE_BPS,
     maxSwapCostInCollateralAsset,
     quoteDebtToCollateral,
     quoteInputToCollateral,
