@@ -8,19 +8,20 @@ import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress } from 'viem'
 import type { Config } from 'wagmi'
 import {
-  readLeverageManagerGetLeverageTokenCollateralAsset,
-  readLeverageManagerGetLeverageTokenDebtAsset,
-  readLeverageManagerPreviewMint,
+  // V2 reads (explicit address must be provided when using VNets/custom deployments)
+  readLeverageManagerV2GetLeverageTokenCollateralAsset,
+  readLeverageManagerV2GetLeverageTokenDebtAsset,
+  readLeverageManagerV2PreviewMint,
 } from '@/lib/contracts/generated'
 import { applySlippageFloor, mulDivFloor } from './math'
 import type { Quote, QuoteFn } from './types'
 
-// Reuse generated types for stronger inference and future-proofing
-type Gen = typeof import('@/lib/contracts/generated')
-type TokenArg = Parameters<Gen['readLeverageManagerPreviewMint']>[1]['args'][0]
-type EquityInInputAssetArg = Parameters<Gen['writeLeverageRouterV2MintWithCalls']>[1]['args'][1]
-type V2Calls = Parameters<Gen['writeLeverageRouterV2MintWithCalls']>[1]['args'][4]
-type V2Call = V2Calls[number]
+// Local structural types (avoid brittle codegen coupling in tests/VNet)
+type TokenArg = Address
+type EquityInInputAssetArg = bigint
+type RouterV2Call = { target: Address; data: `0x${string}`; value: bigint }
+type V2Calls = Array<RouterV2Call>
+type V2Call = RouterV2Call
 
 /**
  * Structured plan for executing a single-transaction mint via the V2 router.
@@ -99,6 +100,8 @@ export async function planMintV2(params: {
   slippageBps: number
   quoteDebtToCollateral: QuoteFn
   quoteInputToCollateral?: QuoteFn
+  /** Optional explicit LeverageManagerV2 address (required for VNet/custom deployments) */
+  managerAddress?: Address
 }): Promise<MintPlanV2> {
   const {
     config,
@@ -108,9 +111,14 @@ export async function planMintV2(params: {
     slippageBps,
     quoteDebtToCollateral,
     quoteInputToCollateral,
+    managerAddress,
   } = params
 
-  const { collateralAsset, debtAsset } = await getManagerAssets(config, token)
+  const { collateralAsset, debtAsset } = await getManagerAssets({
+    config,
+    token,
+    ...(managerAddress ? { managerAddress } : {}),
+  })
 
   const { calls, userCollateralOut } = await prepareInputConversion({
     inputAsset,
@@ -119,17 +127,28 @@ export async function planMintV2(params: {
     ...(typeof quoteInputToCollateral !== 'undefined' ? { quoteInputToCollateral } : {}),
   })
 
-  const previewWithUserCollateral = await previewMintAmount(config, token, userCollateralOut)
+  const previewWithUserCollateral = await previewMintAmount({
+    config,
+    token,
+    equityInCollateralAsset: userCollateralOut,
+    ...(managerAddress ? { managerAddress } : {}),
+  })
 
   const { debtIn, debtQuote } = await planDebtSwap({
     previewWithUserCollateral,
+    userCollateralOut,
     debtAsset,
     collateralAsset,
     quoteDebtToCollateral,
   })
 
   const totalCollateral = userCollateralOut + debtQuote.out
-  const previewWithTotalCollateral = await previewMintAmount(config, token, totalCollateral)
+  const previewWithTotalCollateral = await previewMintAmount({
+    config,
+    token,
+    equityInCollateralAsset: totalCollateral,
+    ...(managerAddress ? { managerAddress } : {}),
+  })
   if (previewWithTotalCollateral.debt < debtIn)
     throw new Error('Reprice: manager preview debt < planned flash loan')
 
@@ -155,11 +174,20 @@ export async function planMintV2(params: {
 
 // Helpers — defined below the main function for clarity
 
-async function getManagerAssets(config: Config, token: TokenArg) {
-  const collateralAsset = await readLeverageManagerGetLeverageTokenCollateralAsset(config, {
+async function getManagerAssets(args: {
+  config: Config
+  token: TokenArg
+  managerAddress?: Address
+}) {
+  const { config, token, managerAddress } = args
+  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
+    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
   })
-  const debtAsset = await readLeverageManagerGetLeverageTokenDebtAsset(config, { args: [token] })
+  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
+    ...(managerAddress ? { address: managerAddress } : {}),
+    args: [token],
+  })
   return { collateralAsset, debtAsset }
 }
 
@@ -193,20 +221,36 @@ async function prepareInputConversion(args: {
   return { calls, userCollateralOut: inputQuote.out }
 }
 
-type Preview = Awaited<ReturnType<Gen['readLeverageManagerPreviewMint']>>
+type Preview = Awaited<ReturnType<typeof readLeverageManagerV2PreviewMint>>
 
-async function previewMintAmount(config: Config, token: TokenArg, equityInCollateralAsset: bigint) {
-  return readLeverageManagerPreviewMint(config, { args: [token, equityInCollateralAsset] })
+async function previewMintAmount(args: {
+  config: Config
+  token: TokenArg
+  equityInCollateralAsset: bigint
+  managerAddress?: Address
+}) {
+  const { config, token, equityInCollateralAsset, managerAddress } = args
+  return readLeverageManagerV2PreviewMint(config, {
+    ...(managerAddress ? { address: managerAddress } : {}),
+    args: [token, equityInCollateralAsset],
+  })
 }
 
 async function planDebtSwap(args: {
   previewWithUserCollateral: Preview
+  userCollateralOut: bigint
   debtAsset: Address
   collateralAsset: Address
   quoteDebtToCollateral: QuoteFn
 }): Promise<{ debtIn: bigint; debtQuote: Quote }> {
-  const { previewWithUserCollateral, debtAsset, collateralAsset, quoteDebtToCollateral } = args
-  const neededFromDebtSwap = previewWithUserCollateral.collateral - previewWithUserCollateral.equity
+  const {
+    previewWithUserCollateral,
+    userCollateralOut,
+    debtAsset,
+    collateralAsset,
+    quoteDebtToCollateral,
+  } = args
+  const neededFromDebtSwap = previewWithUserCollateral.collateral - userCollateralOut
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
   let debtIn = previewWithUserCollateral.debt

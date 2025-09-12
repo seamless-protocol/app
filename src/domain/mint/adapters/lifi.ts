@@ -13,7 +13,10 @@ export interface LifiAdapterOptions {
   baseUrl?: string
   apiKey?: string
   order?: LifiOrder
+  /** Optional integrator slug; if omitted, no `integrator` param is sent */
   integrator?: string
+  /** Optional bridge allowlist (e.g., 'none') */
+  allowBridges?: string
 }
 
 type StepEstimate = {
@@ -46,7 +49,8 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     baseUrl = process.env['LIFI_API_BASE'] ?? 'https://li.quest',
     apiKey = process.env['LIFI_API_KEY'],
     order = 'CHEAPEST',
-    integrator = 'seamless-protocol',
+    integrator = process.env['LIFI_INTEGRATOR'],
+    allowBridges,
   } = opts
 
   const headers = buildHeaders(apiKey)
@@ -60,8 +64,9 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       amountIn,
       router,
       slippage,
-      integrator,
+      ...(integrator ? { integrator } : {}),
       order,
+      ...(allowBridges ? { allowBridges } : {}),
     })
 
     const res = await fetch(url.toString(), { method: 'GET', headers })
@@ -91,8 +96,9 @@ function buildQuoteUrl(
     amountIn: bigint
     router: Address
     slippage: string
-    integrator: string
+    integrator?: string
     order: LifiOrder
+    allowBridges?: string
   },
 ): URL {
   const url = new URL('/v1/quote', baseUrl)
@@ -103,8 +109,9 @@ function buildQuoteUrl(
   url.searchParams.set('fromAmount', params.amountIn.toString())
   url.searchParams.set('fromAddress', getAddress(params.router))
   url.searchParams.set('slippage', params.slippage)
-  url.searchParams.set('integrator', params.integrator)
+  if (params.integrator) url.searchParams.set('integrator', params.integrator)
   url.searchParams.set('order', params.order)
+  if (params.allowBridges) url.searchParams.set('allowBridges', params.allowBridges)
   return url
 }
 

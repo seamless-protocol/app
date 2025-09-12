@@ -4,13 +4,13 @@ import { planMintV2 } from '@/domain/mint/plan.v2'
 
 vi.mock('@/lib/contracts/generated', async () => {
   return {
-    readLeverageManagerGetLeverageTokenCollateralAsset: vi.fn(
+    readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(
       async () => '0x1111111111111111111111111111111111111111' as Address,
     ),
-    readLeverageManagerGetLeverageTokenDebtAsset: vi.fn(
+    readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(
       async () => '0x2222222222222222222222222222222222222222' as Address,
     ),
-    readLeverageManagerPreviewMint: vi.fn(async (_config, { args }: any) => {
+    readLeverageManagerV2PreviewMint: vi.fn(async (_config, { args }: any) => {
       // args: [token, equityInCollateralAsset]
       const equity = args[1] as bigint
       // Simplified, linear preview for testing

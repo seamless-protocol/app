@@ -16,6 +16,9 @@ export interface ContractAddresses {
   leverageTokenFactory?: Address
   leverageManager?: Address
   leverageRouter?: Address
+  // V2 surfaces (distinct addresses when deployed)
+  leverageManagerV2?: Address
+  leverageRouterV2?: Address
   morphoVaultFactory?: Address
   // Tokens
   stakedSeam?: Address

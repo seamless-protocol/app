@@ -10,7 +10,9 @@
 
 // import { getPublicClient } from '@wagmi/core'
 import type { Address, Hash } from 'viem'
+import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
+import { contractAddresses } from '@/lib/contracts/addresses'
 import { DEFAULT_SLIPPAGE_BPS } from './constants'
 // Addresses inferred by actions from config
 import { detectRouterVersion } from './detectVersion'
@@ -19,12 +21,11 @@ import { executeMintV2 } from './execute.v2'
 import { planMintV2 } from './plan.v2'
 import { type QuoteFn, RouterVersion } from './types'
 
-// Reuse generated Wagmi action types for stronger inference
-type Gen = typeof import('@/lib/contracts/generated')
-type TokenArg = Parameters<Gen['readLeverageManagerPreviewMint']>[1]['args'][0]
-type AccountArg = Extract<Parameters<Gen['writeLeverageRouterMint']>[1]['account'], `0x${string}`>
-type EquityInInputAssetArg = Parameters<Gen['writeLeverageRouterV2MintWithCalls']>[1]['args'][1]
-type MaxSwapCostArg = Parameters<Gen['writeLeverageRouterMint']>[1]['args'][3]
+// Keep parameter types simple to avoid brittle codegen coupling
+type TokenArg = Address
+type AccountArg = Address
+type EquityInInputAssetArg = bigint
+type MaxSwapCostArg = bigint
 
 // Discriminated result type for orchestrated mints
 export type OrchestrateMintResult =
@@ -85,6 +86,9 @@ export async function orchestrateMint(params: {
   maxSwapCostInCollateralAsset?: MaxSwapCostArg
   quoteDebtToCollateral?: QuoteFn
   quoteInputToCollateral?: QuoteFn
+  /** Optional overrides for V2 when using VNet/custom deployments */
+  routerAddressV2?: Address
+  managerAddressV2?: Address
 }): Promise<OrchestrateMintResult> {
   const {
     config,
@@ -110,6 +114,7 @@ export async function orchestrateMint(params: {
       slippageBps,
       quoteDebtToCollateral,
       ...(quoteInputToCollateral ? { quoteInputToCollateral } : {}),
+      ...(params.managerAddressV2 ? { managerAddress: params.managerAddressV2 } : {}),
     })
 
     const tx = await executeMintV2({
@@ -123,6 +128,12 @@ export async function orchestrateMint(params: {
         calls: plan.calls,
         expectedTotalCollateral: plan.expectedTotalCollateral,
       },
+      routerAddress:
+        params.routerAddressV2 ||
+        (contractAddresses[base.id]?.leverageRouterV2 as Address | undefined) ||
+        (() => {
+          throw new Error('LeverageRouterV2 address required for router v2 flow')
+        })(),
       ...(typeof maxSwapCostInCollateralAsset !== 'undefined'
         ? { maxSwapCostInCollateralAsset }
         : {}),

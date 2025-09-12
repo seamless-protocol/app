@@ -34,7 +34,13 @@ describe('executeMintV2', () => {
     const expectedMaxSwapCost =
       (plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
 
-    const res = await executeMintV2({ config: cfg, token, account, plan })
+    const res = await executeMintV2({
+      config: cfg,
+      token,
+      account,
+      plan,
+      routerAddress: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as `0x${string}`,
+    })
     expect(res.hash).toBe('0xhash')
 
     const { simulateLeverageRouterV2MintWithCalls } = await import('@/lib/contracts/generated')
@@ -62,6 +68,7 @@ describe('executeMintV2', () => {
       account,
       plan,
       maxSwapCostInCollateralAsset: overrideMaxSwapCost,
+      routerAddress: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as `0x${string}`,
     })
     const { simulateLeverageRouterV2MintWithCalls } = await import('@/lib/contracts/generated')
     const callArgs = (simulateLeverageRouterV2MintWithCalls as any).mock.calls[0][1].args

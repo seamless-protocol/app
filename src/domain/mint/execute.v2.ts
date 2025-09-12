@@ -39,8 +39,10 @@ export async function executeMintV2(params: {
     expectedTotalCollateral: bigint
   }
   maxSwapCostInCollateralAsset?: bigint
+  /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
+  routerAddress: Address
 }) {
-  const { config, token, account, plan, maxSwapCostInCollateralAsset } = params
+  const { config, token, account, plan, maxSwapCostInCollateralAsset, routerAddress } = params
 
   // No allowance handling here; UI should perform approvals beforehand
 
@@ -50,6 +52,7 @@ export async function executeMintV2(params: {
     (plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
 
   const { request } = await simulateLeverageRouterV2MintWithCalls(config, {
+    address: routerAddress,
     args: [token, plan.equityInInputAsset, plan.minShares, maxSwapCost, plan.calls],
     account,
   })

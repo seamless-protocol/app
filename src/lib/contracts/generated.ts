@@ -194,6 +194,1263 @@ export const leverageManagerConfig = {
 } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// LeverageManagerV2
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const leverageManagerV2Abi = [
+  {
+    type: 'function',
+    inputs: [],
+    name: 'BASE_RATIO',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'DEFAULT_ADMIN_ROLE',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'FEE_MANAGER_ROLE',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'UPGRADER_ROLE',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'UPGRADE_INTERFACE_VERSION',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'chargeManagementFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+      { name: 'rounding', internalType: 'enum Math.Rounding', type: 'uint8' },
+    ],
+    name: 'convertCollateralToDebt',
+    outputs: [{ name: 'debt', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+      { name: 'rounding', internalType: 'enum Math.Rounding', type: 'uint8' },
+    ],
+    name: 'convertCollateralToShares',
+    outputs: [{ name: 'shares', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'debt', internalType: 'uint256', type: 'uint256' },
+      { name: 'rounding', internalType: 'enum Math.Rounding', type: 'uint8' },
+    ],
+    name: 'convertDebtToCollateral',
+    outputs: [{ name: 'collateral', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'shares', internalType: 'uint256', type: 'uint256' },
+      { name: 'rounding', internalType: 'enum Math.Rounding', type: 'uint8' },
+    ],
+    name: 'convertSharesToCollateral',
+    outputs: [{ name: 'collateral', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'shares', internalType: 'uint256', type: 'uint256' },
+      { name: 'rounding', internalType: 'enum Math.Rounding', type: 'uint8' },
+    ],
+    name: 'convertSharesToDebt',
+    outputs: [{ name: 'debt', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'shares', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'convertToAssets',
+    outputs: [
+      {
+        name: 'equityInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'equityInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    name: 'convertToShares',
+    outputs: [{ name: 'shares', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'tokenConfig',
+        internalType: 'struct LeverageTokenConfig',
+        type: 'tuple',
+        components: [
+          {
+            name: 'lendingAdapter',
+            internalType: 'contract ILendingAdapter',
+            type: 'address',
+          },
+          {
+            name: 'rebalanceAdapter',
+            internalType: 'contract IRebalanceAdapterBase',
+            type: 'address',
+          },
+          { name: 'mintTokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'redeemTokenFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+      { name: 'name', internalType: 'string', type: 'string' },
+      { name: 'symbol', internalType: 'string', type: 'string' },
+    ],
+    name: 'createNewLeverageToken',
+    outputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+      { name: 'minShares', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'deposit',
+    outputs: [
+      {
+        name: 'actionData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getDefaultManagementFeeAtCreation',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getFeeAdjustedTotalSupply',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLastManagementFeeAccrualTimestamp',
+    outputs: [{ name: '', internalType: 'uint120', type: 'uint120' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'action', internalType: 'enum ExternalAction', type: 'uint8' },
+    ],
+    name: 'getLeverageTokenActionFee',
+    outputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenCollateralAsset',
+    outputs: [
+      {
+        name: 'collateralAsset',
+        internalType: 'contract IERC20',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenConfig',
+    outputs: [
+      {
+        name: 'config',
+        internalType: 'struct LeverageTokenConfig',
+        type: 'tuple',
+        components: [
+          {
+            name: 'lendingAdapter',
+            internalType: 'contract ILendingAdapter',
+            type: 'address',
+          },
+          {
+            name: 'rebalanceAdapter',
+            internalType: 'contract IRebalanceAdapterBase',
+            type: 'address',
+          },
+          { name: 'mintTokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'redeemTokenFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenDebtAsset',
+    outputs: [{ name: 'debtAsset', internalType: 'contract IERC20', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getLeverageTokenFactory',
+    outputs: [
+      {
+        name: 'factory',
+        internalType: 'contract IBeaconProxyFactory',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenInitialCollateralRatio',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenLendingAdapter',
+    outputs: [
+      {
+        name: 'adapter',
+        internalType: 'contract ILendingAdapter',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenRebalanceAdapter',
+    outputs: [
+      {
+        name: 'module',
+        internalType: 'contract IRebalanceAdapterBase',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenState',
+    outputs: [
+      {
+        name: 'state',
+        internalType: 'struct LeverageTokenState',
+        type: 'tuple',
+        components: [
+          {
+            name: 'collateralInDebtAsset',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'collateralRatio', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getManagementFee',
+    outputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'role', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'getRoleAdmin',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getTreasury',
+    outputs: [{ name: 'treasury', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'action', internalType: 'enum ExternalAction', type: 'uint8' }],
+    name: 'getTreasuryActionFee',
+    outputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'account', internalType: 'address', type: 'address' },
+    ],
+    name: 'grantRole',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'account', internalType: 'address', type: 'address' },
+    ],
+    name: 'hasRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'initialAdmin', internalType: 'address', type: 'address' },
+      { name: 'treasury', internalType: 'address', type: 'address' },
+      {
+        name: 'leverageTokenFactory',
+        internalType: 'contract IBeaconProxyFactory',
+        type: 'address',
+      },
+    ],
+    name: 'initialize',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'shares', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxCollateral', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'mint',
+    outputs: [
+      {
+        name: 'actionData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'previewDeposit',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'shares', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'previewMint',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'shares', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'previewRedeem',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'previewWithdraw',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'proxiableUUID',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'leverageToken',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'actions',
+        internalType: 'struct RebalanceAction[]',
+        type: 'tuple[]',
+        components: [
+          {
+            name: 'actionType',
+            internalType: 'enum ActionType',
+            type: 'uint8',
+          },
+          { name: 'amount', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+      { name: 'tokenIn', internalType: 'contract IERC20', type: 'address' },
+      { name: 'tokenOut', internalType: 'contract IERC20', type: 'address' },
+      { name: 'amountIn', internalType: 'uint256', type: 'uint256' },
+      { name: 'amountOut', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'rebalance',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'shares', internalType: 'uint256', type: 'uint256' },
+      { name: 'minCollateral', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'redeem',
+    outputs: [
+      {
+        name: 'actionData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'callerConfirmation', internalType: 'address', type: 'address' },
+    ],
+    name: 'renounceRole',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'account', internalType: 'address', type: 'address' },
+    ],
+    name: 'revokeRole',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256' }],
+    name: 'setDefaultManagementFeeAtCreation',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'fee', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'setManagementFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'treasury', internalType: 'address', type: 'address' }],
+    name: 'setTreasury',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'action', internalType: 'enum ExternalAction', type: 'uint8' },
+      { name: 'fee', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'setTreasuryActionFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'interfaceId', internalType: 'bytes4', type: 'bytes4' }],
+    name: 'supportsInterface',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'newImplementation', internalType: 'address', type: 'address' },
+      { name: 'data', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'upgradeToAndCall',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxShares', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'withdraw',
+    outputs: [
+      {
+        name: 'actionData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256', indexed: false }],
+    name: 'DefaultManagementFeeAtCreationSet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'version',
+        internalType: 'uint64',
+        type: 'uint64',
+        indexed: false,
+      },
+    ],
+    name: 'Initialized',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'leverageTokenFactory',
+        internalType: 'contract IBeaconProxyFactory',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'LeverageManagerInitialized',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'leverageToken',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'action',
+        internalType: 'enum ExternalAction',
+        type: 'uint8',
+        indexed: true,
+      },
+      { name: 'fee', internalType: 'uint256', type: 'uint256', indexed: false },
+    ],
+    name: 'LeverageTokenActionFeeSet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'collateralAsset',
+        internalType: 'contract IERC20',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'debtAsset',
+        internalType: 'contract IERC20',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'config',
+        internalType: 'struct LeverageTokenConfig',
+        type: 'tuple',
+        components: [
+          {
+            name: 'lendingAdapter',
+            internalType: 'contract ILendingAdapter',
+            type: 'address',
+          },
+          {
+            name: 'rebalanceAdapter',
+            internalType: 'contract IRebalanceAdapterBase',
+            type: 'address',
+          },
+          { name: 'mintTokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'redeemTokenFee', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+    ],
+    name: 'LeverageTokenCreated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'leverageToken',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sharesFee',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ManagementFeeCharged',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'fee', internalType: 'uint256', type: 'uint256', indexed: false },
+    ],
+    name: 'ManagementFeeSet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'actionData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+    ],
+    name: 'Mint',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'stateBefore',
+        internalType: 'struct LeverageTokenState',
+        type: 'tuple',
+        components: [
+          {
+            name: 'collateralInDebtAsset',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'collateralRatio', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+      {
+        name: 'stateAfter',
+        internalType: 'struct LeverageTokenState',
+        type: 'tuple',
+        components: [
+          {
+            name: 'collateralInDebtAsset',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'collateralRatio', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+      {
+        name: 'actions',
+        internalType: 'struct RebalanceAction[]',
+        type: 'tuple[]',
+        components: [
+          {
+            name: 'actionType',
+            internalType: 'enum ActionType',
+            type: 'uint8',
+          },
+          { name: 'amount', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+    ],
+    name: 'Rebalance',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'actionData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+    ],
+    name: 'Redeem',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32', indexed: true },
+      {
+        name: 'previousAdminRole',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+      {
+        name: 'newAdminRole',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+    ],
+    name: 'RoleAdminChanged',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32', indexed: true },
+      {
+        name: 'account',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'RoleGranted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32', indexed: true },
+      {
+        name: 'account',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'RoleRevoked',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'action',
+        internalType: 'enum ExternalAction',
+        type: 'uint8',
+        indexed: true,
+      },
+      { name: 'fee', internalType: 'uint256', type: 'uint256', indexed: false },
+    ],
+    name: 'TreasuryActionFeeSet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'treasury',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'TreasurySet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'implementation',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'Upgraded',
+  },
+  { type: 'error', inputs: [], name: 'AccessControlBadConfirmation' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'neededRole', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'AccessControlUnauthorizedAccount',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'target', internalType: 'address', type: 'address' }],
+    name: 'AddressEmptyCode',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'implementation', internalType: 'address', type: 'address' }],
+    name: 'ERC1967InvalidImplementation',
+  },
+  { type: 'error', inputs: [], name: 'ERC1967NonPayable' },
+  { type: 'error', inputs: [], name: 'FailedCall' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'fee', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxFee', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'FeeTooHigh',
+  },
+  { type: 'error', inputs: [], name: 'InvalidCollateralRatios' },
+  { type: 'error', inputs: [], name: 'InvalidInitialization' },
+  { type: 'error', inputs: [], name: 'InvalidLeverageTokenAssets' },
+  {
+    type: 'error',
+    inputs: [
+      {
+        name: 'initialCollateralRatio',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    name: 'InvalidLeverageTokenInitialCollateralRatio',
+  },
+  {
+    type: 'error',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'InvalidLeverageTokenStateAfterRebalance',
+  },
+  { type: 'error', inputs: [], name: 'LeverageTokenNotEligibleForRebalance' },
+  { type: 'error', inputs: [], name: 'NotInitializing' },
+  {
+    type: 'error',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'caller', internalType: 'address', type: 'address' },
+    ],
+    name: 'NotRebalancer',
+  },
+  { type: 'error', inputs: [], name: 'ReentrancyGuardReentrantCall' },
+  {
+    type: 'error',
+    inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
+    name: 'SafeERC20FailedOperation',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+      { name: 'expected', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'SlippageTooHigh',
+  },
+  { type: 'error', inputs: [], name: 'UUPSUnauthorizedCallContext' },
+  {
+    type: 'error',
+    inputs: [{ name: 'slot', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'UUPSUnsupportedProxiableUUID',
+  },
+  { type: 'error', inputs: [], name: 'ZeroAddressTreasury' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LeverageRouter
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -367,9 +1624,6 @@ export const leverageRouterConfig = {
 // LeverageRouterV2
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/**
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
- */
 export const leverageRouterV2Abi = [
   {
     type: 'function',
@@ -393,21 +1647,6 @@ export const leverageRouterV2Abi = [
     stateMutability: 'nonpayable',
   },
 ] as const
-
-/**
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
- */
-export const leverageRouterV2Address = {
-  8453: '0xDbA92fC3dc10a17b96b6E807a908155C389A887C',
-} as const
-
-/**
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
- */
-export const leverageRouterV2Config = {
-  address: leverageRouterV2Address,
-  abi: leverageRouterV2Abi,
-} as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LeverageToken
@@ -1693,6 +2932,728 @@ export const useSimulateLeverageManagerMint = /*#__PURE__*/ createUseSimulateCon
 })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__
+ */
+export const useReadLeverageManagerV2 = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"BASE_RATIO"`
+ */
+export const useReadLeverageManagerV2BaseRatio = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'BASE_RATIO',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"DEFAULT_ADMIN_ROLE"`
+ */
+export const useReadLeverageManagerV2DefaultAdminRole = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'DEFAULT_ADMIN_ROLE',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"FEE_MANAGER_ROLE"`
+ */
+export const useReadLeverageManagerV2FeeManagerRole = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'FEE_MANAGER_ROLE',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"UPGRADER_ROLE"`
+ */
+export const useReadLeverageManagerV2UpgraderRole = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'UPGRADER_ROLE',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"UPGRADE_INTERFACE_VERSION"`
+ */
+export const useReadLeverageManagerV2UpgradeInterfaceVersion = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'UPGRADE_INTERFACE_VERSION',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertCollateralToDebt"`
+ */
+export const useReadLeverageManagerV2ConvertCollateralToDebt = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertCollateralToDebt',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertCollateralToShares"`
+ */
+export const useReadLeverageManagerV2ConvertCollateralToShares =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'convertCollateralToShares',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertDebtToCollateral"`
+ */
+export const useReadLeverageManagerV2ConvertDebtToCollateral = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertDebtToCollateral',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertSharesToCollateral"`
+ */
+export const useReadLeverageManagerV2ConvertSharesToCollateral =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'convertSharesToCollateral',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertSharesToDebt"`
+ */
+export const useReadLeverageManagerV2ConvertSharesToDebt = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertSharesToDebt',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertToAssets"`
+ */
+export const useReadLeverageManagerV2ConvertToAssets = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertToAssets',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertToShares"`
+ */
+export const useReadLeverageManagerV2ConvertToShares = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertToShares',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getDefaultManagementFeeAtCreation"`
+ */
+export const useReadLeverageManagerV2GetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getFeeAdjustedTotalSupply"`
+ */
+export const useReadLeverageManagerV2GetFeeAdjustedTotalSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getFeeAdjustedTotalSupply',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLastManagementFeeAccrualTimestamp"`
+ */
+export const useReadLeverageManagerV2GetLastManagementFeeAccrualTimestamp =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLastManagementFeeAccrualTimestamp',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenActionFee"`
+ */
+export const useReadLeverageManagerV2GetLeverageTokenActionFee =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLeverageTokenActionFee',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenCollateralAsset"`
+ */
+export const useReadLeverageManagerV2GetLeverageTokenCollateralAsset =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLeverageTokenCollateralAsset',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenConfig"`
+ */
+export const useReadLeverageManagerV2GetLeverageTokenConfig = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getLeverageTokenConfig',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenDebtAsset"`
+ */
+export const useReadLeverageManagerV2GetLeverageTokenDebtAsset =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLeverageTokenDebtAsset',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenFactory"`
+ */
+export const useReadLeverageManagerV2GetLeverageTokenFactory = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getLeverageTokenFactory',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenInitialCollateralRatio"`
+ */
+export const useReadLeverageManagerV2GetLeverageTokenInitialCollateralRatio =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLeverageTokenInitialCollateralRatio',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenLendingAdapter"`
+ */
+export const useReadLeverageManagerV2GetLeverageTokenLendingAdapter =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLeverageTokenLendingAdapter',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenRebalanceAdapter"`
+ */
+export const useReadLeverageManagerV2GetLeverageTokenRebalanceAdapter =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLeverageTokenRebalanceAdapter',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenState"`
+ */
+export const useReadLeverageManagerV2GetLeverageTokenState = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getLeverageTokenState',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getManagementFee"`
+ */
+export const useReadLeverageManagerV2GetManagementFee = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getManagementFee',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getRoleAdmin"`
+ */
+export const useReadLeverageManagerV2GetRoleAdmin = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getRoleAdmin',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getTreasury"`
+ */
+export const useReadLeverageManagerV2GetTreasury = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getTreasury',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getTreasuryActionFee"`
+ */
+export const useReadLeverageManagerV2GetTreasuryActionFee = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getTreasuryActionFee',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"hasRole"`
+ */
+export const useReadLeverageManagerV2HasRole = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'hasRole',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewDeposit"`
+ */
+export const useReadLeverageManagerV2PreviewDeposit = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'previewDeposit',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewMint"`
+ */
+export const useReadLeverageManagerV2PreviewMint = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'previewMint',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewRedeem"`
+ */
+export const useReadLeverageManagerV2PreviewRedeem = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'previewRedeem',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewWithdraw"`
+ */
+export const useReadLeverageManagerV2PreviewWithdraw = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'previewWithdraw',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"proxiableUUID"`
+ */
+export const useReadLeverageManagerV2ProxiableUuid = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'proxiableUUID',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"supportsInterface"`
+ */
+export const useReadLeverageManagerV2SupportsInterface = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'supportsInterface',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__
+ */
+export const useWriteLeverageManagerV2 = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"chargeManagementFee"`
+ */
+export const useWriteLeverageManagerV2ChargeManagementFee = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'chargeManagementFee',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"createNewLeverageToken"`
+ */
+export const useWriteLeverageManagerV2CreateNewLeverageToken = /*#__PURE__*/ createUseWriteContract(
+  {
+    abi: leverageManagerV2Abi,
+    functionName: 'createNewLeverageToken',
+  },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"deposit"`
+ */
+export const useWriteLeverageManagerV2Deposit = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'deposit',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"grantRole"`
+ */
+export const useWriteLeverageManagerV2GrantRole = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'grantRole',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"initialize"`
+ */
+export const useWriteLeverageManagerV2Initialize = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'initialize',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"mint"`
+ */
+export const useWriteLeverageManagerV2Mint = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"rebalance"`
+ */
+export const useWriteLeverageManagerV2Rebalance = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'rebalance',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"redeem"`
+ */
+export const useWriteLeverageManagerV2Redeem = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"renounceRole"`
+ */
+export const useWriteLeverageManagerV2RenounceRole = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'renounceRole',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"revokeRole"`
+ */
+export const useWriteLeverageManagerV2RevokeRole = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'revokeRole',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
+ */
+export const useWriteLeverageManagerV2SetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'setDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setManagementFee"`
+ */
+export const useWriteLeverageManagerV2SetManagementFee = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'setManagementFee',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasury"`
+ */
+export const useWriteLeverageManagerV2SetTreasury = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'setTreasury',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasuryActionFee"`
+ */
+export const useWriteLeverageManagerV2SetTreasuryActionFee = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'setTreasuryActionFee',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"upgradeToAndCall"`
+ */
+export const useWriteLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'upgradeToAndCall',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"withdraw"`
+ */
+export const useWriteLeverageManagerV2Withdraw = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'withdraw',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__
+ */
+export const useSimulateLeverageManagerV2 = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"chargeManagementFee"`
+ */
+export const useSimulateLeverageManagerV2ChargeManagementFee =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'chargeManagementFee',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"createNewLeverageToken"`
+ */
+export const useSimulateLeverageManagerV2CreateNewLeverageToken =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'createNewLeverageToken',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"deposit"`
+ */
+export const useSimulateLeverageManagerV2Deposit = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'deposit',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"grantRole"`
+ */
+export const useSimulateLeverageManagerV2GrantRole = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'grantRole',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"initialize"`
+ */
+export const useSimulateLeverageManagerV2Initialize = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'initialize',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"mint"`
+ */
+export const useSimulateLeverageManagerV2Mint = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"rebalance"`
+ */
+export const useSimulateLeverageManagerV2Rebalance = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'rebalance',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"redeem"`
+ */
+export const useSimulateLeverageManagerV2Redeem = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"renounceRole"`
+ */
+export const useSimulateLeverageManagerV2RenounceRole = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'renounceRole',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"revokeRole"`
+ */
+export const useSimulateLeverageManagerV2RevokeRole = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'revokeRole',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
+ */
+export const useSimulateLeverageManagerV2SetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'setDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setManagementFee"`
+ */
+export const useSimulateLeverageManagerV2SetManagementFee = /*#__PURE__*/ createUseSimulateContract(
+  {
+    abi: leverageManagerV2Abi,
+    functionName: 'setManagementFee',
+  },
+)
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasury"`
+ */
+export const useSimulateLeverageManagerV2SetTreasury = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'setTreasury',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasuryActionFee"`
+ */
+export const useSimulateLeverageManagerV2SetTreasuryActionFee =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'setTreasuryActionFee',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"upgradeToAndCall"`
+ */
+export const useSimulateLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createUseSimulateContract(
+  {
+    abi: leverageManagerV2Abi,
+    functionName: 'upgradeToAndCall',
+  },
+)
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"withdraw"`
+ */
+export const useSimulateLeverageManagerV2Withdraw = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'withdraw',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__
+ */
+export const useWatchLeverageManagerV2Event = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerV2Abi,
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"DefaultManagementFeeAtCreationSet"`
+ */
+export const useWatchLeverageManagerV2DefaultManagementFeeAtCreationSetEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'DefaultManagementFeeAtCreationSet',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Initialized"`
+ */
+export const useWatchLeverageManagerV2InitializedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'Initialized',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"LeverageManagerInitialized"`
+ */
+export const useWatchLeverageManagerV2LeverageManagerInitializedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'LeverageManagerInitialized',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"LeverageTokenActionFeeSet"`
+ */
+export const useWatchLeverageManagerV2LeverageTokenActionFeeSetEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'LeverageTokenActionFeeSet',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"LeverageTokenCreated"`
+ */
+export const useWatchLeverageManagerV2LeverageTokenCreatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'LeverageTokenCreated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"ManagementFeeCharged"`
+ */
+export const useWatchLeverageManagerV2ManagementFeeChargedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'ManagementFeeCharged',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"ManagementFeeSet"`
+ */
+export const useWatchLeverageManagerV2ManagementFeeSetEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'ManagementFeeSet',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Mint"`
+ */
+export const useWatchLeverageManagerV2MintEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'Mint',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Rebalance"`
+ */
+export const useWatchLeverageManagerV2RebalanceEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'Rebalance',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Redeem"`
+ */
+export const useWatchLeverageManagerV2RedeemEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'Redeem',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleAdminChanged"`
+ */
+export const useWatchLeverageManagerV2RoleAdminChangedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'RoleAdminChanged',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleGranted"`
+ */
+export const useWatchLeverageManagerV2RoleGrantedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'RoleGranted',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleRevoked"`
+ */
+export const useWatchLeverageManagerV2RoleRevokedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'RoleRevoked',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"TreasuryActionFeeSet"`
+ */
+export const useWatchLeverageManagerV2TreasuryActionFeeSetEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'TreasuryActionFeeSet',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"TreasurySet"`
+ */
+export const useWatchLeverageManagerV2TreasurySetEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'TreasurySet',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Upgraded"`
+ */
+export const useWatchLeverageManagerV2UpgradedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'Upgraded',
+})
+
+/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
@@ -1779,43 +3740,31 @@ export const useSimulateLeverageRouterRedeem = /*#__PURE__*/ createUseSimulateCo
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
- *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
 export const useWriteLeverageRouterV2 = /*#__PURE__*/ createUseWriteContract({
   abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
 })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
- *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
 export const useWriteLeverageRouterV2MintWithCalls = /*#__PURE__*/ createUseWriteContract({
   abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
   functionName: 'mintWithCalls',
 })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
- *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
 export const useSimulateLeverageRouterV2 = /*#__PURE__*/ createUseSimulateContract({
   abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
 })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
- *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
 export const useSimulateLeverageRouterV2MintWithCalls = /*#__PURE__*/ createUseSimulateContract({
   abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
   functionName: 'mintWithCalls',
 })
 
@@ -3101,6 +5050,715 @@ export const simulateLeverageManagerMint = /*#__PURE__*/ createSimulateContract(
 })
 
 /**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__
+ */
+export const readLeverageManagerV2 = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"BASE_RATIO"`
+ */
+export const readLeverageManagerV2BaseRatio = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'BASE_RATIO',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"DEFAULT_ADMIN_ROLE"`
+ */
+export const readLeverageManagerV2DefaultAdminRole = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'DEFAULT_ADMIN_ROLE',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"FEE_MANAGER_ROLE"`
+ */
+export const readLeverageManagerV2FeeManagerRole = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'FEE_MANAGER_ROLE',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"UPGRADER_ROLE"`
+ */
+export const readLeverageManagerV2UpgraderRole = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'UPGRADER_ROLE',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"UPGRADE_INTERFACE_VERSION"`
+ */
+export const readLeverageManagerV2UpgradeInterfaceVersion = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'UPGRADE_INTERFACE_VERSION',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertCollateralToDebt"`
+ */
+export const readLeverageManagerV2ConvertCollateralToDebt = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertCollateralToDebt',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertCollateralToShares"`
+ */
+export const readLeverageManagerV2ConvertCollateralToShares = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertCollateralToShares',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertDebtToCollateral"`
+ */
+export const readLeverageManagerV2ConvertDebtToCollateral = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertDebtToCollateral',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertSharesToCollateral"`
+ */
+export const readLeverageManagerV2ConvertSharesToCollateral = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertSharesToCollateral',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertSharesToDebt"`
+ */
+export const readLeverageManagerV2ConvertSharesToDebt = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertSharesToDebt',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertToAssets"`
+ */
+export const readLeverageManagerV2ConvertToAssets = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertToAssets',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertToShares"`
+ */
+export const readLeverageManagerV2ConvertToShares = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'convertToShares',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getDefaultManagementFeeAtCreation"`
+ */
+export const readLeverageManagerV2GetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getFeeAdjustedTotalSupply"`
+ */
+export const readLeverageManagerV2GetFeeAdjustedTotalSupply = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getFeeAdjustedTotalSupply',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLastManagementFeeAccrualTimestamp"`
+ */
+export const readLeverageManagerV2GetLastManagementFeeAccrualTimestamp =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLastManagementFeeAccrualTimestamp',
+  })
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenActionFee"`
+ */
+export const readLeverageManagerV2GetLeverageTokenActionFee = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getLeverageTokenActionFee',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenCollateralAsset"`
+ */
+export const readLeverageManagerV2GetLeverageTokenCollateralAsset =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLeverageTokenCollateralAsset',
+  })
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenConfig"`
+ */
+export const readLeverageManagerV2GetLeverageTokenConfig = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getLeverageTokenConfig',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenDebtAsset"`
+ */
+export const readLeverageManagerV2GetLeverageTokenDebtAsset = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getLeverageTokenDebtAsset',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenFactory"`
+ */
+export const readLeverageManagerV2GetLeverageTokenFactory = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getLeverageTokenFactory',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenInitialCollateralRatio"`
+ */
+export const readLeverageManagerV2GetLeverageTokenInitialCollateralRatio =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLeverageTokenInitialCollateralRatio',
+  })
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenLendingAdapter"`
+ */
+export const readLeverageManagerV2GetLeverageTokenLendingAdapter = /*#__PURE__*/ createReadContract(
+  {
+    abi: leverageManagerV2Abi,
+    functionName: 'getLeverageTokenLendingAdapter',
+  },
+)
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenRebalanceAdapter"`
+ */
+export const readLeverageManagerV2GetLeverageTokenRebalanceAdapter =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'getLeverageTokenRebalanceAdapter',
+  })
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenState"`
+ */
+export const readLeverageManagerV2GetLeverageTokenState = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getLeverageTokenState',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getManagementFee"`
+ */
+export const readLeverageManagerV2GetManagementFee = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getManagementFee',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getRoleAdmin"`
+ */
+export const readLeverageManagerV2GetRoleAdmin = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getRoleAdmin',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getTreasury"`
+ */
+export const readLeverageManagerV2GetTreasury = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getTreasury',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getTreasuryActionFee"`
+ */
+export const readLeverageManagerV2GetTreasuryActionFee = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'getTreasuryActionFee',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"hasRole"`
+ */
+export const readLeverageManagerV2HasRole = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'hasRole',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewDeposit"`
+ */
+export const readLeverageManagerV2PreviewDeposit = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'previewDeposit',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewMint"`
+ */
+export const readLeverageManagerV2PreviewMint = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'previewMint',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewRedeem"`
+ */
+export const readLeverageManagerV2PreviewRedeem = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'previewRedeem',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewWithdraw"`
+ */
+export const readLeverageManagerV2PreviewWithdraw = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'previewWithdraw',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"proxiableUUID"`
+ */
+export const readLeverageManagerV2ProxiableUuid = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'proxiableUUID',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"supportsInterface"`
+ */
+export const readLeverageManagerV2SupportsInterface = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'supportsInterface',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__
+ */
+export const writeLeverageManagerV2 = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"chargeManagementFee"`
+ */
+export const writeLeverageManagerV2ChargeManagementFee = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'chargeManagementFee',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"createNewLeverageToken"`
+ */
+export const writeLeverageManagerV2CreateNewLeverageToken = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'createNewLeverageToken',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"deposit"`
+ */
+export const writeLeverageManagerV2Deposit = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'deposit',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"grantRole"`
+ */
+export const writeLeverageManagerV2GrantRole = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'grantRole',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"initialize"`
+ */
+export const writeLeverageManagerV2Initialize = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'initialize',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"mint"`
+ */
+export const writeLeverageManagerV2Mint = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"rebalance"`
+ */
+export const writeLeverageManagerV2Rebalance = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'rebalance',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"redeem"`
+ */
+export const writeLeverageManagerV2Redeem = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"renounceRole"`
+ */
+export const writeLeverageManagerV2RenounceRole = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'renounceRole',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"revokeRole"`
+ */
+export const writeLeverageManagerV2RevokeRole = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'revokeRole',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
+ */
+export const writeLeverageManagerV2SetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'setDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setManagementFee"`
+ */
+export const writeLeverageManagerV2SetManagementFee = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'setManagementFee',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasury"`
+ */
+export const writeLeverageManagerV2SetTreasury = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'setTreasury',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasuryActionFee"`
+ */
+export const writeLeverageManagerV2SetTreasuryActionFee = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'setTreasuryActionFee',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"upgradeToAndCall"`
+ */
+export const writeLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'upgradeToAndCall',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"withdraw"`
+ */
+export const writeLeverageManagerV2Withdraw = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'withdraw',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__
+ */
+export const simulateLeverageManagerV2 = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"chargeManagementFee"`
+ */
+export const simulateLeverageManagerV2ChargeManagementFee = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'chargeManagementFee',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"createNewLeverageToken"`
+ */
+export const simulateLeverageManagerV2CreateNewLeverageToken = /*#__PURE__*/ createSimulateContract(
+  {
+    abi: leverageManagerV2Abi,
+    functionName: 'createNewLeverageToken',
+  },
+)
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"deposit"`
+ */
+export const simulateLeverageManagerV2Deposit = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'deposit',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"grantRole"`
+ */
+export const simulateLeverageManagerV2GrantRole = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'grantRole',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"initialize"`
+ */
+export const simulateLeverageManagerV2Initialize = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'initialize',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"mint"`
+ */
+export const simulateLeverageManagerV2Mint = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"rebalance"`
+ */
+export const simulateLeverageManagerV2Rebalance = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'rebalance',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"redeem"`
+ */
+export const simulateLeverageManagerV2Redeem = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"renounceRole"`
+ */
+export const simulateLeverageManagerV2RenounceRole = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'renounceRole',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"revokeRole"`
+ */
+export const simulateLeverageManagerV2RevokeRole = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'revokeRole',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
+ */
+export const simulateLeverageManagerV2SetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    functionName: 'setDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setManagementFee"`
+ */
+export const simulateLeverageManagerV2SetManagementFee = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'setManagementFee',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasury"`
+ */
+export const simulateLeverageManagerV2SetTreasury = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'setTreasury',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasuryActionFee"`
+ */
+export const simulateLeverageManagerV2SetTreasuryActionFee = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'setTreasuryActionFee',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"upgradeToAndCall"`
+ */
+export const simulateLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'upgradeToAndCall',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"withdraw"`
+ */
+export const simulateLeverageManagerV2Withdraw = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerV2Abi,
+  functionName: 'withdraw',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__
+ */
+export const watchLeverageManagerV2Event = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"DefaultManagementFeeAtCreationSet"`
+ */
+export const watchLeverageManagerV2DefaultManagementFeeAtCreationSetEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'DefaultManagementFeeAtCreationSet',
+  })
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Initialized"`
+ */
+export const watchLeverageManagerV2InitializedEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'Initialized',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"LeverageManagerInitialized"`
+ */
+export const watchLeverageManagerV2LeverageManagerInitializedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'LeverageManagerInitialized',
+  })
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"LeverageTokenActionFeeSet"`
+ */
+export const watchLeverageManagerV2LeverageTokenActionFeeSetEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'LeverageTokenActionFeeSet',
+  })
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"LeverageTokenCreated"`
+ */
+export const watchLeverageManagerV2LeverageTokenCreatedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'LeverageTokenCreated',
+  })
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"ManagementFeeCharged"`
+ */
+export const watchLeverageManagerV2ManagementFeeChargedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'ManagementFeeCharged',
+  })
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"ManagementFeeSet"`
+ */
+export const watchLeverageManagerV2ManagementFeeSetEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'ManagementFeeSet',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Mint"`
+ */
+export const watchLeverageManagerV2MintEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'Mint',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Rebalance"`
+ */
+export const watchLeverageManagerV2RebalanceEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'Rebalance',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Redeem"`
+ */
+export const watchLeverageManagerV2RedeemEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'Redeem',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleAdminChanged"`
+ */
+export const watchLeverageManagerV2RoleAdminChangedEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'RoleAdminChanged',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleGranted"`
+ */
+export const watchLeverageManagerV2RoleGrantedEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'RoleGranted',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleRevoked"`
+ */
+export const watchLeverageManagerV2RoleRevokedEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'RoleRevoked',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"TreasuryActionFeeSet"`
+ */
+export const watchLeverageManagerV2TreasuryActionFeeSetEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    eventName: 'TreasuryActionFeeSet',
+  })
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"TreasurySet"`
+ */
+export const watchLeverageManagerV2TreasurySetEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'TreasurySet',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Upgraded"`
+ */
+export const watchLeverageManagerV2UpgradedEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerV2Abi,
+  eventName: 'Upgraded',
+})
+
+/**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
@@ -3187,43 +5845,31 @@ export const simulateLeverageRouterRedeem = /*#__PURE__*/ createSimulateContract
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
- *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
 export const writeLeverageRouterV2 = /*#__PURE__*/ createWriteContract({
   abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
 })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
- *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
 export const writeLeverageRouterV2MintWithCalls = /*#__PURE__*/ createWriteContract({
   abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
   functionName: 'mintWithCalls',
 })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
- *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
 export const simulateLeverageRouterV2 = /*#__PURE__*/ createSimulateContract({
   abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
 })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"mintWithCalls"`
- *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
  */
 export const simulateLeverageRouterV2MintWithCalls = /*#__PURE__*/ createSimulateContract({
   abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
   functionName: 'mintWithCalls',
 })
 

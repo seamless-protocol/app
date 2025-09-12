@@ -6,10 +6,19 @@ import { anvil, base } from 'wagmi/chains'
 import { z } from 'zod'
 import { contractAddresses } from '../../src/lib/contracts/addresses.js'
 
-// Load local .env if present (used in integration/e2e runs)
+// Load environment variables for tests (integration/e2e)
+// Priority (first one that provides a key wins):
+// 1) Existing process.env (e.g., from shell)
+// 2) project .env.local
+// 3) project .env
+// 4) tests/integration/.env
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, '..')
-config({ path: resolve(__dirname, '../integration/.env') })
+const projectRoot = resolve(__dirname, '../..')
+// Do not override already-set env vars
+config({ path: resolve(projectRoot, '.env.local'), override: false })
+config({ path: resolve(projectRoot, '.env'), override: false })
+config({ path: resolve(__dirname, '../integration/.env'), override: false })
 
 export type Mode = 'tenderly' | 'anvil'
 
@@ -26,6 +35,9 @@ const Defaults = {
 const EnvSchema = z.object({
   // RPC selection
   TEST_RPC_URL: z.url().optional(),
+  // Allow a generic RPC URL to be provided (e.g., Alchemy)
+  RPC_URL: z.url().optional(),
+  VITE_BASE_RPC_URL: z.url().optional(),
   ANVIL_RPC_URL: z.url().default(Defaults.ANVIL_RPC_URL),
 
   // Keys
@@ -61,6 +73,19 @@ const EnvSchema = z.object({
     .string()
     .regex(/^0x[a-fA-F0-9]{40}$/)
     .optional(),
+  // Legacy/alternate names used in older .env examples
+  TEST_LEVERAGE_MANAGER: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/)
+    .optional(),
+  TEST_LEVERAGE_ROUTER: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/)
+    .optional(),
+  TEST_LEVERAGE_TOKEN_PROXY: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/)
+    .optional(),
   TEST_COLLATERAL: z
     .string()
     .regex(/^0x[a-fA-F0-9]{40}$/)
@@ -73,7 +98,12 @@ const EnvSchema = z.object({
 
 export const Env = EnvSchema.parse(process.env)
 
-const tenderlyPrimary = Env.TEST_RPC_URL
+// Prefer explicit TEST_RPC_URL or generic RPC_URL (e.g. Alchemy), else support VITE_BASE_RPC_URL/TENDERLY_RPC_URL, otherwise fall back to Anvil
+const tenderlyPrimary =
+  Env.TEST_RPC_URL ||
+  Env.RPC_URL ||
+  Env.VITE_BASE_RPC_URL ||
+  (process.env['TENDERLY_RPC_URL'] as string | undefined)
 export const mode: Mode = tenderlyPrimary ? 'tenderly' : 'anvil'
 
 let primaryRpc: string
@@ -95,12 +125,14 @@ if (!baseContracts) {
 
 export const ADDR = {
   factory: baseContracts.leverageTokenFactory as Address,
-  manager: (Env.TEST_MANAGER
-    ? getAddress(Env.TEST_MANAGER)
+  manager: (Env.TEST_MANAGER || Env.TEST_LEVERAGE_MANAGER
+    ? getAddress((Env.TEST_MANAGER || Env.TEST_LEVERAGE_MANAGER) as string)
     : baseContracts.leverageManager) as Address,
-  router: (Env.TEST_ROUTER ? getAddress(Env.TEST_ROUTER) : baseContracts.leverageRouter) as Address,
-  leverageToken: (Env.TEST_LEVERAGE_TOKEN
-    ? getAddress(Env.TEST_LEVERAGE_TOKEN)
+  router: (Env.TEST_ROUTER || Env.TEST_LEVERAGE_ROUTER
+    ? getAddress((Env.TEST_ROUTER || Env.TEST_LEVERAGE_ROUTER) as string)
+    : baseContracts.leverageRouter) as Address,
+  leverageToken: (Env.TEST_LEVERAGE_TOKEN || Env.TEST_LEVERAGE_TOKEN_PROXY
+    ? getAddress((Env.TEST_LEVERAGE_TOKEN || Env.TEST_LEVERAGE_TOKEN_PROXY) as string)
     : ('0xa2fceeae99d2caeee978da27be2d95b0381dbb8c' as Address)) as Address,
   usdc: Env.TEST_USDC
     ? getAddress(Env.TEST_USDC)
