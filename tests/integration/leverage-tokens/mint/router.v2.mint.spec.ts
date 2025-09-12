@@ -1,5 +1,6 @@
 import { type Address, encodeFunctionData, erc20Abi, parseUnits } from 'viem'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { createLifiQuoteAdapter } from '@/domain/mint/adapters/lifi'
 import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from '@/domain/mint/constants'
 import { applySlippageFloor } from '@/domain/mint/math'
 import { leverageManagerAbi, leverageRouterV2Abi } from '@/lib/contracts'
@@ -7,61 +8,9 @@ import { ADDR, mode } from '../../../shared/env'
 import { approveIfNeeded } from '../../../shared/funding'
 import { withFork } from '../../../shared/withFork'
 
-type Quote = { out: bigint; approvalTarget: Address; calldata: `0x${string}` }
+// Adapter returns { out, approvalTarget, calldata }
 
-// Simple LiFi-based quote function for same-chain swaps (Base -> Base)
-// Requires network access; skip this test if not available.
-async function lifiQuote({
-  inToken,
-  outToken,
-  amountIn,
-}: {
-  inToken: Address
-  outToken: Address
-  amountIn: bigint
-}): Promise<Quote> {
-  const fromChainId = 8453
-  const toChainId = 8453
-  const fromAmount = amountIn.toString()
-
-  const base = process.env['LIFI_API_BASE'] ?? 'https://li.quest'
-  const quoteUrl = `${base}/v1/quote?fromChain=${fromChainId}&toChain=${toChainId}&fromToken=${inToken}&toToken=${outToken}&fromAmount=${fromAmount}`
-  const qRes = await fetch(quoteUrl)
-  if (!qRes.ok) throw new Error(`LiFi quote failed: ${qRes.status} ${qRes.statusText}`)
-  const quote = (await qRes.json()) as any
-  const step = quote?.route?.steps?.[0] ?? quote?.steps?.[0]
-  if (!step) throw new Error('LiFi quote: no steps in response')
-
-  const buildUrl =
-    `${base}/v1/stepTransaction?` +
-    new URLSearchParams({
-      fromChain: String(fromChainId),
-      toChain: String(toChainId),
-      fromToken: inToken,
-      toToken: outToken,
-      fromAmount,
-      slippage: '0.005',
-      integrator: 'seamless-protocol-tests',
-    })
-  const txRes = await fetch(buildUrl, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(step),
-  })
-  if (!txRes.ok) throw new Error(`LiFi tx build failed: ${txRes.status} ${txRes.statusText}`)
-  const tx = (await txRes.json())?.transactionRequest as {
-    to: Address
-    data: `0x${string}`
-  }
-  if (!tx?.to || !tx?.data) throw new Error('LiFi tx build: missing to/data')
-
-  // Fetch expected min out to compute plan expectations
-  const out = BigInt(step?.estimate?.toAmount ?? step?.estimate?.toAmountMin ?? '0')
-  const approvalTarget = (step?.estimate?.approvalAddress ||
-    step?.toolDetails?.approvalAddress ||
-    tx?.to) as Address
-  return { out, approvalTarget, calldata: tx.data }
-}
+// Note: LiFi quoting handled via createLifiQuoteAdapter
 
 describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
   beforeAll(() => {
@@ -129,8 +78,9 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
       const neededFromDebtSwap = preview1.collateral - preview1.equity
       expect(neededFromDebtSwap).toBeGreaterThan(0n)
 
-      // Request a quote for swapping previewed debt -> collateral
-      const debtQuote = await lifiQuote({
+      // Request a quote for swapping previewed debt -> collateral using adapter
+      const quoteFn = createLifiQuoteAdapter({ chainId: 8453, router })
+      const debtQuote = await quoteFn({
         inToken: debtAsset,
         outToken: collateralAsset,
         amountIn: preview1.debt,
@@ -145,11 +95,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
       const debtQuote2 =
         debtQuote.out >= neededFromDebtSwap
           ? debtQuote
-          : await lifiQuote({
-              inToken: debtAsset,
-              outToken: collateralAsset,
-              amountIn: debtIn,
-            })
+          : await quoteFn({ inToken: debtAsset, outToken: collateralAsset, amountIn: debtIn })
 
       const totalCollateral = equityInCollateral + debtQuote2.out
       const preview2 = (await publicClient.readContract({
