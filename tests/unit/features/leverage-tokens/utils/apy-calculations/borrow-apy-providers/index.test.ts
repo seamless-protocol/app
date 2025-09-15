@@ -18,9 +18,7 @@ import {
   LeverageTokenKey,
   leverageTokenConfigs,
 } from '@/features/leverage-tokens/leverageTokens.config'
-import {
-  fetchBorrowApyForToken,
-} from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
+import { fetchBorrowApyForToken } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
 import { MorphoBorrowApyProvider } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers/morpho'
 
 // Mock the MorphoBorrowApyProvider

@@ -1,9 +1,10 @@
 import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  fetchRewardsAprForToken,
-} from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
+// Unmock the rewards providers for this test
+vi.unmock('@/features/leverage-tokens/utils/apy-calculations/rewards-providers')
+
+import { fetchRewardsAprForToken } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
 
 describe('Rewards Providers', () => {
   const tokenAddress = '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address
@@ -35,17 +36,17 @@ describe('Rewards Providers', () => {
     it('should throw error for unsupported chain ID', async () => {
       const unsupportedChainId = 1 // Ethereum
 
-      await expect(
-        fetchRewardsAprForToken(tokenAddress, unsupportedChainId),
-      ).rejects.toThrow('No rewards APR provider found for chain ID: 1')
+      await expect(fetchRewardsAprForToken(tokenAddress, unsupportedChainId)).rejects.toThrow(
+        'No rewards APR provider found for chain ID: 1',
+      )
     })
 
     it('should throw error for unsupported chain ID 2', async () => {
       const unsupportedChainId = 137 // Polygon
 
-      await expect(
-        fetchRewardsAprForToken(tokenAddress, unsupportedChainId),
-      ).rejects.toThrow('No rewards APR provider found for chain ID: 137')
+      await expect(fetchRewardsAprForToken(tokenAddress, unsupportedChainId)).rejects.toThrow(
+        'No rewards APR provider found for chain ID: 137',
+      )
     })
 
     it('should handle case where chain ID is 0', async () => {
@@ -59,9 +60,9 @@ describe('Rewards Providers', () => {
     it('should handle negative chain ID', async () => {
       const negativeChainId = -1
 
-      await expect(
-        fetchRewardsAprForToken(tokenAddress, negativeChainId),
-      ).rejects.toThrow('No rewards APR provider found for chain ID: -1')
+      await expect(fetchRewardsAprForToken(tokenAddress, negativeChainId)).rejects.toThrow(
+        'No rewards APR provider found for chain ID: -1',
+      )
     })
   })
 

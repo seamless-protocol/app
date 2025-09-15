@@ -140,7 +140,7 @@ describe('useLeverageTokenAPY', () => {
         chainId,
         expect.any(Object),
       )
-      expect(mockFetchRewardsAprForToken).toHaveBeenCalledWith({ chainId, tokenAddress })
+      expect(mockFetchRewardsAprForToken).toHaveBeenCalledWith(tokenAddress, chainId)
 
       // Verify the calculated APY data
       const apyData = result.current.data

@@ -17,9 +17,7 @@ import {
   LeverageTokenKey,
   leverageTokenConfigs,
 } from '@/features/leverage-tokens/leverageTokens.config'
-import {
-  fetchAprForToken,
-} from '@/features/leverage-tokens/utils/apy-calculations/apr-providers'
+import { fetchAprForToken } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers'
 import { EtherFiAprProvider } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/etherfi'
 
 // Mock the EtherFiAprProvider
@@ -135,7 +133,6 @@ describe('APR Providers', () => {
       )
     })
   })
-
 
   describe('provider selection logic', () => {
     it('should create new provider instance for each call', async () => {
