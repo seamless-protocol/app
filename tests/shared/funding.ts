@@ -15,8 +15,9 @@ export async function topUpNative(to: Address, ether: string) {
     await testClient.setBalance({ address: to, value: parseUnits(ether, 18) })
     return
   }
-  // Tenderly expects array of addresses as first parameter
-  await adminRequest('tenderly_setBalance', [[to], toHex(parseUnits(ether, 18))])
+  // Use tenderly_addBalance so the action surfaces as a transaction in the VNet explorer
+  // (setBalance performs a direct state write and may not show as a tx)
+  await adminRequest('tenderly_addBalance', [[to], toHex(parseUnits(ether, 18))])
 }
 
 /** Set ERC-20 balance via admin RPC (Tenderly) */

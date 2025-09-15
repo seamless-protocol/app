@@ -114,8 +114,10 @@ if (mode === 'tenderly') {
 } else {
   primaryRpc = Env.ANVIL_RPC_URL
 }
-// For both Tenderly and Anvil, admin and primary are the same endpoint
-export const RPC = { primary: primaryRpc, admin: primaryRpc }
+
+// Allow a dedicated admin endpoint when using Tenderly VNets; otherwise fallback to primary
+const adminRpc = (process.env['TENDERLY_ADMIN_RPC_URL'] as string | undefined) || primaryRpc
+export const RPC = { primary: primaryRpc, admin: adminRpc }
 
 // Use deployed contract addresses from config
 const baseContracts = contractAddresses[base.id]
