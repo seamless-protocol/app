@@ -2,8 +2,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FeaturedLeverageTokens } from '@/features/leverage-tokens/components/FeaturedLeverageToken'
-import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
-import { LeverageTokenTable } from '@/features/leverage-tokens/components/LeverageTokenTable'
+import {
+  type LeverageToken,
+  LeverageTokenTable,
+} from '@/features/leverage-tokens/components/leverage-token-table'
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import { useLeverageTokensTableData } from '@/features/leverage-tokens/hooks/useLeverageTokensTableData'
 import { features } from '@/lib/config/features'
@@ -37,7 +39,7 @@ export const Route = createFileRoute('/tokens/')({
 
     return (
       <div className="min-h-screen w-full overflow-hidden">
-        <div className="w-100 sm:w-full max-w-7xl mx-auto space-y-6 sm:space-y-8 sm:px-4 lg:px-8">
+        <div className="w-full max-w-7xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-4 lg:px-8">
           {/* Featured Leverage Tokens Section */}
           {features.featuredTokensSection && (
             <div className="overflow-hidden w-full p-1">

@@ -6,7 +6,7 @@ import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent } from '../../../components/ui/card'
 import { Skeleton } from '../../../components/ui/skeleton'
-import type { LeverageToken } from './LeverageTokenTable'
+import type { LeverageToken } from './leverage-token-table'
 
 export type { LeverageToken }
 
