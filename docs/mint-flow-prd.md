@@ -17,7 +17,7 @@
   - Cost cap: `maxSwapCostInCollateral` (default 2% of user collateral contribution; user-overridable).
 - Router v1: `mint(token, equityInCollateralAsset, minShares, maxSwapCost, SwapContext)`; no user conversion.
 - Router v2: `deposit(token, collateralFromSender, flashLoanAmount, minShares, Call[])`.
-  - User conversion via Call[] is only possible if the router can pull the user’s input token prior to deposit; otherwise, user must supply collateral asset directly (conversion is a pre-step outside the tx).
+  - Initial scope: collateral-only from user on v2 as well (keep it simple). Future: add optional input→collateral conversion via Call[] if/when the router supports pulling user input tokens before deposit.
 
 ## 2) Module Map (3 layers)
 ### A) Planner (pure TypeScript)
@@ -33,7 +33,7 @@
   - `finalPreview(token, totalCollateral)` → { previewDebt, previewShares }
   - Impl preference:
     - ideal: `router.previewDeposit` (if available), else `manager.previewMint(token, equity=userCollateral)`.
-    - final: `manager.previewDeposit(token, totalCollateral)` if available; else binary-search `previewMint` to match collateral.
+    - final: `manager.previewDeposit(token, totalCollateral)` if available; else use `manager.previewMint(token, equity=totalCollateral)` as an approximation (no binary search in initial scope).
 
 ### C) Orchestrator
 - Detect router version (env override or runtime probe).
@@ -45,18 +45,29 @@
 ```ts
 // Planner result
 type Plan = {
+  // Token's collateral ERC-20 address (from manager)
   collateralAsset: Address
+  // Token's debt ERC-20 address (from manager)
   debtAsset: Address
+  // Amount of collateral contributed by the user after any input->collateral conversion
   userCollateralAfterConversion: bigint
+  // Total collateral used in deposit = userCollateralAfterConversion + debtSwapOut
   expectedTotalCollateral: bigint
+  // Debt the manager will borrow given the total collateral (used to repay flash loan)
   expectedDebt: bigint
+  // Shares expected to mint given the total collateral
   expectedShares: bigint
+  // Flash-loan principal (debt asset) sized for the final quote (scaled if underfill)
   flashLoanAmount: bigint
+  // User-protective floor on shares minted (slippageBps applied)
   minShares: bigint
   // v2
+  // Encoded calls (approve + swap) executed by router; excludes user conversion in initial scope
   calls?: Array<{ target: Address; data: Hex; value?: bigint }>
+  // Collateral the router pulls from the user for deposit (v2 deposit arg)
   collateralFromSender: bigint // for v2 deposit()
   // v1
+  // Adapter-specific context for the v1 router swap leg
   swapContext?: unknown
 }
 
@@ -108,7 +119,7 @@ Steps:
 - `minShares = floor(final.previewShares * (1 − slippageBps/10_000))`.
 
 5) Assemble outputs:
-- v2: `calls = [ (optional) input conversion..., approve(debt→agg), swap(debt→collateral) ]`.
+- v2 (initial scope): `calls = [ approve(debt→agg), swap(debt→collateral) ]` (no user conversion yet); `collateralFromSender = userCollateralAfterConversion` (which equals the user’s input if already collateral).
 - v1: `swapContext = buildSwapContext(collateralAsset, debtAsset, chainId)`.
 
 Return: `Plan`.
@@ -124,7 +135,7 @@ Return: `Plan`.
 - v2
   - Preview: `router.previewDeposit(token, userCollateral)`.
   - Invoke: `router.deposit(token, collateralFromSender, flashLoanAmount, minShares, calls[])`.
-  - User conversion calls only if router supports pulling user input tokens; otherwise user must supply collateral asset as `collateralFromSender`.
+  - Initial scope: collateral-only from user; do not include input-conversion calls yet.
 - v1
   - Preview: delegate to `managerPort.idealPreview`.
   - Invoke: `router.mint(token, equityInCollateralAsset, minShares, maxSwapCost, swapContext)`; collateral-only.
@@ -133,7 +144,7 @@ Return: `Plan`.
 - Version selection: `VITE_ROUTER_VERSION=auto|v1|v2` (default `auto`).
   - auto: if v2 addresses provided (VNet), use v2; else v1.
 - Ensure allowance:
-  - v2: input asset to router (only if conversion supported); otherwise collateral to router.
+  - v2: collateral asset to router (initial scope). Future: if conversion supported, approve input asset to router.
   - v1: collateral to router.
 - `maxSwapCostInCollateral`: default 2% of `userCollateralAfterConversion` (expose override in UI Advanced panel).
 - Invoke the selected router port with mapped args from the Plan.
@@ -171,7 +182,7 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 
 ### Integration (fork/Tenderly)
 - v2 (VNet), input=collateral: success; shares ≥ minShares; tiny excess debt returned.
-- v2 (VNet), input≠collateral: single-tx success only if router supports pulling user tokens; otherwise out-of-scope.
+- v2 (VNet), input≠collateral: out-of-scope for initial delivery (to be added behind a flag once supported).
 - v1 (Base), collateral-only: success; non-collateral input → planner rejection.
 
 ### E2E (Playwright)
@@ -209,5 +220,20 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 - Base mainnet: use v1 addresses from `src/lib/contracts/addresses.ts` (no v2 env provided → auto selects v1).
 
 ## 16) Open Items
-- Confirm whether v2 router supports pulling arbitrary user input tokens before deposit (required for in-tx user conversion). If not, user must supply collateral asset; conversion remains a pre-step.
-- Confirm v2 addresses for VNet and how they’re injected (env keys/names).
+- Future: add optional user conversion (e.g., WETH→weETH) via Call[] if router supports pulling user tokens.
+- VNet v2 addresses are provided below and should be injected via env/config.
+
+## 17) Tenderly VNet (v2) Addresses
+- LeverageToken implementation: `0xfFEF572c179AC02F6285B0da7CB27176A725a8A1`
+- LeverageToken factory: `0xA6737ca46336A7714E311597c6C07A18A3aFdCB8`
+- LeverageManager: `0x959c574EC9A40b64245A3cF89b150Dc278e9E55C`
+- LendingAdapter implementation: `0x561D3Fa598AFa651b4133Dc01874C8FfEbBD4817`
+- LendingAdapterFactory: `0x04f20d88254Dc375A7eF5D9bC6Cf4AAE65C18583`
+- MulticallExecutor: `0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd`
+- VeloraAdaptor: `0x1162c0c4491f143ab4142e4c3d349bcb8df77b96`
+- LeverageRouter: `0xfd46483b299197c616671b7df295ca5186c805c2`
+- RebalanceAdapter: `0x85416Da07e256d7c058938aDb9D13d7F3d3eCAc3`
+- LendingAdapter proxy: `0xbA63aC9B956EF23F8788dE4EdD4c264b5dF35fA0`
+- LeverageToken (WEETH-WETH 17x): `0x17533ef332083aD03417DEe7BC058D10e18b22c5`
+
+Env injection: expose these via `VITE_ROUTER_V2_ADDRESS`, `VITE_MANAGER_V2_ADDRESS`, and similar keys for CI/Tenderly. Or add a `contractAddresses['vnet']` entry populated at runtime from env.
