@@ -48,9 +48,16 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     slippageBps = DEFAULT_SLIPPAGE_BPS,
     // Always use li.quest as documented by LiFi for /v1/quote
     baseUrl = opts.baseUrl ?? 'https://li.quest',
-    apiKey = process.env['LIFI_API_KEY'],
+    // Support both browser (import.meta.env) and Node.js (process.env) environments
+    apiKey = opts.apiKey ?? 
+      (typeof import.meta !== 'undefined' && import.meta.env 
+        ? (import.meta.env['VITE_LIFI_API_KEY'] as string | undefined)
+        : process.env['LIFI_API_KEY']),
     order = 'CHEAPEST',
-    integrator = process.env['LIFI_INTEGRATOR'],
+    // Support both browser and Node.js environments for integrator
+    integrator = typeof import.meta !== 'undefined' && import.meta.env
+      ? (import.meta.env['VITE_LIFI_INTEGRATOR'] as string | undefined)
+      : process.env['LIFI_INTEGRATOR'],
     allowBridges,
   } = opts
 

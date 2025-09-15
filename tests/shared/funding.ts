@@ -108,7 +108,15 @@ export async function approveIfNeeded(token: Address, spender: Address, minAmoun
     functionName: 'allowance',
     args: [account.address, spender],
   })
+  console.info('approveIfNeeded: current allowance', {
+    token,
+    spender,
+    currentAllowance: (allowance as bigint).toString(),
+    requiredAmount: minAmount.toString(),
+    needsApproval: (allowance as bigint) < minAmount,
+  })
   if ((allowance as bigint) >= minAmount) return
+  console.info('approveIfNeeded: sending approval tx...')
   const hash = await walletClient.writeContract({
     address: token,
     abi: erc20Abi,
@@ -116,4 +124,5 @@ export async function approveIfNeeded(token: Address, spender: Address, minAmoun
     args: [spender, maxUint256],
   })
   await publicClient.waitForTransactionReceipt({ hash })
+  console.info('approveIfNeeded: approval tx confirmed', { hash })
 }
