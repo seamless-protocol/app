@@ -99,6 +99,9 @@ The app is designed for 7 incremental production releases:
 - **Biome** for linting and formatting
 - Run `bun check:fix` after changes
 
+### Naming & Readability
+- **Descriptive variable names**: Avoid single-letter variable names except for trivial indices in very small scopes. Prefer meaningful names that convey intent (e.g., `previewWithTotalCollateral` over `p`, `debtQuote` over `dq`). This applies across domain code, ports, planners, and tests.
+
 ### Function Style
 - **Function declarations**: Prefer for exported utilities and domain-layer helpers when hoisting improves readability (main flow first, helpers below). Useful if overloads are expected or to keep stack names clear.
 - **Arrow functions**: Prefer inside React components/hooks and for callbacks/handlers. Use for small, module-local helpers that capture lexical scope. Always use arrows for array methods, event handlers, and React props.
