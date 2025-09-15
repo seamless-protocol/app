@@ -22,6 +22,9 @@ export const features = {
   advancedFilters: import.meta.env['VITE_ENABLE_ADVANCED_FILTERS'] === 'true',
   portfolioPnl: import.meta.env['VITE_ENABLE_PORTFOLIO_PNL'] === 'true',
 
+  // UI Display Features
+  featuredTokensSection: import.meta.env['VITE_ENABLE_FEATURED_LEVERAGE_TOKENS'] !== 'false',
+
   // Testing
   testMode: import.meta.env['VITE_TEST_MODE'] === 'mock',
 } as const
