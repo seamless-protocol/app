@@ -57,7 +57,13 @@ export async function adminRequest<T = unknown>(method: string, params: Array<an
       method,
       // Avoid dumping large payloads; show brief param summary
       paramsPreview: Array.isArray(params)
-        ? params.map((p) => (typeof p === 'string' ? `${p.slice(0, 10)}...` : Array.isArray(p) ? `[${p.length}]` : typeof p))
+        ? params.map((p) =>
+            typeof p === 'string'
+              ? `${p.slice(0, 10)}...`
+              : Array.isArray(p)
+                ? `[${p.length}]`
+                : typeof p,
+          )
         : typeof params,
     })
     const req = (

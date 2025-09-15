@@ -88,6 +88,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
       const quoteDebtToCollateral = createLifiQuoteAdapter({
         chainId: base.id,
         router,
+        ...(ADDR.executor ? { fromAddress: ADDR.executor } : {}),
         allowBridges: 'none',
       })
       const quoteSpy = async (args: { inToken: Address; outToken: Address; amountIn: bigint }) => {

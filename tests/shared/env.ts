@@ -86,6 +86,10 @@ const EnvSchema = z.object({
     .string()
     .regex(/^0x[a-fA-F0-9]{40}$/)
     .optional(),
+  TEST_MULTICALL_EXECUTOR: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/)
+    .optional(),
   TEST_COLLATERAL: z
     .string()
     .regex(/^0x[a-fA-F0-9]{40}$/)
@@ -141,6 +145,9 @@ export const ADDR = {
     : ('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as Address),
   weth: getAddress(Env.TEST_WETH ?? '0x4200000000000000000000000000000000000006'),
   weeth: getAddress(Env.TEST_WEETH),
+  executor: Env.TEST_MULTICALL_EXECUTOR
+    ? getAddress(Env.TEST_MULTICALL_EXECUTOR)
+    : (undefined as unknown as Address),
   // Optional overrides for collateral/debt in custom deployments
   collateral: Env.TEST_COLLATERAL ? getAddress(Env.TEST_COLLATERAL) : undefined,
   debt: Env.TEST_DEBT ? getAddress(Env.TEST_DEBT) : undefined,
