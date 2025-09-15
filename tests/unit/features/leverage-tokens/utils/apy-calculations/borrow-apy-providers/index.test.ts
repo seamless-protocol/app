@@ -20,7 +20,6 @@ import {
 } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   fetchBorrowApyForToken,
-  fetchGenericBorrowApy,
 } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
 import { MorphoBorrowApyProvider } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers/morpho'
 
@@ -39,7 +38,7 @@ describe('Borrow APY Providers', () => {
     vi.clearAllMocks()
   })
 
-  describe('fetchGenericBorrowApy', () => {
+  describe('fetchBorrowApyForToken', () => {
     it('should route to Morpho provider for supported token on Base', async () => {
       const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
         ?.address as Address
@@ -53,7 +52,7 @@ describe('Borrow APY Providers', () => {
 
       vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
-      const result = await fetchGenericBorrowApy(supportedTokenAddress, chainId, mockConfig)
+      const result = await fetchBorrowApyForToken(supportedTokenAddress, chainId, mockConfig)
 
       expect(result).toEqual(mockBorrowApyData)
       expect(MorphoBorrowApyProvider).toHaveBeenCalledTimes(1)
@@ -78,7 +77,7 @@ describe('Borrow APY Providers', () => {
 
       vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
-      const result = await fetchGenericBorrowApy(upperCaseTokenAddress, chainId, mockConfig)
+      const result = await fetchBorrowApyForToken(upperCaseTokenAddress, chainId, mockConfig)
 
       expect(result).toEqual(mockBorrowApyData)
       expect(mockProviderInstance.fetchBorrowApy).toHaveBeenCalledWith(
@@ -92,7 +91,7 @@ describe('Borrow APY Providers', () => {
       const unsupportedTokenAddress = '0x1234567890123456789012345678901234567890' as Address
 
       await expect(
-        fetchGenericBorrowApy(unsupportedTokenAddress, chainId, mockConfig),
+        fetchBorrowApyForToken(unsupportedTokenAddress, chainId, mockConfig),
       ).rejects.toThrow(
         'Unsupported token address for borrow APY: 0x1234567890123456789012345678901234567890',
       )
@@ -104,7 +103,7 @@ describe('Borrow APY Providers', () => {
       const unsupportedChainId = 1 // Ethereum
 
       await expect(
-        fetchGenericBorrowApy(supportedTokenAddress, unsupportedChainId, mockConfig),
+        fetchBorrowApyForToken(supportedTokenAddress, unsupportedChainId, mockConfig),
       ).rejects.toThrow('Unsupported chain ID for borrow APY: 1')
     })
 
@@ -122,13 +121,13 @@ describe('Borrow APY Providers', () => {
       vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
       await expect(
-        fetchGenericBorrowApy(supportedTokenAddress, chainId, mockConfig),
+        fetchBorrowApyForToken(supportedTokenAddress, chainId, mockConfig),
       ).rejects.toThrow('Provider fetch failed')
     })
   })
 
   describe('fetchBorrowApyForToken', () => {
-    it('should be a wrapper around fetchGenericBorrowApy', async () => {
+    it('should be a wrapper around fetchBorrowApyForToken', async () => {
       const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
         ?.address as Address
       const mockBorrowApyData = { borrowAPY: 0.0387 }
@@ -189,8 +188,8 @@ describe('Borrow APY Providers', () => {
       vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
       // Call multiple times
-      await fetchGenericBorrowApy(supportedTokenAddress, chainId, mockConfig)
-      await fetchGenericBorrowApy(supportedTokenAddress, chainId, mockConfig)
+      await fetchBorrowApyForToken(supportedTokenAddress, chainId, mockConfig)
+      await fetchBorrowApyForToken(supportedTokenAddress, chainId, mockConfig)
 
       // Should create new instance each time
       expect(MorphoBorrowApyProvider).toHaveBeenCalledTimes(2)
@@ -212,7 +211,7 @@ describe('Borrow APY Providers', () => {
       // Mock console.log to verify logging
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-      await fetchGenericBorrowApy(supportedTokenAddress, chainId, mockConfig)
+      await fetchBorrowApyForToken(supportedTokenAddress, chainId, mockConfig)
 
       expect(consoleSpy).toHaveBeenCalledWith(
         `Fetching borrow APY for ${supportedTokenAddress} on chain ${chainId} using Morpho`,

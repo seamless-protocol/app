@@ -1,28 +1,29 @@
 import type { Address } from 'viem'
 import { MerklRewardsAprProvider } from './merkl'
-import type { BaseRewardsAprData, RewardsAprFetcher, RewardsAprProviderConfig } from './types'
+import type { BaseRewardsAprData, RewardsAprFetcher } from './types'
 
 /**
- * Generic function to fetch rewards APR using the appropriate provider
+ * Function to fetch rewards APR using the appropriate provider
  * Returns default data (0% APR) when provider fails
  */
-export async function fetchGenericRewardsApr(
-  config: RewardsAprProviderConfig,
+export async function fetchRewardsAprForToken(
+  tokenAddress: Address,
+  chainId: number,
 ): Promise<BaseRewardsAprData> {
   // Inline provider selection
   let provider: RewardsAprFetcher
 
-  switch (config.chainId) {
+  switch (chainId) {
     case 8453: // Base
       provider = new MerklRewardsAprProvider()
-      console.log('Fetching rewards APR for Base chain using Merkl, token:', config.tokenAddress)
+      console.log('Fetching rewards APR for Base chain using Merkl, token:', tokenAddress)
       break
     default:
-      throw new Error(`No rewards APR provider found for chain ID: ${config.chainId}`)
+      throw new Error(`No rewards APR provider found for chain ID: ${chainId}`)
   }
 
   try {
-    return await provider.fetchRewardsApr(config.tokenAddress, config.chainId)
+    return await provider.fetchRewardsApr(tokenAddress, chainId)
   } catch (error) {
     console.error('[Rewards Provider] Provider failed, returning default data:', error)
     // Return default data when provider fails
@@ -31,16 +32,3 @@ export async function fetchGenericRewardsApr(
     }
   }
 }
-
-/**
- * Hook-friendly wrapper for the generic rewards APR fetcher
- */
-export async function fetchRewardsAprForToken(
-  tokenAddress: Address,
-  chainId: number,
-): Promise<BaseRewardsAprData> {
-  return fetchGenericRewardsApr({ tokenAddress, chainId })
-}
-
-// Export types
-export type { BaseRewardsAprData, RewardsAprFetcher, RewardsAprProviderConfig }

@@ -19,7 +19,6 @@ import {
 } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   fetchAprForToken,
-  fetchGenericApr,
 } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers'
 import { EtherFiAprProvider } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/etherfi'
 
@@ -37,7 +36,7 @@ describe('APR Providers', () => {
     vi.clearAllMocks()
   })
 
-  describe('fetchGenericApr', () => {
+  describe('fetchAprForToken', () => {
     it('should route to EtherFi provider for supported token on Base', async () => {
       const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
         ?.address as Address
@@ -62,7 +61,7 @@ describe('APR Providers', () => {
 
       vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
-      const result = await fetchGenericApr(supportedTokenAddress, chainId)
+      const result = await fetchAprForToken(supportedTokenAddress, chainId)
 
       expect(result).toEqual(mockAprData)
       expect(EtherFiAprProvider).toHaveBeenCalledTimes(1)
@@ -94,7 +93,7 @@ describe('APR Providers', () => {
 
       vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
-      const result = await fetchGenericApr(upperCaseTokenAddress, chainId)
+      const result = await fetchAprForToken(upperCaseTokenAddress, chainId)
 
       expect(result).toEqual(mockAprData)
       expect(mockProviderInstance.fetchApr).toHaveBeenCalledWith()
@@ -103,7 +102,7 @@ describe('APR Providers', () => {
     it('should throw error for unsupported token address on Base', async () => {
       const unsupportedTokenAddress = '0x1234567890123456789012345678901234567890' as Address
 
-      await expect(fetchGenericApr(unsupportedTokenAddress, chainId)).rejects.toThrow(
+      await expect(fetchAprForToken(unsupportedTokenAddress, chainId)).rejects.toThrow(
         'Unsupported token address: 0x1234567890123456789012345678901234567890',
       )
     })
@@ -113,7 +112,7 @@ describe('APR Providers', () => {
         ?.address as Address
       const unsupportedChainId = 1 // Ethereum
 
-      await expect(fetchGenericApr(supportedTokenAddress, unsupportedChainId)).rejects.toThrow(
+      await expect(fetchAprForToken(supportedTokenAddress, unsupportedChainId)).rejects.toThrow(
         'Unsupported chain ID: 1',
       )
     })
@@ -131,72 +130,12 @@ describe('APR Providers', () => {
 
       vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
-      await expect(fetchGenericApr(supportedTokenAddress, chainId)).rejects.toThrow(
+      await expect(fetchAprForToken(supportedTokenAddress, chainId)).rejects.toThrow(
         'Provider fetch failed',
       )
     })
   })
 
-  describe('fetchAprForToken', () => {
-    it('should be a wrapper around fetchGenericApr', async () => {
-      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
-        ?.address as Address
-      const mockAprData = {
-        sevenDayApr: 5.2,
-        sevenDayRestakingApr: 2.1,
-        bufferEth: 1000,
-        totalAPR: 7.3,
-        stakingAPR: 5.2,
-        restakingAPR: 2.1,
-        metadata: {
-          raw: {},
-          useRestakingApr: true,
-        },
-      }
-
-      const mockProviderInstance = {
-        protocolId: 'etherfi',
-        protocolName: 'Ether.fi',
-        fetchApr: vi.fn().mockResolvedValue(mockAprData),
-      }
-
-      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
-
-      const result = await fetchAprForToken(supportedTokenAddress, chainId)
-
-      expect(result).toEqual(mockAprData)
-      expect(mockProviderInstance.fetchApr).toHaveBeenCalledWith()
-    })
-
-    it('should pass through all parameters correctly', async () => {
-      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
-        ?.address as Address
-      const mockAprData = {
-        sevenDayApr: 3.5,
-        sevenDayRestakingApr: 1.8,
-        bufferEth: 500,
-        totalAPR: 5.3,
-        stakingAPR: 3.5,
-        restakingAPR: 1.8,
-        metadata: {
-          raw: {},
-          useRestakingApr: true,
-        },
-      }
-
-      const mockProviderInstance = {
-        protocolId: 'etherfi',
-        protocolName: 'Ether.fi',
-        fetchApr: vi.fn().mockResolvedValue(mockAprData),
-      }
-
-      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
-
-      await fetchAprForToken(supportedTokenAddress, chainId)
-
-      expect(mockProviderInstance.fetchApr).toHaveBeenCalledWith()
-    })
-  })
 
   describe('provider selection logic', () => {
     it('should create new provider instance for each call', async () => {
@@ -224,8 +163,8 @@ describe('APR Providers', () => {
       vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
       // Call multiple times
-      await fetchGenericApr(supportedTokenAddress, chainId)
-      await fetchGenericApr(supportedTokenAddress, chainId)
+      await fetchAprForToken(supportedTokenAddress, chainId)
+      await fetchAprForToken(supportedTokenAddress, chainId)
 
       // Should create new instance each time
       expect(EtherFiAprProvider).toHaveBeenCalledTimes(2)
@@ -258,7 +197,7 @@ describe('APR Providers', () => {
       // Mock console.log to verify logging
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-      await fetchGenericApr(supportedTokenAddress, chainId)
+      await fetchAprForToken(supportedTokenAddress, chainId)
 
       expect(consoleSpy).toHaveBeenCalledWith(
         `Fetching APR for ${supportedTokenAddress} on chain ${chainId} using Ether.fi`,

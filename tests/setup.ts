@@ -143,7 +143,7 @@ vi.mock('@/features/leverage-tokens/utils/apy-calculations/leverage-ratios', () 
 }))
 
 vi.mock('@/features/leverage-tokens/utils/apy-calculations/rewards-providers', () => ({
-  fetchGenericRewardsApr: vi.fn(),
+  fetchRewardsAprForToken: vi.fn(),
 }))
 
 // Mock GraphQL fetchers

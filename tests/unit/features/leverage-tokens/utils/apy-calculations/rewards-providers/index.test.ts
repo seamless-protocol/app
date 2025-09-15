@@ -2,7 +2,6 @@ import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
-  fetchGenericRewardsApr,
   fetchRewardsAprForToken,
 } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
 
@@ -14,9 +13,9 @@ describe('Rewards Providers', () => {
     vi.clearAllMocks()
   })
 
-  describe('fetchGenericRewardsApr', () => {
+  describe('fetchRewardsAprForToken', () => {
     it('should be mocked and return default data', async () => {
-      const result = await fetchGenericRewardsApr({ chainId, tokenAddress })
+      const result = await fetchRewardsAprForToken(tokenAddress, chainId)
 
       expect(result).toEqual({
         rewardsAPR: 0,
@@ -26,7 +25,7 @@ describe('Rewards Providers', () => {
     it('should handle different token addresses', async () => {
       const differentTokenAddress = '0x1234567890123456789012345678901234567890' as Address
 
-      const result = await fetchGenericRewardsApr({ chainId, tokenAddress: differentTokenAddress })
+      const result = await fetchRewardsAprForToken(differentTokenAddress, chainId)
 
       expect(result).toEqual({
         rewardsAPR: 0,
@@ -37,7 +36,7 @@ describe('Rewards Providers', () => {
       const unsupportedChainId = 1 // Ethereum
 
       await expect(
-        fetchGenericRewardsApr({ chainId: unsupportedChainId, tokenAddress }),
+        fetchRewardsAprForToken(tokenAddress, unsupportedChainId),
       ).rejects.toThrow('No rewards APR provider found for chain ID: 1')
     })
 
@@ -45,14 +44,14 @@ describe('Rewards Providers', () => {
       const unsupportedChainId = 137 // Polygon
 
       await expect(
-        fetchGenericRewardsApr({ chainId: unsupportedChainId, tokenAddress }),
+        fetchRewardsAprForToken(tokenAddress, unsupportedChainId),
       ).rejects.toThrow('No rewards APR provider found for chain ID: 137')
     })
 
     it('should handle case where chain ID is 0', async () => {
       const chainIdZero = 0
 
-      await expect(fetchGenericRewardsApr({ chainId: chainIdZero, tokenAddress })).rejects.toThrow(
+      await expect(fetchRewardsAprForToken(tokenAddress, chainIdZero)).rejects.toThrow(
         'No rewards APR provider found for chain ID: 0',
       )
     })
@@ -61,13 +60,13 @@ describe('Rewards Providers', () => {
       const negativeChainId = -1
 
       await expect(
-        fetchGenericRewardsApr({ chainId: negativeChainId, tokenAddress }),
+        fetchRewardsAprForToken(tokenAddress, negativeChainId),
       ).rejects.toThrow('No rewards APR provider found for chain ID: -1')
     })
   })
 
   describe('fetchRewardsAprForToken', () => {
-    it('should be a wrapper around fetchGenericRewardsApr', async () => {
+    it('should be a wrapper around fetchRewardsAprForToken', async () => {
       const result = await fetchRewardsAprForToken(tokenAddress, chainId)
 
       expect(result).toEqual({
@@ -86,7 +85,7 @@ describe('Rewards Providers', () => {
 
   describe('provider selection logic', () => {
     it('should handle Base chain configuration', async () => {
-      const result = await fetchGenericRewardsApr({ chainId, tokenAddress })
+      const result = await fetchRewardsAprForToken(tokenAddress, chainId)
 
       expect(result).toEqual({
         rewardsAPR: 0,
@@ -95,10 +94,7 @@ describe('Rewards Providers', () => {
 
     it('should handle multiple concurrent requests', async () => {
       const requests = Array.from({ length: 5 }, (_, i) =>
-        fetchGenericRewardsApr({
-          chainId,
-          tokenAddress: `0x${i.toString().padStart(40, '0')}` as Address,
-        }),
+        fetchRewardsAprForToken(`0x${i.toString().padStart(40, '0')}` as Address, chainId),
       )
 
       const results = await Promise.all(requests)
@@ -120,13 +116,13 @@ describe('Rewards Providers', () => {
 
       // Test supported chain
       for (const chainId of supportedChains) {
-        const result = await fetchGenericRewardsApr({ chainId, tokenAddress })
+        const result = await fetchRewardsAprForToken(tokenAddress, chainId)
         expect(result).toEqual({ rewardsAPR: 0 })
       }
 
       // Test unsupported chains
       for (const chainId of unsupportedChains) {
-        await expect(fetchGenericRewardsApr({ chainId, tokenAddress })).rejects.toThrow(
+        await expect(fetchRewardsAprForToken(tokenAddress, chainId)).rejects.toThrow(
           `No rewards APR provider found for chain ID: ${chainId}`,
         )
       }

@@ -5,9 +5,9 @@ import { MorphoBorrowApyProvider } from './morpho'
 import type { BaseBorrowApyData } from './types'
 
 /**
- * Generic borrow APY fetcher that routes to the appropriate provider based on token address and chain ID
+ * Borrow APY fetcher that routes to the appropriate provider based on token address and chain ID
  */
-export async function fetchGenericBorrowApy(
+export async function fetchBorrowApyForToken(
   tokenAddress: Address,
   chainId: number,
   config: Config,
@@ -32,15 +32,4 @@ export async function fetchGenericBorrowApy(
   }
 
   return await provider.fetchBorrowApy(tokenAddress, chainId, config)
-}
-
-/**
- * Hook-friendly wrapper for the generic borrow APY fetcher
- */
-export async function fetchBorrowApyForToken(
-  tokenAddress: Address,
-  chainId: number,
-  config: Config,
-): Promise<BaseBorrowApyData> {
-  return fetchGenericBorrowApy(tokenAddress, chainId, config)
 }
