@@ -172,7 +172,7 @@ export function LeverageTokenHoldingsCard({
                       </div>
                     )}
                     <div>
-                      <h3 className="font-medium text-white">Connect Your Wallet</h3>
+                      <h3 className="font-medium text-white text-left">Connect Your Wallet</h3>
                       <p className="text-sm text-slate-400">View holdings and start minting</p>
                     </div>
                   </div>,

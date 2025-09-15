@@ -117,73 +117,142 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
       : {}
 
     return (
-      <Wrapper
-        ref={ref}
-        className={cn('flex items-center space-x-4 mb-6', className)}
-        {...wrapperProps}
-      >
-        {/* Back Button */}
-        {showBackButton && onBack && (
-          <motion.div
-            {...(animated && {
-              whileHover: { scale: 1.05 },
-              whileTap: { scale: 0.95 },
-            })}
-          >
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-2 py-2 h-9"
-              aria-label="Go back to previous page"
+      <Wrapper ref={ref} className={cn('mb-4 sm:mb-6', className)} {...wrapperProps}>
+        {/* Mobile: Stacked layout */}
+        <div className="flex flex-col space-y-2 sm:hidden">
+          {/* Back Button */}
+          {showBackButton && onBack && (
+            <motion.div
+              {...(animated && {
+                whileHover: { scale: 1.05 },
+                whileTap: { scale: 0.95 },
+              })}
             >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </motion.div>
-        )}
-
-        {/* Breadcrumb Navigation */}
-        <Breadcrumb className="flex-1">
-          <BreadcrumbList>
-            {items.map((item, index) => (
-              <motion.div
-                key={item.label}
-                className="contents"
-                {...(animated && {
-                  initial: { opacity: 0, x: -10 },
-                  animate: { opacity: 1, x: 0 },
-                  transition: { duration: 0.3, delay: index * 0.1 },
-                })}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-2 py-2 h-9 w-fit"
+                aria-label="Go back to previous page"
               >
-                <BreadcrumbItem>
-                  {item.isActive ? (
-                    <BreadcrumbPage className="text-white font-medium">{item.label}</BreadcrumbPage>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={item.onClick}
-                      className="text-slate-400 hover:text-purple-400 transition-colors font-medium bg-transparent border-none p-0 cursor-pointer"
-                      onKeyDown={(e) => {
-                        if ((e.key === 'Enter' || e.key === ' ') && item.onClick) {
-                          e.preventDefault()
-                          item.onClick()
-                        }
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  )}
-                </BreadcrumbItem>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </motion.div>
+          )}
 
-                {index < items.length - 1 && (
-                  <BreadcrumbSeparator>
-                    <ChevronRight className="h-4 w-4 text-slate-600" />
-                  </BreadcrumbSeparator>
-                )}
-              </motion.div>
-            ))}
-          </BreadcrumbList>
-        </Breadcrumb>
+          {/* Breadcrumb Navigation - Mobile */}
+          <Breadcrumb className="w-full">
+            <BreadcrumbList className="flex-wrap">
+              {items.map((item, index) => (
+                <motion.div
+                  key={item.label}
+                  className="contents"
+                  {...(animated && {
+                    initial: { opacity: 0, x: -10 },
+                    animate: { opacity: 1, x: 0 },
+                    transition: { duration: 0.3, delay: index * 0.1 },
+                  })}
+                >
+                  <BreadcrumbItem>
+                    {item.isActive ? (
+                      <BreadcrumbPage className="text-white font-medium text-sm truncate max-w-[200px]">
+                        {item.label}
+                      </BreadcrumbPage>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={item.onClick}
+                        className="text-slate-400 hover:text-purple-400 transition-colors font-medium bg-transparent border-none p-0 cursor-pointer text-sm"
+                        onKeyDown={(e) => {
+                          if ((e.key === 'Enter' || e.key === ' ') && item.onClick) {
+                            e.preventDefault()
+                            item.onClick()
+                          }
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    )}
+                  </BreadcrumbItem>
+
+                  {index < items.length - 1 && (
+                    <BreadcrumbSeparator>
+                      <ChevronRight className="h-3 w-3 text-slate-600" />
+                    </BreadcrumbSeparator>
+                  )}
+                </motion.div>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
+        {/* Desktop: Horizontal layout */}
+        <div className="hidden sm:flex items-center space-x-4">
+          {/* Back Button */}
+          {showBackButton && onBack && (
+            <motion.div
+              {...(animated && {
+                whileHover: { scale: 1.05 },
+                whileTap: { scale: 0.95 },
+              })}
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-2 py-2 h-9"
+                aria-label="Go back to previous page"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </motion.div>
+          )}
+
+          {/* Breadcrumb Navigation - Desktop */}
+          <Breadcrumb className="flex-1">
+            <BreadcrumbList>
+              {items.map((item, index) => (
+                <motion.div
+                  key={item.label}
+                  className="contents"
+                  {...(animated && {
+                    initial: { opacity: 0, x: -10 },
+                    animate: { opacity: 1, x: 0 },
+                    transition: { duration: 0.3, delay: index * 0.1 },
+                  })}
+                >
+                  <BreadcrumbItem>
+                    {item.isActive ? (
+                      <BreadcrumbPage className="text-white font-medium">
+                        {item.label}
+                      </BreadcrumbPage>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={item.onClick}
+                        className="text-slate-400 hover:text-purple-400 transition-colors font-medium bg-transparent border-none p-0 cursor-pointer"
+                        onKeyDown={(e) => {
+                          if ((e.key === 'Enter' || e.key === ' ') && item.onClick) {
+                            e.preventDefault()
+                            item.onClick()
+                          }
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    )}
+                  </BreadcrumbItem>
+
+                  {index < items.length - 1 && (
+                    <BreadcrumbSeparator>
+                      <ChevronRight className="h-4 w-4 text-slate-600" />
+                    </BreadcrumbSeparator>
+                  )}
+                </motion.div>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
       </Wrapper>
     )
   },

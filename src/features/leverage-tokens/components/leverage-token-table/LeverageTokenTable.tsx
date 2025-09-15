@@ -7,11 +7,11 @@ import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { cn } from '@/lib/utils/cn'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
 import { filterBySearch, parseSortString, sortData } from '@/lib/utils/table-utils'
-import { SortArrowDown, SortArrowNeutral, SortArrowUp } from '../../../components/icons'
-import { AssetDisplay } from '../../../components/ui/asset-display'
-import { Badge } from '../../../components/ui/badge'
-import { FilterDropdown } from '../../../components/ui/filter-dropdown'
-import { Skeleton } from '../../../components/ui/skeleton'
+import { SortArrowDown, SortArrowNeutral, SortArrowUp } from '../../../../components/icons'
+import { AssetDisplay } from '../../../../components/ui/asset-display'
+import { Badge } from '../../../../components/ui/badge'
+import { FilterDropdown } from '../../../../components/ui/filter-dropdown'
+import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -22,11 +22,12 @@ import {
   TablePagination,
   TableRow,
   usePagination,
-} from '../../../components/ui/table'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip'
-import type { LeverageTokenConfig } from '../leverageTokens.config'
-import { LeverageBadge } from './LeverageBadge'
-import { SupplyCap } from './SupplyCap'
+} from '../../../../components/ui/table'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../../components/ui/tooltip'
+import type { LeverageTokenConfig } from '../../leverageTokens.config'
+import { LeverageBadge } from '../LeverageBadge'
+import { SupplyCap } from '../SupplyCap'
+import { LeverageTokenMobileCard } from './LeverageTokenMobileCard'
 
 interface LeverageToken extends LeverageTokenConfig {
   // Optional metrics (can be undefined if not available)
@@ -257,11 +258,42 @@ export function LeverageTokenTable({
         </div>
       </motion.div>
 
-      {/* Table Section */}
+      {/* Mobile Cards View */}
+      <div className="lg:hidden space-y-4">
+        {currentItems.length === 0 ? (
+          <div className="text-center py-8 text-slate-400">No leverage tokens found</div>
+        ) : (
+          currentItems.map((token) => (
+            <LeverageTokenMobileCard
+              key={token.address}
+              token={token}
+              {...(onTokenClick && { onTokenClick })}
+              apyData={apyData}
+              isApyLoading={isApyLoading}
+              isApyError={isApyError}
+            />
+          ))
+        )}
+
+        {/* Mobile Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center pt-4">
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={sortedAndFilteredData.length}
+              pageSize={pageSize}
+              onPageChange={goToPage}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900/80 border border-slate-700 rounded-lg overflow-hidden w-full"
+        className="hidden lg:block bg-slate-900/80 border border-slate-700 rounded-lg overflow-hidden w-full"
       >
         <div className="overflow-x-auto w-full max-w-full">
           <Table>

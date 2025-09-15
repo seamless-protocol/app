@@ -15,6 +15,7 @@ interface ImportMetaEnv {
   readonly VITE_ENABLE_STAKING?: string
   readonly VITE_ENABLE_GOVERNANCE?: string
   readonly VITE_ENABLE_TOKEN_CREATION?: string
+  readonly VITE_ENABLE_FEATURED_LEVERAGE_TOKENS?: string
 
   // API endpoint overrides (optional - defaults in config)
   readonly VITE_MORPHO_API_URL?: string

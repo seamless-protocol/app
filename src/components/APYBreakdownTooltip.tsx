@@ -1,4 +1,4 @@
-import type { LeverageToken } from '@/features/leverage-tokens/components/LeverageTokenTable'
+import type { LeverageToken } from '@/features/leverage-tokens/components/leverage-token-table'
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import type { APYBreakdownData } from './APYBreakdown'
 import { APYBreakdown } from './APYBreakdown'
