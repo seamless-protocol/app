@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from '@/domain/mint/constants'
-import { executeMintV2 } from '@/domain/mint/execute.v2'
+import { executeMintV2 } from '@/domain/mint/exec/execute.v2'
+import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from '@/domain/mint/utils/constants'
 
 vi.mock('@/lib/contracts/generated', async () => {
   return {

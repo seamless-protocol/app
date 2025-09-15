@@ -1,7 +1,7 @@
 import type { Address } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
-import { planMintV2 } from '@/domain/mint/plan.v2'
+import { planMintV2 } from '@/domain/mint/planner/plan.v2'
 
 const DUMMY_CONFIG = {} as unknown as Config
 const TOKEN = '0x0000000000000000000000000000000000000001' as Address

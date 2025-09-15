@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { detectRouterVersion } from '@/domain/mint/detectVersion'
-import { RouterVersion } from '@/domain/mint/types'
+import { RouterVersion } from '@/domain/mint/planner/types'
+import { detectRouterVersion } from '@/domain/mint/utils/detectVersion'
 
 describe('detectRouterVersion', () => {
   beforeEach(() => {

@@ -27,4 +27,3 @@ export async function previewMint(
     })
   return { collateral, debt, equity, shares, tokenFee, treasuryFee }
 }
-

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from '@/domain/mint/constants'
+import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from '@/domain/mint/utils/constants'
 
 export function useSlippage(initial: string = '0.5') {
   const [slippage, setSlippage] = useState<string>(initial)

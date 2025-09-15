@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applySlippageFloor, mulDivFloor } from '@/domain/mint/math'
+import { applySlippageFloor, mulDivFloor } from '@/domain/mint/planner/math'
 
 describe('math helpers', () => {
   it('applySlippageFloor floors correctly at 0.5%', () => {

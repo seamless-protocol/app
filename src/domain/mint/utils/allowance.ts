@@ -69,4 +69,3 @@ export async function ensureAllowance({
   lastHash = await write(maxSim.request)
   return { changed: true, hash: lastHash }
 }
-

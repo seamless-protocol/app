@@ -8,4 +8,3 @@ export function applySlippageFloor(value: bigint, slippageBps: number): bigint {
   const bps = BigInt(slippageBps)
   return (value * (denom - bps)) / denom
 }
-

@@ -18,7 +18,7 @@ import {
 type DepositParams = Parameters<typeof simulateLeverageRouterV2Deposit>[1]
 type V2Calls = DepositParams['args'][4]
 
-import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from '@/domain/mint/constants'
+import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from '@/domain/mint/utils/constants'
 
 /**
  * @param config Wagmi Config used to resolve active chain and contract addresses
@@ -64,4 +64,3 @@ export async function executeMintV2(params: {
   })
   return { hash }
 }
-

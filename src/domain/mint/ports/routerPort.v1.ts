@@ -1,7 +1,7 @@
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
 // Infer SwapContext type from generated ABI via helper (keeps types consistent)
-import type { SwapContext as V1SwapContext } from '@/domain/mint/swapContext'
+import type { SwapContext as V1SwapContext } from '@/domain/mint/utils/swapContext'
 import {
   readLeverageManagerPreviewMint,
   simulateLeverageRouterMint,

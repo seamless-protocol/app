@@ -13,8 +13,8 @@ import {
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewMint,
 } from '@/lib/contracts/generated'
-import { applySlippageFloor, mulDivFloor } from './math'
 import type { ManagerPort } from '../ports'
+import { applySlippageFloor, mulDivFloor } from './math'
 import type { Quote, QuoteFn } from './types'
 
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
@@ -193,4 +193,3 @@ function buildDebtSwapCalls(args: {
     { target: debtQuote.approvalTarget, data: debtQuote.calldata, value: 0n },
   ]
 }
-

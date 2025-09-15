@@ -13,14 +13,14 @@ import type { Address, Hash } from 'viem'
 import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
 import { contractAddresses } from '@/lib/contracts/addresses'
-import { DEFAULT_SLIPPAGE_BPS } from './constants'
-// Addresses inferred by actions from config
-import { detectRouterVersion } from './detectVersion'
-import { executeMintV1 } from './execute.v1'
-import { executeMintV2 } from './execute.v2'
-import { planMintV2 } from './plan.v2'
+import { executeMintV1 } from './exec/execute.v1'
+import { executeMintV2 } from './exec/execute.v2'
+import { planMintV2 } from './planner/plan.v2'
+import { type QuoteFn, RouterVersion } from './planner/types'
 import { createManagerPortV2 } from './ports'
-import { type QuoteFn, RouterVersion } from './types'
+import { DEFAULT_SLIPPAGE_BPS } from './utils/constants'
+// Addresses inferred by actions from config
+import { detectRouterVersion } from './utils/detectVersion'
 
 // Keep parameter types simple to avoid brittle codegen coupling
 type TokenArg = Address

@@ -1,23 +1,23 @@
 import type { Address, Hash } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import * as detect from '@/domain/mint/detectVersion'
 import { orchestrateMint } from '@/domain/mint/orchestrate'
+import * as detect from '@/domain/mint/utils/detectVersion'
 
 vi.mock('@/lib/contracts/generated', async () => ({
   // Minimal mocks to avoid accidental real reads
 }))
 
 // Mock execute flows and planner
-vi.mock('@/domain/mint/execute.v1', async () => ({
+vi.mock('@/domain/mint/exec/execute.v1', async () => ({
   executeMintV1: vi.fn(async () => ({
     hash: '0xhash_v1' as Hash,
     preview: { shares: 1n, tokenFee: 0n, treasuryFee: 0n },
   })),
 }))
-vi.mock('@/domain/mint/execute.v2', async () => ({
+vi.mock('@/domain/mint/exec/execute.v2', async () => ({
   executeMintV2: vi.fn(async () => ({ hash: '0xhash_v2' as Hash })),
 }))
-vi.mock('@/domain/mint/plan.v2', async () => ({
+vi.mock('@/domain/mint/planner/plan.v2', async () => ({
   planMintV2: vi.fn(async () => ({
     inputAsset: '0x1' as Address,
     equityInInputAsset: 1n,

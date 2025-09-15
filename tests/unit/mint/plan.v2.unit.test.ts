@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
-import { planMintV2 } from '@/domain/mint/plan.v2'
+import { planMintV2 } from '@/domain/mint/planner/plan.v2'
 
 vi.mock('@/lib/contracts/generated', async () => {
   return {

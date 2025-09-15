@@ -114,4 +114,3 @@ export function createWeETHSwapContext(): SwapContext {
     additionalData: '0x',
   }
 }
-

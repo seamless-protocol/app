@@ -1,6 +1,6 @@
 import type { Address, Hash } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { executeMintV1 } from '@/domain/mint/execute.v1'
+import { executeMintV1 } from '@/domain/mint/exec/execute.v1'
 
 vi.mock('@/lib/contracts/generated', async () => {
   return {

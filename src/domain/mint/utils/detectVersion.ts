@@ -17,4 +17,3 @@ export function detectRouterVersion(): RouterVersion {
 
   return RouterVersion.V1
 }
-

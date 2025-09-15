@@ -1,6 +1,6 @@
 import type { Address, Hash } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
-import { ensureAllowance } from '@/domain/mint/allowance'
+import { ensureAllowance } from '@/domain/mint/utils/allowance'
 
 function makePublicClient(allowance: bigint) {
   return {

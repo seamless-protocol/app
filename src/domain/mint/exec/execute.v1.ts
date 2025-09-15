@@ -13,6 +13,17 @@ import { getPublicClient } from '@wagmi/core'
 import { type Address, getAddress, type Hash } from 'viem'
 import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
+import { applySlippageFloor } from '@/domain/mint/planner/math'
+import {
+  BPS_DENOMINATOR,
+  DEFAULT_MAX_SWAP_COST_BPS,
+  DEFAULT_SLIPPAGE_BPS,
+} from '@/domain/mint/utils/constants'
+import {
+  BASE_TOKEN_ADDRESSES,
+  createSwapContext,
+  createWeETHSwapContext,
+} from '@/domain/mint/utils/swapContext'
 import {
   readLeverageManagerGetLeverageTokenCollateralAsset,
   readLeverageManagerGetLeverageTokenDebtAsset,
@@ -20,9 +31,6 @@ import {
   simulateLeverageRouterMint,
   writeLeverageRouterMint,
 } from '@/lib/contracts/generated'
-import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS, DEFAULT_SLIPPAGE_BPS } from '@/domain/mint/constants'
-import { applySlippageFloor } from '@/domain/mint/math'
-import { BASE_TOKEN_ADDRESSES, createSwapContext, createWeETHSwapContext } from '@/domain/mint/swapContext'
 
 /**
  * @param config Wagmi Config used to resolve active chain and contract addresses
@@ -145,4 +153,3 @@ function buildSwapContext(collateralAsset: Address, debtAsset: Address, activeCh
     ? createWeETHSwapContext()
     : createSwapContext(collateralAsset, debtAsset, activeChainId ?? 0)
 }
-

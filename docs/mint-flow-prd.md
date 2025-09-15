@@ -103,7 +103,7 @@ export type V1SwapContext = ContractFunctionArgs<typeof leverageRouterAbi, 'nonp
 // src/domain/mint/swapContext.ts already declares:
 //   export type SwapContext = ContractFunctionArgs<typeof leverageRouterAbi, 'nonpayable', 'mint'>[4]
 // In Plan and RouterPort, use that:
-import type { SwapContext as V1SwapContextFromHelper } from '@/domain/mint/swapContext'
+import type { SwapContext as V1SwapContextFromHelper } from '@/domain/mint/utils/swapContext'
 
 // Then in Plan/RouterPort types above, replace `unknown` with `V1SwapContext` (or the helper alias):
 type Plan = {
