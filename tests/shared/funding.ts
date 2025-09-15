@@ -12,23 +12,35 @@ const BASE_WETH: Address = '0x4200000000000000000000000000000000000006'
 /** Top up native balance */
 export async function topUpNative(to: Address, ether: string) {
   if (mode === 'anvil') {
+    console.info('[STEP] Funding native (anvil)', { to, ether })
     await testClient.setBalance({ address: to, value: parseUnits(ether, 18) })
+    console.info('[STEP] Funded native (anvil)')
     return
   }
   // Use tenderly_addBalance so the action surfaces as a transaction in the VNet explorer
   // (setBalance performs a direct state write and may not show as a tx)
+  console.info('[STEP] Funding native (tenderly_addBalance)', { to, ether })
   await adminRequest('tenderly_addBalance', [[to], toHex(parseUnits(ether, 18))])
+  console.info('[STEP] Funded native (tenderly_addBalance)')
 }
 
 /** Set ERC-20 balance via admin RPC (Tenderly) */
 export async function setErc20Balance(token: Address, to: Address, human: string) {
+  console.info('[STEP] Funding ERC20 (tenderly_setErc20Balance) — preparing', { token, to, human })
   const decimals = await publicClient.readContract({
     address: token,
     abi: erc20Abi,
     functionName: 'decimals',
   })
   const raw = parseUnits(human, decimals)
+  console.info('[STEP] Funding ERC20 (tenderly_setErc20Balance)', {
+    token,
+    to,
+    human,
+    raw: raw.toString(),
+  })
   await adminRequest('tenderly_setErc20Balance', [token, to, toHex(raw)])
+  console.info('[STEP] Funded ERC20 (tenderly_setErc20Balance)')
 }
 
 async function fundErc20ViaWethDeposit(token: Address, to: Address, human: string) {

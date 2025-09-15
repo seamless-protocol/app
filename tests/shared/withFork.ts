@@ -24,7 +24,9 @@ export type WithForkCtx = {
 }
 
 export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise<T> {
+  console.info('[STEP] Take snapshot')
   const snap: Hash = await takeSnapshot()
+  console.info('[STEP] Snapshot taken', { snap })
   try {
     const ctx: WithForkCtx = {
       account,
@@ -52,6 +54,8 @@ export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise
     }
     return await fn(ctx)
   } finally {
+    console.info('[STEP] Reverting snapshot', { snap })
     await revertSnapshot(snap)
+    console.info('[STEP] Snapshot reverted')
   }
 }

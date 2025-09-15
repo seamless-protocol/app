@@ -41,9 +41,9 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
       }
 
       // Log RPC and chain to ensure we are targeting the expected endpoint
-      console.info('Using RPC', { url: RPC.primary })
+      console.info('[STEP] Using public RPC', { url: RPC.primary })
       const chainId = await publicClient.getChainId()
-      console.info('Chain ID', { chainId })
+      console.info('[STEP] Chain ID', { chainId })
 
       const token: Address =
         (process.env['TEST_LEVERAGE_TOKEN'] as Address) || (ADDR.leverageToken as Address)
@@ -59,13 +59,14 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
         address: manager,
         args: [token],
       })
-      console.info('Resolved assets', { token, manager, router, collateralAsset, debtAsset })
+      console.info('[STEP] Resolved assets', { token, manager, router, collateralAsset, debtAsset })
 
       // Equity input equals collateral to simplify (no input->collateral conversion leg)
       const collateralDecimals = await readErc20Decimals(config, collateralAsset)
       const equityInCollateral = parseUnits('0.5', collateralDecimals)
 
       // Fund account: gas + collateral tokens
+      console.info('[STEP] Funding native & ERC20')
       await topUpNative(account.address, '10')
       await topUpErc20(collateralAsset, account.address, '2')
       // Log balances after top-ups (Tenderly admin RPC operations do not create txs)
@@ -76,13 +77,14 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
         functionName: 'balanceOf',
         args: [account.address],
       })) as bigint
-      console.info('Post-topup balances', {
+      console.info('[STEP] Post-topup balances', {
         account: account.address,
         nativeWei: nativeBal.toString(),
         erc20: { token: collateralAsset, balance: erc20Bal.toString() },
       })
 
       // Build V2 plan via domain logic (uses v2 generated reads)
+      console.info('[STEP] Creating LiFi quote adapter')
       const quoteDebtToCollateral = createLifiQuoteAdapter({
         chainId: base.id,
         router,
@@ -101,6 +103,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
         })
         return res
       }
+      console.info('[STEP] Building V2 plan')
       const plan = await planMintV2({
         config,
         token,
@@ -110,7 +113,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
         quoteDebtToCollateral: quoteSpy,
         managerAddress: manager,
       })
-      console.info('Plan V2', {
+      console.info('[STEP] Plan V2', {
         minShares: plan.minShares.toString(),
         expectedTotalCollateral: plan.expectedTotalCollateral.toString(),
         expectedDebt: plan.expectedDebt.toString(),
@@ -132,6 +135,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
       })
 
       // Router preview (sanity): expected shares/debt from router POV using only user collateral
+      console.info('[STEP] Router previewDeposit (sanity)')
       const routerPreview = (await publicClient.readContract({
         address: router,
         abi: leverageRouterV2Abi,
@@ -144,7 +148,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
         tokenFee: bigint
         treasuryFee: bigint
       }
-      console.info('Router.previewDeposit', {
+      console.info('[STEP] Router.previewDeposit', {
         collateral: routerPreview.collateral.toString(),
         debt: routerPreview.debt.toString(),
         shares: routerPreview.shares.toString(),
@@ -153,13 +157,14 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
       })
 
       // Allowance checks
+      console.info('[STEP] Checking allowance BEFORE')
       const allowance = (await publicClient.readContract({
         address: collateralAsset,
         abi: erc20Abi,
         functionName: 'allowance',
         args: [account.address, router],
       })) as bigint
-      console.info('User->Router allowance', {
+      console.info('[STEP] User->Router allowance BEFORE', {
         token: collateralAsset,
         owner: account.address,
         spender: router,
@@ -167,7 +172,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
       })
 
       // Approvals for collateral (user input) and debt (swap leg)
-      console.info('Approving router to spend collateral...', {
+      console.info('[STEP] Approving router to spend collateral', {
         token: collateralAsset,
         spender: router,
         amount: equityInCollateral.toString(),
@@ -175,13 +180,14 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
       await approveIfNeeded(collateralAsset, router, equityInCollateral)
 
       // Check allowance after approval
+      console.info('[STEP] Checking allowance AFTER')
       const allowanceAfter = (await publicClient.readContract({
         address: collateralAsset,
         abi: erc20Abi,
         functionName: 'allowance',
         args: [account.address, router],
       })) as bigint
-      console.info('User->Router allowance AFTER approval', {
+      console.info('[STEP] User->Router allowance AFTER', {
         token: collateralAsset,
         owner: account.address,
         spender: router,
@@ -190,6 +196,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
 
       // Execute via generated actions through domain executor
       try {
+        console.info('[STEP] Executing deposit (simulate+write)')
         const { hash } = await executeMintV2({
           config,
           token,
@@ -204,12 +211,13 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
           },
           routerAddress: router,
         })
-
+        console.info('[STEP] Waiting for receipt', { hash })
         const receipt = await publicClient.waitForTransactionReceipt({ hash })
+        console.info('[STEP] Receipt', { status: receipt.status })
         expect(receipt.status).toBe('success')
       } catch (e) {
         const msg = prettyViemError(e, [leverageRouterV2Abi, leverageManagerV2Abi, erc20Abi])
-        console.error('MintV2 failed:', msg, {
+        console.error('[STEP] MintV2 failed:', msg, {
           token,
           equityInInputAsset: plan.equityInInputAsset,
           minShares: plan.minShares,
@@ -220,6 +228,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
         })
         // Attempt to send raw tx without simulation to capture Tenderly trace
         try {
+          console.info('[STEP] Sending raw tx without simulate for Tenderly trace')
           const data = encodeFunctionData({
             abi: leverageRouterV2Abi,
             functionName: 'deposit',
@@ -239,11 +248,11 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
             // Generous gas to avoid estimation; Tenderly VNet ignores pricing
             gas: 5_000_000n,
           })
-          console.error('Sent raw tx without simulate (for Tenderly trace)', { hash })
+          console.error('[STEP] Sent raw tx without simulate (for Tenderly trace)', { hash })
           const receipt = await publicClient.waitForTransactionReceipt({ hash })
-          console.error('Raw tx receipt', { status: receipt.status })
+          console.error('[STEP] Raw tx receipt', { status: receipt.status })
         } catch (sendErr) {
-          console.error('Raw send also failed', sendErr)
+          console.error('[STEP] Raw send also failed', sendErr)
         }
         throw e
       }
