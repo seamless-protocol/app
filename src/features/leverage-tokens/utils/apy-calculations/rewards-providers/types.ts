@@ -8,13 +8,15 @@ export interface BaseRewardsAprData {
 }
 
 /**
- * Interface for rewards APR providers
+ * Protocol-specific rewards APR fetcher interface
  */
-export interface RewardsAprProvider {
-  /**
-   * Fetch rewards APR for a given token address
-   */
-  fetchRewardsApr(tokenAddress: Address): Promise<BaseRewardsAprData>
+export interface RewardsAprFetcher {
+  /** Unique identifier for this protocol */
+  protocolId: string
+  /** Human-readable name */
+  protocolName: string
+  /** Fetch rewards APR data for this protocol */
+  fetchRewardsApr(tokenAddress: Address, chainId?: number): Promise<BaseRewardsAprData>
 }
 
 /**

@@ -9,5 +9,5 @@ export { type MorphoBorrowApyData, MorphoBorrowApyProvider } from './borrow-apy-
 export type { BaseBorrowApyData, BorrowApyFetcher } from './borrow-apy-providers/types'
 export { fetchLeverageRatios, type LeverageRatios } from './leverage-ratios'
 // Rewards APR providers
-export { fetchGenericRewardsApr } from './rewards-providers'
-export type { BaseRewardsAprData, RewardsAprProvider } from './rewards-providers/types'
+export { fetchGenericRewardsApr, fetchRewardsAprForToken } from './rewards-providers'
+export type { BaseRewardsAprData, RewardsAprFetcher } from './rewards-providers/types'

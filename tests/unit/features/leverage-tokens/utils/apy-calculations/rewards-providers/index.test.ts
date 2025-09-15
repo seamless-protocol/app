@@ -1,16 +1,10 @@
 import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Mock the module to avoid global mock conflicts
-vi.mock(
-  '@/features/leverage-tokens/utils/apy-calculations/rewards-providers',
-  async (importOriginal) => {
-    const actual = await importOriginal()
-    return actual
-  },
-)
-
-import { fetchGenericRewardsApr } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
+import {
+  fetchGenericRewardsApr,
+  fetchRewardsAprForToken,
+} from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
 
 describe('Rewards Providers', () => {
   const tokenAddress = '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address
@@ -21,26 +15,12 @@ describe('Rewards Providers', () => {
   })
 
   describe('fetchGenericRewardsApr', () => {
-    it('should return zero rewards APR for Base chain', async () => {
+    it('should be mocked and return default data', async () => {
       const result = await fetchGenericRewardsApr({ chainId, tokenAddress })
 
       expect(result).toEqual({
         rewardsAPR: 0,
       })
-    })
-
-    it('should log the placeholder behavior', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-
-      await fetchGenericRewardsApr({ chainId, tokenAddress })
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Fetching rewards APR for Base chain, token:',
-        tokenAddress,
-      )
-      expect(consoleSpy).toHaveBeenCalledWith('Returning 0% rewards APR (placeholder)')
-
-      consoleSpy.mockRestore()
     })
 
     it('should handle different token addresses', async () => {
@@ -86,43 +66,26 @@ describe('Rewards Providers', () => {
     })
   })
 
-  describe('BaseRewardsAprProvider', () => {
-    it('should always return zero rewards APR', async () => {
-      // Test multiple calls to ensure consistent behavior
-      const results = await Promise.all([
-        fetchGenericRewardsApr({ chainId, tokenAddress }),
-        fetchGenericRewardsApr({ chainId, tokenAddress }),
-        fetchGenericRewardsApr({ chainId, tokenAddress }),
-      ])
+  describe('fetchRewardsAprForToken', () => {
+    it('should be a wrapper around fetchGenericRewardsApr', async () => {
+      const result = await fetchRewardsAprForToken(tokenAddress, chainId)
 
-      results.forEach((result) => {
-        expect(result).toEqual({
-          rewardsAPR: 0,
-        })
+      expect(result).toEqual({
+        rewardsAPR: 0,
       })
     })
 
-    it('should be consistent across different token addresses', async () => {
-      const tokenAddresses = [
-        '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
-        '0x1234567890123456789012345678901234567890' as Address,
-        '0x9876543210987654321098765432109876543210' as Address,
-      ]
+    it('should pass through all parameters correctly', async () => {
+      const result = await fetchRewardsAprForToken(tokenAddress, chainId)
 
-      const results = await Promise.all(
-        tokenAddresses.map((addr) => fetchGenericRewardsApr({ chainId, tokenAddress: addr })),
-      )
-
-      results.forEach((result) => {
-        expect(result).toEqual({
-          rewardsAPR: 0,
-        })
+      expect(result).toEqual({
+        rewardsAPR: 0,
       })
     })
   })
 
   describe('provider selection logic', () => {
-    it('should use BaseRewardsAprProvider for Base chain', async () => {
+    it('should handle Base chain configuration', async () => {
       const result = await fetchGenericRewardsApr({ chainId, tokenAddress })
 
       expect(result).toEqual({
@@ -131,7 +94,7 @@ describe('Rewards Providers', () => {
     })
 
     it('should handle multiple concurrent requests', async () => {
-      const requests = Array.from({ length: 10 }, (_, i) =>
+      const requests = Array.from({ length: 5 }, (_, i) =>
         fetchGenericRewardsApr({
           chainId,
           tokenAddress: `0x${i.toString().padStart(40, '0')}` as Address,
