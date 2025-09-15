@@ -30,7 +30,7 @@ describe('planMintV2 validations', () => {
   const cfg = {} as any
   const token = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address
 
-  it('throws when input != collateral and no input converter', async () => {
+  it('throws when input != collateral (initial scope is collateral-only)', async () => {
     await expect(
       planMintV2({
         config: cfg,
@@ -38,13 +38,12 @@ describe('planMintV2 validations', () => {
         inputAsset: '0x9999999999999999999999999999999999999999' as Address,
         equityInInputAsset: 1_000_000n,
         slippageBps: 50,
-        // missing quoteInputToCollateral on purpose
         quoteDebtToCollateral: async () => ({
           out: 1000n,
           approvalTarget: '0x3333333333333333333333333333333333333333' as Address,
           calldata: '0x',
         }),
       }),
-    ).rejects.toThrowError(/no converter/i)
+    ).rejects.toThrowError(/collateral-only/i)
   })
 })

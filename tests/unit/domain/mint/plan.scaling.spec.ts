@@ -18,9 +18,9 @@ const managerPort = {
     }
   },
   async finalPreview({ totalCollateral }: { token: Address; totalCollateral: bigint }) {
-    // For the underfill case, return slightly higher debt than flash-loan'
+    // Return a previewed debt comfortably above the scaled flash loan amount
     return {
-      previewDebt: 4_450_485_956n,
+      previewDebt: 4_460_000_000n,
       previewShares: (totalCollateral * 997_010_445_737_461_631n) / 1_994_020_891_474_923_263n,
     }
   },
