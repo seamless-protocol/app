@@ -49,8 +49,8 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     // Always use li.quest as documented by LiFi for /v1/quote
     baseUrl = opts.baseUrl ?? 'https://li.quest',
     // Support both browser (import.meta.env) and Node.js (process.env) environments
-    apiKey = opts.apiKey ?? 
-      (typeof import.meta !== 'undefined' && import.meta.env 
+    apiKey = opts.apiKey ??
+      (typeof import.meta !== 'undefined' && import.meta.env
         ? (import.meta.env['VITE_LIFI_API_KEY'] as string | undefined)
         : process.env['LIFI_API_KEY']),
     order = 'CHEAPEST',
@@ -141,5 +141,10 @@ function mapStepToQuote(step: Step) {
   const outStr = step.estimate?.toAmountMin || step.estimate?.toAmount
   const out = outStr ? BigInt(outStr) : 0n
 
-  return { out, approvalTarget: getAddress(approvalTarget), calldata: data }
+  return {
+    out,
+    minOut: out,
+    approvalTarget: getAddress(approvalTarget),
+    calldata: data,
+  }
 }

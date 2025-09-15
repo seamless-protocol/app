@@ -173,7 +173,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
         amount: equityInCollateral.toString(),
       })
       await approveIfNeeded(collateralAsset, router, equityInCollateral)
-      
+
       // Check allowance after approval
       const allowanceAfter = (await publicClient.readContract({
         address: collateralAsset,

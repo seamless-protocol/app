@@ -2,7 +2,7 @@
  * Executes a Leverage Token mint via the V2 router using `mintWithCalls`, powered by Wagmi actions.
  *
  * Invariants/behavior:
- * - Sends a single transaction with planned calls (optional input->collateral conversion and debt->collateral swap).
+ * - Sends a single transaction with planned calls (debt->collateral swap only; no input conversion in initial scope).
  * - Does NOT perform ERC-20 approvals or wait for approvals — the UI is responsible for the Approve step.
  * - Contract addresses and active chain are inferred from the Wagmi config; no chainId parameter.
  */
