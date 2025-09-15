@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 import { spawn } from 'node:child_process'
 import process from 'node:process'
-import { createVNet, deleteVNet } from './tenderly-vnet.js'
+// Import the Tenderly VNet helper (explicit .ts for Bun execution)
+import { createVNet, deleteVNet } from './tenderly-vnet.ts'
 
 type TestType = 'e2e' | 'integration'
 
@@ -37,7 +38,11 @@ function getTestCommand(testType: TestType): { cmd: string; args: string[] } {
     case 'e2e':
       return { cmd: 'bunx', args: ['playwright', 'test'] }
     case 'integration':
-      return { cmd: 'bun', args: ['run', 'test:integration'] }
+      // Call Vitest directly to avoid script recursion when test:integration itself uses this runner
+      return {
+        cmd: 'bunx',
+        args: ['vitest', '-c', 'vitest.integration.config.ts', '--run', 'tests/integration'],
+      }
     default:
       throw new Error(`Unknown test type: ${testType}`)
   }

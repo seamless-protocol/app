@@ -266,3 +266,10 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 - LeverageToken (WEETH-WETH 17x): `0x17533ef332083aD03417DEe7BC058D10e18b22c5`
 
 Env injection: expose these via `VITE_ROUTER_V2_ADDRESS`, `VITE_MANAGER_V2_ADDRESS`, and similar keys for CI/Tenderly. Or add a `contractAddresses['vnet']` entry populated at runtime from env.
+
+## Implementation Notes (current state)
+- Planner scope: Implemented for v2 with collateral-only input (no input→collateral conversion yet). Underfill scaling, repayability via manager preview, and minShares guard are in place. Debt-leg calls (approve+swap) are encoded for the router.
+- v1 path: Uses a simple execute flow with simulate guard; planner is not used for v1 in initial delivery. Collateral-only input enforced.
+- Allowances: UI hooks handle approvals; a domain helper `ensureAllowance` exists and supports approve(0)→approve(max) when needed.
+- Quote constraints: The LiFi adapter returns out/minOut and calldata. Deadline validation is not currently enforced.
+- Tests: Unit tests cover planner math/guards and ports. Integration tests validate v2 happy path on Tenderly VNet.
