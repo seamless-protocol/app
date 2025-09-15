@@ -3,7 +3,7 @@
 ## 0) Goals
 - One brain: preview → quote → (maybe) scale → re-preview → guardrails → execute.
 - Small surface: ABI branching only at the ports (router/manager), not in the planner.
-- One-tx UX for v2 (supports optional user conversion if router supports pulling user input), collateral-only for v1.
+- One-tx UX for v2; initial scope is collateral-only for both v1 and v2 (no user conversion). Future: optional user conversion only if the router can pull user input.
 - Boring, well-typed, testable; easy to evolve across chains and router versions.
 
 ## 1) Constraints & Truths
@@ -14,7 +14,7 @@
   - Repayability: `previewDebt ≥ flashLoan'` (prime = scaled loan when underfill).
   - Share floor: `minShares` = floor(previewShares × (1 − slippageBps/10_000)).
   - Swap safety: quotes embed `minOut + deadline` targeting the router as recipient.
-  - Cost cap: `maxSwapCostInCollateral` (default 2% of user collateral contribution; user-overridable).
+  - Cost cap (v1-only): `maxSwapCostInCollateral` (default 2% of user collateral contribution; user-overridable). Not passed to v2; v2 safety relies on quote minOut/deadline + minShares.
 - Router v1: `mint(token, equityInCollateralAsset, minShares, maxSwapCost, SwapContext)`; no user conversion.
 - Router v2: `deposit(token, collateralFromSender, flashLoanAmount, minShares, Call[])`.
   - Initial scope: collateral-only from user on v2 as well (keep it simple). Future: add optional input→collateral conversion via Call[] if/when the router supports pulling user input tokens before deposit.
@@ -27,7 +27,7 @@
 ### B) Ports (tiny, ABI-facing)
 - RouterPort
   - v1: invoke `mint` with `SwapContext`; `supportsUserConversion=false`.
-  - v2: preview via `router.previewDeposit`; invoke `deposit` with `Call[]`; `supportsUserConversion=true` only if router can pull user input tokens.
+  - v2: preview via `router.previewDeposit`; invoke `deposit` with `Call[]`; `supportsUserConversion=false` in initial scope (set to true only if/when the router can pull user input tokens).
 - ManagerPort
   - `idealPreview(token, userCollateral)` → { targetCollateral, idealDebt, idealShares }
   - `finalPreview(token, totalCollateral)` → { previewDebt, previewShares }
@@ -85,21 +85,49 @@ interface RouterPort {
   previewDeposit(token: Address, userCollateral: bigint):
     Promise<{ debt: bigint; collateral: bigint; shares: bigint }>
   invokeMint(args:
-    | { mode:'v2'; token: Address; collateralFromSender: bigint; flashLoanAmount: bigint; minShares: bigint; calls: Array<{ target: Address; data: Hex; value?: bigint }>; maxSwapCost: bigint }
+    | { mode:'v2'; token: Address; collateralFromSender: bigint; flashLoanAmount: bigint; minShares: bigint; calls: Array<{ target: Address; data: Hex; value?: bigint }> }
     | { mode:'v1'; token: Address; equityInCollateralAsset: bigint; minShares: bigint; swapContext: unknown; maxSwapCost: bigint }
   ): Promise<Hash>
 }
 ```
 
+Typed v1 SwapContext
+```ts
+// Prefer using the generated or ABI-inferred type for v1 SwapContext
+// Option A: inferred from ABI (viem ContractFunctionArgs)
+import type { ContractFunctionArgs } from 'viem'
+import { leverageRouterAbi } from '@/lib/contracts/abis/leverageRouter'
+export type V1SwapContext = ContractFunctionArgs<typeof leverageRouterAbi, 'nonpayable', 'mint'>[4]
+
+// Option B: reuse existing helper (recommended)
+// src/domain/mint/swapContext.ts already declares:
+//   export type SwapContext = ContractFunctionArgs<typeof leverageRouterAbi, 'nonpayable', 'mint'>[4]
+// In Plan and RouterPort, use that:
+import type { SwapContext as V1SwapContextFromHelper } from '@/domain/mint/swapContext'
+
+// Then in Plan/RouterPort types above, replace `unknown` with `V1SwapContext` (or the helper alias):
+type Plan = {
+  // ...
+  swapContext?: V1SwapContextFromHelper
+}
+
+interface RouterPort {
+  // ...
+  invokeMint(args:
+    | { mode:'v2'; token: Address; collateralFromSender: bigint; flashLoanAmount: bigint; minShares: bigint; calls: Array<{ target: Address; data: Hex; value?: bigint }> }
+    | { mode:'v1'; token: Address; equityInCollateralAsset: bigint; minShares: bigint; swapContext: V1SwapContextFromHelper; maxSwapCost: bigint }
+  ): Promise<Hash>
+}
+```
+
 ## 4) Planner Algorithm (single path, used by both routers)
-Inputs: `token, inputAsset, equityInInputAsset, slippageBps, managerPort, routerPort, quoteDebtToCollateral, quoteInputToCollateral?`
+Inputs: `token, inputAsset, equityInInputAsset, slippageBps, managerPort, routerPort, quoteDebtToCollateral`
+Note: `inputAsset` must equal `collateralAsset` in initial scope (no user conversion); `quoteInputToCollateral` is out-of-scope for now.
 
 Steps:
-1) User conversion (conditional):
-- If `inputAsset !== collateralAsset`:
-  - Quote `input→collateral` → `userCollateralAfterConversion`.
-  - Prepare approve(input→converter) + conversion call for v2; set `collateralFromSender=0`.
-- Else: `userCollateralAfterConversion = equityInInputAsset` and `collateralFromSender = equityInInputAsset`.
+1) User conversion
+- Initial scope: not supported. Require `inputAsset === collateralAsset`; otherwise throw before planning.
+- Set `userCollateralAfterConversion = equityInInputAsset` and `collateralFromSender = equityInInputAsset`.
 
 2) Ideal targeting:
 - `ideal = routerPort.previewDeposit(token, userCollateralAfterConversion)` → `idealDebt`, `targetCollateral`, `idealShares`.
@@ -129,7 +157,7 @@ Return: `Plan`.
   - Prefer `router.previewDeposit(token, userCollateral)` (v2), else `manager.previewMint(token, equity=userCollateral)`.
 - finalPreview:
   - Prefer `manager.previewDeposit(token, totalCollateral)`.
-  - Else binary-search equity `e` so that `manager.previewMint(token, e).collateral ≈ totalCollateral` (8–12 iters; accept ≤1 wei error). Use resulting `{debt, shares}`.
+  - Else use `manager.previewMint(token, equity=totalCollateral)` as an approximation (no binary search in initial scope).
 
 ## 6) Router Ports
 - v2
@@ -144,15 +172,15 @@ Return: `Plan`.
 - Version selection: `VITE_ROUTER_VERSION=auto|v1|v2` (default `auto`).
   - auto: if v2 addresses provided (VNet), use v2; else v1.
 - Ensure allowance:
-  - v2: collateral asset to router (initial scope). Future: if conversion supported, approve input asset to router.
-  - v1: collateral to router.
-- `maxSwapCostInCollateral`: default 2% of `userCollateralAfterConversion` (expose override in UI Advanced panel).
+  - v2: collateral asset to router (initial scope). No Permit2.
+  - v1: collateral to router. No Permit2.
+- `maxSwapCostInCollateral` (v1-only): default 2% of `userCollateralAfterConversion` (expose override in UI Advanced panel).
 - Invoke the selected router port with mapped args from the Plan.
 
 ## 8) Quote Adapters (interfaces)
 ```ts
-// Required fields must embed minOut + deadline, and recipient must be the router
-export type Quote = { out: bigint; approvalTarget: Address; calldata: Hex }
+// LiFi-only initially. Required fields must include minOut + deadline, and recipient must be the router.
+export type Quote = { out: bigint; minOut: bigint; deadline: bigint; approvalTarget: Address; calldata: Hex }
 export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bigint }) => Promise<Quote>
 ```
 
@@ -160,23 +188,24 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 - Repayability: throw before simulate if `final.previewDebt < flashLoan'`.
 - Share floor: compute `minShares` with floor.
 - Swap safety: reject quotes without `minOut + deadline` semantics.
-- Cost cap: pass `maxSwapCostInCollateral` to router; default 2%.
+- Cost cap (v1-only): pass `maxSwapCostInCollateral` to router; default 2%. Not applicable to v2.
 - v1: if `inputAsset !== collateralAsset` → fail early (collateral-only).
 
 ## 10) Telemetry
 - `router_version: 'v1'|'v2'`
+- `quote_source: 'LiFi'`
+- `quote_latency_ms`, `min_out`, `deadline`
 - `flash_loan_scaled: boolean`, `scale_ratio = flashLoan'/idealDebt`
-- `quote_latency_ms`
-- `excess_debt_returned`
-- `reprice_rate` (planner rejections)
-- `mint_success_rate`
+- `excess_debt_returned`, `excess_debt_returned_bps`
+- `preview_delta_shares`, `preview_delta_debt`
+- `reprice_rate` (planner rejections), `mint_success_rate`
 
 ## 11) Tests
 ### Unit (planner)
 - Underfill → scaled flash loan (floor) math.
 - Exact/overfill → no scaling.
-- v2 call ordering: user conversion first (if present), then debt approve+swap.
-- v1: throws if input ≠ collateral; builds `swapContext` stub.
+- v2 call ordering: debt approve+swap only (no user conversion).
+- Planner: throws if input ≠ collateral; v1 builds `swapContext` stub.
 - Guard: throws if `previewDebt < flashLoan'`.
 - Determinism: same inputs → same plan.
 
@@ -189,11 +218,11 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 - Happy path; “price moved → reprice” surface; chain switch on write; allowance prompting logic.
 
 ## 12) Tasks (T1–T9)
-- T1 ManagerPort: idealPreview + finalPreview (with binary-search fallback).
-- T2 RouterPort v2: preview + deposit (Call[]), conditional conversion support.
+- T1 ManagerPort: idealPreview + finalPreview (approximation; no binary search).
+- T2 RouterPort v2: preview + deposit (Call[]), no user conversion in initial scope.
 - T3 RouterPort v1: mint with SwapContext; supportsUserConversion=false.
 - T4 Planner: implement steps 1–5; return Plan; quote interfaces.
-- T5 Orchestrator: version detection; map Plan to invoke; compute default maxSwapCost.
+- T5 Orchestrator: version detection; map Plan to invoke; compute default maxSwapCost (v1-only).
 - T6 Allowance: robust `ensureAllowance` (supports optional approve(0) then max path).
 - T7 Unit tests: planner math, guards, order.
 - T8 Integration/E2E: fork + UI happy paths and reprice UX.
@@ -205,7 +234,7 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 - V1 (Base): mint with collateral-only; non-collateral input rejected pre-tx.
 - Planner enforces guardrails and re-quotes when scaling amountIn.
 - All swaps enforce `minOut + deadline`.
-- Default `maxSwapCost` 2% applied; user override available.
+- Default `maxSwapCost` 2% applied (v1 only); user override available.
 - Unit + fork tests green; E2E happy path green.
 
 ## 14) Risks & Mitigations

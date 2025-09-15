@@ -19,6 +19,7 @@ import { detectRouterVersion } from './detectVersion'
 import { executeMintV1 } from './execute.v1'
 import { executeMintV2 } from './execute.v2'
 import { planMintV2 } from './plan.v2'
+import { createManagerPortV2 } from './ports'
 import { type QuoteFn, RouterVersion } from './types'
 
 // Keep parameter types simple to avoid brittle codegen coupling
@@ -106,6 +107,17 @@ export async function orchestrateMint(params: {
 
   if (version === RouterVersion.V2) {
     if (!quoteDebtToCollateral) throw new Error('quoteDebtToCollateral is required for router v2')
+    const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
+    const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
+    const routerAddressV2 = params.routerAddressV2 || envRouterV2
+    const managerAddressV2 = params.managerAddressV2 || envManagerV2
+
+    const managerPort = createManagerPortV2({
+      config,
+      ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
+      ...(routerAddressV2 ? { routerAddress: routerAddressV2 } : {}),
+    })
+
     const plan = await planMintV2({
       config,
       token,
@@ -114,7 +126,8 @@ export async function orchestrateMint(params: {
       slippageBps,
       quoteDebtToCollateral,
       ...(quoteInputToCollateral ? { quoteInputToCollateral } : {}),
-      ...(params.managerAddressV2 ? { managerAddress: params.managerAddressV2 } : {}),
+      managerPort,
+      ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
     })
 
     const tx = await executeMintV2({
@@ -130,7 +143,7 @@ export async function orchestrateMint(params: {
         expectedDebt: plan.expectedDebt,
       },
       routerAddress:
-        params.routerAddressV2 ||
+        routerAddressV2 ||
         (contractAddresses[base.id]?.leverageRouterV2 as Address | undefined) ||
         (() => {
           throw new Error('LeverageRouterV2 address required for router v2 flow')
@@ -142,6 +155,7 @@ export async function orchestrateMint(params: {
     return { routerVersion: 'v2' as const, plan, ...tx }
   }
 
+  // V1 path (manager port available if needed later)
   const tx = await executeMintV1({
     config,
     account,

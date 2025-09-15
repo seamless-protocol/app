@@ -8,12 +8,13 @@ import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress } from 'viem'
 import type { Config } from 'wagmi'
 import {
-  // V2 reads (explicit address must be provided when using VNets/custom deployments)
+  // V2 reads (explicit address may be provided when using VNets/custom deployments)
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewMint,
 } from '@/lib/contracts/generated'
 import { applySlippageFloor, mulDivFloor } from './math'
+import type { ManagerPort } from './ports'
 import type { Quote, QuoteFn } from './types'
 
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
@@ -100,7 +101,9 @@ export async function planMintV2(params: {
   slippageBps: number
   quoteDebtToCollateral: QuoteFn
   quoteInputToCollateral?: QuoteFn
-  /** Optional explicit LeverageManagerV2 address (required for VNet/custom deployments) */
+  /** ManagerPort used for ideal/final previews (v2 router or v1-style manager fallback) */
+  managerPort?: ManagerPort
+  /** Optional explicit LeverageManagerV2 address (for VNet/custom) */
   managerAddress?: Address
 }): Promise<MintPlanV2> {
   const {
@@ -111,6 +114,7 @@ export async function planMintV2(params: {
     slippageBps,
     quoteDebtToCollateral,
     quoteInputToCollateral,
+    managerPort,
     managerAddress,
   } = params
 
@@ -127,34 +131,50 @@ export async function planMintV2(params: {
     ...(typeof quoteInputToCollateral !== 'undefined' ? { quoteInputToCollateral } : {}),
   })
 
-  const previewWithUserCollateral = await previewMintAmount({
-    config,
-    token,
-    equityInCollateralAsset: userCollateralOut,
-    ...(managerAddress ? { managerAddress } : {}),
-  })
+  // Ideal preview based on user's collateral only
+  const ideal = managerPort
+    ? await managerPort.idealPreview({ token, userCollateral: userCollateralOut })
+    : await (async () => {
+        const r = await readLeverageManagerV2PreviewMint(config, {
+          ...(managerAddress ? { address: managerAddress } : {}),
+          args: [token, userCollateralOut],
+        })
+        return { targetCollateral: r.collateral, idealDebt: r.debt, idealShares: r.shares }
+      })()
+  const neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
+  if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
-  const { debtIn, debtQuote } = await planDebtSwap({
-    previewWithUserCollateral,
-    userCollateralOut,
-    debtAsset,
-    collateralAsset,
-    quoteDebtToCollateral,
+  // Size debt leg and quote
+  let debtIn = ideal.idealDebt
+  let debtQuote = await quoteDebtToCollateral({
+    inToken: debtAsset,
+    outToken: collateralAsset,
+    amountIn: debtIn,
   })
+  if (debtQuote.out < neededFromDebtSwap) {
+    debtIn = mulDivFloor(ideal.idealDebt, debtQuote.out, neededFromDebtSwap)
+    debtQuote = await quoteDebtToCollateral({
+      inToken: debtAsset,
+      outToken: collateralAsset,
+      amountIn: debtIn,
+    })
+  }
 
   const totalCollateral = userCollateralOut + debtQuote.out
-  const previewWithTotalCollateral = await previewMintAmount({
-    config,
-    token,
-    equityInCollateralAsset: totalCollateral,
-    ...(managerAddress ? { managerAddress } : {}),
-  })
-  if (previewWithTotalCollateral.debt < debtIn)
+  const final = managerPort
+    ? await managerPort.finalPreview({ token, totalCollateral })
+    : await (async () => {
+        const r = await readLeverageManagerV2PreviewMint(config, {
+          ...(managerAddress ? { address: managerAddress } : {}),
+          args: [token, totalCollateral],
+        })
+        return { previewDebt: r.debt, previewShares: r.shares }
+      })()
+  if (final.previewDebt < debtIn)
     throw new Error('Reprice: manager preview debt < planned flash loan')
 
-  const minShares = applySlippageFloor(previewWithTotalCollateral.shares, slippageBps)
-  const excessDebt =
-    previewWithTotalCollateral.debt > debtIn ? previewWithTotalCollateral.debt - debtIn : 0n
+  const minShares = applySlippageFloor(final.previewShares, slippageBps)
+  const excessDebt: bigint = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
 
   calls.push(...buildDebtSwapCalls({ debtAsset, debtQuote, debtIn }))
 
@@ -164,8 +184,8 @@ export async function planMintV2(params: {
     collateralAsset,
     debtAsset,
     minShares,
-    expectedShares: previewWithTotalCollateral.shares,
-    expectedDebt: previewWithTotalCollateral.debt,
+    expectedShares: final.previewShares,
+    expectedDebt: final.previewDebt,
     expectedTotalCollateral: totalCollateral,
     expectedExcessDebt: excessDebt,
     calls,
@@ -221,54 +241,7 @@ async function prepareInputConversion(args: {
   return { calls, userCollateralOut: inputQuote.out }
 }
 
-type Preview = Awaited<ReturnType<typeof readLeverageManagerV2PreviewMint>>
-
-async function previewMintAmount(args: {
-  config: Config
-  token: TokenArg
-  equityInCollateralAsset: bigint
-  managerAddress?: Address
-}) {
-  const { config, token, equityInCollateralAsset, managerAddress } = args
-  return readLeverageManagerV2PreviewMint(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
-    args: [token, equityInCollateralAsset],
-  })
-}
-
-async function planDebtSwap(args: {
-  previewWithUserCollateral: Preview
-  userCollateralOut: bigint
-  debtAsset: Address
-  collateralAsset: Address
-  quoteDebtToCollateral: QuoteFn
-}): Promise<{ debtIn: bigint; debtQuote: Quote }> {
-  const {
-    previewWithUserCollateral,
-    userCollateralOut,
-    debtAsset,
-    collateralAsset,
-    quoteDebtToCollateral,
-  } = args
-  const neededFromDebtSwap = previewWithUserCollateral.collateral - userCollateralOut
-  if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
-
-  let debtIn = previewWithUserCollateral.debt
-  let debtQuote = await quoteDebtToCollateral({
-    inToken: debtAsset,
-    outToken: collateralAsset,
-    amountIn: debtIn,
-  })
-  if (debtQuote.out < neededFromDebtSwap) {
-    debtIn = mulDivFloor(previewWithUserCollateral.debt, debtQuote.out, neededFromDebtSwap)
-    debtQuote = await quoteDebtToCollateral({
-      inToken: debtAsset,
-      outToken: collateralAsset,
-      amountIn: debtIn,
-    })
-  }
-  return { debtIn, debtQuote }
-}
+// planDebtSwap inlined into main flow using ideal preview values
 
 // minShares computation centralized via applySlippageFloor in math.ts
 
