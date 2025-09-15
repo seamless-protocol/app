@@ -72,7 +72,7 @@ export function FeaturedLeverageToken({
               <span className="text-slate-400 text-sm">Reward APR</span>
               {apyData?.rewardsAPR !== undefined ? (
                 <span className="text-cyan-400 font-medium">
-                  {formatPercentage(apyData.rewardsAPR, { decimals: 2, isDecimal: false })}
+                  {formatPercentage(apyData.rewardsAPR, { decimals: 2 })}
                 </span>
               ) : (
                 <Skeleton className="h-4 w-16" />

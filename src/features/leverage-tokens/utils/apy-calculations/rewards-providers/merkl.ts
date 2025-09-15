@@ -62,7 +62,7 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
       }, 0)
 
       const result: BaseRewardsAprData = {
-        rewardsAPR: totalAPR,
+        rewardsAPR: totalAPR / 100,
       }
 
       console.log(
@@ -111,7 +111,7 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
       }
 
       const data = await response.json()
-      return data.opportunities || []
+      return Array.isArray(data) ? data : data.opportunities || []
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.error('[Merkl] Request timeout while fetching opportunities')

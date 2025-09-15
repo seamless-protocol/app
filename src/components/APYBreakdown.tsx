@@ -56,7 +56,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
         <div className="flex justify-between">
           <span className="text-slate-300">Rewards APR:</span>
           <span className="text-cyan-400 font-medium">
-            {formatPercentage(data.rewardsAPR, { decimals: 2, showSign: true, isDecimal: false })}
+            {formatPercentage(data.rewardsAPR, { decimals: 2, showSign: true })}
           </span>
         </div>
 
