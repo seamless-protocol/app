@@ -5,14 +5,14 @@ import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverag
 import { fetchAprForToken } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers'
 import { fetchBorrowApyForToken } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
 import { fetchLeverageRatios } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
-import { fetchGenericRewardsApr } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
+import { fetchRewardsAprForToken } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
 import { hookTestUtils } from '../../../../utils'
 
 // Mock the external dependencies
 const mockFetchAprForToken = vi.mocked(fetchAprForToken)
 const mockFetchBorrowApyForToken = vi.mocked(fetchBorrowApyForToken)
 const mockFetchLeverageRatios = vi.mocked(fetchLeverageRatios)
-const mockFetchGenericRewardsApr = vi.mocked(fetchGenericRewardsApr)
+const mockFetchRewardsAprForToken = vi.mocked(fetchRewardsAprForToken)
 
 describe('useLeverageTokenAPY', () => {
   const tokenAddress = '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address
@@ -73,7 +73,7 @@ describe('useLeverageTokenAPY', () => {
       expect(mockFetchAprForToken).not.toHaveBeenCalled()
       expect(mockFetchBorrowApyForToken).not.toHaveBeenCalled()
       expect(mockFetchLeverageRatios).not.toHaveBeenCalled()
-      expect(mockFetchGenericRewardsApr).not.toHaveBeenCalled()
+      expect(mockFetchRewardsAprForToken).not.toHaveBeenCalled()
     })
 
     it('should not fetch when tokenAddress is missing', () => {
@@ -115,7 +115,7 @@ describe('useLeverageTokenAPY', () => {
       mockFetchLeverageRatios.mockResolvedValue(mockLeverageRatios)
       mockFetchAprForToken.mockResolvedValue(mockAprData)
       mockFetchBorrowApyForToken.mockResolvedValue(mockBorrowApyData)
-      mockFetchGenericRewardsApr.mockResolvedValue(mockRewardsAprData)
+      mockFetchRewardsAprForToken.mockResolvedValue(mockRewardsAprData)
 
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useLeverageTokenAPY({
@@ -140,7 +140,7 @@ describe('useLeverageTokenAPY', () => {
         chainId,
         expect.any(Object),
       )
-      expect(mockFetchGenericRewardsApr).toHaveBeenCalledWith({ chainId, tokenAddress })
+      expect(mockFetchRewardsAprForToken).toHaveBeenCalledWith(tokenAddress, chainId)
 
       // Verify the calculated APY data
       const apyData = result.current.data
@@ -195,7 +195,7 @@ describe('useLeverageTokenAPY', () => {
       expect(mockFetchLeverageRatios).not.toHaveBeenCalled()
       expect(mockFetchAprForToken).not.toHaveBeenCalled()
       expect(mockFetchBorrowApyForToken).not.toHaveBeenCalled()
-      expect(mockFetchGenericRewardsApr).not.toHaveBeenCalled()
+      expect(mockFetchRewardsAprForToken).not.toHaveBeenCalled()
     })
 
     it('should handle missing APR data gracefully', async () => {
@@ -223,7 +223,7 @@ describe('useLeverageTokenAPY', () => {
       mockFetchLeverageRatios.mockResolvedValue(mockLeverageRatios)
       mockFetchAprForToken.mockResolvedValue(mockAprData)
       mockFetchBorrowApyForToken.mockResolvedValue(mockBorrowApyData)
-      mockFetchGenericRewardsApr.mockResolvedValue(mockRewardsAprData)
+      mockFetchRewardsAprForToken.mockResolvedValue(mockRewardsAprData)
 
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useLeverageTokenAPY({
@@ -338,7 +338,7 @@ describe('useLeverageTokenAPY', () => {
       mockFetchLeverageRatios.mockResolvedValue(mockLeverageRatios)
       mockFetchAprForToken.mockResolvedValue(mockAprData)
       mockFetchBorrowApyForToken.mockResolvedValue(mockBorrowApyData)
-      mockFetchGenericRewardsApr.mockResolvedValue(mockRewardsAprData)
+      mockFetchRewardsAprForToken.mockResolvedValue(mockRewardsAprData)
 
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useLeverageTokenAPY({
@@ -386,7 +386,7 @@ describe('useLeverageTokenAPY', () => {
       mockFetchLeverageRatios.mockResolvedValue(mockLeverageRatios)
       mockFetchAprForToken.mockResolvedValue(mockAprData)
       mockFetchBorrowApyForToken.mockResolvedValue(mockBorrowApyData)
-      mockFetchGenericRewardsApr.mockResolvedValue(mockRewardsAprData)
+      mockFetchRewardsAprForToken.mockResolvedValue(mockRewardsAprData)
 
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useLeverageTokenAPY({

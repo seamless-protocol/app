@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Zap } from 'lucide-react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
-import { formatAPY } from '@/lib/utils/formatting'
+import { formatAPY, formatPercentage } from '@/lib/utils/formatting'
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent } from '../../../components/ui/card'
@@ -72,7 +72,7 @@ export function FeaturedLeverageToken({
               <span className="text-slate-400 text-sm">Reward APR</span>
               {apyData?.rewardsAPR !== undefined ? (
                 <span className="text-cyan-400 font-medium">
-                  {formatAPY(apyData.rewardsAPR, 2)}
+                  {formatPercentage(apyData.rewardsAPR, { decimals: 2 })}
                 </span>
               ) : (
                 <Skeleton className="h-4 w-16" />
