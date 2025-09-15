@@ -100,7 +100,6 @@ export async function planMintV2(params: {
   equityInInputAsset: EquityInInputAssetArg
   slippageBps: number
   quoteDebtToCollateral: QuoteFn
-  quoteInputToCollateral?: QuoteFn
   /** ManagerPort used for ideal/final previews (v2 router or v1-style manager fallback) */
   managerPort?: ManagerPort
   /** Optional explicit LeverageManagerV2 address (for VNet/custom) */
@@ -113,7 +112,6 @@ export async function planMintV2(params: {
     equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral,
-    quoteInputToCollateral,
     managerPort,
     managerAddress,
   } = params
@@ -124,12 +122,12 @@ export async function planMintV2(params: {
     ...(managerAddress ? { managerAddress } : {}),
   })
 
-  const { calls, userCollateralOut } = await prepareInputConversion({
-    inputAsset,
-    collateralAsset,
-    equityInInputAsset,
-    ...(typeof quoteInputToCollateral !== 'undefined' ? { quoteInputToCollateral } : {}),
-  })
+  // Enforce collateral-only input in initial scope
+  const calls: V2Calls = []
+  if (getAddress(inputAsset) !== getAddress(collateralAsset)) {
+    throw new Error('Router v2 initial scope requires collateral-only input')
+  }
+  const userCollateralOut = equityInInputAsset
 
   // Ideal preview based on user's collateral only
   const ideal = managerPort
@@ -211,35 +209,7 @@ async function getManagerAssets(args: {
   return { collateralAsset, debtAsset }
 }
 
-async function prepareInputConversion(args: {
-  inputAsset: Address
-  collateralAsset: Address
-  equityInInputAsset: EquityInInputAssetArg
-  quoteInputToCollateral?: QuoteFn
-}): Promise<{ calls: Array<V2Call>; userCollateralOut: bigint }> {
-  const { inputAsset, collateralAsset, equityInInputAsset, quoteInputToCollateral } = args
-  const calls: Array<V2Call> = []
-  if (getAddress(inputAsset) === getAddress(collateralAsset)) {
-    return { calls, userCollateralOut: equityInInputAsset }
-  }
-  if (!quoteInputToCollateral) throw new Error('Router v2: no converter for selected input asset')
-  const inputQuote = await quoteInputToCollateral({
-    inToken: inputAsset,
-    outToken: collateralAsset,
-    amountIn: equityInInputAsset,
-  })
-  calls.push({
-    target: inputAsset,
-    data: encodeFunctionData({
-      abi: erc20Abi,
-      functionName: 'approve',
-      args: [inputQuote.approvalTarget, equityInInputAsset],
-    }),
-    value: 0n,
-  })
-  calls.push({ target: inputQuote.approvalTarget, data: inputQuote.calldata, value: 0n })
-  return { calls, userCollateralOut: inputQuote.out }
-}
+// Removed input conversion for initial scope per PRD
 
 // planDebtSwap inlined into main flow using ideal preview values
 

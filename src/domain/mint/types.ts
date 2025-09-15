@@ -13,8 +13,15 @@ export type Addresses = {
 }
 
 export type Quote = {
+  // Amount the router is guaranteed to receive (minOut semantics)
   out: bigint
+  // Explicit minOut field for PRD clarity (alias of out)
+  minOut?: bigint
+  // Optional deadline (if provided by the aggregator/DEX)
+  deadline?: bigint
+  // Target to approve before submitting calldata
   approvalTarget: Address
+  // Calldata to execute the swap on the aggregator/DEX
   calldata: Hex
 }
 
