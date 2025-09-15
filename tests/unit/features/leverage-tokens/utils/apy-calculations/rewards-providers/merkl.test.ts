@@ -53,13 +53,13 @@ describe('MerklRewardsAprProvider', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ opportunities: mockOpportunities }),
+        json: async () => mockOpportunities,
       } as unknown as Response)
 
       const result = await provider.fetchRewardsApr(tokenAddress, chainId)
 
       expect(result).toEqual({
-        rewardsAPR: 0.05, // Merkl provides APR directly
+        rewardsAPR: 0.0005, // Merkl API returns 0.05, converted to percentage format
       })
 
       // Verify API call
@@ -98,14 +98,14 @@ describe('MerklRewardsAprProvider', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ opportunities: mockOpportunities }),
+        json: async () => mockOpportunities,
       } as unknown as Response)
 
       const result = await provider.fetchRewardsApr(tokenAddress, 8453) // Only Base chain
 
-      // Should sum the Base chain opportunities: 0.05 + 0.03 = 0.08
+      // Should sum the Base chain opportunities: 0.05 + 0.03 = 0.08, converted to percentage format
       expect(result).toEqual({
-        rewardsAPR: 0.08,
+        rewardsAPR: 0.0008,
       })
 
       // Verify API call with chain ID filter
@@ -144,14 +144,14 @@ describe('MerklRewardsAprProvider', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ opportunities: mockOpportunities }),
+        json: async () => mockOpportunities,
       } as unknown as Response)
 
       const result = await provider.fetchRewardsApr(tokenAddress) // No chain ID
 
-      // Should sum opportunities from all chains: 0.05 + 0.03 = 0.08
+      // Should sum opportunities from all chains: 0.05 + 0.03 = 0.08, converted to percentage format
       expect(result).toEqual({
-        rewardsAPR: 0.08,
+        rewardsAPR: 0.0008,
       })
 
       // Verify API call without chain ID filter
@@ -256,7 +256,7 @@ describe('MerklRewardsAprProvider', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ opportunities: mockOpportunities }),
+        json: async () => mockOpportunities,
       } as unknown as Response)
 
       const result = await provider.fetchRewardsApr(tokenAddress, chainId)
@@ -281,13 +281,13 @@ describe('MerklRewardsAprProvider', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ opportunities: mockOpportunities }),
+        json: async () => mockOpportunities,
       } as unknown as Response)
 
       const result = await provider.fetchRewardsApr(differentTokenAddress, chainId)
 
       expect(result).toEqual({
-        rewardsAPR: 0.03,
+        rewardsAPR: 0.0003, // Converted to percentage format
       })
 
       expect(mockFetch).toHaveBeenCalledWith(
@@ -311,13 +311,13 @@ describe('MerklRewardsAprProvider', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ opportunities: mockOpportunities }),
+        json: async () => mockOpportunities,
       } as unknown as Response)
 
       const result = await provider.fetchRewardsApr(tokenAddress, customChainId)
 
       expect(result).toEqual({
-        rewardsAPR: 0.025,
+        rewardsAPR: 0.00025, // Converted to percentage format
       })
     })
 
@@ -341,13 +341,13 @@ describe('MerklRewardsAprProvider', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ opportunities: mockOpportunities }),
+        json: async () => mockOpportunities,
       } as unknown as Response)
 
       const result = await provider.fetchRewardsApr(tokenAddress, chainId)
 
       expect(result).toEqual({
-        rewardsAPR: 0.08, // Should sum both opportunities: 0.05 + 0.03
+        rewardsAPR: 0.0008, // Should sum both opportunities: 0.05 + 0.03, converted to percentage format
       })
     })
 
@@ -365,7 +365,7 @@ describe('MerklRewardsAprProvider', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ opportunities: mockOpportunities }),
+        json: async () => mockOpportunities,
       } as unknown as Response)
 
       const result = await provider.fetchRewardsApr(tokenAddress, chainId)
@@ -389,13 +389,13 @@ describe('MerklRewardsAprProvider', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ opportunities: mockOpportunities }),
+        json: async () => mockOpportunities,
       } as unknown as Response)
 
       const result = await provider.fetchRewardsApr(tokenAddress, chainId)
 
       expect(result).toEqual({
-        rewardsAPR: 0.5,
+        rewardsAPR: 0.005, // Converted to percentage format
       })
     })
   })

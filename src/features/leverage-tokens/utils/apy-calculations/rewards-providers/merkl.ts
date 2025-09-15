@@ -62,6 +62,7 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
       }, 0)
 
       const result: BaseRewardsAprData = {
+        // Divide by 100 to convert to percentage
         rewardsAPR: totalAPR / 100,
       }
 
