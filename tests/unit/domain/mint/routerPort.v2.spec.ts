@@ -45,7 +45,7 @@ describe('RouterPort V2', () => {
         address: ROUTER,
         abi: [],
         functionName: 'deposit',
-        args: [TOKEN, 1000n, 500n, 42n, []],
+        args: [TOKEN, 1000n, 500n, 42n, '0x00000000000000000000000000000000000000ee', []],
         account: ACCOUNT,
       },
     })
@@ -58,6 +58,7 @@ describe('RouterPort V2', () => {
       collateralFromSender: 1000n,
       flashLoanAmount: 500n,
       minShares: 42n,
+      multicallExecutor: '0x00000000000000000000000000000000000000ee' as Address,
       calls: [],
       account: ACCOUNT,
     })

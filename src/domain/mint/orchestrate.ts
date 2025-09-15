@@ -148,6 +148,11 @@ export async function orchestrateMint(params: {
         (() => {
           throw new Error('LeverageRouterV2 address required for router v2 flow')
         })(),
+      multicallExecutor:
+        (import.meta.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] as Address | undefined) ||
+        ((): Address => {
+          throw new Error('Multicall executor address required for router v2 flow')
+        })(),
       ...(typeof maxSwapCostInCollateralAsset !== 'undefined'
         ? { maxSwapCostInCollateralAsset }
         : {}),

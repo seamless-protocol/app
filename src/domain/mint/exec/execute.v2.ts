@@ -16,7 +16,7 @@ import {
 
 // Infer call array type directly from generated action signature
 type DepositParams = Parameters<typeof simulateLeverageRouterV2Deposit>[1]
-type V2Calls = DepositParams['args'][4]
+type V2Calls = DepositParams['args'][5]
 
 import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from '@/domain/mint/utils/constants'
 
@@ -42,8 +42,18 @@ export async function executeMintV2(params: {
   maxSwapCostInCollateralAsset?: bigint
   /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
   routerAddress: Address
+  /** Multicall executor address (required for audit-fixes ABI) */
+  multicallExecutor: Address
 }) {
-  const { config, token, account, plan, maxSwapCostInCollateralAsset, routerAddress } = params
+  const {
+    config,
+    token,
+    account,
+    plan,
+    maxSwapCostInCollateralAsset,
+    routerAddress,
+    multicallExecutor,
+  } = params
 
   // No allowance handling here; UI should perform approvals beforehand
 
@@ -54,8 +64,15 @@ export async function executeMintV2(params: {
 
   const { request } = await simulateLeverageRouterV2Deposit(config, {
     address: routerAddress,
-    // deposit(token, collateralFromSender, flashLoanAmount, minShares, swapCalls)
-    args: [token, plan.equityInInputAsset, plan.expectedDebt, plan.minShares, plan.calls],
+    // deposit(token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, swapCalls)
+    args: [
+      token,
+      plan.equityInInputAsset,
+      plan.expectedDebt,
+      plan.minShares,
+      multicallExecutor,
+      plan.calls,
+    ],
     account,
   })
 

@@ -17,6 +17,799 @@ import {
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
 export const leverageManagerAbi = [
+  { type: 'error', inputs: [], name: 'AccessControlBadConfirmation' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'neededRole', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'AccessControlUnauthorizedAccount',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'target', internalType: 'address', type: 'address' }],
+    name: 'AddressEmptyCode',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'implementation', internalType: 'address', type: 'address' }],
+    name: 'ERC1967InvalidImplementation',
+  },
+  { type: 'error', inputs: [], name: 'ERC1967NonPayable' },
+  { type: 'error', inputs: [], name: 'FailedCall' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'fee', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxFee', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'FeeTooHigh',
+  },
+  { type: 'error', inputs: [], name: 'InvalidCollateralRatios' },
+  { type: 'error', inputs: [], name: 'InvalidInitialization' },
+  { type: 'error', inputs: [], name: 'InvalidLeverageTokenAssets' },
+  {
+    type: 'error',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'InvalidLeverageTokenStateAfterRebalance',
+  },
+  { type: 'error', inputs: [], name: 'LeverageTokenNotEligibleForRebalance' },
+  { type: 'error', inputs: [], name: 'NotInitializing' },
+  {
+    type: 'error',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'caller', internalType: 'address', type: 'address' },
+    ],
+    name: 'NotRebalancer',
+  },
+  { type: 'error', inputs: [], name: 'ReentrancyGuardReentrantCall' },
+  {
+    type: 'error',
+    inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
+    name: 'SafeERC20FailedOperation',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+      { name: 'expected', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'SlippageTooHigh',
+  },
+  { type: 'error', inputs: [], name: 'UUPSUnauthorizedCallContext' },
+  {
+    type: 'error',
+    inputs: [{ name: 'slot', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'UUPSUnsupportedProxiableUUID',
+  },
+  { type: 'error', inputs: [], name: 'ZeroAddressTreasury' },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256', indexed: false }],
+    name: 'DefaultManagementFeeAtCreationSet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'version',
+        internalType: 'uint64',
+        type: 'uint64',
+        indexed: false,
+      },
+    ],
+    name: 'Initialized',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'leverageTokenFactory',
+        internalType: 'contract IBeaconProxyFactory',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'LeverageManagerInitialized',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'leverageToken',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'action',
+        internalType: 'enum ExternalAction',
+        type: 'uint8',
+        indexed: true,
+      },
+      { name: 'fee', internalType: 'uint256', type: 'uint256', indexed: false },
+    ],
+    name: 'LeverageTokenActionFeeSet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'collateralAsset',
+        internalType: 'contract IERC20',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'debtAsset',
+        internalType: 'contract IERC20',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'config',
+        internalType: 'struct LeverageTokenConfig',
+        type: 'tuple',
+        components: [
+          {
+            name: 'lendingAdapter',
+            internalType: 'contract ILendingAdapter',
+            type: 'address',
+          },
+          {
+            name: 'rebalanceAdapter',
+            internalType: 'contract IRebalanceAdapterBase',
+            type: 'address',
+          },
+          { name: 'mintTokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'redeemTokenFee', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+    ],
+    name: 'LeverageTokenCreated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'leverageToken',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sharesFee',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ManagementFeeCharged',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'fee', internalType: 'uint256', type: 'uint256', indexed: false },
+    ],
+    name: 'ManagementFeeSet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'actionData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+    ],
+    name: 'Mint',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'stateBefore',
+        internalType: 'struct LeverageTokenState',
+        type: 'tuple',
+        components: [
+          {
+            name: 'collateralInDebtAsset',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'collateralRatio', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+      {
+        name: 'stateAfter',
+        internalType: 'struct LeverageTokenState',
+        type: 'tuple',
+        components: [
+          {
+            name: 'collateralInDebtAsset',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'collateralRatio', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+      {
+        name: 'actions',
+        internalType: 'struct RebalanceAction[]',
+        type: 'tuple[]',
+        components: [
+          {
+            name: 'actionType',
+            internalType: 'enum ActionType',
+            type: 'uint8',
+          },
+          { name: 'amount', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+    ],
+    name: 'Rebalance',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'actionData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+        indexed: false,
+      },
+    ],
+    name: 'Redeem',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32', indexed: true },
+      {
+        name: 'previousAdminRole',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+      {
+        name: 'newAdminRole',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+    ],
+    name: 'RoleAdminChanged',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32', indexed: true },
+      {
+        name: 'account',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'RoleGranted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32', indexed: true },
+      {
+        name: 'account',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'RoleRevoked',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'action',
+        internalType: 'enum ExternalAction',
+        type: 'uint8',
+        indexed: true,
+      },
+      { name: 'fee', internalType: 'uint256', type: 'uint256', indexed: false },
+    ],
+    name: 'TreasuryActionFeeSet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'treasury',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'TreasurySet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'implementation',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'Upgraded',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'BASE_RATIO',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'DEFAULT_ADMIN_ROLE',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'FEE_MANAGER_ROLE',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'UPGRADER_ROLE',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'UPGRADE_INTERFACE_VERSION',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'defaultAdmin', internalType: 'address', type: 'address' },
+      { name: 'treasury', internalType: 'address', type: 'address' },
+    ],
+    name: '__FeeManager_init',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'chargeManagementFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'tokenConfig',
+        internalType: 'struct LeverageTokenConfig',
+        type: 'tuple',
+        components: [
+          {
+            name: 'lendingAdapter',
+            internalType: 'contract ILendingAdapter',
+            type: 'address',
+          },
+          {
+            name: 'rebalanceAdapter',
+            internalType: 'contract IRebalanceAdapterBase',
+            type: 'address',
+          },
+          { name: 'mintTokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'redeemTokenFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+      { name: 'name', internalType: 'string', type: 'string' },
+      { name: 'symbol', internalType: 'string', type: 'string' },
+    ],
+    name: 'createNewLeverageToken',
+    outputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getDefaultManagementFeeAtCreation',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLastManagementFeeAccrualTimestamp',
+    outputs: [{ name: '', internalType: 'uint120', type: 'uint120' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'action', internalType: 'enum ExternalAction', type: 'uint8' },
+    ],
+    name: 'getLeverageTokenActionFee',
+    outputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenCollateralAsset',
+    outputs: [
+      {
+        name: 'collateralAsset',
+        internalType: 'contract IERC20',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenConfig',
+    outputs: [
+      {
+        name: 'config',
+        internalType: 'struct LeverageTokenConfig',
+        type: 'tuple',
+        components: [
+          {
+            name: 'lendingAdapter',
+            internalType: 'contract ILendingAdapter',
+            type: 'address',
+          },
+          {
+            name: 'rebalanceAdapter',
+            internalType: 'contract IRebalanceAdapterBase',
+            type: 'address',
+          },
+          { name: 'mintTokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'redeemTokenFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenDebtAsset',
+    outputs: [{ name: 'debtAsset', internalType: 'contract IERC20', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getLeverageTokenFactory',
+    outputs: [
+      {
+        name: 'factory',
+        internalType: 'contract IBeaconProxyFactory',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenInitialCollateralRatio',
+    outputs: [{ name: 'ratio', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenLendingAdapter',
+    outputs: [
+      {
+        name: 'adapter',
+        internalType: 'contract ILendingAdapter',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenRebalanceAdapter',
+    outputs: [
+      {
+        name: 'module',
+        internalType: 'contract IRebalanceAdapterBase',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getLeverageTokenState',
+    outputs: [
+      {
+        name: 'state',
+        internalType: 'struct LeverageTokenState',
+        type: 'tuple',
+        components: [
+          {
+            name: 'collateralInDebtAsset',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'collateralRatio', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+    ],
+    name: 'getManagementFee',
+    outputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'role', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'getRoleAdmin',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getTreasury',
+    outputs: [{ name: 'treasury', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'action', internalType: 'enum ExternalAction', type: 'uint8' }],
+    name: 'getTreasuryActionFee',
+    outputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'account', internalType: 'address', type: 'address' },
+    ],
+    name: 'grantRole',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'account', internalType: 'address', type: 'address' },
+    ],
+    name: 'hasRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'initialAdmin', internalType: 'address', type: 'address' },
+      { name: 'treasury', internalType: 'address', type: 'address' },
+      {
+        name: 'leverageTokenFactory',
+        internalType: 'contract IBeaconProxyFactory',
+        type: 'address',
+      },
+    ],
+    name: 'initialize',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
   {
     type: 'function',
     inputs: [
@@ -90,91 +883,174 @@ export const leverageManagerAbi = [
         internalType: 'contract ILeverageToken',
         type: 'address',
       },
+      {
+        name: 'equityInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
     ],
-    name: 'getLeverageTokenCollateralAsset',
+    name: 'previewRedeem',
     outputs: [
       {
-        name: 'collateralAsset',
-        internalType: 'contract IERC20',
-        type: 'address',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      {
-        name: 'token',
-        internalType: 'contract ILeverageToken',
-        type: 'address',
-      },
-    ],
-    name: 'getLeverageTokenDebtAsset',
-    outputs: [{ name: 'debtAsset', internalType: 'contract IERC20', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      {
-        name: 'token',
-        internalType: 'contract ILeverageToken',
-        type: 'address',
-      },
-    ],
-    name: 'getLeverageTokenConfig',
-    outputs: [
-      {
-        name: 'config',
-        internalType: 'struct LeverageTokenConfig',
+        name: '',
+        internalType: 'struct ActionData',
         type: 'tuple',
         components: [
-          {
-            name: 'lendingAdapter',
-            internalType: 'contract ILendingAdapter',
-            type: 'address',
-          },
-          {
-            name: 'rebalanceAdapter',
-            internalType: 'contract IRebalanceAdapterBase',
-            type: 'address',
-          },
-          { name: 'mintTokenFee', internalType: 'uint256', type: 'uint256' },
-          { name: 'redeemTokenFee', internalType: 'uint256', type: 'uint256' },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      {
-        name: 'token',
-        internalType: 'contract ILeverageToken',
-        type: 'address',
-      },
-    ],
-    name: 'getLeverageTokenState',
-    outputs: [
-      {
-        name: 'state',
-        internalType: 'struct LeverageTokenState',
-        type: 'tuple',
-        components: [
-          {
-            name: 'collateralInDebtAsset',
-            internalType: 'uint256',
-            type: 'uint256',
-          },
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
           { name: 'debt', internalType: 'uint256', type: 'uint256' },
           { name: 'equity', internalType: 'uint256', type: 'uint256' },
-          { name: 'collateralRatio', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
         ],
       },
     ],
     stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'proxiableUUID',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'leverageToken',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'actions',
+        internalType: 'struct RebalanceAction[]',
+        type: 'tuple[]',
+        components: [
+          {
+            name: 'actionType',
+            internalType: 'enum ActionType',
+            type: 'uint8',
+          },
+          { name: 'amount', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+      { name: 'tokenIn', internalType: 'contract IERC20', type: 'address' },
+      { name: 'tokenOut', internalType: 'contract IERC20', type: 'address' },
+      { name: 'amountIn', internalType: 'uint256', type: 'uint256' },
+      { name: 'amountOut', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'rebalance',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      {
+        name: 'equityInCollateralAsset',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'maxShares', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'redeem',
+    outputs: [
+      {
+        name: 'actionData',
+        internalType: 'struct ActionData',
+        type: 'tuple',
+        components: [
+          { name: 'collateral', internalType: 'uint256', type: 'uint256' },
+          { name: 'debt', internalType: 'uint256', type: 'uint256' },
+          { name: 'equity', internalType: 'uint256', type: 'uint256' },
+          { name: 'shares', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenFee', internalType: 'uint256', type: 'uint256' },
+          { name: 'treasuryFee', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'callerConfirmation', internalType: 'address', type: 'address' },
+    ],
+    name: 'renounceRole',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'account', internalType: 'address', type: 'address' },
+    ],
+    name: 'revokeRole',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256' }],
+    name: 'setDefaultManagementFeeAtCreation',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'contract ILeverageToken',
+        type: 'address',
+      },
+      { name: 'fee', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'setManagementFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'treasury', internalType: 'address', type: 'address' }],
+    name: 'setTreasury',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'action', internalType: 'enum ExternalAction', type: 'uint8' },
+      { name: 'fee', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'setTreasuryActionFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'interfaceId', internalType: 'bytes4', type: 'bytes4' }],
+    name: 'supportsInterface',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'newImplementation', internalType: 'address', type: 'address' },
+      { name: 'data', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'upgradeToAndCall',
+    outputs: [],
+    stateMutability: 'payable',
   },
 ] as const
 
@@ -1459,6 +2335,37 @@ export const leverageManagerV2Abi = [
  */
 export const leverageRouterAbi = [
   {
+    type: 'constructor',
+    inputs: [
+      {
+        name: '_leverageManager',
+        internalType: 'contract ILeverageManager',
+        type: 'address',
+      },
+      { name: '_morpho', internalType: 'contract IMorpho', type: 'address' },
+      {
+        name: '_swapper',
+        internalType: 'contract ISwapAdapter',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'actualCost', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxCost', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'MaxSwapCostExceeded',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
+    name: 'SafeERC20FailedOperation',
+  },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+  {
     type: 'function',
     inputs: [],
     name: 'leverageManager',
@@ -1493,10 +2400,14 @@ export const leverageRouterAbi = [
           { name: 'encodedPath', internalType: 'bytes', type: 'bytes' },
           { name: 'fees', internalType: 'uint24[]', type: 'uint24[]' },
           { name: 'tickSpacing', internalType: 'int24[]', type: 'int24[]' },
-          { name: 'exchange', internalType: 'uint8', type: 'uint8' },
+          {
+            name: 'exchange',
+            internalType: 'enum ISwapAdapter.Exchange',
+            type: 'uint8',
+          },
           {
             name: 'exchangeAddresses',
-            internalType: 'tuple',
+            internalType: 'struct ISwapAdapter.ExchangeAddresses',
             type: 'tuple',
             components: [
               {
@@ -1536,6 +2447,23 @@ export const leverageRouterAbi = [
   },
   {
     type: 'function',
+    inputs: [],
+    name: 'morpho',
+    outputs: [{ name: '', internalType: 'contract IMorpho', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'loanAmount', internalType: 'uint256', type: 'uint256' },
+      { name: 'data', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'onMorphoFlashLoan',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     inputs: [
       {
         name: 'token',
@@ -1562,10 +2490,14 @@ export const leverageRouterAbi = [
           { name: 'encodedPath', internalType: 'bytes', type: 'bytes' },
           { name: 'fees', internalType: 'uint24[]', type: 'uint24[]' },
           { name: 'tickSpacing', internalType: 'int24[]', type: 'int24[]' },
-          { name: 'exchange', internalType: 'uint8', type: 'uint8' },
+          {
+            name: 'exchange',
+            internalType: 'enum ISwapAdapter.Exchange',
+            type: 'uint8',
+          },
           {
             name: 'exchangeAddresses',
-            internalType: 'tuple',
+            internalType: 'struct ISwapAdapter.ExchangeAddresses',
             type: 'tuple',
             components: [
               {
@@ -1603,6 +2535,13 @@ export const leverageRouterAbi = [
     outputs: [],
     stateMutability: 'nonpayable',
   },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'swapper',
+    outputs: [{ name: '', internalType: 'contract ISwapAdapter', type: 'address' }],
+    stateMutability: 'view',
+  },
 ] as const
 
 /**
@@ -1637,7 +2576,6 @@ export const leverageRouterV2Abi = [
     ],
     stateMutability: 'nonpayable',
   },
-  { type: 'receive', stateMutability: 'payable' },
   {
     type: 'function',
     inputs: [
@@ -1672,8 +2610,13 @@ export const leverageRouterV2Abi = [
       { name: 'flashLoanAmount', internalType: 'uint256', type: 'uint256' },
       { name: 'minShares', internalType: 'uint256', type: 'uint256' },
       {
+        name: 'multicallExecutor',
+        internalType: 'contract IMulticallExecutor',
+        type: 'address',
+      },
+      {
         name: 'swapCalls',
-        internalType: 'struct ILeverageRouter.Call[]',
+        internalType: 'struct IMulticallExecutor.Call[]',
         type: 'tuple[]',
         components: [
           { name: 'target', internalType: 'address', type: 'address' },
@@ -1756,8 +2699,13 @@ export const leverageRouterV2Abi = [
         type: 'uint256',
       },
       {
+        name: 'multicallExecutor',
+        internalType: 'contract IMulticallExecutor',
+        type: 'address',
+      },
+      {
         name: 'swapCalls',
-        internalType: 'struct ILeverageRouter.Call[]',
+        internalType: 'struct IMulticallExecutor.Call[]',
         type: 'tuple[]',
         components: [
           { name: 'target', internalType: 'address', type: 'address' },
@@ -1808,11 +2756,6 @@ export const leverageRouterV2Abi = [
   },
   {
     type: 'error',
-    inputs: [{ name: 'target', internalType: 'address', type: 'address' }],
-    name: 'AddressEmptyCode',
-  },
-  {
-    type: 'error',
     inputs: [
       { name: 'remainingCollateral', internalType: 'uint256', type: 'uint256' },
       {
@@ -1822,15 +2765,6 @@ export const leverageRouterV2Abi = [
       },
     ],
     name: 'CollateralSlippageTooHigh',
-  },
-  { type: 'error', inputs: [], name: 'FailedCall' },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'balance', internalType: 'uint256', type: 'uint256' },
-      { name: 'needed', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'InsufficientBalance',
   },
   {
     type: 'error',
@@ -1848,6 +2782,7 @@ export const leverageRouterV2Abi = [
     ],
     name: 'MaxSwapCostExceeded',
   },
+  { type: 'error', inputs: [], name: 'ReentrancyGuardReentrantCall' },
   {
     type: 'error',
     inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
@@ -3042,14 +3977,93 @@ export const useReadLeverageManager = /*#__PURE__*/ createUseReadContract({
 })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"previewMint"`
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"BASE_RATIO"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerPreviewMint = /*#__PURE__*/ createUseReadContract({
+export const useReadLeverageManagerBaseRatio = /*#__PURE__*/ createUseReadContract({
   abi: leverageManagerAbi,
   address: leverageManagerAddress,
-  functionName: 'previewMint',
+  functionName: 'BASE_RATIO',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"DEFAULT_ADMIN_ROLE"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerDefaultAdminRole = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'DEFAULT_ADMIN_ROLE',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"FEE_MANAGER_ROLE"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerFeeManagerRole = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'FEE_MANAGER_ROLE',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"UPGRADER_ROLE"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerUpgraderRole = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'UPGRADER_ROLE',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"UPGRADE_INTERFACE_VERSION"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerUpgradeInterfaceVersion = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'UPGRADE_INTERFACE_VERSION',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getDefaultManagementFeeAtCreation"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'getDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLastManagementFeeAccrualTimestamp"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetLastManagementFeeAccrualTimestamp =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'getLastManagementFeeAccrualTimestamp',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenActionFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetLeverageTokenActionFee = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getLeverageTokenActionFee',
 })
 
 /**
@@ -3065,6 +4079,17 @@ export const useReadLeverageManagerGetLeverageTokenCollateralAsset =
   })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenConfig"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetLeverageTokenConfig = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getLeverageTokenConfig',
+})
+
+/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenDebtAsset"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
@@ -3076,15 +4101,51 @@ export const useReadLeverageManagerGetLeverageTokenDebtAsset = /*#__PURE__*/ cre
 })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenConfig"`
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenFactory"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerGetLeverageTokenConfig = /*#__PURE__*/ createUseReadContract({
+export const useReadLeverageManagerGetLeverageTokenFactory = /*#__PURE__*/ createUseReadContract({
   abi: leverageManagerAbi,
   address: leverageManagerAddress,
-  functionName: 'getLeverageTokenConfig',
+  functionName: 'getLeverageTokenFactory',
 })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenInitialCollateralRatio"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetLeverageTokenInitialCollateralRatio =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'getLeverageTokenInitialCollateralRatio',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenLendingAdapter"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetLeverageTokenLendingAdapter =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'getLeverageTokenLendingAdapter',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenRebalanceAdapter"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetLeverageTokenRebalanceAdapter =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'getLeverageTokenRebalanceAdapter',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenState"`
@@ -3098,6 +4159,105 @@ export const useReadLeverageManagerGetLeverageTokenState = /*#__PURE__*/ createU
 })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getManagementFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetManagementFee = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getManagementFee',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getRoleAdmin"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetRoleAdmin = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getRoleAdmin',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getTreasury"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetTreasury = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getTreasury',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getTreasuryActionFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerGetTreasuryActionFee = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getTreasuryActionFee',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"hasRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerHasRole = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'hasRole',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"previewMint"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerPreviewMint = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'previewMint',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"previewRedeem"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerPreviewRedeem = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'previewRedeem',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"proxiableUUID"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerProxiableUuid = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'proxiableUUID',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"supportsInterface"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useReadLeverageManagerSupportsInterface = /*#__PURE__*/ createUseReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'supportsInterface',
+})
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
@@ -3105,6 +4265,61 @@ export const useReadLeverageManagerGetLeverageTokenState = /*#__PURE__*/ createU
 export const useWriteLeverageManager = /*#__PURE__*/ createUseWriteContract({
   abi: leverageManagerAbi,
   address: leverageManagerAddress,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"__FeeManager_init"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerFeeManagerInit = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: '__FeeManager_init',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"chargeManagementFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerChargeManagementFee = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'chargeManagementFee',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"createNewLeverageToken"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerCreateNewLeverageToken = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'createNewLeverageToken',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"grantRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerGrantRole = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'grantRole',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"initialize"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerInitialize = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'initialize',
 })
 
 /**
@@ -3119,6 +4334,106 @@ export const useWriteLeverageManagerMint = /*#__PURE__*/ createUseWriteContract(
 })
 
 /**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"rebalance"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerRebalance = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'rebalance',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"redeem"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerRedeem = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"renounceRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerRenounceRole = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'renounceRole',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"revokeRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerRevokeRole = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'revokeRole',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerSetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'setDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setManagementFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerSetManagementFee = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setManagementFee',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setTreasury"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerSetTreasury = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setTreasury',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setTreasuryActionFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerSetTreasuryActionFee = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setTreasuryActionFee',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"upgradeToAndCall"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWriteLeverageManagerUpgradeToAndCall = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'upgradeToAndCall',
+})
+
+/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
@@ -3126,6 +4441,63 @@ export const useWriteLeverageManagerMint = /*#__PURE__*/ createUseWriteContract(
 export const useSimulateLeverageManager = /*#__PURE__*/ createUseSimulateContract({
   abi: leverageManagerAbi,
   address: leverageManagerAddress,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"__FeeManager_init"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerFeeManagerInit = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: '__FeeManager_init',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"chargeManagementFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerChargeManagementFee =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'chargeManagementFee',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"createNewLeverageToken"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerCreateNewLeverageToken =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'createNewLeverageToken',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"grantRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerGrantRole = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'grantRole',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"initialize"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerInitialize = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'initialize',
 })
 
 /**
@@ -3137,6 +4509,301 @@ export const useSimulateLeverageManagerMint = /*#__PURE__*/ createUseSimulateCon
   abi: leverageManagerAbi,
   address: leverageManagerAddress,
   functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"rebalance"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerRebalance = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'rebalance',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"redeem"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerRedeem = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"renounceRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerRenounceRole = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'renounceRole',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"revokeRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerRevokeRole = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'revokeRole',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerSetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'setDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setManagementFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerSetManagementFee = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setManagementFee',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setTreasury"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerSetTreasury = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setTreasury',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setTreasuryActionFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerSetTreasuryActionFee =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'setTreasuryActionFee',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"upgradeToAndCall"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useSimulateLeverageManagerUpgradeToAndCall = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'upgradeToAndCall',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"DefaultManagementFeeAtCreationSet"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerDefaultManagementFeeAtCreationSetEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'DefaultManagementFeeAtCreationSet',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"Initialized"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerInitializedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'Initialized',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"LeverageManagerInitialized"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerLeverageManagerInitializedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'LeverageManagerInitialized',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"LeverageTokenActionFeeSet"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerLeverageTokenActionFeeSetEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'LeverageTokenActionFeeSet',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"LeverageTokenCreated"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerLeverageTokenCreatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'LeverageTokenCreated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"ManagementFeeCharged"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerManagementFeeChargedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'ManagementFeeCharged',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"ManagementFeeSet"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerManagementFeeSetEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'ManagementFeeSet',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"Mint"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerMintEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'Mint',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"Rebalance"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerRebalanceEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'Rebalance',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"Redeem"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerRedeemEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'Redeem',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"RoleAdminChanged"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerRoleAdminChangedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'RoleAdminChanged',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"RoleGranted"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerRoleGrantedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'RoleGranted',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"RoleRevoked"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerRoleRevokedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'RoleRevoked',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"TreasuryActionFeeSet"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerTreasuryActionFeeSetEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'TreasuryActionFeeSet',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"TreasurySet"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerTreasurySetEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'TreasurySet',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"Upgraded"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const useWatchLeverageManagerUpgradedEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'Upgraded',
 })
 
 /**
@@ -3883,6 +5550,28 @@ export const useReadLeverageRouterLeverageManager = /*#__PURE__*/ createUseReadC
 })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"morpho"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useReadLeverageRouterMorpho = /*#__PURE__*/ createUseReadContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'morpho',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"swapper"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useReadLeverageRouterSwapper = /*#__PURE__*/ createUseReadContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'swapper',
+})
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
@@ -3901,6 +5590,17 @@ export const useWriteLeverageRouterMint = /*#__PURE__*/ createUseWriteContract({
   abi: leverageRouterAbi,
   address: leverageRouterAddress,
   functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"onMorphoFlashLoan"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useWriteLeverageRouterOnMorphoFlashLoan = /*#__PURE__*/ createUseWriteContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'onMorphoFlashLoan',
 })
 
 /**
@@ -3933,6 +5633,17 @@ export const useSimulateLeverageRouterMint = /*#__PURE__*/ createUseSimulateCont
   abi: leverageRouterAbi,
   address: leverageRouterAddress,
   functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"onMorphoFlashLoan"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const useSimulateLeverageRouterOnMorphoFlashLoan = /*#__PURE__*/ createUseSimulateContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'onMorphoFlashLoan',
 })
 
 /**
@@ -5252,14 +6963,93 @@ export const readLeverageManager = /*#__PURE__*/ createReadContract({
 })
 
 /**
- * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"previewMint"`
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"BASE_RATIO"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerPreviewMint = /*#__PURE__*/ createReadContract({
+export const readLeverageManagerBaseRatio = /*#__PURE__*/ createReadContract({
   abi: leverageManagerAbi,
   address: leverageManagerAddress,
-  functionName: 'previewMint',
+  functionName: 'BASE_RATIO',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"DEFAULT_ADMIN_ROLE"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerDefaultAdminRole = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'DEFAULT_ADMIN_ROLE',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"FEE_MANAGER_ROLE"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerFeeManagerRole = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'FEE_MANAGER_ROLE',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"UPGRADER_ROLE"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerUpgraderRole = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'UPGRADER_ROLE',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"UPGRADE_INTERFACE_VERSION"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerUpgradeInterfaceVersion = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'UPGRADE_INTERFACE_VERSION',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getDefaultManagementFeeAtCreation"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'getDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLastManagementFeeAccrualTimestamp"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetLastManagementFeeAccrualTimestamp =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'getLastManagementFeeAccrualTimestamp',
+  })
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenActionFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetLeverageTokenActionFee = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getLeverageTokenActionFee',
 })
 
 /**
@@ -5274,6 +7064,17 @@ export const readLeverageManagerGetLeverageTokenCollateralAsset = /*#__PURE__*/ 
 })
 
 /**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenConfig"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetLeverageTokenConfig = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getLeverageTokenConfig',
+})
+
+/**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenDebtAsset"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
@@ -5285,15 +7086,51 @@ export const readLeverageManagerGetLeverageTokenDebtAsset = /*#__PURE__*/ create
 })
 
 /**
- * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenConfig"`
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenFactory"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerGetLeverageTokenConfig = /*#__PURE__*/ createReadContract({
+export const readLeverageManagerGetLeverageTokenFactory = /*#__PURE__*/ createReadContract({
   abi: leverageManagerAbi,
   address: leverageManagerAddress,
-  functionName: 'getLeverageTokenConfig',
+  functionName: 'getLeverageTokenFactory',
 })
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenInitialCollateralRatio"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetLeverageTokenInitialCollateralRatio =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'getLeverageTokenInitialCollateralRatio',
+  })
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenLendingAdapter"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetLeverageTokenLendingAdapter = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getLeverageTokenLendingAdapter',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenRebalanceAdapter"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetLeverageTokenRebalanceAdapter = /*#__PURE__*/ createReadContract(
+  {
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'getLeverageTokenRebalanceAdapter',
+  },
+)
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getLeverageTokenState"`
@@ -5307,6 +7144,105 @@ export const readLeverageManagerGetLeverageTokenState = /*#__PURE__*/ createRead
 })
 
 /**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getManagementFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetManagementFee = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getManagementFee',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getRoleAdmin"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetRoleAdmin = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getRoleAdmin',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getTreasury"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetTreasury = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getTreasury',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"getTreasuryActionFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerGetTreasuryActionFee = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'getTreasuryActionFee',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"hasRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerHasRole = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'hasRole',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"previewMint"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerPreviewMint = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'previewMint',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"previewRedeem"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerPreviewRedeem = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'previewRedeem',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"proxiableUUID"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerProxiableUuid = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'proxiableUUID',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"supportsInterface"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const readLeverageManagerSupportsInterface = /*#__PURE__*/ createReadContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'supportsInterface',
+})
+
+/**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
@@ -5314,6 +7250,61 @@ export const readLeverageManagerGetLeverageTokenState = /*#__PURE__*/ createRead
 export const writeLeverageManager = /*#__PURE__*/ createWriteContract({
   abi: leverageManagerAbi,
   address: leverageManagerAddress,
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"__FeeManager_init"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerFeeManagerInit = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: '__FeeManager_init',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"chargeManagementFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerChargeManagementFee = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'chargeManagementFee',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"createNewLeverageToken"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerCreateNewLeverageToken = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'createNewLeverageToken',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"grantRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerGrantRole = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'grantRole',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"initialize"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerInitialize = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'initialize',
 })
 
 /**
@@ -5328,6 +7319,106 @@ export const writeLeverageManagerMint = /*#__PURE__*/ createWriteContract({
 })
 
 /**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"rebalance"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerRebalance = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'rebalance',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"redeem"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerRedeem = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"renounceRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerRenounceRole = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'renounceRole',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"revokeRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerRevokeRole = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'revokeRole',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerSetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'setDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setManagementFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerSetManagementFee = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setManagementFee',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setTreasury"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerSetTreasury = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setTreasury',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setTreasuryActionFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerSetTreasuryActionFee = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setTreasuryActionFee',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"upgradeToAndCall"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const writeLeverageManagerUpgradeToAndCall = /*#__PURE__*/ createWriteContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'upgradeToAndCall',
+})
+
+/**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
@@ -5335,6 +7426,61 @@ export const writeLeverageManagerMint = /*#__PURE__*/ createWriteContract({
 export const simulateLeverageManager = /*#__PURE__*/ createSimulateContract({
   abi: leverageManagerAbi,
   address: leverageManagerAddress,
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"__FeeManager_init"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerFeeManagerInit = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: '__FeeManager_init',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"chargeManagementFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerChargeManagementFee = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'chargeManagementFee',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"createNewLeverageToken"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerCreateNewLeverageToken = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'createNewLeverageToken',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"grantRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerGrantRole = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'grantRole',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"initialize"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerInitialize = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'initialize',
 })
 
 /**
@@ -5346,6 +7492,301 @@ export const simulateLeverageManagerMint = /*#__PURE__*/ createSimulateContract(
   abi: leverageManagerAbi,
   address: leverageManagerAddress,
   functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"rebalance"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerRebalance = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'rebalance',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"redeem"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerRedeem = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'redeem',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"renounceRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerRenounceRole = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'renounceRole',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"revokeRole"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerRevokeRole = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'revokeRole',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerSetDefaultManagementFeeAtCreation =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    functionName: 'setDefaultManagementFeeAtCreation',
+  })
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setManagementFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerSetManagementFee = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setManagementFee',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setTreasury"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerSetTreasury = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setTreasury',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"setTreasuryActionFee"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerSetTreasuryActionFee = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'setTreasuryActionFee',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerAbi}__ and `functionName` set to `"upgradeToAndCall"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const simulateLeverageManagerUpgradeToAndCall = /*#__PURE__*/ createSimulateContract({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  functionName: 'upgradeToAndCall',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"DefaultManagementFeeAtCreationSet"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerDefaultManagementFeeAtCreationSetEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'DefaultManagementFeeAtCreationSet',
+  })
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"Initialized"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerInitializedEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'Initialized',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"LeverageManagerInitialized"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerLeverageManagerInitializedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'LeverageManagerInitialized',
+  })
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"LeverageTokenActionFeeSet"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerLeverageTokenActionFeeSetEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'LeverageTokenActionFeeSet',
+  })
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"LeverageTokenCreated"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerLeverageTokenCreatedEvent = /*#__PURE__*/ createWatchContractEvent(
+  {
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'LeverageTokenCreated',
+  },
+)
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"ManagementFeeCharged"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerManagementFeeChargedEvent = /*#__PURE__*/ createWatchContractEvent(
+  {
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'ManagementFeeCharged',
+  },
+)
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"ManagementFeeSet"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerManagementFeeSetEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'ManagementFeeSet',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"Mint"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerMintEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'Mint',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"Rebalance"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerRebalanceEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'Rebalance',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"Redeem"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerRedeemEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'Redeem',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"RoleAdminChanged"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerRoleAdminChangedEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'RoleAdminChanged',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"RoleGranted"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerRoleGrantedEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'RoleGranted',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"RoleRevoked"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerRoleRevokedEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'RoleRevoked',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"TreasuryActionFeeSet"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerTreasuryActionFeeSetEvent = /*#__PURE__*/ createWatchContractEvent(
+  {
+    abi: leverageManagerAbi,
+    address: leverageManagerAddress,
+    eventName: 'TreasuryActionFeeSet',
+  },
+)
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"TreasurySet"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerTreasurySetEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'TreasurySet',
+})
+
+/**
+ * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerAbi}__ and `eventName` set to `"Upgraded"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
+ */
+export const watchLeverageManagerUpgradedEvent = /*#__PURE__*/ createWatchContractEvent({
+  abi: leverageManagerAbi,
+  address: leverageManagerAddress,
+  eventName: 'Upgraded',
 })
 
 /**
@@ -6079,6 +8520,28 @@ export const readLeverageRouterLeverageManager = /*#__PURE__*/ createReadContrac
 })
 
 /**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"morpho"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const readLeverageRouterMorpho = /*#__PURE__*/ createReadContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'morpho',
+})
+
+/**
+ * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"swapper"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const readLeverageRouterSwapper = /*#__PURE__*/ createReadContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'swapper',
+})
+
+/**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
@@ -6097,6 +8560,17 @@ export const writeLeverageRouterMint = /*#__PURE__*/ createWriteContract({
   abi: leverageRouterAbi,
   address: leverageRouterAddress,
   functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"onMorphoFlashLoan"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const writeLeverageRouterOnMorphoFlashLoan = /*#__PURE__*/ createWriteContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'onMorphoFlashLoan',
 })
 
 /**
@@ -6129,6 +8603,17 @@ export const simulateLeverageRouterMint = /*#__PURE__*/ createSimulateContract({
   abi: leverageRouterAbi,
   address: leverageRouterAddress,
   functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterAbi}__ and `functionName` set to `"onMorphoFlashLoan"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xDbA92fC3dc10a17b96b6E807a908155C389A887C)
+ */
+export const simulateLeverageRouterOnMorphoFlashLoan = /*#__PURE__*/ createSimulateContract({
+  abi: leverageRouterAbi,
+  address: leverageRouterAddress,
+  functionName: 'onMorphoFlashLoan',
 })
 
 /**

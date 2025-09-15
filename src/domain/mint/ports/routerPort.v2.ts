@@ -8,7 +8,7 @@ import {
 
 // Infer swap calls tuple type from generated action signature
 type DepositParams = Parameters<typeof simulateLeverageRouterV2Deposit>[1]
-type V2Calls = DepositParams['args'][4]
+type V2Calls = DepositParams['args'][5]
 
 export interface RouterPortV2PreviewResult {
   collateral: bigint
@@ -28,6 +28,7 @@ export interface RouterPortV2 {
     collateralFromSender: bigint
     flashLoanAmount: bigint
     minShares: bigint
+    multicallExecutor: Address
     calls: V2Calls
     account: Address
   }): Promise<{ hash: Hash }>
@@ -48,10 +49,18 @@ export function createRouterPortV2(params: {
       })
       return { collateral: res.collateral, debt: res.debt, shares: res.shares }
     },
-    async invokeMint({ token, collateralFromSender, flashLoanAmount, minShares, calls, account }) {
+    async invokeMint({
+      token,
+      collateralFromSender,
+      flashLoanAmount,
+      minShares,
+      multicallExecutor,
+      calls,
+      account,
+    }) {
       const { request } = await simulateLeverageRouterV2Deposit(config, {
         address: routerAddress,
-        args: [token, collateralFromSender, flashLoanAmount, minShares, calls],
+        args: [token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, calls],
         account,
       })
       const hash = await writeLeverageRouterV2Deposit(config, { ...request })

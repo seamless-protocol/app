@@ -211,6 +211,8 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
             expectedDebt: plan.expectedDebt,
           },
           routerAddress: router,
+          multicallExecutor: (ADDR.executor ||
+            ('0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd' as Address)) as Address,
         })
         console.info('[STEP] Waiting for receipt', { hash })
         const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -238,6 +240,8 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
               plan.equityInInputAsset,
               plan.expectedDebt,
               plan.minShares,
+              (ADDR.executor ||
+                ('0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd' as Address)) as Address,
               plan.calls.map((c) => ({ target: c.target, value: c.value, data: c.data })),
             ],
           })
