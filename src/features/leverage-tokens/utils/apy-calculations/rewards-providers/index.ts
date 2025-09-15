@@ -23,7 +23,7 @@ export async function fetchRewardsAprForToken(
   }
 
   try {
-    return await provider.fetchRewardsApr(tokenAddress, chainId)
+    return await provider.fetchRewardsApr(tokenAddress)
   } catch (error) {
     console.error('[Rewards Provider] Provider failed, returning default data:', error)
     // Return default data when provider fails
