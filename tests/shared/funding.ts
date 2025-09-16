@@ -1,6 +1,14 @@
 import { type Address, erc20Abi, getAddress, maxUint256, parseAbi, parseUnits, toHex } from 'viem'
 import { BASE_WETH } from '../../src/lib/contracts/addresses.js'
-import { account, adminRequest, mode, publicClient, testClient, walletClient } from './clients'
+import {
+  ADDR,
+  account,
+  adminRequest,
+  mode,
+  publicClient,
+  testClient,
+  walletClient,
+} from './clients'
 
 // Re-export commonly used ABIs
 export { erc20Abi }
@@ -64,9 +72,9 @@ async function fundErc20ViaWethDeposit(token: Address, to: Address, human: strin
   return true
 }
 
-// Token addresses from Base network
-const USDC_ADDRESS: Address = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913'
-const weETH_ADDRESS: Address = '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a'
+// Token addresses follow the detected chain configuration
+const USDC_ADDRESS = getAddress(ADDR.usdc)
+const weETH_ADDRESS = getAddress(ADDR.weeth)
 
 // Rich holders for token funding via impersonation (Anvil only)
 const RICH_HOLDERS: Record<Address, Address | undefined> = {
