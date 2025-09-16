@@ -9,6 +9,8 @@ export type LifiOrder = 'CHEAPEST' | 'FASTEST'
 export interface LifiAdapterOptions {
   chainId?: number
   router: Address
+  /** Optional override for quote `fromAddress` (defaults to `router`). */
+  fromAddress?: Address
   slippageBps?: number
   baseUrl?: string
   apiKey?: string
@@ -45,6 +47,7 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
   const {
     chainId = base.id,
     router,
+    fromAddress,
     slippageBps = DEFAULT_SLIPPAGE_BPS,
     // Always use li.quest as documented by LiFi for /v1/quote
     baseUrl = opts.baseUrl ?? 'https://li.quest',
@@ -71,6 +74,11 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       outToken,
       amountIn,
       router,
+      // The on-chain swap is executed inside the router flow. When a MulticallExecutor
+      // is used, it may be the effective token holder and caller for the swap.
+      // Allow overriding `fromAddress` to match the executor when needed; otherwise
+      // default to the router address.
+      fromAddress: (fromAddress ?? router) as Address,
       slippage,
       ...(integrator ? { integrator } : {}),
       order,
@@ -111,6 +119,7 @@ function buildQuoteUrl(
     outToken: Address
     amountIn: bigint
     router: Address
+    fromAddress: Address
     slippage: string
     integrator?: string
     order: LifiOrder
@@ -123,7 +132,7 @@ function buildQuoteUrl(
   url.searchParams.set('fromToken', getAddress(params.inToken))
   url.searchParams.set('toToken', getAddress(params.outToken))
   url.searchParams.set('fromAmount', params.amountIn.toString())
-  url.searchParams.set('fromAddress', getAddress(params.router))
+  url.searchParams.set('fromAddress', getAddress(params.fromAddress))
   url.searchParams.set('slippage', params.slippage)
   if (params.integrator) url.searchParams.set('integrator', params.integrator)
   url.searchParams.set('order', params.order)

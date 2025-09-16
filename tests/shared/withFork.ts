@@ -1,4 +1,5 @@
 import type { Address, Hash } from 'viem'
+import type { Config } from 'wagmi'
 import {
   ADDR,
   account,
@@ -10,11 +11,13 @@ import {
   walletClient,
 } from './clients'
 import { topUpErc20, topUpNative } from './funding'
+import { wagmiConfig } from './wagmi'
 
 export type WithForkCtx = {
   account: typeof account
   walletClient: typeof walletClient
   publicClient: typeof publicClient
+  config: Config
   ADDR: typeof ADDR
   others: Array<{ account: (typeof extraAccounts)[number]; wallet: (typeof extraWallets)[number] }>
   fund: {
@@ -32,6 +35,7 @@ export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise
       account,
       walletClient,
       publicClient,
+      config: wagmiConfig as Config,
       ADDR,
       others: extraAccounts
         .map((acct, i) => {

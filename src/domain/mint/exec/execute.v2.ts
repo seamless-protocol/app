@@ -76,8 +76,6 @@ export async function executeMintV2(params: {
     account,
   })
 
-  const hash = await writeLeverageRouterV2Deposit(config, {
-    ...request,
-  })
+  const hash = await writeLeverageRouterV2Deposit(config, { ...request })
   return { hash }
 }

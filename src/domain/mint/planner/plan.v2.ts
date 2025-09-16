@@ -5,7 +5,7 @@
  * re-previews the manager state with total collateral to ensure repayability.
  */
 import type { Address } from 'viem'
-import { encodeFunctionData, erc20Abi, getAddress } from 'viem'
+import { encodeFunctionData, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
 import {
   // V2 reads (explicit address may be provided when using VNets/custom deployments)
@@ -23,6 +23,11 @@ type EquityInInputAssetArg = bigint
 type RouterV2Call = { target: Address; data: `0x${string}`; value: bigint }
 type V2Calls = Array<RouterV2Call>
 type V2Call = RouterV2Call
+
+// Base WETH native path support
+const BASE_WETH = '0x4200000000000000000000000000000000000006' as Address
+const ETH_SENTINEL = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as Address
+const WETH_WITHDRAW_ABI = parseAbi(['function withdraw(uint256 wad)'])
 
 /**
  * Structured plan for executing a single-transaction mint via the V2 router.
@@ -109,15 +114,18 @@ export async function planMintV2(params: {
 
   // Size debt leg and quote
   let debtIn = ideal.idealDebt
+  // Prefer native path for Base WETH: withdraw -> aggregator with msg.value
+  const useNativeDebtPath = getAddress(debtAsset) === getAddress(BASE_WETH)
+  const inTokenForQuote = useNativeDebtPath ? ETH_SENTINEL : debtAsset
   let debtQuote = await quoteDebtToCollateral({
-    inToken: debtAsset,
+    inToken: inTokenForQuote,
     outToken: collateralAsset,
     amountIn: debtIn,
   })
   if (debtQuote.out < neededFromDebtSwap) {
     debtIn = mulDivFloor(ideal.idealDebt, debtQuote.out, neededFromDebtSwap)
     debtQuote = await quoteDebtToCollateral({
-      inToken: debtAsset,
+      inToken: inTokenForQuote,
       outToken: collateralAsset,
       amountIn: debtIn,
     })
@@ -139,7 +147,7 @@ export async function planMintV2(params: {
   const minShares = applySlippageFloor(final.previewShares, slippageBps)
   const excessDebt: bigint = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
 
-  calls.push(...buildDebtSwapCalls({ debtAsset, debtQuote, debtIn }))
+  calls.push(...buildDebtSwapCalls({ debtAsset, debtQuote, debtIn, useNative: useNativeDebtPath }))
 
   return {
     inputAsset,
@@ -178,18 +186,23 @@ function buildDebtSwapCalls(args: {
   debtAsset: Address
   debtQuote: Quote
   debtIn: bigint
+  useNative: boolean
 }): Array<V2Call> {
-  const { debtAsset, debtQuote, debtIn } = args
-  return [
-    {
-      target: debtAsset,
-      data: encodeFunctionData({
-        abi: erc20Abi,
-        functionName: 'approve',
-        args: [debtQuote.approvalTarget, debtIn],
-      }),
-      value: 0n,
-    },
-    { target: debtQuote.approvalTarget, data: debtQuote.calldata, value: 0n },
-  ]
+  const { debtAsset, debtQuote, debtIn, useNative } = args
+  if (useNative) {
+    return [
+      {
+        target: debtAsset,
+        data: encodeFunctionData({
+          abi: WETH_WITHDRAW_ABI,
+          functionName: 'withdraw',
+          args: [debtIn],
+        }),
+        value: 0n,
+      },
+      { target: debtQuote.approvalTarget, data: debtQuote.calldata, value: debtIn },
+    ]
+  }
+  // ERC20-in path: aggregator call only (router handles approvals internally)
+  return [{ target: debtQuote.approvalTarget, data: debtQuote.calldata, value: 0n }]
 }

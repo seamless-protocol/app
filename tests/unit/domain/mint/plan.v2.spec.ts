@@ -66,10 +66,9 @@ describe('planMintV2', () => {
     expect(plan.expectedTotalCollateral).toBe(1_150n)
     // minShares is slippage-adjusted 0.5% below expected shares (shares == total collateral via mock)
     expect(plan.minShares).toBeGreaterThan(0n)
-    // Calls: approve(debtAsset->target) + swap for debt leg
+    // Calls: single aggregator call (router handles approvals internally)
     const calls = plan.calls ?? []
-    expect(calls.length).toBe(2)
+    expect(calls.length).toBe(1)
     expect(calls[0]?.value).toBe(0n)
-    expect(calls[1]?.value).toBe(0n)
   })
 })
