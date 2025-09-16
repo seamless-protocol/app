@@ -30,6 +30,16 @@ function PortfolioPage() {
   } = usePortfolioData()
   const performanceData = usePortfolioPerformance()
   const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
+  
+  // Console log for testing rewards data
+  console.log('🎁 Portfolio Rewards Data:', {
+    rewardsData,
+    isLoading: rewardsLoading,
+    hasRewards: rewardsData?.hasRewards,
+    totalClaimable: rewardsData?.totalClaimableAmount,
+    tokenCount: rewardsData?.tokenCount,
+    rewardsCount: rewardsData?.claimableRewards?.length,
+  })
   const { data: stakingData, isLoading: stakingLoading } = usePortfolioStaking()
 
   // Extract data with fallbacks
