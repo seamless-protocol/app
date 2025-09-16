@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { features } from '@/lib/config/features'
 import { ConnectButtonTest } from './ConnectButtonTest'
-import { KyberSwapWidget } from './KyberSwapWidget'
+import { LiFiWidget } from './LiFiWidget'
 import { ModeToggle } from './mode-toggle'
 import { Toaster } from './ui/sonner'
 import { type NavigationItem, VerticalNavbar } from './VerticalNavbar'
@@ -184,7 +184,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
               {/* Actions */}
               <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
-                <KyberSwapWidget />
+                <LiFiWidget />
                 {features.testMode ? <ConnectButtonTest /> : <WalletConnectButton />}
                 <ModeToggle />
               </div>

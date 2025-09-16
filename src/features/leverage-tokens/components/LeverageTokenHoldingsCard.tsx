@@ -1,30 +1,10 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { motion } from 'framer-motion'
 import { Minus, Plus, Zap } from 'lucide-react'
-import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useAccount } from 'wagmi'
 import { AssetDisplay } from '@/components/ui/asset-display'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-
-// Fallback component for when KyberSwapWidget is not available (e.g., in Storybook)
-function KyberSwapWidgetFallback() {
-  return (
-    <div className="bg-slate-800 rounded-lg p-8 text-center">
-      <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Zap className="w-8 h-8 text-purple-400" />
-      </div>
-      <h3 className="text-white font-medium mb-2">KyberSwap Widget</h3>
-      <p className="text-slate-400 text-sm mb-4">
-        TODO: Update KyberSwap widget params once they support leverage tokens
-      </p>
-      <p className="text-slate-500 text-xs">
-        This would open the actual KyberSwap widget for minting/redeeming leverage tokens
-      </p>
-    </div>
-  )
-}
 
 interface UserPosition {
   hasPosition: boolean
@@ -52,43 +32,18 @@ export function LeverageTokenHoldingsCard({
   collateralAsset,
   debtAsset,
 }: LeverageTokenHoldingsCardProps) {
-  const [showKyberSwapWidget, setShowKyberSwapWidget] = useState(false)
-
   // Use real wallet connection state from wagmi
   const { isConnected } = useAccount()
 
   const handleMintClick = () => {
-    if (isConnected) {
-      if (onMint) {
-        onMint()
-      } else {
-        // TODO: Update KyberSwap widget params once they support leverage tokens
-        setShowKyberSwapWidget(true)
-      }
+    if (isConnected && onMint) {
+      onMint()
     }
-    // If not connected, the button will be replaced with ConnectButton automatically
   }
 
   const handleRedeemClick = () => {
-    if (isConnected) {
-      if (onRedeem) {
-        onRedeem()
-      } else {
-        // TODO: Update KyberSwap widget params once they support leverage tokens
-        setShowKyberSwapWidget(true)
-      }
-    }
-    // If not connected, the button will be replaced with ConnectButton automatically
-  }
-
-  // Try to load KyberSwapWidget, fallback to mock for Storybook
-  const renderKyberSwapWidget = () => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { KyberSwapWidget: Widget } = require('@/components/KyberSwapWidget')
-      return <Widget />
-    } catch {
-      return <KyberSwapWidgetFallback />
+    if (isConnected && onRedeem) {
+      onRedeem()
     }
   }
 
@@ -225,41 +180,6 @@ export function LeverageTokenHoldingsCard({
           </div>
         </CardContent>
       </Card>
-
-      {/* KyberSwap Widget Modal */}
-      {showKyberSwapWidget &&
-        createPortal(
-          <div
-            data-state="open"
-            data-slot="dialog-overlay"
-            className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-            style={{ pointerEvents: 'auto' }}
-            data-aria-hidden="true"
-            aria-hidden="true"
-            onClick={(e) => {
-              // Close modal when clicking backdrop
-              if (e.target === e.currentTarget) {
-                setShowKyberSwapWidget(false)
-              }
-            }}
-          >
-            <div className="relative">
-              {/* Close Button - positioned relative to widget container */}
-              <button
-                type="button"
-                onClick={() => setShowKyberSwapWidget(false)}
-                className="cursor-pointer absolute -top-4 -right-4 w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-50 flex items-center justify-center text-xl font-light shadow-lg"
-                aria-label="Close swap widget"
-              >
-                ×
-              </button>
-
-              {/* Widget Container */}
-              <div className="kyber-swap-widget">{renderKyberSwapWidget()}</div>
-            </div>
-          </div>,
-          document.body,
-        )}
     </motion.div>
   )
 }

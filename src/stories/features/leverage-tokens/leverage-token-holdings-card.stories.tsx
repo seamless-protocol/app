@@ -96,7 +96,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          'The leverage token holdings card displays different states based on wallet connection. When connected, it shows actual holdings with balance and performance. When disconnected, it prompts to connect wallet. Mint and Redeem buttons can use custom handlers (demonstrated with toast notifications) or fall back to the KyberSwap widget.',
+          'The leverage token holdings card displays different states based on wallet connection. When connected, it shows actual holdings with balance and performance. When disconnected, it prompts to connect wallet. Mint and Redeem buttons can use custom handlers (demonstrated with toast notifications) or fall back to the LI.FI widget.',
       },
     },
   },
