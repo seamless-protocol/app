@@ -6,6 +6,7 @@ import { vi } from 'vitest'
 vi.stubEnv('VITE_ENABLE_LEVERAGE_TOKENS', 'true')
 vi.stubEnv('VITE_ENABLE_LEVERAGE_TOKEN_CREATION', 'false')
 vi.stubEnv('VITE_TEST_MODE', 'mock')
+vi.stubEnv('VITE_MULTICALL_EXECUTOR_ADDRESS', '0x0000000000000000000000000000000000000001')
 
 // Mock wagmi hooks
 vi.mock('wagmi', () => ({
@@ -44,8 +45,10 @@ vi.mock('@wagmi/core', () => ({
   waitForTransactionReceipt: vi.fn(),
   readContract: vi.fn(),
   readContracts: vi.fn(),
+  connect: vi.fn(async () => ({ accounts: ['0x0'], chainId: base.id })),
   getPublicClient: vi.fn(() => ({
-    getChainId: vi.fn(() => Promise.resolve(8453)),
+    getChainId: vi.fn(() => Promise.resolve(base.id)),
+    chain: { id: base.id },
     transport: { url: 'http://localhost:8545' },
   })),
 }))
@@ -61,9 +64,21 @@ vi.mock('@/lib/contracts/generated', () => ({
   leverageRouterAbi: [],
 }))
 
-// Mock contract addresses
-vi.mock('@/lib/contracts/addresses', () => ({
-  contractAddresses: {
+// Mock contract addresses (keep base constants aligned with source module)
+vi.mock('@/lib/contracts/addresses', () => {
+  type ContractMap = {
+    leverageTokenFactory?: string
+    leverageManager?: string
+    leverageRouter?: string
+    stakedSeam?: string
+    seamlessToken?: string
+    timelockShort?: string
+    governorShort?: string
+    timelockLong?: string
+    governorLong?: string
+  }
+
+  const contractAddresses: Record<number, ContractMap> = {
     [base.id]: {
       leverageTokenFactory: '0xE0b2e40EDeb53B96C923381509a25a615c1Abe57',
       leverageManager: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8',
@@ -72,15 +87,60 @@ vi.mock('@/lib/contracts/addresses', () => ({
       seamlessToken: '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85',
       timelockShort: '0x639d2dD24304aC2e6A691d8c1cFf4a2665925fee',
       governorShort: '0x8768c789C6df8AF1a92d96dE823b4F80010Db294',
+      timelockLong: '0xA96448469520666EDC351eff7676af2247b16718',
+      governorLong: '0x04faA2826DbB38a7A4E9a5E3dB26b9E389E761B6',
     },
-  },
-  STAKED_SEAM: { address: '0x73f0849756f6A79C1d536b7abAB1E6955f7172A4', chainId: 8453 },
-  seamlessContracts: {
-    8453: { rewardsController: '0x2C6dC2CE7747E726A590082ADB3d7d08F52ADB93' },
-  },
-  getContractAddresses: vi.fn(),
-  getLeverageManagerAddress: vi.fn(),
-}))
+  }
+
+  const seamlessContracts = {
+    [base.id]: {
+      rewardsController: '0x2C6dC2CE7747E726A590082ADB3d7d08F52ADB93',
+    },
+  }
+
+  const getContractAddresses = vi.fn(
+    (chainId: number): ContractMap => contractAddresses[chainId] ?? {},
+  )
+  const getLeverageManagerAddress = vi.fn(
+    (chainId: number) => getContractAddresses(chainId)?.leverageManager,
+  )
+
+  const getGovernanceAddresses = vi.fn((chainId: number) => {
+    const addresses = getContractAddresses(chainId)
+    return {
+      timelockShort: addresses?.timelockShort,
+      governorShort: addresses?.governorShort,
+      timelockLong: addresses?.timelockLong,
+      governorLong: addresses?.governorLong,
+    }
+  })
+
+  const getRequiredGovernanceAddresses = vi.fn((chainId: number) => {
+    const governance = getGovernanceAddresses(chainId)
+    if (!governance.timelockShort) throw new Error('Missing governance address "timelockShort"')
+    if (!governance.governorShort) throw new Error('Missing governance address "governorShort"')
+    if (!governance.timelockLong) throw new Error('Missing governance address "timelockLong"')
+    if (!governance.governorLong) throw new Error('Missing governance address "governorLong"')
+    return governance as Required<typeof governance>
+  })
+
+  const hasDeployedContracts = vi.fn(
+    (chainId: number) => Object.keys(getContractAddresses(chainId)).length > 0,
+  )
+
+  return {
+    ETH_SENTINEL: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    BASE_WETH: '0x4200000000000000000000000000000000000006',
+    contractAddresses,
+    seamlessContracts,
+    STAKED_SEAM: { address: contractAddresses[base.id]?.stakedSeam, chainId: base.id },
+    getContractAddresses,
+    getLeverageManagerAddress,
+    getGovernanceAddresses,
+    getRequiredGovernanceAddresses,
+    hasDeployedContracts,
+  }
+})
 
 // Mock query keys
 vi.mock('@/features/leverage-tokens/utils/queryKeys', () => ({

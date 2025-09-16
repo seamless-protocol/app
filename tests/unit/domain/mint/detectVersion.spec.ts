@@ -1,10 +1,15 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouterVersion } from '@/domain/mint/planner/types'
 import { detectRouterVersion } from '@/domain/mint/utils/detectVersion'
 
 describe('detectRouterVersion', () => {
   beforeEach(() => {
-    // Reset env for each test
+    vi.unstubAllEnvs()
+    ;(import.meta as any).env = {}
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
     ;(import.meta as any).env = {}
   })
 
@@ -13,12 +18,19 @@ describe('detectRouterVersion', () => {
   })
 
   it('honors VITE_ROUTER_VERSION=v2 override', () => {
-    ;(import.meta as any).env = { VITE_ROUTER_VERSION: 'v2' }
+    vi.stubEnv('VITE_ROUTER_VERSION', 'v2')
+    ;(import.meta as any).env = {
+      ...(import.meta as any).env,
+      VITE_ROUTER_VERSION: 'v2',
+    }
     expect(detectRouterVersion()).toBe(RouterVersion.V2)
   })
 
   it('prefers V2 when both V2 addresses present', () => {
+    vi.stubEnv('VITE_ROUTER_V2_ADDRESS', '0xrouter')
+    vi.stubEnv('VITE_MANAGER_V2_ADDRESS', '0xmanager')
     ;(import.meta as any).env = {
+      ...(import.meta as any).env,
       VITE_ROUTER_V2_ADDRESS: '0xrouter',
       VITE_MANAGER_V2_ADDRESS: '0xmanager',
     }

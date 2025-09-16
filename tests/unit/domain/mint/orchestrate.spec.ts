@@ -1,6 +1,7 @@
 import type { Address, Hash } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { orchestrateMint } from '@/domain/mint/orchestrate'
+import { planMintV2 } from '@/domain/mint/planner/plan.v2'
 import * as detect from '@/domain/mint/utils/detectVersion'
 
 vi.mock('@/lib/contracts/generated', async () => ({
@@ -74,6 +75,6 @@ describe('orchestrateMint', () => {
     })
     expect(res.routerVersion).toBe('v2')
     expect(res.hash).toBe('0xhash_v2')
-    expect(quoteDebtToCollateral).toHaveBeenCalled()
+    expect(planMintV2).toHaveBeenCalledWith(expect.objectContaining({ quoteDebtToCollateral }))
   })
 })
