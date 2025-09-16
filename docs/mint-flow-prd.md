@@ -179,8 +179,9 @@ Return: `Plan`.
 
 ## 8) Quote Adapters (interfaces)
 ```ts
-// LiFi-only initially. Required fields must include minOut + deadline, and recipient must be the router.
-export type Quote = { out: bigint; minOut: bigint; deadline: bigint; approvalTarget: Address; calldata: Hex }
+// Quote adapters may hit an aggregator (LiFi) or an on-chain router (e.g., Uniswap V2/Aerodrome).
+// Implementations must always return minOut semantics and calldata executable by the router.
+export type Quote = { out: bigint; minOut?: bigint; deadline?: bigint; approvalTarget: Address; calldata: Hex }
 export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bigint }) => Promise<Quote>
 ```
 
@@ -193,7 +194,7 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 
 ## 10) Telemetry
 - `router_version: 'v1'|'v2'`
-- `quote_source: 'LiFi'`
+- `quote_source: 'lifi' | 'uniswap_v2' | 'onchain'`
 - `quote_latency_ms`, `min_out`, `deadline`
 - `flash_loan_scaled: boolean`, `scale_ratio = flashLoan'/idealDebt`
 - `excess_debt_returned`, `excess_debt_returned_bps`
@@ -210,7 +211,7 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 - Determinism: same inputs → same plan.
 
 ### Integration (fork/Tenderly)
-- v2 (VNet), input=collateral: success; shares ≥ minShares; tiny excess debt returned.
+- v2 (VNet), input=collateral: success; shares ≥ minShares; tiny excess debt returned. Default quote adapter uses on-chain Uniswap V2 pricing for determinism; LiFi path remains available via env override.
 - v2 (VNet), input≠collateral: out-of-scope for initial delivery (to be added behind a flag once supported).
 - v1 (Base), collateral-only: success; non-collateral input → planner rejection.
 

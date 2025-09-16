@@ -103,6 +103,7 @@ Libraries: React Testing Library + @tanstack/react-query test utils. Mock orches
   - Quote fns return `approvalTarget` + `calldata`; plan contains:
     - Input==collateral: only debt leg approve+swap.
     - Input!=collateral: input leg approve+swap first, then debt leg.
+  - Default integration setup uses an on-chain Uniswap V2/Aerodrome quote for deterministic swaps; LiFi path can be re-enabled with `TEST_USE_LIFI=1` when comparing against live routing.
   - `executeMintV2` simulate succeeds; write returns hash.
   - Reprice guard: under-sized debt quote triggers “preview debt < planned” error.
 - Allowances on-chain
