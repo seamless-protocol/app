@@ -155,6 +155,7 @@ const routerV1 = chainContracts.leverageRouter
 const routerV2 = chainContracts.leverageRouterV2
   ? (chainContracts.leverageRouterV2 as Address)
   : undefined
+const tokenMap = chainContracts.tokens ?? {}
 
 function ensureAddress(label: string, value: Address | undefined): Address {
   if (!value) throw new Error(`Missing ${label} for chain ${canonicalChainId}`)
@@ -174,9 +175,18 @@ export const ADDR = {
   routerV1: optionalAddress(routerV1),
   routerV2: optionalAddress(routerV2),
   leverageToken: getAddress(WEETH_WETH_17X_TOKEN_ADDRESS),
-  usdc: getAddress(Env.TEST_USDC ?? '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'),
-  weth: getAddress(Env.TEST_WETH ?? BASE_WETH),
-  weeth: getAddress(Env.TEST_WEETH),
+  usdc: ensureAddress(
+    'usdc token',
+    (Env.TEST_USDC as Address | undefined) ?? (tokenMap.usdc as Address | undefined),
+  ),
+  weth: ensureAddress(
+    'weth token',
+    (Env.TEST_WETH as Address | undefined) ?? (tokenMap.weth as Address | undefined) ?? BASE_WETH,
+  ),
+  weeth: ensureAddress(
+    'weeth token',
+    (Env.TEST_WEETH as Address | undefined) ?? (tokenMap.weeth as Address | undefined),
+  ),
   executor: optionalAddress(chainContracts.multicall),
 } as const
 

@@ -37,6 +37,11 @@ export interface ContractAddresses {
   governance?: Address
   seamlessToken?: Address
   veSeamless?: Address
+  tokens?: {
+    usdc?: Address
+    weth?: Address
+    weeth?: Address
+  }
 
   // Helper Contracts
   multicall?: Address
@@ -74,6 +79,11 @@ const baseContracts: ContractAddresses = {
   // Tokens
   seamlessToken: '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85' as Address,
   stakedSeam: '0x73f0849756f6A79C1d536b7abAB1E6955f7172A4' as Address,
+  tokens: {
+    usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as Address,
+    weth: BASE_WETH,
+    weeth: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A' as Address,
+  },
 
   // Governance
   governance: '0x8768c789C6df8AF1a92d96dE823b4F80010Db294' as Address, // governorShort

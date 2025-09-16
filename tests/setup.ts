@@ -89,6 +89,11 @@ vi.mock('@/lib/contracts/addresses', () => {
         cbbtc: '0x5a47C803488FE2BB0A0EAaf346b420e4dF22F3C7',
         weth: '0x27d8c7273fd3fcc6956a0b370ce5fd4a7fc65c18',
       },
+      tokens: {
+        usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+        weth: '0x4200000000000000000000000000000000000006',
+        weeth: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A',
+      },
     },
   }
 
