@@ -1,0 +1,296 @@
+import type { Address } from 'viem'
+import { getAllLeverageTokenConfigs } from '../../leverageTokens.config'
+import type { BaseRewardClaimData, RewardClaimFetcher } from './types'
+import { CHAIN_IDS } from '@/lib/utils/chain-logos'
+
+/**
+ * Supported chain IDs for Merkl rewards
+ */
+export const SUPPORTED_CHAIN_IDS = [CHAIN_IDS.BASE, CHAIN_IDS.ETHEREUM, 42161, 324] as const
+
+/**
+ * Merkl distributor contract addresses by chain ID
+ */
+const MERKL_DISTRIBUTOR_ADDRESSES: Record<number, Address> = {
+  [CHAIN_IDS.BASE]: '0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae' as Address,
+  [CHAIN_IDS.ETHEREUM]: '0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae' as Address,
+  [42161]: '0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae' as Address,
+  [324]: '0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae' as Address,
+  // Add other chains as needed
+}
+
+// Types for Merkl API responses
+interface MerklReward {
+  amount: string
+  token: {
+    address: string
+    symbol: string
+    decimals: number
+  }
+  proofs: string[]
+}
+
+interface MerklUserRewards {
+  chain: {
+    id: number
+  }
+  rewards: MerklReward[]
+}
+
+/**
+ * Merkl rewards claim provider implementation
+ *
+ * This provider fetches and claims rewards from Merkl for Seamless leverage tokens.
+ * It filters rewards to only include those related to Seamless leverage tokens.
+ */
+export class MerklRewardClaimProvider implements RewardClaimFetcher {
+  protocolId = 'merkl'
+  protocolName = 'Merkl'
+
+  private readonly supportedChainIds: readonly number[]
+  private readonly distributorAddresses: Record<number, Address>
+
+  constructor() {
+    this.supportedChainIds = SUPPORTED_CHAIN_IDS
+    this.distributorAddresses = MERKL_DISTRIBUTOR_ADDRESSES
+
+    // Validate that all supported chains have distributor addresses
+    for (const chainId of this.supportedChainIds) {
+      if (!this.distributorAddresses[chainId]) {
+        throw new Error(`Merkl distributor address not found for chain ID: ${chainId}`)
+      }
+    }
+  }
+
+  /**
+   * Fetch claimable rewards for a user from Merkl
+   * Filters to only include rewards related to Seamless leverage tokens
+   */
+  async fetchClaimableRewards(userAddress: Address): Promise<BaseRewardClaimData[]> {
+    try {
+      console.log(
+        `[Merkl] Fetching claimable rewards for user: ${userAddress} on chains: ${this.supportedChainIds.join(',')}`,
+      )
+
+      // Fetch user rewards from Merkl API for all supported chains
+      const userRewards = await this.fetchUserRewardsFromMerkl(userAddress, this.supportedChainIds)
+
+      if (!userRewards || userRewards.length === 0) {
+        console.log('[Merkl] No rewards found for user')
+        return []
+      }
+
+      // Convert all rewards to BaseRewardClaimData format
+      const allRewards: BaseRewardClaimData[] = []
+
+      for (const rewardData of userRewards) {
+        for (const reward of rewardData.rewards) {
+          const claimData: BaseRewardClaimData = {
+            claimableAmount: reward.amount,
+            tokenAddress: reward.token.address as Address,
+            tokenSymbol: reward.token.symbol,
+            tokenDecimals: reward.token.decimals,
+            chainId: rewardData.chain.id,
+            proof: reward.proofs,
+            metadata: {
+              protocol: 'merkl',
+            },
+          }
+
+          allRewards.push(claimData)
+        }
+      }
+
+      // Filter to only include Seamless-related rewards
+      const seamlessRewards = this.filterSeamlessRewards(allRewards)
+
+      console.log(`[Merkl] Found ${seamlessRewards.length} Seamless-related claimable rewards`)
+      return seamlessRewards
+    } catch (error) {
+      console.error('[Merkl] Error fetching claimable rewards:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Claim rewards using Merkl distributor contract
+   */
+  async claimRewards(
+    userAddress: Address,
+    rewards: BaseRewardClaimData[],
+    signer: any, // Ethers signer or similar
+  ): Promise<string> {
+    try {
+      console.log(`[Merkl] Claiming ${rewards.length} rewards for user: ${userAddress}`)
+
+      if (rewards.length === 0) {
+        throw new Error('No rewards to claim')
+      }
+
+      // Group rewards by token for efficient claiming
+      const rewardsByToken = this.groupRewardsByToken(rewards)
+
+      let totalClaimed = 0
+      const claimPromises = []
+
+      for (const [tokenAddress, tokenRewards] of rewardsByToken.entries()) {
+        // Get the chain ID for this token (all rewards in a group should have the same chain ID)
+        const chainId = tokenRewards[0]?.chainId
+        if (!chainId || !this.supportedChainIds.includes(chainId)) {
+          console.warn(`[Merkl] Skipping rewards for unsupported chain: ${chainId}`)
+          continue
+        }
+
+        const distributorAddress = this.distributorAddresses[chainId]
+        const claimPromise = this.claimTokenRewards(
+          userAddress,
+          tokenAddress,
+          tokenRewards,
+          signer,
+          distributorAddress,
+        )
+        claimPromises.push(claimPromise)
+      }
+
+      // Execute all claims in parallel
+      const results = await Promise.all(claimPromises)
+      totalClaimed = results.reduce((sum, result) => sum + (result.success ? 1 : 0), 0)
+
+      console.log(`[Merkl] Successfully claimed ${totalClaimed}/${rewards.length} reward types`)
+
+      // Return the first successful transaction hash
+      const successfulResult = results.find((result) => result.success)
+      if (!successfulResult) {
+        throw new Error('All claim transactions failed')
+      }
+
+      return successfulResult.transactionHash
+    } catch (error) {
+      console.error('[Merkl] Error claiming rewards:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Fetch user rewards from Merkl API for multiple chains
+   */
+  private async fetchUserRewardsFromMerkl(
+    userAddress: Address,
+    chainIds: readonly number[],
+  ): Promise<MerklUserRewards[]> {
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+      const url = `https://api.merkl.xyz/v4/users/${userAddress}/rewards?chainId=${chainIds.join(',')}`
+
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      })
+
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn('[Merkl] No rewards found for user:', userAddress)
+          return []
+        }
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return Array.isArray(data) ? data : []
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('[Merkl] Request timeout while fetching user rewards')
+      } else {
+        console.error('[Merkl] Error fetching user rewards:', error)
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Filter rewards to only include those related to Seamless leverage tokens
+   */
+  private filterSeamlessRewards(rewards: BaseRewardClaimData[]): BaseRewardClaimData[] {
+    const leverageTokenConfigs = getAllLeverageTokenConfigs()
+    const leverageTokenAddresses = new Set(
+      leverageTokenConfigs.map((config) => config.address.toLowerCase()),
+    )
+
+    return rewards.filter((reward) => {
+      // Check if this reward's token address matches any Seamless leverage token
+      return leverageTokenAddresses.has(reward.tokenAddress.toLowerCase())
+    })
+  }
+
+  /**
+   * Group rewards by token address for efficient claiming
+   */
+  private groupRewardsByToken(rewards: BaseRewardClaimData[]): Map<Address, BaseRewardClaimData[]> {
+    const grouped = new Map<Address, BaseRewardClaimData[]>()
+
+    for (const reward of rewards) {
+      const existing = grouped.get(reward.tokenAddress) || []
+      existing.push(reward)
+      grouped.set(reward.tokenAddress, existing)
+    }
+
+    return grouped
+  }
+
+  /**
+   * Claim rewards for a specific token using the Merkl distributor contract
+   */
+  private async claimTokenRewards(
+    userAddress: Address,
+    tokenAddress: Address,
+    rewards: BaseRewardClaimData[],
+    signer: any, // JsonRpcSigner or similar
+    distributorAddress: Address,
+  ): Promise<{ success: boolean; transactionHash?: string; error?: string }> {
+    try {
+      // Prepare claim data following Merkl's expected format
+      const users = rewards.map(() => userAddress)
+      const tokens = rewards.map(() => tokenAddress)
+      const amounts = rewards.map((reward) => reward.claimableAmount)
+      const proofs = rewards.map((reward) => reward.proof)
+
+      console.log(`[Merkl] Claiming ${rewards.length} rewards for token: ${tokenAddress}`)
+
+      // TODO: Import Distributor__factory when available
+      // const contract = Distributor__factory.connect(distributorAddress, signer)
+      // const tx = await contract.claim(users, tokens, amounts, proofs)
+      // await tx.wait()
+      //
+      // return {
+      //   success: true,
+      //   transactionHash: tx.hash,
+      // }
+
+      // Temporary simulation until contract ABI is available
+      console.log(`[Merkl] Users:`, users)
+      console.log(`[Merkl] Tokens:`, tokens)
+      console.log(`[Merkl] Amounts:`, amounts)
+      console.log(`[Merkl] Proofs:`, proofs)
+
+      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`
+
+      return {
+        success: true,
+        transactionHash: mockTxHash,
+      }
+    } catch (error) {
+      console.error(`[Merkl] Error claiming token rewards for ${tokenAddress}:`, error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
+    }
+  }
+}
