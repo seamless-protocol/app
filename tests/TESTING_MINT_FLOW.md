@@ -127,27 +127,16 @@ Use admin RPC (Tenderly) to set balances, snapshots, and revert between tests.
 - Preview UX
   - Rapid input: preview stabilizes after debounce, not per keystroke.
 
-### File Layout
+### File Layout (current)
 
 - Unit
-  - `tests/unit/domain/mint/detectVersion.spec.ts`
-  - `tests/unit/domain/mint/allowance.spec.ts`
-  - `tests/unit/domain/mint/math.spec.ts`
-  - `tests/unit/domain/mint/plan.v2.spec.ts`
-  - `tests/unit/domain/mint/execute.v1.spec.ts`
-  - `tests/unit/domain/mint/execute.v2.spec.ts`
-  - `tests/unit/domain/mint/orchestrate.spec.ts`
-  - `tests/unit/hooks/useMintPreview.spec.ts`
-  - `tests/unit/hooks/useMintWithRouter.spec.ts`
-  - `tests/unit/features/leverage-tokens/utils/queryKeys.spec.ts`
-- Integration (VNet)
-  - `tests/integration/mint/preview.spec.ts`
-  - `tests/integration/mint/v1-mint.spec.ts`
-  - `tests/integration/mint/v2-plan-and-execute.spec.ts`
-  - `tests/integration/mint/allowance.spec.ts`
+  - `tests/unit/mint/math.unit.test.ts`
+  - `tests/unit/mint/plan.v2.unit.test.ts`
+  - `tests/unit/hooks/useMintPreview.spec.tsx`
+- Integration (Tenderly VNet)
+  - `tests/integration/leverage-tokens/mint/router.v2.mint.spec.ts`
 - E2E (Playwright)
-  - `tests/e2e/mint-v2-flow.spec.ts`
-  - `tests/e2e/mint-v2-slippage-and-errors.spec.ts`
+  - `tests/e2e/basic-app.spec.ts`
 
 ## Deprecations (to remove)
 

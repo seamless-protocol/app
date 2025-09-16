@@ -1,36 +1,30 @@
-import type { Hash, Hex } from "viem";
-import {
-  createPublicClient,
-  createTestClient,
-  createWalletClient,
-  http,
-  publicActions,
-} from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { base } from "viem/chains";
-import { ADDR, Env, Extra, mode, RPC } from "./env";
+import type { Hash, Hex } from 'viem'
+import { createPublicClient, createTestClient, createWalletClient, http, publicActions } from 'viem'
+import { privateKeyToAccount } from 'viem/accounts'
+import { base } from 'viem/chains'
+import { ADDR, Env, Extra, mode, RPC } from './env'
 
-export { ADDR, mode };
+export { ADDR, mode }
 
-export const chain = base;
-export const account = privateKeyToAccount(Env.TEST_PRIVATE_KEY as Hex);
+export const chain = base
+export const account = privateKeyToAccount(Env.TEST_PRIVATE_KEY as Hex)
 
 export const publicClient = createPublicClient({
   chain,
   transport: http(RPC.primary, { batch: true }),
   batch: { multicall: true },
-});
+})
 
 export const walletClient = createWalletClient({
   account,
   chain,
   transport: http(RPC.primary),
-}).extend(publicActions);
+}).extend(publicActions)
 
 export const adminClient = createPublicClient({
   chain,
   transport: http(RPC.admin),
-});
+})
 
 /**
  * Administrative RPC request function for Tenderly VNet operations
@@ -60,50 +54,44 @@ export const adminClient = createPublicClient({
  * // Create snapshot for test isolation
  * const snapshotId = await adminRequest<string>('evm_snapshot', [])
  */
-export async function adminRequest<T = unknown>(
-  method: string,
-  params: Array<any> = [],
-) {
+export async function adminRequest<T = unknown>(method: string, params: Array<any> = []) {
   try {
-    console.info("[ADMIN RPC] request", {
+    console.info('[ADMIN RPC] request', {
       method,
       // Avoid dumping large payloads; show brief param summary
       paramsPreview: Array.isArray(params)
         ? params.map((p) =>
-            typeof p === "string"
+            typeof p === 'string'
               ? `${p.slice(0, 10)}...`
               : Array.isArray(p)
                 ? `[${p.length}]`
                 : typeof p,
           )
         : typeof params,
-    });
+    })
     const req = (
       adminClient as unknown as {
-        request: (args: {
-          method: string;
-          params?: Array<any>;
-        }) => Promise<any>;
+        request: (args: { method: string; params?: Array<any> }) => Promise<any>
       }
-    ).request;
-    const res = (await req({ method, params })) as T;
-    console.info("[ADMIN RPC] response", { method, ok: true });
-    return res;
+    ).request
+    const res = (await req({ method, params })) as T
+    console.info('[ADMIN RPC] response', { method, ok: true })
+    return res
   } catch (err) {
-    console.error("[ADMIN RPC] error", { method, err });
-    throw err;
+    console.error('[ADMIN RPC] error', { method, err })
+    throw err
   }
 }
 
 export const testClient =
-  mode === "anvil"
-    ? createTestClient({ chain, mode: "anvil", transport: http(RPC.primary) })
-    : (undefined as unknown as ReturnType<typeof createTestClient>);
+  mode === 'anvil'
+    ? createTestClient({ chain, mode: 'anvil', transport: http(RPC.primary) })
+    : (undefined as unknown as ReturnType<typeof createTestClient>)
 
-export const extraAccounts = Extra.keys.map((k) => privateKeyToAccount(k));
+export const extraAccounts = Extra.keys.map((k) => privateKeyToAccount(k))
 export const extraWallets = extraAccounts.map((acct) =>
   createWalletClient({ account: acct, chain, transport: http(RPC.primary) }),
-);
+)
 
 /**
  * Create a blockchain state snapshot for test isolation
@@ -131,9 +119,9 @@ export const extraWallets = extraAccounts.map((acct) =>
  * ```
  */
 export async function takeSnapshot(): Promise<Hash> {
-  if (mode === "anvil") return await testClient.snapshot();
-  const id = await adminRequest<string>("evm_snapshot", []);
-  return id as unknown as Hash;
+  if (mode === 'anvil') return await testClient.snapshot()
+  const id = await adminRequest<string>('evm_snapshot', [])
+  return id as unknown as Hash
 }
 
 /**
@@ -165,6 +153,6 @@ export async function takeSnapshot(): Promise<Hash> {
  * ```
  */
 export async function revertSnapshot(id: Hash) {
-  if (mode === "anvil") return await testClient.revert({ id });
-  await adminRequest("evm_revert", [id]);
+  if (mode === 'anvil') return await testClient.revert({ id })
+  await adminRequest('evm_revert', [id])
 }
