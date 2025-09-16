@@ -26,57 +26,64 @@ export function LiFiWidget() {
   const widgetConfig: WidgetConfig = useMemo(
     () => ({
       integrator: 'seamless-protocol',
-      variant: 'compact',
+      variant: 'wide',
       subvariant: 'split',
-      appearance: 'dark',
+      appearance: 'system',
       theme: {
-        container: {
-          border: '1px solid var(--divider-line)',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        },
-        palette: {
-          primary: {
-            main: 'var(--brand-purple)',
-            contrastText: '#ffffff',
+        colorSchemes: {
+          light: {
+            palette: {
+              primary: {
+                main: '#c924a6',
+              },
+              secondary: {
+                main: '#9721cf',
+              },
+              background: {
+                default: '#0e1629',
+                paper: '#161f34',
+              },
+              text: {
+                primary: '#ffffff',
+                secondary: '#fffafa',
+              },
+              common: {
+                black: '#dc7979',
+              },
+              grey: {
+                200: '#eeeeee',
+                300: '#334155',
+                700: '#616161',
+                800: '#424242',
+              },
+            },
           },
-          secondary: {
-            main: 'var(--surface-elevated)',
-            contrastText: 'var(--text-secondary)',
+          dark: {
+            palette: {
+              primary: {
+                main: '#5C67FF',
+              },
+              secondary: {
+                main: '#F7C2FF',
+              },
+            },
           },
-          background: {
-            paper: 'var(--surface-card)',
-            default: 'var(--bg-hero)',
-          },
-          text: {
-            primary: 'var(--text-primary)',
-            secondary: 'var(--text-secondary)',
-          },
-          grey: {
-            50: 'var(--text-primary)',
-            100: 'var(--text-secondary)',
-            200: 'var(--text-muted)',
-            300: 'var(--divider-line)',
-            400: 'var(--divider-line)',
-            500: 'var(--text-muted)',
-            600: 'var(--text-secondary)',
-            700: 'var(--text-primary)',
-            800: 'var(--surface-card)',
-            900: 'var(--bg-section)',
-          },
-        },
-        shape: {
-          borderRadius: 12,
-          borderRadiusSecondary: 8,
-          borderRadiusTertiary: 6,
         },
         typography: {
           fontFamily: '"Satoshi Variable", "Satoshi", sans-serif',
-          fontSize: 14,
-          fontWeightLight: 300,
-          fontWeightRegular: 400,
-          fontWeightMedium: 500,
-          fontWeightBold: 600,
+          // fontSize: 14,
+          // fontWeightLight: 300,
+          // fontWeightRegular: 400,
+          // fontWeightMedium: 500,
+          // fontWeightBold: 600,
+        },
+        container: {
+          boxShadow: '0px 8px 32px rgba(0, 0, 0, 0.08)',
+          borderRadius: '16px',
+        },
+        shape: {
+          borderRadiusSecondary: 8,
+          borderRadius: 8,
         },
       },
       // Hide some UI elements to keep it clean
