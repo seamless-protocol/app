@@ -2,7 +2,7 @@ import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import type { Meta, StoryObj } from '@storybook/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
-import { KyberSwapWidget } from '../../components/KyberSwapWidget'
+import { LiFiWidget } from '../../components/LiFiWidget'
 import { Alert } from '../../components/ui/alert'
 import { Toaster } from '../../components/ui/sonner'
 import { config } from '../../lib/config/wagmi.config'
@@ -10,14 +10,14 @@ import { config } from '../../lib/config/wagmi.config'
 const queryClient = new QueryClient()
 
 const meta = {
-  title: 'Components/KyberSwapWidget',
-  component: KyberSwapWidget,
+  title: 'Components/LiFiWidget',
+  component: LiFiWidget,
   parameters: {
     layout: 'centered',
     docs: {
       description: {
         component:
-          'KyberSwap integration widget for swapping and bridging tokens. Shows different states based on wallet connection.\n\n**To see the full widget functionality:** Navigate to the WalletConnectButton story first and connect your wallet, then return to this story to see the complete swap interface.',
+          'LI.FI integration widget for swapping and bridging tokens. Shows different states based on wallet connection.\n\n**To see the full widget functionality:** Navigate to the WalletConnectButton story first and connect your wallet, then return to this story to see the complete swap interface.',
       },
     },
   },
@@ -36,7 +36,7 @@ const meta = {
       </WagmiProvider>
     ),
   ],
-} satisfies Meta<typeof KyberSwapWidget>
+} satisfies Meta<typeof LiFiWidget>
 
 export default meta
 type Story = StoryObj<typeof meta>
@@ -44,7 +44,7 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   render: () => (
     <div className="space-y-6">
-      <KyberSwapWidget />
+      <LiFiWidget />
       <Alert
         type="info"
         title="💡 To see the full swap widget"
@@ -56,7 +56,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          'The KyberSwap widget with helpful instructions. When wallet is not connected, it shows a button that triggers a toast notification. To see the full swap widget, navigate to Components/WalletConnectButton story, connect your wallet, then return here.',
+          'The LI.FI widget with helpful instructions. When wallet is not connected, it shows a button that triggers a toast notification. To see the full swap widget, navigate to Components/WalletConnectButton story, connect your wallet, then return here.',
       },
     },
   },

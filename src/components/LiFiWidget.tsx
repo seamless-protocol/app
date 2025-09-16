@@ -1,14 +1,13 @@
-import { Widget } from '@kyberswap/widgets'
+import { LiFiWidget as LiFiWidgetComponent, type WidgetConfig } from '@lifi/widget'
 import { motion } from 'framer-motion'
 import { ArrowUpDown } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
-import { useAccount, useChainId, useConnectorClient } from 'wagmi'
+import { useAccount, useConnectorClient } from 'wagmi'
 
-export function KyberSwapWidget() {
+export function LiFiWidget() {
   const { isConnected, address } = useAccount()
-  const chainId = useChainId()
   const { data: client } = useConnectorClient()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -22,6 +21,76 @@ export function KyberSwapWidget() {
     }
     setIsModalOpen(true)
   }
+
+  // LI.FI Widget configuration with custom theme matching app design
+  const widgetConfig: WidgetConfig = useMemo(
+    () => ({
+      integrator: 'seamless-protocol',
+      variant: 'wide',
+      subvariant: 'split',
+      appearance: 'system',
+      theme: {
+        colorSchemes: {
+          light: {
+            palette: {
+              primary: {
+                main: '#c924a6',
+              },
+              secondary: {
+                main: '#9721cf',
+              },
+              background: {
+                default: '#0e1629',
+                paper: '#161f34',
+              },
+              text: {
+                primary: '#ffffff',
+                secondary: '#fffafa',
+              },
+              common: {
+                black: '#dc7979',
+              },
+              grey: {
+                200: '#eeeeee',
+                300: '#334155',
+                700: '#616161',
+                800: '#424242',
+              },
+            },
+          },
+          dark: {
+            palette: {
+              primary: {
+                main: '#5C67FF',
+              },
+              secondary: {
+                main: '#F7C2FF',
+              },
+            },
+          },
+        },
+        typography: {
+          fontFamily: '"Satoshi Variable", "Satoshi", sans-serif',
+          // fontSize: 14,
+          // fontWeightLight: 300,
+          // fontWeightRegular: 400,
+          // fontWeightMedium: 500,
+          // fontWeightBold: 600,
+        },
+        container: {
+          boxShadow: '0px 8px 32px rgba(0, 0, 0, 0.08)',
+          borderRadius: '16px',
+        },
+        shape: {
+          borderRadiusSecondary: 8,
+          borderRadius: 8,
+        },
+      },
+      // Hide some UI elements to keep it clean
+      hiddenUI: ['appearance', 'language'],
+    }),
+    [],
+  )
 
   // Show a clickable button when wallet is not connected
   if (!isConnected || !client || !address) {
@@ -44,13 +113,6 @@ export function KyberSwapWidget() {
         </button>
       </motion.div>
     )
-  }
-
-  // Default token configuration - can be customized based on chain
-  const defaultTokenOut: Record<string, string> = {
-    '1': '0xA0b86a33E6441E88A6c6a5b5b4F2C6c7b8c3c3c3', // Example ETH mainnet token
-    '8453': '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-    // Add more chains as needed
   }
 
   return (
@@ -103,39 +165,8 @@ export function KyberSwapWidget() {
               </button>
 
               {/* Widget Container */}
-              <div className="kyber-swap-widget">
-                {/* @ts-ignore - KyberSwap widget types are complex */}
-                <Widget
-                  client="seamless-protocol"
-                  chainId={chainId}
-                  connectedAccount={{ address, chainId }}
-                  onSubmitTx={async (tx: unknown) => {
-                    console.log('Transaction submitted:', tx)
-                    return (tx as { hash?: string })?.hash || ''
-                  }}
-                  theme={{
-                    text: '#ffffff',
-                    subText: '#d1d5db',
-                    primary: '#0f172aF2',
-                    dialog: '#2a2a30',
-                    secondary: '#1e293b80',
-                    interactive: '#374151',
-                    stroke: '#2f2f35',
-                    accent: '#9333ea',
-                    success: '#10b981',
-                    warning: '#facc15',
-                    error: '#ef4444',
-                    fontFamily: 'Satoshi Variable, Satoshi, sans-serif',
-                    borderRadius: '12px',
-                    buttonRadius: '12px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  }}
-                  tokenList={[]}
-                  enableRoute={true}
-                  enableDexes="kyberswap-elastic,uniswapv3,uniswap"
-                  defaultTokenOut={defaultTokenOut[chainId.toString()] || undefined}
-                  title={<div className="text-white font-medium">Swap</div>}
-                />
+              <div className="lifi-widget">
+                <LiFiWidgetComponent integrator="seamless-protocol" config={widgetConfig} />
               </div>
             </div>
           </div>,
