@@ -18,7 +18,7 @@ import { ConnectButtonTest } from './ConnectButtonTest'
 import { KyberSwapWidget } from './KyberSwapWidget'
 import { ModeToggle } from './mode-toggle'
 import { Toaster } from './ui/sonner'
-import { VerticalNavbar } from './VerticalNavbar'
+import { type NavigationItem, VerticalNavbar } from './VerticalNavbar'
 import { WalletConnectButton } from './WalletConnectButton'
 
 // Navigation configuration that maps to existing routes
@@ -66,7 +66,7 @@ const navigationItems = [
     description: 'Participate in decisions',
     subtitle: 'Participate in protocol governance and voting',
   },
-].filter(Boolean)
+].filter(Boolean) as Array<NavigationItem>
 
 // Community section configuration
 const communitySection = {
