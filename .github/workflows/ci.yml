@@ -78,6 +78,8 @@ jobs:
       - name: Run E2E tests
         run: bun scripts/run-tests.ts e2e
         env:
+          TEST_RPC_URL: ${{ secrets.TEST_RPC_URL }}
+          TENDERLY_ADMIN_RPC_URL: ${{ secrets.TENDERLY_ADMIN_RPC_URL }}
           VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
           VITE_ETHEREUM_RPC_URL: ${{ vars.VITE_ETHEREUM_RPC_URL }}
           ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
@@ -126,6 +128,8 @@ jobs:
       - name: Run integration tests
         run: bun scripts/run-tests.ts integration
         env:
+          TEST_RPC_URL: ${{ secrets.TEST_RPC_URL }}
+          TENDERLY_ADMIN_RPC_URL: ${{ secrets.TENDERLY_ADMIN_RPC_URL }}
           ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
           TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
