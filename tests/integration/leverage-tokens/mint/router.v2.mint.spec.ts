@@ -1,9 +1,9 @@
 import { type Address, type PublicClient, parseUnits } from 'viem'
-import { base } from 'viem/chains'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { orchestrateMint } from '@/domain/mint'
 import { createLifiQuoteAdapter } from '@/domain/mint/adapters/lifi'
 import { createUniswapV2QuoteAdapter } from '@/domain/mint/adapters/uniswapV2'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -34,17 +34,25 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
 
       // Force router version to V2 for this test and provide executor address
       process.env['VITE_ROUTER_VERSION'] = 'v2'
-      if (ADDR.executor) process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = ADDR.executor
+      const executor = ADDR.executor
+      if (!executor) {
+        throw new Error('Multicall executor address missing; update contract map for V2 harness')
+      }
+      process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
 
       // Log RPC and chain to ensure we are targeting the expected endpoint
-      console.info('[STEP] Using public RPC', { url: RPC.primary })
-      const chainId = base.id
-      console.info('[STEP] Chain ID', { chainId })
+      const token: Address = ADDR.leverageToken
+      const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
+      const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
 
-      const token: Address = ((process.env['TEST_LEVERAGE_TOKEN'] as Address) ||
-        ADDR.leverageToken) as Address
-      const manager: Address = ((process.env['TEST_MANAGER'] as Address) || ADDR.manager) as Address
-      const router: Address = ((process.env['TEST_ROUTER'] as Address) || ADDR.router) as Address
+      const tokenConfig = getLeverageTokenConfig(token)
+      if (!tokenConfig) {
+        throw new Error(`Leverage token config not found for ${token}`)
+      }
+
+      console.info('[STEP] Using public RPC', { url: RPC.primary })
+      const chainId = tokenConfig.chainId
+      console.info('[STEP] Chain ID', { chainId })
 
       // Discover token assets
       const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
@@ -80,7 +88,7 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
             return createLifiQuoteAdapter({
               chainId,
               router,
-              fromAddress: ADDR.executor,
+              fromAddress: executor,
               allowBridges: 'none',
             })
           })()

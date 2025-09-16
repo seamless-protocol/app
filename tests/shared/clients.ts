@@ -1,12 +1,11 @@
 import type { Hash, Hex } from 'viem'
 import { createPublicClient, createTestClient, createWalletClient, http, publicActions } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { base } from 'viem/chains'
-import { ADDR, Env, Extra, mode, RPC } from './env'
+import { ADDR, CHAIN, Env, Extra, mode, RPC } from './env'
 
 export { ADDR, mode }
 
-export const chain = base
+export const chain = CHAIN
 export const account = privateKeyToAccount(Env.TEST_PRIVATE_KEY as Hex)
 
 export const publicClient = createPublicClient({

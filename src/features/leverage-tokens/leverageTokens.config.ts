@@ -73,7 +73,7 @@ export interface LeverageTokenConfig {
 // Leverage token configurations
 export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   [LeverageTokenKey.WEETH_WETH_17X]: {
-    address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
+    address: '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as Address,
     name: 'weETH / WETH 17x Leverage Token',
     symbol: 'WEETH-WETH-17x',
     description:

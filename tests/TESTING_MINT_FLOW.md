@@ -42,7 +42,7 @@ This document outlines the end-to-end testing approach for the new mint flow (do
 
 Notes:
 - Some contracts may be unverified yet; ABI coverage comes from our codegen.
-- Generated actions default to Base addresses for chainId 8453; for this VNet, pass `address` overrides in simulate/write calls or use low-level viem `readContract`/`simulateContract` in integration tests until we add test-time address overrides.
+- Integration/E2E harnesses now auto-detect the active RPC's chain id and use the canonical addresses from `src/lib/contracts/addresses.ts`, so no manual env overrides are required.
 - Public VNet view: `https://dashboard.tenderly.co/explorer/vnet/3433d25e-64a4-4ea1-96c1-fbc9e6022e30/transactions`
 
 ## Test Categories

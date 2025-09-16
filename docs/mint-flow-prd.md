@@ -251,7 +251,7 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 
 ## 16) Open Items
 - Future: add optional user conversion (e.g., WETH→weETH) via Call[] if router supports pulling user tokens.
-- VNet v2 addresses are provided below and should be injected via env/config.
+- VNet v2 addresses are provided below; keep the canonical address map updated so tests pick them up automatically.
 
 ## 17) Tenderly VNet (v2) Addresses
 - LeverageToken implementation: `0xfFEF572c179AC02F6285B0da7CB27176A725a8A1`
@@ -266,7 +266,7 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 - LendingAdapter proxy: `0xbA63aC9B956EF23F8788dE4EdD4c264b5dF35fA0`
 - LeverageToken (WEETH-WETH 17x): `0x17533ef332083aD03417DEe7BC058D10e18b22c5`
 
-Env injection: expose these via `VITE_ROUTER_V2_ADDRESS`, `VITE_MANAGER_V2_ADDRESS`, and similar keys for CI/Tenderly. Or add a `contractAddresses['vnet']` entry populated at runtime from env.
+Test harness auto-detects the active chain and consumes these addresses from `src/lib/contracts/addresses.ts`. Keep that map in sync with the latest VNet/Base deployments rather than relying on ad-hoc environment overrides.
 
 ## Implementation Notes (current state)
 - Planner scope: Implemented for v2 with collateral-only input (no input→collateral conversion yet). Underfill scaling, repayability via manager preview, and minShares guard are in place. Debt-leg calls (approve+swap) are encoded for the router.

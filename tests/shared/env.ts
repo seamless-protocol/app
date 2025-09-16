@@ -2,9 +2,10 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { config } from 'dotenv'
 import { type Address, getAddress, type Hex } from 'viem'
-import { anvil, base } from 'wagmi/chains'
+import { anvil, base, type Chain } from 'viem/chains'
 import { z } from 'zod'
 import { BASE_WETH, contractAddresses } from '../../src/lib/contracts/addresses.js'
+import { WEETH_WETH_17X_TOKEN_ADDRESS } from '../fixtures/addresses'
 
 // Load environment variables for tests (integration/e2e)
 // Priority (first one that provides a key wins):
@@ -60,44 +61,6 @@ const EnvSchema = z.object({
     .string()
     .regex(/^0x[a-fA-F0-9]{40}$/)
     .default('0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A'),
-  // Optional address overrides for VNets / custom deployments
-  TEST_MANAGER: z
-    .string()
-    .regex(/^0x[a-fA-F0-9]{40}$/)
-    .optional(),
-  TEST_ROUTER: z
-    .string()
-    .regex(/^0x[a-fA-F0-9]{40}$/)
-    .optional(),
-  TEST_LEVERAGE_TOKEN: z
-    .string()
-    .regex(/^0x[a-fA-F0-9]{40}$/)
-    .optional(),
-  // Legacy/alternate names used in older .env examples
-  TEST_LEVERAGE_MANAGER: z
-    .string()
-    .regex(/^0x[a-fA-F0-9]{40}$/)
-    .optional(),
-  TEST_LEVERAGE_ROUTER: z
-    .string()
-    .regex(/^0x[a-fA-F0-9]{40}$/)
-    .optional(),
-  TEST_LEVERAGE_TOKEN_PROXY: z
-    .string()
-    .regex(/^0x[a-fA-F0-9]{40}$/)
-    .optional(),
-  TEST_MULTICALL_EXECUTOR: z
-    .string()
-    .regex(/^0x[a-fA-F0-9]{40}$/)
-    .optional(),
-  TEST_COLLATERAL: z
-    .string()
-    .regex(/^0x[a-fA-F0-9]{40}$/)
-    .optional(),
-  TEST_DEBT: z
-    .string()
-    .regex(/^0x[a-fA-F0-9]{40}$/)
-    .optional(),
 })
 
 export const Env = EnvSchema.parse(process.env)
@@ -123,34 +86,98 @@ if (mode === 'tenderly') {
 const adminRpc = (process.env['TENDERLY_ADMIN_RPC_URL'] as string | undefined) || primaryRpc
 export const RPC = { primary: primaryRpc, admin: adminRpc }
 
-// Use deployed contract addresses from config
-const baseContracts = contractAddresses[base.id]
-if (!baseContracts) {
-  throw new Error('No contract addresses found for Base chain')
+async function detectChainId(rpcUrl: string): Promise<number> {
+  try {
+    const res = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_chainId', params: [] }),
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText}`)
+    }
+    const json = (await res.json()) as { result?: string }
+    if (!json?.result || typeof json.result !== 'string') {
+      throw new Error('Missing chain id in RPC response')
+    }
+    return Number(BigInt(json.result))
+  } catch (error) {
+    const details = error instanceof Error ? error.message : String(error)
+    throw new Error(`Failed to detect chain id from RPC ${rpcUrl}: ${details}`)
+  }
+}
+
+const detectedChainId = await detectChainId(primaryRpc)
+const chainIdsWithConfig = new Set<number>(Object.keys(contractAddresses).map(Number))
+
+const canonicalChainId = (() => {
+  if (chainIdsWithConfig.has(detectedChainId)) return detectedChainId
+  if (detectedChainId === anvil.id && chainIdsWithConfig.has(base.id)) return base.id
+  throw new Error(`No contract mapping configured for chain ${detectedChainId}`)
+})()
+
+const withRpc = (chain: Chain, id: number) => ({
+  ...chain,
+  id,
+  rpcUrls: {
+    ...chain.rpcUrls,
+    default: { http: [primaryRpc] },
+    public: { http: [primaryRpc] },
+  },
+})
+
+const resolvedChain: Chain = (() => {
+  if (detectedChainId === base.id) return withRpc(base, detectedChainId)
+  if (detectedChainId === anvil.id) return withRpc({ ...base }, anvil.id)
+  if (chainIdsWithConfig.has(detectedChainId)) return withRpc({ ...base }, detectedChainId)
+  // canonicalChainId guard above will already throw for unsupported networks
+  return withRpc(base, canonicalChainId)
+})()
+
+export const CHAIN_ID = detectedChainId
+export const CANONICAL_CHAIN_ID = canonicalChainId
+export const CHAIN = resolvedChain
+
+const chainContracts = contractAddresses[canonicalChainId]
+if (!chainContracts) {
+  throw new Error(`No contract addresses found for chain ${canonicalChainId}`)
+}
+
+const managerV1 = chainContracts.leverageManager
+  ? (chainContracts.leverageManager as Address)
+  : undefined
+const managerV2 = chainContracts.leverageManagerV2
+  ? (chainContracts.leverageManagerV2 as Address)
+  : undefined
+const routerV1 = chainContracts.leverageRouter
+  ? (chainContracts.leverageRouter as Address)
+  : undefined
+const routerV2 = chainContracts.leverageRouterV2
+  ? (chainContracts.leverageRouterV2 as Address)
+  : undefined
+
+function ensureAddress(label: string, value: Address | undefined): Address {
+  if (!value) throw new Error(`Missing ${label} for chain ${canonicalChainId}`)
+  return getAddress(value)
+}
+
+function optionalAddress(value: Address | undefined): Address | undefined {
+  return value ? getAddress(value) : undefined
 }
 
 export const ADDR = {
-  factory: baseContracts.leverageTokenFactory as Address,
-  manager: (Env.TEST_MANAGER || Env.TEST_LEVERAGE_MANAGER
-    ? getAddress((Env.TEST_MANAGER || Env.TEST_LEVERAGE_MANAGER) as string)
-    : baseContracts.leverageManager) as Address,
-  router: (Env.TEST_ROUTER || Env.TEST_LEVERAGE_ROUTER
-    ? getAddress((Env.TEST_ROUTER || Env.TEST_LEVERAGE_ROUTER) as string)
-    : baseContracts.leverageRouter) as Address,
-  leverageToken: (Env.TEST_LEVERAGE_TOKEN || Env.TEST_LEVERAGE_TOKEN_PROXY
-    ? getAddress((Env.TEST_LEVERAGE_TOKEN || Env.TEST_LEVERAGE_TOKEN_PROXY) as string)
-    : ('0xa2fceeae99d2caeee978da27be2d95b0381dbb8c' as Address)) as Address,
-  usdc: Env.TEST_USDC
-    ? getAddress(Env.TEST_USDC)
-    : ('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as Address),
+  factory: ensureAddress('leverageTokenFactory', chainContracts.leverageTokenFactory),
+  manager: ensureAddress('leverageManager', (managerV2 ?? managerV1) as Address | undefined),
+  managerV1: optionalAddress(managerV1),
+  managerV2: optionalAddress(managerV2),
+  router: ensureAddress('leverageRouter', (routerV2 ?? routerV1) as Address | undefined),
+  routerV1: optionalAddress(routerV1),
+  routerV2: optionalAddress(routerV2),
+  leverageToken: getAddress(WEETH_WETH_17X_TOKEN_ADDRESS),
+  usdc: getAddress(Env.TEST_USDC ?? '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'),
   weth: getAddress(Env.TEST_WETH ?? BASE_WETH),
   weeth: getAddress(Env.TEST_WEETH),
-  executor: Env.TEST_MULTICALL_EXECUTOR
-    ? getAddress(Env.TEST_MULTICALL_EXECUTOR)
-    : (undefined as unknown as Address),
-  // Optional overrides for collateral/debt in custom deployments
-  collateral: Env.TEST_COLLATERAL ? getAddress(Env.TEST_COLLATERAL) : undefined,
-  debt: Env.TEST_DEBT ? getAddress(Env.TEST_DEBT) : undefined,
+  executor: optionalAddress(chainContracts.multicall),
 } as const
 
 export const Extra = {

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { type Address, formatUnits } from 'viem'
 import { useAccount, useReadContract } from 'wagmi'
 
-import { STAKED_SEAM, seamlessContracts } from '@/lib/contracts/addresses'
+import { getContractAddresses, STAKED_SEAM } from '@/lib/contracts/addresses'
 
 import { stakingKeys } from '../utils/queryKeys'
 
@@ -18,7 +18,7 @@ export function useStakingRewards() {
   const { address: user } = useAccount()
 
   // Get user rewards from rewards controller
-  const rewardsControllerAddress = seamlessContracts[STAKED_SEAM.chainId]?.rewardsController
+  const rewardsControllerAddress = getContractAddresses(STAKED_SEAM.chainId)?.rewardsController
 
   if (!user) {
     throw new Error('User address is required to fetch staking rewards')
