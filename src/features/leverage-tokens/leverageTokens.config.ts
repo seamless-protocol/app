@@ -1,6 +1,7 @@
 import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
 import type { Address } from 'viem'
 import { BaseLogo } from '@/components/icons/logos'
+import { BASE_WETH } from '@/lib/contracts/addresses'
 
 // Leverage token keys enum for type safety
 export enum LeverageTokenKey {
@@ -92,7 +93,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     debtAsset: {
       symbol: 'WETH',
       name: 'Wrapped Ether',
-      address: '0x4200000000000000000000000000000000000006' as Address,
+      address: BASE_WETH,
       decimals: 18,
     },
     relatedResources: {

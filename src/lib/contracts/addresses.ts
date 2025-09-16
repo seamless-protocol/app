@@ -2,6 +2,17 @@ import type { Address } from 'viem'
 import { base, mainnet } from 'wagmi/chains'
 
 /**
+ * Standard sentinel address used by partner aggregators (e.g. LiFi/Uniswap)
+ * to represent the native token in quote payloads.
+ */
+export const ETH_SENTINEL = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as Address
+
+/**
+ * Canonical WETH address on Base mainnet (chain id 8453).
+ */
+export const BASE_WETH = '0x4200000000000000000000000000000000000006' as Address
+
+/**
  * Supported chain IDs for the protocol
  */
 export type SupportedChainId = typeof mainnet.id | typeof base.id

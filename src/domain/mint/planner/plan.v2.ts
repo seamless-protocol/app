@@ -7,6 +7,7 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
+import { BASE_WETH, ETH_SENTINEL } from '@/lib/contracts/addresses'
 import {
   // V2 reads (explicit address may be provided when using VNets/custom deployments)
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
@@ -25,8 +26,6 @@ type V2Calls = Array<RouterV2Call>
 type V2Call = RouterV2Call
 
 // Base WETH native path support
-const BASE_WETH = '0x4200000000000000000000000000000000000006' as Address
-const ETH_SENTINEL = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as Address
 const WETH_WITHDRAW_ABI = parseAbi(['function withdraw(uint256 wad)'])
 
 /**
@@ -128,6 +127,16 @@ export async function planMintV2(params: {
       inToken: inTokenForQuote,
       outToken: collateralAsset,
       amountIn: debtIn,
+    })
+  }
+
+  if (process.env['DEBUG_PLAN_V2'] === '1') {
+    console.info('[DEBUG][planMintV2] debt quote', {
+      debtIn: debtIn.toString(),
+      out: debtQuote.out.toString(),
+      approvalTarget: debtQuote.approvalTarget,
+      calldata: debtQuote.calldata,
+      useNativeDebtPath,
     })
   }
 

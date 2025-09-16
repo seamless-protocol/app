@@ -1,3 +1,4 @@
+import { BASE_WETH } from '@/lib/contracts/addresses'
 import type { Position } from '../components/active-positions'
 import type { PortfolioDataPoint } from '../components/portfolio-performance-chart'
 
@@ -230,7 +231,7 @@ export const mockRewardsData = {
   protocolFees: '$156.42',
   tokenAddresses: [
     '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC
-    '0x4200000000000000000000000000000000000006', // WETH
+    BASE_WETH, // WETH
     '0xcd5fe23c85820f7b72d0926fc9b05b43e359b7ee', // weETH
     '0x1c7a460413dd4e964f96d8dcc56d0c1e3b4434c1', // SEAM
   ],

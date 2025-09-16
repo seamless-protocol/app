@@ -6,6 +6,7 @@ import { fetchAprForToken } from '@/features/leverage-tokens/utils/apy-calculati
 import { fetchBorrowApyForToken } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
 import { fetchLeverageRatios } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
 import { fetchGenericRewardsApr } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
+import { BASE_WETH } from '@/lib/contracts/addresses'
 import { hookTestUtils } from '../../../../utils'
 
 // Mock the external dependencies
@@ -31,7 +32,7 @@ describe('useLeverageTokenAPY', () => {
     collateralAsset: {
       symbol: 'WETH',
       name: 'Wrapped Ether',
-      address: '0x4200000000000000000000000000000000000006' as Address,
+      address: BASE_WETH,
       decimals: 18,
     },
     debtAsset: {

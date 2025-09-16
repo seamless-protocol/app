@@ -21,7 +21,10 @@ export const walletClient = createWalletClient({
   transport: http(RPC.primary),
 }).extend(publicActions)
 
-export const adminClient = createPublicClient({ chain, transport: http(RPC.admin) })
+export const adminClient = createPublicClient({
+  chain,
+  transport: http(RPC.admin),
+})
 
 /**
  * Administrative RPC request function for Tenderly VNet operations
@@ -151,5 +154,5 @@ export async function takeSnapshot(): Promise<Hash> {
  */
 export async function revertSnapshot(id: Hash) {
   if (mode === 'anvil') return await testClient.revert({ id })
-  await adminRequest('evm_revert', [id])
+  // await adminRequest('evm_revert', [id])
 }

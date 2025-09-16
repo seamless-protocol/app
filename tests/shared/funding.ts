@@ -1,4 +1,5 @@
 import { type Address, erc20Abi, getAddress, maxUint256, parseAbi, parseUnits, toHex } from 'viem'
+import { BASE_WETH } from '../../src/lib/contracts/addresses.js'
 import { account, adminRequest, mode, publicClient, testClient, walletClient } from './clients'
 
 // Re-export commonly used ABIs
@@ -6,8 +7,6 @@ export { erc20Abi }
 
 // WETH ABI slice
 export const wethAbi = parseAbi(['function deposit() payable', 'function withdraw(uint256 wad)'])
-
-const BASE_WETH: Address = '0x4200000000000000000000000000000000000006'
 
 /** Top up native balance */
 export async function topUpNative(to: Address, ether: string) {

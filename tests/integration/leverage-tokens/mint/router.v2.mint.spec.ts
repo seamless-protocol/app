@@ -1,8 +1,9 @@
-import { type Address, parseUnits } from 'viem'
+import { type Address, type PublicClient, parseUnits } from 'viem'
 import { base } from 'viem/chains'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { orchestrateMint } from '@/domain/mint'
 import { createLifiQuoteAdapter } from '@/domain/mint/adapters/lifi'
+import { createUniswapV2QuoteAdapter } from '@/domain/mint/adapters/uniswapV2'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -66,19 +67,41 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
       await topUpErc20(collateralAsset, account.address, '25') // cushion above equity
       await approveIfNeeded(collateralAsset, router, equityInInputAsset)
 
-      // Create LiFi adapter for debt->collateral swap quotes
-      console.info('[STEP] Creating LiFi quote adapter', {
-        chainId,
-        router,
-        fromAddress: ADDR.executor,
-        allowBridges: 'none',
-      })
-      const quoteDebtToCollateral = createLifiQuoteAdapter({
-        chainId,
-        router,
-        fromAddress: ADDR.executor,
-        allowBridges: 'none',
-      })
+      const useLiFi = process.env['TEST_USE_LIFI'] === '1'
+      const quoteDebtToCollateral = useLiFi
+        ? (() => {
+            console.info('[STEP] Creating LiFi quote adapter', {
+              chainId,
+              router,
+              fromAddress: ADDR.executor,
+              allowBridges: 'none',
+            })
+            return createLifiQuoteAdapter({
+              chainId,
+              router,
+              fromAddress: ADDR.executor,
+              allowBridges: 'none',
+            })
+          })()
+        : (() => {
+            const uniswapRouter =
+              (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
+              ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
+            console.info('[STEP] Creating Uniswap V2 quote adapter', {
+              chainId,
+              router,
+              uniswapRouter,
+            })
+            return createUniswapV2QuoteAdapter({
+              publicClient: publicClient as unknown as Pick<
+                PublicClient,
+                'readContract' | 'getBlock'
+              >,
+              router: uniswapRouter,
+              recipient: router,
+              wrappedNative: ADDR.weth,
+            })
+          })()
 
       // Orchestrate V2 mint (simulate+write)
       console.info('[STEP] Orchestrating V2 mint (simulate+write)')

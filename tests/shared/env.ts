@@ -4,7 +4,7 @@ import { config } from 'dotenv'
 import { type Address, getAddress, type Hex } from 'viem'
 import { anvil, base } from 'wagmi/chains'
 import { z } from 'zod'
-import { contractAddresses } from '../../src/lib/contracts/addresses.js'
+import { BASE_WETH, contractAddresses } from '../../src/lib/contracts/addresses.js'
 
 // Load environment variables for tests (integration/e2e)
 // Priority (first one that provides a key wins):
@@ -143,7 +143,7 @@ export const ADDR = {
   usdc: Env.TEST_USDC
     ? getAddress(Env.TEST_USDC)
     : ('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as Address),
-  weth: getAddress(Env.TEST_WETH ?? '0x4200000000000000000000000000000000000006'),
+  weth: getAddress(Env.TEST_WETH ?? BASE_WETH),
   weeth: getAddress(Env.TEST_WEETH),
   executor: Env.TEST_MULTICALL_EXECUTOR
     ? getAddress(Env.TEST_MULTICALL_EXECUTOR)

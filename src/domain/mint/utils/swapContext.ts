@@ -1,6 +1,7 @@
 // Re-export swap context helpers to provide a stable import surface
 import type { Address, ContractFunctionArgs } from 'viem'
 import { base } from 'viem/chains'
+import { BASE_WETH } from '@/lib/contracts/addresses'
 import type { leverageRouterAbi } from '@/lib/contracts/generated'
 
 // Extract SwapContext type from wagmi-generated ABI to ensure compatibility
@@ -98,7 +99,7 @@ export function createSwapContext(
 // Specialized weETH -> WETH swap context for Base via Aerodrome
 export const BASE_TOKEN_ADDRESSES = {
   weETH: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150a' as Address,
-  WETH: '0x4200000000000000000000000000000000000006' as Address,
+  WETH: BASE_WETH,
 } as const
 
 export function createWeETHSwapContext(): SwapContext {
