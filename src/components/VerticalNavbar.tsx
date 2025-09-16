@@ -11,11 +11,12 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from './ui/sheet'
 import { cn } from './ui/utils'
 
 // Types
-interface NavigationItem {
+export interface NavigationItem {
   id: string
   title: string
   icon: React.ComponentType<{ className?: string }>
   description: string
+  subtitle?: string
   badge?: string
 }
 

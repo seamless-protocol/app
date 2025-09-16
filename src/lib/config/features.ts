@@ -1,29 +1,19 @@
 /**
  * Feature flags for controlling feature visibility
- * Uses environment variables for configuration
+ * Uses DISABLE environment variables - features are enabled by default unless explicitly disabled
+ * Set VITE_DISABLE_FEATURE_NAME=true to disable a feature
  */
 export const features = {
-  // Phase II - Currently in development
-  leverageTokens: import.meta.env['VITE_ENABLE_LEVERAGE_TOKENS'] !== 'false',
-  // Token creation is an advanced feature within Phase II - disabled by default
-  leverageTokenCreation: import.meta.env['VITE_ENABLE_LEVERAGE_TOKEN_CREATION'] === 'true',
-
-  // Phase III - Not started
-  morphoVaults: import.meta.env['VITE_ENABLE_VAULTS'] === 'true',
-  dashboard: import.meta.env['VITE_ENABLE_DASHBOARD'] === 'true',
-
-  // Phase V - Not started
-  staking: import.meta.env['VITE_ENABLE_STAKING'] === 'true',
-
-  // Phase VI - Not started
-  governance: import.meta.env['VITE_ENABLE_GOVERNANCE'] === 'true',
-
-  // Phase VII - Advanced features - Not started
-  advancedFilters: import.meta.env['VITE_ENABLE_ADVANCED_FILTERS'] === 'true',
-  portfolioPnl: import.meta.env['VITE_ENABLE_PORTFOLIO_PNL'] === 'true',
+  // Main Features
+  leverageTokens: import.meta.env['VITE_DISABLE_LEVERAGE_TOKENS'] !== 'true',
+  morphoVaults: import.meta.env['VITE_DISABLE_VAULTS'] !== 'true',
+  portfolio: import.meta.env['VITE_DISABLE_PORTFOLIO'] !== 'true',
+  analytics: import.meta.env['VITE_DISABLE_ANALYTICS'] !== 'true',
+  staking: import.meta.env['VITE_DISABLE_STAKING'] !== 'true',
+  governance: import.meta.env['VITE_DISABLE_GOVERNANCE'] !== 'true',
 
   // UI Display Features
-  featuredTokensSection: import.meta.env['VITE_ENABLE_FEATURED_LEVERAGE_TOKENS'] !== 'false',
+  featuredTokensSection: import.meta.env['VITE_DISABLE_FEATURED_LEVERAGE_TOKENS'] !== 'true',
 
   // Testing
   testMode: import.meta.env['VITE_TEST_MODE'] === 'mock',
