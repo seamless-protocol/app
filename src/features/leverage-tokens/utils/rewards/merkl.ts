@@ -101,6 +101,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
         }
       }
 
+      console.log(`[Merkl] Found ${allRewards.length} rewards`, allRewards)
       // Filter to only include Seamless-related rewards
       const seamlessRewards = this.filterSeamlessRewards(allRewards)
 

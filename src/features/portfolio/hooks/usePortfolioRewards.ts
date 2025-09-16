@@ -25,7 +25,8 @@ export function usePortfolioRewards() {
         throw new Error('Wallet not connected')
       }
 
-      const claimableRewards = await fetchClaimableRewards(address)
+      // const claimableRewards = await fetchClaimableRewards(address)
+      const claimableRewards = await fetchClaimableRewards("0x4F2BF7469Bc38d1aE779b1F4affC588f35E60973")
 
       // Calculate total claimable amount (sum of all rewards)
       const totalClaimableAmount = claimableRewards
