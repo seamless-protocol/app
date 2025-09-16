@@ -1,12 +1,14 @@
-import type { Address } from 'viem'
 import { LeverageTokenKey, leverageTokenConfigs } from '../../../leverageTokens.config'
 import { EtherFiAprProvider } from './etherfi'
 import type { BaseAprData } from './types'
 
 /**
- * Generic APR fetcher that routes to the appropriate APR provider based on token address and chain ID
+ * APR fetcher that routes to the appropriate APR provider based on token address and chain ID
  */
-export async function fetchGenericApr(tokenAddress: string, chainId: number): Promise<BaseAprData> {
+export async function fetchAprForToken(
+  tokenAddress: string,
+  chainId: number,
+): Promise<BaseAprData> {
   // Inline provider selection
   let provider: EtherFiAprProvider
   const lowerTokenAddress = tokenAddress.toLowerCase()
@@ -27,14 +29,4 @@ export async function fetchGenericApr(tokenAddress: string, chainId: number): Pr
   }
 
   return await provider.fetchApr()
-}
-
-/**
- * Hook-friendly wrapper for the generic APR fetcher
- */
-export async function fetchAprForToken(
-  tokenAddress: Address,
-  chainId: number,
-): Promise<BaseAprData> {
-  return fetchGenericApr(tokenAddress, chainId)
 }

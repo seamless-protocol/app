@@ -496,3 +496,25 @@ body,
 [data-sonner-toaster="true"] li[data-sonner-toast][data-type="error"] [data-icon] {
   color: var(--error-red) !important;
 }
+
+/* LiFi Widget Brand Styling */
+.lifi-widget .MuiButton-containedPrimary {
+  background: linear-gradient(to right, #9333ea 0%, #db2777 100%) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+.lifi-widget .MuiTab-textColorPrimary {
+  color: var(--text-primary) !important;
+}
+
+.lifi-widget .MuiTab-textColorPrimary.Mui-selected {
+  background-color: #334155 !important;
+  border-radius: 12px !important;
+}
+
+.lifi-widget .MuiButton-containedPrimary:hover {
+  background: linear-gradient(to right, #7c3aed 0%, #be185d 100%) !important;
+}

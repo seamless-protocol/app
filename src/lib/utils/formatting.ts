@@ -44,11 +44,10 @@ export function formatPercentage(
   options: {
     decimals?: number
     showSign?: boolean
-    isDecimal?: boolean
   } = {},
 ): string {
-  const { decimals = 1, showSign = true, isDecimal = true } = options
-  const percentage = isDecimal ? value * 100 : value
+  const { decimals = 1, showSign = true } = options
+  const percentage = value * 100
   const sign = showSign && percentage >= 0 ? '+' : ''
   return `${sign}${percentage.toFixed(decimals)}%`
 }

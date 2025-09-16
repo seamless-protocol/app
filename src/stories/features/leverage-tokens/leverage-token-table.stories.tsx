@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import { WagmiProvider } from 'wagmi'
 import { EthereumLogo, USDCLogo, weETHLogo } from '../../../components/icons/logos'
-import { LeverageTokenTable } from '../../../features/leverage-tokens/components/LeverageTokenTable'
+import { LeverageTokenTable } from '../../../features/leverage-tokens/components/leverage-token-table'
 import { config } from '../../../lib/config/wagmi.config'
 
 const queryClient = new QueryClient()

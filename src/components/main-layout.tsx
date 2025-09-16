@@ -15,43 +15,43 @@ import {
 } from 'lucide-react'
 import { features } from '@/lib/config/features'
 import { ConnectButtonTest } from './ConnectButtonTest'
-import { KyberSwapWidget } from './KyberSwapWidget'
+import { LiFiWidget } from './LiFiWidget'
 import { ModeToggle } from './mode-toggle'
 import { Toaster } from './ui/sonner'
-import { VerticalNavbar } from './VerticalNavbar'
+import { type NavigationItem, VerticalNavbar } from './VerticalNavbar'
 import { WalletConnectButton } from './WalletConnectButton'
 
 // Navigation configuration that maps to existing routes
 const navigationItems = [
-  {
+  features.leverageTokens && {
     id: 'explore',
     title: 'Leverage Tokens',
     icon: Search,
     description: 'Discover leverage token opportunities',
     subtitle: 'Discover leverage token opportunities tailored to your goals',
   },
-  {
+  features.morphoVaults && {
     id: 'vaults',
     title: 'Vaults',
     icon: Vault,
     description: 'Secure yield strategies',
     subtitle: 'Secure yield strategies for your digital assets',
   },
-  {
+  features.portfolio && {
     id: 'portfolio',
     title: 'Portfolio',
     icon: LayoutDashboard,
     description: 'Overview and manage positions',
     subtitle: 'Overview of your supplied assets, earnings, rewards, and active positions',
   },
-  {
+  features.analytics && {
     id: 'analytics',
     title: 'Analytics',
     icon: BarChart3,
     description: 'Track performance metrics',
     subtitle: 'Track protocol metrics, portfolio performance, and market insights',
   },
-  {
+  features.staking && {
     id: 'staking',
     title: 'Staking',
     icon: Coins,
@@ -59,14 +59,14 @@ const navigationItems = [
     badge: 'New',
     subtitle: 'Stake SEAM tokens to earn protocol rewards',
   },
-  {
+  features.governance && {
     id: 'governance',
     title: 'Governance',
     icon: Vote,
     description: 'Participate in decisions',
     subtitle: 'Participate in protocol governance and voting',
   },
-]
+].filter(Boolean) as Array<NavigationItem>
 
 // Community section configuration
 const communitySection = {
@@ -184,7 +184,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
               {/* Actions */}
               <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
-                <KyberSwapWidget />
+                <LiFiWidget />
                 {features.testMode ? <ConnectButtonTest /> : <WalletConnectButton />}
                 <ModeToggle />
               </div>

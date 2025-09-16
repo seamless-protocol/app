@@ -29,7 +29,7 @@
     "wagmi": "wagmi generate"
   },
   "dependencies": {
-    "@kyberswap/widgets": "^2.1.0",
+    "@lifi/widget": "^3.30.11",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -43,7 +43,7 @@
     "@rainbow-me/rainbowkit": "^2.2.8",
     "@sentry/react": "^10.5.0",
     "@tailwindcss/vite": "^4.1.12",
-    "@tanstack/react-query": "^5.85.3",
+    "@tanstack/react-query": "^5.87.4",
     "@tanstack/react-query-devtools": "^5.85.3",
     "@tanstack/react-router": "1.128.0",
     "@tanstack/router-devtools": "1.128.0",
@@ -60,7 +60,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.12",
     "viem": "^2.34.0",
-    "wagmi": "^2.16.3",
+    "wagmi": "^2.16.9",
     "zod": "^4.0.17"
   },
   "devDependencies": {

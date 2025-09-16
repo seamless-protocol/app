@@ -253,7 +253,117 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
             >
-              <div className="flex items-center space-x-3">
+              {/* Mobile Layout */}
+              <div className="flex flex-col space-y-4 sm:hidden">
+                {/* Token Icons and Name */}
+                <div className="flex items-center space-x-3">
+                  <div className="flex -space-x-1">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
+                      style={{ zIndex: 2 }}
+                    >
+                      <AssetDisplay
+                        asset={tokenConfig.collateralAsset}
+                        size="lg"
+                        variant="logo-only"
+                        tooltipContent={
+                          <p className="font-medium">
+                            {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol}
+                            )
+                            <br />
+                            <span className="text-slate-400 text-sm">
+                              Click to view on{' '}
+                              {
+                                getTokenExplorerInfo(
+                                  tokenConfig.chainId,
+                                  tokenConfig.collateralAsset.address,
+                                ).name
+                              }
+                            </span>
+                          </p>
+                        }
+                        onClick={() =>
+                          window.open(
+                            getTokenExplorerInfo(
+                              tokenConfig.chainId,
+                              tokenConfig.collateralAsset.address,
+                            ).url,
+                            '_blank',
+                          )
+                        }
+                      />
+                    </div>
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
+                      style={{ zIndex: 1 }}
+                    >
+                      <AssetDisplay
+                        asset={tokenConfig.debtAsset}
+                        size="lg"
+                        variant="logo-only"
+                        tooltipContent={
+                          <p className="font-medium">
+                            {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
+                            <br />
+                            <span className="text-slate-400 text-sm">
+                              Click to view on{' '}
+                              {
+                                getTokenExplorerInfo(
+                                  tokenConfig.chainId,
+                                  tokenConfig.debtAsset.address,
+                                ).name
+                              }
+                            </span>
+                          </p>
+                        }
+                        onClick={() =>
+                          window.open(
+                            getTokenExplorerInfo(tokenConfig.chainId, tokenConfig.debtAsset.address)
+                              .url,
+                            '_blank',
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                  <h1 className="text-xl font-bold text-white leading-tight flex-1 min-w-0">
+                    <span className="block truncate">{tokenConfig.name}</span>
+                  </h1>
+                </div>
+
+                {/* APY Badge - Mobile */}
+                <div className="flex items-center space-x-1">
+                  <Badge className="bg-green-500/10 text-green-400 border-green-400/20 text-sm">
+                    {apyData?.totalAPY ? (
+                      `${formatAPY(apyData.totalAPY, 2)} APY`
+                    ) : (
+                      <Skeleton className="h-4 w-20" />
+                    )}
+                  </Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-slate-400 hover:text-slate-300 transition-colors"
+                      >
+                        <Info className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
+                      <APYBreakdownTooltip
+                        token={tokenConfig}
+                        {...(apyData && { apyData })}
+                        isLoading={isApyLoading ?? false}
+                        isError={isApyError ?? false}
+                        compact
+                      />
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+
+              {/* Desktop Layout */}
+              <div className="hidden sm:flex items-center space-x-3">
                 <div className="flex -space-x-1">
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
@@ -352,7 +462,11 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                   </Tooltip>
                 </div>
               </div>
-              <p className="text-slate-400 leading-relaxed">{tokenConfig.description}</p>
+
+              {/* Description */}
+              <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
+                {tokenConfig.description}
+              </p>
             </motion.div>
 
             {/* Current Holdings - Mobile Only */}

@@ -7,7 +7,7 @@ import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { fetchAprForToken } from '../utils/apy-calculations/apr-providers'
 import { fetchBorrowApyForToken } from '../utils/apy-calculations/borrow-apy-providers'
 import { fetchLeverageRatios } from '../utils/apy-calculations/leverage-ratios'
-import { fetchGenericRewardsApr } from '../utils/apy-calculations/rewards-providers'
+import { fetchRewardsAprForToken } from '../utils/apy-calculations/rewards-providers'
 import { ltKeys } from '../utils/queryKeys'
 
 interface UseLeverageTokenAPYOptions {
@@ -51,7 +51,7 @@ export function useLeverageTokenAPY({
         fetchLeverageRatios(tokenAddress, leverageToken.chainId, config),
         fetchAprForToken(tokenAddress, leverageToken.chainId),
         fetchBorrowApyForToken(tokenAddress, leverageToken.chainId, config),
-        fetchGenericRewardsApr({ chainId: leverageToken.chainId, tokenAddress }),
+        fetchRewardsAprForToken(tokenAddress, leverageToken.chainId),
       ])
 
       const borrowAPY = borrowApyData.borrowAPY
@@ -144,7 +144,7 @@ export function useRewardsApr(tokenAddress?: Address, chainId?: number) {
     queryKey: tokenAddress && chainId ? ltKeys.external.rewardsApr(tokenAddress) : [],
     queryFn: () => {
       if (!tokenAddress || !chainId) throw new Error('Token address and chain ID are required')
-      return fetchGenericRewardsApr({ chainId, tokenAddress })
+      return fetchRewardsAprForToken(tokenAddress, chainId)
     },
     enabled: !!tokenAddress && !!chainId,
     staleTime: 2 * 60 * 1000, // 2 minutes
