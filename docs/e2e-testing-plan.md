@@ -27,6 +27,7 @@ This document captures the state of the end-to-end (E2E) test harness, the gaps 
 - Locally, E2E requires the same environment as integration tests but offers less guidance.
 - The frontend previously pointed at the Tenderly token, which caused real UI data to break; we now have dedicated flags to keep Tenderly tokens out of production views.
 - E2E has no notion of which leverage token to target once we expand beyond smoke tests.
+- When `scripts/run-tests.ts` falls back to Anvil it still sets `TEST_RPC_URL=http://127.0.0.1:8545`, which makes `tests/shared/env.ts` classify the run as `mode='tenderly'`; funding helpers then call Tenderly-only RPC methods and fail against Anvil.
 
 ## 2. Goals
 
@@ -42,6 +43,7 @@ This document captures the state of the end-to-end (E2E) test harness, the gaps 
 - Continue using the same backend-selection logic for integration and E2E (explicit RPC → Tenderly VNet → Anvil).
 - Reuse the existing `tests/shared/env.ts` detection and `scripts/run-tests.ts` orchestration so there’s a single source of truth.
 - Add logging in `global-setup.ts` to print which backend was selected and any action taken (e.g., “Using Tenderly VNet”, “Checking local Anvil…”).
+- Fix the Anvil fallback so localhost URLs are treated as `mode='anvil'` (either by adjusting env parsing or by skipping `TEST_RPC_URL` entirely) and fail fast when neither Tenderly nor Anvil is reachable; otherwise mint/redeem specs will keep invoking Tenderly-only RPC helpers against Anvil.
 
 ### 3.2 Token Targeting
 - Introduce an env knob (`E2E_TOKEN_SOURCE` or similar) that can be `prod` or `tenderly`.
@@ -93,12 +95,13 @@ This document captures the state of the end-to-end (E2E) test harness, the gaps 
 
 ## 4. Next Steps Checklist
 
-1. Add token-selection env knob and expose both token configs via shared helper.
-2. Log backend choice in Playwright global setup; ensure failure messages are actionable.
-3. Implement mint happy-path spec guarded by feature flag (`E2E_ENABLE_FLOW_TESTS`).
-4. Introduce funding/snapshot helpers for E2E (leveraging existing shared utilities).
-5. Add documentation under `docs/` and summarize in `AGENTS.md`/`CLAUDE.md`.
-6. Evaluate results locally and iterate before expanding coverage or re-enabling CI.
+1. Correct Anvil fallback handling so shared env/helpers run in `mode='anvil'` and emit a clear error when neither Tenderly nor Anvil is available.
+2. Add token-selection env knob and expose both token configs via shared helper.
+3. Log backend choice in Playwright global setup; ensure failure messages are actionable.
+4. Implement mint happy-path spec guarded by feature flag (`E2E_ENABLE_FLOW_TESTS`).
+5. Introduce funding/snapshot helpers for E2E (leveraging existing shared utilities).
+6. Add documentation under `docs/` and summarize in `AGENTS.md`/`CLAUDE.md`.
+7. Evaluate results locally and iterate before expanding coverage or re-enabling CI.
 
 ---
 
@@ -113,9 +116,10 @@ By treating Tenderly-specific deployments as test-only configs and using explici
 - **1.4** Update fixtures/tests that currently assume a single address to read through the helper instead.
 
 ### Task 2: Backend Visibility & Guardrails
-- **2.1** Enhance `tests/e2e/global-setup.ts` logging to announce the chosen backend and required actions.
-- **2.2** Fail fast with actionable messages when Tenderly credentials are missing or Anvil isn’t reachable.
-- **2.3** Mirror the logging pattern in integration tests (if not already present) for consistent experience.
+- **2.1** Update `tests/shared/env.ts` and/or `scripts/run-tests.ts` so localhost RPCs are treated as Anvil without setting `mode='tenderly'`, and ensure shared helpers pick the correct funding strategy.
+- **2.2** Enhance `tests/e2e/global-setup.ts` logging to announce the chosen backend and required actions.
+- **2.3** Fail fast with actionable messages when Tenderly credentials are missing or Anvil isn’t reachable.
+- **2.4** Mirror the logging pattern in integration tests (if not already present) for consistent experience.
 
 ### Task 3: Mint Flow E2E Spec
 - **3.1** Build a Playwright fixture to provision funding using existing helpers (`topUpNative`, `topUpErc20`).
