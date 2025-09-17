@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address, PublicClient, WalletClient } from 'viem'
 import { MerklRewardClaimProvider } from './merkl'
 import type { BaseRewardClaimData, RewardClaimFetcher } from './types'
 
@@ -50,7 +50,7 @@ export async function fetchClaimableRewards(
 export async function claimRewards(
   userAddress: Address,
   rewards: Array<BaseRewardClaimData>,
-  client: any, // Viem client with wallet capabilities
+  client: { publicClient: PublicClient; walletClient: WalletClient },
 ): Promise<string> {
   if (rewards.length === 0) {
     throw new Error('No rewards to claim')
