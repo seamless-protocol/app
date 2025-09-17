@@ -7,6 +7,7 @@ import { useAccount } from 'wagmi'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
+import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { ConfirmStep } from './ConfirmStep'
 import { ErrorStep } from './ErrorStep'
@@ -29,7 +30,14 @@ interface LeverageTokenRedeemModalProps {
   userAddress?: `0x${string}` // Optional user address - if not provided, will use useAccount
 }
 
-type RedeemStep = 'input' | 'confirm' | 'pending' | 'success' | 'error'
+// Hoisted to avoid re-creating on every render
+const REDEEM_STEPS: Array<StepConfig> = [
+  { id: 'input', label: 'Input', progress: 33 },
+  { id: 'confirm', label: 'Confirm', progress: 66 },
+  { id: 'pending', label: 'Processing', progress: 90 },
+  { id: 'success', label: 'Success', progress: 100 },
+  { id: 'error', label: 'Error', progress: 50 },
+]
 
 export function LeverageTokenRedeemModal({
   isOpen,
@@ -75,16 +83,17 @@ export function LeverageTokenRedeemModal({
     ? formatUnits(leverageTokenBalance, leverageTokenConfig.collateralAsset.decimals) // Assuming same decimals
     : '0'
 
-  const [currentStep, setCurrentStep] = useState<RedeemStep>('input')
+  const {
+    step: currentStep,
+    toInput,
+    toConfirm,
+    toPending,
+    toSuccess,
+    toError,
+  } = useRedeemSteps('input')
 
-  // Step configuration for the multi-step modal
-  const steps: Array<StepConfig> = [
-    { id: 'input', label: 'Input', progress: 33 },
-    { id: 'confirm', label: 'Confirm', progress: 66 },
-    { id: 'pending', label: 'Processing', progress: 90 },
-    { id: 'success', label: 'Success', progress: 100 },
-    { id: 'error', label: 'Error', progress: 50 },
-  ]
+  // Step configuration (static)
+  const steps = REDEEM_STEPS
 
   const [selectedToken, setSelectedToken] = useState<Token>({
     symbol: leverageTokenConfig.symbol,
@@ -102,14 +111,14 @@ export function LeverageTokenRedeemModal({
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      setCurrentStep('input')
+      toInput()
       setAmount('')
       setError('')
       setTransactionHash('')
       setExpectedAmount('0')
       setSelectedAsset(leverageTokenConfig.collateralAsset.symbol)
     }
-  }, [isOpen, leverageTokenConfig.collateralAsset.symbol])
+  }, [isOpen, leverageTokenConfig.collateralAsset.symbol, toInput])
 
   // Update selected token balance and price when wallet balance or price changes
   useEffect(() => {
@@ -192,12 +201,12 @@ export function LeverageTokenRedeemModal({
 
   // Handle proceed to confirmation
   const handleProceed = async () => {
-    setCurrentStep('confirm')
+    toConfirm()
   }
 
   // Handle redemption confirmation
   const handleConfirm = async () => {
-    setCurrentStep('pending')
+    toPending()
 
     try {
       // TODO: add actual redeem transaction
@@ -211,16 +220,16 @@ export function LeverageTokenRedeemModal({
         description: `${amount} tokens redeemed for ${expectedAmount} ${selectedAsset}`,
       })
 
-      setCurrentStep('success')
+      toSuccess()
     } catch (_error) {
       setError('Redemption failed. Please try again.')
-      setCurrentStep('error')
+      toError()
     }
   }
 
   // Handle retry from error state
   const handleRetry = () => {
-    setCurrentStep('input')
+    toInput()
     setError('')
   }
 
