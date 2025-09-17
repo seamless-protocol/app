@@ -6,7 +6,7 @@ import type { BaseRewardClaimData, RewardClaimFetcher } from './types'
  * Registry of reward claim providers
  * Just add new providers here and they automatically work!
  */
-const REWARD_PROVIDERS: RewardClaimFetcher[] = [
+const REWARD_PROVIDERS: Array<RewardClaimFetcher> = [
   new MerklRewardClaimProvider(),
   // Add more providers here as they're implemented
 ]
@@ -15,8 +15,10 @@ const REWARD_PROVIDERS: RewardClaimFetcher[] = [
  * Function to fetch claimable rewards using all available providers
  * Returns combined rewards from all providers
  */
-export async function fetchClaimableRewards(userAddress: Address): Promise<BaseRewardClaimData[]> {
-  const allRewards: BaseRewardClaimData[] = []
+export async function fetchClaimableRewards(
+  userAddress: Address,
+): Promise<Array<BaseRewardClaimData>> {
+  const allRewards: Array<BaseRewardClaimData> = []
   const providerPromises = REWARD_PROVIDERS.map(async (provider) => {
     try {
       console.log(`[${provider.protocolName}] Fetching rewards...`)
@@ -47,26 +49,26 @@ export async function fetchClaimableRewards(userAddress: Address): Promise<BaseR
  */
 export async function claimRewards(
   userAddress: Address,
-  rewards: BaseRewardClaimData[],
-  signer: any, // Provider-specific signer type
+  rewards: Array<BaseRewardClaimData>,
+  client: any, // Viem client with wallet capabilities
 ): Promise<string> {
   if (rewards.length === 0) {
     throw new Error('No rewards to claim')
   }
 
   // Group rewards by provider protocol (from metadata)
-  const rewardsByProvider = new Map<string, BaseRewardClaimData[]>()
+  const rewardsByProvider = new Map<string, Array<BaseRewardClaimData>>()
 
   for (const reward of rewards) {
     const protocol = (reward.metadata?.['protocol'] as string) || 'unknown'
     if (!rewardsByProvider.has(protocol)) {
       rewardsByProvider.set(protocol, [])
     }
-    rewardsByProvider.get(protocol)!.push(reward)
+    rewardsByProvider.get(protocol)?.push(reward)
   }
 
   // Find the appropriate provider for each group and claim
-  const claimPromises: Promise<string>[] = []
+  const claimPromises: Array<Promise<string>> = []
 
   for (const [protocol, protocolRewards] of rewardsByProvider.entries()) {
     const provider = REWARD_PROVIDERS.find((p) => p.protocolId === protocol)
@@ -75,7 +77,7 @@ export async function claimRewards(
       continue
     }
 
-    const claimPromise = provider.claimRewards(userAddress, protocolRewards, signer)
+    const claimPromise = provider.claimRewards(userAddress, protocolRewards, client)
     claimPromises.push(claimPromise)
   }
 

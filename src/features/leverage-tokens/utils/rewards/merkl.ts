@@ -1,7 +1,8 @@
-import type { Address } from 'viem'
+import type { Address, PublicClient, WalletClient } from 'viem'
+import { merklDistributorAbi } from '@/lib/contracts/abis/merklDistributor'
+import { CHAIN_IDS } from '@/lib/utils/chain-logos'
 import { getAllLeverageTokenConfigs } from '../../leverageTokens.config'
 import type { BaseRewardClaimData, RewardClaimFetcher } from './types'
-import { CHAIN_IDS } from '@/lib/utils/chain-logos'
 
 /**
  * Supported chain IDs for Merkl rewards
@@ -27,14 +28,14 @@ interface MerklReward {
     symbol: string
     decimals: number
   }
-  proofs: string[]
+  proofs: Array<string>
 }
 
 interface MerklUserRewards {
   chain: {
     id: number
   }
-  rewards: MerklReward[]
+  rewards: Array<MerklReward>
 }
 
 /**
@@ -47,7 +48,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
   protocolId = 'merkl'
   protocolName = 'Merkl'
 
-  private readonly supportedChainIds: readonly number[]
+  private readonly supportedChainIds: ReadonlyArray<number>
   private readonly distributorAddresses: Record<number, Address>
 
   constructor() {
@@ -66,7 +67,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
    * Fetch claimable rewards for a user from Merkl
    * Filters to only include rewards related to Seamless leverage tokens
    */
-  async fetchClaimableRewards(userAddress: Address): Promise<BaseRewardClaimData[]> {
+  async fetchClaimableRewards(userAddress: Address): Promise<Array<BaseRewardClaimData>> {
     try {
       // Fetch user rewards from Merkl API for all supported chains
       const userRewards = await this.fetchUserRewardsFromMerkl(userAddress, this.supportedChainIds)
@@ -77,7 +78,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
       }
 
       // Convert all rewards to BaseRewardClaimData format
-      const allRewards: BaseRewardClaimData[] = []
+      const allRewards: Array<BaseRewardClaimData> = []
 
       for (const rewardData of userRewards) {
         for (const reward of rewardData.rewards) {
@@ -127,8 +128,8 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
    */
   async claimRewards(
     userAddress: Address,
-    rewards: BaseRewardClaimData[],
-    signer: any, // Ethers signer or similar
+    rewards: Array<BaseRewardClaimData>,
+    client: any, // Viem client with wallet capabilities
   ): Promise<string> {
     try {
       console.log(`[Merkl] Claiming ${rewards.length} rewards for user: ${userAddress}`)
@@ -152,11 +153,17 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
         }
 
         const distributorAddress = this.distributorAddresses[chainId]
+        if (!distributorAddress) {
+          console.warn(`[Merkl] Skipping rewards for unsupported chain: ${chainId}`)
+          continue
+        }
+
         const claimPromise = this.claimTokenRewards(
+          client.publicClient,
+          client.walletClient,
           userAddress,
           tokenAddress,
           tokenRewards,
-          signer,
           distributorAddress,
         )
         claimPromises.push(claimPromise)
@@ -170,7 +177,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
 
       // Return the first successful transaction hash
       const successfulResult = results.find((result) => result.success)
-      if (!successfulResult) {
+      if (!successfulResult || !successfulResult.transactionHash) {
         throw new Error('All claim transactions failed')
       }
 
@@ -186,8 +193,8 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
    */
   private async fetchUserRewardsFromMerkl(
     userAddress: Address,
-    chainIds: readonly number[],
-  ): Promise<MerklUserRewards[]> {
+    chainIds: ReadonlyArray<number>,
+  ): Promise<Array<MerklUserRewards>> {
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
@@ -227,7 +234,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
   /**
    * Filter rewards to only include those related to Seamless leverage tokens
    */
-  private filterSeamlessRewards(rewards: BaseRewardClaimData[]): BaseRewardClaimData[] {
+  private filterSeamlessRewards(rewards: Array<BaseRewardClaimData>): Array<BaseRewardClaimData> {
     const leverageTokenConfigs = getAllLeverageTokenConfigs()
     const leverageTokenAddresses = new Set(
       leverageTokenConfigs.map((config) => config.address.toLowerCase()),
@@ -242,8 +249,10 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
   /**
    * Group rewards by token address for efficient claiming
    */
-  private groupRewardsByToken(rewards: BaseRewardClaimData[]): Map<Address, BaseRewardClaimData[]> {
-    const grouped = new Map<Address, BaseRewardClaimData[]>()
+  private groupRewardsByToken(
+    rewards: Array<BaseRewardClaimData>,
+  ): Map<Address, Array<BaseRewardClaimData>> {
+    const grouped = new Map<Address, Array<BaseRewardClaimData>>()
 
     for (const reward of rewards) {
       const existing = grouped.get(reward.tokenAddress) || []
@@ -258,42 +267,44 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
    * Claim rewards for a specific token using the Merkl distributor contract
    */
   private async claimTokenRewards(
+    publicClient: PublicClient,
+    walletClient: WalletClient,
     userAddress: Address,
     tokenAddress: Address,
-    rewards: BaseRewardClaimData[],
-    signer: any, // JsonRpcSigner or similar
+    rewards: Array<BaseRewardClaimData>,
     distributorAddress: Address,
+    simulateContract?: PublicClient['simulateContract'],
+    writeContract?: WalletClient['writeContract'],
   ): Promise<{ success: boolean; transactionHash?: string; error?: string }> {
     try {
       // Prepare claim data following Merkl's expected format
       const users = rewards.map(() => userAddress)
       const tokens = rewards.map(() => tokenAddress)
-      const amounts = rewards.map((reward) => reward.claimableAmount)
-      const proofs = rewards.map((reward) => reward.proof)
+      const amounts = rewards.map((reward) => BigInt(reward.claimableAmount))
+      const proofs = rewards.map((reward) => reward.proof as ReadonlyArray<`0x${string}`>)
 
       console.log(`[Merkl] Claiming ${rewards.length} rewards for token: ${tokenAddress}`)
 
-      // TODO: Import Distributor__factory when available
-      // const contract = Distributor__factory.connect(distributorAddress, signer)
-      // const tx = await contract.claim(users, tokens, amounts, proofs)
-      // await tx.wait()
-      //
-      // return {
-      //   success: true,
-      //   transactionHash: tx.hash,
-      // }
+      const simulate = simulateContract ?? publicClient.simulateContract
+      const write = writeContract ?? walletClient.writeContract
 
-      // Temporary simulation until contract ABI is available
-      console.log(`[Merkl] Users:`, users)
-      console.log(`[Merkl] Tokens:`, tokens)
-      console.log(`[Merkl] Amounts:`, amounts)
-      console.log(`[Merkl] Proofs:`, proofs)
+      const simulation = await simulate({
+        address: distributorAddress,
+        abi: merklDistributorAbi,
+        functionName: 'claim',
+        args: [users, tokens, amounts, proofs],
+        account: userAddress,
+      })
 
-      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`
+      console.log(`[Merkl] Simulation successful. Gas estimate: ${simulation.request.gas}`)
+
+      // Now execute the actual transaction
+      console.log(`[Merkl] Executing claim transaction...`)
+      const txHash = await write(simulation.request)
 
       return {
         success: true,
-        transactionHash: mockTxHash,
+        transactionHash: txHash,
       }
     } catch (error) {
       console.error(`[Merkl] Error claiming token rewards for ${tokenAddress}:`, error)

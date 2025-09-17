@@ -5,7 +5,7 @@ import type { BaseRewardClaimData } from '../../leverage-tokens/utils/rewards/ty
 import { portfolioKeys } from '../utils/queryKeys'
 
 export interface RewardsData {
-  claimableRewards: BaseRewardClaimData[]
+  claimableRewards: Array<BaseRewardClaimData>
   totalClaimableAmount: string
   totalClaimedAmount: string
   totalEarnedAmount: string

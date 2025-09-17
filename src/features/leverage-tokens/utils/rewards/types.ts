@@ -15,7 +15,7 @@ export interface BaseRewardClaimData {
   /** Chain ID where rewards are claimable */
   chainId: number
   /** Proof data needed for claiming (provider-specific) */
-  proof: string[]
+  proof: Array<string>
   /** Additional metadata for the claim */
   metadata?: Record<string, unknown>
 }
@@ -29,12 +29,12 @@ export interface RewardClaimFetcher {
   /** Human-readable name */
   protocolName: string
   /** Fetch claimable rewards for a user address */
-  fetchClaimableRewards(userAddress: Address): Promise<BaseRewardClaimData[]>
+  fetchClaimableRewards(userAddress: Address): Promise<Array<BaseRewardClaimData>>
   /** Claim rewards for a user (returns transaction hash) */
   claimRewards(
     userAddress: Address,
-    rewards: BaseRewardClaimData[],
-    signer: any, // Provider-specific signer type
+    rewards: Array<BaseRewardClaimData>,
+    client: any, // Viem client with wallet capabilities
   ): Promise<string>
 }
 

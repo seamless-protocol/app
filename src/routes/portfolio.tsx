@@ -221,10 +221,10 @@ function PortfolioPage() {
       >
         <div className="relative">
           <AvailableRewards
-            tokenAddresses={rewardsData?.tokenAddresses || []}
-            accruingAmount={rewardsData?.accruingAmount || '$0.00'}
-            seamToken={rewardsData?.seamToken || '0.00'}
-            protocolFees={rewardsData?.protocolFees || '$0.00'}
+            tokenAddresses={[]}
+            accruingAmount={'$0.00'}
+            seamToken={'$0.00'}
+            protocolFees={'$0.00'}
             onClaim={handleClaimRewards}
           />
           {rewardsLoading && (

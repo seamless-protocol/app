@@ -14,6 +14,7 @@ export * from './abis/leverageManager'
 export * from './abis/leverageRouter'
 export * from './abis/leverageToken'
 export * from './abis/leverageTokenFactory'
+export * from './abis/merklDistributor'
 export * from './abis/rebalanceAdapter'
 export * from './addresses'
 // Note: keep codegen exports separate to avoid name collisions with ABIs
