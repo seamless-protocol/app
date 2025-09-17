@@ -77,6 +77,7 @@ export const MULTICALL_EXECUTOR_ADDRESS = assertAddress(
 )
 
 // Default leverage token used in integration tests (weETH/WETH 17x)
+// Tenderly VNet deployment used by integration/E2E tests (distinct from Base mainnet token)
 export const WEETH_WETH_17X_TOKEN_ADDRESS = '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as const
 
 // Staking/Rewards
