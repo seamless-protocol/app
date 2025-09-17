@@ -9,6 +9,7 @@ import { Input } from '../../../../components/ui/input'
 import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import { formatAPY } from '../../../../lib/utils/formatting'
+import { SLIPPAGE_PRESETS_PERCENT_DISPLAY } from '../../constants'
 
 interface Token {
   symbol: string
@@ -192,7 +193,7 @@ export function InputStep({
             <div className="flex items-center justify-between">
               <div className="text-xs font-medium text-white">Slippage Tolerance</div>
               <div className="flex items-center space-x-2">
-                {['0.1', '0.5', '1.0'].map((value) => (
+                {SLIPPAGE_PRESETS_PERCENT_DISPLAY.map((value) => (
                   <Button
                     key={value}
                     variant={slippage === value ? 'default' : 'outline'}

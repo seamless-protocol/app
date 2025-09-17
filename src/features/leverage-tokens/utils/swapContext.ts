@@ -1,5 +1,6 @@
 import type { Address, ContractFunctionArgs } from 'viem'
 import { base } from 'viem/chains'
+import { BASE_WETH } from '@/lib/contracts/addresses'
 import type { leverageRouterAbi } from '@/lib/contracts/generated'
 
 /**
@@ -158,7 +159,7 @@ export function createEtherFiSwapContext(): SwapContext {
  */
 export const BASE_TOKEN_ADDRESSES = {
   weETH: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150a' as Address,
-  WETH: '0x4200000000000000000000000000000000000006' as Address,
+  WETH: BASE_WETH,
 } as const
 
 /**

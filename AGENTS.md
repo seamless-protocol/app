@@ -2,6 +2,8 @@
 
 This file provides guidance to AI agents and automation systems (including Codex) when working with code in this repository.
 
+Note: This document must be kept in strict sync with `CLAUDE.md`. Any change here should be mirrored there verbatim.
+
 ## Project Overview
 
 Seamless Protocol - Frontend application for a DeFi protocol that wraps complex leverage strategies into simple ERC-20 tokens. Built for IPFS deployment as a fully static, client-side application.
@@ -28,11 +30,11 @@ bun format             # Format code with Biome
 bun typecheck          # Type-check only
 
 # Testing
-bun test               # Run unit tests with Vitest
-bun test:ui            # Run tests with UI
-bun test:coverage      # Run tests with coverage
-bun test:integration   # Run integration tests (uses Tenderly VNet by default)
-bun test:e2e           # Run E2E tests with Playwright (uses Tenderly VNet by default)
+bun run test               # Run unit tests with Vitest
+bun run test:ui            # Run tests with UI
+bun run test:coverage      # Run tests with coverage
+bun run test:integration   # Run integration tests (uses Tenderly VNet by default)
+bun run test:e2e           # Run E2E tests with Playwright (uses Tenderly VNet by default)
 
 # Testing Backend Configuration
 # DEFAULT: Tenderly VNet (just-in-time creation/deletion)
@@ -78,6 +80,13 @@ bunx --bun shadcn@latest add [component]  # Add new UI components
 - **Features**: Keep UI-only constants in `src/features/<feature>`, import on-chain config from `src/lib/contracts`.
 - **Tests**: Prefer mocking `@/lib/contracts/addresses` in unit tests; avoid duplicating addresses.
 
+#### Address Overrides for Forks
+- Canonical Base addresses remain the production default; do **not** edit `addresses.ts` with fork-specific values.
+- Supply fork-specific maps (Tenderly, Anvil, etc.) via `VITE_CONTRACT_ADDRESS_OVERRIDES` as a JSON string keyed by `chainId` (nested objects merge with the defaults).
+- Example: `export VITE_CONTRACT_ADDRESS_OVERRIDES='{"8453":{"leverageManager":"0x...","tokens":{"weeth":"0x..."}}}'`
+- `scripts/run-tests.ts` also reads `TENDERLY_CONTRACT_ADDRESS_OVERRIDES` and forwards it to Vite so deterministic Tenderly VNets stay in sync during integration/E2E runs.
+- Default deterministic Tenderly map lives at `tests/shared/tenderly-addresses.json`; update this file when Tenderly deployments change.
+
 ### Development Phases
 The app is designed for 7 incremental production releases:
 1. Foundation & Infrastructure (current)
@@ -96,6 +105,14 @@ The app is designed for 7 incremental production releases:
 ### Code Quality
 - **Biome** for linting and formatting
 - Run `bun check:fix` after changes
+
+### Naming & Readability
+- **Descriptive variable names**: Avoid single-letter variable names except for trivial indices in very small scopes. Prefer meaningful names that convey intent (e.g., `previewWithTotalCollateral` over `p`, `debtQuote` over `dq`). This applies across domain code, ports, planners, and tests.
+
+### Function Style
+- **Function declarations**: Prefer for exported utilities and domain-layer helpers when hoisting improves readability (main flow first, helpers below). Useful if overloads are expected or to keep stack names clear.
+- **Arrow functions**: Prefer inside React components/hooks and for callbacks/handlers. Use for small, module-local helpers that capture lexical scope. Always use arrows for array methods, event handlers, and React props.
+- **Consistency**: Within a file, choose the dominant style that best serves readability. If the file tells a top-down “story”, place the main function first and define helper declarations below; otherwise, use arrows consistently for local helpers.
 
 ### Provider Hierarchy (planned)
 ```

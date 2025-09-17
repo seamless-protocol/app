@@ -2,14 +2,24 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { config } from 'dotenv'
 import { type Address, getAddress, type Hex } from 'viem'
-import { anvil, base } from 'wagmi/chains'
+import { anvil, base, type Chain } from 'viem/chains'
 import { z } from 'zod'
-import { contractAddresses } from '../../src/lib/contracts/addresses.js'
+import { BASE_WETH, contractAddresses } from '../../src/lib/contracts/addresses.js'
+import { WEETH_WETH_17X_TOKEN_ADDRESS } from '../fixtures/addresses'
 
-// Load local .env if present (used in integration/e2e runs)
+// Load environment variables for tests (integration/e2e)
+// Priority (first one that provides a key wins):
+// 1) Existing process.env (e.g., from shell)
+// 2) project .env.local
+// 3) project .env
+// 4) tests/integration/.env
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, '..')
-config({ path: resolve(__dirname, '../integration/.env') })
+const projectRoot = resolve(__dirname, '../..')
+// Do not override already-set env vars
+config({ path: resolve(projectRoot, '.env.local'), override: false })
+config({ path: resolve(projectRoot, '.env'), override: false })
+config({ path: resolve(__dirname, '../integration/.env'), override: false })
 
 export type Mode = 'tenderly' | 'anvil'
 
@@ -26,6 +36,9 @@ const Defaults = {
 const EnvSchema = z.object({
   // RPC selection
   TEST_RPC_URL: z.url().optional(),
+  // Allow a generic RPC URL to be provided (e.g., Alchemy)
+  RPC_URL: z.url().optional(),
+  VITE_BASE_RPC_URL: z.url().optional(),
   ANVIL_RPC_URL: z.url().default(Defaults.ANVIL_RPC_URL),
 
   // Keys
@@ -52,7 +65,12 @@ const EnvSchema = z.object({
 
 export const Env = EnvSchema.parse(process.env)
 
-const tenderlyPrimary = Env.TEST_RPC_URL
+// Prefer explicit TEST_RPC_URL or generic RPC_URL (e.g. Alchemy), else support VITE_BASE_RPC_URL/TENDERLY_RPC_URL, otherwise fall back to Anvil
+const tenderlyPrimary =
+  Env.TEST_RPC_URL ||
+  Env.RPC_URL ||
+  Env.VITE_BASE_RPC_URL ||
+  (process.env['TENDERLY_RPC_URL'] as string | undefined)
 export const mode: Mode = tenderlyPrimary ? 'tenderly' : 'anvil'
 
 let primaryRpc: string
@@ -63,27 +81,113 @@ if (mode === 'tenderly') {
 } else {
   primaryRpc = Env.ANVIL_RPC_URL
 }
-// For both Tenderly and Anvil, admin and primary are the same endpoint
-export const RPC = { primary: primaryRpc, admin: primaryRpc }
 
-// Use deployed contract addresses from config
-const baseContracts = contractAddresses[base.id]
-if (!baseContracts) {
-  throw new Error('No contract addresses found for Base chain')
+// Allow a dedicated admin endpoint when using Tenderly VNets; otherwise fallback to primary
+const adminRpc = (process.env['TENDERLY_ADMIN_RPC_URL'] as string | undefined) || primaryRpc
+export const RPC = { primary: primaryRpc, admin: adminRpc }
+
+async function detectChainId(rpcUrl: string): Promise<number> {
+  try {
+    const res = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_chainId', params: [] }),
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText}`)
+    }
+    const json = (await res.json()) as { result?: string }
+    if (!json?.result || typeof json.result !== 'string') {
+      throw new Error('Missing chain id in RPC response')
+    }
+    return Number(BigInt(json.result))
+  } catch (error) {
+    const details = error instanceof Error ? error.message : String(error)
+    throw new Error(`Failed to detect chain id from RPC ${rpcUrl}: ${details}`)
+  }
+}
+
+const detectedChainId = await detectChainId(primaryRpc)
+const chainIdsWithConfig = new Set<number>(Object.keys(contractAddresses).map(Number))
+
+const canonicalChainId = (() => {
+  if (chainIdsWithConfig.has(detectedChainId)) return detectedChainId
+  if (detectedChainId === anvil.id && chainIdsWithConfig.has(base.id)) return base.id
+  throw new Error(`No contract mapping configured for chain ${detectedChainId}`)
+})()
+
+const withRpc = (chain: Chain, id: number) => ({
+  ...chain,
+  id,
+  rpcUrls: {
+    ...chain.rpcUrls,
+    default: { http: [primaryRpc] },
+    public: { http: [primaryRpc] },
+  },
+})
+
+const resolvedChain: Chain = (() => {
+  if (detectedChainId === base.id) return withRpc(base, detectedChainId)
+  if (detectedChainId === anvil.id) return withRpc({ ...base }, anvil.id)
+  if (chainIdsWithConfig.has(detectedChainId)) return withRpc({ ...base }, detectedChainId)
+  // canonicalChainId guard above will already throw for unsupported networks
+  return withRpc(base, canonicalChainId)
+})()
+
+export const CHAIN_ID = detectedChainId
+export const CANONICAL_CHAIN_ID = canonicalChainId
+export const CHAIN = resolvedChain
+
+const chainContracts = contractAddresses[canonicalChainId]
+if (!chainContracts) {
+  throw new Error(`No contract addresses found for chain ${canonicalChainId}`)
+}
+
+const managerV1 = chainContracts.leverageManager
+  ? (chainContracts.leverageManager as Address)
+  : undefined
+const managerV2 = chainContracts.leverageManagerV2
+  ? (chainContracts.leverageManagerV2 as Address)
+  : undefined
+const routerV1 = chainContracts.leverageRouter
+  ? (chainContracts.leverageRouter as Address)
+  : undefined
+const routerV2 = chainContracts.leverageRouterV2
+  ? (chainContracts.leverageRouterV2 as Address)
+  : undefined
+const tokenMap = chainContracts.tokens ?? {}
+
+function ensureAddress(label: string, value: Address | undefined): Address {
+  if (!value) throw new Error(`Missing ${label} for chain ${canonicalChainId}`)
+  return getAddress(value)
+}
+
+function optionalAddress(value: Address | undefined): Address | undefined {
+  return value ? getAddress(value) : undefined
 }
 
 export const ADDR = {
-  factory: baseContracts.leverageTokenFactory as Address,
-  manager: baseContracts.leverageManager as Address,
-  router: baseContracts.leverageRouter as Address,
-  leverageToken: '0xa2fceeae99d2caeee978da27be2d95b0381dbb8c' as Address, // Specific deployed token for tests
-  usdc: Env.TEST_USDC
-    ? getAddress(Env.TEST_USDC)
-    : ('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as Address),
-  weth: Env.TEST_WETH
-    ? getAddress(Env.TEST_WETH)
-    : ('0x4200000000000000000000000000000000000006' as Address),
-  weeth: getAddress(Env.TEST_WEETH),
+  factory: ensureAddress('leverageTokenFactory', chainContracts.leverageTokenFactory),
+  manager: ensureAddress('leverageManager', (managerV2 ?? managerV1) as Address | undefined),
+  managerV1: optionalAddress(managerV1),
+  managerV2: optionalAddress(managerV2),
+  router: ensureAddress('leverageRouter', (routerV2 ?? routerV1) as Address | undefined),
+  routerV1: optionalAddress(routerV1),
+  routerV2: optionalAddress(routerV2),
+  leverageToken: getAddress(WEETH_WETH_17X_TOKEN_ADDRESS),
+  usdc: ensureAddress(
+    'usdc token',
+    (Env.TEST_USDC as Address | undefined) ?? (tokenMap.usdc as Address | undefined),
+  ),
+  weth: ensureAddress(
+    'weth token',
+    (Env.TEST_WETH as Address | undefined) ?? (tokenMap.weth as Address | undefined) ?? BASE_WETH,
+  ),
+  weeth: ensureAddress(
+    'weeth token',
+    (Env.TEST_WEETH as Address | undefined) ?? (tokenMap.weeth as Address | undefined),
+  ),
+  executor: optionalAddress(chainContracts.multicall),
 } as const
 
 export const Extra = {

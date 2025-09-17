@@ -1,6 +1,7 @@
 import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
 import type { Address } from 'viem'
 import { BaseLogo } from '@/components/icons/logos'
+import { BASE_WETH } from '@/lib/contracts/addresses'
 
 // Leverage token keys enum for type safety
 export enum LeverageTokenKey {
@@ -47,6 +48,8 @@ export interface LeverageTokenConfig {
   chainLogo: React.ComponentType<React.SVGProps<SVGSVGElement>>
   // Supply cap (token units) - hardcoded until contract supports dynamic fetching
   supplyCap?: number
+  // When true, omit from production UI but keep accessible for testing harnesses
+  isTestOnly?: boolean
 
   // Asset configuration
   collateralAsset: {
@@ -92,7 +95,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     debtAsset: {
       symbol: 'WETH',
       name: 'Wrapped Ether',
-      address: '0x4200000000000000000000000000000000000006' as Address,
+      address: BASE_WETH,
       decimals: 18,
     },
     relatedResources: {
@@ -148,6 +151,32 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       ],
     },
   },
+  'weeth-weth-17x-tenderly': {
+    address: '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as Address,
+    name: 'weETH / WETH 17x Leverage Token (Tenderly)',
+    symbol: 'WEETH-WETH-17x',
+    description:
+      'Tenderly VNet deployment of the weETH / WETH 17x leverage token used for automated integration testing.',
+    decimals: 18,
+    leverageRatio: 17,
+    chainId: 8453,
+    chainName: 'Base (Tenderly VNet)',
+    chainLogo: BaseLogo,
+    supplyCap: 150,
+    isTestOnly: true,
+    collateralAsset: {
+      symbol: 'weETH',
+      name: 'Wrapped Ether.fi ETH',
+      address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
+      decimals: 18,
+    },
+    debtAsset: {
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      address: BASE_WETH,
+      decimals: 18,
+    },
+  },
 }
 
 // Helper function to get leverage token config by address
@@ -159,5 +188,5 @@ export function getLeverageTokenConfig(address: Address): LeverageTokenConfig | 
 
 // Helper function to get all leverage token configs
 export function getAllLeverageTokenConfigs(): Array<LeverageTokenConfig> {
-  return Object.values(leverageTokenConfigs)
+  return Object.values(leverageTokenConfigs).filter((cfg) => !cfg.isTestOnly)
 }

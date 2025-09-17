@@ -1,12 +1,11 @@
 import type { Hash, Hex } from 'viem'
 import { createPublicClient, createTestClient, createWalletClient, http, publicActions } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { base } from 'viem/chains'
-import { ADDR, Env, Extra, mode, RPC } from './env'
+import { ADDR, CHAIN, Env, Extra, mode, RPC } from './env'
 
 export { ADDR, mode }
 
-export const chain = base
+export const chain = CHAIN
 export const account = privateKeyToAccount(Env.TEST_PRIVATE_KEY as Hex)
 
 export const publicClient = createPublicClient({
@@ -21,7 +20,10 @@ export const walletClient = createWalletClient({
   transport: http(RPC.primary),
 }).extend(publicActions)
 
-export const adminClient = createPublicClient({ chain, transport: http(RPC.admin) })
+export const adminClient = createPublicClient({
+  chain,
+  transport: http(RPC.admin),
+})
 
 /**
  * Administrative RPC request function for Tenderly VNet operations
@@ -52,12 +54,32 @@ export const adminClient = createPublicClient({ chain, transport: http(RPC.admin
  * const snapshotId = await adminRequest<string>('evm_snapshot', [])
  */
 export async function adminRequest<T = unknown>(method: string, params: Array<any> = []) {
-  const req = (
-    adminClient as unknown as {
-      request: (args: { method: string; params?: Array<any> }) => Promise<any>
-    }
-  ).request
-  return (await req({ method, params })) as T
+  try {
+    console.info('[ADMIN RPC] request', {
+      method,
+      // Avoid dumping large payloads; show brief param summary
+      paramsPreview: Array.isArray(params)
+        ? params.map((p) =>
+            typeof p === 'string'
+              ? `${p.slice(0, 10)}...`
+              : Array.isArray(p)
+                ? `[${p.length}]`
+                : typeof p,
+          )
+        : typeof params,
+    })
+    const req = (
+      adminClient as unknown as {
+        request: (args: { method: string; params?: Array<any> }) => Promise<any>
+      }
+    ).request
+    const res = (await req({ method, params })) as T
+    console.info('[ADMIN RPC] response', { method, ok: true })
+    return res
+  } catch (err) {
+    console.error('[ADMIN RPC] error', { method, err })
+    throw err
+  }
 }
 
 export const testClient =

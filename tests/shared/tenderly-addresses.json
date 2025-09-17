@@ -1,0 +1,9 @@
+{
+  "8453": {
+    "leverageTokenFactory": "0xA6737ca46336A7714E311597c6C07A18A3aFdCB8",
+    "leverageManagerV2": "0x959c574EC9A40b64245A3cF89b150Dc278e9E55C",
+    "leverageRouterV2": "0xfd46483b299197c616671b7df295ca5186c805c2",
+    "leverageTokenImpl": "0xfFEF572c179AC02F6285B0da7CB27176A725a8A1",
+    "multicall": "0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd"
+  }
+}

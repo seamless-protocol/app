@@ -129,7 +129,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
   async claimRewards(
     userAddress: Address,
     rewards: Array<BaseRewardClaimData>,
-    client: any, // Viem client with wallet capabilities
+    client: { publicClient: PublicClient; walletClient: WalletClient },
   ): Promise<string> {
     try {
       console.log(`[Merkl] Claiming ${rewards.length} rewards for user: ${userAddress}`)

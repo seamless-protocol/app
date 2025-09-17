@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address, PublicClient, WalletClient } from 'viem'
 
 /**
  * Base interface for reward claim data
@@ -34,7 +34,7 @@ export interface RewardClaimFetcher {
   claimRewards(
     userAddress: Address,
     rewards: Array<BaseRewardClaimData>,
-    client: any, // Viem client with wallet capabilities
+    client: { publicClient: PublicClient; walletClient: WalletClient },
   ): Promise<string>
 }
 

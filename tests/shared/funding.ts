@@ -1,5 +1,14 @@
 import { type Address, erc20Abi, getAddress, maxUint256, parseAbi, parseUnits, toHex } from 'viem'
-import { account, adminRequest, mode, publicClient, testClient, walletClient } from './clients'
+import { BASE_WETH } from '../../src/lib/contracts/addresses.js'
+import {
+  ADDR,
+  account,
+  adminRequest,
+  mode,
+  publicClient,
+  testClient,
+  walletClient,
+} from './clients'
 
 // Re-export commonly used ABIs
 export { erc20Abi }
@@ -7,27 +16,38 @@ export { erc20Abi }
 // WETH ABI slice
 export const wethAbi = parseAbi(['function deposit() payable', 'function withdraw(uint256 wad)'])
 
-const BASE_WETH: Address = '0x4200000000000000000000000000000000000006'
-
 /** Top up native balance */
 export async function topUpNative(to: Address, ether: string) {
   if (mode === 'anvil') {
+    console.info('[STEP] Funding native (anvil)', { to, ether })
     await testClient.setBalance({ address: to, value: parseUnits(ether, 18) })
+    console.info('[STEP] Funded native (anvil)')
     return
   }
-  // Tenderly expects array of addresses as first parameter
-  await adminRequest('tenderly_setBalance', [[to], toHex(parseUnits(ether, 18))])
+  // Use tenderly_addBalance so the action surfaces as a transaction in the VNet explorer
+  // (setBalance performs a direct state write and may not show as a tx)
+  console.info('[STEP] Funding native (tenderly_addBalance)', { to, ether })
+  await adminRequest('tenderly_addBalance', [[to], toHex(parseUnits(ether, 18))])
+  console.info('[STEP] Funded native (tenderly_addBalance)')
 }
 
 /** Set ERC-20 balance via admin RPC (Tenderly) */
 export async function setErc20Balance(token: Address, to: Address, human: string) {
+  console.info('[STEP] Funding ERC20 (tenderly_setErc20Balance) — preparing', { token, to, human })
   const decimals = await publicClient.readContract({
     address: token,
     abi: erc20Abi,
     functionName: 'decimals',
   })
   const raw = parseUnits(human, decimals)
+  console.info('[STEP] Funding ERC20 (tenderly_setErc20Balance)', {
+    token,
+    to,
+    human,
+    raw: raw.toString(),
+  })
   await adminRequest('tenderly_setErc20Balance', [token, to, toHex(raw)])
+  console.info('[STEP] Funded ERC20 (tenderly_setErc20Balance)')
 }
 
 async function fundErc20ViaWethDeposit(token: Address, to: Address, human: string) {
@@ -52,9 +72,9 @@ async function fundErc20ViaWethDeposit(token: Address, to: Address, human: strin
   return true
 }
 
-// Token addresses from Base network
-const USDC_ADDRESS: Address = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913'
-const weETH_ADDRESS: Address = '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a'
+// Token addresses follow the detected chain configuration
+const USDC_ADDRESS = getAddress(ADDR.usdc)
+const weETH_ADDRESS = getAddress(ADDR.weeth)
 
 // Rich holders for token funding via impersonation (Anvil only)
 const RICH_HOLDERS: Record<Address, Address | undefined> = {
@@ -108,7 +128,15 @@ export async function approveIfNeeded(token: Address, spender: Address, minAmoun
     functionName: 'allowance',
     args: [account.address, spender],
   })
+  console.info('approveIfNeeded: current allowance', {
+    token,
+    spender,
+    currentAllowance: (allowance as bigint).toString(),
+    requiredAmount: minAmount.toString(),
+    needsApproval: (allowance as bigint) < minAmount,
+  })
   if ((allowance as bigint) >= minAmount) return
+  console.info('approveIfNeeded: sending approval tx...')
   const hash = await walletClient.writeContract({
     address: token,
     abi: erc20Abi,
@@ -116,4 +144,5 @@ export async function approveIfNeeded(token: Address, spender: Address, minAmoun
     args: [spender, maxUint256],
   })
   await publicClient.waitForTransactionReceipt({ hash })
+  console.info('approveIfNeeded: approval tx confirmed', { hash })
 }

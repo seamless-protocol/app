@@ -1,4 +1,5 @@
 import type { Address, Hash } from 'viem'
+import type { Config } from 'wagmi'
 import {
   ADDR,
   account,
@@ -10,11 +11,13 @@ import {
   walletClient,
 } from './clients'
 import { topUpErc20, topUpNative } from './funding'
+import { wagmiConfig } from './wagmi'
 
 export type WithForkCtx = {
   account: typeof account
   walletClient: typeof walletClient
   publicClient: typeof publicClient
+  config: Config
   ADDR: typeof ADDR
   others: Array<{ account: (typeof extraAccounts)[number]; wallet: (typeof extraWallets)[number] }>
   fund: {
@@ -24,12 +27,15 @@ export type WithForkCtx = {
 }
 
 export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise<T> {
+  console.info('[STEP] Take snapshot')
   const snap: Hash = await takeSnapshot()
+  console.info('[STEP] Snapshot taken', { snap })
   try {
     const ctx: WithForkCtx = {
       account,
       walletClient,
       publicClient,
+      config: wagmiConfig as Config,
       ADDR,
       others: extraAccounts
         .map((acct, i) => {
@@ -52,6 +58,8 @@ export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise
     }
     return await fn(ctx)
   } finally {
+    console.info('[STEP] Reverting snapshot', { snap })
     await revertSnapshot(snap)
+    console.info('[STEP] Snapshot reverted')
   }
 }

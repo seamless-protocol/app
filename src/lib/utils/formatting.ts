@@ -1,6 +1,7 @@
 /**
  * Utility functions for formatting numbers, currency, percentages, and other display values
  */
+import { formatUnits } from 'viem'
 
 /**
  * Format a number as currency with appropriate suffixes (K, M)
@@ -120,4 +121,18 @@ export function formatNumber(
     return `${(value / 1000).toFixed(thousandDecimals)}K`
   }
   return value.toFixed(decimals)
+}
+
+/**
+ * Format a token amount from base units (bigint) to a fixed-decimal string.
+ * Caller chooses display precision; defaults to 6.
+ */
+export function formatTokenAmountFromBase(
+  value: bigint | undefined,
+  decimals: number,
+  displayDecimals: number = 6,
+): string {
+  if (typeof value !== 'bigint') return '0'
+  const n = Number(formatUnits(value, decimals))
+  return Number.isFinite(n) ? n.toFixed(displayDecimals) : '0'
 }

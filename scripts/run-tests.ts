@@ -1,7 +1,10 @@
 #!/usr/bin/env bun
+import { existsSync, readFileSync } from 'node:fs'
 import { spawn } from 'node:child_process'
+import { resolve } from 'node:path'
 import process from 'node:process'
-import { createVNet, deleteVNet } from './tenderly-vnet.js'
+// Import the Tenderly VNet helper (explicit .ts for Bun execution)
+import { createVNet, deleteVNet } from './tenderly-vnet.ts'
 
 type TestType = 'e2e' | 'integration'
 
@@ -37,15 +40,56 @@ function getTestCommand(testType: TestType): { cmd: string; args: string[] } {
     case 'e2e':
       return { cmd: 'bunx', args: ['playwright', 'test'] }
     case 'integration':
-      return { cmd: 'bun', args: ['run', 'test:integration'] }
+      // Call Vitest directly to avoid script recursion when test:integration itself uses this runner
+      return {
+        cmd: 'bunx',
+        args: ['vitest', '-c', 'vitest.integration.config.ts', '--run', 'tests/integration'],
+      }
     default:
       throw new Error(`Unknown test type: ${testType}`)
   }
 }
 
+let deterministicOverrideCache: string | null = null
+
+function loadDeterministicOverride(): string | null {
+  if (deterministicOverrideCache !== null) return deterministicOverrideCache
+
+  try {
+    const candidatePath = resolve(process.cwd(), 'tests/shared/tenderly-addresses.json')
+    if (!existsSync(candidatePath)) {
+      deterministicOverrideCache = null
+      return deterministicOverrideCache
+    }
+
+    deterministicOverrideCache = readFileSync(candidatePath, 'utf8')
+    return deterministicOverrideCache
+  } catch (error) {
+    console.warn('[run-tests] Unable to load deterministic Tenderly overrides', error)
+    deterministicOverrideCache = null
+    return deterministicOverrideCache
+  }
+}
+
+function injectAddressOverrides(env: Record<string, string>): Record<string, string> {
+  const explicitOverride =
+    process.env.VITE_CONTRACT_ADDRESS_OVERRIDES ||
+    process.env.TENDERLY_CONTRACT_ADDRESS_OVERRIDES ||
+    loadDeterministicOverride()
+
+  if (!explicitOverride) {
+    return env
+  }
+
+  return {
+    ...env,
+    VITE_CONTRACT_ADDRESS_OVERRIDES: explicitOverride,
+  }
+}
+
 async function runCommand(cmd: string, args: string[], env: Record<string, string>) {
   return new Promise<void>((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: 'inherit', env })
+    const child = spawn(cmd, args, { stdio: 'inherit', env: injectAddressOverrides(env) })
     child.on('exit', (code, signal) => {
       if (signal) return reject(new Error(`Child terminated with signal ${signal}`))
       if (code !== 0) return reject(new Error(`Child exited with code ${code}`))
