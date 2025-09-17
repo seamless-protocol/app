@@ -183,6 +183,9 @@ export function PriceLineChart({
                 tickFormatter={formatChartDate}
               />
               <YAxis
+                {...(chartType === 'comparison'
+                  ? { domain: ['dataMin', 'dataMax'] as [string, string] }
+                  : { dataKey: chartConfig.dataKey })}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: '#64748B', fontSize: 12 }}
@@ -193,9 +196,6 @@ export function PriceLineChart({
                   position: 'insideLeft',
                   style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' },
                 }}
-                {...(chartType === 'comparison'
-                  ? { domain: ['dataMin', 'dataMax'] as [string, string] }
-                  : { dataKey: chartConfig.dataKey })}
               />
               <RechartsTooltip
                 contentStyle={{
