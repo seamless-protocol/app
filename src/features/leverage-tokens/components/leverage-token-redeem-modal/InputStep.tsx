@@ -1,4 +1,4 @@
-import { ArrowDownUp, DollarSign, RefreshCw, TrendingDown } from 'lucide-react'
+import { TrendingDown } from 'lucide-react'
 import { useId } from 'react'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
@@ -21,6 +21,18 @@ interface Asset {
   price: number
 }
 
+interface LeverageTokenConfig {
+  symbol: string
+  name: string
+  leverageRatio: number
+  collateralAsset: {
+    symbol: string
+    name: string
+    address: string
+    decimals: number
+  }
+}
+
 interface InputStepProps {
   // Token data
   selectedToken: Token
@@ -35,19 +47,25 @@ interface InputStepProps {
   isLeverageTokenBalanceLoading: boolean
   isUsdPriceLoading: boolean
   isCalculating: boolean
+  isAllowanceLoading: boolean
+  isApproving: boolean
 
   // Calculations
   expectedAmount: string
 
   // Validation
   canProceed: boolean
+  needsApproval: boolean
   isConnected: boolean
 
   // Actions
-  onProceed: () => void
+  onApprove: () => void
 
   // Error
   error?: string | undefined
+
+  // Config
+  leverageTokenConfig: LeverageTokenConfig
 }
 
 export function InputStep({
@@ -61,11 +79,15 @@ export function InputStep({
   isLeverageTokenBalanceLoading,
   isUsdPriceLoading,
   isCalculating,
+  isAllowanceLoading,
+  isApproving,
   expectedAmount,
   canProceed,
+  needsApproval,
   isConnected,
-  onProceed,
+  onApprove,
   error,
+  leverageTokenConfig,
 }: InputStepProps) {
   const redeemAmountId = useId()
 
@@ -197,42 +219,40 @@ export function InputStep({
         </div>
       </div>
 
-      {/* Expected Output */}
-      <div className="space-y-3">
-        <div className="flex justify-center">
-          <div className="p-2 bg-slate-800/50 rounded-full border border-slate-700">
-            <ArrowDownUp className="h-4 w-4 text-slate-400" />
+      {/* Transaction Summary */}
+      <Card variant="gradient" className="p-4 gap-2">
+        <h4 className="text-sm font-medium text-white mb-3">Transaction Summary</h4>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-slate-400">Redeem Amount</span>
+            <span className="text-white">
+              {amount || '0'} {selectedToken.symbol}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">Redemption Fee</span>
+            <span className="text-white">0.2%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">Approval Status</span>
+            <span className={needsApproval ? 'text-yellow-400' : 'text-green-400'}>
+              {isAllowanceLoading ? (
+                <Skeleton className="inline-block h-3 w-16" />
+              ) : needsApproval ? (
+                'Approval Required'
+              ) : (
+                'Approved'
+              )}
+            </span>
+          </div>
+          <div className="flex justify-between font-medium">
+            <span className="text-white">You will receive</span>
+            <span className="text-white">
+              {expectedAmount} {selectedAsset}
+            </span>
           </div>
         </div>
-
-        <Card variant="gradient" className="p-4 gap-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-slate-400">You will receive</div>
-            {isCalculating && (
-              <div className="flex items-center text-xs text-slate-400">
-                <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                <Skeleton className="h-3 w-20" />
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-end justify-between">
-            <div className="flex-1">
-              <div className="text-xl font-medium text-white">
-                {isCalculating ? <Skeleton className="h-6 w-20" /> : expectedAmount}
-              </div>
-              <div className="text-sm text-slate-400 mt-1">{selectedAsset}</div>
-            </div>
-
-            <div className="flex items-center space-x-2 ml-4">
-              <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center">
-                <DollarSign className="h-3 w-3 text-green-400" />
-              </div>
-              <span className="text-sm font-medium text-white">{selectedAsset}</span>
-            </div>
-          </div>
-        </Card>
-      </div>
+      </Card>
 
       {/* Processing Notice */}
       <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
@@ -252,7 +272,7 @@ export function InputStep({
 
       {/* Action Button */}
       <Button
-        onClick={onProceed}
+        onClick={onApprove}
         disabled={!canProceed}
         variant="gradient"
         className="w-full h-12 font-medium"
@@ -267,7 +287,13 @@ export function InputStep({
                 ? 'Minimum redeem: 0.01'
                 : isCalculating
                   ? 'Calculating...'
-                  : 'Review Redemption'}
+                  : isAllowanceLoading
+                    ? 'Checking allowance...'
+                    : isApproving
+                      ? 'Approving...'
+                      : needsApproval
+                        ? `Approve ${selectedToken.symbol}`
+                        : `Redeem ${leverageTokenConfig.symbol}`}
       </Button>
     </div>
   )

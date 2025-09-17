@@ -5,15 +5,19 @@ import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
+import { getContractAddresses } from '../../../../lib/contracts/addresses'
+import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
+import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
+import { TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
 import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
 import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
-import { TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
+import { ApproveStep } from '../leverage-token-mint-modal/ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
 import { ErrorStep } from './ErrorStep'
 import { InputStep } from './InputStep'
@@ -37,8 +41,9 @@ interface LeverageTokenRedeemModalProps {
 
 // Hoisted to avoid re-creating on every render
 const REDEEM_STEPS: Array<StepConfig> = [
-  { id: 'input', label: 'Input', progress: 33 },
-  { id: 'confirm', label: 'Confirm', progress: 66 },
+  { id: 'input', label: 'Input', progress: 25 },
+  { id: 'approve', label: 'Approve', progress: 50 },
+  { id: 'confirm', label: 'Confirm', progress: 75 },
   { id: 'pending', label: 'Processing', progress: 90 },
   { id: 'success', label: 'Success', progress: 100 },
   { id: 'error', label: 'Error', progress: 50 },
@@ -62,6 +67,10 @@ export function LeverageTokenRedeemModal({
   const { address: hookUserAddress, isConnected } = useAccount()
   const wagmiConfig = useConfig()
   const userAddress = propUserAddress || hookUserAddress
+
+  // Get leverage router address for allowance check
+  const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
+  const leverageRouterAddress = contractAddresses.leverageRouter
 
   // Get real wallet balance for leverage tokens
   const { balance: leverageTokenBalance, isLoading: isLeverageTokenBalanceLoading } =
@@ -89,7 +98,14 @@ export function LeverageTokenRedeemModal({
     ? formatUnits(leverageTokenBalance, leverageTokenConfig.collateralAsset.decimals) // Assuming same decimals
     : '0'
 
-  const { step: currentStep, toInput, toConfirm, toSuccess, toError } = useRedeemSteps('input')
+  const {
+    step: currentStep,
+    toInput,
+    toApprove,
+    toConfirm,
+    toSuccess,
+    toError,
+  } = useRedeemSteps('input')
 
   // Step configuration (static)
   const steps = REDEEM_STEPS
@@ -126,6 +142,22 @@ export function LeverageTokenRedeemModal({
     outputAsset: leverageTokenConfig.collateralAsset.address,
   })
 
+  const {
+    isAllowanceLoading,
+    needsApproval: needsApprovalFlag,
+    approve: approveAction,
+    isPending: isApprovingPending,
+    isApproved: isApprovedFlag,
+    error: approveErr,
+  } = useApprovalFlow({
+    tokenAddress: leverageTokenAddress,
+    ...(userAddress ? { owner: userAddress } : {}),
+    ...(leverageRouterAddress ? { spender: leverageRouterAddress } : {}),
+    ...(typeof form.amountRaw !== 'undefined' ? { amountRaw: form.amountRaw } : {}),
+    decimals: leverageTokenConfig.decimals,
+    chainId: leverageTokenConfig.chainId,
+  })
+
   // View model for selected token: inject live balance/price data
   const selectedTokenView = useMemo(() => {
     return {
@@ -148,6 +180,22 @@ export function LeverageTokenRedeemModal({
     if (isOpen) resetModal()
   }, [isOpen, resetModal])
 
+  // Handle approval side-effects in one place
+  useEffect(() => {
+    if (currentStep !== 'approve') return
+    if (isApprovedFlag) {
+      toast.success('Token approval confirmed', {
+        description: `${selectedToken.symbol} spending approved`,
+      })
+      toConfirm()
+      return
+    }
+    if (approveErr) {
+      setError(approveErr?.message || 'Approval failed. Please try again.')
+      toError()
+    }
+  }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
+
   // Calculate expected redemption amount (like mint modal's expectedTokens)
   const expectedAmount = useMemo(
     () =>
@@ -168,16 +216,19 @@ export function LeverageTokenRedeemModal({
     },
   ]
 
+  // Check if approval is needed
+  const needsApproval = () => Boolean(needsApprovalFlag)
+
   // Validate redemption (like mint modal)
   const canProceed = () => {
     return (
       form.isAmountValid &&
       form.hasBalance &&
       form.minAmountOk &&
+      !preview.isLoading &&
       parseFloat(expectedAmount) > 0 &&
       isConnected &&
-      !preview.isLoading &&
-      exec.status === 'idle'
+      !isAllowanceLoading
     )
   }
 
@@ -192,9 +243,21 @@ export function LeverageTokenRedeemModal({
     form.onPercent(percentage, selectedTokenView.balance)
   }
 
-  // Handle proceed to confirmation
-  const handleProceed = async () => {
-    toConfirm()
+  // Handle approval step
+  const handleApprove = async () => {
+    // Skip approval if not needed
+    if (!needsApproval()) {
+      toConfirm()
+      return
+    }
+
+    toApprove()
+    try {
+      approveAction()
+    } catch (_error) {
+      setError('Approval failed. Please try again.')
+      toError()
+    }
   }
 
   // Handle redemption confirmation
@@ -242,11 +305,24 @@ export function LeverageTokenRedeemModal({
             isLeverageTokenBalanceLoading={isLeverageTokenBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
             isCalculating={preview.isLoading}
+            isAllowanceLoading={isAllowanceLoading}
+            isApproving={!!isApprovingPending}
             expectedAmount={expectedAmount}
             canProceed={canProceed()}
+            needsApproval={needsApproval()}
             isConnected={isConnected}
-            onProceed={handleProceed}
+            onApprove={handleApprove}
             error={error || undefined}
+            leverageTokenConfig={leverageTokenConfig}
+          />
+        )
+
+      case 'approve':
+        return (
+          <ApproveStep
+            selectedToken={selectedTokenView}
+            amount={form.amount}
+            isApproving={!!isApprovingPending}
           />
         )
 
@@ -301,4 +377,45 @@ export function LeverageTokenRedeemModal({
       {renderStepContent()}
     </MultiStepModal>
   )
+}
+
+// Local hook: wraps token allowance + approval flow
+function useApprovalFlow(params: {
+  tokenAddress: `0x${string}`
+  owner?: `0x${string}`
+  spender?: `0x${string}`
+  amountRaw?: bigint
+  decimals: number
+  chainId: number
+}) {
+  const { tokenAddress, owner, spender, amountRaw, decimals, chainId } = params
+
+  const { isLoading, needsApproval, amountFormatted } = useTokenAllowance({
+    tokenAddress,
+    ...(owner ? { owner } : {}),
+    ...(spender ? { spender } : {}),
+    chainId,
+    enabled: Boolean(owner && spender),
+    ...(typeof amountRaw !== 'undefined' ? { amountRaw } : {}),
+    decimals,
+  })
+
+  const approveState = useTokenApprove({
+    tokenAddress,
+    ...(spender ? { spender } : {}),
+    ...(amountFormatted ? { amount: amountFormatted } : {}),
+    decimals,
+    chainId,
+    enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
+    useMaxApproval: true,
+  })
+
+  return {
+    isAllowanceLoading: isLoading,
+    needsApproval,
+    approve: approveState.approve,
+    isPending: approveState.isPending,
+    isApproved: approveState.isApproved,
+    error: approveState.error,
+  }
 }

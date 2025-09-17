@@ -5,7 +5,7 @@ import { useConfig, usePublicClient } from 'wagmi'
 type Status = 'idle' | 'submitting' | 'pending' | 'success' | 'error'
 
 // TODO: Create orchestrateRedeem function in domain layer
-async function orchestrateRedeem(params: {
+async function orchestrateRedeem(_params: {
   config: any
   account: Address
   token: Address
