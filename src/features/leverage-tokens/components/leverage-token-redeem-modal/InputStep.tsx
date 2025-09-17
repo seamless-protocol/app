@@ -5,6 +5,7 @@ import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
 import { Input } from '../../../../components/ui/input'
 import { Skeleton } from '../../../../components/ui/skeleton'
+import { AMOUNT_PERCENTAGE_PRESETS } from '../../constants'
 
 interface Token {
   symbol: string
@@ -160,7 +161,7 @@ export function InputStep({
 
           {/* Percentage shortcuts */}
           <div className="flex space-x-2">
-            {[25, 50, 75, 100].map((percentage) => (
+            {AMOUNT_PERCENTAGE_PRESETS.map((percentage) => (
               <Button
                 key={percentage}
                 variant="outline"
