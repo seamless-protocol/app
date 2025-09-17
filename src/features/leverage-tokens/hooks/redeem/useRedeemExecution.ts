@@ -1,28 +1,16 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Address } from 'viem'
 import { useConfig, usePublicClient } from 'wagmi'
+import { orchestrateRedeem } from '@/domain/redeem/orchestrate'
 
 type Status = 'idle' | 'submitting' | 'pending' | 'success' | 'error'
-
-// TODO: Create orchestrateRedeem function in domain layer
-async function orchestrateRedeem(_params: {
-  config: any
-  account: Address
-  token: Address
-  sharesToRedeem: bigint
-  outputAsset: Address
-}): Promise<{ hash: `0x${string}` }> {
-  // Placeholder implementation - this should be replaced with real orchestrateRedeem
-  throw new Error('orchestrateRedeem not implemented yet')
-}
 
 export function useRedeemExecution(params: {
   token: Address
   account?: Address
-  outputAsset: Address // collateral asset
-  slippageBps?: number
+  slippageBps: number
 }) {
-  const { token, account, outputAsset } = params
+  const { token, account, slippageBps } = params
   const [status, setStatus] = useState<Status>('idle')
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState<Error | undefined>(undefined)
@@ -43,7 +31,7 @@ export function useRedeemExecution(params: {
           account,
           token,
           sharesToRedeem,
-          outputAsset,
+          slippageBps,
         })
         setHash(hash)
         setStatus('pending')
@@ -56,7 +44,7 @@ export function useRedeemExecution(params: {
         throw e
       }
     },
-    [account, config, token, outputAsset, publicClient],
+    [account, config, token, slippageBps, publicClient],
   )
 
   return { redeem, status, hash, error, canSubmit }

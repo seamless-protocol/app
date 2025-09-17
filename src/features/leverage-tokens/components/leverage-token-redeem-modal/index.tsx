@@ -143,7 +143,6 @@ export function LeverageTokenRedeemModal({
   const exec = useRedeemExecution({
     token: leverageTokenAddress,
     ...(userAddress ? { account: userAddress } : {}),
-    outputAsset: leverageTokenConfig.collateralAsset.address,
     slippageBps,
   })
 
