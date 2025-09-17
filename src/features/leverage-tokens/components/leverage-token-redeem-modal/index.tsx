@@ -11,7 +11,8 @@ import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
-import { TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
+import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
+import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
 import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
@@ -92,6 +93,7 @@ export function LeverageTokenRedeemModal({
   const leverageTokenUsdPrice = usdPriceMap?.[leverageTokenAddress.toLowerCase()]
   const collateralUsdPrice =
     usdPriceMap?.[leverageTokenConfig.collateralAsset.address.toLowerCase()]
+  const debtUsdPrice = usdPriceMap?.[leverageTokenConfig.debtAsset.address.toLowerCase()]
 
   // Format balances for display
   const leverageTokenBalanceFormatted = leverageTokenBalance
@@ -117,6 +119,8 @@ export function LeverageTokenRedeemModal({
     price: leverageTokenUsdPrice || 0,
   })
 
+  const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [transactionHash, setTransactionHash] = useState('')
   const [error, setError] = useState('')
 
@@ -140,6 +144,7 @@ export function LeverageTokenRedeemModal({
     token: leverageTokenAddress,
     ...(userAddress ? { account: userAddress } : {}),
     outputAsset: leverageTokenConfig.collateralAsset.address,
+    slippageBps,
   })
 
   const {
@@ -213,6 +218,11 @@ export function LeverageTokenRedeemModal({
       symbol: leverageTokenConfig.collateralAsset.symbol,
       name: leverageTokenConfig.collateralAsset.name,
       price: collateralUsdPrice || 0,
+    },
+    {
+      symbol: leverageTokenConfig.debtAsset.symbol,
+      name: leverageTokenConfig.debtAsset.name,
+      price: debtUsdPrice || 0,
     },
   ]
 
@@ -302,6 +312,10 @@ export function LeverageTokenRedeemModal({
             onPercentageClick={handlePercentageClickWithBalance}
             selectedAsset={selectedAsset}
             onAssetChange={setSelectedAsset}
+            showAdvanced={showAdvanced}
+            onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
+            slippage={slippage}
+            onSlippageChange={setSlippage}
             isLeverageTokenBalanceLoading={isLeverageTokenBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
             isCalculating={preview.isLoading}

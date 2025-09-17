@@ -20,6 +20,7 @@ export function useRedeemExecution(params: {
   token: Address
   account?: Address
   outputAsset: Address // collateral asset
+  slippageBps?: number
 }) {
   const { token, account, outputAsset } = params
   const [status, setStatus] = useState<Status>('idle')

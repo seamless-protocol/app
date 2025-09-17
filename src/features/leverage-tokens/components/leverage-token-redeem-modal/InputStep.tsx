@@ -1,11 +1,11 @@
-import { TrendingDown } from 'lucide-react'
+import { Percent, Settings, TrendingDown } from 'lucide-react'
 import { useId } from 'react'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
 import { Input } from '../../../../components/ui/input'
 import { Skeleton } from '../../../../components/ui/skeleton'
-import { AMOUNT_PERCENTAGE_PRESETS } from '../../constants'
+import { AMOUNT_PERCENTAGE_PRESETS, SLIPPAGE_PRESETS_PERCENT_DISPLAY } from '../../constants'
 
 interface Token {
   symbol: string
@@ -43,6 +43,12 @@ interface InputStepProps {
   selectedAsset: string
   onAssetChange: (asset: string) => void
 
+  // UI state
+  showAdvanced: boolean
+  onToggleAdvanced: () => void
+  slippage: string
+  onSlippageChange: (value: string) => void
+
   // Loading states
   isLeverageTokenBalanceLoading: boolean
   isUsdPriceLoading: boolean
@@ -76,6 +82,10 @@ export function InputStep({
   onPercentageClick,
   selectedAsset,
   onAssetChange,
+  showAdvanced,
+  onToggleAdvanced,
+  slippage,
+  onSlippageChange,
   isLeverageTokenBalanceLoading,
   isUsdPriceLoading,
   isCalculating,
@@ -182,20 +192,68 @@ export function InputStep({
           </div>
 
           {/* Percentage shortcuts */}
-          <div className="flex space-x-2">
-            {AMOUNT_PERCENTAGE_PRESETS.map((percentage) => (
-              <Button
-                key={percentage}
-                variant="outline"
-                size="sm"
-                onClick={() => onPercentageClick(percentage)}
-                className="h-7 px-2 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
-              >
-                {percentage === 100 ? 'MAX' : `${percentage}%`}
-              </Button>
-            ))}
+          <div className="flex items-center justify-between">
+            <div className="flex space-x-2">
+              {AMOUNT_PERCENTAGE_PRESETS.map((percentage) => (
+                <Button
+                  key={percentage}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onPercentageClick(percentage)}
+                  className="h-7 px-2 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                >
+                  {percentage === 100 ? 'MAX' : `${percentage}%`}
+                </Button>
+              ))}
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleAdvanced}
+              className="text-slate-400 hover:text-white"
+            >
+              <Settings className="h-4 w-4 mr-1" />
+              Advanced
+            </Button>
           </div>
         </Card>
+
+        {/* Advanced Settings */}
+        {showAdvanced && (
+          <Card variant="gradient" className="p-4 gap-0">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-medium text-white">Slippage Tolerance</div>
+              <div className="flex items-center space-x-2">
+                {SLIPPAGE_PRESETS_PERCENT_DISPLAY.map((value) => (
+                  <Button
+                    key={value}
+                    variant={slippage === value ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onSlippageChange(value)}
+                    className={`h-8 px-3 text-xs ${
+                      slippage === value
+                        ? 'bg-purple-600 text-white hover:bg-purple-500'
+                        : 'border-slate-600 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    {value}%
+                  </Button>
+                ))}
+                <div className="flex items-center space-x-1">
+                  <Input
+                    type="text"
+                    value={slippage}
+                    onChange={(e) => onSlippageChange(e.target.value)}
+                    className="w-16 h-8 text-xs text-center bg-slate-900 border-slate-600 text-white"
+                    placeholder="0.5"
+                  />
+                  <Percent className="h-3 w-3 text-slate-400" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Asset Selection */}
@@ -232,6 +290,10 @@ export function InputStep({
           <div className="flex justify-between">
             <span className="text-slate-400">Redemption Fee</span>
             <span className="text-white">0.2%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">Slippage Tolerance</span>
+            <span className="text-white">{slippage}%</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Approval Status</span>
