@@ -16,8 +16,6 @@ const REWARD_PROVIDERS: RewardClaimFetcher[] = [
  * Returns combined rewards from all providers
  */
 export async function fetchClaimableRewards(userAddress: Address): Promise<BaseRewardClaimData[]> {
-  console.log('Fetching claimable rewards for user:', userAddress)
-
   const allRewards: BaseRewardClaimData[] = []
   const providerPromises = REWARD_PROVIDERS.map(async (provider) => {
     try {

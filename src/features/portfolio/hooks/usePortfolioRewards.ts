@@ -7,8 +7,13 @@ import { portfolioKeys } from '../utils/queryKeys'
 export interface RewardsData {
   claimableRewards: BaseRewardClaimData[]
   totalClaimableAmount: string
+  totalClaimedAmount: string
+  totalEarnedAmount: string
   tokenCount: number
+  claimableCount: number
+  claimedCount: number
   hasRewards: boolean
+  hasClaimableRewards: boolean
 }
 
 /**
@@ -25,13 +30,27 @@ export function usePortfolioRewards() {
         throw new Error('Wallet not connected')
       }
 
-      // const claimableRewards = await fetchClaimableRewards(address)
-      const claimableRewards = await fetchClaimableRewards("0x4F2BF7469Bc38d1aE779b1F4affC588f35E60973")
+      // Test account: 0x4F2BF7469Bc38d1aE779b1F4affC588f35E60973
+      const claimableRewards = await fetchClaimableRewards(address)
 
-      // Calculate total claimable amount (sum of all rewards)
+      // Calculate totals for UI display
       const totalClaimableAmount = claimableRewards
         .reduce((total, reward) => {
           return total + BigInt(reward.claimableAmount)
+        }, 0n)
+        .toString()
+
+      const totalClaimedAmount = claimableRewards
+        .reduce((total, reward) => {
+          const claimedAmount = (reward.metadata?.['claimedAmount'] as string) || '0'
+          return total + BigInt(claimedAmount)
+        }, 0n)
+        .toString()
+
+      const totalEarnedAmount = claimableRewards
+        .reduce((total, reward) => {
+          const totalAmount = (reward.metadata?.['totalAmount'] as string) || '0'
+          return total + BigInt(totalAmount)
         }, 0n)
         .toString()
 
@@ -39,11 +58,25 @@ export function usePortfolioRewards() {
       const uniqueTokens = new Set(claimableRewards.map((reward) => reward.tokenAddress))
       const tokenCount = uniqueTokens.size
 
+      // Count rewards by type
+      const claimableCount = claimableRewards.filter(
+        (reward) => reward.metadata?.['hasClaimable'] === true,
+      ).length
+
+      const claimedCount = claimableRewards.filter(
+        (reward) => reward.metadata?.['hasClaimed'] === true,
+      ).length
+
       return {
         claimableRewards,
         totalClaimableAmount,
+        totalClaimedAmount,
+        totalEarnedAmount,
         tokenCount,
+        claimableCount,
+        claimedCount,
         hasRewards: claimableRewards.length > 0,
+        hasClaimableRewards: claimableCount > 0,
       }
     },
     enabled: !!address, // Only run query when wallet is connected

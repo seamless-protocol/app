@@ -6,7 +6,7 @@ import { CHAIN_IDS } from '@/lib/utils/chain-logos'
 /**
  * Supported chain IDs for Merkl rewards
  */
-export const SUPPORTED_CHAIN_IDS = [CHAIN_IDS.BASE, CHAIN_IDS.ETHEREUM, 42161, 324] as const
+export const SUPPORTED_CHAIN_IDS = [CHAIN_IDS.BASE, CHAIN_IDS.ETHEREUM] as const
 
 /**
  * Merkl distributor contract addresses by chain ID
@@ -14,14 +14,14 @@ export const SUPPORTED_CHAIN_IDS = [CHAIN_IDS.BASE, CHAIN_IDS.ETHEREUM, 42161, 3
 const MERKL_DISTRIBUTOR_ADDRESSES: Record<number, Address> = {
   [CHAIN_IDS.BASE]: '0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae' as Address,
   [CHAIN_IDS.ETHEREUM]: '0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae' as Address,
-  [42161]: '0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae' as Address,
-  [324]: '0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae' as Address,
   // Add other chains as needed
 }
 
 // Types for Merkl API responses
 interface MerklReward {
-  amount: string
+  amount: string // Total amount ever earned
+  claimed: string // Amount already claimed
+  pending: string // Amount available to claim
   token: {
     address: string
     symbol: string
@@ -68,10 +68,6 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
    */
   async fetchClaimableRewards(userAddress: Address): Promise<BaseRewardClaimData[]> {
     try {
-      console.log(
-        `[Merkl] Fetching claimable rewards for user: ${userAddress} on chains: ${this.supportedChainIds.join(',')}`,
-      )
-
       // Fetch user rewards from Merkl API for all supported chains
       const userRewards = await this.fetchUserRewardsFromMerkl(userAddress, this.supportedChainIds)
 
@@ -85,23 +81,36 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
 
       for (const rewardData of userRewards) {
         for (const reward of rewardData.rewards) {
-          const claimData: BaseRewardClaimData = {
-            claimableAmount: reward.amount,
-            tokenAddress: reward.token.address as Address,
-            tokenSymbol: reward.token.symbol,
-            tokenDecimals: reward.token.decimals,
-            chainId: rewardData.chain.id,
-            proof: reward.proofs,
-            metadata: {
-              protocol: 'merkl',
-            },
-          }
+          // Include all rewards (both claimed and pending) for UI display
+          // The UI can decide what to show based on the amounts
+          const hasClaimable = BigInt(reward.pending) > 0n
+          const hasClaimed = BigInt(reward.claimed) > 0n
 
-          allRewards.push(claimData)
+          // Only include rewards that have either pending or claimed amounts
+          if (hasClaimable || hasClaimed) {
+            const claimData: BaseRewardClaimData = {
+              claimableAmount: reward.pending, // Use pending amount as claimable
+              tokenAddress: reward.token.address as Address,
+              tokenSymbol: reward.token.symbol,
+              tokenDecimals: reward.token.decimals,
+              chainId: rewardData.chain.id,
+              proof: reward.proofs,
+              metadata: {
+                protocol: 'merkl',
+                totalAmount: reward.amount, // Total amount ever earned
+                claimedAmount: reward.claimed, // Amount already claimed
+                pendingAmount: reward.pending, // Amount available to claim
+                hasClaimable, // Boolean for easy UI checks
+                hasClaimed, // Boolean for easy UI checks
+              },
+            }
+
+            allRewards.push(claimData)
+          }
         }
       }
 
-      console.log(`[Merkl] Found ${allRewards.length} rewards`, allRewards)
+      console.log(`[Merkl] Found ${allRewards.length} rewards (claimed + pending)`)
       // Filter to only include Seamless-related rewards
       const seamlessRewards = this.filterSeamlessRewards(allRewards)
 
