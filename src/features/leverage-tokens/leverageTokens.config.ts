@@ -181,12 +181,24 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
 
 // Helper function to get leverage token config by address
 export function getLeverageTokenConfig(address: Address): LeverageTokenConfig | undefined {
-  return Object.values(leverageTokenConfigs).find(
+  return getFilteredConfigs().find(
     (config) => config.address.toLowerCase() === address.toLowerCase(),
   )
 }
 
 // Helper function to get all leverage token configs
 export function getAllLeverageTokenConfigs(): Array<LeverageTokenConfig> {
-  return Object.values(leverageTokenConfigs).filter((cfg) => !cfg.isTestOnly)
+  return getFilteredConfigs()
+}
+
+function shouldIncludeTestTokens(): boolean {
+  const flag = import.meta.env['VITE_INCLUDE_TEST_TOKENS']
+  if (!flag) return false
+  const normalized = flag.toLowerCase()
+  return normalized === 'true' || normalized === '1' || normalized === 'tenderly'
+}
+
+function getFilteredConfigs(): Array<LeverageTokenConfig> {
+  const includeTestTokens = shouldIncludeTestTokens()
+  return Object.values(leverageTokenConfigs).filter((cfg) => includeTestTokens || !cfg.isTestOnly)
 }

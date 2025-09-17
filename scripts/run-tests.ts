@@ -111,7 +111,7 @@ async function main() {
   if (explicitRpcUrl) {
     console.log(`🔗 Using explicit RPC URL: ${explicitRpcUrl}`)
     const { cmd, args } = getTestCommand(testType)
-    const env = { ...process.env, TEST_RPC_URL: explicitRpcUrl }
+    const env = withTestDefaults(testType, { ...process.env, TEST_RPC_URL: explicitRpcUrl }, 'custom')
     await runCommand(cmd, args, env)
     return
   }
@@ -121,7 +121,11 @@ async function main() {
   if (!tenderlyConfig) {
     console.log('⚠️  No Tenderly configuration found. Falling back to Anvil (make sure it\'s running on port 8545)')
     const { cmd, args } = getTestCommand(testType)
-    const env = { ...process.env, TEST_RPC_URL: 'http://127.0.0.1:8545' }
+    const env = withTestDefaults(
+      testType,
+      { ...process.env, TEST_RPC_URL: 'http://127.0.0.1:8545' },
+      'anvil',
+    )
     await runCommand(cmd, args, env)
     return
   }
@@ -134,7 +138,7 @@ async function main() {
 
   try {
     const { cmd, args } = getTestCommand(testType)
-    const env = { ...process.env, TEST_RPC_URL: rpcUrl }
+    const env = withTestDefaults(testType, { ...process.env, TEST_RPC_URL: rpcUrl }, 'tenderly')
     console.log(`🚀 Running ${testType} tests against Tenderly fork...`)
     await runCommand(cmd, args, env)
   } finally {
@@ -148,3 +152,27 @@ main().catch((err) => {
   console.error(`❌ Error in ${process.argv[2] || 'test'} runner:`, err)
   process.exit(1)
 })
+
+function withTestDefaults(
+  testType: TestType,
+  env: Record<string, string>,
+  backend: 'tenderly' | 'anvil' | 'custom',
+): Record<string, string> {
+  const isUiSuite = testType === 'e2e'
+  const isChainAwareSuite = testType === 'e2e' || testType === 'integration'
+
+  if (isChainAwareSuite && !env.VITE_INCLUDE_TEST_TOKENS) {
+    if (backend === 'tenderly' || env.TEST_RPC_URL?.includes('tenderly')) {
+      env.VITE_INCLUDE_TEST_TOKENS = 'true'
+    }
+  }
+
+  if (isUiSuite && !env.E2E_TOKEN_SOURCE) {
+    if (backend === 'tenderly') env.E2E_TOKEN_SOURCE = 'tenderly'
+    else if (backend === 'anvil') env.E2E_TOKEN_SOURCE = 'prod'
+    else if (env.TEST_RPC_URL?.includes('tenderly')) env.E2E_TOKEN_SOURCE = 'tenderly'
+    else env.E2E_TOKEN_SOURCE = 'prod'
+  }
+
+  return env
+}

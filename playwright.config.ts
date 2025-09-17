@@ -3,6 +3,11 @@ import { ANVIL_DEFAULT_PRIVATE_KEY } from './tests/shared/env'
 
 // Simple RPC URL detection: Explicit > Tenderly VNet (empty = JIT) > Anvil fallback
 const BASE_RPC_URL = process.env['TEST_RPC_URL'] || 'http://127.0.0.1:8545'
+const E2E_TOKEN_SOURCE = process.env['E2E_TOKEN_SOURCE'] ?? 'prod'
+const INCLUDE_TEST_TOKENS = E2E_TOKEN_SOURCE !== 'prod'
+
+// Ensure the process env is populated so tests can read the resolved value
+process.env['E2E_TOKEN_SOURCE'] = E2E_TOKEN_SOURCE
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -50,6 +55,8 @@ export default defineConfig({
         process.env['VITE_ETHEREUM_RPC_URL'] ?? BASE_RPC_URL,
       VITE_THEGRAPH_API_KEY:
         process.env['VITE_THEGRAPH_API_KEY'] ?? 'playwright-test-thegraph-key',
+      E2E_TOKEN_SOURCE,
+      ...(INCLUDE_TEST_TOKENS ? { VITE_INCLUDE_TEST_TOKENS: 'true' } : {}),
     },
     reuseExistingServer: !process.env['CI'],
     timeout: 120_000, // Give Vite + plugins extra time in CI
