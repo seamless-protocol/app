@@ -30,6 +30,21 @@ function PortfolioPage() {
   } = usePortfolioData()
   const performanceData = usePortfolioPerformance()
   const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
+
+  // Console log for testing rewards data
+  console.log('🎁 Portfolio Rewards Data:', {
+    rewardsData,
+    isLoading: rewardsLoading,
+    hasRewards: rewardsData?.hasRewards,
+    hasClaimableRewards: rewardsData?.hasClaimableRewards,
+    totalClaimable: rewardsData?.totalClaimableAmount,
+    totalClaimed: rewardsData?.totalClaimedAmount,
+    totalEarned: rewardsData?.totalEarnedAmount,
+    tokenCount: rewardsData?.tokenCount,
+    claimableCount: rewardsData?.claimableCount,
+    claimedCount: rewardsData?.claimedCount,
+    rewardsCount: rewardsData?.claimableRewards?.length,
+  })
   const { data: stakingData, isLoading: stakingLoading } = usePortfolioStaking()
 
   // Extract data with fallbacks
@@ -206,10 +221,10 @@ function PortfolioPage() {
       >
         <div className="relative">
           <AvailableRewards
-            tokenAddresses={rewardsData?.tokenAddresses || []}
-            accruingAmount={rewardsData?.accruingAmount || '$0.00'}
-            seamToken={rewardsData?.seamToken || '0.00'}
-            protocolFees={rewardsData?.protocolFees || '$0.00'}
+            tokenAddresses={[]}
+            accruingAmount={'$0.00'}
+            seamToken={'$0.00'}
+            protocolFees={'$0.00'}
             onClaim={handleClaimRewards}
           />
           {rewardsLoading && (
