@@ -1,14 +1,19 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
-import { useAccount } from 'wagmi'
+import { useAccount, useConfig } from 'wagmi'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
+import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
+import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
+import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
+import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
+import { TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
 import { ConfirmStep } from './ConfirmStep'
 import { ErrorStep } from './ErrorStep'
 import { InputStep } from './InputStep'
@@ -55,6 +60,7 @@ export function LeverageTokenRedeemModal({
 
   // Get user account information
   const { address: hookUserAddress, isConnected } = useAccount()
+  const wagmiConfig = useConfig()
   const userAddress = propUserAddress || hookUserAddress
 
   // Get real wallet balance for leverage tokens
@@ -83,78 +89,75 @@ export function LeverageTokenRedeemModal({
     ? formatUnits(leverageTokenBalance, leverageTokenConfig.collateralAsset.decimals) // Assuming same decimals
     : '0'
 
-  const {
-    step: currentStep,
-    toInput,
-    toConfirm,
-    toPending,
-    toSuccess,
-    toError,
-  } = useRedeemSteps('input')
+  const { step: currentStep, toInput, toConfirm, toSuccess, toError } = useRedeemSteps('input')
 
   // Step configuration (static)
   const steps = REDEEM_STEPS
 
-  const [selectedToken, setSelectedToken] = useState<Token>({
+  const [selectedToken] = useState<Token>({
     symbol: leverageTokenConfig.symbol,
     name: leverageTokenConfig.name,
     balance: leverageTokenBalanceFormatted,
     price: leverageTokenUsdPrice || 0,
   })
-  const [amount, setAmount] = useState('')
-  const [selectedAsset, setSelectedAsset] = useState(leverageTokenConfig.collateralAsset.symbol)
-  const [isCalculating, setIsCalculating] = useState(false)
-  const [expectedAmount, setExpectedAmount] = useState('0')
+
   const [transactionHash, setTransactionHash] = useState('')
   const [error, setError] = useState('')
 
-  // Reset state when modal opens/closes
-  useEffect(() => {
-    if (isOpen) {
-      toInput()
-      setAmount('')
-      setError('')
-      setTransactionHash('')
-      setExpectedAmount('0')
-      setSelectedAsset(leverageTokenConfig.collateralAsset.symbol)
-    }
-  }, [isOpen, leverageTokenConfig.collateralAsset.symbol, toInput])
+  const [selectedAsset, setSelectedAsset] = useState(leverageTokenConfig.collateralAsset.symbol)
 
-  // Update selected token balance and price when wallet balance or price changes
-  useEffect(() => {
-    setSelectedToken((prev) => ({
-      ...prev,
+  // Form state and logic
+  const form = useRedeemForm({
+    leverageTokenConfig,
+    leverageTokenBalanceFormatted,
+  })
+
+  // Preview redemption (like mint modal)
+  const preview = useRedeemPreview({
+    config: wagmiConfig,
+    token: leverageTokenAddress,
+    sharesToRedeem: form.amountRaw,
+  })
+
+  // Execution hook (like mint modal)
+  const exec = useRedeemExecution({
+    token: leverageTokenAddress,
+    ...(userAddress ? { account: userAddress } : {}),
+    outputAsset: leverageTokenConfig.collateralAsset.address,
+  })
+
+  // View model for selected token: inject live balance/price data
+  const selectedTokenView = useMemo(() => {
+    return {
+      ...selectedToken,
       balance: leverageTokenBalanceFormatted,
       price: leverageTokenUsdPrice || 0,
-    }))
-  }, [leverageTokenBalanceFormatted, leverageTokenUsdPrice])
-
-  // Calculate expected redemption amount based on input amount
-  const calculateExpectedAmount = useCallback(async (inputAmount: string) => {
-    if (!inputAmount || parseFloat(inputAmount) <= 0) {
-      setExpectedAmount('0')
-      return
     }
+  }, [selectedToken, leverageTokenBalanceFormatted, leverageTokenUsdPrice])
 
-    setIsCalculating(true)
+  // Reset modal state when modal opens (like mint modal)
+  const resetModal = useCallback(() => {
+    toInput()
+    form.setAmount('')
+    setSelectedAsset(leverageTokenConfig.collateralAsset.symbol)
+    setTransactionHash('')
+    setError('')
+  }, [toInput, form.setAmount, leverageTokenConfig.collateralAsset.symbol])
 
-    try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 800))
+  useEffect(() => {
+    if (isOpen) resetModal()
+  }, [isOpen, resetModal])
 
-      const input = parseFloat(inputAmount)
-      // Mock calculation: redemption ratio (accounting for fees)
-      const redemptionRatio = 0.998 // 0.2% redemption fee
-      const expectedOutput = input * redemptionRatio
-
-      setExpectedAmount(expectedOutput.toFixed(6))
-    } catch (error) {
-      console.error('Failed to calculate redemption:', error)
-      setExpectedAmount('0')
-    } finally {
-      setIsCalculating(false)
-    }
-  }, [])
+  // Calculate expected redemption amount (like mint modal's expectedTokens)
+  const expectedAmount = useMemo(
+    () =>
+      formatTokenAmountFromBase(
+        preview.data?.collateral,
+        leverageTokenConfig.collateralAsset.decimals,
+        TOKEN_AMOUNT_DISPLAY_DECIMALS,
+      ),
+    [preview.data?.collateral, leverageTokenConfig.collateralAsset.decimals],
+  )
 
   // Available assets for redemption (collateral asset)
   const availableAssets = [
@@ -165,38 +168,28 @@ export function LeverageTokenRedeemModal({
     },
   ]
 
-  // Handle amount input changes
-  const handleAmountChange = (value: string) => {
-    // Only allow numbers and decimals
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setAmount(value)
-      setError('')
-      calculateExpectedAmount(value)
-    }
-  }
-
-  // Handle percentage shortcuts
-  const handlePercentageClick = (percentage: number) => {
-    const balance = parseFloat(selectedToken.balance)
-    const newAmount = ((balance * percentage) / 100).toFixed(6)
-    setAmount(newAmount)
-    calculateExpectedAmount(newAmount)
-  }
-
-  // Validate redemption
+  // Validate redemption (like mint modal)
   const canProceed = () => {
-    const inputAmount = parseFloat(amount)
-    const balance = parseFloat(selectedToken.balance)
-    const minRedeem = 0.01 // Minimum redeem amount
-
     return (
-      inputAmount > 0 &&
-      inputAmount <= balance &&
-      inputAmount >= minRedeem &&
-      !isCalculating &&
+      form.isAmountValid &&
+      form.hasBalance &&
+      form.minAmountOk &&
       parseFloat(expectedAmount) > 0 &&
-      isConnected
+      isConnected &&
+      !preview.isLoading &&
+      exec.status === 'idle'
     )
+  }
+
+  // Handle amount input changes (with error clearing)
+  const handleAmountChangeWithErrorClear = (value: string) => {
+    form.onAmountChange(value)
+    setError('')
+  }
+
+  // Handle percentage shortcuts (with token balance)
+  const handlePercentageClickWithBalance = (percentage: number) => {
+    form.onPercent(percentage, selectedTokenView.balance)
   }
 
   // Handle proceed to confirmation
@@ -206,23 +199,17 @@ export function LeverageTokenRedeemModal({
 
   // Handle redemption confirmation
   const handleConfirm = async () => {
-    toPending()
+    if (!form.amountRaw) return
 
     try {
-      // TODO: add actual redeem transaction
-      await new Promise((resolve) => setTimeout(resolve, 3000))
-
-      // Mock transaction hash
-      const mockHash = `0x${Math.random().toString(16).substr(2, 64)}`
-      setTransactionHash(mockHash)
-
+      const hash = await exec.redeem(form.amountRaw)
+      setTransactionHash(hash)
       toast.success('Redemption successful!', {
-        description: `${amount} tokens redeemed for ${expectedAmount} ${selectedAsset}`,
+        description: `${form.amount} tokens redeemed for ${expectedAmount} ${selectedAsset}`,
       })
-
       toSuccess()
-    } catch (_error) {
-      setError('Redemption failed. Please try again.')
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Redemption failed. Please try again.')
       toError()
     }
   }
@@ -245,16 +232,16 @@ export function LeverageTokenRedeemModal({
       case 'input':
         return (
           <InputStep
-            selectedToken={selectedToken}
+            selectedToken={selectedTokenView}
             availableAssets={availableAssets}
-            amount={amount}
-            onAmountChange={handleAmountChange}
-            onPercentageClick={handlePercentageClick}
+            amount={form.amount}
+            onAmountChange={handleAmountChangeWithErrorClear}
+            onPercentageClick={handlePercentageClickWithBalance}
             selectedAsset={selectedAsset}
             onAssetChange={setSelectedAsset}
             isLeverageTokenBalanceLoading={isLeverageTokenBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
-            isCalculating={isCalculating}
+            isCalculating={preview.isLoading}
             expectedAmount={expectedAmount}
             canProceed={canProceed()}
             isConnected={isConnected}
@@ -266,8 +253,8 @@ export function LeverageTokenRedeemModal({
       case 'confirm':
         return (
           <ConfirmStep
-            selectedToken={selectedToken}
-            amount={amount}
+            selectedToken={selectedTokenView}
+            amount={form.amount}
             expectedAmount={expectedAmount}
             selectedAsset={selectedAsset}
             leverageTokenConfig={leverageTokenConfig}
@@ -276,12 +263,12 @@ export function LeverageTokenRedeemModal({
         )
 
       case 'pending':
-        return <PendingStep amount={amount} leverageTokenConfig={leverageTokenConfig} />
+        return <PendingStep amount={form.amount} leverageTokenConfig={leverageTokenConfig} />
 
       case 'success':
         return (
           <SuccessStep
-            amount={amount}
+            amount={form.amount}
             expectedAmount={expectedAmount}
             selectedAsset={selectedAsset}
             transactionHash={transactionHash}

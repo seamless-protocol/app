@@ -36,6 +36,12 @@ export const ltKeys = {
         : ltKeys.simulation.mint(params.addr, params.amount),
     redeem: (addr: Address, amount: bigint) =>
       [...ltKeys.token(addr), 'simulate', 'redeem', amount.toString()] as const,
+    redeemOnChain: (chainId: number, addr: Address, amount: bigint) =>
+      [...ltKeys.tokenOnChain(chainId, addr), 'simulate', 'redeem', amount.toString()] as const,
+    redeemKey: (params: { chainId: number | undefined; addr: Address; amount: bigint }) =>
+      typeof params.chainId === 'number'
+        ? ltKeys.simulation.redeemOnChain(params.chainId, params.addr, params.amount)
+        : ltKeys.simulation.redeem(params.addr, params.amount),
   },
   // External data sources (shared across all tokens)
   external: {
