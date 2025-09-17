@@ -1,5 +1,6 @@
 import type { Address } from 'viem'
 import { base, mainnet } from 'wagmi/chains'
+import { getContractAddressOverrides } from './overrides'
 
 /**
  * Standard sentinel address used by partner aggregators (e.g. LiFi/Uniswap)
@@ -115,18 +116,75 @@ export const contractAddresses: Record<number, ContractAddresses> = {
   },
 }
 
+export const seamlessContracts = {
+  [base.id]: {
+    vaults: baseContracts.vaults,
+    leverageTokenImpl: baseContracts.leverageTokenImpl,
+    leverageManager: baseContracts.leverageManager,
+    leverageRouter: baseContracts.leverageRouter,
+    escrowSeam: baseContracts.escrowSeam,
+    rewardsController: baseContracts.rewardsController,
+  },
+  [mainnet.id]: {},
+} as const
+
+type ContractAddressOverride = Partial<ContractAddresses>
+
+/**
+ * Merge canonical addresses with optional override map.
+ * The `canonical` naming avoids confusion with Base chain terminology.
+ */
+function mergeContractAddresses(
+  canonicalContracts: ContractAddresses | undefined,
+  overrideContracts: ContractAddressOverride | undefined,
+): ContractAddresses {
+  const canonical = canonicalContracts ?? {}
+  if (!overrideContracts) {
+    return canonical
+  }
+
+  const merged: ContractAddresses = {
+    ...canonical,
+    ...overrideContracts,
+  }
+
+  if (canonical.tokens || overrideContracts.tokens) {
+    merged.tokens = {
+      ...(canonical.tokens ?? {}),
+      ...(overrideContracts.tokens ?? {}),
+    }
+  }
+
+  if (canonical.vaults || overrideContracts.vaults) {
+    merged.vaults = {
+      ...(canonical.vaults ?? {}),
+      ...(overrideContracts.vaults ?? {}),
+    }
+  }
+
+  return merged
+}
+
 /**
  * Get contract addresses for a specific chain
  */
 export function getContractAddresses(chainId: number): ContractAddresses {
-  return contractAddresses[chainId] || {}
+  const canonicalForChain = contractAddresses[chainId]
+  const overrides = getContractAddressOverrides()
+  const overrideForChain = overrides[chainId]
+
+  if (!canonicalForChain && !overrideForChain) {
+    return {}
+  }
+
+  return mergeContractAddresses(canonicalForChain, overrideForChain)
 }
 
 /**
  * Check if a chain has deployed contracts
  */
 export function hasDeployedContracts(chainId: number): boolean {
-  const addresses = contractAddresses[chainId]
+  const addresses = getContractAddresses(chainId)
   return addresses ? Object.keys(addresses).length > 0 : false
 }
 
@@ -134,7 +192,7 @@ export function hasDeployedContracts(chainId: number): boolean {
  * Get leverage manager address for a specific chain
  */
 export function getLeverageManagerAddress(chainId: number): Address | undefined {
-  const addresses = contractAddresses[chainId]
+  const addresses = getContractAddresses(chainId)
   return addresses?.leverageManager
 }
 
@@ -142,10 +200,13 @@ export function getLeverageManagerAddress(chainId: number): Address | undefined 
  * Convenience export for commonly used token with chain context
  * Mirrors previous CONTRACT_ADDRESSES.STAKED_SEAM shape for minimal churn
  */
-export const STAKED_SEAM = {
-  address: contractAddresses[base.id]?.stakedSeam as Address,
-  chainId: base.id,
-} as const
+export const STAKED_SEAM = ((): { address: Address; chainId: typeof base.id } => {
+  const baseAddresses = getContractAddresses(base.id)
+  return {
+    address: baseAddresses.stakedSeam as Address,
+    chainId: base.id,
+  }
+})()
 
 // Governance helpers
 export interface GovernanceAddresses {
@@ -175,3 +236,10 @@ export function getRequiredGovernanceAddresses(chainId: number): Required<Govern
   }
   return gv as Required<GovernanceAddresses>
 }
+
+// Test utilities (re-export to ensure a single module instance)
+export {
+  getContractAddressOverrides,
+  resetContractAddressOverridesForTesting,
+  setContractAddressOverridesForTesting,
+} from './overrides'
