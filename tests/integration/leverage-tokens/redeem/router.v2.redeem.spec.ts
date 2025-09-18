@@ -27,9 +27,9 @@ describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
   it('redeems shares successfully (happy path — currently blocked by swap plumbing)', async () =>
     withFork(async (ctx) => {
       ensureTenderlyMode()
-      const scenario = await loadScenario(ctx, SLIPPAGE_BPS)
-      const { sharesMinted } = await mintAndAssert(ctx, scenario)
-      await redeemAndAssert(ctx, { ...scenario, sharesMinted })
+      const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
+      const mintOutcome = await executeMintPath(ctx, scenario)
+      await executeRedeemPath(ctx, { ...scenario, ...mintOutcome })
     }))
 })
 
@@ -45,7 +45,7 @@ type RedeemScenario = {
   slippageBps: number
 }
 
-async function loadScenario(ctx: WithForkCtx, slippageBps: number): Promise<RedeemScenario> {
+async function prepareRedeemScenario(ctx: WithForkCtx, slippageBps: number): Promise<RedeemScenario> {
   const { config } = ctx
 
   process.env['VITE_ROUTER_VERSION'] = 'v2'
@@ -94,7 +94,7 @@ async function loadScenario(ctx: WithForkCtx, slippageBps: number): Promise<Rede
   }
 }
 
-async function mintAndAssert(ctx: WithForkCtx, scenario: RedeemScenario) {
+async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario) {
   const { account, config, publicClient } = ctx
   const { token, router, collateralAsset, equityInInputAsset, slippageBps, manager } = scenario
 
@@ -137,17 +137,17 @@ async function mintAndAssert(ctx: WithForkCtx, scenario: RedeemScenario) {
   })
   expect(sharesAfterMint > 0n).toBe(true)
 
-  return { sharesMinted: sharesAfterMint }
+  return { sharesAfterMint }
 }
 
-async function redeemAndAssert(
+async function executeRedeemPath(
   ctx: WithForkCtx,
-  scenario: RedeemScenario & { sharesMinted: bigint },
+  scenario: RedeemScenario & { sharesAfterMint: bigint },
 ): Promise<void> {
   const { account, config, publicClient } = ctx
-  const { token, router, executor, manager, chainId, collateralAsset, sharesMinted, slippageBps } = scenario
+  const { token, router, executor, manager, chainId, collateralAsset, sharesAfterMint, slippageBps } = scenario
 
-  const sharesToRedeem = sharesMinted / 2n
+  const sharesToRedeem = sharesAfterMint / 2n
   await approveIfNeeded(token, router, sharesToRedeem)
 
   console.info('[STEP] Planning redeem with LiFi adapter', {
