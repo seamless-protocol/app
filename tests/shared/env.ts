@@ -61,6 +61,16 @@ const EnvSchema = z.object({
     .string()
     .regex(/^0x[a-fA-F0-9]{40}$/)
     .default('0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A'),
+  V4_POOL_MANAGER: z.string().optional(),
+  V4_POSITION_MANAGER: z.string().optional(),
+  V4_POSITION_DESCRIPTOR: z.string().optional(),
+  V4_STATE_VIEW: z.string().optional(),
+  V4_QUOTER: z.string().optional(),
+  V4_UNIVERSAL_ROUTER: z.string().optional(),
+  V4_PERMIT2: z.string().optional(),
+  V4_HOOKS: z.string().optional(),
+  V4_POOL_FEE: z.string().optional(),
+  V4_POOL_TICK_SPACING: z.string().optional(),
 })
 
 export const Env = EnvSchema.parse(process.env)
@@ -188,6 +198,14 @@ export const ADDR = {
     (Env.TEST_WEETH as Address | undefined) ?? (tokenMap.weeth as Address | undefined),
   ),
   executor: optionalAddress(chainContracts.multicall),
+  poolManagerV4: optionalAddress(Env.V4_POOL_MANAGER as Address | undefined),
+  positionManagerV4: optionalAddress(Env.V4_POSITION_MANAGER as Address | undefined),
+  positionDescriptorV4: optionalAddress(Env.V4_POSITION_DESCRIPTOR as Address | undefined),
+  stateViewV4: optionalAddress(Env.V4_STATE_VIEW as Address | undefined),
+  quoterV4: optionalAddress(Env.V4_QUOTER as Address | undefined),
+  universalRouterV4: optionalAddress(Env.V4_UNIVERSAL_ROUTER as Address | undefined),
+  permit2: optionalAddress(Env.V4_PERMIT2 as Address | undefined),
+  v4Hooks: optionalAddress(Env.V4_HOOKS as Address | undefined),
 } as const
 
 export const Extra = {
@@ -195,4 +213,16 @@ export const Extra = {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean) as Array<Hex>,
+}
+
+function toNumberOrUndefined(value: string | undefined): number | undefined {
+  if (!value) return undefined
+  const parsed = Number(value)
+  if (Number.isFinite(parsed)) return parsed
+  return undefined
+}
+
+export const V4 = {
+  poolFee: toNumberOrUndefined(Env.V4_POOL_FEE),
+  tickSpacing: toNumberOrUndefined(Env.V4_POOL_TICK_SPACING),
 }
