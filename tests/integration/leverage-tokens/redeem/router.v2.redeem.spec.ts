@@ -1,14 +1,17 @@
-import { type Address, type PublicClient, parseUnits } from 'viem'
+import { type Address, parseUnits } from 'viem'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
-import { createUniswapV4QuoteAdapter, type UniswapV4QuoteOptions } from '@/domain/shared/adapters/uniswapV4'
+import {
+  createUniswapV4QuoteAdapter,
+  type UniswapV4QuoteOptions,
+} from '@/domain/shared/adapters/uniswapV4'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
-import { ADDR, V4, mode, RPC } from '../../../shared/env'
+import { ADDR, mode, RPC, V4 } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
 import { approveIfNeeded, erc20Abi, topUpErc20, topUpNative } from '../../../shared/funding'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
@@ -36,8 +39,6 @@ type RedeemScenario = {
   token: Address
   manager: Address
   router: Address
-  executor: Address
-  chainId: number
   collateralAsset: Address
   debtAsset: Address
   equityInInputAsset: bigint
@@ -57,7 +58,10 @@ type RedeemScenario = {
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address
 
-async function prepareRedeemScenario(ctx: WithForkCtx, slippageBps: number): Promise<RedeemScenario> {
+async function prepareRedeemScenario(
+  ctx: WithForkCtx,
+  slippageBps: number,
+): Promise<RedeemScenario> {
   const { config } = ctx
 
   process.env['VITE_ROUTER_VERSION'] = 'v2'
@@ -70,7 +74,9 @@ async function prepareRedeemScenario(ctx: WithForkCtx, slippageBps: number): Pro
   const quoterV4 = ADDR.quoterV4
   const universalRouterV4 = ADDR.universalRouterV4
   if (!quoterV4 || !universalRouterV4) {
-    throw new Error('Uniswap v4 addresses missing; ensure V4_QUOTER and V4_UNIVERSAL_ROUTER are set')
+    throw new Error(
+      'Uniswap v4 addresses missing; ensure V4_QUOTER and V4_UNIVERSAL_ROUTER are set',
+    )
   }
 
   const poolFee = V4.poolFee
@@ -109,8 +115,6 @@ async function prepareRedeemScenario(ctx: WithForkCtx, slippageBps: number): Pro
     token,
     manager,
     router,
-    executor,
-    chainId,
     collateralAsset,
     debtAsset,
     equityInInputAsset,
@@ -180,17 +184,8 @@ async function executeRedeemPath(
   scenario: RedeemScenario & { sharesAfterMint: bigint },
 ): Promise<void> {
   const { account, config, publicClient } = ctx
-  const {
-    token,
-    router,
-    executor,
-    manager,
-    chainId,
-    collateralAsset,
-    sharesAfterMint,
-    slippageBps,
-    uniswapV4,
-  } = scenario
+  const { token, router, manager, collateralAsset, sharesAfterMint, slippageBps, uniswapV4 } =
+    scenario
 
   const sharesToRedeem = sharesAfterMint
   await approveIfNeeded(token, router, sharesToRedeem)
