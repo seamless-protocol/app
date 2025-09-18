@@ -1,4 +1,4 @@
-# Mint/Morph Redeem Notes
+# MM Redeem Notes
 
 WIP scratchpad for the redeem integration refactor. Summaries below should expand as the implementation lands.
 
