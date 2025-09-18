@@ -1,7 +1,7 @@
 /**
  * Domain types for mint orchestration (version-agnostic).
  */
-import type { Address, Hex } from 'viem'
+import type { Address } from 'viem'
 
 export type { Clients, IoOverrides } from '@/lib/web3/types'
 
@@ -12,24 +12,8 @@ export type Addresses = {
   token: Address
 }
 
-export type Quote = {
-  // Amount the router is guaranteed to receive (minOut semantics)
-  out: bigint
-  // Explicit minOut field for PRD clarity (alias of out)
-  minOut?: bigint
-  // Optional deadline (if provided by the aggregator/DEX)
-  deadline?: bigint
-  // Target to approve before submitting calldata
-  approvalTarget: Address
-  // Calldata to execute the swap on the aggregator/DEX
-  calldata: Hex
-}
-
-export type QuoteFn = (args: {
-  inToken: Address
-  outToken: Address
-  amountIn: bigint
-}) => Promise<Quote>
+// Re-export shared quote types
+export type { Quote, QuoteFn } from '../../shared/adapters/types'
 
 export enum RouterVersion {
   V1 = 'v1',

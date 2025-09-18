@@ -31,25 +31,8 @@ export type RedeemPlan = {
   maxSwapCost?: bigint
 }
 
-// Quote for external swaps (if needed during redemption)
-export type Quote = {
-  // Amount the router is guaranteed to receive (minOut semantics)
-  out: bigint
-  // Explicit minOut field for PRD clarity (alias of out)
-  minOut?: bigint
-  // Optional deadline (if provided by the aggregator/DEX)
-  deadline?: bigint
-  // Target to approve before submitting calldata
-  approvalTarget: Address
-  // Calldata to execute the swap on the aggregator/DEX
-  calldata: Hex
-}
-
-export type QuoteFn = (args: {
-  inToken: Address
-  outToken: Address
-  amountIn: bigint
-}) => Promise<Quote>
+// Re-export shared quote types
+export type { Quote, QuoteFn } from '../../shared/adapters/types'
 
 // Re-export RouterVersion from mint since they're the same
-export { RouterVersion } from '../mint/planner/types'
+export { RouterVersion } from '../../mint/planner/types'

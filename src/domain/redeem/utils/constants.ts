@@ -1,7 +1,7 @@
 // Redeem-specific constants and shared utilities
 
-// Re-export shared constants from mint utils
-export { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from '../../mint/utils/constants'
+// Re-export shared constants
+export { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from '../../shared/adapters/constants'
 
 // Redeem-specific constants
 // Default cap for redemption swap costs (2% - same as mint for consistency)

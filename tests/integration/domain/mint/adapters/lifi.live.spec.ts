@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { describe, expect, it } from 'vitest'
-import { createLifiQuoteAdapter } from '@/domain/mint/adapters/lifi'
+import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
 import { BASE_WETH } from '@/lib/contracts/addresses'
 import { ADDR, CHAIN_ID } from '../../../../shared/env'
 

@@ -1,8 +1,8 @@
 import type { Address, PublicClient } from 'viem'
 import { encodeFunctionData, getAddress } from 'viem'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import type { QuoteFn } from '../planner/types'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from '../utils/constants'
+import type { QuoteFn } from './types'
+import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
 
 const UNISWAP_V2_ROUTER_ABI = [
   {
@@ -44,7 +44,7 @@ const UNISWAP_V2_ROUTER_ABI = [
 
 type ResolvePath = (args: { inToken: Address; outToken: Address }) => Array<Address>
 
-type UniswapV2QuoteOptions = {
+export type UniswapV2QuoteOptions = {
   publicClient: PublicClientLike
   router: Address
   recipient: Address

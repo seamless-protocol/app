@@ -16,7 +16,6 @@ import { executeRedeemV1 } from './exec/execute.v1'
 import { executeRedeemV2 } from './exec/execute.v2'
 import { planRedeemV2 } from './planner/plan.v2'
 import { type QuoteFn, RouterVersion } from './planner/types'
-import { createRouterPortV1, createRouterPortV2 } from './ports' // ASK MARCO TO CHECK
 import { DEFAULT_SLIPPAGE_BPS } from './utils/constants'
 import { detectRedeemRouterVersion } from './utils/detectVersion'
 

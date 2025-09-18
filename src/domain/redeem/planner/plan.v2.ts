@@ -5,9 +5,9 @@
  * calculates the remaining collateral to return to the user with slippage protection.
  */
 import type { Address } from 'viem'
-import { encodeFunctionData, getAddress, parseAbi } from 'viem'
+import { getAddress } from 'viem'
 import type { Config } from 'wagmi'
-import { BASE_WETH } from '@/lib/contracts/addresses'
+import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -22,8 +22,6 @@ type SharesToRedeemArg = bigint
 type RouterV2Call = { target: Address; data: `0x${string}`; value: bigint }
 type V2Calls = Array<RouterV2Call>
 
-// Base WETH native path support
-const WETH_DEPOSIT_ABI = parseAbi(['function deposit() payable'])
 
 /**
  * Structured plan for executing a single-transaction redeem via the V2 router.
@@ -175,22 +173,31 @@ async function calculateCollateralNeededForDebt(args: {
 }): Promise<bigint> {
   const { collateralAsset, debtAsset, debtToRepay, quoteCollateralToDebt } = args
 
-  // Quote how much collateral we need to get the required debt amount
+  // Start with an estimate of collateral needed (use debt amount as initial guess)
+  let collateralEstimate = debtToRepay
+  
+  // Quote how much debt we get for this collateral amount
   const quote = await quoteCollateralToDebt({
     inToken: collateralAsset,
     outToken: debtAsset,
-    amountIn: debtToRepay, // Start with debt amount as estimate
+    amountIn: collateralEstimate,
   })
 
-  // If the quote gives us more debt than needed, we can use less collateral
-  if (quote.out >= debtToRepay) {
-    // Calculate the exact collateral amount needed
-    return (debtToRepay * debtToRepay) / quote.out
+  // If we get exactly the debt we need, we're done
+  if (quote.out === debtToRepay) {
+    return collateralEstimate
   }
 
-  // If the quote gives us less debt than needed, we need more collateral
-  // This is a simplified calculation - in practice, you might want to iterate
-  return debtToRepay
+  // If we get more debt than needed, we can use less collateral
+  if (quote.out > debtToRepay) {
+    // Calculate the exact collateral amount needed using the formula:
+    // collateralNeeded = ceil(debtToRepay * collateralQuoted / debtOut)
+    return (debtToRepay * collateralEstimate + quote.out - 1n) / quote.out
+  }
+
+  // If we get less debt than needed, we need more collateral
+  // Use the inverse relationship: collateralNeeded = debtToRepay * collateralEstimate / debtOut
+  return (debtToRepay * collateralEstimate) / quote.out
 }
 
 async function buildCollateralToDebtSwapCalls(args: {
@@ -200,7 +207,7 @@ async function buildCollateralToDebtSwapCalls(args: {
   debtAmount: bigint
   quoteCollateralToDebt: QuoteFn
 }): Promise<V2Calls> {
-  const { collateralAsset, debtAsset, collateralAmount, debtAmount, quoteCollateralToDebt } = args
+  const { collateralAsset, debtAsset, collateralAmount, quoteCollateralToDebt } = args
 
   // Get the quote for the swap
   const quote = await quoteCollateralToDebt({
@@ -211,26 +218,12 @@ async function buildCollateralToDebtSwapCalls(args: {
 
   const calls: V2Calls = []
 
-  // Handle native ETH path for WETH debt
-  const useNativeDebtPath = getAddress(debtAsset) === getAddress(BASE_WETH)
-  if (useNativeDebtPath) {
-    // For WETH debt, we need to deposit ETH first
-    calls.push({
-      target: debtAsset,
-      data: encodeFunctionData({
-        abi: WETH_DEPOSIT_ABI,
-        functionName: 'deposit',
-        args: [],
-      }),
-      value: debtAmount,
-    })
-  }
-
-  // Add the swap call
+  // Handle native ETH path for collateral - if collateral is ETH, pass it as msg.value
+  const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(ETH_SENTINEL)
   calls.push({
     target: quote.approvalTarget,
     data: quote.calldata,
-    value: useNativeDebtPath ? 0n : 0n, // ETH value handled above
+    value: useNativeCollateralPath ? collateralAmount : 0n,
   })
 
   return calls

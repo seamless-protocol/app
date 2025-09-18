@@ -144,6 +144,7 @@ export function LeverageTokenRedeemModal({
     token: leverageTokenAddress,
     ...(userAddress ? { account: userAddress } : {}),
     slippageBps,
+    chainId: leverageTokenConfig.chainId,
   })
 
   const {

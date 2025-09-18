@@ -1,4 +1,4 @@
-import { RouterVersion } from '../mint/planner/types'
+import { RouterVersion } from '../../mint/planner/types'
 
 /**
  * Redeem router version selection policy:

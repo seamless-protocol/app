@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createLifiQuoteAdapter } from '@/domain/mint/adapters/lifi'
+import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
 
 const ROUTER = '0x1111111111111111111111111111111111111111' as Address
 const IN = '0x2222222222222222222222222222222222222222' as Address
