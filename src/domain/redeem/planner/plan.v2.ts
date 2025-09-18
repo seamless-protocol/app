@@ -5,9 +5,9 @@
  * calculates the remaining collateral to return to the user with slippage protection.
  */
 import type { Address } from 'viem'
-import { getAddress } from 'viem'
+import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
-import { ETH_SENTINEL } from '@/lib/contracts/addresses'
+import { BASE_WETH, ETH_SENTINEL } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -21,6 +21,8 @@ type TokenArg = Address
 type SharesToRedeemArg = bigint
 type RouterV2Call = { target: Address; data: `0x${string}`; value: bigint }
 type V2Calls = Array<RouterV2Call>
+
+const WETH_WITHDRAW_ABI = parseAbi(['function withdraw(uint256 wad)'])
 
 /**
  * Structured plan for executing a single-transaction redeem via the V2 router.
@@ -106,11 +108,15 @@ export async function planRedeemV2(params: {
   }
 
   // Calculate how much collateral we need to swap to repay the debt
+  const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
+  const inTokenForQuote = useNativeCollateralPath ? ETH_SENTINEL : collateralAsset
+
   const collateralNeededForDebt = await calculateCollateralNeededForDebt({
-    collateralAsset,
     debtAsset,
     debtToRepay,
     quoteCollateralToDebt,
+    maxCollateralAvailable: totalCollateralAvailable,
+    inTokenForQuote,
   })
 
   // Ensure we have enough collateral to repay the debt
@@ -126,8 +132,9 @@ export async function planRedeemV2(params: {
     collateralAsset,
     debtAsset,
     collateralAmount: collateralNeededForDebt,
-    debtAmount: debtToRepay,
     quoteCollateralToDebt,
+    inTokenForQuote,
+    useNativeCollateralPath,
   })
 
   return {
@@ -165,67 +172,124 @@ async function getManagerAssets(args: {
 }
 
 async function calculateCollateralNeededForDebt(args: {
-  collateralAsset: Address
   debtAsset: Address
   debtToRepay: bigint
   quoteCollateralToDebt: QuoteFn
+  maxCollateralAvailable: bigint
+  inTokenForQuote: Address
 }): Promise<bigint> {
-  const { collateralAsset, debtAsset, debtToRepay, quoteCollateralToDebt } = args
+  const { debtAsset, debtToRepay, quoteCollateralToDebt, maxCollateralAvailable, inTokenForQuote } =
+    args
 
-  // Start with an estimate of collateral needed (use debt amount as initial guess)
-  let collateralEstimate = debtToRepay
-
-  // Quote how much debt we get for this collateral amount
-  const quote = await quoteCollateralToDebt({
-    inToken: collateralAsset,
-    outToken: debtAsset,
-    amountIn: collateralEstimate,
-  })
-
-  // If we get exactly the debt we need, we're done
-  if (quote.out === debtToRepay) {
-    return collateralEstimate
+  if (debtToRepay <= 0n) return 0n
+  if (maxCollateralAvailable <= 0n) {
+    throw new Error('No collateral available to repay debt')
   }
 
-  // If we get more debt than needed, we can use less collateral
-  if (quote.out > debtToRepay) {
-    // Calculate the exact collateral amount needed using the formula:
-    // collateralNeeded = ceil(debtToRepay * collateralQuoted / debtOut)
-    return (debtToRepay * collateralEstimate + quote.out - 1n) / quote.out
+  const upperBound = maxCollateralAvailable
+  let attempt = debtToRepay > upperBound ? upperBound : debtToRepay
+  if (attempt <= 0n) {
+    attempt = upperBound
   }
 
-  // If we get less debt than needed, we need more collateral
-  // Use the inverse relationship: collateralNeeded = debtToRepay * collateralEstimate / debtOut
-  return (debtToRepay * collateralEstimate) / quote.out
+  let previous: bigint | undefined
+  for (let i = 0; i < 12; i++) {
+    if (attempt <= 0n) {
+      attempt = 1n
+    }
+
+    const quote = await quoteCollateralToDebt({
+      inToken: inTokenForQuote,
+      outToken: debtAsset,
+      amountIn: attempt,
+    })
+
+    if (quote.out <= 0n) {
+      throw new Error('Quote returned zero output while sizing collateral swap')
+    }
+
+    if (quote.out < debtToRepay && attempt === upperBound) {
+      throw new Error('Insufficient collateral to repay debt')
+    }
+
+    const required = mulDivCeil(debtToRepay, attempt, quote.out)
+    if (required > upperBound) {
+      throw new Error('Insufficient collateral to repay debt')
+    }
+
+    if (required === attempt || (typeof previous !== 'undefined' && required === previous)) {
+      return required
+    }
+
+    previous = attempt
+    attempt = required
+  }
+
+  throw new Error('Collateral sizing did not converge within iteration limit')
 }
 
 async function buildCollateralToDebtSwapCalls(args: {
   collateralAsset: Address
   debtAsset: Address
   collateralAmount: bigint
-  debtAmount: bigint
   quoteCollateralToDebt: QuoteFn
+  inTokenForQuote: Address
+  useNativeCollateralPath: boolean
 }): Promise<V2Calls> {
-  const { collateralAsset, debtAsset, collateralAmount, quoteCollateralToDebt } = args
+  const {
+    collateralAsset,
+    debtAsset,
+    collateralAmount,
+    quoteCollateralToDebt,
+    inTokenForQuote,
+    useNativeCollateralPath,
+  } = args
 
-  // Get the quote for the swap
+  if (collateralAmount <= 0n) return []
+
   const quote = await quoteCollateralToDebt({
-    inToken: collateralAsset,
+    inToken: inTokenForQuote,
     outToken: debtAsset,
     amountIn: collateralAmount,
   })
 
   const calls: V2Calls = []
 
-  // Handle native ETH path for collateral - if collateral is ETH, pass it as msg.value
-  const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(ETH_SENTINEL)
+  if (useNativeCollateralPath) {
+    calls.push({
+      target: getAddress(collateralAsset),
+      data: encodeFunctionData({
+        abi: WETH_WITHDRAW_ABI,
+        functionName: 'withdraw',
+        args: [collateralAmount],
+      }),
+      value: 0n,
+    })
+  } else {
+    calls.push({
+      target: getAddress(collateralAsset),
+      data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'approve',
+        args: [getAddress(quote.approvalTarget), collateralAmount],
+      }),
+      value: 0n,
+    })
+  }
+
   calls.push({
-    target: quote.approvalTarget,
+    target: getAddress(quote.approvalTarget),
     data: quote.calldata,
     value: useNativeCollateralPath ? collateralAmount : 0n,
   })
 
   return calls
+}
+
+function mulDivCeil(a: bigint, b: bigint, d: bigint): bigint {
+  if (d === 0n) throw new Error('Division by zero in mulDivCeil')
+  const numerator = a * b
+  return numerator === 0n ? 0n : (numerator + (d - 1n)) / d
 }
 
 /**

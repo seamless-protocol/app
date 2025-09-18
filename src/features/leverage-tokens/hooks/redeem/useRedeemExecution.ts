@@ -1,10 +1,9 @@
 import { useCallback, useMemo, useState } from 'react'
-import type { Address } from 'viem'
+import type { Address, PublicClient } from 'viem'
 import { usePublicClient } from 'wagmi'
-import { useRedeemWithRouter } from '../useRedeemWithRouter'
 import { createLifiQuoteAdapter, createUniswapV2QuoteAdapter } from '@/domain/shared/adapters'
-import { getContractAddresses } from '@/lib/contracts/addresses'
-import { BASE_WETH } from '@/lib/contracts/addresses'
+import { BASE_WETH, getContractAddresses } from '@/lib/contracts/addresses'
+import { useRedeemWithRouter } from '../useRedeemWithRouter'
 
 type Status = 'idle' | 'submitting' | 'pending' | 'success' | 'error'
 
@@ -47,7 +46,7 @@ export function useRedeemExecution(params: {
       if (!uniswapRouter) return undefined
 
       return createUniswapV2QuoteAdapter({
-        publicClient: publicClient as any, // Type compatibility issue - using any for now
+        publicClient: publicClient as unknown as Pick<PublicClient, 'readContract' | 'getBlock'>,
         router: uniswapRouter,
         recipient: routerV2,
         wrappedNative: BASE_WETH,

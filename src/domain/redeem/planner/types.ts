@@ -26,13 +26,12 @@ export type RedeemPlan = {
   minCollateralForSender: bigint
   slippageBps: number
   // For v2: any swap calls needed during redemption
-  calls?: Hex[]
+  calls?: Array<Hex>
   // For v1: simple redemption parameters
   maxSwapCost?: bigint
 }
 
-// Re-export shared quote types
-export type { Quote, QuoteFn } from '../../shared/adapters/types'
-
 // Re-export RouterVersion from mint since they're the same
 export { RouterVersion } from '../../mint/planner/types'
+// Re-export shared quote types
+export type { Quote, QuoteFn } from '../../shared/adapters/types'
