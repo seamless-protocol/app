@@ -23,7 +23,7 @@ describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
 
   const SLIPPAGE_BPS = 50
 
-  it('redeems shares successfully (happy path)', async () =>
+  it('redeems all minted shares via Uniswap v4 (happy path)', async () =>
     withFork(async (ctx) => {
       ensureTenderlyMode()
       const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
@@ -192,7 +192,7 @@ async function executeRedeemPath(
     uniswapV4,
   } = scenario
 
-  const sharesToRedeem = sharesAfterMint / 2n
+  const sharesToRedeem = sharesAfterMint
   await approveIfNeeded(token, router, sharesToRedeem)
 
   console.info('[STEP] Planning redeem with Uniswap v4 adapter', {
