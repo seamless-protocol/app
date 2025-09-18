@@ -9,6 +9,6 @@ export { detectRedeemRouterVersion } from './detectVersion'
 
 // Slippage calculations
 export {
-  calculateMinCollateralForSender,
   calculateActualSlippage,
+  calculateMinCollateralForSender,
 } from './slippage'

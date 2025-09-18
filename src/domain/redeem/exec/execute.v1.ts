@@ -8,19 +8,13 @@
  */
 
 import { getPublicClient } from '@wagmi/core'
-import { type Address, type Hash } from 'viem'
+import type { Address, Hash } from 'viem'
 import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
-import { calculateMinCollateralForSender } from '../utils/slippage'
 import {
-  BPS_DENOMINATOR,
-  DEFAULT_SLIPPAGE_BPS,
-  DEFAULT_MAX_REDEEM_SWAP_COST_BPS,
-} from '../utils/constants'
-import {
-  readLeverageManagerPreviewRedeem,
   readLeverageManagerGetLeverageTokenCollateralAsset,
   readLeverageManagerGetLeverageTokenDebtAsset,
+  readLeverageManagerPreviewRedeem,
   simulateLeverageRouterRedeem,
   writeLeverageRouterRedeem,
 } from '@/lib/contracts/generated'
@@ -29,6 +23,12 @@ import {
   createSwapContext,
   createWeETHSwapContext,
 } from '../../mint/utils/swapContext'
+import {
+  BPS_DENOMINATOR,
+  DEFAULT_MAX_REDEEM_SWAP_COST_BPS,
+  DEFAULT_SLIPPAGE_BPS,
+} from '../utils/constants'
+import { calculateMinCollateralForSender } from '../utils/slippage'
 
 // Reuse generated Wagmi action types for stronger inference
 type Gen = typeof import('@/lib/contracts/generated')

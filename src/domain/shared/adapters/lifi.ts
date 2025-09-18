@@ -1,8 +1,8 @@
 import type { Address } from 'viem'
 import { getAddress } from 'viem'
 import { base } from 'viem/chains'
-import type { QuoteFn } from './types'
 import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
+import type { QuoteFn } from './types'
 
 export type LifiOrder = 'CHEAPEST' | 'FASTEST'
 
