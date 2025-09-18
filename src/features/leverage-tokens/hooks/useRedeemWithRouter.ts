@@ -35,13 +35,7 @@ export interface UseRedeemWithRouterParams {
 export function useRedeemWithRouter() {
   const config = useConfig()
   return useMutation<OrchestrateRedeemResult, Error, UseRedeemWithRouterParams>({
-    mutationFn: async ({
-      token,
-      account,
-      sharesToRedeem,
-      slippageBps,
-      quoteCollateralToDebt,
-    }) =>
+    mutationFn: async ({ token, account, sharesToRedeem, slippageBps, quoteCollateralToDebt }) =>
       orchestrateRedeem({
         config,
         account,

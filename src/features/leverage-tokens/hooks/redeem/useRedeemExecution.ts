@@ -34,7 +34,7 @@ export function useRedeemExecution(params: {
 
     // Use LiFi by default, fallback to UniswapV2 if needed
     const useLiFi = import.meta.env['VITE_USE_LIFI'] !== 'false'
-    
+
     if (useLiFi) {
       return createLifiQuoteAdapter({
         chainId,
@@ -61,6 +61,10 @@ export function useRedeemExecution(params: {
       setStatus('submitting')
       setError(undefined)
       try {
+        if (!quoteCollateralToDebt) {
+          throw new Error('Quote function not available for V2 redeem')
+        }
+
         const result = await redeemWithRouter.mutateAsync({
           token,
           account,
@@ -68,7 +72,7 @@ export function useRedeemExecution(params: {
           slippageBps,
           quoteCollateralToDebt,
         })
-        
+
         setHash(result.hash)
         setStatus('pending')
         await publicClient?.waitForTransactionReceipt({ hash: result.hash })
@@ -83,11 +87,11 @@ export function useRedeemExecution(params: {
     [account, token, slippageBps, quoteCollateralToDebt, redeemWithRouter, publicClient],
   )
 
-  return { 
-    redeem, 
-    status: redeemWithRouter.isPending ? 'submitting' : status, 
-    hash, 
-    error: redeemWithRouter.error || error, 
-    canSubmit 
+  return {
+    redeem,
+    status: redeemWithRouter.isPending ? 'submitting' : status,
+    hash,
+    error: redeemWithRouter.error || error,
+    canSubmit,
   }
 }

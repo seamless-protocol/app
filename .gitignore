@@ -70,3 +70,4 @@ package-lock.json
 
 # Local Sources
 .sources
+.data

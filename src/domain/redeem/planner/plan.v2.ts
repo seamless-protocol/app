@@ -22,7 +22,6 @@ type SharesToRedeemArg = bigint
 type RouterV2Call = { target: Address; data: `0x${string}`; value: bigint }
 type V2Calls = Array<RouterV2Call>
 
-
 /**
  * Structured plan for executing a single-transaction redeem via the V2 router.
  *
@@ -175,7 +174,7 @@ async function calculateCollateralNeededForDebt(args: {
 
   // Start with an estimate of collateral needed (use debt amount as initial guess)
   let collateralEstimate = debtToRepay
-  
+
   // Quote how much debt we get for this collateral amount
   const quote = await quoteCollateralToDebt({
     inToken: collateralAsset,
