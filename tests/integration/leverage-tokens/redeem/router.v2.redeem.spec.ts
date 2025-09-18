@@ -23,7 +23,7 @@ describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
 
   const SLIPPAGE_BPS = 50
 
-  it('redeems shares successfully (happy path — currently blocked by swap plumbing)', async () =>
+  it('redeems shares successfully (happy path)', async () =>
     withFork(async (ctx) => {
       ensureTenderlyMode()
       const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
