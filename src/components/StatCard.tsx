@@ -2,7 +2,7 @@ import type * as React from 'react'
 import { cn } from './ui/utils'
 
 export interface StatCardProps {
-  title: string
+  title: string | React.ReactNode
   stat: string | React.ReactNode
   caption?: string | React.ReactNode
   icon?: React.ReactNode
@@ -31,7 +31,7 @@ function StatCard({
       <div data-slot="card-content" className="[&:last-child]:pb-6 p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-400">{title}</p>
+            <div className="text-sm text-slate-400">{title}</div>
             <div className="text-xl sm:text-2xl font-bold text-white">{stat}</div>
             {caption && <div className="text-xs text-slate-400 mt-1">{caption}</div>}
           </div>

@@ -16,7 +16,10 @@ export interface GraphQLRequest {
 
 // Network-specific subgraph endpoints
 const SUBGRAPH_ENDPOINTS = {
-  8453: getEnvVar('VITE_LEVERAGE_TOKENS_SUBGRAPH', 'https://api.studio.thegraph.com/query/113147/seamless-leverage-tokens-base/version/latest'), // Base
+  8453: getEnvVar(
+    'VITE_LEVERAGE_TOKENS_SUBGRAPH',
+    'https://api.studio.thegraph.com/query/113147/seamless-leverage-tokens-base/version/latest',
+  ), // Base
   // Future chains can be added here:
   // 1: getEnvVar('VITE_LEVERAGE_TOKENS_SUBGRAPH_ETHEREUM', 'https://api.studio.thegraph.com/query/...'), // Ethereum
   // 137: getEnvVar('VITE_LEVERAGE_TOKENS_SUBGRAPH_POLYGON', 'https://api.studio.thegraph.com/query/...'), // Polygon
@@ -27,8 +30,8 @@ export type SupportedChainId = keyof typeof SUBGRAPH_ENDPOINTS
 /**
  * Get all supported chain IDs from the configuration
  */
-export function getSupportedChainIds(): SupportedChainId[] {
-  return Object.keys(SUBGRAPH_ENDPOINTS).map(Number) as SupportedChainId[]
+export function getSupportedChainIds(): Array<SupportedChainId> {
+  return Object.keys(SUBGRAPH_ENDPOINTS).map(Number) as Array<SupportedChainId>
 }
 
 /**

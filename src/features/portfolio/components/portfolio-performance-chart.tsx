@@ -1,5 +1,6 @@
 'use client'
 
+import { TrendingUp } from 'lucide-react'
 import { useId } from 'react'
 import {
   Area,
@@ -9,7 +10,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { TrendingUp } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
 
@@ -169,7 +169,8 @@ export function PortfolioPerformanceChart({
               </div>
               <h3 className="text-lg font-medium text-slate-300 mb-2">No Data Available</h3>
               <p className="text-sm text-slate-500 max-w-sm">
-                Portfolio performance data will appear here once you have active positions with historical data.
+                Portfolio performance data will appear here once you have active positions with
+                historical data.
               </p>
             </div>
           )}

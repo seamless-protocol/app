@@ -1,26 +1,21 @@
-import { 
-  USER_POSITIONS_QUERY,
-  LEVERAGE_TOKEN_STATE_HISTORY_QUERY
-} from '../queries/portfolio'
+import { LEVERAGE_TOKEN_STATE_HISTORY_QUERY, USER_POSITIONS_QUERY } from '../queries/portfolio'
 import type {
-  UserPositionsResponse,
-  LeverageTokenStateHistoryResponse,
   LeverageTokenState,
+  LeverageTokenStateHistoryResponse,
+  User,
   UserPosition,
-  User
+  UserPositionsResponse,
 } from '../types/portfolio'
-import { graphqlRequest, getSupportedChainIds } from '../utils'
+import { getSupportedChainIds, graphqlRequest } from '../utils'
 
 /**
  * Fetch user positions across all supported chains
  */
-export async function fetchUserPositions(
-  userAddress: string,
-): Promise<UserPositionsResponse> {
+export async function fetchUserPositions(userAddress: string): Promise<UserPositionsResponse> {
   // Get all supported chain IDs from configuration
   const supportedChains = getSupportedChainIds()
-  
-  const allPositions: UserPosition[] = []
+
+  const allPositions: Array<UserPosition> = []
   let user: User | null = null
 
   // Fetch from all supported chains
@@ -44,7 +39,7 @@ export async function fetchUserPositions(
   }
 
   return {
-    user: user ? { ...user, positions: allPositions } : null
+    user: user ? { ...user, positions: allPositions } : null,
   }
 }
 
@@ -59,10 +54,10 @@ export async function fetchLeverageTokenStateHistory(
 ): Promise<LeverageTokenStateHistoryResponse> {
   const result = await graphqlRequest<LeverageTokenStateHistoryResponse>(chainId, {
     query: LEVERAGE_TOKEN_STATE_HISTORY_QUERY,
-    variables: { 
+    variables: {
       leverageTokenAddress: leverageTokenAddress.toLowerCase(),
       first,
-      skip
+      skip,
     },
   })
 
@@ -75,9 +70,9 @@ export async function fetchLeverageTokenStateHistory(
 export async function fetchAllLeverageTokenStateHistory(
   leverageTokenAddress: string,
   maxRecords: number = 15000,
-): Promise<LeverageTokenState[]> {
+): Promise<Array<LeverageTokenState>> {
   const supportedChains = getSupportedChainIds()
-  const allStates: LeverageTokenState[] = []
+  const allStates: Array<LeverageTokenState> = []
 
   // Fetch from all supported chains
   for (const chainId of supportedChains) {
@@ -90,16 +85,17 @@ export async function fetchAllLeverageTokenStateHistory(
           leverageTokenAddress,
           chainId,
           batchSize,
-          skip
+          skip,
         )
 
         if (!result.leverageToken?.stateHistory) {
           break
         }
 
-        const statesWithTokenAddress = result.leverageToken.stateHistory.map(state => ({
+        const leverageToken = result.leverageToken
+        const statesWithTokenAddress = leverageToken.stateHistory.map((state) => ({
           ...state,
-          leverageToken: result.leverageToken!.id
+          leverageToken: leverageToken.id,
         }))
 
         allStates.push(...statesWithTokenAddress)
@@ -112,11 +108,13 @@ export async function fetchAllLeverageTokenStateHistory(
         skip += batchSize
       }
     } catch (error) {
-      console.warn(`Failed to fetch state history for token ${leverageTokenAddress} from chain ${chainId}:`, error)
+      console.warn(
+        `Failed to fetch state history for token ${leverageTokenAddress} from chain ${chainId}:`,
+        error,
+      )
       // Continue with other chains
     }
   }
 
   return allStates
 }
-

@@ -37,6 +37,7 @@ export interface Position {
 interface ActivePositionsProps {
   positions: Array<Position>
   onAction: (action: 'deposit' | 'withdraw' | 'mint' | 'redeem', position: Position) => void
+  onPositionClick?: (position: Position) => void
   className?: string
 }
 
@@ -66,7 +67,12 @@ const getTypeLabel = (type: string) => {
 
 // No need for custom renderLeverageTokenLogos - AssetDisplay handles this perfectly
 
-export function ActivePositions({ positions, onAction, className }: ActivePositionsProps) {
+export function ActivePositions({
+  positions,
+  onAction,
+  onPositionClick,
+  className,
+}: ActivePositionsProps) {
   const activeCount = positions.length
 
   return (
@@ -89,9 +95,12 @@ export function ActivePositions({ positions, onAction, className }: ActivePositi
               const secondaryLabel = isLeverageToken ? 'Redeem' : 'Withdraw'
 
               return (
-                <div
+                <button
                   key={position.id}
-                  className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 hover:border-purple-500/50 transition-all duration-200 cursor-pointer group"
+                  type="button"
+                  className="w-full text-left bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 hover:border-purple-500/50 transition-all duration-200 cursor-pointer group"
+                  onClick={() => onPositionClick?.(position)}
+                  aria-label={`View details for ${position.name}`}
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
                     {/* Token Info */}
@@ -243,7 +252,7 @@ export function ActivePositions({ positions, onAction, className }: ActivePositi
                       <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 hidden lg:block lg:ml-2" />
                     </div>
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>

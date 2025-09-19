@@ -59,4 +59,3 @@ export const LEVERAGE_TOKEN_STATE_HISTORY_QUERY = `
     }
   }
 `
-

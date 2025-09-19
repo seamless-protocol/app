@@ -41,7 +41,7 @@ export interface UserPosition {
 
 export interface User {
   id: string
-  positions: UserPosition[]
+  positions: Array<UserPosition>
 }
 
 export interface UserPositionsResponse {
@@ -51,6 +51,6 @@ export interface UserPositionsResponse {
 export interface LeverageTokenStateHistoryResponse {
   leverageToken?: {
     id: string
-    stateHistory: LeverageTokenState[]
+    stateHistory: Array<LeverageTokenState>
   } | null
 }

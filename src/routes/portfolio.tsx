@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { DollarSign, Target, TrendingUp } from 'lucide-react'
 import { useAccount } from 'wagmi'
@@ -10,7 +10,10 @@ import { ActivePositions } from '@/features/portfolio/components/active-position
 import { AvailableRewards } from '@/features/portfolio/components/available-rewards'
 import { PortfolioPerformanceChart } from '@/features/portfolio/components/portfolio-performance-chart'
 import { SEAMStaking } from '@/features/portfolio/components/seam-staking'
-import { usePortfolioData, usePortfolioPerformance } from '@/features/portfolio/hooks/usePortfolioDataFetcher'
+import {
+  usePortfolioPerformance,
+  usePortfolioWithTotalValue,
+} from '@/features/portfolio/hooks/usePortfolioDataFetcher'
 import { usePortfolioRewards } from '@/features/portfolio/hooks/usePortfolioRewards'
 import { usePortfolioStaking } from '@/features/portfolio/hooks/usePortfolioStaking'
 
@@ -20,13 +23,14 @@ export const Route = createFileRoute('/portfolio')({
 
 function PortfolioPage() {
   const { isConnected } = useAccount()
+  const navigate = useNavigate()
 
   // Direct hook calls - matching leverage tokens pattern
   const {
     data: portfolioData,
     isLoading: portfolioLoading,
     isError: portfolioError,
-  } = usePortfolioData()
+  } = usePortfolioWithTotalValue()
   const performanceData = usePortfolioPerformance()
   const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
 
@@ -109,6 +113,23 @@ function PortfolioPage() {
   const handleManageStaking = () => {
     console.log('Managing staking...')
     // TODO: Navigate to staking page
+  }
+
+  const handlePositionClick = (position: Position) => {
+    if (position.type === 'leverage-token') {
+      // Extract the leverage token address from the position ID
+      // The position ID format is typically: {userAddress}-{leverageTokenAddress}
+      const leverageTokenAddress = position.id.split('-')[1]
+      if (leverageTokenAddress) {
+        navigate({
+          to: '/tokens/$chainId/$id',
+          params: {
+            chainId: '8453', // Base chain ID
+            id: leverageTokenAddress,
+          },
+        })
+      }
+    }
   }
 
   return (
@@ -255,7 +276,11 @@ function PortfolioPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
       >
-        <ActivePositions positions={positions} onAction={handlePositionAction} />
+        <ActivePositions
+          positions={positions}
+          onAction={handlePositionAction}
+          onPositionClick={handlePositionClick}
+        />
       </motion.div>
     </motion.div>
   )
