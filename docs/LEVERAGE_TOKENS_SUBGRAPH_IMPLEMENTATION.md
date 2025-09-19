@@ -2,6 +2,8 @@
 
 This document provides a comprehensive guide for implementing the `VITE_LEVERAGE_TOKENS_SUBGRAPH` functionality in another application, using this codebase as reference.
 
+The main source code is in _sources on how it was used in the old repo
+
 ## Overview
 
 The leverage tokens subgraph implementation provides historical data visualization and user profit calculations for leverage tokens. It uses Apollo Client with React Query for data fetching, caching, and state management.
