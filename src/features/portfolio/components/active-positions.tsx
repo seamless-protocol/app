@@ -138,11 +138,18 @@ export function ActivePositions({
               const secondaryLabel = isLeverageToken ? 'Redeem' : 'Withdraw'
 
               return (
-                <button
+                <div
                   key={position.id}
-                  type="button"
                   className="w-full text-left bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 hover:border-purple-500/50 transition-all duration-200 cursor-pointer group"
                   onClick={() => onPositionClick?.(position)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onPositionClick?.(position)
+                    }
+                  }}
                   aria-label={`View details for ${position.name}`}
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
@@ -282,7 +289,7 @@ export function ActivePositions({
                       <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 hidden lg:block lg:ml-2" />
                     </div>
                   </div>
-                </button>
+                </div>
               )
             })}
           </div>

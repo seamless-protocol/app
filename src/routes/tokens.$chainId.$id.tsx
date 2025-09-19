@@ -19,7 +19,7 @@ import { LeverageTokenHoldingsCard } from '@/features/leverage-tokens/components
 import { LeverageTokenMintModal } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
 import { LeverageTokenRedeemModal } from '@/features/leverage-tokens/components/leverage-token-redeem-modal'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
-import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
+import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
 import { useLeverageTokenCollateral } from '@/features/leverage-tokens/hooks/useLeverageTokenCollateral'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
@@ -113,14 +113,16 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
 
     // Pre-load APY data for the tooltip
     const {
-      data: apyData,
+      data: tokensAPYData,
       isLoading: isApyLoading,
       isError: isApyError,
-    } = useLeverageTokenAPY({
-      tokenAddress: tokenAddress as Address,
-      ...(tokenConfig && { leverageToken: tokenConfig }),
+    } = useTokensAPY({
+      tokens: tokenConfig ? [tokenConfig] : [],
       enabled: !!tokenConfig, // Only enable if we have a valid config
     })
+
+    // Get APY data for this specific token
+    const apyData = tokenConfig ? tokensAPYData?.get(tokenConfig.address) : undefined
 
     if (!tokenConfig) {
       return (

@@ -16,7 +16,7 @@ import {
   groupStatesByToken,
 } from '../utils/portfolio-calculations'
 import { portfolioKeys } from '../utils/queryKeys'
-import { usePositionsAPY } from './usePositionsAPY'
+import { useTokensAPY } from './usePositionsAPY'
 
 export interface PortfolioSummary {
   totalValue: number
@@ -102,8 +102,8 @@ function convertUserPositionToUIPosition(userPosition: UserPosition): Position {
  * Uses real subgraph data from all supported chains with improved caching and error handling
  */
 export function usePortfolioDataFetcher() {
-  let { address } = useAccount()
-  address = '0x0ec9a61bd923cbaf519b1baef839617f012344e2'
+  const { address } = useAccount()
+  // address = '0x0ec9a61bd923cbaf519b1baef839617f012344e2'
 
   return useQuery({
     queryKey: portfolioKeys.data(),
@@ -284,9 +284,9 @@ export function usePortfolioWithTotalValue() {
   }, [portfolioQueryData?.rawUserPositions, portfolioQueryData?.leverageTokenStates, usdPrices])
 
   // Calculate APY data for all positions
-  const { data: positionsAPYData, isLoading: positionsAPYLoading } = usePositionsAPY({
-    positions: portfolioQueryData?.portfolioData.positions || [],
-    enabled: !!(portfolioQueryData?.portfolioData.positions.length),
+  const { data: positionsAPYData, isLoading: positionsAPYLoading } = useTokensAPY({
+    tokens: portfolioQueryData?.portfolioData.positions || [],
+    enabled: !!portfolioQueryData?.portfolioData.positions.length,
   })
 
   // Return portfolio data with calculated metrics and APY breakdown
