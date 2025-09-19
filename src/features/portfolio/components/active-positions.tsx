@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { cn } from '@/lib/utils/cn'
 
 export interface Position {
@@ -44,6 +45,7 @@ interface ActivePositionsProps {
   onAction: (action: 'deposit' | 'withdraw' | 'mint' | 'redeem', position: Position) => void
   onPositionClick?: (position: Position) => void
   className?: string
+  apyLoading?: boolean
 }
 
 const getRiskLevelColor = (riskLevel: string) => {
@@ -71,10 +73,22 @@ const getTypeLabel = (type: string) => {
 }
 
 // Component to handle APY display for each position
-function PositionAPYDisplay({ position }: { position: Position }) {
+function PositionAPYDisplay({ position, isLoading }: { position: Position; isLoading?: boolean }) {
   // Use the pre-calculated APY data from the portfolio hook
   const displayAPY = position.apy
   const apyBreakdown = position.apyBreakdown
+
+  if (isLoading) {
+    return (
+      <div className="cursor-help">
+        <div className="flex items-center">
+          <p className="text-xs text-slate-400 mr-1">APY</p>
+          <Info className="h-3 w-3 text-slate-400" />
+        </div>
+        <div className="h-5 w-16 bg-slate-700/50 rounded animate-pulse" />
+      </div>
+    )
+  }
 
   return (
     <Tooltip>
@@ -88,21 +102,18 @@ function PositionAPYDisplay({ position }: { position: Position }) {
         </div>
       </TooltipTrigger>
       <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-        {apyBreakdown ? (
-          <APYBreakdownTooltip
-            token={
-              {
-                address: position.leverageTokenAddress || '',
-                name: position.name,
-                collateralAsset: position.collateralAsset,
-                debtAsset: position.debtAsset,
-              } as any
-            }
-            apyData={apyBreakdown}
-          />
-        ) : (
-          <p>Annual Percentage Yield</p>
-        )}
+        {apyBreakdown &&
+          position.leverageTokenAddress &&
+          (() => {
+            const tokenConfig = getLeverageTokenConfig(
+              position.leverageTokenAddress as `0x${string}`,
+            )
+            return tokenConfig ? (
+              <APYBreakdownTooltip token={tokenConfig} apyData={apyBreakdown} />
+            ) : (
+              <p>Annual Percentage Yield</p>
+            )
+          })()}
       </TooltipContent>
     </Tooltip>
   )
@@ -115,6 +126,7 @@ export function ActivePositions({
   onAction,
   onPositionClick,
   className,
+  apyLoading,
 }: ActivePositionsProps) {
   const activeCount = positions.length
 
@@ -138,6 +150,7 @@ export function ActivePositions({
               const secondaryLabel = isLeverageToken ? 'Redeem' : 'Withdraw'
 
               return (
+                // biome-ignore lint/a11y/useSemanticElements: Cannot use button here due to nested button elements (tooltip triggers)
                 <div
                   key={position.id}
                   className="w-full text-left bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 hover:border-purple-500/50 transition-all duration-200 cursor-pointer group"
@@ -255,7 +268,7 @@ export function ActivePositions({
 
                       {/* Second row: APY */}
                       <div className="text-left lg:contents">
-                        <PositionAPYDisplay position={position} />
+                        <PositionAPYDisplay position={position} isLoading={apyLoading ?? false} />
                       </div>
                     </div>
 

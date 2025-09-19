@@ -6,8 +6,8 @@ import {
   type LeverageToken,
   LeverageTokenTable,
 } from '@/features/leverage-tokens/components/leverage-token-table'
-import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
 import { useLeverageTokensTableData } from '@/features/leverage-tokens/hooks/useLeverageTokensTableData'
+import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
 import { features } from '@/lib/config/features'
 
 export const Route = createFileRoute('/tokens/')({

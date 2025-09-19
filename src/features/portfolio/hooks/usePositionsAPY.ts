@@ -117,11 +117,17 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
             }
 
             const tokenId = token.id || token.address || token.leverageTokenAddress
-            return { tokenId: tokenId!, apyData: apyBreakdown }
+            if (!tokenId) {
+              throw new Error(`No valid token ID found for token: ${JSON.stringify(token)}`)
+            }
+            return { tokenId, apyData: apyBreakdown }
           } catch (error) {
             const tokenId = token.id || token.address || token.leverageTokenAddress
             console.warn(`Failed to calculate APY for token ${tokenId}:`, error)
-            return { tokenId: tokenId!, apyData: null }
+            if (!tokenId) {
+              throw new Error(`No valid token ID found for token: ${JSON.stringify(token)}`)
+            }
+            return { tokenId, apyData: null }
           }
         })
 

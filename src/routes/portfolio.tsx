@@ -30,6 +30,7 @@ function PortfolioPage() {
     data: portfolioData,
     isLoading: portfolioLoading,
     isError: portfolioError,
+    positionsAPYLoading,
   } = usePortfolioWithTotalValue()
   const performanceData = usePortfolioPerformance()
   const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
@@ -280,6 +281,7 @@ function PortfolioPage() {
           positions={positions}
           onAction={handlePositionAction}
           onPositionClick={handlePositionClick}
+          apyLoading={positionsAPYLoading}
         />
       </motion.div>
     </motion.div>

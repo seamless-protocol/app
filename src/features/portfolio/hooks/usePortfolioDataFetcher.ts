@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
 import { leverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import {
@@ -42,59 +43,89 @@ export interface PortfolioPerformanceData {
 }
 
 /**
- * Convert subgraph user position to UI position format
+ * Calculate individual position values from user position and token states
  */
-function convertUserPositionToUIPosition(userPosition: UserPosition): Position {
-  // Find the leverage token config by matching the address
+function calculatePositionValues(
+  userPosition: UserPosition,
+  leverageTokenStates: Map<string, Array<LeverageTokenState>>,
+  usdPrices: Record<string, number>,
+): {
+  currentValue: { amount: string; symbol: string; usdValue: string }
+  unrealizedGain: { amount: string; symbol: string; percentage: string }
+} {
+  const tokenStates = leverageTokenStates.get(userPosition.leverageToken.id)
+  if (!tokenStates || tokenStates.length === 0) {
+    return {
+      currentValue: { amount: '0.00', symbol: 'USD', usdValue: '$0.00' },
+      unrealizedGain: { amount: '0.00', symbol: 'USD', percentage: '0.00%' },
+    }
+  }
+
+  // Find the most recent state
+  const now = Date.now() / 1000
+  const mostRecentState = tokenStates
+    .map((state) => ({
+      ...state,
+      timestamp: Number(state.timestamp) / 1000000, // Convert microseconds to seconds
+    }))
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .find((state) => state.timestamp <= now)
+
+  if (!mostRecentState) {
+    return {
+      currentValue: { amount: '0.00', symbol: 'USD', usdValue: '$0.00' },
+      unrealizedGain: { amount: '0.00', symbol: 'USD', percentage: '0.00%' },
+    }
+  }
+
+  // Calculate current position value
+  const balance = BigInt(userPosition.balance)
+  const equityPerToken = BigInt(mostRecentState.equityPerTokenInCollateral)
+  const totalSupply = BigInt(mostRecentState.totalSupply)
+  const positionValue = (balance * equityPerToken) / totalSupply
+
+  // Convert from wei to collateral asset units
+  const positionValueInCollateralAsset = Number(formatUnits(positionValue, 18))
+
+  // Get collateral asset price in USD
+  const collateralAssetAddress =
+    userPosition.leverageToken.lendingAdapter.collateralAsset.toLowerCase()
+  const collateralAssetPriceUsd = usdPrices[collateralAssetAddress]
+  const positionValueInUSD = collateralAssetPriceUsd
+    ? positionValueInCollateralAsset * collateralAssetPriceUsd
+    : 0
+
+  // Calculate deposited amount (what user originally put in)
+  const depositedInCollateral = BigInt(userPosition.totalEquityDepositedInCollateral || '0')
+  const depositedInCollateralAsset = Number(formatUnits(depositedInCollateral, 18))
+  const depositedInUSD = collateralAssetPriceUsd
+    ? depositedInCollateralAsset * collateralAssetPriceUsd
+    : 0
+
+  // Calculate unrealized gain
+  const unrealizedGainAmount = positionValueInUSD - depositedInUSD
+  const unrealizedGainPercentage =
+    depositedInUSD > 0 ? (unrealizedGainAmount / depositedInUSD) * 100 : 0
+
+  // Get the collateral asset symbol from the leverage token config
   const leverageTokenAddress = userPosition.leverageToken.id.toLowerCase()
   const tokenConfig = Object.values(leverageTokenConfigs).find(
     (config) => config.address.toLowerCase() === leverageTokenAddress,
   )
+  const collateralSymbol = tokenConfig?.collateralAsset?.symbol || 'UNKNOWN'
 
-  // Use config data if available, otherwise fallback to placeholder values
-  const collateralAsset = tokenConfig?.collateralAsset || {
-    symbol: 'UNKNOWN',
-    name: 'Unknown Collateral Asset',
-  }
-
-  const debtAsset = tokenConfig?.debtAsset || {
-    symbol: 'UNKNOWN',
-    name: 'Unknown Debt Asset',
-  }
-
-  const position = {
-    id: userPosition.id,
-    name: tokenConfig?.name || `Leverage Token ${userPosition.leverageToken.id.slice(0, 8)}...`,
-    type: 'leverage-token' as const,
-    token: collateralAsset.symbol as 'USDC' | 'WETH' | 'weETH', // Use collateral asset as primary token
-    riskLevel: (tokenConfig?.leverageRatio && tokenConfig.leverageRatio > 10 ? 'high' : 'medium') as
-      | 'low'
-      | 'medium'
-      | 'high',
+  return {
     currentValue: {
-      amount: '0.00', // Would need to calculate from balance and equity per token
-      symbol: 'USD',
-      usdValue: '$0.00',
+      amount: positionValueInCollateralAsset.toFixed(4),
+      symbol: collateralSymbol, // Use actual collateral asset symbol
+      usdValue: `$${positionValueInUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     },
     unrealizedGain: {
-      amount: '0.00',
-      symbol: 'USD',
-      percentage: '0.00%',
+      amount: `${unrealizedGainAmount >= 0 ? '+' : '-'}${Math.abs(unrealizedGainAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      symbol: 'USD', // This is correct since unrealized gain is in USD
+      percentage: `${unrealizedGainPercentage >= 0 ? '+' : ''}${unrealizedGainPercentage.toFixed(2)}%`,
     },
-    apy: '0.00%', // Would need to calculate from historical data
-    collateralAsset: {
-      symbol: collateralAsset.symbol,
-      name: collateralAsset.name,
-    },
-    debtAsset: {
-      symbol: debtAsset.symbol,
-      name: debtAsset.name,
-    },
-    leverageTokenAddress: userPosition.leverageToken.id,
-    // APY breakdown will be populated by the APY calculation hook
   }
-
-  return position
 }
 
 /**
@@ -102,8 +133,8 @@ function convertUserPositionToUIPosition(userPosition: UserPosition): Position {
  * Uses real subgraph data from all supported chains with improved caching and error handling
  */
 export function usePortfolioDataFetcher() {
-  const { address } = useAccount()
-  // address = '0x0ec9a61bd923cbaf519b1baef839617f012344e2'
+  let { address } = useAccount()
+  address = '0x0ec9a61bd923cbaf519b1baef839617f012344e2'
 
   return useQuery({
     queryKey: portfolioKeys.data(),
@@ -155,8 +186,56 @@ export function usePortfolioDataFetcher() {
 
         const userPositions = userPositionsResponse.user.positions
 
-        // Convert subgraph positions to UI positions
-        const positions = userPositions.map(convertUserPositionToUIPosition)
+        // Convert subgraph positions to UI positions (without calculated values yet)
+        const positions = userPositions.map((userPosition) => {
+          // Find the leverage token config by matching the address
+          const leverageTokenAddress = userPosition.leverageToken.id.toLowerCase()
+          const tokenConfig = Object.values(leverageTokenConfigs).find(
+            (config) => config.address.toLowerCase() === leverageTokenAddress,
+          )
+
+          // Use config data if available, otherwise fallback to placeholder values
+          const collateralAsset = tokenConfig?.collateralAsset || {
+            symbol: 'UNKNOWN',
+            name: 'Unknown Collateral Asset',
+          }
+
+          const debtAsset = tokenConfig?.debtAsset || {
+            symbol: 'UNKNOWN',
+            name: 'Unknown Debt Asset',
+          }
+
+          return {
+            id: userPosition.id,
+            name:
+              tokenConfig?.name || `${collateralAsset.symbol} / ${debtAsset.symbol} Leverage Token`,
+            type: 'leverage-token' as const,
+            token: collateralAsset.symbol as 'USDC' | 'WETH' | 'weETH', // Use collateral asset as primary token
+            riskLevel: (tokenConfig?.leverageRatio && tokenConfig.leverageRatio > 10
+              ? 'high'
+              : 'medium') as 'low' | 'medium' | 'high',
+            currentValue: {
+              amount: '0.00', // Will be calculated later
+              symbol: 'USD',
+              usdValue: '$0.00',
+            },
+            unrealizedGain: {
+              amount: '0.00', // Will be calculated later
+              symbol: 'USD',
+              percentage: '0.00%',
+            },
+            apy: '0.00%', // Will be calculated later
+            collateralAsset: {
+              symbol: collateralAsset.symbol,
+              name: collateralAsset.name,
+            },
+            debtAsset: {
+              symbol: debtAsset.symbol,
+              name: debtAsset.name,
+            },
+            leverageTokenAddress: userPosition.leverageToken.id,
+          }
+        })
 
         // Fetch state history for all leverage tokens in parallel for better performance
         const leverageTokenAddresses = userPositions.map((pos) => pos.leverageToken.id)
@@ -293,13 +372,29 @@ export function usePortfolioWithTotalValue() {
   const portfolioDataWithMetrics = useMemo(() => {
     if (!portfolioQueryData) return null
 
-    // Enhance positions with APY breakdown data
+    // Enhance positions with APY breakdown data and calculated values
     const enhancedPositions = portfolioQueryData.portfolioData.positions.map((position) => {
       const apyBreakdown = positionsAPYData?.get(position.id)
       const newApy = apyBreakdown ? `${(apyBreakdown.totalAPY * 100).toFixed(2)}%` : position.apy
 
+      // Find the corresponding raw user position to calculate values
+      const rawUserPosition = portfolioQueryData.rawUserPositions.find(
+        (rawPos) => rawPos.id === position.id,
+      )
+
+      // Calculate position values if we have the raw data and USD prices
+      let calculatedValues = {}
+      if (rawUserPosition && Object.keys(usdPrices).length > 0) {
+        calculatedValues = calculatePositionValues(
+          rawUserPosition,
+          portfolioQueryData.leverageTokenStates,
+          usdPrices,
+        )
+      }
+
       return {
         ...position,
+        ...calculatedValues, // Override with calculated values
         apyBreakdown,
         // Update APY display with calculated value
         apy: newApy,
@@ -316,7 +411,7 @@ export function usePortfolioWithTotalValue() {
         changePercent: portfolioMetrics.changePercent,
       },
     }
-  }, [portfolioQueryData, portfolioMetrics, positionsAPYData])
+  }, [portfolioQueryData, portfolioMetrics, positionsAPYData, usdPrices])
 
   return {
     data: portfolioDataWithMetrics,
