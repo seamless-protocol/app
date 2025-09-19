@@ -1,9 +1,29 @@
 import type { Hash, Hex } from 'viem'
 import { createPublicClient, createTestClient, createWalletClient, http, publicActions } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { ADDR, CHAIN, Env, Extra, mode, RPC } from './env'
+import {
+  ADDR,
+  CHAIN,
+  DEFAULT_CHAIN_ID,
+  Env,
+  Extra,
+  LEVERAGE_TOKEN_ADDRESS,
+  LEVERAGE_TOKEN_KEY,
+  LEVERAGE_TOKEN_LABEL,
+  mode,
+  RPC,
+  TOKEN_SOURCE,
+} from './env'
 
-export { ADDR, mode }
+export {
+  ADDR,
+  mode,
+  TOKEN_SOURCE,
+  LEVERAGE_TOKEN_KEY,
+  LEVERAGE_TOKEN_ADDRESS,
+  LEVERAGE_TOKEN_LABEL,
+  DEFAULT_CHAIN_ID,
+}
 
 export const chain = CHAIN
 export const account = privateKeyToAccount(Env.TEST_PRIVATE_KEY as Hex)

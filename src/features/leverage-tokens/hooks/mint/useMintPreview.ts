@@ -2,15 +2,15 @@ import { useQuery } from '@tanstack/react-query'
 import { getPublicClient } from '@wagmi/core'
 import { useEffect, useRef, useState } from 'react'
 import type { Address } from 'viem'
-import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
+import type { Config } from 'wagmi'
 import { RouterVersion } from '@/domain/mint/planner/types'
 import { detectRouterVersion } from '@/domain/mint/utils/detectVersion'
+import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 import { getContractAddresses } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerPreviewMint,
   readLeverageManagerV2PreviewDeposit,
 } from '@/lib/contracts/generated'
-import type { Config } from 'wagmi'
 
 type PreviewTuple = Awaited<ReturnType<typeof readLeverageManagerPreviewMint>>
 
@@ -47,7 +47,7 @@ export function useMintPreview(params: {
     return RouterVersion.V1
   })()
   const useV2 = effectiveVersion === RouterVersion.V2 && Boolean(managerV2Address)
-  const managerAddress = useV2 ? managerV2Address : managerV1Address ?? managerV2Address
+  const managerAddress = useV2 ? managerV2Address : (managerV1Address ?? managerV2Address)
 
   const amountForKey = hasValidInput && typeof debounced === 'bigint' ? debounced : 0n
   const queryKey = ltKeys.simulation.mintKey({

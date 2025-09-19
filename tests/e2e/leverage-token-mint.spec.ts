@@ -1,19 +1,25 @@
 import { expect, test } from '@playwright/test'
-import { ADDR, account, mode, revertSnapshot, takeSnapshot } from '../shared/clients'
+import {
+  ADDR,
+  account,
+  DEFAULT_CHAIN_ID,
+  LEVERAGE_TOKEN_ADDRESS,
+  LEVERAGE_TOKEN_KEY,
+  LEVERAGE_TOKEN_LABEL,
+  mode,
+  revertSnapshot,
+  TOKEN_SOURCE,
+  takeSnapshot,
+} from '../shared/clients'
 import { topUpErc20, topUpNative } from '../shared/funding'
 
 const ENABLE_FLOW_TESTS = process.env['E2E_ENABLE_FLOW_TESTS'] === '1'
-const DEFAULT_CHAIN_ID = process.env['E2E_CHAIN_ID'] ?? '8453'
-const TOKEN_SOURCE = process.env['E2E_TOKEN_SOURCE'] ?? 'prod'
-const DEFAULT_TENDERLY_ADDRESS = '0x17533ef332083aD03417DEe7BC058D10e18b22c5'
-const DEFAULT_BASE_ADDRESS = '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c'
+const chainId = process.env['E2E_CHAIN_ID'] ?? String(DEFAULT_CHAIN_ID)
+const tokenSource = (process.env['E2E_TOKEN_SOURCE'] ?? TOKEN_SOURCE).toLowerCase()
+const tokenKey = process.env['E2E_LEVERAGE_TOKEN_KEY'] ?? LEVERAGE_TOKEN_KEY
 const leverageTokenAddress = (process.env['E2E_LEVERAGE_TOKEN_ADDRESS'] ??
-  (TOKEN_SOURCE === 'tenderly' ? DEFAULT_TENDERLY_ADDRESS : DEFAULT_BASE_ADDRESS)) as `0x${string}`
-const leverageTokenLabel =
-  process.env['E2E_LEVERAGE_TOKEN_LABEL'] ??
-  (TOKEN_SOURCE === 'tenderly'
-    ? 'weETH / WETH 17x Leverage Token (Tenderly)'
-    : 'weETH / WETH 17x Leverage Token')
+  LEVERAGE_TOKEN_ADDRESS) as `0x${string}`
+const leverageTokenLabel = process.env['E2E_LEVERAGE_TOKEN_LABEL'] ?? LEVERAGE_TOKEN_LABEL
 
 // Skip suite unless explicitly enabled
 if (!ENABLE_FLOW_TESTS) {
@@ -31,21 +37,27 @@ if (!ENABLE_FLOW_TESTS) {
         await topUpNative(account.address, '5')
         await topUpErc20(ADDR.weeth, account.address, '50')
 
-        // Navigate directly to the leverage token detail route
-        await page.goto(`/#/tokens/${DEFAULT_CHAIN_ID}/${leverageTokenAddress}`)
+        await page.goto('/#/tokens')
         await page.waitForLoadState('networkidle')
 
         // Connect mock wallet if needed
         const connectButton = page.getByTestId('connect-mock')
         if (await connectButton.isVisible()) {
           await connectButton.click()
+          await expect(connectButton).toBeHidden({ timeout: 5_000 })
+          await expect(page.getByTestId('connected-address')).toBeVisible({ timeout: 15_000 })
         }
-        await expect(page.getByTestId('connected-address')).toBeVisible()
 
-        // Open the mint modal from the holdings card
-        const holdingsCard = page.locator('[data-testid="leverage-token-holdings-card"]')
-        await expect(holdingsCard).toBeVisible()
-        await holdingsCard.getByRole('button', { name: 'Mint' }).first().click()
+        await page.goto(`/#/tokens/${chainId}/${leverageTokenAddress}`)
+        await page.waitForLoadState('networkidle')
+        await expect(page).toHaveURL(
+          new RegExp(`/#/tokens/${chainId}/${leverageTokenAddress}`, 'i'),
+        )
+
+        // Open the mint modal (button lives inside the holdings card when connected)
+        const mintButton = page.getByRole('button', { name: /^Mint$/ })
+        await expect(mintButton, 'Mint action should be visible').toBeVisible({ timeout: 15_000 })
+        await mintButton.click()
 
         await expect(page.getByRole('heading', { name: 'Mint Leverage Token' })).toBeVisible()
 
@@ -53,8 +65,9 @@ if (!ENABLE_FLOW_TESTS) {
         const amountInput = page.getByLabel('Mint Amount')
         await amountInput.fill('1')
 
-        // Wait for preview to settle and primary action to enable
-        const primaryAction = page.getByRole('button', { name: /(Approve|Mint)/ })
+        // Wait for the primary action button to appear and become enabled
+        const primaryAction = page.getByTestId('mint-primary-action')
+        await expect(primaryAction).toBeVisible({ timeout: 15_000 })
         await expect(primaryAction).toBeEnabled({ timeout: 15_000 })
 
         const primaryLabel = (await primaryAction.innerText()) ?? ''
@@ -62,7 +75,6 @@ if (!ENABLE_FLOW_TESTS) {
 
         // Approval step may render if allowance missing
         if (/Approve/i.test(primaryLabel)) {
-          // Wait for approval to finish and confirm step to appear
           await expect(page.getByRole('heading', { name: 'Confirm Mint' })).toBeVisible({
             timeout: 20_000,
           })
@@ -81,7 +93,7 @@ if (!ENABLE_FLOW_TESTS) {
 
         // Close out the modal
         await page.getByRole('button', { name: 'Done' }).click()
-        await expect(holdingsCard).toBeVisible()
+        await expect(mintButton).toBeVisible()
       } finally {
         await revertSnapshot(snapshotId)
       }
@@ -93,7 +105,8 @@ if (!ENABLE_FLOW_TESTS) {
 if (ENABLE_FLOW_TESTS) {
   console.info('[E2E] Mint flow enabled', {
     backendMode: mode,
-    tokenSource: TOKEN_SOURCE,
+    tokenSource,
+    tokenKey,
     leverageTokenAddress,
     leverageTokenLabel,
   })

@@ -7,8 +7,11 @@ let cachedOverrides: ContractAddressOverrides | null = null
 function readOverrideEnv(): string | undefined {
   try {
     if (typeof import.meta !== 'undefined') {
-      const envValue = import.meta.env['VITE_CONTRACT_ADDRESS_OVERRIDES']
-      if (envValue) return envValue
+      const metaEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env
+      if (metaEnv) {
+        const envValue = metaEnv['VITE_CONTRACT_ADDRESS_OVERRIDES']
+        if (envValue) return envValue
+      }
     }
   } catch (error) {
     console.warn('[contracts] Unable to read VITE_CONTRACT_ADDRESS_OVERRIDES', error)

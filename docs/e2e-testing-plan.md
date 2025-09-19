@@ -7,14 +7,17 @@ This document captures the state of the end-to-end (E2E) test harness, the gaps 
 ### Harness & Startup
 - Playwright is configured via `playwright.config.ts` to run everything under `tests/e2e/`.
 - The dev server is started automatically (`bunx --bun vite` with `VITE_TEST_MODE=mock`).
-- Backend selection is driven by `TEST_RPC_URL`. If unset, Playwright falls back to `http://127.0.0.1:8545`.
+- Backend selection is driven by `TEST_RPC_URL` and now defaults to the configured Tenderly VNet when no explicit URL is provided.
 - `tests/e2e/global-setup.ts` validates the backend: it assumes Tenderly when `TEST_RPC_URL` is absent, otherwise checks for a reachable RPC (or a local Anvil instance).
 - Only a smoke suite (`basic-app.spec.ts`) is currently in place. It ensures the app bootstraps and that hash routing works.
 
 ### Shared Test Environment
 - `tests/shared/env.ts` loads env vars (`.env.local`, `.env`, `tests/integration/.env`) and determines the target chain.
 - It resolves contract/token addresses via `src/lib/contracts/addresses.ts` plus `tests/fixtures/addresses.ts`.
-- `ADDR.leverageToken` currently points to the Tenderly VNet deployment (`0x1753…`). This is intentional for integration tests but is not yet surfaced in the UI.
+- `E2E_TOKEN_SOURCE` (default `tenderly`) selects between the Tenderly VNet leverage token set and the Base mainnet deployment, exporting both the address and label for tests and the frontend runtime.
+- `E2E_LEVERAGE_TOKEN_KEY` (default `weeth-weth-17x`) picks the specific leverage token; Tenderly currently exposes both `weeth/weth 17x` and `cbBTC/USDC 2x`, and their manager/router/multicall overrides are surfaced alongside the token metadata.
+- `VITE_TEST_RPC_URL` and `TENDERLY_ADMIN_RPC_URL` are populated automatically so both the frontend and funding helpers talk to the same Tenderly VNet (or local Anvil when selected).
+- Contract overrides (`VITE_CONTRACT_ADDRESS_OVERRIDES`) are injected into the Playwright web server env so the UI resolves the Tenderly stack when that source is selected.
 
 ### `scripts/run-tests.ts`
 - Wraps both integration and E2E runs.
@@ -26,8 +29,8 @@ This document captures the state of the end-to-end (E2E) test harness, the gaps 
 - Playwright rarely runs in CI; Tenderly VNets introduce latency and have occasionally timed out or throttled.
 - Locally, E2E requires the same environment as integration tests but offers less guidance.
 - The frontend previously pointed at the Tenderly token, which caused real UI data to break; we now have dedicated flags to keep Tenderly tokens out of production views.
-- E2E has no notion of which leverage token to target once we expand beyond smoke tests.
-- When `scripts/run-tests.ts` falls back to Anvil it still sets `TEST_RPC_URL=http://127.0.0.1:8545`, which makes `tests/shared/env.ts` classify the run as `mode='tenderly'`; funding helpers then call Tenderly-only RPC methods and fail against Anvil.
+- Token selection exists (`E2E_TOKEN_SOURCE` + `E2E_LEVERAGE_TOKEN_KEY`) but scenario coverage is still limited to smoke checks.
+- Anvil fallback detection now treats localhost RPCs as `mode='anvil'`, avoiding accidental calls to Tenderly-only funding helpers, though we still need more guard rails before running rich flows on Anvil.
 
 ## 2. Goals
 
@@ -110,13 +113,13 @@ By treating Tenderly-specific deployments as test-only configs and using explici
 ## 5. Task Breakdown (Detailed)
 
 ### Task 1: Token Selection Controls
-- **1.1** Add `E2E_TOKEN_SOURCE` (default `tenderly`) to shared env parsing (`tests/shared/env.ts`).
-- **1.2** Expose both canonical and Tenderly leverage-token configs via a helper so tests/app can read the selected one.
-- **1.3** When Tenderly is chosen, ensure `scripts/run-tests.ts`/Playwright inject matching `VITE_CONTRACT_ADDRESS_OVERRIDES`.
-- **1.4** Update fixtures/tests that currently assume a single address to read through the helper instead.
+- ✅ `E2E_TOKEN_SOURCE` and `E2E_LEVERAGE_TOKEN_KEY` now drive shared env parsing and surface the selected token, label, and overrides.
+- ✅ Tenderly and Base definitions live in `tests/fixtures/addresses.ts`, including manager/router/multicall metadata exposed via helpers.
+- ✅ Playwright injects matching `VITE_CONTRACT_ADDRESS_OVERRIDES`/`VITE_TEST_RPC_URL` so the frontend mirrors the backend.
+- 🔄 Continue updating fixtures/tests when new leverage tokens are deployed so they funnel through the registry instead of inlined addresses.
 
 ### Task 2: Backend Visibility & Guardrails
-- **2.1** Update `tests/shared/env.ts` and/or `scripts/run-tests.ts` so localhost RPCs are treated as Anvil without setting `mode='tenderly'`, and ensure shared helpers pick the correct funding strategy.
+- ✅ Localhost RPCs are now classified as `mode='anvil'`, avoiding Tenderly-only funding helpers when falling back to a local fork.
 - **2.2** Enhance `tests/e2e/global-setup.ts` logging to announce the chosen backend and required actions.
 - **2.3** Fail fast with actionable messages when Tenderly credentials are missing or Anvil isn’t reachable.
 - **2.4** Mirror the logging pattern in integration tests (if not already present) for consistent experience.
