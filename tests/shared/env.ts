@@ -4,8 +4,11 @@ import { config } from 'dotenv'
 import { type Address, getAddress, type Hex } from 'viem'
 import { anvil, base, type Chain } from 'viem/chains'
 import { z } from 'zod'
+import { getUniswapV3ChainConfig, getUniswapV3PoolConfig } from '../../src/lib/config/uniswapV3.js'
 import { BASE_WETH, contractAddresses } from '../../src/lib/contracts/addresses.js'
 import { WEETH_WETH_17X_TOKEN_ADDRESS } from '../fixtures/addresses'
+
+type LeverageTokenSource = 'tenderly' | 'prod'
 
 // Load environment variables for tests (integration/e2e)
 // Priority (first one that provides a key wins):
@@ -71,26 +74,46 @@ const EnvSchema = z.object({
   V4_HOOKS: z.string().optional(),
   V4_POOL_FEE: z.string().optional(),
   V4_POOL_TICK_SPACING: z.string().optional(),
+  V3_QUOTER: z.string().optional(),
+  V3_SWAP_ROUTER: z.string().optional(),
+  V3_POOL_FEE: z.string().optional(),
+  V3_POOL_TICK_SPACING: z.string().optional(),
+  V3_POOL_ADDRESS: z.string().optional(),
 })
 
 export const Env = EnvSchema.parse(process.env)
 
-// Prefer explicit TEST_RPC_URL or generic RPC_URL (e.g. Alchemy), else support VITE_BASE_RPC_URL/TENDERLY_RPC_URL, otherwise fall back to Anvil
-const tenderlyPrimary =
+function isLocalRpc(url: string | undefined): boolean {
+  if (!url) return false
+  try {
+    const parsed = new URL(url)
+    return parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost'
+  } catch {
+    return /127\.0\.0\.1|localhost/.test(url)
+  }
+}
+
+// Prefer explicit TEST_RPC_URL or generic RPC_URL (e.g. Alchemy), else support VITE_BASE_RPC_URL/TENDERLY_RPC_URL
+const rpcCandidate =
   Env.TEST_RPC_URL ||
   Env.RPC_URL ||
   Env.VITE_BASE_RPC_URL ||
   (process.env['TENDERLY_RPC_URL'] as string | undefined)
-export const mode: Mode = tenderlyPrimary ? 'tenderly' : 'anvil'
 
-let primaryRpc: string
-if (mode === 'tenderly') {
-  const primary = tenderlyPrimary
-  if (!primary) throw new Error('TEST_RPC_URL required in tenderly mode')
-  primaryRpc = primary
-} else {
-  primaryRpc = Env.ANVIL_RPC_URL
-}
+export const mode: Mode = rpcCandidate && !isLocalRpc(rpcCandidate) ? 'tenderly' : 'anvil'
+
+const primaryRpc: string = (() => {
+  if (mode === 'tenderly') {
+    if (!rpcCandidate) throw new Error('TEST_RPC_URL required in tenderly mode')
+    return rpcCandidate
+  }
+
+  if (rpcCandidate && isLocalRpc(rpcCandidate)) {
+    return rpcCandidate
+  }
+
+  return Env.ANVIL_RPC_URL
+})()
 
 // Allow a dedicated admin endpoint when using Tenderly VNets; otherwise fallback to primary
 const adminRpc = (process.env['TENDERLY_ADMIN_RPC_URL'] as string | undefined) || primaryRpc
@@ -153,6 +176,13 @@ if (!chainContracts) {
   throw new Error(`No contract addresses found for chain ${canonicalChainId}`)
 }
 
+const defaultV3Config =
+  getUniswapV3ChainConfig(canonicalChainId) ?? getUniswapV3ChainConfig(base.id) ?? undefined
+const defaultV3Pool =
+  getUniswapV3PoolConfig(canonicalChainId, 'weeth-weth') ??
+  getUniswapV3PoolConfig(base.id, 'weeth-weth') ??
+  undefined
+
 const managerV1 = chainContracts.leverageManager
   ? (chainContracts.leverageManager as Address)
   : undefined
@@ -176,6 +206,20 @@ function optionalAddress(value: Address | undefined): Address | undefined {
   return value ? getAddress(value) : undefined
 }
 
+const TOKEN_LABELS: Record<LeverageTokenSource, string> = {
+  tenderly: 'weETH / WETH 17x Leverage Token (Tenderly)',
+  prod: 'weETH / WETH 17x Leverage Token',
+}
+
+export function getLeverageTokenSource(): LeverageTokenSource {
+  const raw = (process.env['E2E_TOKEN_SOURCE'] || 'tenderly').toLowerCase()
+  if (raw === 'prod') return 'prod'
+  return 'tenderly'
+}
+
+const leverageTokenSource = getLeverageTokenSource()
+const leverageTokenAddress = getAddress(WEETH_WETH_17X_TOKEN_ADDRESS)
+
 export const ADDR = {
   factory: ensureAddress('leverageTokenFactory', chainContracts.leverageTokenFactory),
   manager: ensureAddress('leverageManager', (managerV2 ?? managerV1) as Address | undefined),
@@ -184,7 +228,7 @@ export const ADDR = {
   router: ensureAddress('leverageRouter', (routerV2 ?? routerV1) as Address | undefined),
   routerV1: optionalAddress(routerV1),
   routerV2: optionalAddress(routerV2),
-  leverageToken: getAddress(WEETH_WETH_17X_TOKEN_ADDRESS),
+  leverageToken: leverageTokenAddress,
   usdc: ensureAddress(
     'usdc token',
     (Env.TEST_USDC as Address | undefined) ?? (tokenMap.usdc as Address | undefined),
@@ -206,7 +250,18 @@ export const ADDR = {
   universalRouterV4: optionalAddress(Env.V4_UNIVERSAL_ROUTER as Address | undefined),
   permit2: optionalAddress(Env.V4_PERMIT2 as Address | undefined),
   v4Hooks: optionalAddress(Env.V4_HOOKS as Address | undefined),
+  v3Quoter: optionalAddress((Env.V3_QUOTER as Address | undefined) ?? defaultV3Config?.quoter),
+  v3SwapRouter: optionalAddress(
+    (Env.V3_SWAP_ROUTER as Address | undefined) ?? defaultV3Config?.swapRouter,
+  ),
+  v3Pool: optionalAddress((Env.V3_POOL_ADDRESS as Address | undefined) ?? defaultV3Pool?.address),
 } as const
+
+export const TOKEN_SOURCE = leverageTokenSource
+export const LEVERAGE_TOKEN_ADDRESS = leverageTokenAddress
+export const LEVERAGE_TOKEN_LABEL = TOKEN_LABELS[leverageTokenSource]
+export const DEFAULT_CHAIN_ID = canonicalChainId
+export const DEFAULT_TENDERLY_ADDRESS = getAddress(WEETH_WETH_17X_TOKEN_ADDRESS)
 
 export const Extra = {
   keys: (Env.TEST_PRIVATE_KEYS_CSV ?? '')
@@ -225,4 +280,9 @@ function toNumberOrUndefined(value: string | undefined): number | undefined {
 export const V4 = {
   poolFee: toNumberOrUndefined(Env.V4_POOL_FEE),
   tickSpacing: toNumberOrUndefined(Env.V4_POOL_TICK_SPACING),
+}
+
+export const V3 = {
+  poolFee: toNumberOrUndefined(Env.V3_POOL_FEE) ?? defaultV3Pool?.fee,
+  tickSpacing: toNumberOrUndefined(Env.V3_POOL_TICK_SPACING) ?? defaultV3Pool?.tickSpacing,
 }

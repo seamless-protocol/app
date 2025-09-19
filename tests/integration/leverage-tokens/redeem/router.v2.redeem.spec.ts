@@ -2,18 +2,19 @@ import { type Address, parseUnits } from 'viem'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
 import {
-  createUniswapV4QuoteAdapter,
-  type UniswapV4QuoteOptions,
-} from '@/domain/shared/adapters/uniswapV4'
+  createUniswapV3QuoteAdapter,
+  type UniswapV3QuoteOptions,
+} from '@/domain/shared/adapters/uniswapV3'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
-import { ADDR, mode, RPC, V4 } from '../../../shared/env'
+import { ADDR, mode, RPC, V3 } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
-import { approveIfNeeded, erc20Abi, topUpErc20, topUpNative } from '../../../shared/funding'
+import { approveIfNeeded, erc20Abi } from '../../../shared/funding'
+import { executeSharedMint } from '../../../shared/mintHelpers'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
 
 describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
@@ -26,7 +27,7 @@ describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
 
   const SLIPPAGE_BPS = 50
 
-  it('redeems all minted shares via Uniswap v4 (happy path)', async () =>
+  it('redeems all minted shares via Uniswap v3 (happy path)', async () =>
     withFork(async (ctx) => {
       ensureTenderlyMode()
       const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
@@ -43,20 +44,14 @@ type RedeemScenario = {
   debtAsset: Address
   equityInInputAsset: bigint
   slippageBps: number
-  uniswapV4: {
+  uniswapV3: {
     quoter: Address
-    universalRouter: Address
-    poolKey: {
-      currency0: Address
-      currency1: Address
-      fee: number
-      tickSpacing: number
-      hooks: Address
-    }
+    swapRouter: Address
+    fee: number
+    poolAddress: Address
+    wrappedNative?: Address
   }
 }
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address
 
 async function prepareRedeemScenario(
   ctx: WithForkCtx,
@@ -71,18 +66,20 @@ async function prepareRedeemScenario(
   }
   process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
 
-  const quoterV4 = ADDR.quoterV4
-  const universalRouterV4 = ADDR.universalRouterV4
-  if (!quoterV4 || !universalRouterV4) {
-    throw new Error(
-      'Uniswap v4 addresses missing; ensure V4_QUOTER and V4_UNIVERSAL_ROUTER are set',
-    )
+  const quoterV3 = ADDR.v3Quoter
+  const swapRouterV3 = ADDR.v3SwapRouter
+  if (!quoterV3 || !swapRouterV3) {
+    throw new Error('Uniswap v3 addresses missing; set V3_QUOTER and V3_SWAP_ROUTER')
   }
 
-  const poolFee = V4.poolFee
-  const tickSpacing = V4.tickSpacing
-  if (typeof poolFee !== 'number' || typeof tickSpacing !== 'number') {
-    throw new Error('Uniswap v4 pool config missing; set V4_POOL_FEE and V4_POOL_TICK_SPACING')
+  const poolFee = V3.poolFee
+  if (typeof poolFee !== 'number') {
+    throw new Error('Uniswap v3 pool config missing; set V3_POOL_FEE')
+  }
+
+  const poolAddress = ADDR.v3Pool
+  if (!poolAddress) {
+    throw new Error('Uniswap v3 pool address missing; set V3_POOL_ADDRESS or repo default')
   }
 
   const token: Address = ADDR.leverageToken
@@ -119,59 +116,27 @@ async function prepareRedeemScenario(
     debtAsset,
     equityInInputAsset,
     slippageBps,
-    uniswapV4: {
-      quoter: quoterV4,
-      universalRouter: universalRouterV4,
-      poolKey: {
-        currency0: collateralAsset,
-        currency1: debtAsset,
-        fee: poolFee,
-        tickSpacing,
-        hooks: ADDR.v4Hooks ?? ZERO_ADDRESS,
-      },
+    uniswapV3: {
+      quoter: quoterV3,
+      swapRouter: swapRouterV3,
+      fee: poolFee,
+      poolAddress,
+      wrappedNative: ADDR.weth,
     },
   }
 }
 
 async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario) {
   const { account, config, publicClient } = ctx
-  const { token, router, collateralAsset, equityInInputAsset, slippageBps, manager, uniswapV4 } =
-    scenario
-
-  console.info('[STEP] Funding + approving collateral for mint', {
-    collateralAsset,
-    equityInInputAsset: equityInInputAsset.toString(),
-  })
-  await topUpNative(account.address, '1')
-  await topUpErc20(collateralAsset, account.address, '25')
-  await approveIfNeeded(collateralAsset, router, equityInInputAsset)
-
-  const mintQuote = createUniswapV4QuoteAdapter({
-    publicClient: publicClient as unknown as UniswapV4QuoteOptions['publicClient'],
-    quoter: uniswapV4.quoter,
-    universalRouter: uniswapV4.universalRouter,
-    poolKey: uniswapV4.poolKey,
-  })
-
-  console.info('[STEP] Minting leverage tokens via V2 router')
-  const { orchestrateMint } = await import('@/domain/mint')
-  const mintTx = await orchestrateMint({
+  const mintOutcome = await executeSharedMint({
+    account,
+    publicClient,
     config,
-    account: account.address,
-    token,
-    inputAsset: collateralAsset,
-    equityInInputAsset,
-    slippageBps,
-    quoteDebtToCollateral: mintQuote,
-    routerAddressV2: router,
-    managerAddressV2: manager,
+    slippageBps: scenario.slippageBps,
   })
-
-  const mintReceipt = await publicClient.waitForTransactionReceipt({ hash: mintTx.hash })
-  expect(mintReceipt.status).toBe('success')
 
   const sharesAfterMint = await readLeverageTokenBalanceOf(config, {
-    address: token,
+    address: mintOutcome.token,
     args: [account.address],
   })
   expect(sharesAfterMint > 0n).toBe(true)
@@ -184,21 +149,24 @@ async function executeRedeemPath(
   scenario: RedeemScenario & { sharesAfterMint: bigint },
 ): Promise<void> {
   const { account, config, publicClient } = ctx
-  const { token, router, manager, collateralAsset, sharesAfterMint, slippageBps, uniswapV4 } =
+  const { token, router, manager, collateralAsset, sharesAfterMint, slippageBps, uniswapV3 } =
     scenario
 
   const sharesToRedeem = sharesAfterMint
   await approveIfNeeded(token, router, sharesToRedeem)
 
-  console.info('[STEP] Planning redeem with Uniswap v4 adapter', {
+  console.info('[STEP] Planning redeem with Uniswap v3 adapter', {
     sharesToRedeem: sharesToRedeem.toString(),
   })
 
-  const quoteCollateralToDebt = createUniswapV4QuoteAdapter({
-    publicClient: publicClient as unknown as UniswapV4QuoteOptions['publicClient'],
-    quoter: uniswapV4.quoter,
-    universalRouter: uniswapV4.universalRouter,
-    poolKey: uniswapV4.poolKey,
+  const quoteCollateralToDebt = createUniswapV3QuoteAdapter({
+    publicClient: publicClient as unknown as UniswapV3QuoteOptions['publicClient'],
+    quoter: uniswapV3.quoter,
+    router: uniswapV3.swapRouter,
+    fee: uniswapV3.fee,
+    recipient: router,
+    poolAddress: uniswapV3.poolAddress,
+    ...(uniswapV3.wrappedNative ? { wrappedNative: uniswapV3.wrappedNative } : {}),
   })
 
   const plan = await planRedeemV2({
@@ -208,6 +176,13 @@ async function executeRedeemPath(
     slippageBps,
     quoteCollateralToDebt,
     managerAddress: manager,
+  })
+
+  console.info('[PLAN DEBUG]', {
+    expectedDebt: plan.expectedDebt.toString(),
+    expectedCollateral: plan.expectedCollateral.toString(),
+    minCollateral: plan.minCollateralForSender.toString(),
+    calls: plan.calls.map((call) => ({ target: call.target, value: call.value.toString() })),
   })
 
   expect(plan.sharesToRedeem).toBe(sharesToRedeem)
@@ -222,10 +197,10 @@ async function executeRedeemPath(
   })
   expect(hasApprovalOrWithdraw).toBe(true)
 
-  const universalRouterCall = plan.calls.find(
-    (call) => call.target.toLowerCase() === uniswapV4.universalRouter.toLowerCase(),
+  const swapRouterCall = plan.calls.find(
+    (call) => call.target.toLowerCase() === uniswapV3.swapRouter.toLowerCase(),
   )
-  expect(universalRouterCall).toBeDefined()
+  expect(swapRouterCall).toBeDefined()
 
   const collateralBalanceBefore = (await publicClient.readContract({
     address: collateralAsset,
@@ -270,8 +245,6 @@ async function executeRedeemPath(
   const collateralDelta = collateralBalanceAfter - collateralBalanceBefore
   expect(collateralDelta >= plan.minCollateralForSender).toBe(true)
   expect(collateralDelta <= plan.expectedCollateral).toBe(true)
-
-  // TODO: Assert debt balance drop via manager.previewRedeem once redeem succeeds end-to-end.
 }
 
 function ensureTenderlyMode(): void {
