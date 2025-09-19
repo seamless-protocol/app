@@ -59,12 +59,30 @@ export function PortfolioPerformanceChart({
       return `${(value / 1000000).toFixed(0)}M`
     } else if (value >= 1000) {
       return `${(value / 1000).toFixed(0)}K`
+    } else if (value >= 1) {
+      return value.toFixed(0)
+    } else if (value >= 0.01) {
+      return value.toFixed(2)
+    } else if (value >= 0.001) {
+      return value.toFixed(3)
+    } else if (value > 0) {
+      return value.toFixed(4)
     }
-    return value.toFixed(0)
+    return '0'
   }
 
   const defaultTooltipFormatter = (value: number | string, _name?: string): [string, string] => {
-    return [`$${Number(value).toLocaleString()}`, 'Portfolio Value']
+    const numValue = Number(value)
+    if (numValue >= 1) {
+      return [`$${numValue.toLocaleString()}`, 'Portfolio Value']
+    } else if (numValue >= 0.01) {
+      return [`$${numValue.toFixed(2)}`, 'Portfolio Value']
+    } else if (numValue >= 0.001) {
+      return [`$${numValue.toFixed(3)}`, 'Portfolio Value']
+    } else if (numValue > 0) {
+      return [`$${numValue.toFixed(4)}`, 'Portfolio Value']
+    }
+    return ['$0', 'Portfolio Value']
   }
 
   const formatCurrency = yAxisFormatter || defaultYAxisFormatter
@@ -119,6 +137,7 @@ export function PortfolioPerformanceChart({
                     value: yAxisLabel,
                     angle: -90,
                     position: 'insideLeft',
+                    offset: -1,
                     style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' },
                   }}
                 />

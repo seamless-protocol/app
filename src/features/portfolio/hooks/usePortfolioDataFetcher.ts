@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useAccount } from 'wagmi'
 import type { Position } from '../components/active-positions'
 import type { PortfolioDataPoint } from '../components/portfolio-performance-chart'
@@ -13,6 +13,7 @@ import {
   groupStatesByToken
 } from '../utils/portfolio-calculations'
 import type { LeverageTokenState } from '@/lib/graphql/types/portfolio'
+import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 
 export interface PortfolioSummary {
   totalValue: number
@@ -76,6 +77,7 @@ function convertUserPositionToUIPosition(userPosition: any): Position {
  */
 export function usePortfolioDataFetcher() {
   const { address } = useAccount()
+  // const address = "0x00329eeb09eeec0b7513dde76dbed168807a114f"
 
   return useQuery({
     queryKey: portfolioKeys.data(),
@@ -142,15 +144,12 @@ export function usePortfolioDataFetcher() {
         const allStates: LeverageTokenState[] = []
 
         // Process results, including successful and failed requests
-        stateHistoryResults.forEach((result, index) => {
+        stateHistoryResults.forEach((result) => {
           if (result.status === 'fulfilled') {
             allStates.push(...result.value)
-          } else {
-            console.warn(`Failed to fetch state history for token ${leverageTokenAddresses[index]}:`, result.reason)
-            // Continue with other tokens - partial data is better than no data
           }
         })
-
+        
         // Group states by token address
         const groupedStates = groupStatesByToken(allStates)
 
@@ -205,10 +204,30 @@ export function usePortfolioDataFetcher() {
 export function usePortfolioPerformance() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30D')
   const { data: portfolioQueryData, isLoading, isError, error } = usePortfolioDataFetcher()
+  
+  // Get unique debt asset addresses from user positions
+  const debtAssetAddresses = useMemo(() => {
+    if (!portfolioQueryData?.rawUserPositions.length) return []
+    
+    const addresses = new Set<string>()
+    portfolioQueryData.rawUserPositions.forEach(position => {
+      if (position.leverageToken.lendingAdapter.debtAsset) {
+        addresses.add(position.leverageToken.lendingAdapter.debtAsset.toLowerCase())
+      }
+    })
+    return Array.from(addresses)
+  }, [portfolioQueryData?.rawUserPositions])
+
+  // Fetch prices for all debt assets used in user positions
+  const { data: usdPrices = {} } = useUsdPrices({
+    chainId: 8453, // Base chain
+    addresses: debtAssetAddresses,
+    enabled: debtAssetAddresses.length > 0,
+  })
 
   // Generate performance data from the cached portfolio data
   const performanceData = useQuery({
-    queryKey: portfolioKeys.performance(selectedTimeframe),
+    queryKey: [...portfolioKeys.performance(selectedTimeframe), usdPrices],
     queryFn: async (): Promise<Array<PortfolioDataPoint>> => {
       if (!portfolioQueryData?.rawUserPositions.length || !portfolioQueryData?.leverageTokenStates.size) {
         return []
@@ -218,12 +237,13 @@ export function usePortfolioPerformance() {
       const performanceData = generatePortfolioPerformanceData(
         portfolioQueryData.rawUserPositions,
         portfolioQueryData.leverageTokenStates,
-        selectedTimeframe as '7D' | '30D' | '90D' | '1Y'
+        selectedTimeframe as '7D' | '30D' | '90D' | '1Y',
+        usdPrices
       )
 
       return performanceData
     },
-    enabled: !!portfolioQueryData && portfolioQueryData.rawUserPositions.length > 0,
+    enabled: !!portfolioQueryData && portfolioQueryData.rawUserPositions.length > 0 && Object.keys(usdPrices).length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes - performance data changes less frequently
     gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch on window focus

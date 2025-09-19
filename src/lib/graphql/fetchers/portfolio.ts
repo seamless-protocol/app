@@ -97,7 +97,12 @@ export async function fetchAllLeverageTokenStateHistory(
           break
         }
 
-        allStates.push(...result.leverageToken.stateHistory)
+        const statesWithTokenAddress = result.leverageToken.stateHistory.map(state => ({
+          ...state,
+          leverageToken: result.leverageToken!.id
+        }))
+
+        allStates.push(...statesWithTokenAddress)
 
         // If we got less than batchSize, we've reached the end
         if (result.leverageToken.stateHistory.length < batchSize) {

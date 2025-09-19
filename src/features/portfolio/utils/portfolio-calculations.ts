@@ -12,24 +12,41 @@ function _calculatePortfolioValueAtTimestamp(
   timestamp: number,
   userPositions: UserPosition[],
   leverageTokenStates: Map<string, LeverageTokenState[]>,
+  usdPrices: Record<string, number>,
 ): number {
   let totalValue = 0
 
   for (const position of userPositions) {
     const tokenStates = leverageTokenStates.get(position.leverageToken.id)
-    if (!tokenStates) continue
+    if (!tokenStates) {
+      continue
+    }
 
     // Find the closest state to the timestamp
     const closestState = _findClosestStateByTimestamp(tokenStates, timestamp)
-    if (!closestState) continue
+    if (!closestState) {
+      console.log('❌ No closest state found for timestamp:', new Date(timestamp * 1000))
+      continue
+    }
 
     // Calculate position value: balance * equity per token
     const balance = BigInt(position.balance)
     const equityPerToken = BigInt(closestState.equityPerTokenInDebt)
-    const positionValue = (balance * equityPerToken) / BigInt(closestState.totalSupply)
+    const totalSupply = BigInt(closestState.totalSupply)
     
-    // Convert to USD (assuming equity is in USD terms)
-    totalValue += Number(formatUnits(positionValue, 18))
+    
+    const positionValue = (balance * equityPerToken) / totalSupply
+    
+    // The positionValue is in debt asset units (WETH), convert from wei to ETH
+    // Both balance and equityPerToken are in 18 decimals, so the result is also in 18 decimals
+    const positionValueInETH = Number(formatUnits(positionValue, 18))
+    
+    // Get debt asset price in USD from CoinGecko
+    const debtAssetAddress = position.leverageToken.lendingAdapter.debtAsset.toLowerCase()
+    const debtAssetPriceUsd = usdPrices[debtAssetAddress]
+    const positionValueInUSD = debtAssetPriceUsd ? positionValueInETH * debtAssetPriceUsd : 0
+    totalValue += positionValueInUSD
+    
   }
 
   return totalValue
@@ -54,7 +71,8 @@ function _findClosestStateByTimestamp(
   let closestDiff = Infinity
 
   for (const state of sortedStates) {
-    const stateTimestamp = Number(state.timestamp)
+    // Convert microseconds to seconds for comparison (same as in generatePortfolioPerformanceData)
+    const stateTimestamp = Number(state.timestamp) / 1000000
     const diff = Math.abs(stateTimestamp - targetTimestamp)
     
     if (stateTimestamp <= targetTimestamp && diff < closestDiff) {
@@ -62,6 +80,7 @@ function _findClosestStateByTimestamp(
       closestDiff = diff
     }
   }
+
 
   return closestState
 }
@@ -73,8 +92,9 @@ export function generatePortfolioPerformanceData(
   userPositions: UserPosition[],
   leverageTokenStates: Map<string, LeverageTokenState[]>,
   timeframe: '7D' | '30D' | '90D' | '1Y',
+  usdPrices: Record<string, number>,
 ): PortfolioDataPoint[] {
-  if (userPositions.length === 0) {
+  if (userPositions.length === 0 || leverageTokenStates.size === 0) {
     return []
   }
 
@@ -83,7 +103,9 @@ export function generatePortfolioPerformanceData(
   
   for (const states of leverageTokenStates.values()) {
     for (const state of states) {
-      allTimestamps.add(Number(state.timestamp))
+      // Convert microseconds to seconds (divide by 1,000,000)
+      const timestamp = Number(state.timestamp) / 1000000
+      allTimestamps.add(timestamp)
     }
   }
 
@@ -112,7 +134,8 @@ export function generatePortfolioPerformanceData(
     const portfolioValue = _calculatePortfolioValueAtTimestamp(
       timestamp,
       userPositions,
-      leverageTokenStates
+      leverageTokenStates,
+      usdPrices
     )
     
     if (portfolioValue > 0) {
@@ -123,7 +146,7 @@ export function generatePortfolioPerformanceData(
       })
     }
   }
-
+  
   // Sort by timestamp ascending for chart display
   return dataPoints.sort((a, b) => {
     const dateA = new Date(a.date).getTime()
@@ -179,6 +202,11 @@ export function groupStatesByToken(
   
   for (const state of states) {
     const tokenAddress = state.leverageToken
+    
+    if (!tokenAddress) {
+      continue // Skip states without token address
+    }
+    
     if (!grouped.has(tokenAddress)) {
       grouped.set(tokenAddress, [])
     }
