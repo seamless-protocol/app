@@ -5,8 +5,42 @@ import { resolve } from 'node:path'
 import process from 'node:process'
 // Import the Tenderly VNet helper (explicit .ts for Bun execution)
 import { createVNet, deleteVNet } from './tenderly-vnet.ts'
+import {
+  BASE_TENDERLY_VNET_ADMIN_RPC,
+  BASE_TENDERLY_VNET_PRIMARY_RPC,
+  DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY,
+  MAINNET_TENDERLY_VNET_ADMIN_RPC,
+  MAINNET_TENDERLY_VNET_PRIMARY_RPC,
+} from '../tests/fixtures/addresses'
 
 type TestType = 'e2e' | 'integration'
+
+type ChainSlug = 'base' | 'mainnet'
+
+type ChainPreset = {
+  label: string
+  testRpc: string
+  adminRpc: string
+  tokenSource: string
+  tokenKey: string
+}
+
+const CHAIN_PRESETS: Record<ChainSlug, ChainPreset> = {
+  base: {
+    label: 'Base (Tenderly VNet)',
+    testRpc: BASE_TENDERLY_VNET_PRIMARY_RPC,
+    adminRpc: BASE_TENDERLY_VNET_ADMIN_RPC,
+    tokenSource: 'tenderly',
+    tokenKey: DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY,
+  },
+  mainnet: {
+    label: 'Mainnet (Tenderly VNet)',
+    testRpc: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
+    adminRpc: MAINNET_TENDERLY_VNET_ADMIN_RPC,
+    tokenSource: 'tenderly',
+    tokenKey: 'cbbtc-usdc-2x',
+  },
+}
 
 interface TenderlyConfig {
   account: string
@@ -35,19 +69,53 @@ function getTenderlyConfig(): TenderlyConfig | null {
   }
 }
 
-function getTestCommand(testType: TestType): { cmd: string; args: string[] } {
+function getTestCommand(testType: TestType, extraArgs: string[] = []): { cmd: string; args: string[] } {
   switch (testType) {
     case 'e2e':
-      return { cmd: 'bunx', args: ['playwright', 'test'] }
+      return { cmd: 'bunx', args: ['playwright', 'test', ...extraArgs] }
     case 'integration':
       // Call Vitest directly to avoid script recursion when test:integration itself uses this runner
       return {
         cmd: 'bunx',
-        args: ['vitest', '-c', 'vitest.integration.config.ts', '--run', 'tests/integration'],
+        args: ['vitest', '-c', 'vitest.integration.config.ts', '--run', 'tests/integration', ...extraArgs],
       }
     default:
       throw new Error(`Unknown test type: ${testType}`)
   }
+}
+
+function parseArguments(): {
+  testType: TestType
+  chainOption?: string
+  passThroughArgs: string[]
+} {
+  const args = process.argv.slice(2)
+  const rawType = args.shift() as TestType | undefined
+  if (!rawType || !['e2e', 'integration'].includes(rawType)) {
+    console.error('Usage: bun scripts/run-tests.ts [e2e|integration] [--chain <base|mainnet|all>] [extra args...]')
+    process.exit(1)
+  }
+
+  let chainOption: string | undefined
+  const passThroughArgs: string[] = []
+
+  while (args.length > 0) {
+    const arg = args.shift() as string
+    if (arg === '--chain') {
+      const value = args.shift()
+      if (!value) {
+        console.error('Missing value after --chain')
+        process.exit(1)
+      }
+      chainOption = value
+    } else if (arg.startsWith('--chain=')) {
+      chainOption = arg.split('=')[1]
+    } else {
+      passThroughArgs.push(arg)
+    }
+  }
+
+  return { testType: rawType, chainOption, passThroughArgs }
 }
 
 let deterministicOverrideCache: string | null = null
@@ -100,17 +168,18 @@ async function runCommand(cmd: string, args: string[], env: Record<string, strin
 }
 
 async function main() {
-  const testType = process.argv[2] as TestType
-  if (!testType || !['e2e', 'integration'].includes(testType)) {
-    console.error('Usage: bun scripts/run-tests.ts [e2e|integration]')
-    process.exit(1)
+  const { testType, chainOption, passThroughArgs } = parseArguments()
+
+  if (chainOption) {
+    await runForChainOption(chainOption, testType, passThroughArgs)
+    return
   }
 
   // Check for explicit TEST_RPC_URL override
   const explicitRpcUrl = process.env.TEST_RPC_URL
   if (explicitRpcUrl) {
     console.log(`🔗 Using explicit RPC URL: ${explicitRpcUrl}`)
-    const { cmd, args } = getTestCommand(testType)
+    const { cmd, args } = getTestCommand(testType, passThroughArgs)
     const env = withTestDefaults(testType, { ...process.env, TEST_RPC_URL: explicitRpcUrl }, 'custom')
     await runCommand(cmd, args, env)
     return
@@ -120,7 +189,7 @@ async function main() {
   const tenderlyConfig = getTenderlyConfig()
   if (!tenderlyConfig) {
     console.log('⚠️  No Tenderly configuration found. Falling back to Anvil (make sure it\'s running on port 8545)')
-    const { cmd, args } = getTestCommand(testType)
+    const { cmd, args } = getTestCommand(testType, passThroughArgs)
     const env = withTestDefaults(
       testType,
       { ...process.env, TEST_RPC_URL: 'http://127.0.0.1:8545' },
@@ -137,7 +206,7 @@ async function main() {
   console.log(`🔗 RPC: ${rpcUrl}`)
 
   try {
-    const { cmd, args } = getTestCommand(testType)
+    const { cmd, args } = getTestCommand(testType, passThroughArgs)
     const env = withTestDefaults(testType, { ...process.env, TEST_RPC_URL: rpcUrl }, 'tenderly')
     console.log(`🚀 Running ${testType} tests against Tenderly fork...`)
     await runCommand(cmd, args, env)
@@ -152,6 +221,39 @@ main().catch((err) => {
   console.error(`❌ Error in ${process.argv[2] || 'test'} runner:`, err)
   process.exit(1)
 })
+
+async function runForChainOption(chainOption: string, testType: TestType, passThroughArgs: string[]) {
+  const slugs: Array<ChainSlug> =
+    chainOption === 'all'
+      ? (Object.keys(CHAIN_PRESETS) as Array<ChainSlug>)
+      : ([chainOption] as Array<ChainSlug>)
+
+  for (const slug of slugs) {
+    const preset = CHAIN_PRESETS[slug]
+    if (!preset) {
+      console.error(`Unknown chain preset '${slug}'. Available: ${Object.keys(CHAIN_PRESETS).join(', ')}`)
+      process.exit(1)
+    }
+
+    console.log(`\n=== 🚀 Running ${testType} tests [${preset.label}] ===`)
+    const env = {
+      ...process.env,
+      TEST_RPC_URL: preset.testRpc,
+      TENDERLY_ADMIN_RPC_URL: preset.adminRpc,
+      E2E_TOKEN_SOURCE: preset.tokenSource,
+      E2E_LEVERAGE_TOKEN_KEY: preset.tokenKey,
+    }
+
+    try {
+      const { cmd, args } = getTestCommand(testType, passThroughArgs)
+      await runCommand(cmd, args, withTestDefaults(testType, env, 'tenderly'))
+      console.log(`=== ✅ ${preset.label} ===`)
+    } catch (error) {
+      console.error(`=== ❌ ${preset.label} failed ===`)
+      throw error
+    }
+  }
+}
 
 function withTestDefaults(
   testType: TestType,

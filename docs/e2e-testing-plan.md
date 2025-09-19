@@ -23,6 +23,7 @@ This document captures the state of the end-to-end (E2E) test harness, the gaps 
 - Wraps both integration and E2E runs.
 - Backend ladder: explicit `TEST_RPC_URL` → Tenderly JIT VNet (if credentials) → local Anvil fallback.
 - Injects contract address overrides (`VITE_CONTRACT_ADDRESS_OVERRIDES`) using `tests/shared/tenderly-addresses.json`.
+- Supports a matrix flag: `--chain base`, `--chain mainnet`, or `--chain all` to run suites sequentially on the canned Tenderly endpoints for each chain and print a clear summary of success/failure per network.
 - E2E runs inherit the same ladder and overrides even though they don’t currently exercise on-chain flows.
 
 ### Pain Points
