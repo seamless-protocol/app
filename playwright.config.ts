@@ -1,8 +1,30 @@
 import { defineConfig, devices } from '@playwright/test'
-import { ANVIL_DEFAULT_PRIVATE_KEY } from './tests/shared/env'
+import {
+  ADDR,
+  ANVIL_DEFAULT_PRIVATE_KEY,
+  DEFAULT_CHAIN_ID,
+  LEVERAGE_TOKEN_KEY,
+  LEVERAGE_TOKEN_ADDRESS,
+  LEVERAGE_TOKEN_LABEL,
+  TOKEN_SOURCE,
+  RPC,
+} from './tests/shared/env'
 
-// Simple RPC URL detection: Explicit > Tenderly VNet (empty = JIT) > Anvil fallback
-const BASE_RPC_URL = process.env['TEST_RPC_URL'] || 'http://127.0.0.1:8545'
+const BASE_RPC_URL = RPC.primary
+const ADMIN_RPC_URL = RPC.admin
+const E2E_TOKEN_SOURCE = (process.env['E2E_TOKEN_SOURCE'] ?? TOKEN_SOURCE).toLowerCase()
+const INCLUDE_TEST_TOKENS = E2E_TOKEN_SOURCE !== 'prod'
+
+// Ensure the process env is populated so tests can read the resolved value
+process.env['E2E_TOKEN_SOURCE'] = E2E_TOKEN_SOURCE
+process.env['E2E_LEVERAGE_TOKEN_ADDRESS'] = LEVERAGE_TOKEN_ADDRESS
+process.env['E2E_LEVERAGE_TOKEN_LABEL'] = LEVERAGE_TOKEN_LABEL
+process.env['E2E_CHAIN_ID'] = String(DEFAULT_CHAIN_ID)
+process.env['E2E_LEVERAGE_TOKEN_KEY'] = LEVERAGE_TOKEN_KEY
+process.env['VITE_TEST_RPC_URL'] = BASE_RPC_URL
+process.env['TENDERLY_ADMIN_RPC_URL'] = ADMIN_RPC_URL
+process.env['VITE_CONTRACT_ADDRESS_OVERRIDES'] =
+  process.env['VITE_CONTRACT_ADDRESS_OVERRIDES'] ?? ''
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -42,6 +64,7 @@ export default defineConfig({
       VITE_TEST_MODE: 'mock',
       VITE_BASE_RPC_URL: BASE_RPC_URL,
       VITE_ANVIL_RPC_URL: BASE_RPC_URL,
+      VITE_TEST_RPC_URL: BASE_RPC_URL,
       VITE_TEST_PRIVATE_KEY: ANVIL_DEFAULT_PRIVATE_KEY,
       // Minimum required env vars for app bootstrap during tests
       VITE_WALLETCONNECT_PROJECT_ID:
@@ -50,6 +73,17 @@ export default defineConfig({
         process.env['VITE_ETHEREUM_RPC_URL'] ?? BASE_RPC_URL,
       VITE_THEGRAPH_API_KEY:
         process.env['VITE_THEGRAPH_API_KEY'] ?? 'playwright-test-thegraph-key',
+      VITE_ROUTER_V2_ADDRESS: ADDR.routerV2 ?? ADDR.router ?? '',
+      VITE_MANAGER_V2_ADDRESS: ADDR.managerV2 ?? ADDR.manager ?? '',
+      VITE_MULTICALL_EXECUTOR_ADDRESS: ADDR.executor ?? '',
+      VITE_CONTRACT_ADDRESS_OVERRIDES: process.env['VITE_CONTRACT_ADDRESS_OVERRIDES'] ?? '',
+      TENDERLY_ADMIN_RPC_URL: ADMIN_RPC_URL,
+      E2E_TOKEN_SOURCE,
+      E2E_LEVERAGE_TOKEN_KEY: LEVERAGE_TOKEN_KEY,
+      E2E_LEVERAGE_TOKEN_ADDRESS: LEVERAGE_TOKEN_ADDRESS,
+      E2E_LEVERAGE_TOKEN_LABEL: LEVERAGE_TOKEN_LABEL,
+      E2E_CHAIN_ID: String(DEFAULT_CHAIN_ID),
+      ...(INCLUDE_TEST_TOKENS ? { VITE_INCLUDE_TEST_TOKENS: 'true' } : {}),
     },
     reuseExistingServer: !process.env['CI'],
     timeout: 120_000, // Give Vite + plugins extra time in CI

@@ -141,6 +141,8 @@ export function LeverageTokenHoldingsCard({
                 <>
                   <div className="flex-1 min-w-0">
                     <Button
+                      data-test-id="mint-button"
+                      type="button"
                       onClick={handleMintClick}
                       className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white w-full"
                     >
@@ -150,6 +152,7 @@ export function LeverageTokenHoldingsCard({
                   </div>
                   <div className="flex-1 min-w-0">
                     <Button
+                      type="button"
                       onClick={handleRedeemClick}
                       variant="outline"
                       disabled={!userPosition.hasPosition}
