@@ -96,7 +96,7 @@ export function useMintPreview(params: {
     },
   })
 
-  const isLoading = query.isPending || query.isFetching
+  const isLoading = hasValidInput && (query.isPending || query.isFetching)
   const data = query.data
   const error = query.error
 
