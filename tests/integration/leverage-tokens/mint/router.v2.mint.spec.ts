@@ -4,6 +4,10 @@ import { orchestrateMint } from '@/domain/mint'
 import { createLifiQuoteAdapter } from '@/domain/mint/adapters/lifi'
 import { createUniswapV2QuoteAdapter } from '@/domain/mint/adapters/uniswapV2'
 import {
+  createUniswapV3QuoteAdapter,
+  type UniswapV3QuoteOptions,
+} from '@/domain/mint/adapters/uniswapV3'
+import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
@@ -226,6 +230,35 @@ function buildQuoteAdapter({
       router,
       fromAddress: executor,
       allowBridges: 'none',
+    })
+  }
+
+  const shouldUseUniswapV3 = Boolean(tokenDefinition.swap?.uniswapV3)
+  if (shouldUseUniswapV3) {
+    const v3Addresses = addresses.uniswapV3
+    if (!v3Addresses) {
+      throw new Error('Uniswap V3 configuration missing for leverage token')
+    }
+    const { pool, fee, quoter, router: swapRouter } = v3Addresses
+    if (!swapRouter) {
+      throw new Error('Uniswap V3 swap router missing; update chain config')
+    }
+    console.info('[STEP] Creating Uniswap V3 quote adapter', {
+      token: label,
+      chainId,
+      quoter,
+      swapRouter,
+      pool,
+      fee,
+    })
+    return createUniswapV3QuoteAdapter({
+      publicClient: publicClient as unknown as UniswapV3QuoteOptions['publicClient'],
+      ...(quoter ? { quoter } : {}),
+      router: swapRouter,
+      fee,
+      recipient: router,
+      poolAddress: pool,
+      wrappedNative: addresses.weth,
     })
   }
 

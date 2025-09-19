@@ -5,7 +5,7 @@
  * re-previews the manager state with total collateral to ensure repayability.
  */
 import type { Address } from 'viem'
-import { encodeFunctionData, getAddress, parseAbi } from 'viem'
+import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
 import { BASE_WETH, ETH_SENTINEL } from '@/lib/contracts/addresses'
 import {
@@ -56,7 +56,8 @@ export type MintPlanV2 = {
   expectedExcessDebt: bigint
   /**
    * Encoded router calls (approve + swap) to be submitted to V2 `mintWithCalls`.
-   * The sequence always includes the debt->collateral swap; if `inputAsset` differs
+   * The sequence always includes the debt->collateral swap plus an ERC-20 approve
+   * when the debt asset is not the wrapped native token; if `inputAsset` differs
    * from `collateralAsset`, it also includes an input->collateral approval and swap.
    */
   calls: V2Calls
@@ -212,6 +213,17 @@ function buildDebtSwapCalls(args: {
       { target: debtQuote.approvalTarget, data: debtQuote.calldata, value: debtIn },
     ]
   }
-  // ERC20-in path: aggregator call only (router handles approvals internally)
-  return [{ target: debtQuote.approvalTarget, data: debtQuote.calldata, value: 0n }]
+  // ERC20-in path: approve router for debt asset then perform swap
+  return [
+    {
+      target: debtAsset,
+      data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'approve',
+        args: [debtQuote.approvalTarget, debtIn],
+      }),
+      value: 0n,
+    },
+    { target: debtQuote.approvalTarget, data: debtQuote.calldata, value: 0n },
+  ]
 }

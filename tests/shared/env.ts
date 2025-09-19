@@ -5,6 +5,11 @@ import { type Address, getAddress, type Hex } from 'viem'
 import { anvil, base, type Chain } from 'viem/chains'
 import { z } from 'zod'
 import {
+  getUniswapV3ChainConfig,
+  getUniswapV3PoolConfig,
+  type UniswapV3PoolKey,
+} from '../../src/lib/config/uniswapV3.js'
+import {
   BASE_WETH,
   contractAddresses,
   getContractAddresses,
@@ -253,6 +258,13 @@ type LeverageTokenAddresses = {
   veloraAdapter?: Address
   rebalanceAdapter?: Address
   lendingAdapter?: Address
+  uniswapV3?: {
+    pool: Address
+    fee: number
+    quoter?: Address
+    router?: Address
+    tickSpacing?: number
+  }
 }
 
 function buildAddressContext(definition: LeverageTokenDefinition): LeverageTokenAddresses {
@@ -335,6 +347,30 @@ function buildAddressContext(definition: LeverageTokenDefinition): LeverageToken
   if (veloraAddress) result.veloraAdapter = veloraAddress
   if (rebalanceAddress) result.rebalanceAdapter = rebalanceAddress
   if (lendingAddress) result.lendingAdapter = lendingAddress
+
+  const swapV3Config = definition.swap?.uniswapV3
+  const poolKey: UniswapV3PoolKey | undefined = swapV3Config?.poolKey
+  const chainV3Config = getUniswapV3ChainConfig(definition.chainId)
+  const poolConfig = poolKey ? getUniswapV3PoolConfig(definition.chainId, poolKey) : undefined
+  const resolvedPool = swapV3Config?.pool ?? poolConfig?.address
+  const resolvedFee = swapV3Config?.fee ?? poolConfig?.fee
+  const resolvedQuoter = optionalAddress(
+    (swapV3Config?.quoter as Address | undefined) ?? chainV3Config?.quoter,
+  )
+  const resolvedRouter = optionalAddress(
+    (swapV3Config?.router as Address | undefined) ?? chainV3Config?.swapRouter,
+  )
+  const resolvedTickSpacing = poolConfig?.tickSpacing
+
+  if (resolvedPool && typeof resolvedFee === 'number') {
+    result.uniswapV3 = {
+      pool: getAddress(resolvedPool),
+      fee: resolvedFee,
+      ...(resolvedQuoter ? { quoter: resolvedQuoter } : {}),
+      ...(resolvedRouter ? { router: resolvedRouter } : {}),
+      ...(typeof resolvedTickSpacing === 'number' ? { tickSpacing: resolvedTickSpacing } : {}),
+    }
+  }
 
   return result
 }

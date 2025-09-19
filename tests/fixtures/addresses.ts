@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { base, mainnet } from 'viem/chains'
-
+import type { UniswapV3PoolKey } from '../../src/lib/config/uniswapV3.js'
 import type { ContractAddresses } from '../../src/lib/contracts/addresses.js'
 import { contractAddresses } from '../../src/lib/contracts/addresses.js'
 
@@ -106,6 +106,13 @@ export interface LeverageTokenDefinition {
   swap?: {
     uniswapV2Router?: Address
     useLiFi?: boolean
+    uniswapV3?: {
+      pool?: Address
+      poolKey?: UniswapV3PoolKey
+      fee?: number
+      quoter?: Address
+      router?: Address
+    }
   }
 }
 
@@ -134,6 +141,10 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
     adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
     swap: {
       uniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D' as Address,
+      uniswapV3: {
+        poolKey: 'weeth-weth',
+        fee: 100,
+      },
     },
   },
   'cbbtc-usdc-2x': {
@@ -153,6 +164,10 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
     adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
     swap: {
       uniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D' as Address,
+      uniswapV3: {
+        poolKey: 'usdc-cbbtc',
+        fee: 500,
+      },
     },
   },
 }
