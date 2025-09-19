@@ -48,8 +48,8 @@ export default defineConfig({
         process.env['VITE_WALLETCONNECT_PROJECT_ID'] ?? 'playwright-test-walletconnect',
       VITE_ETHEREUM_RPC_URL:
         process.env['VITE_ETHEREUM_RPC_URL'] ?? BASE_RPC_URL,
-      VITE_THEGRAPH_API_KEY:
-        process.env['VITE_THEGRAPH_API_KEY'] ?? 'playwright-test-thegraph-key',
+      VITE_LEVERAGE_TOKENS_SUBGRAPH_API_KEY:
+        process.env['VITE_LEVERAGE_TOKENS_SUBGRAPH_API_KEY'] ?? 'playwright-test-thegraph-key',
     },
     reuseExistingServer: !process.env['CI'],
     timeout: 120_000, // Give Vite + plugins extra time in CI

@@ -1,5 +1,5 @@
 import { MORPHO_MARKET_BORROW_RATE_QUERY } from '../queries/morpho'
-import type { MorphoMarketBorrowRateResponse } from '../types'
+import type { MorphoMarketBorrowRateResponse } from '../types/morpho'
 
 /**
  * Fetches Morpho market borrow rate data using GraphQL

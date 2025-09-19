@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { TrendingUp } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
 
@@ -69,6 +70,9 @@ export function PortfolioPerformanceChart({
   const formatCurrency = yAxisFormatter || defaultYAxisFormatter
   const formatTooltipValue = tooltipFormatter || defaultTooltipFormatter
 
+  // Check if we have data to display
+  const hasData = data && data.length > 0
+
   return (
     <Card className={`bg-slate-900/80 border-slate-700 ${className}`}>
       <CardHeader className="pb-4">
@@ -91,53 +95,65 @@ export function PortfolioPerformanceChart({
       </CardHeader>
       <CardContent className="pt-0 px-6 pb-6">
         <div style={{ height: `${height}px` }} className="w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} style={{ cursor: 'default' }}>
-              <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={gradientColors.start} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={gradientColors.end} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#64748B', fontSize: 12, dy: 8 }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#64748B', fontSize: 12 }}
-                tickFormatter={formatCurrency}
-                label={{
-                  value: yAxisLabel,
-                  angle: -90,
-                  position: 'insideLeft',
-                  style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' },
-                }}
-              />
-              <RechartsTooltip
-                contentStyle={{
-                  backgroundColor: '#1E293B',
-                  border: '1px solid #334155',
-                  borderRadius: '8px',
-                  color: '#F8FAFC',
-                }}
-                formatter={formatTooltipValue}
-              />
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke={strokeColor}
-                strokeWidth={2}
-                fillOpacity={1}
-                fill={`url(#${gradientId})`}
-                activeDot={false}
-                isAnimationActive={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {hasData ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data} style={{ cursor: 'default' }}>
+                <defs>
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={gradientColors.start} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={gradientColors.end} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#64748B', fontSize: 12, dy: 8 }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#64748B', fontSize: 12 }}
+                  tickFormatter={formatCurrency}
+                  label={{
+                    value: yAxisLabel,
+                    angle: -90,
+                    position: 'insideLeft',
+                    style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' },
+                  }}
+                />
+                <RechartsTooltip
+                  contentStyle={{
+                    backgroundColor: '#1E293B',
+                    border: '1px solid #334155',
+                    borderRadius: '8px',
+                    color: '#F8FAFC',
+                  }}
+                  formatter={formatTooltipValue}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke={strokeColor}
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill={`url(#${gradientId})`}
+                  activeDot={false}
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
+                <TrendingUp className="h-8 w-8 text-slate-500" />
+              </div>
+              <h3 className="text-lg font-medium text-slate-300 mb-2">No Data Available</h3>
+              <p className="text-sm text-slate-500 max-w-sm">
+                Portfolio performance data will appear here once you have active positions with historical data.
+              </p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

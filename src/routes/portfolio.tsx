@@ -10,8 +10,7 @@ import { ActivePositions } from '@/features/portfolio/components/active-position
 import { AvailableRewards } from '@/features/portfolio/components/available-rewards'
 import { PortfolioPerformanceChart } from '@/features/portfolio/components/portfolio-performance-chart'
 import { SEAMStaking } from '@/features/portfolio/components/seam-staking'
-import { usePortfolioData } from '@/features/portfolio/hooks/usePortfolioData'
-import { usePortfolioPerformance } from '@/features/portfolio/hooks/usePortfolioPerformance'
+import { usePortfolioData, usePortfolioPerformance } from '@/features/portfolio/hooks/usePortfolioDataFetcher'
 import { usePortfolioRewards } from '@/features/portfolio/hooks/usePortfolioRewards'
 import { usePortfolioStaking } from '@/features/portfolio/hooks/usePortfolioStaking'
 

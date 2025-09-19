@@ -5,7 +5,8 @@
 export const portfolioKeys = {
   all: ['portfolio'] as const,
   data: () => [...portfolioKeys.all, 'data'] as const,
-  performance: (timeframe: string) => [...portfolioKeys.all, 'performance', timeframe] as const,
+  performance: (timeframe: string, address?: string) => 
+    [...portfolioKeys.all, 'performance', timeframe, address] as const,
   rewards: (address?: string) => [...portfolioKeys.all, 'rewards', address] as const,
   staking: () => [...portfolioKeys.all, 'staking'] as const,
   positions: () => [...portfolioKeys.all, 'positions'] as const,
