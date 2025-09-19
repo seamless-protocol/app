@@ -11,4 +11,6 @@ export const portfolioKeys = {
   staking: () => [...portfolioKeys.all, 'staking'] as const,
   positions: () => [...portfolioKeys.all, 'positions'] as const,
   summary: () => [...portfolioKeys.all, 'summary'] as const,
+  positionsAPY: (positions: Array<any>) =>
+    [...portfolioKeys.all, 'positionsAPY', positions.length] as const,
 } as const

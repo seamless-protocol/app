@@ -1,3 +1,5 @@
+import type { APYBreakdownData } from '@/components/APYBreakdown'
+import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { ArrowUpRight, Info, Minus, Plus } from '@/components/icons'
 import { AssetDisplay } from '@/components/ui/asset-display'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +34,9 @@ export interface Position {
     symbol: string
     name: string
   }
+  // APY breakdown data for tooltip
+  apyBreakdown?: APYBreakdownData | undefined
+  leverageTokenAddress?: string // For fetching APY data
 }
 
 interface ActivePositionsProps {
@@ -63,6 +68,44 @@ const getTypeLabel = (type: string) => {
     default:
       return 'Unknown'
   }
+}
+
+// Component to handle APY display for each position
+function PositionAPYDisplay({ position }: { position: Position }) {
+  // Use the pre-calculated APY data from the portfolio hook
+  const displayAPY = position.apy
+  const apyBreakdown = position.apyBreakdown
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="cursor-help">
+          <div className="flex items-center">
+            <p className="text-xs text-slate-400 mr-1">APY</p>
+            <Info className="h-3 w-3 text-slate-400" />
+          </div>
+          <p className="font-medium text-purple-400">{displayAPY}</p>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
+        {apyBreakdown ? (
+          <APYBreakdownTooltip
+            token={
+              {
+                address: position.leverageTokenAddress || '',
+                name: position.name,
+                collateralAsset: position.collateralAsset,
+                debtAsset: position.debtAsset,
+              } as any
+            }
+            apyData={apyBreakdown}
+          />
+        ) : (
+          <p>Annual Percentage Yield</p>
+        )}
+      </TooltipContent>
+    </Tooltip>
+  )
 }
 
 // No need for custom renderLeverageTokenLogos - AssetDisplay handles this perfectly
@@ -205,20 +248,7 @@ export function ActivePositions({
 
                       {/* Second row: APY */}
                       <div className="text-left lg:contents">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="cursor-help">
-                              <div className="flex items-center">
-                                <p className="text-xs text-slate-400 mr-1">APY</p>
-                                <Info className="h-3 w-3 text-slate-400" />
-                              </div>
-                              <p className="font-medium text-purple-400">{position.apy}</p>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Annual Percentage Yield</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        <PositionAPYDisplay position={position} />
                       </div>
                     </div>
 

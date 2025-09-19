@@ -16,6 +16,7 @@ import {
   groupStatesByToken,
 } from '../utils/portfolio-calculations'
 import { portfolioKeys } from '../utils/queryKeys'
+import { usePositionsAPY } from './usePositionsAPY'
 
 export interface PortfolioSummary {
   totalValue: number
@@ -61,12 +62,15 @@ function convertUserPositionToUIPosition(userPosition: UserPosition): Position {
     name: 'Unknown Debt Asset',
   }
 
-  return {
+  const position = {
     id: userPosition.id,
     name: tokenConfig?.name || `Leverage Token ${userPosition.leverageToken.id.slice(0, 8)}...`,
-    type: 'leverage-token',
+    type: 'leverage-token' as const,
     token: collateralAsset.symbol as 'USDC' | 'WETH' | 'weETH', // Use collateral asset as primary token
-    riskLevel: tokenConfig?.leverageRatio && tokenConfig.leverageRatio > 10 ? 'high' : 'medium',
+    riskLevel: (tokenConfig?.leverageRatio && tokenConfig.leverageRatio > 10 ? 'high' : 'medium') as
+      | 'low'
+      | 'medium'
+      | 'high',
     currentValue: {
       amount: '0.00', // Would need to calculate from balance and equity per token
       symbol: 'USD',
@@ -86,7 +90,11 @@ function convertUserPositionToUIPosition(userPosition: UserPosition): Position {
       symbol: debtAsset.symbol,
       name: debtAsset.name,
     },
+    leverageTokenAddress: userPosition.leverageToken.id,
+    // APY breakdown will be populated by the APY calculation hook
   }
+
+  return position
 }
 
 /**
@@ -275,12 +283,32 @@ export function usePortfolioWithTotalValue() {
     )
   }, [portfolioQueryData?.rawUserPositions, portfolioQueryData?.leverageTokenStates, usdPrices])
 
-  // Return portfolio data with calculated metrics
+  // Calculate APY data for all positions
+  const { data: positionsAPYData, isLoading: positionsAPYLoading } = usePositionsAPY({
+    positions: portfolioQueryData?.portfolioData.positions || [],
+    enabled: !!(portfolioQueryData?.portfolioData.positions.length),
+  })
+
+  // Return portfolio data with calculated metrics and APY breakdown
   const portfolioDataWithMetrics = useMemo(() => {
     if (!portfolioQueryData) return null
 
+    // Enhance positions with APY breakdown data
+    const enhancedPositions = portfolioQueryData.portfolioData.positions.map((position) => {
+      const apyBreakdown = positionsAPYData?.get(position.id)
+      const newApy = apyBreakdown ? `${(apyBreakdown.totalAPY * 100).toFixed(2)}%` : position.apy
+
+      return {
+        ...position,
+        apyBreakdown,
+        // Update APY display with calculated value
+        apy: newApy,
+      }
+    })
+
     return {
       ...portfolioQueryData.portfolioData,
+      positions: enhancedPositions,
       summary: {
         ...portfolioQueryData.portfolioData.summary,
         totalValue: portfolioMetrics.totalValue,
@@ -288,13 +316,14 @@ export function usePortfolioWithTotalValue() {
         changePercent: portfolioMetrics.changePercent,
       },
     }
-  }, [portfolioQueryData, portfolioMetrics])
+  }, [portfolioQueryData, portfolioMetrics, positionsAPYData])
 
   return {
     data: portfolioDataWithMetrics,
     rawUserPositions: portfolioQueryData?.rawUserPositions || [],
     leverageTokenStates: portfolioQueryData?.leverageTokenStates || new Map(),
     usdPrices,
+    positionsAPYLoading,
     isLoading,
     isError,
     error,
