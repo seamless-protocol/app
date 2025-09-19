@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import type React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
@@ -63,7 +63,9 @@ describe('useMintPreview', () => {
   it('debounces equity input and enables only for positive bigint', async () => {
     vi.useRealTimers()
     try {
-      const { useMintPreview } = await import('@/features/leverage-tokens/hooks/mint/useMintPreview')
+      const { useMintPreview } = await import(
+        '@/features/leverage-tokens/hooks/mint/useMintPreview'
+      )
       const { result, rerender } = renderHook(
         ({ amount }) =>
           useMintPreview({ config: cfg, token, equityInCollateralAsset: amount, debounceMs: 200 }),
@@ -94,7 +96,7 @@ describe('useMintPreview', () => {
 
   it('stays disabled for undefined amount', async () => {
     const { useMintPreview } = await import('@/features/leverage-tokens/hooks/mint/useMintPreview')
-    const { result } = renderHook(
+    renderHook(
       () =>
         useMintPreview({ config: cfg, token, equityInCollateralAsset: undefined, debounceMs: 50 }),
       { wrapper: ({ children }) => wrapper(children) },
