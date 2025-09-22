@@ -119,8 +119,16 @@ export async function planRedeemV2(params: {
     inTokenForQuote,
   })
 
-  // Ensure we have enough collateral to repay the debt
-  if (collateralNeededForDebt > totalCollateralAvailable) {
+  // For underwater positions, we may not be able to fully repay the debt
+  // but we should still allow the redeem to proceed with partial debt repayment
+  const isUnderwater = debtToRepay > totalCollateralAvailable
+  if (isUnderwater) {
+    console.warn(`[REDEEM] Underwater position: debt (${debtToRepay}) > collateral (${totalCollateralAvailable}). Redeem will use all available collateral.`)
+  }
+
+  // For underwater positions, we use all available collateral and don't check if it's enough
+  // For healthy positions, ensure we have enough collateral to repay the debt
+  if (!isUnderwater && collateralNeededForDebt > totalCollateralAvailable) {
     throw new Error('Insufficient collateral to repay debt')
   }
 
@@ -186,6 +194,12 @@ async function calculateCollateralNeededForDebt(args: {
     throw new Error('No collateral available to repay debt')
   }
 
+  // For underwater positions (debt > collateral), we can only use all available collateral
+  if (debtToRepay > maxCollateralAvailable) {
+    console.warn(`[REDEEM] Underwater position detected: debt (${debtToRepay}) > collateral (${maxCollateralAvailable}). Using all available collateral.`)
+    return maxCollateralAvailable
+  }
+
   const upperBound = maxCollateralAvailable
   let attempt = debtToRepay > upperBound ? upperBound : debtToRepay
   if (attempt <= 0n) {
@@ -204,17 +218,23 @@ async function calculateCollateralNeededForDebt(args: {
       amountIn: attempt,
     })
 
+    console.log(`[REDEEM] Quote attempt ${i}: ${attempt.toString()} weETH -> ${quote.out.toString()} WETH (ratio: ${Number(quote.out) / Number(attempt)})`)
+
     if (quote.out <= 0n) {
       throw new Error('Quote returned zero output while sizing collateral swap')
     }
 
+    // If we're using all available collateral and still can't get enough debt tokens,
+    // this is an underwater position - use all available collateral
     if (quote.out < debtToRepay && attempt === upperBound) {
-      throw new Error('Insufficient collateral to repay debt')
+      console.warn(`[REDEEM] Underwater position: cannot get enough debt tokens (${debtToRepay}) with available collateral (${maxCollateralAvailable}). Using all available collateral.`)
+      return maxCollateralAvailable
     }
 
     const required = mulDivCeil(debtToRepay, attempt, quote.out)
     if (required > upperBound) {
-      throw new Error('Insufficient collateral to repay debt')
+      console.warn(`[REDEEM] Required collateral (${required}) exceeds available (${upperBound}). Using all available collateral.`)
+      return maxCollateralAvailable
     }
 
     if (required === attempt || (typeof previous !== 'undefined' && required === previous)) {

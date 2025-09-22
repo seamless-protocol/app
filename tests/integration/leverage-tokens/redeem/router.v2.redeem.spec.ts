@@ -59,12 +59,11 @@ async function prepareRedeemScenario(
 ): Promise<RedeemScenario> {
   const { config } = ctx
 
-  process.env['VITE_ROUTER_VERSION'] = 'v2'
+  // Note: VITE_ROUTER_VERSION and VITE_MULTICALL_EXECUTOR_ADDRESS are set by executeSharedMint
   const executor = ADDR.executor
   if (!executor) {
     throw new Error('Multicall executor address missing; update contract map for V2 harness')
   }
-  process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
 
   const quoterV3 = ADDR.v3Quoter
   const swapRouterV3 = ADDR.v3SwapRouter
@@ -128,6 +127,9 @@ async function prepareRedeemScenario(
 
 async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario) {
   const { account, config, publicClient } = ctx
+  
+  // Use V2 for mint step to match redeem step
+  process.env['VITE_ROUTER_VERSION'] = 'v2'
   const mintOutcome = await executeSharedMint({
     account,
     publicClient,
@@ -201,6 +203,17 @@ async function executeRedeemPath(
     (call) => call.target.toLowerCase() === uniswapV3.swapRouter.toLowerCase(),
   )
   expect(swapRouterCall).toBeDefined()
+
+  // Debug: Log all swap calls to see what's being executed
+  console.log('[DEBUG] Swap calls in redeem plan:')
+  plan.calls.forEach((call, index) => {
+    console.log(`[DEBUG] Call ${index}:`, {
+      target: call.target,
+      value: call.value,
+      data: call.data.slice(0, 10), // First 4 bytes (function selector)
+      dataLength: call.data.length
+    })
+  })
 
   const collateralBalanceBefore = (await publicClient.readContract({
     address: collateralAsset,

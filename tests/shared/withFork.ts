@@ -28,6 +28,8 @@ export type WithForkCtx = {
 
 export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise<T> {
   console.info('[STEP] Take snapshot')
+  // Add small delay to prevent race condition when multiple tests run in parallel
+  await new Promise(resolve => setTimeout(resolve, Math.random() * 100))
   const snap: Hash = await takeSnapshot()
   console.info('[STEP] Snapshot taken', { snap })
   try {

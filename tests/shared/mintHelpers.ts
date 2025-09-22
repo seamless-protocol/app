@@ -50,7 +50,10 @@ export async function executeSharedMint({
     throw new Error('TEST_RPC_URL missing or invalid for tenderly mode')
   }
 
-  process.env['VITE_ROUTER_VERSION'] = 'v2'
+  // Only set router version if not already set
+  if (!process.env['VITE_ROUTER_VERSION']) {
+    process.env['VITE_ROUTER_VERSION'] = 'v2'
+  }
   const executor = ADDR.executor
   if (!executor) {
     throw new Error('Multicall executor address missing; update contract map for V2 harness')
@@ -81,13 +84,13 @@ export async function executeSharedMint({
   console.info('[SHARED MINT] Token assets', { collateralAsset, debtAsset })
 
   const decimals = await readErc20Decimals(config, collateralAsset)
-  const equityInInputAsset = parseUnits('10', decimals)
+  const equityInInputAsset = parseUnits('10', decimals) // Reasonable amount to create healthy leverage position
   console.info('[SHARED MINT] Funding + approving collateral', {
     collateralAsset,
     equityInInputAsset: equityInInputAsset.toString(),
   })
   await topUpNative(account.address, '1')
-  await topUpErc20(collateralAsset, account.address, '25')
+  await topUpErc20(collateralAsset, account.address, '10000000') // 10M weETH to ensure sufficient collateral for redeem
   await approveIfNeeded(collateralAsset, router, equityInInputAsset)
 
   const useLiFi = process.env['TEST_USE_LIFI'] === '1'

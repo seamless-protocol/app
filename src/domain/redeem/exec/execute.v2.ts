@@ -52,6 +52,22 @@ export async function executeRedeemV2(params: {
 
   // No allowance handling here; UI should perform approvals beforehand
 
+  // Debug: Log the swap calls being passed to the redeem function
+  console.log('[DEBUG] Redeem parameters:', {
+    token,
+    sharesToRedeem: sharesToRedeem.toString(),
+    minCollateralForSender: minCollateralForSender.toString(),
+    multicallExecutor,
+    swapCallsCount: swapCalls.length,
+    swapCalls: swapCalls.map((call, index) => ({
+      index,
+      target: call.target,
+      value: call.value.toString(),
+      dataSelector: call.data.slice(0, 10),
+      dataLength: call.data.length
+    }))
+  })
+
   const { request } = await simulateLeverageRouterV2Redeem(config, {
     address: routerAddress,
     // redeem(token, shares, minCollateralForSender, multicallExecutor, swapCalls)
