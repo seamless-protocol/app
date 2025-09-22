@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
-import { getContractAddresses } from '../../../../lib/contracts/addresses'
+import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
@@ -71,7 +71,10 @@ export function LeverageTokenRedeemModal({
 
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
-  const leverageRouterAddress = contractAddresses.leverageRouter
+  const leverageRouterAddress =
+    contractAddresses.leverageRouterV2 ?? contractAddresses.leverageRouter
+  const leverageManagerAddress =
+    contractAddresses.leverageManagerV2 ?? contractAddresses.leverageManager
 
   // Get real wallet balance for leverage tokens
   const { balance: leverageTokenBalance, isLoading: isLeverageTokenBalanceLoading } =
@@ -144,8 +147,35 @@ export function LeverageTokenRedeemModal({
     token: leverageTokenAddress,
     ...(userAddress ? { account: userAddress } : {}),
     slippageBps,
-    chainId: leverageTokenConfig.chainId,
+    chainId: leverageTokenConfig.chainId as SupportedChainId,
+    ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
+    ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
+    ...(leverageTokenConfig.swaps?.collateralToDebt
+      ? { swap: leverageTokenConfig.swaps.collateralToDebt }
+      : {}),
   })
+
+  const quoteBlockingError = useMemo(() => {
+    switch (exec.quoteStatus) {
+      case 'not-required':
+      case 'ready':
+        return undefined
+      case 'missing-config':
+        return 'Swap configuration missing for this leverage token. Redeeming via router v2 is unavailable.'
+      case 'missing-router':
+        return 'Leverage router address is unavailable; confirm contract addresses are configured for this chain.'
+      case 'missing-client':
+        return 'Unable to access the RPC client for quote generation. Check your connection and try again.'
+      case 'missing-chain-config':
+        return 'Uniswap pool configuration is missing for this chain. Please update the app config to enable redeeming.'
+      case 'error':
+        return (
+          exec.quoteError?.message ?? 'Failed to initialize swap quote. Please retry in a moment.'
+        )
+      default:
+        return undefined
+    }
+  }, [exec.quoteError?.message, exec.quoteStatus])
 
   const {
     isAllowanceLoading,
@@ -238,7 +268,8 @@ export function LeverageTokenRedeemModal({
       !preview.isLoading &&
       parseFloat(expectedAmount) > 0 &&
       isConnected &&
-      !isAllowanceLoading
+      !isAllowanceLoading &&
+      exec.canSubmit
     )
   }
 
@@ -273,6 +304,11 @@ export function LeverageTokenRedeemModal({
   // Handle redemption confirmation
   const handleConfirm = async () => {
     if (!form.amountRaw) return
+    if (!exec.canSubmit) {
+      setError(quoteBlockingError || 'Redeem configuration is not ready. Please try again shortly.')
+      toError()
+      return
+    }
 
     try {
       const hash = await exec.redeem(form.amountRaw)
@@ -326,7 +362,7 @@ export function LeverageTokenRedeemModal({
             needsApproval={needsApproval()}
             isConnected={isConnected}
             onApprove={handleApprove}
-            error={error || undefined}
+            error={error || quoteBlockingError}
             leverageTokenConfig={leverageTokenConfig}
           />
         )

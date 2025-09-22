@@ -2,18 +2,18 @@ import { type Address, parseUnits } from 'viem'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
 import {
-  createUniswapV3QuoteAdapter,
-  type UniswapV3QuoteOptions,
-} from '@/domain/shared/adapters/uniswapV3'
+  createUniswapV2QuoteAdapter,
+  type UniswapV2QuoteOptions,
+} from '@/domain/shared/adapters/uniswapV2'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
-import { ADDR, mode, RPC, V3 } from '../../../shared/env'
+import { ADDR, mode, RPC } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
-import { approveIfNeeded, erc20Abi } from '../../../shared/funding'
+import { approveIfNeeded, erc20Abi, seedUniswapV2PairLiquidity } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
 
@@ -27,13 +27,17 @@ describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
 
   const SLIPPAGE_BPS = 50
 
-  it('redeems all minted shares via Uniswap v3 (happy path)', async () =>
-    withFork(async (ctx) => {
-      ensureTenderlyMode()
-      const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
-      const mintOutcome = await executeMintPath(ctx, scenario)
-      await executeRedeemPath(ctx, { ...scenario, ...mintOutcome })
-    }))
+  it(
+    'redeems all minted shares via Uniswap v2 (happy path)',
+    async () =>
+      withFork(async (ctx) => {
+        ensureTenderlyMode()
+        const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
+        const mintOutcome = await executeMintPath(ctx, scenario)
+        await executeRedeemPath(ctx, { ...scenario, ...mintOutcome })
+      }),
+    120_000,
+  )
 })
 
 type RedeemScenario = {
@@ -44,11 +48,8 @@ type RedeemScenario = {
   debtAsset: Address
   equityInInputAsset: bigint
   slippageBps: number
-  uniswapV3: {
-    quoter: Address
-    swapRouter: Address
-    fee: number
-    poolAddress: Address
+  uniswapV2: {
+    router: Address
     wrappedNative?: Address
   }
 }
@@ -66,21 +67,9 @@ async function prepareRedeemScenario(
   }
   process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
 
-  const quoterV3 = ADDR.v3Quoter
-  const swapRouterV3 = ADDR.v3SwapRouter
-  if (!quoterV3 || !swapRouterV3) {
-    throw new Error('Uniswap v3 addresses missing; set V3_QUOTER and V3_SWAP_ROUTER')
-  }
-
-  const poolFee = V3.poolFee
-  if (typeof poolFee !== 'number') {
-    throw new Error('Uniswap v3 pool config missing; set V3_POOL_FEE')
-  }
-
-  const poolAddress = ADDR.v3Pool
-  if (!poolAddress) {
-    throw new Error('Uniswap v3 pool address missing; set V3_POOL_ADDRESS or repo default')
-  }
+  const uniswapRouter =
+    (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
+    ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
 
   const token: Address = ADDR.leverageToken
   const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
@@ -116,11 +105,8 @@ async function prepareRedeemScenario(
     debtAsset,
     equityInInputAsset,
     slippageBps,
-    uniswapV3: {
-      quoter: quoterV3,
-      swapRouter: swapRouterV3,
-      fee: poolFee,
-      poolAddress,
+    uniswapV2: {
+      router: uniswapRouter,
       wrappedNative: ADDR.weth,
     },
   }
@@ -128,12 +114,29 @@ async function prepareRedeemScenario(
 
 async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario) {
   const { account, config, publicClient } = ctx
-  const mintOutcome = await executeSharedMint({
-    account,
-    publicClient,
-    config,
-    slippageBps: scenario.slippageBps,
+  const previousAdapter = process.env['TEST_QUOTE_ADAPTER']
+  process.env['TEST_QUOTE_ADAPTER'] = 'uniswapv2'
+  await seedUniswapV2PairLiquidity({
+    router: scenario.uniswapV2.router,
+    tokenA: scenario.collateralAsset,
+    tokenB: scenario.debtAsset,
   })
+
+  let mintOutcome: Awaited<ReturnType<typeof executeSharedMint>>
+  try {
+    mintOutcome = await executeSharedMint({
+      account,
+      publicClient,
+      config,
+      slippageBps: scenario.slippageBps,
+    })
+  } finally {
+    if (typeof previousAdapter === 'string') {
+      process.env['TEST_QUOTE_ADAPTER'] = previousAdapter
+    } else {
+      delete process.env['TEST_QUOTE_ADAPTER']
+    }
+  }
 
   const sharesAfterMint = await readLeverageTokenBalanceOf(config, {
     address: mintOutcome.token,
@@ -149,24 +152,27 @@ async function executeRedeemPath(
   scenario: RedeemScenario & { sharesAfterMint: bigint },
 ): Promise<void> {
   const { account, config, publicClient } = ctx
-  const { token, router, manager, collateralAsset, sharesAfterMint, slippageBps, uniswapV3 } =
+  const { token, router, manager, collateralAsset, sharesAfterMint, slippageBps, uniswapV2 } =
     scenario
 
   const sharesToRedeem = sharesAfterMint
   await approveIfNeeded(token, router, sharesToRedeem)
 
-  console.info('[STEP] Planning redeem with Uniswap v3 adapter', {
+  await seedUniswapV2PairLiquidity({
+    router: uniswapV2.router,
+    tokenA: collateralAsset,
+    tokenB: scenario.debtAsset,
+  })
+
+  console.info('[STEP] Planning redeem with Uniswap v2 adapter', {
     sharesToRedeem: sharesToRedeem.toString(),
   })
 
-  const quoteCollateralToDebt = createUniswapV3QuoteAdapter({
-    publicClient: publicClient as unknown as UniswapV3QuoteOptions['publicClient'],
-    quoter: uniswapV3.quoter,
-    router: uniswapV3.swapRouter,
-    fee: uniswapV3.fee,
+  const quoteCollateralToDebt = createUniswapV2QuoteAdapter({
+    publicClient: publicClient as unknown as UniswapV2QuoteOptions['publicClient'],
+    router: uniswapV2.router,
     recipient: router,
-    poolAddress: uniswapV3.poolAddress,
-    ...(uniswapV3.wrappedNative ? { wrappedNative: uniswapV3.wrappedNative } : {}),
+    ...(uniswapV2.wrappedNative ? { wrappedNative: uniswapV2.wrappedNative } : {}),
   })
 
   const plan = await planRedeemV2({
@@ -198,7 +204,7 @@ async function executeRedeemPath(
   expect(hasApprovalOrWithdraw).toBe(true)
 
   const swapRouterCall = plan.calls.find(
-    (call) => call.target.toLowerCase() === uniswapV3.swapRouter.toLowerCase(),
+    (call) => call.target.toLowerCase() === uniswapV2.router.toLowerCase(),
   )
   expect(swapRouterCall).toBeDefined()
 

@@ -1,17 +1,23 @@
 import type { Address, PublicClient } from 'viem'
 import { parseUnits } from 'viem'
 import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
+import type { QuoteFn } from '@/domain/shared/adapters/types'
 import {
   createUniswapV2QuoteAdapter,
   type UniswapV2QuoteOptions,
 } from '@/domain/shared/adapters/uniswapV2'
+import {
+  createUniswapV3QuoteAdapter,
+  type UniswapV3QuoteOptions,
+} from '@/domain/shared/adapters/uniswapV3'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
-import { ADDR, mode, RPC } from './env'
+import { createStaticQuoteAdapter, loadStaticQuoteSnapshot } from './adapters/staticQuote'
+import { ADDR, mode, RPC, V3 } from './env'
 import { readErc20Decimals } from './erc20'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
 
@@ -42,6 +48,7 @@ export async function executeSharedMint({
   config,
   slippageBps = 50,
 }: MintSetupParams): Promise<MintOutcome> {
+  const resolvedSlippageBps = Number(process.env['TEST_SLIPPAGE_BPS'] ?? slippageBps ?? 50)
   if (mode !== 'tenderly') {
     console.error('Shared mint helper requires Tenderly VNet. Configure TEST_RPC_URL.', {
       mode,
@@ -81,7 +88,8 @@ export async function executeSharedMint({
   console.info('[SHARED MINT] Token assets', { collateralAsset, debtAsset })
 
   const decimals = await readErc20Decimals(config, collateralAsset)
-  const equityInInputAsset = parseUnits('10', decimals)
+  const equityHuman = process.env['TEST_EQUITY_AMOUNT'] ?? '0.1'
+  const equityInInputAsset = parseUnits(equityHuman, decimals)
   console.info('[SHARED MINT] Funding + approving collateral', {
     collateralAsset,
     equityInInputAsset: equityInInputAsset.toString(),
@@ -90,38 +98,20 @@ export async function executeSharedMint({
   await topUpErc20(collateralAsset, account.address, '25')
   await approveIfNeeded(collateralAsset, router, equityInInputAsset)
 
+  const quoteAdapterPreference = (process.env['TEST_QUOTE_ADAPTER'] ?? '').toLowerCase()
   const useLiFi = process.env['TEST_USE_LIFI'] === '1'
-  const quoteDebtToCollateral = useLiFi
-    ? (() => {
-        console.info('[SHARED MINT] Creating LiFi quote adapter', {
-          chainId,
-          router,
-          fromAddress: executor,
-          allowBridges: 'none',
-        })
-        return createLifiQuoteAdapter({
-          chainId,
-          router,
-          fromAddress: executor,
-          allowBridges: 'none',
-        })
-      })()
-    : (() => {
-        const uniswapRouter =
-          (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
-          ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
-        console.info('[SHARED MINT] Creating Uniswap V2 quote adapter', {
-          chainId,
-          router,
-          uniswapRouter,
-        })
-        return createUniswapV2QuoteAdapter({
-          publicClient: publicClient as unknown as UniswapV2QuoteOptions['publicClient'],
-          router: uniswapRouter,
-          recipient: router,
-          wrappedNative: ADDR.weth,
-        })
-      })()
+  const canUseV3 = Boolean(ADDR.v3Quoter && ADDR.v3SwapRouter && ADDR.v3Pool && V3.poolFee)
+
+  const quoteDebtToCollateral = await resolveDebtToCollateralQuote({
+    preference: quoteAdapterPreference,
+    useLiFi,
+    canUseV3,
+    chainId,
+    router,
+    executor,
+    resolvedSlippageBps,
+    publicClient,
+  })
 
   const sharesBefore = await readLeverageTokenBalanceOf(config, {
     address: token,
@@ -136,7 +126,7 @@ export async function executeSharedMint({
     token,
     inputAsset: collateralAsset,
     equityInInputAsset,
-    slippageBps,
+    slippageBps: resolvedSlippageBps,
     quoteDebtToCollateral,
     routerAddressV2: router,
     managerAddressV2: manager,
@@ -144,6 +134,8 @@ export async function executeSharedMint({
   if (res.routerVersion !== 'v2') {
     throw new Error(`Unexpected router version: ${res.routerVersion}`)
   }
+
+  console.info('[SHARED MINT RESULT]', { hash: res.hash })
 
   console.info('[SHARED MINT PLAN]', {
     minShares: res.plan.minShares.toString(),
@@ -176,4 +168,131 @@ export async function executeSharedMint({
     token,
     sharesMinted: mintedShares,
   }
+}
+
+async function resolveDebtToCollateralQuote(params: {
+  preference: string
+  useLiFi: boolean
+  canUseV3: boolean
+  chainId: number
+  router: Address
+  executor: Address
+  resolvedSlippageBps: number
+  publicClient: PublicClient
+}): Promise<QuoteFn> {
+  const {
+    preference,
+    useLiFi,
+    canUseV3,
+    chainId,
+    router,
+    executor,
+    resolvedSlippageBps,
+    publicClient,
+  } = params
+
+  const normalizedPreference = preference.trim()
+  const mode = selectQuoteMode({ preference: normalizedPreference, useLiFi, canUseV3 })
+
+  switch (mode) {
+    case 'static': {
+      const path =
+        process.env['TEST_STATIC_DEBT_TO_COLLATERAL_PATH'] ?? process.env['TEST_STATIC_QUOTE_PATH']
+      if (!path) {
+        throw new Error(
+          'TEST_QUOTE_ADAPTER=static requires TEST_STATIC_DEBT_TO_COLLATERAL_PATH or TEST_STATIC_QUOTE_PATH',
+        )
+      }
+      const selector = process.env['TEST_STATIC_QUOTE_SELECTOR']
+      const snapshot = await loadStaticQuoteSnapshot({
+        path,
+        ...(selector ? { selector } : {}),
+      })
+      console.info('[SHARED MINT] Using static quote adapter', {
+        path,
+        selector,
+        amountIn: snapshot.amountIn.toString(),
+        amountOut: snapshot.amountOut.toString(),
+        approvalTarget: snapshot.approvalTarget,
+      })
+      return createStaticQuoteAdapter({ snapshot, label: 'debt-to-collateral' })
+    }
+    case 'lifi': {
+      console.info('[SHARED MINT] Creating LiFi quote adapter', {
+        chainId,
+        router,
+        fromAddress: executor,
+        allowBridges: 'none',
+        slippageBps: resolvedSlippageBps,
+      })
+      return createLifiQuoteAdapter({
+        chainId,
+        router,
+        fromAddress: executor,
+        allowBridges: 'none',
+        slippageBps: resolvedSlippageBps,
+      })
+    }
+    case 'uniswapv3': {
+      if (!canUseV3 || !ADDR.v3Quoter || !ADDR.v3SwapRouter || !ADDR.v3Pool || !V3.poolFee) {
+        throw new Error('Uniswap v3 adapter selected but configuration is incomplete')
+      }
+      console.info('[SHARED MINT] Creating Uniswap V3 quote adapter', {
+        chainId,
+        router,
+        quoter: ADDR.v3Quoter,
+        swapRouter: ADDR.v3SwapRouter,
+        pool: ADDR.v3Pool,
+        fee: V3.poolFee,
+        slippageBps: resolvedSlippageBps,
+      })
+      return createUniswapV3QuoteAdapter({
+        publicClient: publicClient as unknown as UniswapV3QuoteOptions['publicClient'],
+        quoter: ADDR.v3Quoter,
+        router: ADDR.v3SwapRouter,
+        fee: V3.poolFee,
+        recipient: router,
+        poolAddress: ADDR.v3Pool,
+        slippageBps: resolvedSlippageBps,
+        ...(ADDR.weth ? { wrappedNative: ADDR.weth } : {}),
+      })
+    }
+    default: {
+      const uniswapRouter =
+        (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
+        ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
+      console.info('[SHARED MINT] Creating Uniswap V2 quote adapter', {
+        chainId,
+        router,
+        uniswapRouter,
+        slippageBps: resolvedSlippageBps,
+      })
+      return createUniswapV2QuoteAdapter({
+        publicClient: publicClient as unknown as UniswapV2QuoteOptions['publicClient'],
+        router: uniswapRouter,
+        recipient: router,
+        wrappedNative: ADDR.weth,
+        slippageBps: resolvedSlippageBps,
+      })
+    }
+  }
+}
+
+function selectQuoteMode(params: {
+  preference: string
+  useLiFi: boolean
+  canUseV3: boolean
+}): 'static' | 'lifi' | 'uniswapv3' | 'uniswapv2' {
+  const { preference, useLiFi, canUseV3 } = params
+  const normalized = preference.toLowerCase()
+  if (normalized === 'static') return 'static'
+  if (normalized === 'lifi') return 'lifi'
+  if (normalized === 'uniswapv3' || normalized === 'v3' || normalized === 'uni-v3')
+    return 'uniswapv3'
+  if (normalized === 'uniswapv2' || normalized === 'v2' || normalized === 'uni-v2')
+    return 'uniswapv2'
+
+  if (useLiFi) return 'lifi'
+  if (canUseV3) return 'uniswapv3'
+  return 'uniswapv2'
 }

@@ -1,6 +1,7 @@
 import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
 import type { Address } from 'viem'
 import { BaseLogo } from '@/components/icons/logos'
+import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
 
 // Leverage token keys enum for type safety
@@ -34,6 +35,8 @@ interface ResourceItem {
   highlight?: boolean
 }
 
+type SwapConfig = CollateralToDebtSwapConfig
+
 // Leverage token configuration interface
 export interface LeverageTokenConfig {
   // Basic token info
@@ -61,6 +64,11 @@ export interface LeverageTokenConfig {
     name: string
     address: Address
     decimals: number
+  }
+
+  swaps?: {
+    debtToCollateral?: SwapConfig
+    collateralToDebt?: SwapConfig
   }
 
   // Related resources (optional)
@@ -95,6 +103,16 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       name: 'Wrapped Ether',
       address: BASE_WETH,
       decimals: 18,
+    },
+    swaps: {
+      debtToCollateral: {
+        type: 'uniswapV3',
+        poolKey: 'weeth-weth',
+      },
+      collateralToDebt: {
+        type: 'uniswapV3',
+        poolKey: 'weeth-weth',
+      },
     },
     relatedResources: {
       underlyingPlatforms: [

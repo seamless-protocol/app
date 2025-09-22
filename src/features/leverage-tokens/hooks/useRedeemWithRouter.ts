@@ -27,6 +27,8 @@ export interface UseRedeemWithRouterParams {
   slippageBps?: number
 
   quoteCollateralToDebt?: QuoteFn
+  routerAddress?: Address
+  managerAddress?: Address
 }
 
 /**
@@ -35,7 +37,15 @@ export interface UseRedeemWithRouterParams {
 export function useRedeemWithRouter() {
   const config = useConfig()
   return useMutation<OrchestrateRedeemResult, Error, UseRedeemWithRouterParams>({
-    mutationFn: async ({ token, account, sharesToRedeem, slippageBps, quoteCollateralToDebt }) =>
+    mutationFn: async ({
+      token,
+      account,
+      sharesToRedeem,
+      slippageBps,
+      quoteCollateralToDebt,
+      routerAddress,
+      managerAddress,
+    }) =>
       orchestrateRedeem({
         config,
         account,
@@ -43,6 +53,8 @@ export function useRedeemWithRouter() {
         sharesToRedeem,
         ...(typeof slippageBps !== 'undefined' ? { slippageBps } : {}),
         ...(typeof quoteCollateralToDebt !== 'undefined' ? { quoteCollateralToDebt } : {}),
+        ...(typeof routerAddress !== 'undefined' ? { routerAddressV2: routerAddress } : {}),
+        ...(typeof managerAddress !== 'undefined' ? { managerAddressV2: managerAddress } : {}),
       }),
   })
 }

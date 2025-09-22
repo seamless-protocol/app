@@ -1,89 +1,102 @@
 import { useCallback, useMemo, useState } from 'react'
-import type { Address, PublicClient } from 'viem'
-import { usePublicClient } from 'wagmi'
-import { createLifiQuoteAdapter, createUniswapV2QuoteAdapter } from '@/domain/shared/adapters'
-import { BASE_WETH, getContractAddresses } from '@/lib/contracts/addresses'
+import type { Address } from 'viem'
+import { RouterVersion } from '@/domain/redeem/planner/types'
+import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
+import { detectRedeemRouterVersion } from '@/domain/redeem/utils/detectVersion'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { useRedeemWithRouter } from '../useRedeemWithRouter'
+import { type QuoteStatus, useCollateralToDebtQuote } from './useCollateralToDebtQuote'
 
 type Status = 'idle' | 'submitting' | 'pending' | 'success' | 'error'
 
-export function useRedeemExecution(params: {
+interface UseRedeemExecutionParams {
   token: Address
   account?: Address
   slippageBps: number
-  chainId?: number
-}) {
-  const { token, account, slippageBps, chainId } = params
+  chainId: SupportedChainId
+  routerAddress?: Address
+  managerAddress?: Address
+  swap?: CollateralToDebtSwapConfig
+}
+
+export function useRedeemExecution({
+  token,
+  account,
+  slippageBps,
+  chainId,
+  routerAddress,
+  managerAddress,
+  swap,
+}: UseRedeemExecutionParams) {
   const [status, setStatus] = useState<Status>('idle')
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState<Error | undefined>(undefined)
 
-  const publicClient = usePublicClient()
   const redeemWithRouter = useRedeemWithRouter()
 
+  const routerVersion = detectRedeemRouterVersion()
+  const requiresQuote = routerVersion === RouterVersion.V2
+
+  const {
+    quote,
+    status: quoteStatus,
+    error: quoteError,
+  } = useCollateralToDebtQuote({
+    chainId,
+    ...(routerAddress ? { routerAddress } : {}),
+    ...(swap ? { swap } : {}),
+    slippageBps,
+    requiresQuote,
+  })
+
   const canSubmit = useMemo(() => Boolean(account), [account])
-
-  // Create quote function for V2 router
-  const quoteCollateralToDebt = useMemo(() => {
-    if (!publicClient || !chainId) return undefined
-
-    const contractAddresses = getContractAddresses(chainId)
-    const routerV2 = contractAddresses.leverageRouterV2
-    if (!routerV2) return undefined
-
-    // Use LiFi by default, fallback to UniswapV2 if needed
-    const useLiFi = import.meta.env['VITE_USE_LIFI'] !== 'false'
-
-    if (useLiFi) {
-      return createLifiQuoteAdapter({
-        chainId,
-        router: routerV2,
-        allowBridges: 'none',
-      })
-    } else {
-      // Fallback to UniswapV2 - would need a router address
-      const uniswapRouter = import.meta.env['VITE_UNISWAP_V2_ROUTER'] as Address | undefined
-      if (!uniswapRouter) return undefined
-
-      return createUniswapV2QuoteAdapter({
-        publicClient: publicClient as unknown as Pick<PublicClient, 'readContract' | 'getBlock'>,
-        router: uniswapRouter,
-        recipient: routerV2,
-        wrappedNative: BASE_WETH,
-      })
-    }
-  }, [publicClient, chainId])
+  const quoteReady = !requiresQuote || quoteStatus === 'ready' || quoteStatus === 'not-required'
+  const effectiveCanSubmit = canSubmit && quoteReady
 
   const redeem = useCallback(
     async (sharesToRedeem: bigint) => {
       if (!account) throw new Error('No account')
+      if (requiresQuote && quoteStatus !== 'ready') {
+        const baseError =
+          quoteError?.message || 'Unable to initialize swap quote for router v2 redeem.'
+        throw new Error(baseError)
+      }
+
       setStatus('submitting')
       setError(undefined)
       try {
-        if (!quoteCollateralToDebt) {
-          throw new Error('Quote function not available for V2 redeem')
-        }
-
         const result = await redeemWithRouter.mutateAsync({
           token,
           account,
           sharesToRedeem,
           slippageBps,
-          quoteCollateralToDebt,
+          ...(quote ? { quoteCollateralToDebt: quote } : {}),
+          ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
+          ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
         })
 
         setHash(result.hash)
-        setStatus('pending')
-        await publicClient?.waitForTransactionReceipt({ hash: result.hash })
         setStatus('success')
         return result.hash
-      } catch (e: unknown) {
-        setError(e as Error)
+      } catch (err) {
+        const nextError = err instanceof Error ? err : new Error(String(err))
+        setError(nextError)
         setStatus('error')
-        throw e
+        throw nextError
       }
     },
-    [account, token, slippageBps, quoteCollateralToDebt, redeemWithRouter, publicClient],
+    [
+      account,
+      managerAddress,
+      quote,
+      quoteError?.message,
+      quoteStatus,
+      redeemWithRouter,
+      requiresQuote,
+      routerAddress,
+      slippageBps,
+      token,
+    ],
   )
 
   return {
@@ -91,6 +104,10 @@ export function useRedeemExecution(params: {
     status: redeemWithRouter.isPending ? 'submitting' : status,
     hash,
     error: redeemWithRouter.error || error,
-    canSubmit,
+    canSubmit: effectiveCanSubmit,
+    quoteStatus,
+    quoteError,
   }
 }
+
+export type { QuoteStatus }

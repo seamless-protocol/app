@@ -25,8 +25,8 @@ const WEETH_WETH_POOL_BASE = {
   address: getAddress('0xB1419a7F9e8c6E434b1d05377E0dbc4154E3de78'),
   token0: WEETH_BASE,
   token1: BASE_WETH,
-  fee: 500,
-  tickSpacing: 10,
+  fee: 100,
+  tickSpacing: 1,
 } satisfies UniswapV3PoolConfig
 
 const CONFIG_BY_CHAIN: Partial<Record<number, UniswapV3ChainConfig>> = {
