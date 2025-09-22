@@ -8,14 +8,13 @@
 ## Current State
 - Adapter (`src/domain/shared/adapters/uniswapV3.ts`) is structurally correct: it normalizes ETH → WETH, sets `sqrtPriceLimitX96 = 0`, and encodes `exactOutputSingle` for debt repayment.
 - Tokens in env resolve correctly (`ADDR.weeth` / `ADDR.weth`). Planner only unwraps when collateral **is** WETH, so the redeem path stays ERC-20 → ERC-20 once the quote succeeds.
-- `scripts/debug-v3-quote.ts` fails today because the fee tier/pool are misconfigured, not because of adapter logic.
 
 ## What Needs To Happen
 1. **Verify new in-repo config** (developer + CI):
    - `src/lib/config/uniswapV3.ts` now pins Base defaults (quoter, swap router, weETH/WETH pool `0xB141…de78`, fee `500`, tick spacing `10`).
    - `tests/shared/env.ts` consumes those defaults; env vars remain optional overrides only. Ensure CI runners load the repo config (no extra secrets required).
 2. **Re-run smoke checks** once env is fixed:
-   - `bun run tsx scripts/debug-v3-quote.ts` → expect non-zero `out` and calldata decoding to `exactOutputSingle`.
+   - Invoke the Uniswap v3 adapter via a quick REPL or unit harness and ensure the quote returns non-zero `out` with calldata decoding to `exactOutputSingle`.
    - `bun run test:integration --filter "redeem"` now mints using the Uniswap v2 adapter (setup-only) and redeems via Uniswap v3; confirm both legs succeed on Tenderly.
 3. **Hardening follow-ups** (recommended):
    - In `createUniswapV3QuoteAdapter`, read `token0/token1` from the provided pool and assert they match normalized inputs. Fail fast with a descriptive error if not (prevents future misconfig).
