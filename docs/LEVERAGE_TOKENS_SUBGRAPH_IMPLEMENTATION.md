@@ -17,7 +17,7 @@ The leverage tokens subgraph implementation provides historical data visualizati
 VITE_LEVERAGE_TOKENS_SUBGRAPH=https://api.studio.thegraph.com/query/113147/seamless-leverage-tokens-base/version/latest
 
 # API key for authentication
-VITE_LEVERAGE_TOKENS_SUBGRAPH_API_KEY=your_api_key_here
+VITE_THEGRAPH_API_KEY=your_api_key_here
 ```
 
 ## Apollo Client Configuration
@@ -31,7 +31,7 @@ const leverageTokenApolloClient = new ApolloClient({
   uri: import.meta.env.VITE_LEVERAGE_TOKENS_SUBGRAPH,
   cache: new InMemoryCache(),
   headers: {
-    "Authorization": `Bearer ${import.meta.env.VITE_LEVERAGE_TOKENS_SUBGRAPH_API_KEY}`,
+    "Authorization": `Bearer ${import.meta.env.VITE_THEGRAPH_API_KEY}`,
   },
 });
 

@@ -51,9 +51,9 @@ export function getSubgraphEndpoint(chainId: number): string {
  * Generic GraphQL request function
  */
 export async function graphqlRequest<T>(chainId: number, request: GraphQLRequest): Promise<T> {
-  const apiKey = getEnvVar('VITE_LEVERAGE_TOKENS_SUBGRAPH_API_KEY')
+  const apiKey = getEnvVar('VITE_THEGRAPH_API_KEY')
   if (!apiKey) {
-    throw new Error('VITE_LEVERAGE_TOKENS_SUBGRAPH_API_KEY environment variable is required')
+    throw new Error('VITE_THEGRAPH_API_KEY environment variable is required')
   }
 
   const endpoint = getSubgraphEndpoint(chainId)

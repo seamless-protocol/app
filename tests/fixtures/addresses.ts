@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { base, mainnet } from 'viem/chains'
-
+import type { UniswapV3PoolKey } from '../../src/lib/config/uniswapV3.js'
 import type { ContractAddresses } from '../../src/lib/contracts/addresses.js'
 import { contractAddresses } from '../../src/lib/contracts/addresses.js'
 
@@ -76,9 +76,191 @@ export const MULTICALL_EXECUTOR_ADDRESS = assertAddress(
   baseContracts.multicall,
 )
 
-// Default leverage token used in integration tests (weETH/WETH 17x)
-// Tenderly VNet deployment used by integration/E2E tests (distinct from Base mainnet token)
-export const WEETH_WETH_17X_TOKEN_ADDRESS = '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as const
+export const BASE_TENDERLY_VNET_PRIMARY_RPC =
+  'https://virtual.base.us-east.rpc.tenderly.co/6ca6f867-7c83-460a-ac5e-d5b2c17e04e9' as const
+export const BASE_TENDERLY_VNET_ADMIN_RPC = BASE_TENDERLY_VNET_PRIMARY_RPC
+
+export const MAINNET_TENDERLY_VNET_PRIMARY_RPC =
+  'https://virtual.mainnet.us-east.rpc.tenderly.co/bdcd1ab9-21b8-4e3c-8561-4e5aa2e847c9' as const
+export const MAINNET_TENDERLY_VNET_ADMIN_RPC =
+  'https://virtual.mainnet.us-east.rpc.tenderly.co/46b140d1-7b0a-45b1-badc-46e337bf9c13' as const
+
+export type LeverageTokenSource = 'tenderly' | 'prod'
+export type LeverageTokenKey = 'weeth-weth-17x' | 'cbbtc-usdc-2x'
+
+export interface LeverageTokenDefinition {
+  key: LeverageTokenKey
+  address: Address
+  label: string
+  chainId: number
+  collateralSymbol: string
+  debtSymbol: string
+  leverageManager?: Address
+  leverageRouter?: Address
+  multicallExecutor?: Address
+  rebalanceAdapter?: Address
+  lendingAdapter?: Address
+  veloraAdapter?: Address
+  rpcUrl?: string
+  adminRpcUrl?: string
+  swap?: {
+    uniswapV2Router?: Address
+    useLiFi?: boolean
+    uniswapV3?: {
+      pool?: Address
+      poolKey?: UniswapV3PoolKey
+      fee?: number
+      quoter?: Address
+      router?: Address
+    }
+  }
+}
+
+export const TENDERLY_VNET_STACK = {
+  leverageManager: '0x575572D9cF8692d5a8e8EE5312445D0A6856c55f' as Address,
+  leverageRouter: '0x71E826cC335DaBac3dAF4703B2119983e1Bc843B' as Address,
+  multicallExecutor: '0x8db50770F8346e7D98886410490E9101718869EB' as Address,
+  veloraAdapter: '0x153e6be8B331f87a3DC9FE6A574CFAAcd1B0e8BB' as Address,
+}
+
+const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = {
+  'weeth-weth-17x': {
+    key: 'weeth-weth-17x',
+    address: '0xa1FFe279BEb08F52f4E507AABa004a512ceb6c37' as Address,
+    label: 'weETH / WETH 17x Leverage Token (Tenderly)',
+    chainId: mainnet.id,
+    collateralSymbol: 'weETH',
+    debtSymbol: 'WETH',
+    leverageManager: TENDERLY_VNET_STACK.leverageManager,
+    leverageRouter: TENDERLY_VNET_STACK.leverageRouter,
+    multicallExecutor: TENDERLY_VNET_STACK.multicallExecutor,
+    rebalanceAdapter: '0x42B2f80b25EFA106E8Ed2CE675b0CA2a3829eA16' as Address,
+    lendingAdapter: '0xfC9414be7746920bc89bB979e112Ff962C013c00' as Address,
+    veloraAdapter: TENDERLY_VNET_STACK.veloraAdapter,
+    rpcUrl: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
+    adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
+    swap: {
+      uniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D' as Address,
+      uniswapV3: {
+        poolKey: 'weeth-weth',
+        fee: 100,
+      },
+    },
+  },
+  'cbbtc-usdc-2x': {
+    key: 'cbbtc-usdc-2x',
+    address: '0x662c3f931D4101b7e2923f8493D6b35368a991aD' as Address,
+    label: 'cbBTC / USDC 2x Leverage Token (Tenderly)',
+    chainId: mainnet.id,
+    collateralSymbol: 'cbBTC',
+    debtSymbol: 'USDC',
+    leverageManager: TENDERLY_VNET_STACK.leverageManager,
+    leverageRouter: TENDERLY_VNET_STACK.leverageRouter,
+    multicallExecutor: TENDERLY_VNET_STACK.multicallExecutor,
+    rebalanceAdapter: '0x21DaC768668cAb4a33f4069B4002bB4B1DA33d32' as Address,
+    lendingAdapter: '0x1B1bCfd0b1FB7559407c2b73E0d6e606B2d26b69' as Address,
+    veloraAdapter: TENDERLY_VNET_STACK.veloraAdapter,
+    rpcUrl: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
+    adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
+    swap: {
+      uniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D' as Address,
+      uniswapV3: {
+        poolKey: 'usdc-cbbtc',
+        fee: 500,
+      },
+    },
+  },
+}
+
+const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = {
+  'weeth-weth-17x': {
+    key: 'weeth-weth-17x',
+    address: '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as Address,
+    label: 'weETH / WETH 17x Leverage Token',
+    chainId: base.id,
+    collateralSymbol: 'weETH',
+    debtSymbol: 'WETH',
+  },
+  'cbbtc-usdc-2x': {
+    key: 'cbbtc-usdc-2x',
+    address: '0x0000000000000000000000000000000000000000' as Address,
+    label: 'cbBTC / USDC 2x Leverage Token',
+    chainId: base.id,
+    collateralSymbol: 'cbBTC',
+    debtSymbol: 'USDC',
+  },
+}
+
+const LEVERAGE_TOKEN_REGISTRY: Record<
+  LeverageTokenSource,
+  Record<LeverageTokenKey, LeverageTokenDefinition>
+> = {
+  tenderly: TENDERLY_LEVERAGE_TOKENS,
+  prod: PROD_LEVERAGE_TOKENS,
+}
+
+export function getLeverageTokenDefinition(
+  source: LeverageTokenSource,
+  key: LeverageTokenKey,
+): LeverageTokenDefinition {
+  const tokens = LEVERAGE_TOKEN_REGISTRY[source]
+  const definition = tokens[key]
+  if (!definition || definition.address === '0x0000000000000000000000000000000000000000') {
+    throw new Error(`Leverage token '${key}' not configured for source '${source}'`)
+  }
+  return definition
+}
+
+export function listLeverageTokens(source: LeverageTokenSource): Array<LeverageTokenDefinition> {
+  return Object.values(LEVERAGE_TOKEN_REGISTRY[source]).filter(
+    (token) => token.address !== '0x0000000000000000000000000000000000000000',
+  )
+}
+
+export const DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY: LeverageTokenKey = 'weeth-weth-17x'
+export const DEFAULT_PROD_LEVERAGE_TOKEN_KEY: LeverageTokenKey = 'weeth-weth-17x'
+
+export function getDefaultLeverageTokenDefinition(
+  source: LeverageTokenSource,
+): LeverageTokenDefinition {
+  const key =
+    source === 'tenderly' ? DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY : DEFAULT_PROD_LEVERAGE_TOKEN_KEY
+  return getLeverageTokenDefinition(source, key)
+}
+
+export const WEETH_WETH_17X_TENDERLY_TOKEN_ADDRESS =
+  TENDERLY_LEVERAGE_TOKENS['weeth-weth-17x'].address
+
+export function isLeverageTokenKey(value: unknown): value is LeverageTokenKey {
+  return value === 'weeth-weth-17x' || value === 'cbbtc-usdc-2x'
+}
+
+export function getLeverageTokenAddress(
+  source: LeverageTokenSource,
+  key?: LeverageTokenKey,
+): Address {
+  const definition = key
+    ? getLeverageTokenDefinition(source, key)
+    : getDefaultLeverageTokenDefinition(source)
+  return definition.address
+}
+
+export function getLeverageTokenLabel(source: LeverageTokenSource, key?: LeverageTokenKey): string {
+  const definition = key
+    ? getLeverageTokenDefinition(source, key)
+    : getDefaultLeverageTokenDefinition(source)
+  return definition.label
+}
+
+export const TENDERLY_VNET_CONTRACT_OVERRIDES: Record<number, Partial<ContractAddresses>> = {
+  [mainnet.id]: {
+    leverageManager: TENDERLY_VNET_STACK.leverageManager,
+    leverageManagerV2: TENDERLY_VNET_STACK.leverageManager,
+    leverageRouter: TENDERLY_VNET_STACK.leverageRouter,
+    leverageRouterV2: TENDERLY_VNET_STACK.leverageRouter,
+    multicall: TENDERLY_VNET_STACK.multicallExecutor,
+  },
+}
 
 // Staking/Rewards
 export const REWARDS_CONTROLLER_ADDRESS = assertAddress(

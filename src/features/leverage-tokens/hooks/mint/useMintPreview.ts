@@ -1,51 +1,102 @@
 import { useQuery } from '@tanstack/react-query'
 import { getPublicClient } from '@wagmi/core'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
+import { RouterVersion } from '@/domain/mint/planner/types'
+import { detectRouterVersion } from '@/domain/mint/utils/detectVersion'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
-import { readLeverageManagerPreviewMint } from '@/lib/contracts/generated'
+import { getContractAddresses } from '@/lib/contracts/addresses'
+import {
+  readLeverageManagerPreviewMint,
+  readLeverageManagerV2PreviewDeposit,
+} from '@/lib/contracts/generated'
 
-type Preview = Awaited<ReturnType<typeof readLeverageManagerPreviewMint>>
+type PreviewTuple = Awaited<ReturnType<typeof readLeverageManagerPreviewMint>>
+
+type PreviewResult = {
+  collateral: bigint
+  debt: bigint
+  shares: bigint
+  equity?: bigint
+  tokenFee?: bigint
+  treasuryFee?: bigint
+}
 
 export function useMintPreview(params: {
   config: Config
   token: Address
   equityInCollateralAsset: bigint | undefined
   debounceMs?: number
+  chainId?: number
 }) {
-  const { config, token, equityInCollateralAsset, debounceMs = 350 } = params
+  const { config, token, equityInCollateralAsset, debounceMs = 350, chainId } = params
 
-  // Local debounce of the raw bigint input so the query only runs after idle
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
-  const enabled = useMemo(() => typeof debounced === 'bigint' && debounced > 0n, [debounced])
+  const hasValidInput = typeof debounced === 'bigint' && debounced > 0n
 
-  // Derive active chain id from wagmi config for multi-chain cache isolation
-  const chainId = getPublicClient(config)?.chain?.id
+  const detectedChainId = chainId ?? getPublicClient(config)?.chain?.id
+  const contracts = detectedChainId ? getContractAddresses(detectedChainId) : undefined
 
-  const amountForKey = enabled && typeof debounced === 'bigint' ? (debounced as bigint) : 0n
+  const requestedVersion = detectRouterVersion()
+  const managerV2Address = contracts?.leverageManagerV2
+  const managerV1Address = contracts?.leverageManager
+  const effectiveVersion = (() => {
+    if (requestedVersion === RouterVersion.V2) return RouterVersion.V2
+    if (!managerV1Address && managerV2Address) return RouterVersion.V2
+    return RouterVersion.V1
+  })()
+  const useV2 = effectiveVersion === RouterVersion.V2 && Boolean(managerV2Address)
+  const managerAddress = useV2 ? managerV2Address : (managerV1Address ?? managerV2Address)
+
+  const amountForKey = hasValidInput && typeof debounced === 'bigint' ? debounced : 0n
   const queryKey = ltKeys.simulation.mintKey({
-    chainId,
+    chainId: detectedChainId,
     addr: token,
     amount: amountForKey,
   })
 
-  const query = useQuery<Preview, Error>({
+  const query = useQuery<PreviewResult, Error>({
     queryKey,
-    // Only executes when enabled=true
-    queryFn: () =>
-      readLeverageManagerPreviewMint(config, {
-        args: [token, debounced ?? 0n],
-      }),
-    enabled,
+    enabled: hasValidInput && Boolean(managerAddress) && Boolean(detectedChainId),
     retry: false,
     refetchOnWindowFocus: false,
-    // Keep behavior deterministic for keystroke-driven UX
     staleTime: 0,
+    queryFn: async () => {
+      if (!managerAddress || typeof debounced !== 'bigint') {
+        throw new Error('Mint preview unavailable: manager address or input missing')
+      }
+
+      if (useV2 && managerV2Address) {
+        const res = await readLeverageManagerV2PreviewDeposit(config, {
+          address: managerV2Address,
+          args: [token, debounced],
+        })
+        return {
+          collateral: res.collateral,
+          debt: res.debt,
+          shares: res.shares,
+          tokenFee: res.tokenFee,
+          treasuryFee: res.treasuryFee,
+        }
+      }
+
+      const res: PreviewTuple = await readLeverageManagerPreviewMint(config, {
+        ...(managerAddress ? { address: managerAddress } : {}),
+        args: [token, debounced],
+      })
+      return {
+        collateral: res.collateral,
+        debt: res.debt,
+        shares: res.shares,
+        equity: res.equity,
+        tokenFee: res.tokenFee,
+        treasuryFee: res.treasuryFee,
+      }
+    },
   })
 
-  // Map React Query statuses to the previous API surface
-  const isLoading = enabled ? query.isPending || query.isFetching : false
+  const isLoading = hasValidInput && (query.isPending || query.isFetching)
   const data = query.data
   const error = query.error
 

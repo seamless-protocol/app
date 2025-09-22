@@ -25,11 +25,19 @@ export type Quote = {
   calldata: Hex
 }
 
-export type QuoteFn = (args: {
+export type QuoteIntent = 'exactIn' | 'exactOut'
+
+export type QuoteRequest = {
   inToken: Address
   outToken: Address
   amountIn: bigint
-}) => Promise<Quote>
+  /** Optional desired output when requesting an exact-out quote. */
+  amountOut?: bigint
+  /** Optional intent flag to switch between exact-in and exact-out sizing. */
+  intent?: QuoteIntent
+}
+
+export type QuoteFn = (args: QuoteRequest) => Promise<Quote>
 
 export enum RouterVersion {
   V1 = 'v1',
