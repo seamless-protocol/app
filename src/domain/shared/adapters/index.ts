@@ -9,7 +9,3 @@ export {
   createUniswapV3QuoteAdapter,
   type UniswapV3QuoteOptions,
 } from './uniswapV3'
-export {
-  createUniswapV4QuoteAdapter,
-  type UniswapV4QuoteOptions,
-} from './uniswapV4'
