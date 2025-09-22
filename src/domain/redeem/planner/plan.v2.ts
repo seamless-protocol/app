@@ -124,14 +124,19 @@ export async function planRedeemV2(params: {
     throw new Error('Insufficient collateral to repay debt')
   }
 
-  const remainingCollateral = totalCollateralAvailable - collateralNeededForDebt
+  // Pad the swap input slightly so rounding/flooring during execution does not leave us
+  // a few wei short when repaying debt (e.g. Uniswap V2 floors amountsOut). Single wei
+  // padding keeps amountOutMin effectively unchanged but gives Morpho pulls a cushion.
+  const padding = collateralNeededForDebt > 0n && totalCollateralAvailable > collateralNeededForDebt ? 1n : 0n
+  const paddedCollateralForDebt = collateralNeededForDebt + padding
+  const remainingCollateral = totalCollateralAvailable - paddedCollateralForDebt
   const minCollateralForSender = calculateMinCollateralForSender(remainingCollateral, slippageBps)
 
   // Build the collateral->debt swap calls
   const calls = await buildCollateralToDebtSwapCalls({
     collateralAsset,
     debtAsset,
-    collateralAmount: collateralNeededForDebt,
+    collateralAmount: paddedCollateralForDebt,
     quoteCollateralToDebt,
     inTokenForQuote,
     useNativeCollateralPath,
@@ -218,7 +223,7 @@ async function calculateCollateralNeededForDebt(args: {
     }
 
     if (required === attempt || (typeof previous !== 'undefined' && required === previous)) {
-      return required
+      return applyRequiredBuffer({ required, maxCollateralAvailable: upperBound })
     }
 
     previous = attempt
@@ -226,6 +231,23 @@ async function calculateCollateralNeededForDebt(args: {
   }
 
   throw new Error('Collateral sizing did not converge within iteration limit')
+}
+
+const BPS_DENOMINATOR_BIGINT = 10_000n
+const REPAY_BUFFER_BPS = 1n
+const MIN_BUFFER_WEI = 1n
+
+function applyRequiredBuffer(args: { required: bigint; maxCollateralAvailable: bigint }): bigint {
+  const { required, maxCollateralAvailable } = args
+  if (required >= maxCollateralAvailable) return required
+
+  const proportionalComponent = required === 0n
+    ? 0n
+    : (required * REPAY_BUFFER_BPS + (BPS_DENOMINATOR_BIGINT - 1n)) / BPS_DENOMINATOR_BIGINT
+  const buffer = proportionalComponent > MIN_BUFFER_WEI ? proportionalComponent : MIN_BUFFER_WEI
+  const buffered = required + buffer
+
+  return buffered > maxCollateralAvailable ? maxCollateralAvailable : buffered
 }
 
 async function buildCollateralToDebtSwapCalls(args: {
