@@ -1,9 +1,12 @@
+import type { APYBreakdownData } from '@/components/APYBreakdown'
+import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { ArrowUpRight, Info, Minus, Plus } from '@/components/icons'
 import { AssetDisplay } from '@/components/ui/asset-display'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { cn } from '@/lib/utils/cn'
 
 export interface Position {
@@ -32,12 +35,17 @@ export interface Position {
     symbol: string
     name: string
   }
+  // APY breakdown data for tooltip
+  apyBreakdown?: APYBreakdownData | undefined
+  leverageTokenAddress?: string // For fetching APY data
 }
 
 interface ActivePositionsProps {
   positions: Array<Position>
   onAction: (action: 'deposit' | 'withdraw' | 'mint' | 'redeem', position: Position) => void
+  onPositionClick?: (position: Position) => void
   className?: string
+  apyLoading?: boolean
 }
 
 const getRiskLevelColor = (riskLevel: string) => {
@@ -64,9 +72,62 @@ const getTypeLabel = (type: string) => {
   }
 }
 
+// Component to handle APY display for each position
+function PositionAPYDisplay({ position, isLoading }: { position: Position; isLoading?: boolean }) {
+  // Use the pre-calculated APY data from the portfolio hook
+  const displayAPY = position.apy
+  const apyBreakdown = position.apyBreakdown
+
+  if (isLoading) {
+    return (
+      <div className="cursor-help">
+        <div className="flex items-center">
+          <p className="text-xs text-slate-400 mr-1">APY</p>
+          <Info className="h-3 w-3 text-slate-400" />
+        </div>
+        <div className="h-5 w-16 bg-slate-700/50 rounded animate-pulse" />
+      </div>
+    )
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="cursor-help">
+          <div className="flex items-center">
+            <p className="text-xs text-slate-400 mr-1">APY</p>
+            <Info className="h-3 w-3 text-slate-400" />
+          </div>
+          <p className="font-medium text-purple-400">{displayAPY}</p>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
+        {apyBreakdown &&
+          position.leverageTokenAddress &&
+          (() => {
+            const tokenConfig = getLeverageTokenConfig(
+              position.leverageTokenAddress as `0x${string}`,
+            )
+            return tokenConfig ? (
+              <APYBreakdownTooltip token={tokenConfig} apyData={apyBreakdown} />
+            ) : (
+              <p>Annual Percentage Yield</p>
+            )
+          })()}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 // No need for custom renderLeverageTokenLogos - AssetDisplay handles this perfectly
 
-export function ActivePositions({ positions, onAction, className }: ActivePositionsProps) {
+export function ActivePositions({
+  positions,
+  onAction,
+  onPositionClick,
+  className,
+  apyLoading,
+}: ActivePositionsProps) {
   const activeCount = positions.length
 
   return (
@@ -89,9 +150,20 @@ export function ActivePositions({ positions, onAction, className }: ActivePositi
               const secondaryLabel = isLeverageToken ? 'Redeem' : 'Withdraw'
 
               return (
+                // biome-ignore lint/a11y/useSemanticElements: Cannot use button here due to nested button elements (tooltip triggers)
                 <div
                   key={position.id}
-                  className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 hover:border-purple-500/50 transition-all duration-200 cursor-pointer group"
+                  className="w-full text-left bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 hover:border-purple-500/50 transition-all duration-200 cursor-pointer group"
+                  onClick={() => onPositionClick?.(position)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onPositionClick?.(position)
+                    }
+                  }}
+                  aria-label={`View details for ${position.name}`}
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
                     {/* Token Info */}
@@ -196,20 +268,7 @@ export function ActivePositions({ positions, onAction, className }: ActivePositi
 
                       {/* Second row: APY */}
                       <div className="text-left lg:contents">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="cursor-help">
-                              <div className="flex items-center">
-                                <p className="text-xs text-slate-400 mr-1">APY</p>
-                                <Info className="h-3 w-3 text-slate-400" />
-                              </div>
-                              <p className="font-medium text-purple-400">{position.apy}</p>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Annual Percentage Yield</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        <PositionAPYDisplay position={position} isLoading={apyLoading ?? false} />
                       </div>
                     </div>
 

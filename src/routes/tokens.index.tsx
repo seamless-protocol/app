@@ -6,8 +6,8 @@ import {
   type LeverageToken,
   LeverageTokenTable,
 } from '@/features/leverage-tokens/components/leverage-token-table'
-import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import { useLeverageTokensTableData } from '@/features/leverage-tokens/hooks/useLeverageTokensTableData'
+import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
 import { features } from '@/lib/config/features'
 
 export const Route = createFileRoute('/tokens/')({
@@ -17,17 +17,19 @@ export const Route = createFileRoute('/tokens/')({
     // Fetch live leverage token table data
     const { data: leverageTokens = [], isLoading, isError, error } = useLeverageTokensTableData()
 
-    // Pre-load APY data for the first token (currently only one token)
-    const firstToken = leverageTokens[0]
+    // Calculate APY data for all leverage tokens
     const {
-      data: apyData,
+      data: tokensAPYData,
       isLoading: isApyLoading,
       isError: isApyError,
-    } = useLeverageTokenAPY({
-      ...(firstToken?.address && { tokenAddress: firstToken.address }),
-      ...(firstToken && { leverageToken: firstToken }),
-      enabled: !!firstToken,
+    } = useTokensAPY({
+      tokens: leverageTokens,
+      enabled: leverageTokens.length > 0,
     })
+
+    // Get APY data for the first token (for backward compatibility with current table design)
+    const firstToken = leverageTokens[0]
+    const apyData = firstToken ? tokensAPYData?.get(firstToken.address) : undefined
 
     const handleTokenClick = (token: LeverageToken) => {
       // Navigate to the specific token's page using the new chain ID-based route

@@ -71,8 +71,7 @@ export default defineConfig({
         process.env['VITE_WALLETCONNECT_PROJECT_ID'] ?? 'playwright-test-walletconnect',
       VITE_ETHEREUM_RPC_URL:
         process.env['VITE_ETHEREUM_RPC_URL'] ?? BASE_RPC_URL,
-      VITE_THEGRAPH_API_KEY:
-        process.env['VITE_THEGRAPH_API_KEY'] ?? 'playwright-test-thegraph-key',
+      VITE_THEGRAPH_API_KEY: process.env['VITE_THEGRAPH_API_KEY'] ?? 'playwright-test-thegraph-key',
       VITE_ROUTER_V2_ADDRESS: ADDR.routerV2 ?? ADDR.router ?? '',
       VITE_MANAGER_V2_ADDRESS: ADDR.managerV2 ?? ADDR.manager ?? '',
       VITE_MULTICALL_EXECUTOR_ADDRESS: ADDR.executor ?? '',
