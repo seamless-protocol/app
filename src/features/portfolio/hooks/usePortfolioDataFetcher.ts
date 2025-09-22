@@ -281,7 +281,7 @@ export function usePortfolioDataFetcher() {
         // This is a temporary solution - in the future we should fetch prices here too
         const summary: PortfolioSummary = {
           totalValue: 0, // Will be calculated in usePortfolioPerformance with USD prices
-          totalEarnings: 0, // Would need historical data
+          totalEarnings: 0, // Will be calculated in usePortfolioWithTotalValue
           activePositions: positions.length,
           changeAmount: 0, // Would need historical data
           changePercent: 0, // Would need historical data
@@ -416,6 +416,7 @@ export function usePortfolioWithTotalValue() {
       summary: {
         ...portfolioQueryData.portfolioData.summary,
         totalValue: portfolioMetrics.totalValue,
+        totalEarnings: Math.max(0, portfolioMetrics.changeAmount), // Only show positive earnings
         changeAmount: portfolioMetrics.changeAmount,
         changePercent: portfolioMetrics.changePercent,
       },
