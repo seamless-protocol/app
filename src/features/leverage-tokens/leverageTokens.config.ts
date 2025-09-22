@@ -1,8 +1,7 @@
 import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
 import type { Address } from 'viem'
 import { BaseLogo } from '@/components/icons/logos'
-import type { LifiOrder } from '@/domain/shared/adapters'
-import type { UniswapV3PoolKey } from '@/lib/config/uniswapV3'
+import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
 
 // Leverage token keys enum for type safety
@@ -35,17 +34,6 @@ interface ResourceItem {
   }
   highlight?: boolean
 }
-
-export type CollateralToDebtSwapConfig =
-  | {
-      type: 'uniswapV3'
-      poolKey: UniswapV3PoolKey
-    }
-  | {
-      type: 'lifi'
-      allowBridges?: string
-      order?: LifiOrder
-    }
 
 type SwapConfig = CollateralToDebtSwapConfig
 
