@@ -75,8 +75,120 @@ function PortfolioPage() {
   if (portfolioLoading) {
     return (
       <div className="space-y-6">
-        <div className="text-center py-12">
-          <div className="text-slate-400">Loading portfolio...</div>
+        {/* Portfolio Summary Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Total Portfolio Value Card */}
+          <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-6 w-6 rounded-full" />
+            </div>
+            <Skeleton className="h-8 w-24 mb-2" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+
+          {/* Total Earnings Card */}
+          <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-6 w-6 rounded-full" />
+            </div>
+            <Skeleton className="h-8 w-16 mb-2" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+
+          {/* Active Positions Card */}
+          <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-6 w-6 rounded-full" />
+            </div>
+            <Skeleton className="h-8 w-8 mb-2" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+
+        {/* Portfolio Performance Chart Skeleton */}
+        <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <Skeleton className="h-6 w-40" />
+            <div className="flex space-x-2">
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-8 w-12" />
+            </div>
+          </div>
+          <Skeleton className="h-64 w-full rounded" />
+        </div>
+
+        {/* Active Positions Table Skeleton */}
+        <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+          <Skeleton className="h-6 w-32 mb-4" />
+          <div className="space-y-4">
+            {/* Table header */}
+            <div className="flex justify-between items-center py-3 border-b border-slate-700">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+            {/* Table row */}
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center space-x-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          </div>
+        </div>
+
+        {/* Rewards and Staking Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Available Rewards Card */}
+          <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-6 w-6 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          </div>
+
+          {/* SEAM Staking Card */}
+          <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-6 w-6 rounded-full" />
+              <div className="flex items-center space-x-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-6 w-12 rounded-full" />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -250,7 +362,7 @@ function PortfolioPage() {
           />
           {rewardsLoading && (
             <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-              <div className="text-slate-400">Loading rewards...</div>
+              <div className="h-5 w-24 bg-slate-700/50 rounded animate-pulse" />
             </div>
           )}
         </div>
