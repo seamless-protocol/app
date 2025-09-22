@@ -93,6 +93,17 @@ export async function executeMintV2(params: {
     plan.calls,
   ] satisfies DepositParams['args']
 
+  const skipSimulate = process.env['TEST_SKIP_SIMULATE'] === '1'
+
+  if (skipSimulate) {
+    const hash = await writeLeverageRouterV2Deposit(config, {
+      address: routerAddress,
+      account,
+      args,
+    })
+    return { hash }
+  }
+
   const { request } = await simulateLeverageRouterV2Deposit(config, {
     address: routerAddress,
     // deposit(token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, swapCalls)
