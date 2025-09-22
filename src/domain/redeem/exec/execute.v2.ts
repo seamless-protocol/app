@@ -60,17 +60,6 @@ export async function executeRedeemV2(params: {
     swapCalls,
   ] satisfies RedeemParams['args']
 
-  const skipSimulate = process.env['TEST_SKIP_SIMULATE'] === '1'
-
-  if (skipSimulate) {
-    const hash = await writeLeverageRouterV2Redeem(config, {
-      address: routerAddress,
-      account,
-      args,
-    })
-    return { hash }
-  }
-
   const { request } = await simulateLeverageRouterV2Redeem(config, {
     address: routerAddress,
     // redeem(token, shares, minCollateralForSender, multicallExecutor, swapCalls)
