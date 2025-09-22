@@ -62,6 +62,28 @@ export async function executeMintV2(params: {
     (plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
   )
 
+  if (process.env['DEBUG_EXECUTE_MINT_V2'] === '1') {
+    console.info('[DEBUG][executeMintV2] mint parameters', {
+      token,
+      account,
+      inputAsset: plan.inputAsset,
+      equityInInputAsset: plan.equityInInputAsset.toString(),
+      expectedDebt: plan.expectedDebt.toString(),
+      expectedTotalCollateral: plan.expectedTotalCollateral.toString(),
+      minShares: plan.minShares.toString(),
+      multicallExecutor,
+      routerAddress,
+      callCount: plan.calls.length,
+    })
+    plan.calls.forEach((call, index) => {
+      console.info('[DEBUG][executeMintV2] call', index, {
+        target: call.target,
+        value: call.value.toString(),
+        data: call.data,
+      })
+    })
+  }
+
   const args = [
     token,
     plan.equityInInputAsset,
