@@ -1,10 +1,14 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { DollarSign, Target, TrendingUp } from 'lucide-react'
+import { useState } from 'react'
+import type { Address } from 'viem'
 import { useAccount } from 'wagmi'
 import { ConnectionStatusCard } from '@/components/ConnectionStatusCard'
 import { StatCardList } from '@/components/StatCardList'
 import { Skeleton } from '@/components/ui/skeleton'
+import { LeverageTokenMintModal } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
+import { LeverageTokenRedeemModal } from '@/features/leverage-tokens/components/leverage-token-redeem-modal'
 import type { Position } from '@/features/portfolio/components/active-positions'
 import { ActivePositions } from '@/features/portfolio/components/active-positions'
 import { AvailableRewards } from '@/features/portfolio/components/available-rewards'
@@ -22,8 +26,13 @@ export const Route = createFileRoute('/portfolio')({
 })
 
 function PortfolioPage() {
-  const { isConnected } = useAccount()
+  const { isConnected, address: userAddress } = useAccount()
   const navigate = useNavigate()
+
+  // Modal state
+  const [isMintModalOpen, setIsMintModalOpen] = useState(false)
+  const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false)
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
 
   // Direct hook calls - matching leverage tokens pattern
   const {
@@ -209,8 +218,16 @@ function PortfolioPage() {
     action: 'deposit' | 'withdraw' | 'mint' | 'redeem',
     position: Position,
   ) => {
-    console.log(`${action} action for position:`, position)
-    // TODO: Implement position actions
+    setSelectedPosition(position)
+
+    if (action === 'mint') {
+      setIsMintModalOpen(true)
+    } else if (action === 'redeem') {
+      setIsRedeemModalOpen(true)
+    } else {
+      console.log(`${action} action for position:`, position)
+      // TODO: Implement other actions
+    }
   }
 
   const handleClaimRewards = () => {
@@ -406,6 +423,32 @@ function PortfolioPage() {
           apyLoading={positionsAPYLoading}
         />
       </motion.div>
+
+      {/* Mint Modal */}
+      {selectedPosition && (
+        <LeverageTokenMintModal
+          isOpen={isMintModalOpen}
+          onClose={() => {
+            setIsMintModalOpen(false)
+            setSelectedPosition(null)
+          }}
+          leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
+          {...(userAddress && { userAddress })}
+        />
+      )}
+
+      {/* Redeem Modal */}
+      {selectedPosition && (
+        <LeverageTokenRedeemModal
+          isOpen={isRedeemModalOpen}
+          onClose={() => {
+            setIsRedeemModalOpen(false)
+            setSelectedPosition(null)
+          }}
+          leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
+          {...(userAddress && { userAddress })}
+        />
+      )}
     </motion.div>
   )
 }
