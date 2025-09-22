@@ -265,8 +265,13 @@ function PortfolioPage() {
               title: 'Total Portfolio Value',
               stat: portfolioLoading ? (
                 <Skeleton className="h-6 w-24" />
+              ) : summary.totalValue < 0.01 ? (
+                '< $0.01'
               ) : (
-                `$${summary.totalValue.toLocaleString()}`
+                `$${summary.totalValue.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 6,
+                })}`
               ),
               caption: portfolioLoading ? (
                 <Skeleton className="h-4 w-16" />
@@ -294,16 +299,21 @@ function PortfolioPage() {
               stat: portfolioLoading ? (
                 <Skeleton className="h-6 w-24" />
               ) : (
-                `+$${summary.totalEarnings.toLocaleString()}`
+                `${summary.changeAmount >= 0 ? '+' : ''}$${Math.abs(
+                  summary.changeAmount,
+                ).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 6,
+                })}`
               ),
               caption: portfolioLoading ? (
                 <Skeleton className="h-4 w-20" />
               ) : (
-                `+${summary.averageAPY.toFixed(1)}% avg APY`
+                `${summary.changePercent >= 0 ? '+' : ''}${summary.changePercent.toFixed(2)}% total return`
               ),
               icon: <TrendingUp />,
-              iconBgClass: 'bg-green-500/20',
-              iconTextClass: 'text-green-400',
+              iconBgClass: summary.changeAmount >= 0 ? 'bg-green-500/20' : 'bg-red-500/20',
+              iconTextClass: summary.changeAmount >= 0 ? 'text-green-400' : 'text-red-400',
             },
             {
               title: 'Active Positions',
