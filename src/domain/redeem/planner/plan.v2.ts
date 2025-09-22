@@ -127,7 +127,8 @@ export async function planRedeemV2(params: {
   // Pad the swap input slightly so rounding/flooring during execution does not leave us
   // a few wei short when repaying debt (e.g. Uniswap V2 floors amountsOut). Single wei
   // padding keeps amountOutMin effectively unchanged but gives Morpho pulls a cushion.
-  const padding = collateralNeededForDebt > 0n && totalCollateralAvailable > collateralNeededForDebt ? 1n : 0n
+  const padding =
+    collateralNeededForDebt > 0n && totalCollateralAvailable > collateralNeededForDebt ? 1n : 0n
   const paddedCollateralForDebt = collateralNeededForDebt + padding
   const remainingCollateral = totalCollateralAvailable - paddedCollateralForDebt
   const minCollateralForSender = calculateMinCollateralForSender(remainingCollateral, slippageBps)
@@ -241,9 +242,10 @@ function applyRequiredBuffer(args: { required: bigint; maxCollateralAvailable: b
   const { required, maxCollateralAvailable } = args
   if (required >= maxCollateralAvailable) return required
 
-  const proportionalComponent = required === 0n
-    ? 0n
-    : (required * REPAY_BUFFER_BPS + (BPS_DENOMINATOR_BIGINT - 1n)) / BPS_DENOMINATOR_BIGINT
+  const proportionalComponent =
+    required === 0n
+      ? 0n
+      : (required * REPAY_BUFFER_BPS + (BPS_DENOMINATOR_BIGINT - 1n)) / BPS_DENOMINATOR_BIGINT
   const buffer = proportionalComponent > MIN_BUFFER_WEI ? proportionalComponent : MIN_BUFFER_WEI
   const buffered = required + buffer
 

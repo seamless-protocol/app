@@ -219,7 +219,10 @@ export async function seedUniswapV2PairLiquidity(options: {
   ])) as [Address, Address]
 
   const pairTokenSet = new Set([pairToken0.toLowerCase(), pairToken1.toLowerCase()])
-  if (!pairTokenSet.has(canonicalTokenA.toLowerCase()) || !pairTokenSet.has(canonicalTokenB.toLowerCase())) {
+  if (
+    !pairTokenSet.has(canonicalTokenA.toLowerCase()) ||
+    !pairTokenSet.has(canonicalTokenB.toLowerCase())
+  ) {
     throw new Error('Uniswap v2 pair tokens mismatch requested tokens')
   }
 

@@ -16,7 +16,6 @@ import {
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
-import { createStaticQuoteAdapter, loadStaticQuoteSnapshot } from './adapters/staticQuote'
 import { ADDR, mode, RPC, V3 } from './env'
 import { readErc20Decimals } from './erc20'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
@@ -195,28 +194,6 @@ async function resolveDebtToCollateralQuote(params: {
   const mode = selectQuoteMode({ preference: normalizedPreference, useLiFi, canUseV3 })
 
   switch (mode) {
-    case 'static': {
-      const path =
-        process.env['TEST_STATIC_DEBT_TO_COLLATERAL_PATH'] ?? process.env['TEST_STATIC_QUOTE_PATH']
-      if (!path) {
-        throw new Error(
-          'TEST_QUOTE_ADAPTER=static requires TEST_STATIC_DEBT_TO_COLLATERAL_PATH or TEST_STATIC_QUOTE_PATH',
-        )
-      }
-      const selector = process.env['TEST_STATIC_QUOTE_SELECTOR']
-      const snapshot = await loadStaticQuoteSnapshot({
-        path,
-        ...(selector ? { selector } : {}),
-      })
-      console.info('[SHARED MINT] Using static quote adapter', {
-        path,
-        selector,
-        amountIn: snapshot.amountIn.toString(),
-        amountOut: snapshot.amountOut.toString(),
-        approvalTarget: snapshot.approvalTarget,
-      })
-      return createStaticQuoteAdapter({ snapshot, label: 'debt-to-collateral' })
-    }
     case 'lifi': {
       console.info('[SHARED MINT] Creating LiFi quote adapter', {
         chainId,
@@ -282,10 +259,9 @@ function selectQuoteMode(params: {
   preference: string
   useLiFi: boolean
   canUseV3: boolean
-}): 'static' | 'lifi' | 'uniswapv3' | 'uniswapv2' {
+}): 'lifi' | 'uniswapv3' | 'uniswapv2' {
   const { preference, useLiFi, canUseV3 } = params
   const normalized = preference.toLowerCase()
-  if (normalized === 'static') return 'static'
   if (normalized === 'lifi') return 'lifi'
   if (normalized === 'uniswapv3' || normalized === 'v3' || normalized === 'uni-v3')
     return 'uniswapv3'

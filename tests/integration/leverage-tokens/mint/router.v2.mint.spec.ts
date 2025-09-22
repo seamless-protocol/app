@@ -31,7 +31,6 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
         try {
           const manager = getAddress((ADDR.managerV2 ?? ADDR.manager) as Address)
           const token = getAddress(ADDR.leverageToken)
-          const router = getAddress((ADDR.routerV2 ?? ADDR.router) as Address)
           const uniswapRouter =
             (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
             ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)

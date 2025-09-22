@@ -1,13 +1,13 @@
-import { describe, expect, it, vi } from 'vitest'
 import type { Address } from 'viem'
 import { decodeFunctionData, erc20Abi } from 'viem'
+import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/contracts/generated', () => ({
-  readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(async () =>
-    '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC' as Address,
+  readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(
+    async () => '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC' as Address,
   ),
-  readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(async () =>
-    '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
+  readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(
+    async () => '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
   ),
   readLeverageManagerV2PreviewRedeem: vi.fn(async () => ({
     collateral: 100n,
@@ -52,9 +52,8 @@ describe('planRedeemV2 collateral padding', () => {
 
     const approvalCall = plan.calls[0]
     expect(approvalCall).toBeDefined()
-    expect(approvalCall.target.toLowerCase()).toBe(
-      '0xcccccccccccccccccccccccccccccccccccccccc',
-    )
+    if (!approvalCall) throw new Error('approval call missing')
+    expect(approvalCall.target.toLowerCase()).toBe('0xcccccccccccccccccccccccccccccccccccccccc')
 
     const decoded = decodeFunctionData({ abi: erc20Abi, data: approvalCall.data })
     expect(decoded.functionName).toBe('approve')
