@@ -14,6 +14,13 @@ function _calculatePortfolioValueAtTimestamp(
   let totalValue = 0
 
   for (const position of userPositions) {
+    const balance = BigInt(position.balance)
+
+    // Skip zero balance positions (redeemed tokens)
+    if (balance === 0n) {
+      continue
+    }
+
     const tokenStates = leverageTokenStates.get(position.leverageToken.id)
     if (!tokenStates) {
       continue
@@ -26,7 +33,6 @@ function _calculatePortfolioValueAtTimestamp(
     }
 
     // Calculate position value: balance * equity per token (using collateral asset like old app)
-    const balance = BigInt(position.balance)
     const equityPerToken = BigInt(closestState.equityPerTokenInCollateral)
     const totalSupply = BigInt(closestState.totalSupply)
 
@@ -106,6 +112,13 @@ export function calculatePortfolioMetrics(
   const now = Date.now() / 1000 // Current timestamp in seconds
 
   for (const position of userPositions) {
+    const balance = BigInt(position.balance)
+
+    // Skip zero balance positions (redeemed tokens)
+    if (balance === 0n) {
+      continue
+    }
+
     const tokenStates = leverageTokenStates.get(position.leverageToken.id)
     if (!tokenStates || tokenStates.length === 0) {
       continue
@@ -118,7 +131,6 @@ export function calculatePortfolioMetrics(
     }
 
     // Calculate current position value: balance * equity per token (using collateral asset like old app)
-    const balance = BigInt(position.balance)
     const equityPerToken = BigInt(mostRecentState.equityPerTokenInCollateral)
     const totalSupply = BigInt(mostRecentState.totalSupply)
 
