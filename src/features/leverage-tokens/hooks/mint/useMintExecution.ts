@@ -1,7 +1,10 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Address } from 'viem'
+import { createPublicClient, http } from 'viem'
 import { useConfig, usePublicClient } from 'wagmi'
+import { base } from 'wagmi/chains'
 import { orchestrateMint } from '@/domain/mint'
+import { mintRedeemRpcUrl, isMintRedeemTestModeEnabled } from '@/lib/config/tenderly.config'
 
 type Status = 'idle' | 'submitting' | 'pending' | 'success' | 'error'
 
@@ -17,7 +20,19 @@ export function useMintExecution(params: {
   const [error, setError] = useState<Error | undefined>(undefined)
 
   const config = useConfig()
-  const publicClient = usePublicClient()
+  const wagmiPublicClient = usePublicClient()
+
+  // Create custom public client for Tenderly if in test mode
+  const tenderlyPublicClient = useMemo(() => {
+    if (!isMintRedeemTestModeEnabled) return null
+    return createPublicClient({
+      chain: base,
+      transport: http(mintRedeemRpcUrl),
+    })
+  }, [])
+
+  // Use Tenderly client if available, otherwise use wagmi client
+  const publicClient = tenderlyPublicClient || wagmiPublicClient
 
   const canSubmit = useMemo(() => Boolean(account), [account])
 
@@ -49,5 +64,13 @@ export function useMintExecution(params: {
     [account, config, token, inputAsset, slippageBps, publicClient],
   )
 
-  return { mint, status, hash, error, canSubmit }
+  return {
+    mint,
+    status,
+    hash,
+    error,
+    canSubmit,
+    isUsingTenderly: isMintRedeemTestModeEnabled,
+    rpcUrl: mintRedeemRpcUrl,
+  }
 }

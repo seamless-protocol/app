@@ -313,7 +313,10 @@ export function LeverageTokenRedeemModal({
     try {
       const hash = await exec.redeem(form.amountRaw)
       setTransactionHash(hash)
-      toast.success('Redemption successful!', {
+      const successMessage = exec.isUsingTenderly
+        ? 'Redemption successful on Tenderly VNet!'
+        : 'Redemption successful!'
+      toast.success(successMessage, {
         description: `${form.amount} tokens redeemed for ${expectedAmount} ${selectedAsset}`,
       })
       toSuccess()
