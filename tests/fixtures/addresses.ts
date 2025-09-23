@@ -77,7 +77,7 @@ export const MULTICALL_EXECUTOR_ADDRESS = assertAddress(
 )
 
 export const BASE_TENDERLY_VNET_PRIMARY_RPC =
-  'https://virtual.base.us-east.rpc.tenderly.co/6ca6f867-7c83-460a-ac5e-d5b2c17e04e9' as const
+  'https://virtual.base.us-east.rpc.tenderly.co/3433d25e-64a4-4ea1-96c1-fbc9e6022e30' as const
 export const BASE_TENDERLY_VNET_ADMIN_RPC = BASE_TENDERLY_VNET_PRIMARY_RPC
 
 export const MAINNET_TENDERLY_VNET_PRIMARY_RPC =
