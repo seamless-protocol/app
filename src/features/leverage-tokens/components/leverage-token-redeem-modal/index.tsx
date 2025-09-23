@@ -94,6 +94,13 @@ export function LeverageTokenRedeemModal({
     enabled: Boolean(userAddress && isConnected),
   })
 
+  const { refetch: refetchCollateralTokenBalance } = useTokenBalance({
+    tokenAddress: leverageTokenConfig.collateralAsset.address,
+    userAddress: userAddress as `0x${string}`,
+    chainId: leverageTokenConfig.chainId,
+    enabled: Boolean(userAddress && isConnected),
+  })
+
   // Get leverage token user position (includes USD value calculation)
   const { data: positionData, isLoading: isPositionLoading } = useLeverageTokenUserPosition({
     tokenAddress: leverageTokenAddress,
@@ -409,6 +416,7 @@ export function LeverageTokenRedeemModal({
       })
 
       refetchLeverageTokenBalance?.()
+      refetchCollateralTokenBalance?.()
       queryClient.invalidateQueries({ queryKey: ltKeys.token(leverageTokenAddress) })
       if (userAddress) {
         queryClient.invalidateQueries({ queryKey: ltKeys.user(leverageTokenAddress, userAddress) })

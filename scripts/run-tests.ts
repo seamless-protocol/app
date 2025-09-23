@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { spawn } from 'node:child_process'
 import { resolve } from 'node:path'
 import process from 'node:process'
+import { z } from 'zod'
 // Import the Tenderly VNet helper (explicit .ts for Bun execution)
 import { createVNet, deleteVNet } from './tenderly-vnet.ts'
 import {
@@ -42,13 +43,26 @@ const CHAIN_PRESETS: Record<ChainSlug, ChainPreset> = {
   },
 }
 
+// Schema for the RPC URL map - handles both string URLs and objects with url property
+const RpcUrlMapSchema = z.record(
+  z.union([
+    z.string().url(),
+    z.object({ url: z.string().url() }).transform(obj => obj.url)
+  ])
+)
+
 const testRpcUrlMap: Record<string, string> = (() => {
   const rawMap =
     process.env['VITE_TEST_RPC_URL_MAP'] || process.env['TEST_RPC_URL_MAP'] || undefined
   if (!rawMap) return {}
+  
   try {
-    const parsed = JSON.parse(rawMap) as Record<string, string>
-    return typeof parsed === 'object' && parsed !== null ? parsed : {}
+    const result = RpcUrlMapSchema.safeParse(JSON.parse(rawMap))
+    if (!result.success) {
+      console.warn('[run-tests] Invalid VITE_TEST_RPC_URL_MAP format:', result.error.format())
+      return {}
+    }
+    return result.data
   } catch (error) {
     console.warn('[run-tests] Failed to parse VITE_TEST_RPC_URL_MAP', error)
     return {}
