@@ -1,5 +1,5 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit'
-import { http } from 'wagmi'
+import { type Config, http } from 'wagmi'
 import { base, mainnet } from 'wagmi/chains'
 
 const walletConnectProjectId = import.meta.env['VITE_WALLETCONNECT_PROJECT_ID']
@@ -49,9 +49,11 @@ export const config = getDefaultConfig({
   syncConnectedChain: true, // Sync chain changes immediately
 })
 
+export type AppWagmiConfig = Config
+
 // Type augmentation for wagmi
 declare module 'wagmi' {
   interface Register {
-    config: typeof config
+    config: AppWagmiConfig
   }
 }

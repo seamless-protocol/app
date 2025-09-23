@@ -195,6 +195,16 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       address: BASE_WETH,
       decimals: 18,
     },
+    swaps: {
+      debtToCollateral: {
+        type: 'uniswapV3',
+        poolKey: 'weeth-weth',
+      },
+      collateralToDebt: {
+        type: 'uniswapV3',
+        poolKey: 'weeth-weth',
+      },
+    },
   },
 }
 
