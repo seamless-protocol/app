@@ -62,17 +62,19 @@ export async function executeMintV2(params: {
     (plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
   )
 
+  const args = [
+    token,
+    plan.equityInInputAsset,
+    plan.expectedDebt,
+    plan.minShares,
+    multicallExecutor,
+    plan.calls,
+  ] satisfies DepositParams['args']
+
   const { request } = await simulateLeverageRouterV2Deposit(config, {
     address: routerAddress,
     // deposit(token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, swapCalls)
-    args: [
-      token,
-      plan.equityInInputAsset,
-      plan.expectedDebt,
-      plan.minShares,
-      multicallExecutor,
-      plan.calls,
-    ],
+    args,
     account,
   })
 

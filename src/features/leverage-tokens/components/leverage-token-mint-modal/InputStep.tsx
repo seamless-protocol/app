@@ -9,7 +9,7 @@ import { Input } from '../../../../components/ui/input'
 import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import { formatAPY } from '../../../../lib/utils/formatting'
-import { SLIPPAGE_PRESETS_PERCENT_DISPLAY } from '../../constants'
+import { AMOUNT_PERCENTAGE_PRESETS, SLIPPAGE_PRESETS_PERCENT_DISPLAY } from '../../constants'
 
 interface Token {
   symbol: string
@@ -162,7 +162,7 @@ export function InputStep({
           {/* Percentage shortcuts */}
           <div className="flex items-center justify-between">
             <div className="flex space-x-2">
-              {[25, 50, 75, 100].map((percentage) => (
+              {AMOUNT_PERCENTAGE_PRESETS.map((percentage) => (
                 <Button
                   key={percentage}
                   variant="outline"

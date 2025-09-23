@@ -1,8 +1,8 @@
 import type { Address, PublicClient } from 'viem'
 import { encodeFunctionData, getAddress } from 'viem'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import type { QuoteFn } from '../planner/types'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from '../utils/constants'
+import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
+import type { QuoteFn } from './types'
 
 const UNISWAP_V2_ROUTER_ABI = [
   {
@@ -44,7 +44,7 @@ const UNISWAP_V2_ROUTER_ABI = [
 
 type ResolvePath = (args: { inToken: Address; outToken: Address }) => Array<Address>
 
-type UniswapV2QuoteOptions = {
+export type UniswapV2QuoteOptions = {
   publicClient: PublicClientLike
   router: Address
   recipient: Address
@@ -74,6 +74,7 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
   } = options
 
   const slippage = BigInt(slippageBps)
+  const normalizedRouter = getAddress(router)
 
   return async ({ inToken, outToken, amountIn }) => {
     const isNativeIn = getAddress(inToken) === getAddress(ETH_SENTINEL)
@@ -98,7 +99,7 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
     }
 
     const amountsOut = await publicClient.readContract({
-      address: router,
+      address: normalizedRouter,
       abi: UNISWAP_V2_ROUTER_ABI,
       functionName: 'getAmountsOut',
       args: [amountIn, path],
@@ -125,7 +126,7 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
     return {
       out,
       minOut,
-      approvalTarget: getAddress(router),
+      approvalTarget: normalizedRouter,
       calldata,
     }
   }

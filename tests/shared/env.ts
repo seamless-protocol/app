@@ -267,7 +267,10 @@ type LeverageTokenAddresses = {
   }
 }
 
-function buildAddressContext(definition: LeverageTokenDefinition): LeverageTokenAddresses {
+function buildAddressContext(
+  definition: LeverageTokenDefinition,
+  source: LeverageTokenSource = leverageTokenSource,
+): LeverageTokenAddresses {
   const contracts = getContractAddresses(definition.chainId)
   if (!contracts || Object.keys(contracts).length === 0) {
     throw new Error(`No contract addresses found for chain ${definition.chainId}`)
@@ -349,16 +352,19 @@ function buildAddressContext(definition: LeverageTokenDefinition): LeverageToken
   if (lendingAddress) result.lendingAdapter = lendingAddress
 
   const swapV3Config = definition.swap?.uniswapV3
+  const isTenderlySource = source === 'tenderly'
   const poolKey: UniswapV3PoolKey | undefined = swapV3Config?.poolKey
   const chainV3Config = getUniswapV3ChainConfig(definition.chainId)
   const poolConfig = poolKey ? getUniswapV3PoolConfig(definition.chainId, poolKey) : undefined
-  const resolvedPool = swapV3Config?.pool ?? poolConfig?.address
-  const resolvedFee = swapV3Config?.fee ?? poolConfig?.fee
+  const resolvedPool = swapV3Config?.pool ?? (isTenderlySource ? undefined : poolConfig?.address)
+  const resolvedFee = swapV3Config?.fee ?? (isTenderlySource ? undefined : poolConfig?.fee)
   const resolvedQuoter = optionalAddress(
-    (swapV3Config?.quoter as Address | undefined) ?? chainV3Config?.quoter,
+    (swapV3Config?.quoter as Address | undefined) ??
+      (isTenderlySource ? undefined : chainV3Config?.quoter),
   )
   const resolvedRouter = optionalAddress(
-    (swapV3Config?.router as Address | undefined) ?? chainV3Config?.swapRouter,
+    (swapV3Config?.router as Address | undefined) ??
+      (isTenderlySource ? undefined : chainV3Config?.swapRouter),
   )
   const resolvedTickSpacing = poolConfig?.tickSpacing
 
@@ -382,10 +388,10 @@ export function getAddressesForToken(
   source: LeverageTokenSource = leverageTokenSource,
 ): LeverageTokenAddresses {
   const definition = getLeverageTokenDefinition(source, key)
-  return buildAddressContext(definition)
+  return buildAddressContext(definition, source)
 }
 
-export const ADDR = buildAddressContext(leverageTokenDefinition)
+export const ADDR = buildAddressContext(leverageTokenDefinition, leverageTokenSource)
 
 export const Extra = {
   keys: (Env.TEST_PRIVATE_KEYS_CSV ?? '')

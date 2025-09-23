@@ -8,8 +8,8 @@ import {
   RawContractError,
 } from 'viem'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import type { QuoteFn } from '../planner/types'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from '../utils/constants'
+import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
+import type { QuoteFn } from './types'
 
 type PublicClientLike = Pick<PublicClient, 'call' | 'getBlock' | 'readContract'>
 

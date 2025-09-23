@@ -58,8 +58,6 @@ export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise
     }
     return await fn(ctx)
   } finally {
-    console.info('[STEP] Reverting snapshot', { snap })
     await revertSnapshot(snap)
-    console.info('[STEP] Snapshot reverted')
   }
 }

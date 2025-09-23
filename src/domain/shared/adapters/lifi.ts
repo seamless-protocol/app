@@ -1,8 +1,8 @@
 import type { Address } from 'viem'
 import { getAddress } from 'viem'
 import { base } from 'viem/chains'
-import type { QuoteFn } from '../planner/types'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from '../utils/constants'
+import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
+import type { QuoteFn } from './types'
 
 export type LifiOrder = 'CHEAPEST' | 'FASTEST'
 
@@ -41,7 +41,7 @@ type Step = {
 /**
  * Create a QuoteFn adapter backed by LiFi's /v1/quote.
  * - Quotes are same-chain (Base -> Base) by default.
- * - Uses router as fromAddress since router executes the swap inside mintWithCalls.
+ * - Uses router as fromAddress since router executes the swap inside router calls.
  */
 export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
   const {

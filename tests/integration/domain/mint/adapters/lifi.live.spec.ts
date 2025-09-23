@@ -2,7 +2,7 @@ import type { Address } from 'viem'
 import { parseUnits } from 'viem'
 import { base, mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
-import { createLifiQuoteAdapter } from '@/domain/mint/adapters/lifi'
+import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
 
 const LIVE = process.env['LIFI_LIVE'] === '1'
 

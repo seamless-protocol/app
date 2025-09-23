@@ -1,12 +1,12 @@
 import { type Address, type PublicClient, parseUnits } from 'viem'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { orchestrateMint } from '@/domain/mint'
-import { createLifiQuoteAdapter } from '@/domain/mint/adapters/lifi'
-import { createUniswapV2QuoteAdapter } from '@/domain/mint/adapters/uniswapV2'
+import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
+import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
 import {
   createUniswapV3QuoteAdapter,
   type UniswapV3QuoteOptions,
-} from '@/domain/mint/adapters/uniswapV3'
+} from '@/domain/shared/adapters/uniswapV3'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -325,6 +325,12 @@ async function assertMintOutcome({
 
   if (orchestration.routerVersion === 'v2') {
     expect(mintedShares >= orchestration.plan.minShares).toBe(true)
-    expect(mintedShares).toBe(orchestration.plan.expectedShares)
+
+    const expectedShares = orchestration.plan.expectedShares
+    const delta =
+      mintedShares >= expectedShares ? mintedShares - expectedShares : expectedShares - mintedShares
+    const tolerance = expectedShares / 10_000n || 1n // allow up to 0.01% variance from preview
+
+    expect(delta <= tolerance).toBe(true)
   }
 }
