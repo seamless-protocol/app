@@ -39,6 +39,9 @@ export function useMintExecution(params: {
   const addresses = useMemo(() => getContractAddresses(chainId), [chainId])
   const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
   const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
+  const envMulticallExecutor = import.meta.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] as
+    | Address
+    | undefined
 
   const routerAddressV2 = useMemo(() => {
     return envRouterV2 ?? (addresses.leverageRouterV2 as Address | undefined)
@@ -47,6 +50,10 @@ export function useMintExecution(params: {
   const managerAddressV2 = useMemo(() => {
     return envManagerV2 ?? (addresses.leverageManagerV2 as Address | undefined)
   }, [envManagerV2, addresses.leverageManagerV2])
+
+  const multicallExecutorAddress = useMemo(() => {
+    return envMulticallExecutor ?? (addresses.multicall as Address | undefined)
+  }, [envMulticallExecutor, addresses.multicall])
 
   const canSubmit = useMemo(() => Boolean(account), [account])
 
@@ -77,6 +84,7 @@ export function useMintExecution(params: {
             slippageBps,
             getPublicClient: (cid: number): PublicClient | undefined =>
               cid === chainId ? chainPublicClient : undefined,
+            ...(multicallExecutorAddress ? { fromAddress: multicallExecutorAddress } : {}),
           })
 
           quoteDebtToCollateral = quote
@@ -117,6 +125,7 @@ export function useMintExecution(params: {
       managerAddressV2,
       chainPublicClient,
       activePublicClient,
+      multicallExecutorAddress,
     ],
   )
 

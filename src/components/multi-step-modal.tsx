@@ -1,5 +1,3 @@
-'use client'
-
 import type { ReactNode } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
 import { Progress } from './ui/progress'

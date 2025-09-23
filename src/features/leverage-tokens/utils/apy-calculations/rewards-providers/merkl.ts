@@ -105,8 +105,10 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.warn('[Merkl] No opportunities found for token:', tokenAddress)
-          return []
+          const errorMsg = chainId
+            ? `No Merkl opportunities found for token: ${tokenAddress} on chain: ${chainId}`
+            : `No Merkl opportunities found for token: ${tokenAddress}`
+          throw new Error(errorMsg)
         }
         throw new Error(`HTTP error! status: ${response.status}`)
       }

@@ -8,7 +8,7 @@ import type { QuoteFn } from '../planner/types'
 
 export type DebtToCollateralSwapConfig = CollateralToDebtSwapConfig
 
-interface CreateDebtToCollateralQuoteParams {
+export interface CreateDebtToCollateralQuoteParams {
   chainId: number
   routerAddress: Address
   swap: DebtToCollateralSwapConfig
@@ -17,7 +17,7 @@ interface CreateDebtToCollateralQuoteParams {
   fromAddress?: Address
 }
 
-interface CreateDebtToCollateralQuoteResult {
+export interface CreateDebtToCollateralQuoteResult {
   quote: QuoteFn
   adapterType: DebtToCollateralSwapConfig['type']
 }
