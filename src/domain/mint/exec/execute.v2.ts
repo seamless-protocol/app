@@ -62,28 +62,6 @@ export async function executeMintV2(params: {
     (plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
   )
 
-  if (process.env['DEBUG_EXECUTE_MINT_V2'] === '1') {
-    console.info('[DEBUG][executeMintV2] mint parameters', {
-      token,
-      account,
-      inputAsset: plan.inputAsset,
-      equityInInputAsset: plan.equityInInputAsset.toString(),
-      expectedDebt: plan.expectedDebt.toString(),
-      expectedTotalCollateral: plan.expectedTotalCollateral.toString(),
-      minShares: plan.minShares.toString(),
-      multicallExecutor,
-      routerAddress,
-      callCount: plan.calls.length,
-    })
-    plan.calls.forEach((call, index) => {
-      console.info('[DEBUG][executeMintV2] call', index, {
-        target: call.target,
-        value: call.value.toString(),
-        data: call.data,
-      })
-    })
-  }
-
   const args = [
     token,
     plan.equityInInputAsset,
@@ -92,17 +70,6 @@ export async function executeMintV2(params: {
     multicallExecutor,
     plan.calls,
   ] satisfies DepositParams['args']
-
-  const skipSimulate = process.env['TEST_SKIP_SIMULATE'] === '1'
-
-  if (skipSimulate) {
-    const hash = await writeLeverageRouterV2Deposit(config, {
-      address: routerAddress,
-      account,
-      args,
-    })
-    return { hash }
-  }
 
   const { request } = await simulateLeverageRouterV2Deposit(config, {
     address: routerAddress,
