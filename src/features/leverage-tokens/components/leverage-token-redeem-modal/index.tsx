@@ -484,7 +484,6 @@ function useApprovalFlow(params: {
     decimals,
     chainId,
     enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
-    useMaxApproval: true,
   })
 
   return {
