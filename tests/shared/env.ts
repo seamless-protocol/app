@@ -359,10 +359,12 @@ function buildAddressContext(
   const resolvedPool = swapV3Config?.pool ?? (isTenderlySource ? undefined : poolConfig?.address)
   const resolvedFee = swapV3Config?.fee ?? (isTenderlySource ? undefined : poolConfig?.fee)
   const resolvedQuoter = optionalAddress(
-    (swapV3Config?.quoter as Address | undefined) ?? (isTenderlySource ? undefined : chainV3Config?.quoter),
+    (swapV3Config?.quoter as Address | undefined) ??
+      (isTenderlySource ? undefined : chainV3Config?.quoter),
   )
   const resolvedRouter = optionalAddress(
-    (swapV3Config?.router as Address | undefined) ?? (isTenderlySource ? undefined : chainV3Config?.swapRouter),
+    (swapV3Config?.router as Address | undefined) ??
+      (isTenderlySource ? undefined : chainV3Config?.swapRouter),
   )
   const resolvedTickSpacing = poolConfig?.tickSpacing
 
