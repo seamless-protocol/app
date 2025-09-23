@@ -49,10 +49,10 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
       const opportunities = await this.fetchOpportunitiesByToken(tokenAddress, chainId)
 
       if (!opportunities || opportunities.length === 0) {
-        const errorMsg = chainId
-          ? `No Merkl opportunities found for token: ${tokenAddress} on chain: ${chainId}`
-          : `No Merkl opportunities found for token: ${tokenAddress}`
-        throw new Error(errorMsg)
+        console.log(`[Merkl] No opportunities found for token: ${tokenAddress}, returning 0% APR`)
+        return {
+          rewardsAPR: 0,
+        }
       }
 
       // Sum up APRs from all opportunities (already filtered by chain ID if provided)

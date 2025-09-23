@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi'
 import { AssetDisplay } from '@/components/ui/asset-display'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface UserPosition {
   hasPosition: boolean
@@ -20,6 +21,7 @@ interface LeverageTokenHoldingsCardProps {
   onMint?: () => void
   onRedeem?: () => void
   className?: string
+  isLoading?: boolean
   collateralAsset?: { symbol: string; name: string; address: string }
   debtAsset?: { symbol: string; name: string; address: string }
 }
@@ -29,6 +31,7 @@ export function LeverageTokenHoldingsCard({
   onMint,
   onRedeem,
   className = '',
+  isLoading = false,
   collateralAsset,
   debtAsset,
 }: LeverageTokenHoldingsCardProps) {
@@ -97,11 +100,17 @@ export function LeverageTokenHoldingsCard({
                     </div>
                   )}
                   <div className="text-xl font-medium text-white">
-                    {userPosition.balance} {userPosition.shareToken}
+                    {isLoading ? (
+                      <Skeleton className="h-6 w-32" />
+                    ) : (
+                      `${userPosition.balance} ${userPosition.shareToken}`
+                    )}
                   </div>
                 </div>
 
-                <div className="text-slate-400">{userPosition.balanceUSD}</div>
+                <div className="text-slate-400">
+                  {isLoading ? <Skeleton className="h-4 w-24" /> : userPosition.balanceUSD}
+                </div>
 
                 {userPosition.allTimePercentage && (
                   <div className="text-white">

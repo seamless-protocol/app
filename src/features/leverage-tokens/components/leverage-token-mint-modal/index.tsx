@@ -138,6 +138,7 @@ export function LeverageTokenMintModal({
     config: wagmiConfig,
     token: leverageTokenAddress,
     equityInCollateralAsset: form.amountRaw,
+    chainId: leverageTokenConfig.chainId,
   })
 
   const {

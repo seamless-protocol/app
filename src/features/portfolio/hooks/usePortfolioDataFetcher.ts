@@ -142,8 +142,8 @@ function calculatePositionValues(
  * Uses real subgraph data from all supported chains with improved caching and error handling
  */
 export function usePortfolioDataFetcher() {
-  let { address } = useAccount()
-  address = '0x0ec9a61bd923cbaf519b1baef839617f012344e2'
+  const { address } = useAccount()
+  // address = '0x0ec9a61bd923cbaf519b1baef839617f012344e2'
 
   return useQuery({
     queryKey: portfolioKeys.data(),

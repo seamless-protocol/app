@@ -49,5 +49,11 @@ export function useMintExecution(params: {
     [account, config, token, inputAsset, slippageBps, publicClient],
   )
 
-  return { mint, status, hash, error, canSubmit }
+  return {
+    mint,
+    status,
+    hash,
+    error,
+    canSubmit,
+  }
 }

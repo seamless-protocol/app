@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Address } from 'viem'
+import { usePublicClient } from 'wagmi'
 import { RouterVersion } from '@/domain/redeem/planner/types'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { detectRedeemRouterVersion } from '@/domain/redeem/utils/detectVersion'
@@ -31,6 +32,8 @@ export function useRedeemExecution({
   const [status, setStatus] = useState<Status>('idle')
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState<Error | undefined>(undefined)
+
+  const publicClient = usePublicClient()
 
   const redeemWithRouter = useRedeemWithRouter()
 
@@ -76,6 +79,8 @@ export function useRedeemExecution({
         })
 
         setHash(result.hash)
+        setStatus('pending')
+        await publicClient?.waitForTransactionReceipt({ hash: result.hash })
         setStatus('success')
         return result.hash
       } catch (err) {
@@ -96,6 +101,7 @@ export function useRedeemExecution({
       routerAddress,
       slippageBps,
       token,
+      publicClient,
     ],
   )
 
