@@ -1,6 +1,6 @@
 # Phase 3 Launch Readiness Checklist
 
-This checklist tracks the work required to ship a Phase 1–3 production bundle by the planned 10/3 soft launch. It reflects the canonical phase guidelines (technical foundation, leverage tokens, and dashboard/holdings) and narrows scope to mint/redeem actions with Sentry as the sole production telemetry tool.
+This checklist tracks the work required to ship a Phase 1–3 production bundle by the planned 10/3 soft launch. It reflects the canonical phase guidelines (technical foundation, leverage tokens, and dashboard/holdings) and narrows scope to mint/redeem actions with Sentry as the sole production telemetry tool. Reward-claiming flows and broader event analytics (e.g., GA) are intentionally deferred until after the soft launch.
 
 ## Phase Guidance Reference
 - **Phase 1 – Foundation & Infrastructure:** React + Wagmi/Viem stack, IPFS-ready bundle, CI + testing harnesses, and architectural guardrails (hash routing, config management, error handling).
@@ -26,7 +26,7 @@ This checklist tracks the work required to ship a Phase 1–3 production bundle 
 - [ ] Move the hard-coded test wallet in `usePortfolioDataFetcher` behind `VITE_TEST_MODE=mock`; default to connected accounts and document a funding script for dev/test convenience.
 - [ ] Ensure mint/redeem triggers from dashboard stay functional post-hook cleanup.
 - [ ] Wire reward display to production Merkl data and confirm Sentry logging covers errors.
-- [ ] Ensure non-mint/redeem actions (staking/claim) stay hidden behind feature flags for launch.
+- [ ] Ensure non-mint/redeem actions (staking/claim) stay hidden behind feature flags for launch, including keeping reward-claim buttons disabled until the post-launch phase.
 
 ## Deployment & QA Checklist
 - [ ] Draft IPFS deployment runbook (build → pin → verify hash, rollback steps).
@@ -36,7 +36,6 @@ This checklist tracks the work required to ship a Phase 1–3 production bundle 
 - [ ] Document trusted-user access steps for the soft-launch hash.
 
 ## Open Questions for Wes & Team
-- [ ] Confirmation that analytics beyond Sentry are deferred post-launch.
 - [ ] Ownership of production secrets and escalation path for updates.
 
 ## Status Maintenance
