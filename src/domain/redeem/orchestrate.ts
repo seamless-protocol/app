@@ -119,7 +119,9 @@ export async function orchestrateRedeem(params: {
               'VITE_MULTICALL_EXECUTOR_ADDRESS'
             ] as Address | undefined)
           : undefined) ||
-        (process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] as Address | undefined) ||
+        (typeof process !== 'undefined'
+          ? (process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] as Address | undefined)
+          : undefined) ||
         ((): Address => {
           throw new Error('Multicall executor address required for router v2 flow')
         })(),

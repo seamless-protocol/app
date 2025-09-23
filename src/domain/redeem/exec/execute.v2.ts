@@ -60,7 +60,8 @@ export async function executeRedeemV2(params: {
     swapCalls,
   ] satisfies RedeemParams['args']
 
-  const skipSimulate = process.env['TEST_SKIP_SIMULATE'] === '1'
+  const skipSimulate =
+    (typeof process !== 'undefined' && process.env['TEST_SKIP_SIMULATE'] === '1') || false
 
   if (skipSimulate) {
     const hash = await writeLeverageRouterV2Redeem(config, {
