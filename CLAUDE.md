@@ -80,6 +80,13 @@ bunx --bun shadcn@latest add [component]  # Add new UI components
 - **Features**: Keep UI-only constants in `src/features/<feature>`, import on-chain config from `src/lib/contracts`.
 - **Tests**: Prefer mocking `@/lib/contracts/addresses` in unit tests; avoid duplicating addresses.
 
+#### Address Overrides for Forks
+- Canonical Base addresses remain the production default; do **not** edit `addresses.ts` with fork-specific values.
+- Supply fork-specific maps (Tenderly, Anvil, etc.) via `VITE_CONTRACT_ADDRESS_OVERRIDES` as a JSON string keyed by `chainId` (nested objects merge with the defaults).
+- Example: `export VITE_CONTRACT_ADDRESS_OVERRIDES='{"8453":{"leverageManager":"0x...","tokens":{"weeth":"0x..."}}}'`
+- `scripts/run-tests.ts` also reads `TENDERLY_CONTRACT_ADDRESS_OVERRIDES` and forwards it to Vite so deterministic Tenderly VNets stay in sync during integration/E2E runs.
+- Default deterministic Tenderly map lives at `tests/shared/tenderly-addresses.json`; update this file when Tenderly deployments change.
+
 ### Development Phases
 The app is designed for 7 incremental production releases:
 1. Foundation & Infrastructure (current)

@@ -149,6 +149,38 @@ const SWAP_ROUTER_ABI = [
   },
 ] as const
 
+const POOL_ABI = [
+  {
+    type: 'function',
+    name: 'token0',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }],
+  },
+  {
+    type: 'function',
+    name: 'token1',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }],
+  },
+  {
+    type: 'function',
+    name: 'slot0',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [
+      { name: 'sqrtPriceX96', type: 'uint160' },
+      { name: 'tick', type: 'int24' },
+      { name: 'observationIndex', type: 'uint16' },
+      { name: 'observationCardinality', type: 'uint16' },
+      { name: 'observationCardinalityNext', type: 'uint16' },
+      { name: 'feeProtocol', type: 'uint8' },
+      { name: 'unlocked', type: 'bool' },
+    ],
+  },
+] as const
+
 export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): QuoteFn {
   const {
     publicClient,
@@ -156,6 +188,7 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
     router,
     fee,
     recipient,
+    poolAddress,
     wrappedNative,
     slippageBps = DEFAULT_SLIPPAGE_BPS,
     deadlineSeconds = 15 * 60,
@@ -165,20 +198,17 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
     throw new Error('Invalid slippage basis points')
   }
 
+  const poolTokensPromise = resolvePoolTokens(publicClient, poolAddress)
+
   return async ({ inToken, outToken, amountIn, amountOut: requiredOut, intent }) => {
-    console.info('[v3 adapter] request', {
-      inToken,
-      outToken,
-      amountIn: amountIn.toString(),
-      requiredOut: requiredOut?.toString(),
-      intent,
-    })
     const { tokenIn, tokenOut } = normalizeTokens({
       inToken,
       outToken,
       ...(wrappedNative ? { wrappedNative } : {}),
     })
     const poolKey: NormalizedPoolKey = { tokenIn, tokenOut, fee }
+
+    await assertPoolCompatibility(poolTokensPromise, { tokenIn, tokenOut })
 
     const block = await publicClient.getBlock()
     const deadline = block.timestamp + BigInt(deadlineSeconds)
@@ -192,7 +222,7 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
         ...(quoter ? { quoter } : {}),
         poolKey,
         amountOut: targetOut,
-        poolAddress: options.poolAddress,
+        poolAddress,
       })
       if (requiredIn <= 0n) throw new Error('Uniswap v3 quoter returned zero input for exact-out')
 
@@ -219,8 +249,7 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
         minOut: targetOut,
         approvalTarget: getAddress(router),
         calldata,
-        amountIn: requiredIn,
-        maxIn,
+        deadline,
       }
     }
 
@@ -229,7 +258,7 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
       ...(quoter ? { quoter } : {}),
       poolKey,
       amountIn,
-      poolAddress: options.poolAddress,
+      poolAddress,
     })
     if (amountOut <= 0n) throw new Error('Uniswap v3 quoter returned zero output')
 
@@ -256,7 +285,7 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
       minOut,
       approvalTarget: getAddress(router),
       calldata,
-      amountIn,
+      deadline,
     }
   }
 }
@@ -392,28 +421,49 @@ async function estimateExactOutputSingle(args: {
 async function getPoolState(publicClient: PublicClientLike, poolAddress: Address) {
   const slot0 = (await publicClient.readContract({
     address: poolAddress,
-    abi: [
-      {
-        type: 'function',
-        name: 'slot0',
-        stateMutability: 'view',
-        inputs: [],
-        outputs: [
-          { name: 'sqrtPriceX96', type: 'uint160' },
-          { name: 'tick', type: 'int24' },
-          { name: 'observationIndex', type: 'uint16' },
-          { name: 'observationCardinality', type: 'uint16' },
-          { name: 'observationCardinalityNext', type: 'uint16' },
-          { name: 'feeProtocol', type: 'uint8' },
-          { name: 'unlocked', type: 'bool' },
-        ],
-      },
-    ],
+    abi: POOL_ABI,
     functionName: 'slot0',
   })) as unknown as [bigint, number, number, number, number, number, boolean]
   const sqrtPriceX96 = BigInt(slot0[0])
   const priceX192 = sqrtPriceX96 * sqrtPriceX96
   return { sqrtPriceX96, priceX192 }
+}
+
+async function resolvePoolTokens(publicClient: PublicClientLike, poolAddress: Address) {
+  const [token0, token1] = (await Promise.all([
+    publicClient.readContract({
+      address: poolAddress,
+      abi: POOL_ABI,
+      functionName: 'token0',
+    }),
+    publicClient.readContract({
+      address: poolAddress,
+      abi: POOL_ABI,
+      functionName: 'token1',
+    }),
+  ])) as [Address, Address]
+  return { token0: getAddress(token0), token1: getAddress(token1) }
+}
+
+async function assertPoolCompatibility(
+  poolTokensPromise: Promise<{ token0: Address; token1: Address }>,
+  {
+    tokenIn,
+    tokenOut,
+  }: {
+    tokenIn: Address
+    tokenOut: Address
+  },
+) {
+  const poolTokens = await poolTokensPromise
+  const matchesDirect = poolTokens.token0 === tokenIn && poolTokens.token1 === tokenOut
+  const matchesReverse = poolTokens.token0 === tokenOut && poolTokens.token1 === tokenIn
+
+  if (!matchesDirect && !matchesReverse) {
+    throw new Error(
+      `Uniswap v3 pool tokens mismatch: expected ${tokenIn}/${tokenOut}, got ${poolTokens.token0}/${poolTokens.token1}`,
+    )
+  }
 }
 
 function applyFee(amount: bigint, fee: number): bigint {

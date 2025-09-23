@@ -5,9 +5,16 @@
 export const portfolioKeys = {
   all: ['portfolio'] as const,
   data: () => [...portfolioKeys.all, 'data'] as const,
-  performance: (timeframe: string) => [...portfolioKeys.all, 'performance', timeframe] as const,
-  rewards: () => [...portfolioKeys.all, 'rewards'] as const,
+  performance: (timeframe: string, address?: string) =>
+    [...portfolioKeys.all, 'performance', timeframe, address] as const,
+  rewards: (address?: string) => [...portfolioKeys.all, 'rewards', address] as const,
   staking: () => [...portfolioKeys.all, 'staking'] as const,
   positions: () => [...portfolioKeys.all, 'positions'] as const,
   summary: () => [...portfolioKeys.all, 'summary'] as const,
+  positionsAPY: (tokens: Array<{ id?: string; address?: string; leverageTokenAddress?: string }>) =>
+    [
+      'apy',
+      'tokens',
+      tokens.map((t) => t.id || t.address || t.leverageTokenAddress).sort(),
+    ] as const,
 } as const

@@ -6,12 +6,8 @@ import {
   type UniswapV2QuoteOptions,
 } from '@/domain/shared/adapters/uniswapV2'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
-import {
-  readLeverageManagerV2GetLeverageTokenCollateralAsset,
-  readLeverageManagerV2GetLeverageTokenDebtAsset,
-  readLeverageTokenBalanceOf,
-} from '@/lib/contracts/generated'
-import { ADDR, mode, RPC } from '../../../shared/env'
+import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
+import { ADDR, CHAIN_ID, mode, RPC } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
 import { approveIfNeeded, erc20Abi, seedUniswapV2PairLiquidity } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
@@ -75,23 +71,13 @@ async function prepareRedeemScenario(
   const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
   const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
 
-  const tokenConfig = getLeverageTokenConfig(token)
-  if (!tokenConfig) {
-    throw new Error(`Leverage token config not found for ${token}`)
-  }
-
   console.info('[STEP] Using public RPC', { url: RPC.primary })
-  const chainId = tokenConfig.chainId
+  const tokenConfig = getLeverageTokenConfig(token)
+  const chainId = tokenConfig?.chainId ?? CHAIN_ID
   console.info('[STEP] Chain ID', { chainId })
 
-  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    address: manager,
-    args: [token],
-  })
-  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    address: manager,
-    args: [token],
-  })
+  const collateralAsset = ADDR.weeth
+  const debtAsset = ADDR.weth
   console.info('[STEP] Token assets', { collateralAsset, debtAsset })
 
   const decimals = await readErc20Decimals(config, collateralAsset)

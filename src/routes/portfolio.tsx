@@ -1,17 +1,23 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { DollarSign, Target, TrendingUp } from 'lucide-react'
+import { useState } from 'react'
+import type { Address } from 'viem'
 import { useAccount } from 'wagmi'
 import { ConnectionStatusCard } from '@/components/ConnectionStatusCard'
 import { StatCardList } from '@/components/StatCardList'
 import { Skeleton } from '@/components/ui/skeleton'
+import { LeverageTokenMintModal } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
+import { LeverageTokenRedeemModal } from '@/features/leverage-tokens/components/leverage-token-redeem-modal'
 import type { Position } from '@/features/portfolio/components/active-positions'
 import { ActivePositions } from '@/features/portfolio/components/active-positions'
 import { AvailableRewards } from '@/features/portfolio/components/available-rewards'
 import { PortfolioPerformanceChart } from '@/features/portfolio/components/portfolio-performance-chart'
 import { SEAMStaking } from '@/features/portfolio/components/seam-staking'
-import { usePortfolioData } from '@/features/portfolio/hooks/usePortfolioData'
-import { usePortfolioPerformance } from '@/features/portfolio/hooks/usePortfolioPerformance'
+import {
+  usePortfolioPerformance,
+  usePortfolioWithTotalValue,
+} from '@/features/portfolio/hooks/usePortfolioDataFetcher'
 import { usePortfolioRewards } from '@/features/portfolio/hooks/usePortfolioRewards'
 import { usePortfolioStaking } from '@/features/portfolio/hooks/usePortfolioStaking'
 
@@ -20,16 +26,38 @@ export const Route = createFileRoute('/portfolio')({
 })
 
 function PortfolioPage() {
-  const { isConnected } = useAccount()
+  const { isConnected, address: userAddress } = useAccount()
+  const navigate = useNavigate()
+
+  // Modal state
+  const [isMintModalOpen, setIsMintModalOpen] = useState(false)
+  const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false)
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
 
   // Direct hook calls - matching leverage tokens pattern
   const {
     data: portfolioData,
     isLoading: portfolioLoading,
     isError: portfolioError,
-  } = usePortfolioData()
+    positionsAPYLoading,
+  } = usePortfolioWithTotalValue()
   const performanceData = usePortfolioPerformance()
   const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
+
+  // Console log for testing rewards data
+  console.log('🎁 Portfolio Rewards Data:', {
+    rewardsData,
+    isLoading: rewardsLoading,
+    hasRewards: rewardsData?.hasRewards,
+    hasClaimableRewards: rewardsData?.hasClaimableRewards,
+    totalClaimable: rewardsData?.totalClaimableAmount,
+    totalClaimed: rewardsData?.totalClaimedAmount,
+    totalEarned: rewardsData?.totalEarnedAmount,
+    tokenCount: rewardsData?.tokenCount,
+    claimableCount: rewardsData?.claimableCount,
+    claimedCount: rewardsData?.claimedCount,
+    rewardsCount: rewardsData?.claimableRewards?.length,
+  })
   const { data: stakingData, isLoading: stakingLoading } = usePortfolioStaking()
 
   // Extract data with fallbacks
@@ -56,8 +84,120 @@ function PortfolioPage() {
   if (portfolioLoading) {
     return (
       <div className="space-y-6">
-        <div className="text-center py-12">
-          <div className="text-slate-400">Loading portfolio...</div>
+        {/* Portfolio Summary Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Total Portfolio Value Card */}
+          <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-6 w-6 rounded-full" />
+            </div>
+            <Skeleton className="h-8 w-24 mb-2" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+
+          {/* Total Earnings Card */}
+          <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-6 w-6 rounded-full" />
+            </div>
+            <Skeleton className="h-8 w-16 mb-2" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+
+          {/* Active Positions Card */}
+          <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-6 w-6 rounded-full" />
+            </div>
+            <Skeleton className="h-8 w-8 mb-2" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+
+        {/* Portfolio Performance Chart Skeleton */}
+        <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <Skeleton className="h-6 w-40" />
+            <div className="flex space-x-2">
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-8 w-12" />
+            </div>
+          </div>
+          <Skeleton className="h-64 w-full rounded" />
+        </div>
+
+        {/* Active Positions Table Skeleton */}
+        <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+          <Skeleton className="h-6 w-32 mb-4" />
+          <div className="space-y-4">
+            {/* Table header */}
+            <div className="flex justify-between items-center py-3 border-b border-slate-700">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+            {/* Table row */}
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center space-x-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          </div>
+        </div>
+
+        {/* Rewards and Staking Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Available Rewards Card */}
+          <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-6 w-6 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          </div>
+
+          {/* SEAM Staking Card */}
+          <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-6 w-6 rounded-full" />
+              <div className="flex items-center space-x-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-6 w-12 rounded-full" />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -78,8 +218,16 @@ function PortfolioPage() {
     action: 'deposit' | 'withdraw' | 'mint' | 'redeem',
     position: Position,
   ) => {
-    console.log(`${action} action for position:`, position)
-    // TODO: Implement position actions
+    setSelectedPosition(position)
+
+    if (action === 'mint') {
+      setIsMintModalOpen(true)
+    } else if (action === 'redeem') {
+      setIsRedeemModalOpen(true)
+    } else {
+      console.log(`${action} action for position:`, position)
+      // TODO: Implement other actions
+    }
   }
 
   const handleClaimRewards = () => {
@@ -95,6 +243,23 @@ function PortfolioPage() {
   const handleManageStaking = () => {
     console.log('Managing staking...')
     // TODO: Navigate to staking page
+  }
+
+  const handlePositionClick = (position: Position) => {
+    if (position.type === 'leverage-token') {
+      // Extract the leverage token address from the position ID
+      // The position ID format is typically: {userAddress}-{leverageTokenAddress}
+      const leverageTokenAddress = position.id.split('-')[1]
+      if (leverageTokenAddress) {
+        navigate({
+          to: '/tokens/$chainId/$id',
+          params: {
+            chainId: '8453', // Base chain ID
+            id: leverageTokenAddress,
+          },
+        })
+      }
+    }
   }
 
   return (
@@ -117,8 +282,13 @@ function PortfolioPage() {
               title: 'Total Portfolio Value',
               stat: portfolioLoading ? (
                 <Skeleton className="h-6 w-24" />
+              ) : summary.totalValue < 0.01 ? (
+                '< $0.01'
               ) : (
-                `$${summary.totalValue.toLocaleString()}`
+                `$${summary.totalValue.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 6,
+                })}`
               ),
               caption: portfolioLoading ? (
                 <Skeleton className="h-4 w-16" />
@@ -146,16 +316,21 @@ function PortfolioPage() {
               stat: portfolioLoading ? (
                 <Skeleton className="h-6 w-24" />
               ) : (
-                `+$${summary.totalEarnings.toLocaleString()}`
+                `${summary.changeAmount >= 0 ? '+' : ''}$${Math.abs(
+                  summary.changeAmount,
+                ).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 6,
+                })}`
               ),
               caption: portfolioLoading ? (
                 <Skeleton className="h-4 w-20" />
               ) : (
-                `+${summary.averageAPY.toFixed(1)}% avg APY`
+                `${summary.changePercent >= 0 ? '+' : ''}${summary.changePercent.toFixed(2)}% total return`
               ),
               icon: <TrendingUp />,
-              iconBgClass: 'bg-green-500/20',
-              iconTextClass: 'text-green-400',
+              iconBgClass: summary.changeAmount >= 0 ? 'bg-green-500/20' : 'bg-red-500/20',
+              iconTextClass: summary.changeAmount >= 0 ? 'text-green-400' : 'text-red-400',
             },
             {
               title: 'Active Positions',
@@ -206,15 +381,15 @@ function PortfolioPage() {
       >
         <div className="relative">
           <AvailableRewards
-            tokenAddresses={rewardsData?.tokenAddresses || []}
-            accruingAmount={rewardsData?.accruingAmount || '$0.00'}
-            seamToken={rewardsData?.seamToken || '0.00'}
-            protocolFees={rewardsData?.protocolFees || '$0.00'}
+            tokenAddresses={[]}
+            accruingAmount={'$0.00'}
+            seamToken={'$0.00'}
+            protocolFees={'$0.00'}
             onClaim={handleClaimRewards}
           />
           {rewardsLoading && (
             <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-              <div className="text-slate-400">Loading rewards...</div>
+              <div className="h-5 w-24 bg-slate-700/50 rounded animate-pulse" />
             </div>
           )}
         </div>
@@ -241,8 +416,39 @@ function PortfolioPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
       >
-        <ActivePositions positions={positions} onAction={handlePositionAction} />
+        <ActivePositions
+          positions={positions}
+          onAction={handlePositionAction}
+          onPositionClick={handlePositionClick}
+          apyLoading={positionsAPYLoading}
+        />
       </motion.div>
+
+      {/* Mint Modal */}
+      {selectedPosition && (
+        <LeverageTokenMintModal
+          isOpen={isMintModalOpen}
+          onClose={() => {
+            setIsMintModalOpen(false)
+            setSelectedPosition(null)
+          }}
+          leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
+          {...(userAddress && { userAddress })}
+        />
+      )}
+
+      {/* Redeem Modal */}
+      {selectedPosition && (
+        <LeverageTokenRedeemModal
+          isOpen={isRedeemModalOpen}
+          onClose={() => {
+            setIsRedeemModalOpen(false)
+            setSelectedPosition(null)
+          }}
+          leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
+          {...(userAddress && { userAddress })}
+        />
+      )}
     </motion.div>
   )
 }

@@ -125,8 +125,8 @@ jobs:
           cp tests/integration/.env.example tests/integration/.env
           echo "Integration test environment prepared"
 
-      - name: Run integration tests
-        run: bun scripts/run-tests.ts integration
+      - name: Run integration tests (Base + Mainnet)
+        run: bun scripts/run-tests.ts integration --chain all
         env:
           TEST_RPC_URL: ${{ secrets.TEST_RPC_URL }}
           TENDERLY_ADMIN_RPC_URL: ${{ secrets.TENDERLY_ADMIN_RPC_URL }}

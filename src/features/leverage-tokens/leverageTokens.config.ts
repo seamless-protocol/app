@@ -51,6 +51,8 @@ export interface LeverageTokenConfig {
   chainLogo: React.ComponentType<React.SVGProps<SVGSVGElement>>
   // Supply cap (token units) - hardcoded until contract supports dynamic fetching
   supplyCap?: number
+  // When true, omit from production UI but keep accessible for testing harnesses
+  isTestOnly?: boolean
 
   // Asset configuration
   collateralAsset: {
@@ -81,7 +83,7 @@ export interface LeverageTokenConfig {
 // Leverage token configurations
 export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   [LeverageTokenKey.WEETH_WETH_17X]: {
-    address: '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as Address,
+    address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
     name: 'weETH / WETH 17x Leverage Token',
     symbol: 'WEETH-WETH-17x',
     description:
@@ -167,16 +169,54 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       ],
     },
   },
+  'weeth-weth-17x-tenderly': {
+    address: '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as Address,
+    name: 'weETH / WETH 17x Leverage Token (Tenderly)',
+    symbol: 'WEETH-WETH-17x',
+    description:
+      'Tenderly VNet deployment of the weETH / WETH 17x leverage token used for automated integration testing.',
+    decimals: 18,
+    leverageRatio: 17,
+    chainId: 8453,
+    chainName: 'Base (Tenderly VNet)',
+    chainLogo: BaseLogo,
+    supplyCap: 150,
+    isTestOnly: true,
+    collateralAsset: {
+      symbol: 'weETH',
+      name: 'Wrapped Ether.fi ETH',
+      address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
+      decimals: 18,
+    },
+    debtAsset: {
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      address: BASE_WETH,
+      decimals: 18,
+    },
+  },
 }
 
 // Helper function to get leverage token config by address
 export function getLeverageTokenConfig(address: Address): LeverageTokenConfig | undefined {
-  return Object.values(leverageTokenConfigs).find(
+  return getFilteredConfigs().find(
     (config) => config.address.toLowerCase() === address.toLowerCase(),
   )
 }
 
 // Helper function to get all leverage token configs
 export function getAllLeverageTokenConfigs(): Array<LeverageTokenConfig> {
-  return Object.values(leverageTokenConfigs)
+  return getFilteredConfigs()
+}
+
+function shouldIncludeTestTokens(): boolean {
+  const flag = import.meta.env['VITE_INCLUDE_TEST_TOKENS']
+  if (!flag) return false
+  const normalized = flag.toLowerCase()
+  return normalized === 'true' || normalized === '1' || normalized === 'tenderly'
+}
+
+function getFilteredConfigs(): Array<LeverageTokenConfig> {
+  const includeTestTokens = shouldIncludeTestTokens()
+  return Object.values(leverageTokenConfigs).filter((cfg) => includeTestTokens || !cfg.isTestOnly)
 }

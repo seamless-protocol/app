@@ -5,10 +5,13 @@ import {
   createUniswapV3QuoteAdapter,
   type UniswapV3QuoteOptions,
 } from '@/domain/shared/adapters/uniswapV3'
-import { ADDR, RPC, V3 } from '../../../shared/env'
+import { ADDR, RPC } from '../../../shared/env'
 
 const hasV3Config = Boolean(
-  ADDR.v3Quoter && ADDR.v3SwapRouter && ADDR.v3Pool && typeof V3.poolFee === 'number',
+  ADDR.uniswapV3?.quoter &&
+    ADDR.uniswapV3?.router &&
+    ADDR.uniswapV3?.pool &&
+    typeof ADDR.uniswapV3?.fee === 'number',
 )
 const describeIfV3 = hasV3Config ? describe : describe.skip
 
@@ -73,11 +76,11 @@ describeIfV3('Uniswap v3 adapter (Tenderly)', () => {
 
   const options: UniswapV3QuoteOptions = {
     publicClient: client as unknown as UniswapV3QuoteOptions['publicClient'],
-    quoter: ADDR.v3Quoter as Address,
-    router: ADDR.v3SwapRouter as Address,
-    fee: (V3.poolFee ?? 0) as number,
-    recipient: ADDR.v3SwapRouter as Address,
-    poolAddress: ADDR.v3Pool as Address,
+    quoter: ADDR.uniswapV3?.quoter as Address,
+    router: ADDR.uniswapV3?.router as Address,
+    fee: (ADDR.uniswapV3?.fee ?? 0) as number,
+    recipient: ADDR.uniswapV3?.router as Address,
+    poolAddress: ADDR.uniswapV3?.pool as Address,
     wrappedNative: ADDR.weth,
   }
 

@@ -69,5 +69,5 @@ package-lock.json
 *storybook.log
 
 # Local Sources
-.sources
-.data
+_sources
+_data

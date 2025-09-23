@@ -12,8 +12,13 @@ export type Addresses = {
   token: Address
 }
 
-// Re-export shared quote types
-export type { Quote, QuoteFn } from '../../shared/adapters/types'
+// Re-export shared quote types used by mint planners
+export type {
+  Quote,
+  QuoteFn,
+  QuoteIntent,
+  QuoteRequest,
+} from '../../shared/adapters/types'
 
 export enum RouterVersion {
   V1 = 'v1',

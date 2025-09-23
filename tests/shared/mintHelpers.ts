@@ -11,12 +11,8 @@ import {
   type UniswapV3QuoteOptions,
 } from '@/domain/shared/adapters/uniswapV3'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
-import {
-  readLeverageManagerV2GetLeverageTokenCollateralAsset,
-  readLeverageManagerV2GetLeverageTokenDebtAsset,
-  readLeverageTokenBalanceOf,
-} from '@/lib/contracts/generated'
-import { ADDR, mode, RPC, V3 } from './env'
+import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
+import { ADDR, CHAIN_ID, mode, RPC } from './env'
 import { readErc20Decimals } from './erc20'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
 
@@ -67,23 +63,13 @@ export async function executeSharedMint({
   const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
   const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
 
-  const tokenConfig = getLeverageTokenConfig(token)
-  if (!tokenConfig) {
-    throw new Error(`Leverage token config not found for ${token}`)
-  }
-
   console.info('[SHARED MINT] Using public RPC', { url: RPC.primary })
-  const chainId = tokenConfig.chainId
+  const tokenConfig = getLeverageTokenConfig(token)
+  const chainId = tokenConfig?.chainId ?? CHAIN_ID
   console.info('[SHARED MINT] Chain ID', { chainId })
 
-  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    address: manager,
-    args: [token],
-  })
-  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    address: manager,
-    args: [token],
-  })
+  const collateralAsset = ADDR.weeth
+  const debtAsset = ADDR.weth
   console.info('[SHARED MINT] Token assets', { collateralAsset, debtAsset })
 
   const decimals = await readErc20Decimals(config, collateralAsset)
@@ -99,7 +85,13 @@ export async function executeSharedMint({
 
   const quoteAdapterPreference = (process.env['TEST_QUOTE_ADAPTER'] ?? '').toLowerCase()
   const useLiFi = process.env['TEST_USE_LIFI'] === '1'
-  const canUseV3 = Boolean(ADDR.v3Quoter && ADDR.v3SwapRouter && ADDR.v3Pool && V3.poolFee)
+  const uniswapV3Config = ADDR.uniswapV3
+  const canUseV3 = Boolean(
+    uniswapV3Config?.quoter &&
+      uniswapV3Config?.router &&
+      uniswapV3Config?.pool &&
+      typeof uniswapV3Config?.fee === 'number',
+  )
 
   const quoteDebtToCollateral = await resolveDebtToCollateralQuote({
     preference: quoteAdapterPreference,
@@ -211,25 +203,32 @@ async function resolveDebtToCollateralQuote(params: {
       })
     }
     case 'uniswapv3': {
-      if (!canUseV3 || !ADDR.v3Quoter || !ADDR.v3SwapRouter || !ADDR.v3Pool || !V3.poolFee) {
+      const config = ADDR.uniswapV3
+      if (
+        !canUseV3 ||
+        !config?.quoter ||
+        !config.router ||
+        !config.pool ||
+        typeof config.fee !== 'number'
+      ) {
         throw new Error('Uniswap v3 adapter selected but configuration is incomplete')
       }
       console.info('[SHARED MINT] Creating Uniswap V3 quote adapter', {
         chainId,
         router,
-        quoter: ADDR.v3Quoter,
-        swapRouter: ADDR.v3SwapRouter,
-        pool: ADDR.v3Pool,
-        fee: V3.poolFee,
+        quoter: config.quoter,
+        swapRouter: config.router,
+        pool: config.pool,
+        fee: config.fee,
         slippageBps: resolvedSlippageBps,
       })
       return createUniswapV3QuoteAdapter({
         publicClient: publicClient as unknown as UniswapV3QuoteOptions['publicClient'],
-        quoter: ADDR.v3Quoter,
-        router: ADDR.v3SwapRouter,
-        fee: V3.poolFee,
+        quoter: config.quoter,
+        router: config.router,
+        fee: config.fee,
         recipient: router,
-        poolAddress: ADDR.v3Pool,
+        poolAddress: config.pool,
         slippageBps: resolvedSlippageBps,
         ...(ADDR.weth ? { wrappedNative: ADDR.weth } : {}),
       })
