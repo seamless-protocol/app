@@ -7,6 +7,7 @@ describe('getContractAddresses', () => {
     vi.unmock('@/lib/contracts/addresses')
     vi.unmock('@/lib/contracts/overrides')
     vi.unstubAllEnvs()
+    vi.stubEnv('VITE_USE_TENDERLY_VNET', 'false')
     delete process.env['VITE_CONTRACT_ADDRESS_OVERRIDES']
   })
 
@@ -15,15 +16,17 @@ describe('getContractAddresses', () => {
     vi.unmock('@/lib/contracts/addresses')
     vi.unmock('@/lib/contracts/overrides')
     vi.unstubAllEnvs()
+    vi.stubEnv('VITE_USE_TENDERLY_VNET', 'false')
     delete process.env['VITE_CONTRACT_ADDRESS_OVERRIDES']
   })
 
   it('returns canonical Base addresses when no override is provided', async () => {
-    const { contractAddresses, getContractAddresses } = await import('@/lib/contracts/addresses')
+    const addressesModule = await import('@/lib/contracts/addresses')
+    addressesModule.setContractAddressOverridesForTesting({})
 
-    const canonical = contractAddresses[base.id]?.leverageManager
+    const canonical = addressesModule.contractAddresses[base.id]?.leverageManager
 
-    expect(getContractAddresses(base.id).leverageManager).toBe(canonical)
+    expect(addressesModule.getContractAddresses(base.id).leverageManager).toBe(canonical)
   })
 
   it('merges overrides when override map is provided', async () => {
