@@ -1,3 +1,5 @@
+'use client'
+
 import { motion } from 'framer-motion'
 import { ArrowLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 import * as React from 'react'

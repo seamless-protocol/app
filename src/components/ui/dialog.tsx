@@ -1,3 +1,5 @@
+'use client'
+
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
