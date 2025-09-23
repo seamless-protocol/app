@@ -7,15 +7,15 @@
 
 import { createPublicClient, http, formatUnits } from 'viem'
 import { base } from 'viem/chains'
+import { leverageTokenConfigs, LeverageTokenKey } from '../src/features/leverage-tokens/leverageTokens.config'
 
 // Configuration
 const ANVIL_ACCOUNT = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as const
 const TENDERLY_RPC_URL = process.env.TEST_RPC_URL
 
-// Token addresses on Base
-const TOKENS = {
+// Standard tokens (not leverage tokens)
+const STANDARD_TOKENS = {
   WETH: '0x4200000000000000000000000000000000000006',
-  USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
   weETH: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A',
   ETH: '0x0000000000000000000000000000000000000000', // Native ETH
 } as const
@@ -60,8 +60,9 @@ async function checkBalances() {
     const ethBalance = await publicClient.getBalance({ address: ANVIL_ACCOUNT })
     console.log(`💰 ETH Balance: ${formatUnits(ethBalance, 18)} ETH`)
 
-    // Check ERC20 token balances
-    for (const [tokenName, tokenAddress] of Object.entries(TOKENS)) {
+    // Check standard token balances
+    console.log('📊 Standard Tokens:')
+    for (const [tokenName, tokenAddress] of Object.entries(STANDARD_TOKENS)) {
       if (tokenAddress === '0x0000000000000000000000000000000000000000') continue
 
       try {
@@ -92,10 +93,95 @@ async function checkBalances() {
     }
 
     console.log('')
-    console.log('💡 If balances are 0, you may need to:')
-    console.log('1. Use Tenderly dashboard to set balances')
-    console.log('2. Run the funding script: bun run scripts/fund-account.ts')
-    console.log('3. Transfer tokens from another account')
+    console.log('🚀 Leverage Tokens & Assets:')
+    
+    // Check leverage token configurations
+    for (const [tokenKey, config] of Object.entries(leverageTokenConfigs)) {
+      const isTestToken = tokenKey.includes('tenderly') || config.name.toLowerCase().includes('tenderly')
+      const prefix = isTestToken ? '🧪' : '📈'
+      console.log(`\n${prefix} ${config.name} (${config.symbol}):`)
+      
+      // Check leverage token balance
+      try {
+        const [balance, decimals, symbol] = await Promise.all([
+          publicClient.readContract({
+            address: config.address,
+            abi: ERC20_ABI,
+            functionName: 'balanceOf',
+            args: [ANVIL_ACCOUNT],
+          }),
+          publicClient.readContract({
+            address: config.address,
+            abi: ERC20_ABI,
+            functionName: 'decimals',
+          }),
+          publicClient.readContract({
+            address: config.address,
+            abi: ERC20_ABI,
+            functionName: 'symbol',
+          }),
+        ])
+
+        const formattedBalance = formatUnits(balance, decimals)
+        console.log(`  🎯 Leverage Token (${symbol}): ${formattedBalance} ${symbol}`)
+      } catch (error) {
+        console.log(`  ❌ Leverage Token: Error reading balance - ${error instanceof Error ? error.message : String(error)}`)
+      }
+
+      // Check collateral asset balance
+      try {
+        const [balance, decimals, symbol] = await Promise.all([
+          publicClient.readContract({
+            address: config.collateralAsset.address,
+            abi: ERC20_ABI,
+            functionName: 'balanceOf',
+            args: [ANVIL_ACCOUNT],
+          }),
+          publicClient.readContract({
+            address: config.collateralAsset.address,
+            abi: ERC20_ABI,
+            functionName: 'decimals',
+          }),
+          publicClient.readContract({
+            address: config.collateralAsset.address,
+            abi: ERC20_ABI,
+            functionName: 'symbol',
+          }),
+        ])
+
+        const formattedBalance = formatUnits(balance, decimals)
+        console.log(`  💎 Collateral Asset (${symbol}): ${formattedBalance} ${symbol}`)
+      } catch (error) {
+        console.log(`  ❌ Collateral Asset: Error reading balance - ${error instanceof Error ? error.message : String(error)}`)
+      }
+
+      // Check debt asset balance
+      try {
+        const [balance, decimals, symbol] = await Promise.all([
+          publicClient.readContract({
+            address: config.debtAsset.address,
+            abi: ERC20_ABI,
+            functionName: 'balanceOf',
+            args: [ANVIL_ACCOUNT],
+          }),
+          publicClient.readContract({
+            address: config.debtAsset.address,
+            abi: ERC20_ABI,
+            functionName: 'decimals',
+          }),
+          publicClient.readContract({
+            address: config.debtAsset.address,
+            abi: ERC20_ABI,
+            functionName: 'symbol',
+          }),
+        ])
+
+        const formattedBalance = formatUnits(balance, decimals)
+        console.log(`  💸 Debt Asset (${symbol}): ${formattedBalance} ${symbol}`)
+      } catch (error) {
+        console.log(`  ❌ Debt Asset: Error reading balance - ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
 
   } catch (error) {
     console.error('❌ Failed to check balances:', error)
