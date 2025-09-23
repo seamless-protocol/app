@@ -58,7 +58,7 @@ export function useRedeemExecution({
     swap,
     quoteStatus,
     routerAddress,
-    chainId
+    chainId,
   })
 
   const canSubmit = useMemo(() => Boolean(account), [account])

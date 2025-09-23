@@ -9,7 +9,6 @@ import { getContractAddresses, type SupportedChainId } from '../../../../lib/con
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
-import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
 import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
@@ -18,6 +17,7 @@ import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
 import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
+import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { ApproveStep } from '../leverage-token-mint-modal/ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
@@ -70,7 +70,7 @@ export function LeverageTokenRedeemModal({
     symbol: leverageTokenConfig.symbol,
     hasSwaps: !!leverageTokenConfig.swaps,
     swaps: leverageTokenConfig.swaps,
-    collateralToDebt: leverageTokenConfig.swaps?.collateralToDebt
+    collateralToDebt: leverageTokenConfig.swaps?.collateralToDebt,
   })
 
   // Get user account information
@@ -166,7 +166,7 @@ export function LeverageTokenRedeemModal({
     hasCollateralToDebt: !!leverageTokenConfig.swaps?.collateralToDebt,
     collateralToDebt: leverageTokenConfig.swaps?.collateralToDebt,
     leverageTokenAddress,
-    leverageTokenConfig: leverageTokenConfig.symbol
+    leverageTokenConfig: leverageTokenConfig.symbol,
   })
 
   // Execution hook (like mint modal)

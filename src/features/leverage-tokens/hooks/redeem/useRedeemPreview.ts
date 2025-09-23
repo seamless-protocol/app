@@ -12,7 +12,14 @@ import {
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
 
-type Preview = Awaited<ReturnType<typeof readLeverageManagerPreviewRedeem>>
+export interface RedeemPreviewResult {
+  collateral: bigint
+  debt: bigint
+  shares: bigint
+  equity?: bigint
+  tokenFee?: bigint
+  treasuryFee?: bigint
+}
 
 export function useRedeemPreview(params: {
   config: Config
@@ -22,13 +29,13 @@ export function useRedeemPreview(params: {
   chainId?: number
 }) {
   const { config, token, sharesToRedeem, debounceMs = 350, chainId } = params
-  
+
   console.log('🔍 useRedeemPreview invoked:', {
     token,
     sharesToRedeem: sharesToRedeem?.toString(),
     debounceMs,
     chainId,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   })
 
   // Local debounce of the raw bigint input so the query only runs after idle
@@ -57,7 +64,7 @@ export function useRedeemPreview(params: {
     amount: amountForKey,
   })
 
-  const query = useQuery<Preview, Error>({
+  const query = useQuery<RedeemPreviewResult, Error>({
     queryKey,
     // Only executes when enabled=true
     queryFn: async () => {
@@ -67,23 +74,29 @@ export function useRedeemPreview(params: {
           contractAddress: managerV2Address,
           token,
           amount: debounced?.toString(),
-          chainId: detectedChainId
+          chainId: detectedChainId,
         })
-        
+
         const res = await readLeverageManagerV2PreviewRedeem(config, {
           address: managerV2Address,
           args: [token, debounced ?? 0n],
         })
-        
+
         console.log('✅ V2 Redeem Preview result:', {
           collateral: res.collateral.toString(),
           debt: res.debt.toString(),
           shares: res.shares.toString(),
           tokenFee: res.tokenFee?.toString(),
-          treasuryFee: res.treasuryFee?.toString()
+          treasuryFee: res.treasuryFee?.toString(),
         })
-        
-        return res
+
+        return {
+          collateral: res.collateral,
+          debt: res.debt,
+          shares: res.shares,
+          tokenFee: res.tokenFee,
+          treasuryFee: res.treasuryFee,
+        }
       }
 
       console.log('📞 Calling readLeverageManagerPreviewRedeem:', {
@@ -91,24 +104,31 @@ export function useRedeemPreview(params: {
         contractAddress: managerAddress,
         token,
         amount: debounced?.toString(),
-        chainId: detectedChainId
+        chainId: detectedChainId,
       })
-      
+
       const res = await readLeverageManagerPreviewRedeem(config, {
         ...(managerAddress ? { address: managerAddress } : {}),
         args: [token, debounced ?? 0n],
       })
-      
+
       console.log('✅ V1 Redeem Preview result:', {
         collateral: res.collateral.toString(),
         debt: res.debt.toString(),
         shares: res.shares.toString(),
         equity: res.equity?.toString(),
         tokenFee: res.tokenFee?.toString(),
-        treasuryFee: res.treasuryFee?.toString()
+        treasuryFee: res.treasuryFee?.toString(),
       })
-      
-      return res
+
+      return {
+        collateral: res.collateral,
+        debt: res.debt,
+        shares: res.shares,
+        equity: res.equity,
+        tokenFee: res.tokenFee,
+        treasuryFee: res.treasuryFee,
+      }
     },
     enabled,
     retry: false,

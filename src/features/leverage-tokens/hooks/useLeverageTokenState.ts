@@ -39,7 +39,7 @@ export function useLeverageTokenState(tokenAddress: Address, chainIdOverride?: n
         chainId: chainId as SupportedChainId,
       },
     ]
-  }, [managerAddress, tokenAddress, chainId])
+  }, [managerAddress, managerAbi, tokenAddress, chainId])
 
   const { data, isLoading, isError, error } = useReadContracts({
     contracts,

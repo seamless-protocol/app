@@ -12,6 +12,7 @@ export interface UseTokenApproveParams {
   decimals?: number // Token decimals
   chainId: number
   enabled?: boolean
+  useMaxApproval?: boolean
 }
 
 /**
@@ -25,9 +26,10 @@ export function useTokenApprove({
   decimals = 18,
   chainId,
   enabled = true,
+  useMaxApproval = false,
 }: UseTokenApproveParams) {
   // Calculate approval amount
-  const approvalAmount = amount ? parseUnits(amount, decimals) : 0n
+  const approvalAmount = useMaxApproval ? maxUint256 : amount ? parseUnits(amount, decimals) : 0n
 
   // Write contract for approval
   const {
@@ -70,6 +72,7 @@ export function useTokenApprove({
   return {
     // Actions
     approve,
+    useMaxApproval,
 
     // Transaction state
     hash,
