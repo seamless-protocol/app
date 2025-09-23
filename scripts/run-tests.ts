@@ -42,6 +42,19 @@ const CHAIN_PRESETS: Record<ChainSlug, ChainPreset> = {
   },
 }
 
+const testRpcUrlMap: Record<string, string> = (() => {
+  const rawMap =
+    process.env['VITE_TEST_RPC_URL_MAP'] || process.env['TEST_RPC_URL_MAP'] || undefined
+  if (!rawMap) return {}
+  try {
+    const parsed = JSON.parse(rawMap) as Record<string, string>
+    return typeof parsed === 'object' && parsed !== null ? parsed : {}
+  } catch (error) {
+    console.warn('[run-tests] Failed to parse VITE_TEST_RPC_URL_MAP', error)
+    return {}
+  }
+})()
+
 interface TenderlyConfig {
   account: string
   project: string
@@ -235,10 +248,19 @@ async function runForChainOption(chainOption: string, testType: TestType, passTh
       process.exit(1)
     }
 
+    const chainId = slug === 'base' ? '8453' : '1'
+    const mappedRpc = testRpcUrlMap[chainId]
+    const effectiveRpc = mappedRpc ?? preset.testRpc
+
     console.log(`\n=== 🚀 Running ${testType} tests [${preset.label}] ===`)
+    if (mappedRpc) {
+      console.log(`[run-tests] Using mapped RPC for chain ${chainId}: ${mappedRpc}`)
+    }
+
     const env = {
       ...process.env,
-      TEST_RPC_URL: preset.testRpc,
+      TEST_RPC_URL: effectiveRpc,
+      VITE_TEST_RPC_URL: effectiveRpc,
       TENDERLY_ADMIN_RPC_URL: preset.adminRpc,
       E2E_TOKEN_SOURCE: preset.tokenSource,
       E2E_LEVERAGE_TOKEN_KEY: preset.tokenKey,
