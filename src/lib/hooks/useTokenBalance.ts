@@ -26,6 +26,7 @@ export function useTokenBalance({
     isLoading,
     isError,
     error,
+    refetch,
   } = useReadContracts({
     contracts:
       enabled && tokenAddress && userAddress
@@ -53,5 +54,6 @@ export function useTokenBalance({
     isLoading,
     isError,
     error,
+    refetch,
   }
 }

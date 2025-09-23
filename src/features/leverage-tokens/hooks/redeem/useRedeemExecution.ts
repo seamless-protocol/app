@@ -81,7 +81,13 @@ export function useRedeemExecution({
 
         setHash(result.hash)
         setStatus('pending')
-        await publicClient?.waitForTransactionReceipt({ hash: result.hash })
+        const receipt = await publicClient?.waitForTransactionReceipt({ hash: result.hash })
+        if (receipt && receipt.status !== 'success') {
+          const revertError = new Error('Transaction reverted')
+          setError(revertError)
+          setStatus('error')
+          throw revertError
+        }
         setStatus('success')
         return result
       } catch (err) {

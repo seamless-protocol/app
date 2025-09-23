@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
-import { type QuoteFn, RouterVersion } from '@/domain/redeem/planner/types'
+import type { QuoteFn } from '@/domain/redeem/planner/types'
+import { RouterVersion } from '@/domain/redeem/planner/types'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 
 interface UseRedeemPlanPreviewParams {

@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
@@ -20,6 +21,7 @@ import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
+import { ltKeys } from '../../utils/queryKeys'
 import { ApproveStep } from '../leverage-token-mint-modal/ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
 import { ErrorStep } from './ErrorStep'
@@ -58,6 +60,8 @@ export function LeverageTokenRedeemModal({
   leverageTokenAddress,
   userAddress: propUserAddress,
 }: LeverageTokenRedeemModalProps) {
+  const queryClient = useQueryClient()
+
   // Get leverage token configuration by address
   const leverageTokenConfig = getLeverageTokenConfig(leverageTokenAddress)
 
@@ -79,13 +83,16 @@ export function LeverageTokenRedeemModal({
     contractAddresses.leverageManagerV2 ?? contractAddresses.leverageManager
 
   // Get real wallet balance for leverage tokens
-  const { balance: leverageTokenBalance, isLoading: isLeverageTokenBalanceLoading } =
-    useTokenBalance({
-      tokenAddress: leverageTokenAddress,
-      userAddress: userAddress as `0x${string}`,
-      chainId: leverageTokenConfig.chainId,
-      enabled: Boolean(userAddress && isConnected),
-    })
+  const {
+    balance: leverageTokenBalance,
+    isLoading: isLeverageTokenBalanceLoading,
+    refetch: refetchLeverageTokenBalance,
+  } = useTokenBalance({
+    tokenAddress: leverageTokenAddress,
+    userAddress: userAddress as `0x${string}`,
+    chainId: leverageTokenConfig.chainId,
+    enabled: Boolean(userAddress && isConnected),
+  })
 
   // Get leverage token user position (includes USD value calculation)
   const { data: positionData, isLoading: isPositionLoading } = useLeverageTokenUserPosition({
@@ -400,6 +407,13 @@ export function LeverageTokenRedeemModal({
       toast.success('Redemption successful!', {
         description: `${form.amount} tokens redeemed for ${toastAmount} ${selectedAsset}`,
       })
+
+      refetchLeverageTokenBalance?.()
+      queryClient.invalidateQueries({ queryKey: ltKeys.token(leverageTokenAddress) })
+      if (userAddress) {
+        queryClient.invalidateQueries({ queryKey: ltKeys.user(leverageTokenAddress, userAddress) })
+      }
+
       toSuccess()
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Redemption failed. Please try again.')
