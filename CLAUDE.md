@@ -79,6 +79,7 @@ bunx --bun shadcn@latest add [component]  # Add new UI components
 - **Re-exports**: Import via `@/lib/contracts` to access addresses, ABIs, and wagmi codegen.
 - **Features**: Keep UI-only constants in `src/features/<feature>`, import on-chain config from `src/lib/contracts`.
 - **Tests**: Prefer mocking `@/lib/contracts/addresses` in unit tests; avoid duplicating addresses.
+- **Swap routing policy**: Production leverage tokens (anything without `isTestOnly`) must default to LiFi for Router v2 debt/collateral conversions with bridges disabled. Test-only/Tenderly definitions keep explicit Uniswap V3 pool configs so integration specs stay deterministic. When adding tokens, set `swaps` in `src/features/leverage-tokens/leverageTokens.config.ts` accordingly.
 
 #### Address Overrides for Forks
 - Canonical Base addresses remain the production default; do **not** edit `addresses.ts` with fork-specific values.

@@ -63,14 +63,6 @@ export function LeverageTokenRedeemModal({
     throw new Error(`No configuration found for token address: ${leverageTokenAddress}`)
   }
 
-  console.log('🔧 Leverage token config debug:', {
-    leverageTokenAddress,
-    symbol: leverageTokenConfig.symbol,
-    hasSwaps: !!leverageTokenConfig.swaps,
-    swaps: leverageTokenConfig.swaps,
-    collateralToDebt: leverageTokenConfig.swaps?.collateralToDebt,
-  })
-
   // Get user account information
   const { address: hookUserAddress, isConnected } = useAccount()
   const wagmiConfig = useConfig()
@@ -156,15 +148,6 @@ export function LeverageTokenRedeemModal({
     token: leverageTokenAddress,
     sharesToRedeem: form.amountRaw,
     chainId: leverageTokenConfig.chainId,
-  })
-
-  // Debug swap configuration
-  console.log('🔧 Redeem swap config debug:', {
-    hasSwaps: !!leverageTokenConfig.swaps,
-    hasCollateralToDebt: !!leverageTokenConfig.swaps?.collateralToDebt,
-    collateralToDebt: leverageTokenConfig.swaps?.collateralToDebt,
-    leverageTokenAddress,
-    leverageTokenConfig: leverageTokenConfig.symbol,
   })
 
   // Execution hook (like mint modal)

@@ -52,15 +52,6 @@ export function useRedeemExecution({
     requiresQuote,
   })
 
-  console.log('🔧 Redeem execution debug:', {
-    requiresQuote,
-    hasSwap: !!swap,
-    swap,
-    quoteStatus,
-    routerAddress,
-    chainId,
-  })
-
   const canSubmit = useMemo(() => Boolean(account), [account])
   const quoteReady = !requiresQuote || quoteStatus === 'ready' || quoteStatus === 'not-required'
   const effectiveCanSubmit = canSubmit && quoteReady

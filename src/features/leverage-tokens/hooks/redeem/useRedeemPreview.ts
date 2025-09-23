@@ -30,14 +30,6 @@ export function useRedeemPreview(params: {
 }) {
   const { config, token, sharesToRedeem, debounceMs = 350, chainId } = params
 
-  console.log('🔍 useRedeemPreview invoked:', {
-    token,
-    sharesToRedeem: sharesToRedeem?.toString(),
-    debounceMs,
-    chainId,
-    timestamp: Date.now(),
-  })
-
   // Local debounce of the raw bigint input so the query only runs after idle
   const debounced = useDebouncedBigint(sharesToRedeem, debounceMs)
   const enabled = useMemo(() => typeof debounced === 'bigint' && debounced > 0n, [debounced])
@@ -69,25 +61,9 @@ export function useRedeemPreview(params: {
     // Only executes when enabled=true
     queryFn: async () => {
       if (useV2 && managerV2Address) {
-        console.log('📞 Calling readLeverageManagerV2PreviewRedeem:', {
-          function: 'readLeverageManagerV2PreviewRedeem',
-          contractAddress: managerV2Address,
-          token,
-          amount: debounced?.toString(),
-          chainId: detectedChainId,
-        })
-
         const res = await readLeverageManagerV2PreviewRedeem(config, {
           address: managerV2Address,
           args: [token, debounced ?? 0n],
-        })
-
-        console.log('✅ V2 Redeem Preview result:', {
-          collateral: res.collateral.toString(),
-          debt: res.debt.toString(),
-          shares: res.shares.toString(),
-          tokenFee: res.tokenFee?.toString(),
-          treasuryFee: res.treasuryFee?.toString(),
         })
 
         return {
@@ -99,26 +75,9 @@ export function useRedeemPreview(params: {
         }
       }
 
-      console.log('📞 Calling readLeverageManagerPreviewRedeem:', {
-        function: 'readLeverageManagerPreviewRedeem',
-        contractAddress: managerAddress,
-        token,
-        amount: debounced?.toString(),
-        chainId: detectedChainId,
-      })
-
       const res = await readLeverageManagerPreviewRedeem(config, {
         ...(managerAddress ? { address: managerAddress } : {}),
         args: [token, debounced ?? 0n],
-      })
-
-      console.log('✅ V1 Redeem Preview result:', {
-        collateral: res.collateral.toString(),
-        debt: res.debt.toString(),
-        shares: res.shares.toString(),
-        equity: res.equity?.toString(),
-        tokenFee: res.tokenFee?.toString(),
-        treasuryFee: res.treasuryFee?.toString(),
       })
 
       return {

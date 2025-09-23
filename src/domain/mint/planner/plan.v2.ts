@@ -101,13 +101,20 @@ export async function planMintV2(params: {
 
   // Ideal preview based on user's collateral only
   const ideal = managerPort
-    ? await managerPort.idealPreview({ token, userCollateral: userCollateralOut })
+    ? await managerPort.idealPreview({
+        token,
+        userCollateral: userCollateralOut,
+      })
     : await (async () => {
         const r = await readLeverageManagerV2PreviewMint(config, {
           ...(managerAddress ? { address: managerAddress } : {}),
           args: [token, userCollateralOut],
         })
-        return { targetCollateral: r.collateral, idealDebt: r.debt, idealShares: r.shares }
+        return {
+          targetCollateral: r.collateral,
+          idealDebt: r.debt,
+          idealShares: r.shares,
+        }
       })()
   const neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
@@ -131,16 +138,6 @@ export async function planMintV2(params: {
     })
   }
 
-  if (process.env['DEBUG_PLAN_V2'] === '1') {
-    console.info('[DEBUG][planMintV2] debt quote', {
-      debtIn: debtIn.toString(),
-      out: debtQuote.out.toString(),
-      approvalTarget: debtQuote.approvalTarget,
-      calldata: debtQuote.calldata,
-      useNativeDebtPath,
-    })
-  }
-
   const totalCollateral = userCollateralOut + debtQuote.out
   const final = managerPort
     ? await managerPort.finalPreview({ token, totalCollateral })
@@ -157,7 +154,14 @@ export async function planMintV2(params: {
   const minShares = applySlippageFloor(final.previewShares, slippageBps)
   const excessDebt: bigint = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
 
-  calls.push(...buildDebtSwapCalls({ debtAsset, debtQuote, debtIn, useNative: useNativeDebtPath }))
+  calls.push(
+    ...buildDebtSwapCalls({
+      debtAsset,
+      debtQuote,
+      debtIn,
+      useNative: useNativeDebtPath,
+    }),
+  )
 
   return {
     inputAsset,
@@ -210,7 +214,11 @@ function buildDebtSwapCalls(args: {
         }),
         value: 0n,
       },
-      { target: debtQuote.approvalTarget, data: debtQuote.calldata, value: debtIn },
+      {
+        target: debtQuote.approvalTarget,
+        data: debtQuote.calldata,
+        value: debtIn,
+      },
     ]
   }
   // ERC20-in path: approve router for debt asset then perform swap

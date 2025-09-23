@@ -109,12 +109,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'uniswapV3',
-        poolKey: 'weeth-weth',
+        type: 'lifi',
+        allowBridges: 'none',
       },
       collateralToDebt: {
-        type: 'uniswapV3',
-        poolKey: 'weeth-weth',
+        type: 'lifi',
+        allowBridges: 'none',
       },
     },
     relatedResources: {
