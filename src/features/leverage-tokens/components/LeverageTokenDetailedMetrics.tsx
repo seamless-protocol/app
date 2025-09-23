@@ -1,5 +1,3 @@
-'use client'
-
 import { motion } from 'framer-motion'
 import { ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { useState } from 'react'
