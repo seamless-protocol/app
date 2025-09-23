@@ -1,30 +1,30 @@
-import { QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { RouterProvider } from '@tanstack/react-router'
-import '@rainbow-me/rainbowkit/styles.css'
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { WagmiProvider } from 'wagmi'
-import { validateEnv } from './lib/env'
-import './index.css'
-import { ErrorBoundary } from './components/error-boundary'
-import { RainbowThemeWrapper } from './components/rainbow-theme-wrapper'
-import { ThemeProvider } from './components/theme-provider'
-import { features } from './lib/config/features'
-import { queryClient } from './lib/config/query.config'
-import { initSentry } from './lib/config/sentry.config'
-import { config as prodConfig } from './lib/config/wagmi.config'
-import { testConfig } from './lib/config/wagmi.config.test'
-import { router } from './router'
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { RouterProvider } from "@tanstack/react-router";
+import "@rainbow-me/rainbowkit/styles.css";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { WagmiProvider } from "wagmi";
+import { validateEnv } from "./lib/env";
+import "./index.css";
+import { ErrorBoundary } from "./components/error-boundary";
+import { RainbowThemeWrapper } from "./components/rainbow-theme-wrapper";
+import { ThemeProvider } from "./components/theme-provider";
+import { features } from "./lib/config/features";
+import { queryClient } from "./lib/config/query.config";
+import { initSentry } from "./lib/config/sentry.config";
+import { config as prodConfig } from "./lib/config/wagmi.config";
+import { testConfig } from "./lib/config/wagmi.config.test";
+import { router } from "./router";
 
 // Validate environment variables before app starts
 try {
-  validateEnv()
+  validateEnv();
 } catch (error) {
-  console.error('Environment validation failed:', error)
+  console.error("Environment validation failed:", error);
   // In development, show the error in the UI
   if (import.meta.env.DEV) {
-    const errorDiv = document.createElement('div')
+    const errorDiv = document.createElement("div");
     errorDiv.style.cssText = `
       position: fixed;
       top: 0;
@@ -36,27 +36,27 @@ try {
       font-family: monospace;
       white-space: pre-wrap;
       z-index: 99999;
-    `
-    errorDiv.textContent = error instanceof Error ? error.message : String(error)
-    document.body.appendChild(errorDiv)
+    `;
+    errorDiv.textContent =
+      error instanceof Error ? error.message : String(error);
+    document.body.appendChild(errorDiv);
   }
-  throw error
+  throw error;
 }
 
 // Initialize Sentry before app renders
-initSentry()
+initSentry();
 
-const rootElement = document.getElementById('root')
+const rootElement = document.getElementById("root");
 if (!rootElement) {
-  throw new Error('Failed to find root element')
+  throw new Error("Failed to find root element");
 }
 
 createRoot(rootElement).render(
   <StrictMode>
     <ErrorBoundary>
       <ThemeProvider defaultTheme="system">
-        {/* biome-ignore lint/suspicious/noExplicitAny: prodConfig typing is safe here */}
-        <WagmiProvider config={features.testMode ? testConfig : (prodConfig as any)}>
+        <WagmiProvider config={features.testMode ? testConfig : prodConfig}>
           <QueryClientProvider client={queryClient}>
             <RainbowThemeWrapper>
               <RouterProvider router={router} />
@@ -67,4 +67,4 @@ createRoot(rootElement).render(
       </ThemeProvider>
     </ErrorBoundary>
   </StrictMode>,
-)
+);
