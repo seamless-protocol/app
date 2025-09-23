@@ -7,6 +7,7 @@ import { BASE_WETH } from '@/lib/contracts/addresses'
 // Leverage token keys enum for type safety
 export enum LeverageTokenKey {
   WEETH_WETH_17X = 'weeth-weth-17x',
+  WEETH_WETH_17X_TENDERLY = 'weeth-weth-17x-tenderly',
   // Add more token keys here as they are added
   // ANOTHER_TOKEN = 'another-token',
 }
@@ -169,7 +170,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       ],
     },
   },
-  'weeth-weth-17x-tenderly': {
+  [LeverageTokenKey.WEETH_WETH_17X_TENDERLY]: {
     address: '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as Address,
     name: 'weETH / WETH 17x Leverage Token (Tenderly)',
     symbol: 'WEETH-WETH-17x',
