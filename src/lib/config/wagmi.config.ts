@@ -10,14 +10,11 @@ if (!walletConnectProjectId) {
   )
 }
 
-// Test mode detection - use Tenderly VNet for all operations when in test mode
-const isTestMode =
-  import.meta.env['VITE_TEST_MODE'] === 'true' ||
-  import.meta.env['VITE_MINT_REDEEM_TEST_MODE'] === 'true' ||
-  import.meta.env['VITE_MINT_TEST_MODE'] === 'true'
+// Tenderly VNet mode detection - use test RPC when enabled
+const useTenderlyVNet = import.meta.env['VITE_USE_TENDERLY_VNET'] === 'true'
 
-// Resolve RPC URLs with test mode support
-const baseRpc = isTestMode
+// Resolve RPC URLs with Tenderly VNet support
+const baseRpc = useTenderlyVNet
   ? import.meta.env['VITE_TEST_RPC_URL'] || import.meta.env['TEST_RPC_URL']
   : import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org'
 
@@ -26,9 +23,9 @@ const mainnetRpc =
   import.meta.env['VITE_ETHEREUM_RPC_URL'] ||
   'https://eth.llamarpc.com'
 
-// Debug logging for test mode
-if (isTestMode) {
-  console.log('🧪 Test mode enabled - using Tenderly VNet for all operations')
+// Debug logging for Tenderly VNet mode
+if (useTenderlyVNet) {
+  console.log('🌐 Tenderly VNet mode enabled - using test environment')
   console.log('🌐 Base RPC:', baseRpc)
 }
 
