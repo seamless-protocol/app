@@ -42,6 +42,63 @@ export const ltKeys = {
       typeof params.chainId === 'number'
         ? ltKeys.simulation.redeemOnChain(params.chainId, params.addr, params.amount)
         : ltKeys.simulation.redeem(params.addr, params.amount),
+    redeemPlan: (
+      addr: Address,
+      amount: bigint,
+      slippageBps: number,
+      managerAddress?: Address,
+      swapKey?: string,
+    ) =>
+      [
+        ...ltKeys.token(addr),
+        'simulate',
+        'redeem-plan',
+        amount.toString(),
+        `slippage:${slippageBps}`,
+        managerAddress ? `manager:${managerAddress}` : 'manager:default',
+        swapKey ? `swap:${swapKey}` : 'swap:default',
+      ] as const,
+    redeemPlanOnChain: (
+      chainId: number,
+      addr: Address,
+      amount: bigint,
+      slippageBps: number,
+      managerAddress?: Address,
+      swapKey?: string,
+    ) =>
+      [
+        ...ltKeys.tokenOnChain(chainId, addr),
+        'simulate',
+        'redeem-plan',
+        amount.toString(),
+        `slippage:${slippageBps}`,
+        managerAddress ? `manager:${managerAddress}` : 'manager:default',
+        swapKey ? `swap:${swapKey}` : 'swap:default',
+      ] as const,
+    redeemPlanKey: (params: {
+      chainId: number | undefined
+      addr: Address
+      amount: bigint
+      slippageBps: number
+      managerAddress?: Address
+      swapKey?: string
+    }) =>
+      typeof params.chainId === 'number'
+        ? ltKeys.simulation.redeemPlanOnChain(
+            params.chainId,
+            params.addr,
+            params.amount,
+            params.slippageBps,
+            params.managerAddress,
+            params.swapKey,
+          )
+        : ltKeys.simulation.redeemPlan(
+            params.addr,
+            params.amount,
+            params.slippageBps,
+            params.managerAddress,
+            params.swapKey,
+          ),
   },
   // External data sources (shared across all tokens)
   external: {

@@ -1,0 +1,73 @@
+import { useQuery } from '@tanstack/react-query'
+import type { Address } from 'viem'
+import type { Config } from 'wagmi'
+import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
+import { type QuoteFn, RouterVersion } from '@/domain/redeem/planner/types'
+import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
+
+interface UseRedeemPlanPreviewParams {
+  config: Config
+  token: Address
+  sharesToRedeem: bigint | undefined
+  slippageBps: number
+  chainId: number
+  routerVersion: RouterVersion
+  quote?: QuoteFn
+  managerAddress?: Address
+  swapKey?: string
+}
+
+export function useRedeemPlanPreview({
+  config,
+  token,
+  sharesToRedeem,
+  slippageBps,
+  chainId,
+  routerVersion,
+  quote,
+  managerAddress,
+  swapKey,
+}: UseRedeemPlanPreviewParams) {
+  const enabled =
+    routerVersion === RouterVersion.V2 &&
+    typeof sharesToRedeem === 'bigint' &&
+    sharesToRedeem > 0n &&
+    typeof quote === 'function'
+
+  const keyParams = {
+    chainId,
+    addr: token,
+    amount: sharesToRedeem ?? 0n,
+    slippageBps,
+    ...(managerAddress ? { managerAddress } : {}),
+    ...(swapKey ? { swapKey } : {}),
+  }
+
+  const query = useQuery({
+    queryKey: ltKeys.simulation.redeemPlanKey(keyParams),
+    enabled,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+    retry: 1,
+    queryFn: async () => {
+      if (!enabled || !quote || typeof sharesToRedeem !== 'bigint') {
+        throw new Error('Redeem plan prerequisites missing')
+      }
+
+      return planRedeemV2({
+        config,
+        token,
+        sharesToRedeem,
+        slippageBps,
+        quoteCollateralToDebt: quote,
+        ...(managerAddress ? { managerAddress } : {}),
+      })
+    },
+  })
+
+  return {
+    plan: query.data,
+    isLoading: query.isPending || query.isFetching,
+    error: query.error,
+  }
+}

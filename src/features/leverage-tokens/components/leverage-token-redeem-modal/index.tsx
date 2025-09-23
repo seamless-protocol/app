@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
+import type { OrchestrateRedeemResult } from '@/domain/redeem'
+import { RouterVersion } from '@/domain/redeem/planner/types'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
@@ -13,6 +15,7 @@ import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from 
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
 import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
+import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
 import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
@@ -164,6 +167,34 @@ export function LeverageTokenRedeemModal({
       : {}),
   })
 
+  const collateralSwapConfig = leverageTokenConfig.swaps?.collateralToDebt
+
+  const swapConfigKey = useMemo(() => {
+    if (!collateralSwapConfig) return 'none'
+    switch (collateralSwapConfig.type) {
+      case 'lifi':
+        return `lifi:${collateralSwapConfig.allowBridges ?? 'default'}:${collateralSwapConfig.order ?? 'CHEAPEST'}`
+      case 'uniswapV2':
+        return `uniswapV2:${collateralSwapConfig.router}`
+      case 'uniswapV3':
+        return `uniswapV3:${collateralSwapConfig.poolKey}`
+      default:
+        return 'unknown'
+    }
+  }, [collateralSwapConfig])
+
+  const planPreview = useRedeemPlanPreview({
+    config: wagmiConfig,
+    token: leverageTokenAddress,
+    sharesToRedeem: form.amountRaw,
+    slippageBps,
+    chainId: leverageTokenConfig.chainId,
+    routerVersion: exec.routerVersion,
+    ...(exec.quote ? { quote: exec.quote } : {}),
+    ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
+    ...(swapConfigKey ? { swapKey: swapConfigKey } : {}),
+  })
+
   const quoteBlockingError = useMemo(() => {
     switch (exec.quoteStatus) {
       case 'not-required':
@@ -185,6 +216,32 @@ export function LeverageTokenRedeemModal({
         return undefined
     }
   }, [exec.quoteError?.message, exec.quoteStatus])
+
+  const planError = useMemo(() => {
+    if (exec.routerVersion !== RouterVersion.V2) return undefined
+    return planPreview.error?.message
+  }, [exec.routerVersion, planPreview.error?.message])
+
+  const redeemBlockingError = quoteBlockingError || planError
+
+  const expectedCollateralRaw = useMemo(() => {
+    if (exec.routerVersion === RouterVersion.V2) {
+      return planPreview.plan?.expectedCollateral
+    }
+    return preview.data?.collateral
+  }, [exec.routerVersion, planPreview.plan?.expectedCollateral, preview.data?.collateral])
+
+  const expectedAmount = useMemo(
+    () =>
+      typeof expectedCollateralRaw === 'bigint'
+        ? formatTokenAmountFromBase(
+            expectedCollateralRaw,
+            leverageTokenConfig.collateralAsset.decimals,
+            TOKEN_AMOUNT_DISPLAY_DECIMALS,
+          )
+        : '0',
+    [expectedCollateralRaw, leverageTokenConfig.collateralAsset.decimals],
+  )
 
   const {
     isAllowanceLoading,
@@ -240,17 +297,6 @@ export function LeverageTokenRedeemModal({
     }
   }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
 
-  // Calculate expected redemption amount (like mint modal's expectedTokens)
-  const expectedAmount = useMemo(
-    () =>
-      formatTokenAmountFromBase(
-        preview.data?.collateral,
-        leverageTokenConfig.collateralAsset.decimals,
-        TOKEN_AMOUNT_DISPLAY_DECIMALS,
-      ),
-    [preview.data?.collateral, leverageTokenConfig.collateralAsset.decimals],
-  )
-
   // Available assets for redemption (collateral asset)
   const availableAssets = [
     {
@@ -268,14 +314,18 @@ export function LeverageTokenRedeemModal({
   // Check if approval is needed
   const needsApproval = () => Boolean(needsApprovalFlag)
 
-  // Validate redemption (like mint modal)
+  const isPlanCalculating =
+    exec.routerVersion === RouterVersion.V2 && Boolean(form.amountRaw) && planPreview.isLoading
+
+  const isCalculating = preview.isLoading || isPlanCalculating
+
   const canProceed = () => {
     return (
       form.isAmountValid &&
       form.hasBalance &&
       form.minAmountOk &&
-      !preview.isLoading &&
-      parseFloat(expectedAmount) > 0 &&
+      !isCalculating &&
+      typeof expectedCollateralRaw === 'bigint' &&
       isConnected &&
       !isAllowanceLoading &&
       exec.canSubmit
@@ -313,18 +363,42 @@ export function LeverageTokenRedeemModal({
   // Handle redemption confirmation
   const handleConfirm = async () => {
     if (!form.amountRaw) return
-    if (!exec.canSubmit) {
-      setError(quoteBlockingError || 'Redeem configuration is not ready. Please try again shortly.')
+    if (!exec.canSubmit || typeof expectedCollateralRaw !== 'bigint') {
+      setError(
+        redeemBlockingError || 'Redeem configuration is not ready. Please try again shortly.',
+      )
       toError()
       return
     }
 
     try {
       toPending()
-      const hash = await exec.redeem(form.amountRaw)
-      setTransactionHash(hash)
+      const result = await exec.redeem(form.amountRaw)
+      setTransactionHash(result.hash)
+
+      if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+        logRedeemDiagnostics({
+          result,
+          collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
+          debtDecimals: leverageTokenConfig.debtAsset.decimals,
+          ...(typeof preview.data?.collateral === 'bigint'
+            ? { previewCollateral: preview.data.collateral }
+            : {}),
+          ...(typeof preview.data?.debt === 'bigint' ? { previewDebt: preview.data.debt } : {}),
+        })
+      }
+
+      const toastAmount =
+        result.routerVersion === 'v2'
+          ? formatTokenAmountFromBase(
+              result.plan.expectedCollateral,
+              leverageTokenConfig.collateralAsset.decimals,
+              TOKEN_AMOUNT_DISPLAY_DECIMALS,
+            )
+          : expectedAmount
+
       toast.success('Redemption successful!', {
-        description: `${form.amount} tokens redeemed for ${expectedAmount} ${selectedAsset}`,
+        description: `${form.amount} tokens redeemed for ${toastAmount} ${selectedAsset}`,
       })
       toSuccess()
     } catch (error) {
@@ -364,7 +438,7 @@ export function LeverageTokenRedeemModal({
             onSlippageChange={setSlippage}
             isLeverageTokenBalanceLoading={isLeverageTokenBalanceLoading}
             isUsdPriceLoading={isPositionLoading}
-            isCalculating={preview.isLoading}
+            isCalculating={isCalculating}
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedAmount={expectedAmount}
@@ -372,7 +446,7 @@ export function LeverageTokenRedeemModal({
             needsApproval={needsApproval()}
             isConnected={isConnected}
             onApprove={handleApprove}
-            error={error || quoteBlockingError}
+            error={error || redeemBlockingError}
             leverageTokenConfig={leverageTokenConfig}
           />
         )
@@ -437,6 +511,51 @@ export function LeverageTokenRedeemModal({
       {renderStepContent()}
     </MultiStepModal>
   )
+}
+
+function logRedeemDiagnostics(params: {
+  result: OrchestrateRedeemResult
+  previewCollateral?: bigint
+  previewDebt?: bigint
+  collateralDecimals: number
+  debtDecimals: number
+}) {
+  const { result, previewCollateral, previewDebt, collateralDecimals, debtDecimals } = params
+
+  const formatValue = (value: bigint | undefined, decimals: number) =>
+    typeof value === 'bigint' ? formatUnits(value, decimals) : 'n/a'
+
+  if (result.routerVersion === 'v2') {
+    const gross = formatValue(
+      previewCollateral ?? result.plan.expectedTotalCollateral,
+      collateralDecimals,
+    )
+    const debt = formatValue(previewDebt ?? result.plan.expectedDebt, debtDecimals)
+    const net = formatValue(result.plan.expectedCollateral, collateralDecimals)
+    const swapInput = formatValue(
+      result.plan.expectedTotalCollateral - result.plan.expectedCollateral,
+      collateralDecimals,
+    )
+
+    console.groupCollapsed('[redeem][v2] diagnostics')
+    console.table({
+      grossCollateral: gross,
+      debtToRepay: debt,
+      swapInput,
+      netCollateral: net,
+      slippageBps: result.plan.slippageBps,
+    })
+    console.log('plan', result.plan)
+    console.groupEnd()
+    return
+  }
+
+  console.groupCollapsed('[redeem][v1] diagnostics')
+  console.table({
+    previewCollateral: formatValue(previewCollateral, collateralDecimals),
+    previewDebt: formatValue(previewDebt, debtDecimals),
+  })
+  console.groupEnd()
 }
 
 // Local hook: wraps token allowance + approval flow
