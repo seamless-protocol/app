@@ -115,6 +115,7 @@ export function LeverageTokenRedeemModal({
     toInput,
     toApprove,
     toConfirm,
+    toPending,
     toSuccess,
     toError,
   } = useRedeemSteps('input')
@@ -319,6 +320,7 @@ export function LeverageTokenRedeemModal({
     }
 
     try {
+      toPending()
       const hash = await exec.redeem(form.amountRaw)
       setTransactionHash(hash)
       toast.success('Redemption successful!', {

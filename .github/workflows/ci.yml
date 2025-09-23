@@ -130,6 +130,7 @@ jobs:
         env:
           TEST_RPC_URL: ${{ secrets.TEST_RPC_URL }}
           TENDERLY_ADMIN_RPC_URL: ${{ secrets.TENDERLY_ADMIN_RPC_URL }}
+          VITE_USE_TENDERLY_VNET: "true"
           ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
           TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
