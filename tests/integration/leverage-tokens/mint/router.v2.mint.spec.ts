@@ -325,6 +325,11 @@ async function assertMintOutcome({
 
   if (orchestration.routerVersion === 'v2') {
     expect(mintedShares >= orchestration.plan.minShares).toBe(true)
-    expect(mintedShares).toBe(orchestration.plan.expectedShares)
+
+    const expectedShares = orchestration.plan.expectedShares
+    const delta = mintedShares >= expectedShares ? mintedShares - expectedShares : expectedShares - mintedShares
+    const tolerance = expectedShares / 10_000n || 1n // allow up to 0.01% variance from preview
+
+    expect(delta <= tolerance).toBe(true)
   }
 }

@@ -74,6 +74,7 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
   } = options
 
   const slippage = BigInt(slippageBps)
+  const normalizedRouter = getAddress(router)
 
   return async ({ inToken, outToken, amountIn }) => {
     const isNativeIn = getAddress(inToken) === getAddress(ETH_SENTINEL)
@@ -98,7 +99,7 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
     }
 
     const amountsOut = await publicClient.readContract({
-      address: router,
+      address: normalizedRouter,
       abi: UNISWAP_V2_ROUTER_ABI,
       functionName: 'getAmountsOut',
       args: [amountIn, path],
@@ -125,7 +126,7 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
     return {
       out,
       minOut,
-      approvalTarget: getAddress(router),
+      approvalTarget: normalizedRouter,
       calldata,
     }
   }
