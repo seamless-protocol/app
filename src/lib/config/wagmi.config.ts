@@ -10,12 +10,27 @@ if (!walletConnectProjectId) {
   )
 }
 
-// Resolve RPC URLs with sensible fallbacks and support both naming conventions
-const baseRpc = import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org'
+// Test mode detection - use Tenderly VNet for all operations when in test mode
+const isTestMode =
+  import.meta.env['VITE_TEST_MODE'] === 'true' ||
+  import.meta.env['VITE_MINT_REDEEM_TEST_MODE'] === 'true' ||
+  import.meta.env['VITE_MINT_TEST_MODE'] === 'true'
+
+// Resolve RPC URLs with test mode support
+const baseRpc = isTestMode
+  ? import.meta.env['VITE_TEST_RPC_URL'] || import.meta.env['TEST_RPC_URL']
+  : import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org'
+
 const mainnetRpc =
   import.meta.env['VITE_MAINNET_RPC_URL'] ||
   import.meta.env['VITE_ETHEREUM_RPC_URL'] ||
   'https://eth.llamarpc.com'
+
+// Debug logging for test mode
+if (isTestMode) {
+  console.log('🧪 Test mode enabled - using Tenderly VNet for all operations')
+  console.log('🌐 Base RPC:', baseRpc)
+}
 
 // Use RainbowKit's getDefaultConfig which handles connectors automatically
 export const config = getDefaultConfig({

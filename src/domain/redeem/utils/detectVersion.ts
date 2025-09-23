@@ -9,9 +9,8 @@ import { RouterVersion } from '../../mint/planner/types'
  * Note: Redeem uses the same router versions as mint since they share the same infrastructure.
  */
 export function detectRedeemRouterVersion(): RouterVersion {
-  const forced = (import.meta.env['VITE_ROUTER_VERSION'] as string | undefined) ?? ''
-    .toString()
-    .toLowerCase()
+  const forced =
+    (import.meta.env['VITE_ROUTER_VERSION'] as string | undefined) ?? ''.toString().toLowerCase()
   if (forced === 'v2') return RouterVersion.V2
   if (forced === 'v1') return RouterVersion.V1
 

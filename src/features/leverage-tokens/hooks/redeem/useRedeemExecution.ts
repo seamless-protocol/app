@@ -1,13 +1,10 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Address } from 'viem'
-import { createPublicClient, http } from 'viem'
 import { usePublicClient } from 'wagmi'
-import { base } from 'wagmi/chains'
 import { RouterVersion } from '@/domain/redeem/planner/types'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { detectRedeemRouterVersion } from '@/domain/redeem/utils/detectVersion'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
-import { mintRedeemRpcUrl, isMintRedeemTestModeEnabled } from '@/lib/config/tenderly.config'
 import { useRedeemWithRouter } from '../useRedeemWithRouter'
 import { type QuoteStatus, useCollateralToDebtQuote } from './useCollateralToDebtQuote'
 
@@ -36,19 +33,7 @@ export function useRedeemExecution({
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState<Error | undefined>(undefined)
 
-  const wagmiPublicClient = usePublicClient()
-
-  // Create custom public client for Tenderly if in test mode
-  const tenderlyPublicClient = useMemo(() => {
-    if (!isMintRedeemTestModeEnabled) return null
-    return createPublicClient({
-      chain: base,
-      transport: http(mintRedeemRpcUrl),
-    })
-  }, [])
-
-  // Use Tenderly client if available, otherwise use wagmi client
-  const publicClient = tenderlyPublicClient || wagmiPublicClient
+  const publicClient = usePublicClient()
 
   const redeemWithRouter = useRedeemWithRouter()
 
@@ -128,8 +113,6 @@ export function useRedeemExecution({
     canSubmit: effectiveCanSubmit,
     quoteStatus,
     quoteError,
-    isUsingTenderly: isMintRedeemTestModeEnabled,
-    rpcUrl: mintRedeemRpcUrl,
   }
 }
 

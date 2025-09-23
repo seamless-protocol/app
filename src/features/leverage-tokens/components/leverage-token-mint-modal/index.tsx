@@ -277,10 +277,7 @@ export function LeverageTokenMintModal({
     try {
       const hash = await exec.mint(form.amountRaw)
       setTransactionHash(hash)
-      const successMessage = exec.isUsingTenderly
-        ? 'Leverage tokens minted successfully on Tenderly VNet!'
-        : 'Leverage tokens minted successfully!'
-      toast.success(successMessage, {
+      toast.success('Leverage tokens minted successfully!', {
         description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} tokens`,
       })
       toSuccess()

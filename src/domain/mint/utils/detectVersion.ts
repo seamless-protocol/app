@@ -7,9 +7,8 @@ import { RouterVersion } from '../planner/types'
  * - Else, default to V1.
  */
 export function detectRouterVersion(): RouterVersion {
-  const forced = (import.meta.env['VITE_ROUTER_VERSION'] as string | undefined) ?? ''
-    .toString()
-    .toLowerCase()
+  const forced =
+    (import.meta.env['VITE_ROUTER_VERSION'] as string | undefined) ?? ''.toString().toLowerCase()
   if (forced === 'v2') return RouterVersion.V2
   if (forced === 'v1') return RouterVersion.V1
 
