@@ -72,7 +72,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     })
 
     // Live user holdings (shares + USD) via on-chain state and price
-    const { data: userPosData } = useLeverageTokenUserPosition({
+    const { data: userPosData, isLoading: isUserPosLoading } = useLeverageTokenUserPosition({
       tokenAddress: tokenAddress as `0x${string}`,
       chainIdOverride: chainId,
       debtAssetAddress: tokenConfig?.debtAsset.address as `0x${string}` | undefined,
@@ -488,6 +488,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 }}
                 collateralAsset={tokenConfig.collateralAsset}
                 debtAsset={tokenConfig.debtAsset}
+                isLoading={isUserPosLoading}
                 onMint={handleMint}
                 onRedeem={handleRedeem}
               />
@@ -624,6 +625,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
               }}
               collateralAsset={tokenConfig.collateralAsset}
               debtAsset={tokenConfig.debtAsset}
+              isLoading={isUserPosLoading}
               onMint={handleMint}
               onRedeem={handleRedeem}
             />

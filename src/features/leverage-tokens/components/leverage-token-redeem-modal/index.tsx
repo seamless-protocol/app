@@ -131,7 +131,6 @@ export function LeverageTokenRedeemModal({
     price: positionData?.equityUsd || 0,
   })
 
-
   const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [transactionHash, setTransactionHash] = useState('')
