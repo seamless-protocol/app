@@ -123,23 +123,20 @@ export function InputStep({
               {isUsdPriceLoading ? (
                 <Skeleton className="inline-block h-4 w-20" />
               ) : (
-                `$${(parseFloat(selectedToken.balance) * selectedToken.price).toLocaleString(
-                  'en-US',
-                  {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  },
-                )}`
+                `$${selectedToken.price.toLocaleString('en-US', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}`
               )}
             </span>
           </div>
           <div>
             <span className="text-slate-400 block">Total Earned</span>
-            <span className="text-green-400 font-medium">+$1,234.56</span>
+            <span className="text-green-400 font-medium">$N/A</span>
           </div>
           <div>
             <span className="text-slate-400 block">Originally Minted</span>
-            <span className="text-white font-medium">$14,444.34</span>
+            <span className="text-white font-medium">$N/A</span>
           </div>
         </div>
       </Card>
@@ -175,7 +172,10 @@ export function InputStep({
                 {isUsdPriceLoading ? (
                   <Skeleton className="h-4 w-20" />
                 ) : (
-                  `≈ $${(parseFloat(amount || '0') * selectedToken.price).toLocaleString('en-US', {
+                  `≈ $${(
+                    parseFloat(amount || '0') *
+                      (selectedToken.price / parseFloat(selectedToken.balance))
+                  ).toLocaleString('en-US', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}`

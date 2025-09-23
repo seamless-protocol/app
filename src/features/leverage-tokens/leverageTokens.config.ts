@@ -210,14 +210,7 @@ export function getAllLeverageTokenConfigs(): Array<LeverageTokenConfig> {
   return getFilteredConfigs()
 }
 
-function shouldIncludeTestTokens(): boolean {
-  const flag = import.meta.env['VITE_INCLUDE_TEST_TOKENS']
-  if (!flag) return false
-  const normalized = flag.toLowerCase()
-  return normalized === 'true' || normalized === '1' || normalized === 'tenderly'
-}
-
 function getFilteredConfigs(): Array<LeverageTokenConfig> {
-  const includeTestTokens = shouldIncludeTestTokens()
+  const includeTestTokens = import.meta.env['VITE_USE_TENDERLY_VNET'] === 'true'
   return Object.values(leverageTokenConfigs).filter((cfg) => includeTestTokens || !cfg.isTestOnly)
 }

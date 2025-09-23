@@ -9,6 +9,7 @@ import { getContractAddresses, type SupportedChainId } from '../../../../lib/con
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
+import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
 import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
@@ -85,15 +86,23 @@ export function LeverageTokenRedeemModal({
       enabled: Boolean(userAddress && isConnected),
     })
 
-  // Get USD price for leverage token
-  const { data: usdPriceMap, isLoading: isUsdPriceLoading } = useUsdPrices({
-    chainId: leverageTokenConfig.chainId,
-    addresses: [leverageTokenAddress, leverageTokenConfig.collateralAsset.address],
-    enabled: Boolean(leverageTokenAddress && leverageTokenConfig.collateralAsset.address),
+  // Get leverage token user position (includes USD value calculation)
+  const { data: positionData, isLoading: isPositionLoading } = useLeverageTokenUserPosition({
+    tokenAddress: leverageTokenAddress,
+    chainIdOverride: leverageTokenConfig.chainId,
+    debtAssetAddress: leverageTokenConfig.debtAsset.address,
+    debtAssetDecimals: leverageTokenConfig.debtAsset.decimals,
   })
 
-  // Get USD prices
-  const leverageTokenUsdPrice = usdPriceMap?.[leverageTokenAddress.toLowerCase()]
+  // Get USD prices for collateral and debt assets
+  const { data: usdPriceMap } = useUsdPrices({
+    chainId: leverageTokenConfig.chainId,
+    addresses: [leverageTokenConfig.collateralAsset.address, leverageTokenConfig.debtAsset.address],
+    enabled: Boolean(
+      leverageTokenConfig.collateralAsset.address && leverageTokenConfig.debtAsset.address,
+    ),
+  })
+
   const collateralUsdPrice =
     usdPriceMap?.[leverageTokenConfig.collateralAsset.address.toLowerCase()]
   const debtUsdPrice = usdPriceMap?.[leverageTokenConfig.debtAsset.address.toLowerCase()]
@@ -119,8 +128,9 @@ export function LeverageTokenRedeemModal({
     symbol: leverageTokenConfig.symbol,
     name: leverageTokenConfig.name,
     balance: leverageTokenBalanceFormatted,
-    price: leverageTokenUsdPrice || 0,
+    price: positionData?.equityUsd || 0,
   })
+
 
   const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -198,9 +208,9 @@ export function LeverageTokenRedeemModal({
     return {
       ...selectedToken,
       balance: leverageTokenBalanceFormatted,
-      price: leverageTokenUsdPrice || 0,
+      price: positionData?.equityUsd || 0,
     }
-  }, [selectedToken, leverageTokenBalanceFormatted, leverageTokenUsdPrice])
+  }, [selectedToken, leverageTokenBalanceFormatted, positionData?.equityUsd])
 
   // Reset modal state when modal opens (like mint modal)
   const resetModal = useCallback(() => {
@@ -353,7 +363,7 @@ export function LeverageTokenRedeemModal({
             slippage={slippage}
             onSlippageChange={setSlippage}
             isLeverageTokenBalanceLoading={isLeverageTokenBalanceLoading}
-            isUsdPriceLoading={isUsdPriceLoading}
+            isUsdPriceLoading={isPositionLoading}
             isCalculating={preview.isLoading}
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}

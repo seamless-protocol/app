@@ -59,7 +59,10 @@ export function useLeverageTokenUserPosition({
   const debtUsd = debtAssetAddress ? usdPriceMap[debtAssetAddress.toLowerCase()] : undefined
 
   const data: LeverageTokenUserPositionData | undefined = useMemo(() => {
-    if (!stateData || !balance) return undefined
+    if (!stateData || !balance) {
+      return undefined
+    }
+
     const { equity, totalSupply } = stateData
     if (!totalSupply || totalSupply === 0n) {
       return { balance, equityInDebt: 0n, equityUsd: debtUsd ? 0 : undefined }

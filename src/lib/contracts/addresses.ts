@@ -248,6 +248,5 @@ export function getRequiredGovernanceAddresses(chainId: number): Required<Govern
 // Test utilities (re-export to ensure a single module instance)
 export {
   getContractAddressOverrides,
-  resetContractAddressOverridesForTesting,
   setContractAddressOverridesForTesting,
 } from './overrides'
