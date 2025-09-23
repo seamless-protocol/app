@@ -2,6 +2,7 @@ import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { createLifiQuoteAdapter, createUniswapV3QuoteAdapter } from '@/domain/shared/adapters'
+import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
 import { getUniswapV3ChainConfig, getUniswapV3PoolConfig } from '@/lib/config/uniswapV3'
 import { BASE_WETH, getContractAddresses } from '@/lib/contracts/addresses'
 import type { QuoteFn } from '../planner/types'
@@ -45,6 +46,24 @@ export function createDebtToCollateralQuote({
   const publicClient = getPublicClient(chainId)
   if (!publicClient) {
     throw new Error('Public client unavailable for debt swap quote')
+  }
+
+  if (swap.type === 'uniswapV2') {
+    const wrappedNative = resolveWrappedNative(chainId)
+    if (!wrappedNative) {
+      throw new Error('Missing wrapped native token for debt swap')
+    }
+
+    const quote = createUniswapV2QuoteAdapter({
+      publicClient: publicClient as unknown as Parameters<
+        typeof createUniswapV2QuoteAdapter
+      >[0]['publicClient'],
+      router: swap.router,
+      recipient: routerAddress,
+      wrappedNative,
+    })
+
+    return { quote, adapterType: 'uniswapV2' }
   }
 
   const chainConfig = getUniswapV3ChainConfig(chainId)

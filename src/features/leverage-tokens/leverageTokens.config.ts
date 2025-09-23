@@ -4,6 +4,8 @@ import { BaseLogo } from '@/components/icons/logos'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
 
+const BASE_UNISWAP_V2_ROUTER = '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' as Address
+
 // Leverage token keys enum for type safety
 export enum LeverageTokenKey {
   WEETH_WETH_17X = 'weeth-weth-17x',
@@ -197,12 +199,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'uniswapV3',
-        poolKey: 'weeth-weth',
+        type: 'uniswapV2',
+        router: BASE_UNISWAP_V2_ROUTER,
       },
       collateralToDebt: {
-        type: 'uniswapV3',
-        poolKey: 'weeth-weth',
+        type: 'uniswapV2',
+        router: BASE_UNISWAP_V2_ROUTER,
       },
     },
   },

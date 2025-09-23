@@ -5,6 +5,7 @@ import {
   createUniswapV3QuoteAdapter,
   type LifiOrder,
 } from '@/domain/shared/adapters'
+import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
 import {
   getUniswapV3ChainConfig,
   getUniswapV3PoolConfig,
@@ -17,6 +18,10 @@ export type CollateralToDebtSwapConfig =
   | {
       type: 'uniswapV3'
       poolKey: UniswapV3PoolKey
+    }
+  | {
+      type: 'uniswapV2'
+      router: Address
     }
   | {
       type: 'lifi'
@@ -58,6 +63,24 @@ export function createCollateralToDebtQuote({
   const publicClient = getPublicClient(chainId)
   if (!publicClient) {
     throw new Error('Public client unavailable for collateral quote')
+  }
+
+  if (swap.type === 'uniswapV2') {
+    const wrappedNative = resolveWrappedNative(chainId)
+    if (!wrappedNative) {
+      throw new Error('Missing wrapped native token for Uniswap V2 collateral swap')
+    }
+
+    const quote = createUniswapV2QuoteAdapter({
+      publicClient: publicClient as unknown as Parameters<
+        typeof createUniswapV2QuoteAdapter
+      >[0]['publicClient'],
+      router: swap.router,
+      recipient: routerAddress,
+      wrappedNative,
+    })
+
+    return { quote, adapterType: 'uniswapV2' }
   }
 
   const chainConfig = getUniswapV3ChainConfig(chainId)
