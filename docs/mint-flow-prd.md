@@ -169,7 +169,6 @@ Return: `Plan`.
   - Invoke: `router.mint(token, equityInCollateralAsset, minShares, maxSwapCost, swapContext)`; collateral-only.
 
 ## 7) Orchestrator
-- Version selection: `VITE_ROUTER_VERSION=auto|v1|v2` (default `auto`).
   - auto: if v2 addresses provided (VNet), use v2; else v1.
 - Ensure allowance:
   - v2: collateral asset to router (initial scope). No Permit2.
@@ -245,8 +244,7 @@ export type QuoteFn = (args: { inToken: Address; outToken: Address; amountIn: bi
 - Arbitrary Call[] risk (v2) → consider router allow-listing targets/selectors (contract-side).
 
 ## 15) Configuration & Environments
-- Router selection: `VITE_ROUTER_VERSION=auto|v1|v2` (default `auto`).
-- V2 (Tenderly VNet): provide v2 router/manager addresses via env/config; set `VITE_ROUTER_VERSION=v2` in VNet CI.
+- V2 (Tenderly VNet): provide v2 router/manager addresses via env/config.
 - Base mainnet: use v1 addresses from `src/lib/contracts/addresses.ts` (no v2 env provided → auto selects v1).
 
 ## 16) Open Items

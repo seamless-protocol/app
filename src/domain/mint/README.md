@@ -9,7 +9,7 @@ Folder Structure
 - `planner/`: Planning and math
   - `plan.v2.ts`: Build v2 plan (collateral-only for now)
   - `math.ts`: Slippage and math helpers
-  - `types.ts`: Plan, Quote, RouterVersion types
+  - `types.ts`: Plan, Quote types
 - `ports/`: Chain read/write facades
   - `managerPort.ts`: Manager previews for v2
   - `routerPort.v2.ts`: Router v2 preview + invoke
@@ -19,7 +19,6 @@ Folder Structure
 - `adapters/`
   - `lifi.ts`: Exact-input quote builder
 - `utils/`
-  - `detectVersion.ts`: Router version detection (always returns v2)
   - `constants.ts`: Defaults and BPS helpers
   - `allowance.ts`: Allowance utilities
   - `previewMint.ts`: Local preview helper for tests
@@ -61,7 +60,7 @@ Alignment with Planner Doc
 Roadmap (high-value next steps)
 - Add v2 input→collateral conversion leg; set `collateralFromSender=0` when converting.
 - Enforce quote `deadline` and recipient policies.
-- Emit telemetry (router version, scaled flag, reprice rate, excess debt).
+- Emit telemetry (scaled flag, reprice rate, excess debt).
 
 Rationale
 - Separate planning vs execution concerns; keep ABI-facing ports isolated; make adapters and small utils easily testable; simplify future expansion (conversion leg, shared planner).

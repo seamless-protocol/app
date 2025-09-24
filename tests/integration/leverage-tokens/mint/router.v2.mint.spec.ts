@@ -71,7 +71,6 @@ async function runMintScenario({ ctx, tokenDefinition, label }: MintScenarioPara
 
   const previousKey = process.env['E2E_LEVERAGE_TOKEN_KEY']
   process.env['E2E_LEVERAGE_TOKEN_KEY'] = tokenDefinition.key
-  process.env['VITE_ROUTER_VERSION'] = 'v2'
   process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = addresses.executor as Address
 
   try {
