@@ -29,6 +29,7 @@ export interface UseRedeemWithRouterParams {
   quoteCollateralToDebt?: QuoteFn
   routerAddress?: Address
   managerAddress?: Address
+  outputAsset?: Address
 }
 
 /**
@@ -45,6 +46,7 @@ export function useRedeemWithRouter() {
       quoteCollateralToDebt,
       routerAddress,
       managerAddress,
+      outputAsset,
     }) =>
       orchestrateRedeem({
         config,
@@ -55,6 +57,7 @@ export function useRedeemWithRouter() {
         ...(typeof quoteCollateralToDebt !== 'undefined' ? { quoteCollateralToDebt } : {}),
         ...(typeof routerAddress !== 'undefined' ? { routerAddressV2: routerAddress } : {}),
         ...(typeof managerAddress !== 'undefined' ? { managerAddressV2: managerAddress } : {}),
+        ...(typeof outputAsset !== 'undefined' ? { outputAsset } : {}),
       }),
   })
 }

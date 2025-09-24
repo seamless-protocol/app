@@ -79,6 +79,8 @@ export async function orchestrateRedeem(params: {
   /** Optional overrides for V2 when using VNet/custom deployments */
   routerAddressV2?: Address
   managerAddressV2?: Address
+  /** Optional override for the desired payout asset (defaults to collateral). */
+  outputAsset?: Address
 }): Promise<OrchestrateRedeemResult> {
   const {
     config,
@@ -87,6 +89,7 @@ export async function orchestrateRedeem(params: {
     sharesToRedeem,
     slippageBps = DEFAULT_SLIPPAGE_BPS,
     quoteCollateralToDebt,
+    outputAsset,
   } = params
 
   const version = detectRedeemRouterVersion()
@@ -105,6 +108,7 @@ export async function orchestrateRedeem(params: {
       slippageBps,
       quoteCollateralToDebt,
       ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
+      ...(outputAsset ? { outputAsset } : {}),
     })
 
     const tx = await executeRedeemV2({

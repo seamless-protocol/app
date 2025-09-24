@@ -16,6 +16,7 @@ interface UseRedeemPlanPreviewParams {
   quote?: QuoteFn
   managerAddress?: Address
   swapKey?: string
+  outputAsset?: Address
 }
 
 export function useRedeemPlanPreview({
@@ -28,6 +29,7 @@ export function useRedeemPlanPreview({
   quote,
   managerAddress,
   swapKey,
+  outputAsset,
 }: UseRedeemPlanPreviewParams) {
   const enabled =
     routerVersion === RouterVersion.V2 &&
@@ -42,6 +44,7 @@ export function useRedeemPlanPreview({
     slippageBps,
     ...(managerAddress ? { managerAddress } : {}),
     ...(swapKey ? { swapKey } : {}),
+    ...(outputAsset ? { outputAsset } : {}),
   }
 
   const query = useQuery({
@@ -62,6 +65,7 @@ export function useRedeemPlanPreview({
         slippageBps,
         quoteCollateralToDebt: quote,
         ...(managerAddress ? { managerAddress } : {}),
+        ...(outputAsset ? { outputAsset } : {}),
       })
     },
   })

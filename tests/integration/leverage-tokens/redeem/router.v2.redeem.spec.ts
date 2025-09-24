@@ -24,13 +24,29 @@ describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
   const SLIPPAGE_BPS = 50
 
   it(
-    'redeems all minted shares via Uniswap v2 (happy path)',
+    'redeems all minted shares into collateral asset via Uniswap v2 (baseline)',
     async () =>
       withFork(async (ctx) => {
         ensureTenderlyMode()
         const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
         const mintOutcome = await executeMintPath(ctx, scenario)
         await executeRedeemPath(ctx, { ...scenario, ...mintOutcome })
+      }),
+    120_000,
+  )
+
+  it(
+    'redeems all minted shares into debt asset when alternate output is selected',
+    async () =>
+      withFork(async (ctx) => {
+        ensureTenderlyMode()
+        const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
+        const mintOutcome = await executeMintPath(ctx, scenario)
+        await executeRedeemPath(ctx, {
+          ...scenario,
+          ...mintOutcome,
+          payoutAsset: scenario.debtAsset,
+        })
       }),
     120_000,
   )
@@ -137,7 +153,7 @@ async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario) {
 
 async function executeRedeemPath(
   ctx: WithForkCtx,
-  scenario: RedeemScenario & { sharesAfterMint: bigint },
+  scenario: RedeemScenario & { sharesAfterMint: bigint; payoutAsset?: Address },
 ): Promise<void> {
   const { account, config, publicClient } = ctx
   const {
@@ -150,6 +166,7 @@ async function executeRedeemPath(
     swap,
     debtAsset,
     chainId,
+    payoutAsset,
   } = scenario
 
   const sharesToRedeem = sharesAfterMint
@@ -184,18 +201,31 @@ async function executeRedeemPath(
     slippageBps,
     quoteCollateralToDebt,
     managerAddress: manager,
+    ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 
   console.info('[PLAN DEBUG]', {
     expectedDebt: plan.expectedDebt.toString(),
     expectedCollateral: plan.expectedCollateral.toString(),
+    expectedDebtPayout: plan.expectedDebtPayout.toString(),
+    payoutAsset: plan.payoutAsset,
+    payoutAmount: plan.payoutAmount.toString(),
     minCollateral: plan.minCollateralForSender.toString(),
     calls: plan.calls.map((call) => ({ target: call.target, value: call.value.toString() })),
   })
 
   expect(plan.sharesToRedeem).toBe(sharesToRedeem)
   expect(plan.expectedDebt > 0n).toBe(true)
-  expect(plan.calls.length).toBeGreaterThanOrEqual(2)
+  expect(plan.calls.length).toBeGreaterThanOrEqual(payoutAsset ? 4 : 2)
+
+  if (payoutAsset) {
+    expect(plan.payoutAsset.toLowerCase()).toBe(payoutAsset.toLowerCase())
+    expect(plan.expectedDebtPayout > 0n).toBe(true)
+  } else {
+    expect(plan.payoutAsset.toLowerCase()).toBe(collateralAsset.toLowerCase())
+    expect(plan.expectedCollateral > 0n).toBe(true)
+  }
+
   const hasApprovalOrWithdraw = plan.calls.some((call) => {
     if (call.target.toLowerCase() !== collateralAsset.toLowerCase()) return false
     return (
@@ -219,6 +249,13 @@ async function executeRedeemPath(
     args: [account.address],
   })) as bigint
 
+  const debtBalanceBefore = (await publicClient.readContract({
+    address: debtAsset,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: [account.address],
+  })) as bigint
+
   const sharesBeforeRedeem = await readLeverageTokenBalanceOf(config, {
     address: token,
     args: [account.address],
@@ -233,6 +270,7 @@ async function executeRedeemPath(
     quoteCollateralToDebt,
     routerAddressV2: router,
     managerAddressV2: manager,
+    ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 
   expect(redeemTx.routerVersion).toBe('v2')
@@ -245,16 +283,47 @@ async function executeRedeemPath(
   })
   expect(sharesAfterRedeem).toBe(sharesBeforeRedeem - sharesToRedeem)
 
-  const collateralBalanceAfter = (await publicClient.readContract({
+  const collateralBalanceAfter = await publicClient.readContract({
     address: collateralAsset,
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: [account.address],
-  })) as bigint
+  })
+
+  const debtBalanceAfter = await publicClient.readContract({
+    address: debtAsset,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: [account.address],
+  })
 
   const collateralDelta = collateralBalanceAfter - collateralBalanceBefore
+  const debtDelta = debtBalanceAfter - debtBalanceBefore
+
+  const slippageRatio = BigInt(slippageBps)
+  const toleranceBps = slippageRatio + 10n // allow slippage plus 10 bps for rounding noise
+
+  const isWithinTolerance = (actual: bigint, expected: bigint): boolean => {
+    if (expected === 0n) return actual === 0n
+    if (actual < 0n) return false
+    const lowerBound = (expected * (10_000n - toleranceBps)) / 10_000n
+    const upperBound = (expected * (10_000n + toleranceBps)) / 10_000n
+    return actual >= lowerBound && actual <= upperBound
+  }
+
+  if (payoutAsset) {
+    expect(collateralDelta <= plan.minCollateralForSender).toBe(true)
+    expect(plan.expectedCollateral).toBe(0n)
+    expect(isWithinTolerance(debtDelta, plan.payoutAmount)).toBe(true)
+    return
+  }
+
   expect(collateralDelta >= plan.minCollateralForSender).toBe(true)
-  expect(collateralDelta <= plan.expectedCollateral).toBe(true)
+  expect(isWithinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
+
+  const debtDeltaAbs = debtDelta >= 0n ? debtDelta : -debtDelta
+  const debtTolerance = (plan.expectedDebt * toleranceBps) / 10_000n + 1n
+  expect(debtDeltaAbs <= debtTolerance).toBe(true)
 }
 
 function ensureTenderlyMode(): void {

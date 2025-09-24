@@ -39,6 +39,8 @@ interface Token {
   logo?: string
 }
 
+type OutputAssetId = 'collateral' | 'debt'
+
 interface LeverageTokenRedeemModalProps {
   isOpen: boolean
   onClose: () => void
@@ -103,6 +105,13 @@ export function LeverageTokenRedeemModal({
     enabled: Boolean(userAddress && isConnected),
   })
 
+  const { refetch: refetchDebtTokenBalance } = useTokenBalance({
+    tokenAddress: leverageTokenConfig.debtAsset.address,
+    userAddress: userAddress as `0x${string}`,
+    chainId: leverageTokenConfig.chainId,
+    enabled: Boolean(userAddress && isConnected),
+  })
+
   // Get leverage token user position (includes USD value calculation)
   const { data: positionData, isLoading: isPositionLoading } = useLeverageTokenUserPosition({
     tokenAddress: leverageTokenAddress,
@@ -130,6 +139,44 @@ export function LeverageTokenRedeemModal({
   const collateralUsdPrice =
     usdPriceMap?.[leverageTokenConfig.collateralAsset.address.toLowerCase()]
   const debtUsdPrice = usdPriceMap?.[leverageTokenConfig.debtAsset.address.toLowerCase()]
+
+  const outputAssetOptions = useMemo(
+    () => ({
+      collateral: {
+        id: 'collateral' as const,
+        symbol: leverageTokenConfig.collateralAsset.symbol,
+        name: leverageTokenConfig.collateralAsset.name,
+        address: leverageTokenConfig.collateralAsset.address,
+        decimals: leverageTokenConfig.collateralAsset.decimals,
+        price: collateralUsdPrice || 0,
+      },
+      debt: {
+        id: 'debt' as const,
+        symbol: leverageTokenConfig.debtAsset.symbol,
+        name: leverageTokenConfig.debtAsset.name,
+        address: leverageTokenConfig.debtAsset.address,
+        decimals: leverageTokenConfig.debtAsset.decimals,
+        price: debtUsdPrice || 0,
+      },
+    }),
+    [
+      collateralUsdPrice,
+      debtUsdPrice,
+      leverageTokenConfig.collateralAsset.address,
+      leverageTokenConfig.collateralAsset.decimals,
+      leverageTokenConfig.collateralAsset.name,
+      leverageTokenConfig.collateralAsset.symbol,
+      leverageTokenConfig.debtAsset.address,
+      leverageTokenConfig.debtAsset.decimals,
+      leverageTokenConfig.debtAsset.name,
+      leverageTokenConfig.debtAsset.symbol,
+    ],
+  )
+
+  const availableAssets = useMemo(
+    () => [outputAssetOptions.collateral, outputAssetOptions.debt],
+    [outputAssetOptions],
+  )
 
   // Format balances for display
   const leverageTokenBalanceFormatted = leverageTokenBalance
@@ -161,7 +208,8 @@ export function LeverageTokenRedeemModal({
   const [transactionHash, setTransactionHash] = useState('')
   const [error, setError] = useState('')
 
-  const [selectedAsset, setSelectedAsset] = useState(leverageTokenConfig.collateralAsset.symbol)
+  const [selectedOutputId, setSelectedOutputId] = useState<OutputAssetId>('collateral')
+  const selectedOutputAsset = outputAssetOptions[selectedOutputId]
 
   // Form state and logic
   const form = useRedeemForm({
@@ -188,7 +236,16 @@ export function LeverageTokenRedeemModal({
     ...(leverageTokenConfig.swaps?.collateralToDebt
       ? { swap: leverageTokenConfig.swaps.collateralToDebt }
       : {}),
+    outputAsset: selectedOutputAsset.address,
   })
+
+  const disabledOutputAssets = useMemo(() => {
+    const disabled: Array<OutputAssetId> = []
+    if (exec.routerVersion !== RouterVersion.V2) {
+      disabled.push('debt')
+    }
+    return disabled
+  }, [exec.routerVersion])
 
   const collateralSwapConfig = leverageTokenConfig.swaps?.collateralToDebt
 
@@ -216,6 +273,7 @@ export function LeverageTokenRedeemModal({
     ...(exec.quote ? { quote: exec.quote } : {}),
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
     ...(swapConfigKey ? { swapKey: swapConfigKey } : {}),
+    outputAsset: selectedOutputAsset.address,
   })
 
   const quoteBlockingError = useMemo(() => {
@@ -247,64 +305,32 @@ export function LeverageTokenRedeemModal({
 
   const redeemBlockingError = quoteBlockingError || planError
 
-  const expectedCollateralRaw = useMemo(() => {
+  const expectedPayoutRaw = useMemo(() => {
     if (exec.routerVersion === RouterVersion.V2) {
-      return planPreview.plan?.expectedCollateral
+      return planPreview.plan?.payoutAmount
     }
-    return preview.data?.collateral
-  }, [exec.routerVersion, planPreview.plan?.expectedCollateral, preview.data?.collateral])
-
-  const expectedDebtRaw = useMemo(() => {
-    if (exec.routerVersion === RouterVersion.V2) {
-      return planPreview.plan?.expectedDebt
-    }
-    return preview.data?.debt
-  }, [exec.routerVersion, planPreview.plan?.expectedDebt, preview.data?.debt])
-
-  // Calculate expected amount based on selected asset
-  const expectedAmount = useMemo(() => {
-    const isCollateralSelected = selectedAsset === leverageTokenConfig.collateralAsset.symbol
-    const rawAmount = isCollateralSelected ? expectedCollateralRaw : expectedDebtRaw
-    const decimals = isCollateralSelected
-      ? leverageTokenConfig.collateralAsset.decimals
-      : leverageTokenConfig.debtAsset.decimals
-
-    return typeof rawAmount === 'bigint'
-      ? formatTokenAmountFromBase(rawAmount, decimals, TOKEN_AMOUNT_DISPLAY_DECIMALS)
-      : '0'
+    return selectedOutputId === 'debt' ? preview.data?.debt : preview.data?.collateral
   }, [
-    selectedAsset,
-    expectedCollateralRaw,
-    expectedDebtRaw,
-    leverageTokenConfig.collateralAsset.symbol,
+    exec.routerVersion,
+    planPreview.plan?.payoutAmount,
+    preview.data?.collateral,
+    preview.data?.debt,
+    selectedOutputId,
+  ])
+
+  const expectedAmount = useMemo(() => {
+    if (typeof expectedPayoutRaw !== 'bigint') return '0'
+    const decimals =
+      selectedOutputAsset.id === 'debt'
+        ? leverageTokenConfig.debtAsset.decimals
+        : leverageTokenConfig.collateralAsset.decimals
+    return formatTokenAmountFromBase(expectedPayoutRaw, decimals, TOKEN_AMOUNT_DISPLAY_DECIMALS)
+  }, [
+    expectedPayoutRaw,
+    selectedOutputAsset.id,
     leverageTokenConfig.collateralAsset.decimals,
     leverageTokenConfig.debtAsset.decimals,
   ])
-
-  // Calculate both collateral and debt amounts for display
-  const expectedCollateralAmount = useMemo(
-    () =>
-      typeof expectedCollateralRaw === 'bigint'
-        ? formatTokenAmountFromBase(
-            expectedCollateralRaw,
-            leverageTokenConfig.collateralAsset.decimals,
-            TOKEN_AMOUNT_DISPLAY_DECIMALS,
-          )
-        : '0',
-    [expectedCollateralRaw, leverageTokenConfig.collateralAsset.decimals],
-  )
-
-  const expectedDebtAmount = useMemo(
-    () =>
-      typeof expectedDebtRaw === 'bigint'
-        ? formatTokenAmountFromBase(
-            expectedDebtRaw,
-            leverageTokenConfig.debtAsset.decimals,
-            TOKEN_AMOUNT_DISPLAY_DECIMALS,
-          )
-        : '0',
-    [expectedDebtRaw, leverageTokenConfig.debtAsset.decimals],
-  )
 
   const {
     isAllowanceLoading,
@@ -347,14 +373,20 @@ export function LeverageTokenRedeemModal({
   const resetModal = useCallback(() => {
     toInput()
     form.setAmount('')
-    setSelectedAsset(leverageTokenConfig.collateralAsset.symbol)
+    setSelectedOutputId('collateral')
     setTransactionHash('')
     setError('')
-  }, [toInput, form.setAmount, leverageTokenConfig.collateralAsset.symbol])
+  }, [toInput, form.setAmount])
 
   useEffect(() => {
     if (isOpen) resetModal()
   }, [isOpen, resetModal])
+
+  useEffect(() => {
+    if (exec.routerVersion !== RouterVersion.V2 && selectedOutputId === 'debt') {
+      setSelectedOutputId('collateral')
+    }
+  }, [exec.routerVersion, selectedOutputId])
 
   // Handle approval side-effects in one place
   useEffect(() => {
@@ -372,20 +404,6 @@ export function LeverageTokenRedeemModal({
     }
   }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
 
-  // Available assets for redemption (collateral asset)
-  const availableAssets = [
-    {
-      symbol: leverageTokenConfig.collateralAsset.symbol,
-      name: leverageTokenConfig.collateralAsset.name,
-      price: collateralUsdPrice || 0,
-    },
-    {
-      symbol: leverageTokenConfig.debtAsset.symbol,
-      name: leverageTokenConfig.debtAsset.name,
-      price: debtUsdPrice || 0,
-    },
-  ]
-
   // Check if approval is needed
   const needsApproval = () => Boolean(needsApprovalFlag)
 
@@ -400,7 +418,7 @@ export function LeverageTokenRedeemModal({
       form.hasBalance &&
       form.minAmountOk &&
       !isCalculating &&
-      typeof expectedCollateralRaw === 'bigint' &&
+      typeof expectedPayoutRaw === 'bigint' &&
       isConnected &&
       !isAllowanceLoading &&
       exec.canSubmit
@@ -417,6 +435,17 @@ export function LeverageTokenRedeemModal({
   const handlePercentageClickWithBalance = (percentage: number) => {
     form.onPercent(percentage, selectedTokenView.balance)
   }
+
+  const handleOutputAssetChange = useCallback(
+    (asset: OutputAssetId) => {
+      if (asset === 'debt' && exec.routerVersion !== RouterVersion.V2) {
+        return
+      }
+      setSelectedOutputId(asset)
+      setError('')
+    },
+    [exec.routerVersion],
+  )
 
   // Handle approval step
   const handleApprove = async () => {
@@ -438,7 +467,7 @@ export function LeverageTokenRedeemModal({
   // Handle redemption confirmation
   const handleConfirm = async () => {
     if (!form.amountRaw) return
-    if (!exec.canSubmit || typeof expectedCollateralRaw !== 'bigint') {
+    if (!exec.canSubmit || typeof expectedPayoutRaw !== 'bigint') {
       setError(
         redeemBlockingError || 'Redeem configuration is not ready. Please try again shortly.',
       )
@@ -456,6 +485,7 @@ export function LeverageTokenRedeemModal({
           result,
           collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
           debtDecimals: leverageTokenConfig.debtAsset.decimals,
+          payoutAsset: selectedOutputAsset.address,
           ...(typeof preview.data?.collateral === 'bigint'
             ? { previewCollateral: preview.data.collateral }
             : {}),
@@ -466,18 +496,22 @@ export function LeverageTokenRedeemModal({
       const toastAmount =
         result.routerVersion === 'v2'
           ? formatTokenAmountFromBase(
-              result.plan.expectedCollateral,
-              leverageTokenConfig.collateralAsset.decimals,
+              result.plan.payoutAmount,
+              result.plan.payoutAsset.toLowerCase() ===
+                leverageTokenConfig.debtAsset.address.toLowerCase()
+                ? leverageTokenConfig.debtAsset.decimals
+                : leverageTokenConfig.collateralAsset.decimals,
               TOKEN_AMOUNT_DISPLAY_DECIMALS,
             )
           : expectedAmount
 
       toast.success('Redemption successful!', {
-        description: `${form.amount} tokens redeemed for ${toastAmount} ${selectedAsset}`,
+        description: `${form.amount} tokens redeemed for ${toastAmount} ${selectedOutputAsset.symbol}`,
       })
 
       refetchLeverageTokenBalance?.()
       refetchCollateralTokenBalance?.()
+      refetchDebtTokenBalance?.()
       queryClient.invalidateQueries({ queryKey: ltKeys.token(leverageTokenAddress) })
       if (userAddress) {
         queryClient.invalidateQueries({ queryKey: ltKeys.user(leverageTokenAddress, userAddress) })
@@ -513,8 +547,9 @@ export function LeverageTokenRedeemModal({
             amount={form.amount}
             onAmountChange={handleAmountChangeWithErrorClear}
             onPercentageClick={handlePercentageClickWithBalance}
-            selectedAsset={selectedAsset}
-            onAssetChange={setSelectedAsset}
+            selectedAssetId={selectedOutputId}
+            selectedAssetSymbol={selectedOutputAsset.symbol}
+            onAssetChange={handleOutputAssetChange}
             showAdvanced={showAdvanced}
             onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
             slippage={slippage}
@@ -525,8 +560,6 @@ export function LeverageTokenRedeemModal({
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedAmount={expectedAmount}
-            expectedCollateralAmount={expectedCollateralAmount}
-            expectedDebtAmount={expectedDebtAmount}
             earnings={earnings}
             debtSymbol={leverageTokenConfig.debtAsset.symbol}
             collateralSymbol={leverageTokenConfig.collateralAsset.symbol}
@@ -537,6 +570,7 @@ export function LeverageTokenRedeemModal({
             onApprove={handleApprove}
             error={error || redeemBlockingError}
             leverageTokenConfig={leverageTokenConfig}
+            disabledAssets={disabledOutputAssets}
           />
         )
 
@@ -555,7 +589,7 @@ export function LeverageTokenRedeemModal({
             selectedToken={selectedTokenView}
             amount={form.amount}
             expectedAmount={expectedAmount}
-            selectedAsset={selectedAsset}
+            selectedAsset={selectedOutputAsset.symbol}
             leverageTokenConfig={leverageTokenConfig}
             onConfirm={handleConfirm}
           />
@@ -569,7 +603,7 @@ export function LeverageTokenRedeemModal({
           <SuccessStep
             amount={form.amount}
             expectedAmount={expectedAmount}
-            selectedAsset={selectedAsset}
+            selectedAsset={selectedOutputAsset.symbol}
             transactionHash={transactionHash}
             onClose={handleClose}
           />
@@ -608,8 +642,10 @@ function logRedeemDiagnostics(params: {
   previewDebt?: bigint
   collateralDecimals: number
   debtDecimals: number
+  payoutAsset?: string
 }) {
-  const { result, previewCollateral, previewDebt, collateralDecimals, debtDecimals } = params
+  const { result, previewCollateral, previewDebt, collateralDecimals, debtDecimals, payoutAsset } =
+    params
 
   const formatValue = (value: bigint | undefined, decimals: number) =>
     typeof value === 'bigint' ? formatUnits(value, decimals) : 'n/a'
@@ -625,6 +661,12 @@ function logRedeemDiagnostics(params: {
       result.plan.expectedTotalCollateral - result.plan.expectedCollateral,
       collateralDecimals,
     )
+    const payoutDecimals =
+      result.plan.payoutAsset.toLowerCase() === result.plan.debtAsset.toLowerCase()
+        ? debtDecimals
+        : collateralDecimals
+    const payout = formatValue(result.plan.payoutAmount, payoutDecimals)
+    const debtPayout = formatValue(result.plan.expectedDebtPayout, debtDecimals)
 
     console.groupCollapsed('[redeem][v2] diagnostics')
     console.table({
@@ -633,6 +675,10 @@ function logRedeemDiagnostics(params: {
       swapInput,
       netCollateral: net,
       slippageBps: result.plan.slippageBps,
+      payoutAsset: result.plan.payoutAsset,
+      requestedPayoutAsset: payoutAsset ?? 'n/a',
+      payoutAmount: payout,
+      debtPayout,
     })
     console.log('plan', result.plan)
     console.groupEnd()

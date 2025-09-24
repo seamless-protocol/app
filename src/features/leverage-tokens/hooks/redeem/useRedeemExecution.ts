@@ -19,6 +19,7 @@ interface UseRedeemExecutionParams {
   routerAddress?: Address
   managerAddress?: Address
   swap?: CollateralToDebtSwapConfig
+  outputAsset?: Address
 }
 
 export function useRedeemExecution({
@@ -29,6 +30,7 @@ export function useRedeemExecution({
   routerAddress,
   managerAddress,
   swap,
+  outputAsset,
 }: UseRedeemExecutionParams) {
   const [status, setStatus] = useState<Status>('idle')
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
@@ -77,6 +79,7 @@ export function useRedeemExecution({
           ...(quote ? { quoteCollateralToDebt: quote } : {}),
           ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
           ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
+          ...(typeof outputAsset !== 'undefined' ? { outputAsset } : {}),
         })
 
         setHash(result.hash)
@@ -107,6 +110,7 @@ export function useRedeemExecution({
       requiresQuote,
       routerAddress,
       slippageBps,
+      outputAsset,
       token,
       publicClient,
     ],
