@@ -1,61 +1,28 @@
 #!/usr/bin/env bun
-import { existsSync, readFileSync } from 'node:fs'
 import { spawn } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import process from 'node:process'
 import { z } from 'zod'
+import { resolveBackend } from '../tests/shared/backend'
 // Import the Tenderly VNet helper (explicit .ts for Bun execution)
 import { createVNet, deleteVNet } from './tenderly-vnet.ts'
-import {
-  BASE_TENDERLY_VNET_ADMIN_RPC,
-  BASE_TENDERLY_VNET_PRIMARY_RPC,
-  DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY,
-  MAINNET_TENDERLY_VNET_ADMIN_RPC,
-  MAINNET_TENDERLY_VNET_PRIMARY_RPC,
-} from '../tests/fixtures/addresses'
 
 type TestType = 'e2e' | 'integration'
 
 type ChainSlug = 'base' | 'mainnet'
 
-type ChainPreset = {
-  label: string
-  testRpc: string
-  adminRpc: string
-  tokenSource: string
-  tokenKey: string
-}
-
-const CHAIN_PRESETS: Record<ChainSlug, ChainPreset> = {
-  base: {
-    label: 'Base (Tenderly VNet)',
-    testRpc: BASE_TENDERLY_VNET_PRIMARY_RPC,
-    adminRpc: BASE_TENDERLY_VNET_ADMIN_RPC,
-    tokenSource: 'tenderly',
-    tokenKey: DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY,
-  },
-  mainnet: {
-    label: 'Mainnet (Tenderly VNet)',
-    testRpc: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
-    adminRpc: MAINNET_TENDERLY_VNET_ADMIN_RPC,
-    tokenSource: 'tenderly',
-    tokenKey: 'cbbtc-usdc-2x',
-  },
-}
-
 // Schema for the RPC URL map - handles both string URLs and objects with url property
 const RpcUrlMapSchema = z.record(
-  z.union([
-    z.string().url(),
-    z.object({ url: z.string().url() }).transform(obj => obj.url)
-  ])
+  z.string(),
+  z.union([z.string().url(), z.object({ url: z.string().url() }).transform((obj) => obj.url)]),
 )
 
 const testRpcUrlMap: Record<string, string> = (() => {
   const rawMap =
     process.env['VITE_TEST_RPC_URL_MAP'] || process.env['TEST_RPC_URL_MAP'] || undefined
   if (!rawMap) return {}
-  
+
   try {
     const result = RpcUrlMapSchema.safeParse(JSON.parse(rawMap))
     if (!result.success) {
@@ -78,10 +45,11 @@ interface TenderlyConfig {
 }
 
 function getTenderlyConfig(): TenderlyConfig | null {
-  const account = process.env.TENDERLY_ACCOUNT || process.env.TENDERLY_ACCOUNT_SLUG
-  const project = process.env.TENDERLY_PROJECT || process.env.TENDERLY_PROJECT_SLUG
-  const accessKey = process.env.TENDERLY_ACCESS_KEY
-  const chainId = process.env.TENDERLY_CHAIN_ID || '8453'
+  const account = process.env['TENDERLY_ACCOUNT'] || process.env['TENDERLY_ACCOUNT_SLUG']
+  const project = process.env['TENDERLY_PROJECT'] || process.env['TENDERLY_PROJECT_SLUG']
+  const accessKey = process.env['TENDERLY_ACCESS_KEY']
+  const chainId = process.env['TENDERLY_CHAIN_ID'] || '8453'
+  const token = process.env['TENDERLY_TOKEN']
 
   if (!account || !project || !accessKey) {
     return null
@@ -91,12 +59,15 @@ function getTenderlyConfig(): TenderlyConfig | null {
     account,
     project,
     accessKey,
-    token: process.env.TENDERLY_TOKEN,
     chainId,
+    ...(token ? { token } : {}),
   }
 }
 
-function getTestCommand(testType: TestType, extraArgs: string[] = []): { cmd: string; args: string[] } {
+function getTestCommand(
+  testType: TestType,
+  extraArgs: Array<string> = [],
+): { cmd: string; args: Array<string> } {
   switch (testType) {
     case 'e2e':
       return { cmd: 'bunx', args: ['playwright', 'test', ...extraArgs] }
@@ -104,7 +75,14 @@ function getTestCommand(testType: TestType, extraArgs: string[] = []): { cmd: st
       // Call Vitest directly to avoid script recursion when test:integration itself uses this runner
       return {
         cmd: 'bunx',
-        args: ['vitest', '-c', 'vitest.integration.config.ts', '--run', 'tests/integration', ...extraArgs],
+        args: [
+          'vitest',
+          '-c',
+          'vitest.integration.config.ts',
+          '--run',
+          'tests/integration',
+          ...extraArgs,
+        ],
       }
     default:
       throw new Error(`Unknown test type: ${testType}`)
@@ -114,17 +92,19 @@ function getTestCommand(testType: TestType, extraArgs: string[] = []): { cmd: st
 function parseArguments(): {
   testType: TestType
   chainOption?: string
-  passThroughArgs: string[]
+  passThroughArgs: Array<string>
 } {
   const args = process.argv.slice(2)
   const rawType = args.shift() as TestType | undefined
   if (!rawType || !['e2e', 'integration'].includes(rawType)) {
-    console.error('Usage: bun scripts/run-tests.ts [e2e|integration] [--chain <base|mainnet|all>] [extra args...]')
+    console.error(
+      'Usage: bun scripts/run-tests.ts [e2e|integration] [--chain <base|mainnet|all>] [extra args...]',
+    )
     process.exit(1)
   }
 
   let chainOption: string | undefined
-  const passThroughArgs: string[] = []
+  const passThroughArgs: Array<string> = []
 
   while (args.length > 0) {
     const arg = args.shift() as string
@@ -142,7 +122,11 @@ function parseArguments(): {
     }
   }
 
-  return { testType: rawType, chainOption, passThroughArgs }
+  return {
+    testType: rawType,
+    ...(chainOption ? { chainOption } : {}),
+    passThroughArgs,
+  }
 }
 
 let deterministicOverrideCache: string | null = null
@@ -166,10 +150,10 @@ function loadDeterministicOverride(): string | null {
   }
 }
 
-function injectAddressOverrides(env: Record<string, string>): Record<string, string> {
+function injectAddressOverrides(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const explicitOverride =
-    process.env.VITE_CONTRACT_ADDRESS_OVERRIDES ||
-    process.env.TENDERLY_CONTRACT_ADDRESS_OVERRIDES ||
+    process.env['VITE_CONTRACT_ADDRESS_OVERRIDES'] ||
+    process.env['TENDERLY_CONTRACT_ADDRESS_OVERRIDES'] ||
     loadDeterministicOverride()
 
   if (!explicitOverride) {
@@ -182,7 +166,7 @@ function injectAddressOverrides(env: Record<string, string>): Record<string, str
   }
 }
 
-async function runCommand(cmd: string, args: string[], env: Record<string, string>) {
+async function runCommand(cmd: string, args: Array<string>, env: NodeJS.ProcessEnv) {
   return new Promise<void>((resolve, reject) => {
     const child = spawn(cmd, args, { stdio: 'inherit', env: injectAddressOverrides(env) })
     child.on('exit', (code, signal) => {
@@ -203,11 +187,15 @@ async function main() {
   }
 
   // Check for explicit TEST_RPC_URL override
-  const explicitRpcUrl = process.env.TEST_RPC_URL
+  const explicitRpcUrl = process.env['TEST_RPC_URL']
   if (explicitRpcUrl) {
     console.log(`🔗 Using explicit RPC URL: ${explicitRpcUrl}`)
     const { cmd, args } = getTestCommand(testType, passThroughArgs)
-    const env = withTestDefaults(testType, { ...process.env, TEST_RPC_URL: explicitRpcUrl }, 'custom')
+    const env = withTestDefaults(
+      testType,
+      { ...process.env, TEST_RPC_URL: explicitRpcUrl },
+      'custom',
+    )
     await runCommand(cmd, args, env)
     return
   }
@@ -215,7 +203,9 @@ async function main() {
   // Try to get Tenderly config
   const tenderlyConfig = getTenderlyConfig()
   if (!tenderlyConfig) {
-    console.log('⚠️  No Tenderly configuration found. Falling back to Anvil (make sure it\'s running on port 8545)')
+    console.log(
+      "⚠️  No Tenderly configuration found. Falling back to Anvil (make sure it's running on port 8545)",
+    )
     const { cmd, args } = getTestCommand(testType, passThroughArgs)
     const env = withTestDefaults(
       testType,
@@ -249,43 +239,59 @@ main().catch((err) => {
   process.exit(1)
 })
 
-async function runForChainOption(chainOption: string, testType: TestType, passThroughArgs: string[]) {
+async function runForChainOption(
+  chainOption: string,
+  testType: TestType,
+  passThroughArgs: Array<string>,
+) {
   const slugs: Array<ChainSlug> =
     chainOption === 'all'
-      ? (Object.keys(CHAIN_PRESETS) as Array<ChainSlug>)
+      ? (['base', 'mainnet'] as Array<ChainSlug>)
       : ([chainOption] as Array<ChainSlug>)
 
   for (const slug of slugs) {
-    const preset = CHAIN_PRESETS[slug]
-    if (!preset) {
-      console.error(`Unknown chain preset '${slug}'. Available: ${Object.keys(CHAIN_PRESETS).join(', ')}`)
-      process.exit(1)
-    }
-
-    const chainId = slug === 'base' ? '8453' : '1'
+    const backend = await resolveBackend({
+      chain: slug,
+      mode: 'tenderly-static',
+      scenario: 'leverage-mint',
+    })
+    const chainId = String(backend.canonicalChainId)
     const mappedRpc = testRpcUrlMap[chainId]
-    const effectiveRpc = mappedRpc ?? preset.testRpc
+    const effectiveRpc = mappedRpc ?? backend.rpcUrl
 
-    console.log(`\n=== 🚀 Running ${testType} tests [${preset.label}] ===`)
+    const label = `Run (${slug}, ${backend.mode})`
+
+    console.log(`\n=== 🚀 Running ${testType} tests [${label}] ===`)
     if (mappedRpc) {
-      console.log(`[run-tests] Using mapped RPC for chain ${chainId}: ${mappedRpc}`)
+      console.log(`[run-tests] Overriding RPC for chain ${chainId}: ${mappedRpc}`)
     }
 
-    const env = {
-      ...process.env,
-      TEST_RPC_URL: effectiveRpc,
-      VITE_TEST_RPC_URL: effectiveRpc,
-      TENDERLY_ADMIN_RPC_URL: preset.adminRpc,
-      E2E_TOKEN_SOURCE: preset.tokenSource,
-      E2E_LEVERAGE_TOKEN_KEY: preset.tokenKey,
-    }
+    const env = withTestDefaults(
+      testType,
+      {
+        ...process.env,
+        TEST_CHAIN: backend.chainKey,
+        TEST_MODE: backend.mode,
+        TEST_SCENARIO: backend.scenario.key,
+        TEST_RPC_URL: effectiveRpc,
+        VITE_TEST_RPC_URL: effectiveRpc,
+        VITE_BASE_RPC_URL: effectiveRpc,
+        TENDERLY_ADMIN_RPC_URL: backend.adminRpcUrl,
+        E2E_TOKEN_SOURCE: backend.scenario.leverageTokenSource,
+        E2E_LEVERAGE_TOKEN_KEY: backend.scenario.defaultLeverageTokenKey,
+        ...(backend.contractOverrides
+          ? { VITE_CONTRACT_ADDRESS_OVERRIDES: JSON.stringify(backend.contractOverrides) }
+          : {}),
+      },
+      backend.executionKind === 'anvil' ? 'anvil' : 'tenderly',
+    )
 
     try {
       const { cmd, args } = getTestCommand(testType, passThroughArgs)
-      await runCommand(cmd, args, withTestDefaults(testType, env, 'tenderly'))
-      console.log(`=== ✅ ${preset.label} ===`)
+      await runCommand(cmd, args, env)
+      console.log(`=== ✅ ${label} ===`)
     } catch (error) {
-      console.error(`=== ❌ ${preset.label} failed ===`)
+      console.error(`=== ❌ ${label} failed ===`)
       throw error
     }
   }
@@ -299,17 +305,19 @@ function withTestDefaults(
   const isUiSuite = testType === 'e2e'
   const isChainAwareSuite = testType === 'e2e' || testType === 'integration'
 
-  if (isChainAwareSuite && !env.VITE_INCLUDE_TEST_TOKENS) {
-    if (backend === 'tenderly' || env.TEST_RPC_URL?.includes('tenderly')) {
-      env.VITE_INCLUDE_TEST_TOKENS = 'true'
+  if (isChainAwareSuite && !env['VITE_INCLUDE_TEST_TOKENS']) {
+    const currentRpc = env['TEST_RPC_URL']
+    if (backend === 'tenderly' || currentRpc?.includes('tenderly')) {
+      env['VITE_INCLUDE_TEST_TOKENS'] = 'true'
     }
   }
 
-  if (isUiSuite && !env.E2E_TOKEN_SOURCE) {
-    if (backend === 'tenderly') env.E2E_TOKEN_SOURCE = 'tenderly'
-    else if (backend === 'anvil') env.E2E_TOKEN_SOURCE = 'prod'
-    else if (env.TEST_RPC_URL?.includes('tenderly')) env.E2E_TOKEN_SOURCE = 'tenderly'
-    else env.E2E_TOKEN_SOURCE = 'prod'
+  if (isUiSuite && !env['E2E_TOKEN_SOURCE']) {
+    const currentRpc = env['TEST_RPC_URL']
+    if (backend === 'tenderly') env['E2E_TOKEN_SOURCE'] = 'tenderly'
+    else if (backend === 'anvil') env['E2E_TOKEN_SOURCE'] = 'prod'
+    else if (currentRpc?.includes('tenderly')) env['E2E_TOKEN_SOURCE'] = 'tenderly'
+    else env['E2E_TOKEN_SOURCE'] = 'prod'
   }
 
   return env

@@ -1,4 +1,4 @@
-import { type Address, type PublicClient, parseUnits } from 'viem'
+import { type Address, getAddress, type PublicClient, parseUnits } from 'viem'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { orchestrateMint } from '@/domain/mint'
 import {
@@ -18,7 +18,12 @@ import {
   RPC,
 } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
-import { approveIfNeeded, topUpErc20, topUpNative } from '../../../shared/funding'
+import {
+  approveIfNeeded,
+  seedUniswapV2PairLiquidity,
+  topUpErc20,
+  topUpNative,
+} from '../../../shared/funding'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
 
 const TOKENS_UNDER_TEST = AVAILABLE_LEVERAGE_TOKENS.filter(
@@ -77,7 +82,7 @@ async function runMintScenario({ ctx, tokenDefinition, label }: MintScenarioPara
   try {
     console.info('[STEP] Using public RPC', { url: RPC.primary, token: label })
 
-    const { collateralAsset, equityInInputAsset } = await fetchTokenAssets({
+    const { collateralAsset, debtAsset, equityInInputAsset } = await fetchTokenAssets({
       config,
       manager,
       token,
@@ -92,14 +97,27 @@ async function runMintScenario({ ctx, tokenDefinition, label }: MintScenarioPara
       label,
     })
 
+    const swapConfig = resolveDebtSwapConfig({ tokenDefinition, addresses })
+
+    let effectiveSwapConfig = swapConfig
+
+    if (swapConfig.type === 'uniswapV2') {
+      const routerAddress = getAddress(swapConfig.router)
+      effectiveSwapConfig = { ...swapConfig, router: routerAddress }
+      await seedUniswapV2PairLiquidity({
+        router: routerAddress,
+        tokenA: collateralAsset,
+        tokenB: debtAsset,
+      })
+    }
+
     const quoteDebtToCollateral = buildQuoteAdapter({
-      tokenDefinition,
       chainId: tokenDefinition.chainId,
       router,
       executor: addresses.executor as Address,
       publicClient,
-      addresses,
       label,
+      swapConfig: effectiveSwapConfig,
     })
 
     const sharesBefore = await readLeverageTokenBalanceOf(config, {
@@ -171,7 +189,7 @@ async function fetchTokenAssets({
   const decimals = await readErc20Decimals(config, collateralAsset)
   const equityInInputAsset = parseUnits('10', decimals)
 
-  return { collateralAsset, equityInInputAsset }
+  return { collateralAsset, debtAsset, equityInInputAsset }
 }
 
 async function fundAccount({
@@ -198,24 +216,20 @@ async function fundAccount({
 }
 
 function buildQuoteAdapter({
-  tokenDefinition,
   chainId,
   router,
   executor,
   publicClient,
-  addresses,
   label,
+  swapConfig,
 }: {
-  tokenDefinition: (typeof AVAILABLE_LEVERAGE_TOKENS)[number]
   chainId: number
   router: Address
   executor: Address
   publicClient: PublicClient
-  addresses: ReturnType<typeof getAddressesForToken>
   label: string
+  swapConfig: DebtToCollateralSwapConfig
 }) {
-  const swapConfig = resolveDebtSwapConfig({ tokenDefinition, addresses })
-
   const { quote, adapterType } = createDebtToCollateralQuote({
     chainId,
     routerAddress: router,
