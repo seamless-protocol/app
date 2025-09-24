@@ -90,6 +90,10 @@ export function useMintExecution(params: {
           quoteDebtToCollateral = quote
         }
 
+        if (!quoteDebtToCollateral) {
+          throw new Error('quoteDebtToCollateral is required for mint execution')
+        }
+
         const { hash } = await orchestrateMint({
           config,
           account,
@@ -97,7 +101,7 @@ export function useMintExecution(params: {
           inputAsset,
           equityInInputAsset,
           slippageBps,
-          ...(quoteDebtToCollateral ? { quoteDebtToCollateral } : {}),
+          quoteDebtToCollateral,
           ...(routerAddressV2 ? { routerAddressV2 } : {}),
           ...(managerAddressV2 ? { managerAddressV2 } : {}),
         })

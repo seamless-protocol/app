@@ -257,10 +257,8 @@ process.env['E2E_CHAIN_ID'] ||= String(canonicalChainId)
 type LeverageTokenAddresses = {
   factory: Address
   manager: Address
-  managerV1?: Address
   managerV2?: Address
   router: Address
-  routerV1?: Address
   routerV2?: Address
   leverageToken: Address
   usdc: Address
@@ -288,9 +286,7 @@ function buildAddressContext(
     throw new Error(`No contract addresses found for chain ${definition.chainId}`)
   }
 
-  const managerV1 = contracts.leverageManager as Address | undefined
   const managerV2 = contracts.leverageManagerV2 as Address | undefined
-  const routerV1 = contracts.leverageRouter as Address | undefined
   const routerV2 = contracts.leverageRouterV2 as Address | undefined
   const tokenMap = contracts.tokens ?? {}
 
@@ -301,13 +297,11 @@ function buildAddressContext(
   const rebalanceOverride = definition.rebalanceAdapter
   const lendingOverride = definition.lendingAdapter
 
-  const resolvedManagerV2 = managerOverride ?? managerV2 ?? managerV1
-  const resolvedManagerV1 = managerV1 ?? managerOverride
-  const resolvedRouterV2 = routerOverride ?? routerV2 ?? routerV1
-  const resolvedRouterV1 = routerV1 ?? routerOverride
+  const resolvedManagerV2 = managerOverride ?? managerV2
+  const resolvedRouterV2 = routerOverride ?? routerV2
 
-  const primaryManager = managerOverride ?? managerV2 ?? managerV1
-  const primaryRouter = routerOverride ?? routerV2 ?? routerV1
+  const primaryManager = managerOverride ?? managerV2
+  const primaryRouter = routerOverride ?? routerV2
 
   const result: LeverageTokenAddresses = {
     factory: ensureAddress(
@@ -343,9 +337,7 @@ function buildAddressContext(
     ),
   }
 
-  const managerV1Address = optionalAddress(resolvedManagerV1)
   const managerV2Address = optionalAddress(resolvedManagerV2)
-  const routerV1Address = optionalAddress(resolvedRouterV1)
   const routerV2Address = optionalAddress(resolvedRouterV2)
   const executorAddress = optionalAddress(
     executorOverride ?? (contracts.multicall as Address | undefined),
@@ -354,9 +346,7 @@ function buildAddressContext(
   const rebalanceAddress = optionalAddress(rebalanceOverride)
   const lendingAddress = optionalAddress(lendingOverride)
 
-  if (managerV1Address) result.managerV1 = managerV1Address
   if (managerV2Address) result.managerV2 = managerV2Address
-  if (routerV1Address) result.routerV1 = routerV1Address
   if (routerV2Address) result.routerV2 = routerV2Address
   if (executorAddress) result.executor = executorAddress
   if (veloraAddress) result.veloraAdapter = veloraAddress

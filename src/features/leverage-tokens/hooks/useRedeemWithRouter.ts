@@ -1,13 +1,12 @@
 /**
  * React Query hook wrapping the domain-level orchestrateRedeem.
  *
- * Return type is discriminated by `routerVersion`:
- * - v1: { routerVersion: 'v1', hash, preview }
- * - v2: { routerVersion: 'v2', hash, plan }
+ * Return type:
+ * - { hash, plan }
  *
  * Optional params:
  * - `slippageBps` tunes redeem behavior
- * - V2 requires `quoteCollateralToDebt` for debt repayment swaps
+ * - Requires `quoteCollateralToDebt` for debt repayment swaps
  */
 import { useMutation } from '@tanstack/react-query'
 import type { Address } from 'viem'
@@ -26,7 +25,7 @@ export interface UseRedeemWithRouterParams {
   sharesToRedeem: SharesToRedeemArg
   slippageBps?: number
 
-  quoteCollateralToDebt?: QuoteFn
+  quoteCollateralToDebt: QuoteFn
   routerAddress?: Address
   managerAddress?: Address
 }
@@ -52,7 +51,7 @@ export function useRedeemWithRouter() {
         token,
         sharesToRedeem,
         ...(typeof slippageBps !== 'undefined' ? { slippageBps } : {}),
-        ...(typeof quoteCollateralToDebt !== 'undefined' ? { quoteCollateralToDebt } : {}),
+        quoteCollateralToDebt,
         ...(typeof routerAddress !== 'undefined' ? { routerAddressV2: routerAddress } : {}),
         ...(typeof managerAddress !== 'undefined' ? { managerAddressV2: managerAddress } : {}),
       }),

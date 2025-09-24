@@ -4,7 +4,7 @@ This document outlines the end-to-end testing approach for the new mint flow (do
 
 ## Overview
 
-- Goals: Validate mint planning (V2), execution (V1/V2), allowances, preview UX, and full user journeys.
+- Goals: Validate mint planning (V2), execution (V2), allowances, preview UX, and full user journeys.
 - Default backend: Tenderly VNet JIT environments for integration and E2E (preferred). Anvil is only a local fallback.
 - Scope: Unit (domain + hooks), Integration (on-chain), and E2E (Playwright).
 
@@ -50,7 +50,7 @@ Notes:
 ### 1) Unit — Domain Logic
 
 - detectRouterVersion
-  - Defaults to V1; respects `VITE_ROUTER_VERSION=v2` override.
+  - Always returns V2 (router v1 has been removed).
 - ensureAllowance
   - Enough allowance: returns `{ changed:false }` with no simulate/write.
   - Insufficient: simulates `approve(maxUint256)`, writes once, returns hash.
@@ -63,17 +63,12 @@ Notes:
   - Debt swap sizing: re-quote path when initial `quote.out < neededFromDebtSwap`.
   - Reprice validation: throws when `previewedDebt < planned debtIn`.
   - Output structure: correct `minShares`, `expected*`, calls ordering (approve → swap per leg).
-- executeMintV1
-  - Fails if `inputAsset != collateral`.
-  - Computes `minShares` via slippage floor; default `maxSwapCost` fallback.
-  - Builds proper swapContext (Base + weETH special-case).
-  - simulate → write path uses generated actions; returns hash.
 - executeMintV2
   - Defaults `maxSwapCost` from `expectedTotalCollateral` unless overridden.
   - simulate → write path uses generated actions; returns hash.
 - orchestrateMint
-  - V2 requires `quoteDebtToCollateral` or throws.
-  - Returns discriminated result (V1: `{ hash, preview }`; V2: `{ hash, plan }`).
+  - Requires `quoteDebtToCollateral` or throws.
+  - Returns result `{ hash, plan }`.
 
 Mocking policy: Unit tests mock `@/lib/contracts/generated` and do not use network.
 
@@ -95,10 +90,6 @@ Libraries: React Testing Library + @tanstack/react-query test utils. Mock orches
 
 - Preview
   - `readLeverageManager.previewMint` with realistic equity returns positive `shares` and coherent fees.
-- V1 Mint (collateral-only)
-  - Fund collateral, approve router, `executeMintV1` simulate+write returns hash.
-  - Slippage guard: tight slippage causes revert on `minShares` breach.
-  - Wrong input asset surfaces error early.
 - V2 Plan + Execute (single-tx)
   - Quote fns return `approvalTarget` + `calldata`; plan contains:
     - Input==collateral: only debt leg approve+swap.

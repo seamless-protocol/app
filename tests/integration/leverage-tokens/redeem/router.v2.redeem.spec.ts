@@ -235,7 +235,6 @@ async function executeRedeemPath(
     managerAddressV2: manager,
   })
 
-  expect(redeemTx.routerVersion).toBe('v2')
   const redeemReceipt = await publicClient.waitForTransactionReceipt({ hash: redeemTx.hash })
   expect(redeemReceipt.status).toBe('success')
 

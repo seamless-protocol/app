@@ -285,19 +285,16 @@ async function assertMintOutcome({
   sharesBefore: bigint
   label: string
 }) {
-  expect(orchestration.routerVersion).toBe('v2')
   expect(/^0x[0-9a-fA-F]{64}$/.test(orchestration.hash)).toBe(true)
 
-  if (orchestration.routerVersion === 'v2') {
-    console.info('[PLAN]', {
-      token: label,
-      minShares: orchestration.plan.minShares.toString(),
-      expectedShares: orchestration.plan.expectedShares.toString(),
-      expectedDebt: orchestration.plan.expectedDebt.toString(),
-      expectedTotalCollateral: orchestration.plan.expectedTotalCollateral.toString(),
-      calls: orchestration.plan.calls.length,
-    })
-  }
+  console.info('[PLAN]', {
+    token: label,
+    minShares: orchestration.plan.minShares.toString(),
+    expectedShares: orchestration.plan.expectedShares.toString(),
+    expectedDebt: orchestration.plan.expectedDebt.toString(),
+    expectedTotalCollateral: orchestration.plan.expectedTotalCollateral.toString(),
+    calls: orchestration.plan.calls.length,
+  })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash: orchestration.hash })
   expect(receipt.status).toBe('success')
@@ -309,14 +306,12 @@ async function assertMintOutcome({
   const mintedShares = sharesAfter - sharesBefore
   expect(mintedShares > 0n).toBe(true)
 
-  if (orchestration.routerVersion === 'v2') {
-    expect(mintedShares >= orchestration.plan.minShares).toBe(true)
+  expect(mintedShares >= orchestration.plan.minShares).toBe(true)
 
-    const expectedShares = orchestration.plan.expectedShares
-    const delta =
-      mintedShares >= expectedShares ? mintedShares - expectedShares : expectedShares - mintedShares
-    const tolerance = expectedShares / 10_000n || 1n // allow up to 0.01% variance from preview
+  const expectedShares = orchestration.plan.expectedShares
+  const delta =
+    mintedShares >= expectedShares ? mintedShares - expectedShares : expectedShares - mintedShares
+  const tolerance = expectedShares / 10_000n || 1n // allow up to 0.01% variance from preview
 
-    expect(delta <= tolerance).toBe(true)
-  }
+  expect(delta <= tolerance).toBe(true)
 }

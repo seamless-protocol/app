@@ -122,9 +122,6 @@ export async function executeSharedMint({
     routerAddressV2: router,
     managerAddressV2: manager,
   })
-  if (res.routerVersion !== 'v2') {
-    throw new Error(`Unexpected router version: ${res.routerVersion}`)
-  }
 
   console.info('[SHARED MINT RESULT]', { hash: res.hash })
 

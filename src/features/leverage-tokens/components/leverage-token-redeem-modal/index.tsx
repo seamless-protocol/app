@@ -463,14 +463,11 @@ export function LeverageTokenRedeemModal({
         })
       }
 
-      const toastAmount =
-        result.routerVersion === 'v2'
-          ? formatTokenAmountFromBase(
-              result.plan.expectedCollateral,
-              leverageTokenConfig.collateralAsset.decimals,
-              TOKEN_AMOUNT_DISPLAY_DECIMALS,
-            )
-          : expectedAmount
+      const toastAmount = formatTokenAmountFromBase(
+        result.plan.expectedCollateral,
+        leverageTokenConfig.collateralAsset.decimals,
+        TOKEN_AMOUNT_DISPLAY_DECIMALS,
+      )
 
       toast.success('Redemption successful!', {
         description: `${form.amount} tokens redeemed for ${toastAmount} ${selectedAsset}`,
@@ -614,36 +611,26 @@ function logRedeemDiagnostics(params: {
   const formatValue = (value: bigint | undefined, decimals: number) =>
     typeof value === 'bigint' ? formatUnits(value, decimals) : 'n/a'
 
-  if (result.routerVersion === 'v2') {
-    const gross = formatValue(
-      previewCollateral ?? result.plan.expectedTotalCollateral,
-      collateralDecimals,
-    )
-    const debt = formatValue(previewDebt ?? result.plan.expectedDebt, debtDecimals)
-    const net = formatValue(result.plan.expectedCollateral, collateralDecimals)
-    const swapInput = formatValue(
-      result.plan.expectedTotalCollateral - result.plan.expectedCollateral,
-      collateralDecimals,
-    )
+  const gross = formatValue(
+    previewCollateral ?? result.plan.expectedTotalCollateral,
+    collateralDecimals,
+  )
+  const debt = formatValue(previewDebt ?? result.plan.expectedDebt, debtDecimals)
+  const net = formatValue(result.plan.expectedCollateral, collateralDecimals)
+  const swapInput = formatValue(
+    result.plan.expectedTotalCollateral - result.plan.expectedCollateral,
+    collateralDecimals,
+  )
 
-    console.groupCollapsed('[redeem][v2] diagnostics')
-    console.table({
-      grossCollateral: gross,
-      debtToRepay: debt,
-      swapInput,
-      netCollateral: net,
-      slippageBps: result.plan.slippageBps,
-    })
-    console.log('plan', result.plan)
-    console.groupEnd()
-    return
-  }
-
-  console.groupCollapsed('[redeem][v1] diagnostics')
+  console.groupCollapsed('[redeem][v2] diagnostics')
   console.table({
-    previewCollateral: formatValue(previewCollateral, collateralDecimals),
-    previewDebt: formatValue(previewDebt, debtDecimals),
+    grossCollateral: gross,
+    debtToRepay: debt,
+    swapInput,
+    netCollateral: net,
+    slippageBps: result.plan.slippageBps,
   })
+  console.log('plan', result.plan)
   console.groupEnd()
 }
 

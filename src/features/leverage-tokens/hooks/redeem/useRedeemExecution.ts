@@ -69,12 +69,16 @@ export function useRedeemExecution({
       setStatus('submitting')
       setError(undefined)
       try {
+        if (!quote) {
+          throw new Error('quoteCollateralToDebt is required for redeem execution')
+        }
+
         const result = await redeemWithRouter.mutateAsync({
           token,
           account,
           sharesToRedeem,
           slippageBps,
-          ...(quote ? { quoteCollateralToDebt: quote } : {}),
+          quoteCollateralToDebt: quote,
           ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
           ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
         })

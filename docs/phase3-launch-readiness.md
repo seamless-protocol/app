@@ -16,10 +16,10 @@ This checklist tracks the work required to ship a Phase 1–3 production bundle 
 
 ## Phase 2 Readiness
 - [x] Leverage token table/detail pages live (TanStack Router routes + hooks).
-- [x] Mint/redeem modals implemented with V1 router support.
+- [x] Mint/redeem modals implemented with V2 router support.
 - [ ] Inject quote adapters into router V2 mint orchestrator (`useMintExecution`) using token `swaps.debtToCollateral` config.
 - [ ] Verify redeem modal resolves `swaps.collateralToDebt` and reacts to final router/manager addresses without code changes.
-- [ ] Document final contract addresses (manager/router v1+v2, multicall executor) once provided.
+- [ ] Document final contract addresses (manager/router v2, multicall executor) once provided.
 
 ## Phase 3 Readiness
 - [x] Portfolio overview powered by subgraph + pricing hooks (`usePortfolioWithTotalValue`).
