@@ -25,10 +25,8 @@ export type RedeemPlan = {
   expectedCollateral: bigint
   minCollateralForSender: bigint
   slippageBps: number
-  // For v2: any swap calls needed during redemption
+  // Any swap calls needed during redemption
   calls?: Array<Hex>
-  // For v1: simple redemption parameters
-  maxSwapCost?: bigint
 }
 
 // Re-export shared quote types

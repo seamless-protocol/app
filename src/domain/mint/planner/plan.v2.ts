@@ -70,7 +70,7 @@ export async function planMintV2(params: {
   equityInInputAsset: EquityInInputAssetArg
   slippageBps: number
   quoteDebtToCollateral: QuoteFn
-  /** ManagerPort used for ideal/final previews (v2 router or v1-style manager fallback) */
+  /** ManagerPort used for ideal/final previews (v2 router or manager fallback) */
   managerPort?: ManagerPort
   /** Optional explicit LeverageManagerV2 address (for VNet/custom) */
   managerAddress?: Address
