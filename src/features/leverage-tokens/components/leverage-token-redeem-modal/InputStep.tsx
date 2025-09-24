@@ -33,6 +33,14 @@ interface LeverageTokenConfig {
   }
 }
 
+interface EarningsDisplay {
+  mintedDebt?: number
+  mintedCollateral?: number
+  mintedUsd?: number
+  earnedDebt?: number
+  earnedUsd?: number
+}
+
 interface InputStepProps {
   // Token data
   selectedToken: Token
@@ -58,8 +66,9 @@ interface InputStepProps {
 
   // Calculations
   expectedAmount: string
-  totalEarnedUsd?: number
-  originallyMintedUsd?: number
+  earnings: EarningsDisplay
+  debtSymbol: string
+  collateralSymbol: string
   isUserMetricsLoading: boolean
 
   // Validation
@@ -95,8 +104,9 @@ export function InputStep({
   isAllowanceLoading,
   isApproving,
   expectedAmount,
-  totalEarnedUsd,
-  originallyMintedUsd,
+  earnings,
+  debtSymbol,
+  collateralSymbol,
   isUserMetricsLoading,
   canProceed,
   needsApproval,
@@ -107,24 +117,52 @@ export function InputStep({
 }: InputStepProps) {
   const redeemAmountId = useId()
 
+  const formatAssetValue = (value: number, symbol: string) =>
+    `${value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    })} ${symbol}`
+
   const formatUsdValue = (value: number) =>
     `${value < 0 ? '-' : ''}$${Math.abs(value).toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`
 
-  const hasTotalEarnedValue = typeof totalEarnedUsd === 'number' && Number.isFinite(totalEarnedUsd)
-  const hasOriginallyMintedValue =
-    typeof originallyMintedUsd === 'number' && Number.isFinite(originallyMintedUsd)
+  const hasMintedDebt =
+    typeof earnings.mintedDebt === 'number' && Number.isFinite(earnings.mintedDebt)
+  const hasMintedCollateral =
+    typeof earnings.mintedCollateral === 'number' && Number.isFinite(earnings.mintedCollateral)
+  const hasMintedUsd = typeof earnings.mintedUsd === 'number' && Number.isFinite(earnings.mintedUsd)
 
-  const totalEarnedValue = hasTotalEarnedValue ? (totalEarnedUsd as number) : 0
-  const originalMintedValue = hasOriginallyMintedValue ? (originallyMintedUsd as number) : 0
+  const mintedPrimary = hasMintedDebt
+    ? formatAssetValue(earnings.mintedDebt as number, debtSymbol)
+    : hasMintedCollateral
+      ? formatAssetValue(earnings.mintedCollateral as number, collateralSymbol)
+      : undefined
 
-  const totalEarnedClass = hasTotalEarnedValue
-    ? totalEarnedValue >= 0
-      ? 'text-green-400'
-      : 'text-red-400'
-    : 'text-slate-500'
+  const mintedUsd = hasMintedUsd ? formatUsdValue(earnings.mintedUsd as number) : undefined
+
+  const hasEarnedDebt =
+    typeof earnings.earnedDebt === 'number' && Number.isFinite(earnings.earnedDebt)
+  const hasEarnedUsd = typeof earnings.earnedUsd === 'number' && Number.isFinite(earnings.earnedUsd)
+
+  const earnedDebtValue = hasEarnedDebt ? (earnings.earnedDebt as number) : 0
+  const earnedDisplay = hasEarnedDebt
+    ? formatAssetValue(earnedDebtValue, debtSymbol)
+    : hasEarnedUsd
+      ? formatUsdValue(earnings.earnedUsd as number)
+      : undefined
+
+  const totalEarnedClass =
+    hasEarnedDebt || hasEarnedUsd
+      ? (hasEarnedDebt ? earnedDebtValue : (earnings.earnedUsd as number)) >= 0
+        ? 'text-green-400'
+        : 'text-red-400'
+      : 'text-slate-500'
+
+  const earnedUsd = hasEarnedUsd ? formatUsdValue(earnings.earnedUsd as number) : undefined
+  const showEarnedUsdSecondary = hasEarnedDebt && earnedUsd
 
   return (
     <div className="space-y-6">
@@ -159,10 +197,13 @@ export function InputStep({
             <span className="text-slate-400 block">Total Earned</span>
             {isUserMetricsLoading ? (
               <Skeleton className="inline-block h-4 w-20" />
-            ) : hasTotalEarnedValue ? (
-              <span className={`${totalEarnedClass} font-medium`}>
-                {formatUsdValue(totalEarnedValue)}
-              </span>
+            ) : earnedDisplay ? (
+              <div className="flex items-center gap-2">
+                <span className={`${totalEarnedClass} font-medium`}>{earnedDisplay}</span>
+                {showEarnedUsdSecondary ? (
+                  <span className="text-slate-400 text-xs">({earnedUsd})</span>
+                ) : null}
+              </div>
             ) : (
               <span className="text-slate-500 font-medium">$N/A</span>
             )}
@@ -171,8 +212,11 @@ export function InputStep({
             <span className="text-slate-400 block">Originally Minted</span>
             {isUserMetricsLoading ? (
               <Skeleton className="inline-block h-4 w-20" />
-            ) : hasOriginallyMintedValue ? (
-              <span className="text-white font-medium">{formatUsdValue(originalMintedValue)}</span>
+            ) : mintedPrimary ? (
+              <div className="flex items-center gap-2">
+                <span className="text-white font-medium">{mintedPrimary}</span>
+                {mintedUsd ? <span className="text-slate-400 text-xs">({mintedUsd})</span> : null}
+              </div>
             ) : (
               <span className="text-slate-500 font-medium">$N/A</span>
             )}

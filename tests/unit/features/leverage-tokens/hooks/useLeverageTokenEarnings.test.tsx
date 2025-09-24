@@ -19,6 +19,7 @@ describe('useLeverageTokenEarnings', () => {
     const { result } = renderHook(() =>
       useLeverageTokenEarnings({
         metrics,
+        equityDebt: 110n * 10n ** 6n,
         equityUsd: 110,
         collateralDecimals: 18,
         debtDecimals: 6,
@@ -26,8 +27,10 @@ describe('useLeverageTokenEarnings', () => {
       }),
     )
 
-    expect(result.current.originallyMintedUsd).toBeCloseTo(100)
-    expect(result.current.totalEarnedUsd).toBeCloseTo(10)
+    expect(result.current.mintedDebt).toBeCloseTo(100)
+    expect(result.current.mintedUsd).toBeCloseTo(100)
+    expect(result.current.earnedDebt).toBeCloseTo(10)
+    expect(result.current.earnedUsd).toBeCloseTo(10)
   })
 
   it('falls back to collateral deposits when debt totals are missing', () => {
@@ -43,8 +46,10 @@ describe('useLeverageTokenEarnings', () => {
       }),
     )
 
-    expect(result.current.originallyMintedUsd).toBeCloseTo(200)
-    expect(result.current.totalEarnedUsd).toBeCloseTo(10)
+    expect(result.current.mintedDebt).toBeUndefined()
+    expect(result.current.mintedCollateral).toBeCloseTo(2)
+    expect(result.current.mintedUsd).toBeCloseTo(200)
+    expect(result.current.earnedUsd).toBeCloseTo(10)
   })
 
   it('returns undefined values when metrics are not available', () => {
@@ -56,7 +61,8 @@ describe('useLeverageTokenEarnings', () => {
       }),
     )
 
-    expect(result.current.originallyMintedUsd).toBeUndefined()
-    expect(result.current.totalEarnedUsd).toBeUndefined()
+    expect(result.current.mintedDebt).toBeUndefined()
+    expect(result.current.mintedUsd).toBeUndefined()
+    expect(result.current.earnedUsd).toBeUndefined()
   })
 })

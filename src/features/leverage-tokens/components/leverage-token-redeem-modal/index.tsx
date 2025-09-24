@@ -291,8 +291,11 @@ export function LeverageTokenRedeemModal({
     }
   }, [selectedToken, leverageTokenBalanceFormatted, positionData?.equityUsd])
 
-  const { originallyMintedUsd, totalEarnedUsd } = useLeverageTokenEarnings({
+  const earnings = useLeverageTokenEarnings({
     ...(userMetrics ? { metrics: userMetrics } : {}),
+    ...(typeof positionData?.equityInDebt === 'bigint'
+      ? { equityDebt: positionData.equityInDebt }
+      : {}),
     ...(typeof positionData?.equityUsd === 'number' ? { equityUsd: positionData.equityUsd } : {}),
     collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
     debtDecimals: leverageTokenConfig.debtAsset.decimals,
@@ -482,8 +485,9 @@ export function LeverageTokenRedeemModal({
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedAmount={expectedAmount}
-            {...(typeof totalEarnedUsd === 'number' ? { totalEarnedUsd } : {})}
-            {...(typeof originallyMintedUsd === 'number' ? { originallyMintedUsd } : {})}
+            earnings={earnings}
+            debtSymbol={leverageTokenConfig.debtAsset.symbol}
+            collateralSymbol={leverageTokenConfig.collateralAsset.symbol}
             isUserMetricsLoading={isUserMetricsLoading}
             canProceed={canProceed()}
             needsApproval={needsApproval()}
