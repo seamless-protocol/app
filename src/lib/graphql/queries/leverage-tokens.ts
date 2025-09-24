@@ -17,3 +17,17 @@ export const LEVERAGE_TOKEN_PRICE_COMPARISON_QUERY = `
     }
   }
 `
+
+export const USER_LEVERAGE_TOKEN_POSITION_QUERY = `
+  query UserLeverageTokenPosition($userAddress: Bytes!, $leverageToken: Bytes!) {
+    user(id: $userAddress) {
+      id
+      positions(where: { leverageToken: $leverageToken }) {
+        id
+        balance
+        totalEquityDepositedInCollateral
+        totalEquityDepositedInDebt
+      }
+    }
+  }
+`

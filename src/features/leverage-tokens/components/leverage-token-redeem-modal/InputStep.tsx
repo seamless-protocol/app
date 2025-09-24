@@ -58,6 +58,9 @@ interface InputStepProps {
 
   // Calculations
   expectedAmount: string
+  totalEarnedUsd?: number
+  originallyMintedUsd?: number
+  isUserMetricsLoading: boolean
 
   // Validation
   canProceed: boolean
@@ -92,6 +95,9 @@ export function InputStep({
   isAllowanceLoading,
   isApproving,
   expectedAmount,
+  totalEarnedUsd,
+  originallyMintedUsd,
+  isUserMetricsLoading,
   canProceed,
   needsApproval,
   isConnected,
@@ -100,6 +106,25 @@ export function InputStep({
   leverageTokenConfig,
 }: InputStepProps) {
   const redeemAmountId = useId()
+
+  const formatUsdValue = (value: number) =>
+    `${value < 0 ? '-' : ''}$${Math.abs(value).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`
+
+  const hasTotalEarnedValue = typeof totalEarnedUsd === 'number' && Number.isFinite(totalEarnedUsd)
+  const hasOriginallyMintedValue =
+    typeof originallyMintedUsd === 'number' && Number.isFinite(originallyMintedUsd)
+
+  const totalEarnedValue = hasTotalEarnedValue ? (totalEarnedUsd as number) : 0
+  const originalMintedValue = hasOriginallyMintedValue ? (originallyMintedUsd as number) : 0
+
+  const totalEarnedClass = hasTotalEarnedValue
+    ? totalEarnedValue >= 0
+      ? 'text-green-400'
+      : 'text-red-400'
+    : 'text-slate-500'
 
   return (
     <div className="space-y-6">
@@ -132,11 +157,25 @@ export function InputStep({
           </div>
           <div>
             <span className="text-slate-400 block">Total Earned</span>
-            <span className="text-green-400 font-medium">$N/A</span>
+            {isUserMetricsLoading ? (
+              <Skeleton className="inline-block h-4 w-20" />
+            ) : hasTotalEarnedValue ? (
+              <span className={`${totalEarnedClass} font-medium`}>
+                {formatUsdValue(totalEarnedValue)}
+              </span>
+            ) : (
+              <span className="text-slate-500 font-medium">$N/A</span>
+            )}
           </div>
           <div>
             <span className="text-slate-400 block">Originally Minted</span>
-            <span className="text-white font-medium">$N/A</span>
+            {isUserMetricsLoading ? (
+              <Skeleton className="inline-block h-4 w-20" />
+            ) : hasOriginallyMintedValue ? (
+              <span className="text-white font-medium">{formatUsdValue(originalMintedValue)}</span>
+            ) : (
+              <span className="text-slate-500 font-medium">$N/A</span>
+            )}
           </div>
         </div>
       </Card>
