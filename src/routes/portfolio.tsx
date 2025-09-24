@@ -20,6 +20,7 @@ import {
 } from '@/features/portfolio/hooks/usePortfolioDataFetcher'
 import { usePortfolioRewards } from '@/features/portfolio/hooks/usePortfolioRewards'
 import { usePortfolioStaking } from '@/features/portfolio/hooks/usePortfolioStaking'
+import { features } from '@/lib/config/features'
 
 export const Route = createFileRoute('/portfolio')({
   component: PortfolioPage,
@@ -373,42 +374,52 @@ function PortfolioPage() {
       </motion.div>
 
       {/* Available Rewards & Staking Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-      >
-        <div className="relative">
-          <AvailableRewards
-            tokenAddresses={[]}
-            accruingAmount={'$0.00'}
-            seamToken={'$0.00'}
-            protocolFees={'$0.00'}
-            onClaim={handleClaimRewards}
-          />
-          {rewardsLoading && (
-            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-              <div className="h-5 w-24 bg-slate-700/50 rounded animate-pulse" />
+      {(features.availableRewards || features.seamStaking) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className={`grid gap-6 ${
+            features.availableRewards && features.seamStaking
+              ? 'grid-cols-1 lg:grid-cols-2'
+              : 'grid-cols-1'
+          }`}
+        >
+          {features.availableRewards && (
+            <div className="relative">
+              <AvailableRewards
+                tokenAddresses={[]}
+                accruingAmount={'$0.00'}
+                seamToken={'$0.00'}
+                protocolFees={'$0.00'}
+                onClaim={handleClaimRewards}
+              />
+              {rewardsLoading && (
+                <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
+                  <div className="h-5 w-24 bg-slate-700/50 rounded animate-pulse" />
+                </div>
+              )}
             </div>
           )}
-        </div>
 
-        <div className="relative">
-          <SEAMStaking
-            stakedAmount={stakingData?.stakedAmount || '0.00'}
-            earnedRewards={stakingData?.earnedRewards || '0.00'}
-            apy={stakingData?.apy || '0.00'}
-            onStake={handleStake}
-            onManage={handleManageStaking}
-          />
-          {stakingLoading && (
-            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-              <div className="text-slate-400">Loading staking data...</div>
+          {features.seamStaking && (
+            <div className="relative">
+              <SEAMStaking
+                stakedAmount={stakingData?.stakedAmount || '0.00'}
+                earnedRewards={stakingData?.earnedRewards || '0.00'}
+                apy={stakingData?.apy || '0.00'}
+                onStake={handleStake}
+                onManage={handleManageStaking}
+              />
+              {stakingLoading && (
+                <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
+                  <div className="text-slate-400">Loading staking data...</div>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Active Positions */}
       <motion.div
