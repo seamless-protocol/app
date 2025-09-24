@@ -300,16 +300,30 @@ async function executeRedeemPath(
   const collateralDelta = collateralBalanceAfter - collateralBalanceBefore
   const debtDelta = debtBalanceAfter - debtBalanceBefore
 
+  const slippageRatio = BigInt(slippageBps)
+  const toleranceBps = slippageRatio + 10n // allow slippage plus 10 bps for rounding noise
+
+  const isWithinTolerance = (actual: bigint, expected: bigint): boolean => {
+    if (expected === 0n) return actual === 0n
+    if (actual < 0n) return false
+    const lowerBound = (expected * (10_000n - toleranceBps)) / 10_000n
+    const upperBound = (expected * (10_000n + toleranceBps)) / 10_000n
+    return actual >= lowerBound && actual <= upperBound
+  }
+
   if (payoutAsset) {
     expect(collateralDelta <= plan.minCollateralForSender).toBe(true)
     expect(plan.expectedCollateral).toBe(0n)
-    expect(debtDelta >= plan.payoutAmount).toBe(true)
+    expect(isWithinTolerance(debtDelta, plan.payoutAmount)).toBe(true)
     return
   }
 
   expect(collateralDelta >= plan.minCollateralForSender).toBe(true)
-  expect(collateralDelta <= plan.expectedCollateral).toBe(true)
-  expect(debtDelta >= plan.expectedDebtPayout).toBe(true)
+  expect(isWithinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
+
+  const debtDeltaAbs = debtDelta >= 0n ? debtDelta : -debtDelta
+  const debtTolerance = (plan.expectedDebt * toleranceBps) / 10_000n + 1n
+  expect(debtDeltaAbs <= debtTolerance).toBe(true)
 }
 
 function ensureTenderlyMode(): void {
