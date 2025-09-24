@@ -305,20 +305,6 @@ export function LeverageTokenRedeemModal({
 
   const redeemBlockingError = quoteBlockingError || planError
 
-  const expectedCollateralRaw = useMemo(() => {
-    if (exec.routerVersion === RouterVersion.V2) {
-      return planPreview.plan?.expectedCollateral
-    }
-    return preview.data?.collateral
-  }, [exec.routerVersion, planPreview.plan?.expectedCollateral, preview.data?.collateral])
-
-  const expectedDebtRaw = useMemo(() => {
-    if (exec.routerVersion === RouterVersion.V2) {
-      return planPreview.plan?.expectedDebt
-    }
-    return preview.data?.debt
-  }, [exec.routerVersion, planPreview.plan?.expectedDebt, preview.data?.debt])
-
   const expectedPayoutRaw = useMemo(() => {
     if (exec.routerVersion === RouterVersion.V2) {
       return planPreview.plan?.payoutAmount
@@ -345,30 +331,6 @@ export function LeverageTokenRedeemModal({
     leverageTokenConfig.collateralAsset.decimals,
     leverageTokenConfig.debtAsset.decimals,
   ])
-
-  const expectedCollateralAmount = useMemo(
-    () =>
-      typeof expectedCollateralRaw === 'bigint'
-        ? formatTokenAmountFromBase(
-            expectedCollateralRaw,
-            leverageTokenConfig.collateralAsset.decimals,
-            TOKEN_AMOUNT_DISPLAY_DECIMALS,
-          )
-        : '0',
-    [expectedCollateralRaw, leverageTokenConfig.collateralAsset.decimals],
-  )
-
-  const expectedDebtAmount = useMemo(
-    () =>
-      typeof expectedDebtRaw === 'bigint'
-        ? formatTokenAmountFromBase(
-            expectedDebtRaw,
-            leverageTokenConfig.debtAsset.decimals,
-            TOKEN_AMOUNT_DISPLAY_DECIMALS,
-          )
-        : '0',
-    [expectedDebtRaw, leverageTokenConfig.debtAsset.decimals],
-  )
 
   const {
     isAllowanceLoading,
@@ -598,8 +560,6 @@ export function LeverageTokenRedeemModal({
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedAmount={expectedAmount}
-            expectedCollateralAmount={expectedCollateralAmount}
-            expectedDebtAmount={expectedDebtAmount}
             earnings={earnings}
             debtSymbol={leverageTokenConfig.debtAsset.symbol}
             collateralSymbol={leverageTokenConfig.collateralAsset.symbol}

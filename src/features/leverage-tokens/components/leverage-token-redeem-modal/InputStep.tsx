@@ -70,8 +70,6 @@ interface InputStepProps {
   // Calculations
   expectedAmount: string
   selectedAssetSymbol: string
-  expectedCollateralAmount: string
-  expectedDebtAmount: string
   earnings: EarningsDisplay
   debtSymbol: string
   collateralSymbol: string
@@ -112,8 +110,6 @@ export function InputStep({
   isApproving,
   expectedAmount,
   selectedAssetSymbol,
-  expectedCollateralAmount,
-  expectedDebtAmount,
   earnings,
   debtSymbol,
   collateralSymbol,
@@ -409,26 +405,6 @@ export function InputStep({
                 <Skeleton className="inline-block h-4 w-24" />
               ) : (
                 `${expectedAmount} ${selectedAssetSymbol}`
-              )}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-400">Collateral amount</span>
-            <span className="text-slate-300">
-              {isCalculating ? (
-                <Skeleton className="inline-block h-3 w-16" />
-              ) : (
-                `${expectedCollateralAmount} ${collateralSymbol}`
-              )}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-400">Debt amount</span>
-            <span className="text-slate-300">
-              {isCalculating ? (
-                <Skeleton className="inline-block h-3 w-16" />
-              ) : (
-                `${expectedDebtAmount} ${debtSymbol}`
               )}
             </span>
           </div>
