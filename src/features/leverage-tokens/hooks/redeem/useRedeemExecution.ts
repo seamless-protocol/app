@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Address } from 'viem'
 import { usePublicClient } from 'wagmi'
+import type { OrchestrateRedeemResult } from '@/domain/redeem'
 import { RouterVersion } from '@/domain/redeem/planner/types'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { detectRedeemRouterVersion } from '@/domain/redeem/utils/detectVersion'
@@ -57,7 +58,7 @@ export function useRedeemExecution({
   const effectiveCanSubmit = canSubmit && quoteReady
 
   const redeem = useCallback(
-    async (sharesToRedeem: bigint) => {
+    async (sharesToRedeem: bigint): Promise<OrchestrateRedeemResult> => {
       if (!account) throw new Error('No account')
       if (requiresQuote && quoteStatus !== 'ready') {
         const baseError =
@@ -80,9 +81,15 @@ export function useRedeemExecution({
 
         setHash(result.hash)
         setStatus('pending')
-        await publicClient?.waitForTransactionReceipt({ hash: result.hash })
+        const receipt = await publicClient?.waitForTransactionReceipt({ hash: result.hash })
+        if (receipt && receipt.status !== 'success') {
+          const revertError = new Error('Transaction reverted')
+          setError(revertError)
+          setStatus('error')
+          throw revertError
+        }
         setStatus('success')
-        return result.hash
+        return result
       } catch (err) {
         const nextError = err instanceof Error ? err : new Error(String(err))
         setError(nextError)
@@ -113,6 +120,8 @@ export function useRedeemExecution({
     canSubmit: effectiveCanSubmit,
     quoteStatus,
     quoteError,
+    quote,
+    routerVersion,
   }
 }
 

@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { spawn } from 'node:child_process'
 import { resolve } from 'node:path'
 import process from 'node:process'
+import { z } from 'zod'
 // Import the Tenderly VNet helper (explicit .ts for Bun execution)
 import { createVNet, deleteVNet } from './tenderly-vnet.ts'
 import {
@@ -41,6 +42,32 @@ const CHAIN_PRESETS: Record<ChainSlug, ChainPreset> = {
     tokenKey: 'cbbtc-usdc-2x',
   },
 }
+
+// Schema for the RPC URL map - handles both string URLs and objects with url property
+const RpcUrlMapSchema = z.record(
+  z.union([
+    z.string().url(),
+    z.object({ url: z.string().url() }).transform(obj => obj.url)
+  ])
+)
+
+const testRpcUrlMap: Record<string, string> = (() => {
+  const rawMap =
+    process.env['VITE_TEST_RPC_URL_MAP'] || process.env['TEST_RPC_URL_MAP'] || undefined
+  if (!rawMap) return {}
+  
+  try {
+    const result = RpcUrlMapSchema.safeParse(JSON.parse(rawMap))
+    if (!result.success) {
+      console.warn('[run-tests] Invalid VITE_TEST_RPC_URL_MAP format:', result.error.format())
+      return {}
+    }
+    return result.data
+  } catch (error) {
+    console.warn('[run-tests] Failed to parse VITE_TEST_RPC_URL_MAP', error)
+    return {}
+  }
+})()
 
 interface TenderlyConfig {
   account: string
@@ -235,10 +262,19 @@ async function runForChainOption(chainOption: string, testType: TestType, passTh
       process.exit(1)
     }
 
+    const chainId = slug === 'base' ? '8453' : '1'
+    const mappedRpc = testRpcUrlMap[chainId]
+    const effectiveRpc = mappedRpc ?? preset.testRpc
+
     console.log(`\n=== 🚀 Running ${testType} tests [${preset.label}] ===`)
+    if (mappedRpc) {
+      console.log(`[run-tests] Using mapped RPC for chain ${chainId}: ${mappedRpc}`)
+    }
+
     const env = {
       ...process.env,
-      TEST_RPC_URL: preset.testRpc,
+      TEST_RPC_URL: effectiveRpc,
+      VITE_TEST_RPC_URL: effectiveRpc,
       TENDERLY_ADMIN_RPC_URL: preset.adminRpc,
       E2E_TOKEN_SOURCE: preset.tokenSource,
       E2E_LEVERAGE_TOKEN_KEY: preset.tokenKey,

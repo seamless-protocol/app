@@ -71,7 +71,8 @@ describe('useTokenApprove', () => {
       expect(result.current.error).toBeNull()
       expect(result.current.hash).toBeUndefined()
       expect(result.current.receipt).toBeUndefined()
-      expect(result.current.useMaxApproval).toBe(false)
+      // useMaxApproval no longer exposed; ensure hook remains defined
+      expect(typeof result.current.approve).toBe('function')
     })
 
     it('should calculate approval amount correctly for specific amount', () => {
@@ -106,43 +107,6 @@ describe('useTokenApprove', () => {
       )
 
       expect(result.current.approvalAmount).toBe(expectedAmount)
-    })
-
-    it('should use max approval when useMaxApproval is true', () => {
-      const maxUint256 = BigInt(
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
-      )
-
-      ;(useWriteContract as any).mockReturnValue({
-        writeContract: vi.fn(),
-        data: undefined,
-        isPending: false,
-        isError: false,
-        error: null,
-      })
-
-      ;(useWaitForTransactionReceipt as any).mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-        error: null,
-      })
-
-      const { result } = hookTestUtils.renderHookWithQuery(() =>
-        useTokenApprove({
-          tokenAddress,
-          spender: spenderAddress,
-          amount: '100',
-          decimals,
-          chainId,
-          enabled: true,
-          useMaxApproval: true,
-        }),
-      )
-
-      expect(result.current.approvalAmount).toBe(maxUint256)
-      expect(result.current.useMaxApproval).toBe(true)
     })
 
     it('should return zero approval amount when amount is not provided', () => {

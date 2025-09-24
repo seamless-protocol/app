@@ -1,5 +1,3 @@
-'use client'
-
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Wallet } from 'lucide-react'
 import { useState } from 'react'

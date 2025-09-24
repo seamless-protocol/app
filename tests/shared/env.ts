@@ -146,11 +146,23 @@ if (mode === 'tenderly') {
 
 export const RPC = { primary: primaryRpc, admin: adminRpc }
 
+function buildTenderlyHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const token = process.env['TENDERLY_TOKEN']
+  const accessKey = process.env['TENDERLY_ACCESS_KEY']
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  } else if (accessKey) {
+    headers['X-Access-Key'] = accessKey
+  }
+  return headers
+}
+
 async function detectChainId(rpcUrl: string): Promise<number> {
   try {
     const res = await fetch(rpcUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildTenderlyHeaders(),
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_chainId', params: [] }),
     })
     if (!res.ok) {

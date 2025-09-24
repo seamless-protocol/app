@@ -1,12 +1,10 @@
 import { type Address, type PublicClient, parseUnits } from 'viem'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { orchestrateMint } from '@/domain/mint'
-import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
-import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
 import {
-  createUniswapV3QuoteAdapter,
-  type UniswapV3QuoteOptions,
-} from '@/domain/shared/adapters/uniswapV3'
+  createDebtToCollateralQuote,
+  type DebtToCollateralSwapConfig,
+} from '@/domain/mint/utils/createDebtToCollateralQuote'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -216,70 +214,58 @@ function buildQuoteAdapter({
   addresses: ReturnType<typeof getAddressesForToken>
   label: string
 }) {
-  const shouldUseLiFi = tokenDefinition.swap?.useLiFi ?? process.env['TEST_USE_LIFI'] === '1'
-  if (shouldUseLiFi) {
-    console.info('[STEP] Creating LiFi quote adapter', {
-      token: label,
-      chainId,
-      router,
-      fromAddress: executor,
-      allowBridges: 'none',
-    })
-    return createLifiQuoteAdapter({
-      chainId,
-      router,
-      fromAddress: executor,
-      allowBridges: 'none',
-    })
+  const swapConfig = resolveDebtSwapConfig({ tokenDefinition, addresses })
+
+  const { quote, adapterType } = createDebtToCollateralQuote({
+    chainId,
+    routerAddress: router,
+    swap: swapConfig,
+    slippageBps: 50,
+    getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
+    fromAddress: executor,
+  })
+
+  console.info('[STEP] Creating debt swap quote adapter', {
+    token: label,
+    chainId,
+    adapterType,
+  })
+
+  return quote
+}
+
+function resolveDebtSwapConfig({
+  tokenDefinition,
+  addresses,
+}: {
+  tokenDefinition: (typeof AVAILABLE_LEVERAGE_TOKENS)[number]
+  addresses: ReturnType<typeof getAddressesForToken>
+}): DebtToCollateralSwapConfig {
+  if (tokenDefinition.swap?.useLiFi ?? process.env['TEST_USE_LIFI'] === '1') {
+    return { type: 'lifi', allowBridges: 'none' }
   }
 
-  const shouldUseUniswapV3 = Boolean(tokenDefinition.swap?.uniswapV3)
-  if (shouldUseUniswapV3) {
-    const v3Addresses = addresses.uniswapV3
-    if (!v3Addresses) {
+  if (tokenDefinition.swap?.uniswapV2Router) {
+    return { type: 'uniswapV2', router: tokenDefinition.swap.uniswapV2Router }
+  }
+
+  const v3Config = tokenDefinition.swap?.uniswapV3
+  if (v3Config?.poolKey) {
+    if (!addresses.uniswapV3?.pool) {
       throw new Error('Uniswap V3 configuration missing for leverage token')
     }
-    const { pool, fee, quoter, router: swapRouter } = v3Addresses
-    if (!swapRouter) {
-      throw new Error('Uniswap V3 swap router missing; update chain config')
-    }
-    console.info('[STEP] Creating Uniswap V3 quote adapter', {
-      token: label,
-      chainId,
-      quoter,
-      swapRouter,
-      pool,
-      fee,
-    })
-    return createUniswapV3QuoteAdapter({
-      publicClient: publicClient as unknown as UniswapV3QuoteOptions['publicClient'],
-      ...(quoter ? { quoter } : {}),
-      router: swapRouter,
-      fee,
-      recipient: router,
-      poolAddress: pool,
-      wrappedNative: addresses.weth,
-    })
+    return { type: 'uniswapV3', poolKey: v3Config.poolKey }
   }
 
-  const uniswapRouter =
-    tokenDefinition.swap?.uniswapV2Router ??
+  const fallbackRouter =
     (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
     ('0x4752ba5DBc23f44D87826276BF6Fd6b1c372ad24' as Address)
 
-  console.info('[STEP] Creating Uniswap V2 quote adapter', {
-    token: label,
-    chainId,
-    router,
-    uniswapRouter,
-  })
+  if (!fallbackRouter) {
+    throw new Error('Uniswap V2 router address required for fallback debt swap')
+  }
 
-  return createUniswapV2QuoteAdapter({
-    publicClient: publicClient as unknown as Pick<PublicClient, 'readContract' | 'getBlock'>,
-    router: uniswapRouter,
-    recipient: router,
-    wrappedNative: addresses.weth,
-  })
+  return { type: 'uniswapV2', router: fallbackRouter }
 }
 
 async function assertMintOutcome({

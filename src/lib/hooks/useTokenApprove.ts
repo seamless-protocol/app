@@ -1,5 +1,5 @@
 import type { Address } from 'viem'
-import { maxUint256, parseUnits } from 'viem'
+import { parseUnits } from 'viem'
 import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { TX_SETTINGS } from '@/features/leverage-tokens/utils/constants'
 import type { SupportedChainId } from '@/lib/contracts'
@@ -12,7 +12,6 @@ export interface UseTokenApproveParams {
   decimals?: number // Token decimals
   chainId: number
   enabled?: boolean
-  useMaxApproval?: boolean // If true, approves max uint256 instead of specific amount
 }
 
 /**
@@ -26,10 +25,9 @@ export function useTokenApprove({
   decimals = 18,
   chainId,
   enabled = true,
-  useMaxApproval = false,
 }: UseTokenApproveParams) {
   // Calculate approval amount
-  const approvalAmount = useMaxApproval ? maxUint256 : amount ? parseUnits(amount, decimals) : 0n
+  const approvalAmount = amount ? parseUnits(amount, decimals) : 0n
 
   // Write contract for approval
   const {
@@ -91,6 +89,5 @@ export function useTokenApprove({
 
     // Approval details
     approvalAmount,
-    useMaxApproval,
   }
 }

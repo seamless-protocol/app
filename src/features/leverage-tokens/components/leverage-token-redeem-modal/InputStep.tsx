@@ -310,7 +310,11 @@ export function InputStep({
           <div className="flex justify-between font-medium">
             <span className="text-white">You will receive</span>
             <span className="text-white">
-              {expectedAmount} {selectedAsset}
+              {isCalculating ? (
+                <Skeleton className="inline-block h-4 w-24" />
+              ) : (
+                `${expectedAmount} ${selectedAsset}`
+              )}
             </span>
           </div>
         </div>

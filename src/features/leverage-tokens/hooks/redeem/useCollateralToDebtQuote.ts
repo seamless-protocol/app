@@ -68,7 +68,10 @@ export function useCollateralToDebtQuote({
       if (message.includes('Public client')) {
         return { status: 'missing-client' as QuoteStatus, quote: undefined, error }
       }
-      if (message.includes('Missing Uniswap V3 configuration')) {
+      if (
+        message.includes('Missing Uniswap V3 configuration') ||
+        message.includes('Missing wrapped native token for Uniswap V2')
+      ) {
         return { status: 'missing-chain-config' as QuoteStatus, quote: undefined, error }
       }
       return { status: 'error' as QuoteStatus, quote: undefined, error }

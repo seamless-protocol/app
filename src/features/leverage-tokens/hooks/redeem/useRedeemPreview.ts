@@ -3,40 +3,92 @@ import { getPublicClient } from '@wagmi/core'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
+import { RouterVersion } from '@/domain/mint/planner/types'
+import { detectRouterVersion } from '@/domain/mint/utils/detectVersion'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
-import { readLeverageManagerPreviewRedeem } from '@/lib/contracts/generated'
+import { getContractAddresses } from '@/lib/contracts/addresses'
+import {
+  readLeverageManagerPreviewRedeem,
+  readLeverageManagerV2PreviewRedeem,
+} from '@/lib/contracts/generated'
 
-type Preview = Awaited<ReturnType<typeof readLeverageManagerPreviewRedeem>>
+export interface RedeemPreviewResult {
+  collateral: bigint
+  debt: bigint
+  shares: bigint
+  equity?: bigint
+  tokenFee?: bigint
+  treasuryFee?: bigint
+}
 
 export function useRedeemPreview(params: {
   config: Config
   token: Address
   sharesToRedeem: bigint | undefined
   debounceMs?: number
+  chainId?: number
 }) {
-  const { config, token, sharesToRedeem, debounceMs = 350 } = params
+  const { config, token, sharesToRedeem, debounceMs = 350, chainId } = params
 
   // Local debounce of the raw bigint input so the query only runs after idle
   const debounced = useDebouncedBigint(sharesToRedeem, debounceMs)
   const enabled = useMemo(() => typeof debounced === 'bigint' && debounced > 0n, [debounced])
 
   // Derive active chain id from wagmi config for multi-chain cache isolation
-  const chainId = getPublicClient(config)?.chain?.id
+  const detectedChainId = chainId ?? getPublicClient(config)?.chain?.id
+  const contracts = detectedChainId ? getContractAddresses(detectedChainId) : undefined
+
+  const requestedVersion = detectRouterVersion()
+  const managerV2Address = contracts?.leverageManagerV2
+  const managerV1Address = contracts?.leverageManager
+  const effectiveVersion = (() => {
+    if (requestedVersion === RouterVersion.V2) return RouterVersion.V2
+    if (!managerV1Address && managerV2Address) return RouterVersion.V2
+    return RouterVersion.V1
+  })()
+  const useV2 = effectiveVersion === RouterVersion.V2 && Boolean(managerV2Address)
+  const managerAddress = useV2 ? managerV2Address : (managerV1Address ?? managerV2Address)
 
   const amountForKey = enabled && typeof debounced === 'bigint' ? (debounced as bigint) : 0n
   const queryKey = ltKeys.simulation.redeemKey({
-    chainId,
+    chainId: detectedChainId,
     addr: token,
     amount: amountForKey,
   })
 
-  const query = useQuery<Preview, Error>({
+  const query = useQuery<RedeemPreviewResult, Error>({
     queryKey,
     // Only executes when enabled=true
-    queryFn: () =>
-      readLeverageManagerPreviewRedeem(config, {
+    queryFn: async () => {
+      if (useV2 && managerV2Address) {
+        const res = await readLeverageManagerV2PreviewRedeem(config, {
+          address: managerV2Address,
+          args: [token, debounced ?? 0n],
+        })
+
+        return {
+          collateral: res.collateral,
+          debt: res.debt,
+          shares: res.shares,
+          tokenFee: res.tokenFee,
+          treasuryFee: res.treasuryFee,
+        }
+      }
+
+      const res = await readLeverageManagerPreviewRedeem(config, {
+        ...(managerAddress ? { address: managerAddress } : {}),
         args: [token, debounced ?? 0n],
-      }),
+      })
+
+      return {
+        collateral: res.collateral,
+        debt: res.debt,
+        shares: res.shares,
+        equity: res.equity,
+        tokenFee: res.tokenFee,
+        treasuryFee: res.treasuryFee,
+      }
+    },
     enabled,
     retry: false,
     refetchOnWindowFocus: false,

@@ -1,59 +1,42 @@
 import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
-import {
-  createLifiQuoteAdapter,
-  createUniswapV3QuoteAdapter,
-  type LifiOrder,
-} from '@/domain/shared/adapters'
+import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
+import { createLifiQuoteAdapter, createUniswapV3QuoteAdapter } from '@/domain/shared/adapters'
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
-import {
-  getUniswapV3ChainConfig,
-  getUniswapV3PoolConfig,
-  type UniswapV3PoolKey,
-} from '@/lib/config/uniswapV3'
+import { getUniswapV3ChainConfig, getUniswapV3PoolConfig } from '@/lib/config/uniswapV3'
 import { BASE_WETH, getContractAddresses } from '@/lib/contracts/addresses'
 import type { QuoteFn } from '../planner/types'
 
-export type CollateralToDebtSwapConfig =
-  | {
-      type: 'uniswapV3'
-      poolKey: UniswapV3PoolKey
-    }
-  | {
-      type: 'uniswapV2'
-      router: Address
-    }
-  | {
-      type: 'lifi'
-      allowBridges?: string
-      order?: LifiOrder
-    }
+export type DebtToCollateralSwapConfig = CollateralToDebtSwapConfig
 
-export interface CreateCollateralToDebtQuoteParams {
+export interface CreateDebtToCollateralQuoteParams {
   chainId: number
   routerAddress: Address
-  swap: CollateralToDebtSwapConfig
+  swap: DebtToCollateralSwapConfig
   slippageBps: number
   getPublicClient: (chainId: number) => PublicClient | undefined
+  fromAddress?: Address
 }
 
-export interface CreateCollateralToDebtQuoteResult {
+export interface CreateDebtToCollateralQuoteResult {
   quote: QuoteFn
-  adapterType: CollateralToDebtSwapConfig['type']
+  adapterType: DebtToCollateralSwapConfig['type']
 }
 
-export function createCollateralToDebtQuote({
+export function createDebtToCollateralQuote({
   chainId,
   routerAddress,
   swap,
   slippageBps,
   getPublicClient,
-}: CreateCollateralToDebtQuoteParams): CreateCollateralToDebtQuoteResult {
+  fromAddress,
+}: CreateDebtToCollateralQuoteParams): CreateDebtToCollateralQuoteResult {
   if (swap.type === 'lifi') {
     const quote = createLifiQuoteAdapter({
       chainId,
       router: routerAddress,
       slippageBps,
+      ...(fromAddress ? { fromAddress } : {}),
       ...(swap.allowBridges ? { allowBridges: swap.allowBridges } : {}),
       ...(swap.order ? { order: swap.order } : {}),
     })
@@ -62,13 +45,13 @@ export function createCollateralToDebtQuote({
 
   const publicClient = getPublicClient(chainId)
   if (!publicClient) {
-    throw new Error('Public client unavailable for collateral quote')
+    throw new Error('Public client unavailable for debt swap quote')
   }
 
   if (swap.type === 'uniswapV2') {
     const wrappedNative = resolveWrappedNative(chainId)
     if (!wrappedNative) {
-      throw new Error('Missing wrapped native token for Uniswap V2 collateral swap')
+      throw new Error('Missing wrapped native token for debt swap')
     }
 
     const quote = createUniswapV2QuoteAdapter({
@@ -86,7 +69,7 @@ export function createCollateralToDebtQuote({
   const chainConfig = getUniswapV3ChainConfig(chainId)
   const poolConfig = getUniswapV3PoolConfig(chainId, swap.poolKey)
   if (!chainConfig || !poolConfig) {
-    throw new Error('Missing Uniswap V3 configuration for collateral swap')
+    throw new Error('Missing Uniswap V3 configuration for debt swap')
   }
 
   const wrappedNative = resolveWrappedNative(chainId)

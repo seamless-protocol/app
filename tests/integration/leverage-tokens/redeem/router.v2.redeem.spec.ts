@@ -2,9 +2,9 @@ import { type Address, parseUnits } from 'viem'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
 import {
-  createUniswapV2QuoteAdapter,
-  type UniswapV2QuoteOptions,
-} from '@/domain/shared/adapters/uniswapV2'
+  type CollateralToDebtSwapConfig,
+  createCollateralToDebtQuote,
+} from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
 import { ADDR, CHAIN_ID, mode, RPC } from '../../../shared/env'
@@ -44,10 +44,8 @@ type RedeemScenario = {
   debtAsset: Address
   equityInInputAsset: bigint
   slippageBps: number
-  uniswapV2: {
-    router: Address
-    wrappedNative?: Address
-  }
+  chainId: number
+  swap: CollateralToDebtSwapConfig
 }
 
 async function prepareRedeemScenario(
@@ -91,9 +89,10 @@ async function prepareRedeemScenario(
     debtAsset,
     equityInInputAsset,
     slippageBps,
-    uniswapV2: {
+    chainId,
+    swap: {
+      type: 'uniswapV2',
       router: uniswapRouter,
-      wrappedNative: ADDR.weth,
     },
   }
 }
@@ -102,8 +101,11 @@ async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario) {
   const { account, config, publicClient } = ctx
   const previousAdapter = process.env['TEST_QUOTE_ADAPTER']
   process.env['TEST_QUOTE_ADAPTER'] = 'uniswapv2'
+  if (scenario.swap.type !== 'uniswapV2') {
+    throw new Error('Redeem mint helper currently requires an Uniswap V2 swap configuration')
+  }
   await seedUniswapV2PairLiquidity({
-    router: scenario.uniswapV2.router,
+    router: scenario.swap.router,
     tokenA: scenario.collateralAsset,
     tokenB: scenario.debtAsset,
   })
@@ -138,28 +140,42 @@ async function executeRedeemPath(
   scenario: RedeemScenario & { sharesAfterMint: bigint },
 ): Promise<void> {
   const { account, config, publicClient } = ctx
-  const { token, router, manager, collateralAsset, sharesAfterMint, slippageBps, uniswapV2 } =
-    scenario
+  const {
+    token,
+    router,
+    manager,
+    collateralAsset,
+    sharesAfterMint,
+    slippageBps,
+    swap,
+    debtAsset,
+    chainId,
+  } = scenario
 
   const sharesToRedeem = sharesAfterMint
   await approveIfNeeded(token, router, sharesToRedeem)
 
-  await seedUniswapV2PairLiquidity({
-    router: uniswapV2.router,
-    tokenA: collateralAsset,
-    tokenB: scenario.debtAsset,
-  })
+  if (swap.type === 'uniswapV2') {
+    await seedUniswapV2PairLiquidity({
+      router: swap.router,
+      tokenA: collateralAsset,
+      tokenB: debtAsset,
+    })
+  }
 
-  console.info('[STEP] Planning redeem with Uniswap v2 adapter', {
+  console.info('[STEP] Planning redeem with shared swap adapter', {
     sharesToRedeem: sharesToRedeem.toString(),
   })
 
-  const quoteCollateralToDebt = createUniswapV2QuoteAdapter({
-    publicClient: publicClient as unknown as UniswapV2QuoteOptions['publicClient'],
-    router: uniswapV2.router,
-    recipient: router,
-    ...(uniswapV2.wrappedNative ? { wrappedNative: uniswapV2.wrappedNative } : {}),
+  const { quote: quoteCollateralToDebt, adapterType } = createCollateralToDebtQuote({
+    chainId,
+    routerAddress: router,
+    swap,
+    slippageBps,
+    getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
   })
+
+  console.info('[STEP] Using collateral swap adapter', { adapterType })
 
   const plan = await planRedeemV2({
     config,
@@ -189,10 +205,12 @@ async function executeRedeemPath(
   })
   expect(hasApprovalOrWithdraw).toBe(true)
 
-  const swapRouterCall = plan.calls.find(
-    (call) => call.target.toLowerCase() === uniswapV2.router.toLowerCase(),
-  )
-  expect(swapRouterCall).toBeDefined()
+  if (swap.type === 'uniswapV2') {
+    const swapRouterCall = plan.calls.find(
+      (call) => call.target.toLowerCase() === swap.router.toLowerCase(),
+    )
+    expect(swapRouterCall).toBeDefined()
+  }
 
   const collateralBalanceBefore = (await publicClient.readContract({
     address: collateralAsset,
