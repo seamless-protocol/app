@@ -152,21 +152,23 @@ export async function planRedeemV2(params: {
     useNativeCollateralPath,
   })
 
-  const outputAsset = params.outputAsset
-    ? getAddress(params.outputAsset)
-    : getAddress(collateralAsset)
-  const wantsDebtOutput = outputAsset === getAddress(debtAsset)
+  const collateralAddr = getAddress(collateralAsset)
+  const debtAddr = getAddress(debtAsset)
+  const payoutOverride = params.outputAsset ? getAddress(params.outputAsset) : undefined
+  const wantsDebtOutput = payoutOverride ? payoutOverride === debtAddr : false
 
-  let minCollateralForSender = calculateMinCollateralForSender(remainingCollateral, slippageBps)
-  let expectedCollateralForSender = remainingCollateral
-  let expectedDebtPayout = 0n
-  let payoutAsset: Address = getAddress(collateralAsset)
-  let payoutAmount = remainingCollateral
-  let additionalCalls: V2Calls = []
+  const planDraft = {
+    minCollateralForSender: calculateMinCollateralForSender(remainingCollateral, slippageBps),
+    expectedCollateral: remainingCollateral,
+    expectedDebtPayout: 0n,
+    payoutAsset: wantsDebtOutput ? debtAddr : collateralAddr,
+    payoutAmount: remainingCollateral,
+    calls: [...swapCalls] as V2Calls,
+  }
 
   if (wantsDebtOutput) {
-    minCollateralForSender = 0n
-    payoutAsset = getAddress(debtAsset)
+    planDraft.minCollateralForSender = 0n
+    planDraft.expectedCollateral = 0n
 
     if (remainingCollateral > 0n) {
       const { calls: payoutCalls, expectedDebtOut } = await buildCollateralToDebtSwapCalls({
@@ -177,13 +179,11 @@ export async function planRedeemV2(params: {
         inTokenForQuote,
         useNativeCollateralPath,
       })
-      additionalCalls = payoutCalls
-      expectedCollateralForSender = 0n
-      expectedDebtPayout = expectedDebtOut
-      payoutAmount = expectedDebtOut
+      planDraft.calls.push(...payoutCalls)
+      planDraft.expectedDebtPayout = expectedDebtOut
+      planDraft.payoutAmount = expectedDebtOut
     } else {
-      expectedCollateralForSender = 0n
-      payoutAmount = 0n
+      planDraft.payoutAmount = 0n
     }
   }
 
@@ -193,15 +193,15 @@ export async function planRedeemV2(params: {
     collateralAsset,
     debtAsset,
     slippageBps,
-    minCollateralForSender,
-    expectedCollateral: expectedCollateralForSender,
+    minCollateralForSender: planDraft.minCollateralForSender,
+    expectedCollateral: planDraft.expectedCollateral,
     expectedDebt: debtToRepay,
     expectedTotalCollateral: totalCollateralAvailable,
     expectedExcessCollateral: remainingCollateral,
-    expectedDebtPayout,
-    payoutAsset,
-    payoutAmount,
-    calls: [...swapCalls, ...additionalCalls],
+    expectedDebtPayout: planDraft.expectedDebtPayout,
+    payoutAsset: planDraft.payoutAsset,
+    payoutAmount: planDraft.payoutAmount,
+    calls: planDraft.calls,
   }
 }
 
