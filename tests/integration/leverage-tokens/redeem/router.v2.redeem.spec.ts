@@ -283,19 +283,19 @@ async function executeRedeemPath(
   })
   expect(sharesAfterRedeem).toBe(sharesBeforeRedeem - sharesToRedeem)
 
-  const collateralBalanceAfter = (await publicClient.readContract({
+  const collateralBalanceAfter = await publicClient.readContract({
     address: collateralAsset,
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: [account.address],
-  })) as bigint
+  })
 
-  const debtBalanceAfter = (await publicClient.readContract({
+  const debtBalanceAfter = await publicClient.readContract({
     address: debtAsset,
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: [account.address],
-  })) as bigint
+  })
 
   const collateralDelta = collateralBalanceAfter - collateralBalanceBefore
   const debtDelta = debtBalanceAfter - debtBalanceBefore
