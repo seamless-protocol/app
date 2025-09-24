@@ -49,8 +49,6 @@ Notes:
 
 ### 1) Unit — Domain Logic
 
-- detectRouterVersion
-  - Always returns V2 (router v1 has been removed).
 - ensureAllowance
   - Enough allowance: returns `{ changed:false }` with no simulate/write.
   - Insufficient: simulates `approve(maxUint256)`, writes once, returns hash.

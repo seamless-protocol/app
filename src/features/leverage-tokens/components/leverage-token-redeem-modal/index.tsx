@@ -4,7 +4,6 @@ import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 import type { OrchestrateRedeemResult } from '@/domain/redeem'
-import { RouterVersion } from '@/domain/redeem/planner/types'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
@@ -212,7 +211,6 @@ export function LeverageTokenRedeemModal({
     sharesToRedeem: form.amountRaw,
     slippageBps,
     chainId: leverageTokenConfig.chainId,
-    routerVersion: exec.routerVersion,
     ...(exec.quote ? { quote: exec.quote } : {}),
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
     ...(swapConfigKey ? { swapKey: swapConfigKey } : {}),
@@ -241,25 +239,18 @@ export function LeverageTokenRedeemModal({
   }, [exec.quoteError?.message, exec.quoteStatus])
 
   const planError = useMemo(() => {
-    if (exec.routerVersion !== RouterVersion.V2) return undefined
     return planPreview.error?.message
-  }, [exec.routerVersion, planPreview.error?.message])
+  }, [planPreview.error?.message])
 
   const redeemBlockingError = quoteBlockingError || planError
 
   const expectedCollateralRaw = useMemo(() => {
-    if (exec.routerVersion === RouterVersion.V2) {
-      return planPreview.plan?.expectedCollateral
-    }
-    return preview.data?.collateral
-  }, [exec.routerVersion, planPreview.plan?.expectedCollateral, preview.data?.collateral])
+    return planPreview.plan?.expectedCollateral
+  }, [planPreview.plan?.expectedCollateral])
 
   const expectedDebtRaw = useMemo(() => {
-    if (exec.routerVersion === RouterVersion.V2) {
-      return planPreview.plan?.expectedDebt
-    }
-    return preview.data?.debt
-  }, [exec.routerVersion, planPreview.plan?.expectedDebt, preview.data?.debt])
+    return planPreview.plan?.expectedDebt
+  }, [planPreview.plan?.expectedDebt])
 
   // Calculate expected amount based on selected asset
   const expectedAmount = useMemo(() => {
@@ -389,8 +380,7 @@ export function LeverageTokenRedeemModal({
   // Check if approval is needed
   const needsApproval = () => Boolean(needsApprovalFlag)
 
-  const isPlanCalculating =
-    exec.routerVersion === RouterVersion.V2 && Boolean(form.amountRaw) && planPreview.isLoading
+  const isPlanCalculating = Boolean(form.amountRaw) && planPreview.isLoading
 
   const isCalculating = preview.isLoading || isPlanCalculating
 
