@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { cn } from '@/lib/utils/cn'
+import { TrendingUp } from 'lucide-react'
 
 export interface Position {
   id: string
@@ -142,173 +143,185 @@ export function ActivePositions({
           </div>
 
           <div className="space-y-4">
-            {positions.map((position) => {
-              const isLeverageToken = position.type === 'leverage-token'
-              const primaryAction = isLeverageToken ? 'mint' : 'deposit'
-              const secondaryAction = isLeverageToken ? 'redeem' : 'withdraw'
-              const primaryLabel = isLeverageToken ? 'Mint' : 'Deposit'
-              const secondaryLabel = isLeverageToken ? 'Redeem' : 'Withdraw'
+            {positions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
+                  <TrendingUp className="h-8 w-8 text-slate-500" />
+                </div>
+                <h3 className="text-lg font-medium text-slate-300 mb-2">No Active Positions</h3>
+                <p className="text-sm text-slate-500 max-w-sm">
+                  Mint leverage tokens to see your active positions and start earning rewards.
+                </p>
+              </div>
+            ) : (
+              positions.map((position) => {
+                const isLeverageToken = position.type === 'leverage-token'
+                const primaryAction = isLeverageToken ? 'mint' : 'deposit'
+                const secondaryAction = isLeverageToken ? 'redeem' : 'withdraw'
+                const primaryLabel = isLeverageToken ? 'Mint' : 'Deposit'
+                const secondaryLabel = isLeverageToken ? 'Redeem' : 'Withdraw'
 
-              return (
-                // biome-ignore lint/a11y/useSemanticElements: Cannot use button here due to nested button elements (tooltip triggers)
-                <div
-                  key={position.id}
-                  className="w-full text-left bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 hover:border-purple-500/50 transition-all duration-200 cursor-pointer group"
-                  onClick={() => onPositionClick?.(position)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      onPositionClick?.(position)
-                    }
-                  }}
-                  aria-label={`View details for ${position.name}`}
-                >
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
-                    {/* Token Info */}
-                    <div className="lg:col-span-4 flex items-center space-x-4">
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
-                          isLeverageToken && position.collateralAsset && position.debtAsset
-                            ? ''
-                            : 'bg-slate-700/50 border border-slate-600 p-1'
-                        }`}
-                      >
-                        {isLeverageToken && position.collateralAsset && position.debtAsset ? (
-                          <div className="flex -space-x-1">
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
-                              style={{ zIndex: 2 }}
-                            >
-                              <AssetDisplay
-                                asset={position.collateralAsset}
-                                size="lg"
-                                variant="logo-only"
-                                tooltipContent={
-                                  <p className="font-medium">
-                                    {position.collateralAsset.name} (
-                                    {position.collateralAsset.symbol})
-                                  </p>
-                                }
-                              />
+                return (
+                  // biome-ignore lint/a11y/useSemanticElements: Cannot use button here due to nested button elements (tooltip triggers)
+                  <div
+                    key={position.id}
+                    className="w-full text-left bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 hover:border-purple-500/50 transition-all duration-200 cursor-pointer group"
+                    onClick={() => onPositionClick?.(position)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        onPositionClick?.(position)
+                      }
+                    }}
+                    aria-label={`View details for ${position.name}`}
+                  >
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+                      {/* Token Info */}
+                      <div className="lg:col-span-4 flex items-center space-x-4">
+                        <div
+                          className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+                            isLeverageToken && position.collateralAsset && position.debtAsset
+                              ? ''
+                              : 'bg-slate-700/50 border border-slate-600 p-1'
+                          }`}
+                        >
+                          {isLeverageToken && position.collateralAsset && position.debtAsset ? (
+                            <div className="flex -space-x-1">
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
+                                style={{ zIndex: 2 }}
+                              >
+                                <AssetDisplay
+                                  asset={position.collateralAsset}
+                                  size="lg"
+                                  variant="logo-only"
+                                  tooltipContent={
+                                    <p className="font-medium">
+                                      {position.collateralAsset.name} (
+                                      {position.collateralAsset.symbol})
+                                    </p>
+                                  }
+                                />
+                              </div>
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
+                                style={{ zIndex: 1 }}
+                              >
+                                <AssetDisplay
+                                  asset={position.debtAsset}
+                                  size="lg"
+                                  variant="logo-only"
+                                  tooltipContent={
+                                    <p className="font-medium">
+                                      {position.debtAsset.name} ({position.debtAsset.symbol})
+                                    </p>
+                                  }
+                                />
+                              </div>
                             </div>
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
-                              style={{ zIndex: 1 }}
-                            >
-                              <AssetDisplay
-                                asset={position.debtAsset}
-                                size="lg"
-                                variant="logo-only"
-                                tooltipContent={
-                                  <p className="font-medium">
-                                    {position.debtAsset.name} ({position.debtAsset.symbol})
-                                  </p>
-                                }
-                              />
-                            </div>
+                          ) : (
+                            <AssetDisplay
+                              asset={{ symbol: position.token, name: position.name }}
+                              size="lg"
+                              variant="logo-only"
+                              tooltipContent={
+                                <p className="font-medium">
+                                  {position.name} ({position.token})
+                                </p>
+                              }
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-medium text-white truncate group-hover:text-purple-300 transition-colors">
+                              {position.name}
+                            </h3>
+                            <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 lg:hidden" />
                           </div>
-                        ) : (
-                          <AssetDisplay
-                            asset={{ symbol: position.token, name: position.name }}
-                            size="lg"
-                            variant="logo-only"
-                            tooltipContent={
-                              <p className="font-medium">
-                                {position.name} ({position.token})
-                              </p>
-                            }
-                          />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium text-white truncate group-hover:text-purple-300 transition-colors">
-                            {position.name}
-                          </h3>
-                          <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 lg:hidden" />
-                        </div>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Badge className={getRiskLevelColor(position.riskLevel)}>
-                            {position.riskLevel.charAt(0).toUpperCase() +
-                              position.riskLevel.slice(1)}{' '}
-                            Risk
-                          </Badge>
-                          <Badge className="text-slate-400 border-slate-600">
-                            {getTypeLabel(position.type)}
-                          </Badge>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge className={getRiskLevelColor(position.riskLevel)}>
+                              {position.riskLevel.charAt(0).toUpperCase() +
+                                position.riskLevel.slice(1)}{' '}
+                              Risk
+                            </Badge>
+                            <Badge className="text-slate-400 border-slate-600">
+                              {getTypeLabel(position.type)}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Position Stats */}
-                    <div className="lg:col-span-5 space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4">
-                      {/* First row: Current Value and Unrealized Gain */}
-                      <div className="grid grid-cols-2 gap-4 lg:contents">
-                        <div className="text-left">
-                          <p className="text-xs text-slate-400">Current Value</p>
-                          <p className="font-medium text-white">
-                            {position.currentValue.amount} {position.currentValue.symbol}
-                          </p>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            {position.currentValue.usdValue}
-                          </p>
+                      {/* Position Stats */}
+                      <div className="lg:col-span-5 space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4">
+                        {/* First row: Current Value and Unrealized Gain */}
+                        <div className="grid grid-cols-2 gap-4 lg:contents">
+                          <div className="text-left">
+                            <p className="text-xs text-slate-400">Current Value</p>
+                            <p className="font-medium text-white">
+                              {position.currentValue.amount} {position.currentValue.symbol}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              {position.currentValue.usdValue}
+                            </p>
+                          </div>
+                          <div className="text-left">
+                            <p className="text-xs text-slate-400">Unrealized Gain</p>
+                            <p
+                              className={`font-medium ${position.unrealizedGain.amount.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}
+                            >
+                              {position.unrealizedGain.amount} {position.unrealizedGain.symbol}
+                            </p>
+                            <p
+                              className={`text-xs ${position.unrealizedGain.percentage.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}
+                            >
+                              {position.unrealizedGain.percentage}
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-left">
-                          <p className="text-xs text-slate-400">Unrealized Gain</p>
-                          <p
-                            className={`font-medium ${position.unrealizedGain.amount.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}
+
+                        {/* Second row: APY */}
+                        <div className="text-left lg:contents">
+                          <PositionAPYDisplay position={position} isLoading={apyLoading ?? false} />
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="lg:col-span-3 w-full lg:flex lg:items-center lg:justify-end lg:space-x-2">
+                        <div className="grid grid-cols-2 gap-2 lg:flex lg:gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-500 text-white w-full lg:w-auto flex-1 lg:flex-none"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onAction(primaryAction, position)
+                            }}
                           >
-                            {position.unrealizedGain.amount} {position.unrealizedGain.symbol}
-                          </p>
-                          <p
-                            className={`text-xs ${position.unrealizedGain.percentage.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}
+                            <Plus className="h-4 w-4 mr-1" />
+                            {primaryLabel}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-slate-600 text-slate-300 hover:bg-slate-700 w-full lg:w-auto flex-1 lg:flex-none"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onAction(secondaryAction, position)
+                            }}
                           >
-                            {position.unrealizedGain.percentage}
-                          </p>
+                            <Minus className="h-4 w-4 mr-1" />
+                            {secondaryLabel}
+                          </Button>
                         </div>
+                        <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 hidden lg:block lg:ml-2" />
                       </div>
-
-                      {/* Second row: APY */}
-                      <div className="text-left lg:contents">
-                        <PositionAPYDisplay position={position} isLoading={apyLoading ?? false} />
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="lg:col-span-3 w-full lg:flex lg:items-center lg:justify-end lg:space-x-2">
-                      <div className="grid grid-cols-2 gap-2 lg:flex lg:gap-2">
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-500 text-white w-full lg:w-auto flex-1 lg:flex-none"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onAction(primaryAction, position)
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          {primaryLabel}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-slate-600 text-slate-300 hover:bg-slate-700 w-full lg:w-auto flex-1 lg:flex-none"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onAction(secondaryAction, position)
-                          }}
-                        >
-                          <Minus className="h-4 w-4 mr-1" />
-                          {secondaryLabel}
-                        </Button>
-                      </div>
-                      <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 hidden lg:block lg:ml-2" />
                     </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })
+            )}
           </div>
         </div>
       </CardContent>
