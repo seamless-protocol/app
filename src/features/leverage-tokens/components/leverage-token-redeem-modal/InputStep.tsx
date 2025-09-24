@@ -7,6 +7,8 @@ import { Input } from '../../../../components/ui/input'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import { AMOUNT_PERCENTAGE_PRESETS, SLIPPAGE_PRESETS_PERCENT_DISPLAY } from '../../constants'
 
+type OutputAssetId = 'collateral' | 'debt'
+
 interface Token {
   symbol: string
   name: string
@@ -16,6 +18,7 @@ interface Token {
 }
 
 interface Asset {
+  id: OutputAssetId
   symbol: string
   name: string
   price: number
@@ -40,8 +43,8 @@ interface InputStepProps {
   amount: string
   onAmountChange: (value: string) => void
   onPercentageClick: (percentage: number) => void
-  selectedAsset: string
-  onAssetChange: (asset: string) => void
+  selectedAssetId: OutputAssetId
+  onAssetChange: (asset: OutputAssetId) => void
 
   // UI state
   showAdvanced: boolean
@@ -58,6 +61,8 @@ interface InputStepProps {
 
   // Calculations
   expectedAmount: string
+  selectedAssetSymbol: string
+  disabledAssets?: Array<OutputAssetId>
 
   // Validation
   canProceed: boolean
@@ -80,7 +85,7 @@ export function InputStep({
   amount,
   onAmountChange,
   onPercentageClick,
-  selectedAsset,
+  selectedAssetId,
   onAssetChange,
   showAdvanced,
   onToggleAdvanced,
@@ -92,6 +97,8 @@ export function InputStep({
   isAllowanceLoading,
   isApproving,
   expectedAmount,
+  selectedAssetSymbol,
+  disabledAssets = [],
   canProceed,
   needsApproval,
   isConnected,
@@ -262,14 +269,15 @@ export function InputStep({
         <div className="flex space-x-3">
           {availableAssets.map((asset) => (
             <Button
-              key={asset.symbol}
-              variant={selectedAsset === asset.symbol ? 'default' : 'outline'}
-              onClick={() => onAssetChange(asset.symbol)}
+              key={asset.id}
+              variant={selectedAssetId === asset.id ? 'default' : 'outline'}
+              onClick={() => onAssetChange(asset.id)}
+              disabled={disabledAssets.includes(asset.id)}
               className={`flex-1 ${
-                selectedAsset === asset.symbol
+                selectedAssetId === asset.id
                   ? 'bg-purple-600 text-white hover:bg-purple-500'
                   : 'border-slate-600 text-slate-300 hover:bg-slate-700'
-              }`}
+              } ${disabledAssets.includes(asset.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {asset.symbol}
             </Button>
@@ -313,7 +321,7 @@ export function InputStep({
               {isCalculating ? (
                 <Skeleton className="inline-block h-4 w-24" />
               ) : (
-                `${expectedAmount} ${selectedAsset}`
+                `${expectedAmount} ${selectedAssetSymbol}`
               )}
             </span>
           </div>

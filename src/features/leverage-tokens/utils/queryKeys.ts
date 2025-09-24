@@ -48,6 +48,7 @@ export const ltKeys = {
       slippageBps: number,
       managerAddress?: Address,
       swapKey?: string,
+      outputAsset?: Address,
     ) =>
       [
         ...ltKeys.token(addr),
@@ -57,6 +58,7 @@ export const ltKeys = {
         `slippage:${slippageBps}`,
         managerAddress ? `manager:${managerAddress}` : 'manager:default',
         swapKey ? `swap:${swapKey}` : 'swap:default',
+        outputAsset ? `output:${outputAsset}` : 'output:default',
       ] as const,
     redeemPlanOnChain: (
       chainId: number,
@@ -65,6 +67,7 @@ export const ltKeys = {
       slippageBps: number,
       managerAddress?: Address,
       swapKey?: string,
+      outputAsset?: Address,
     ) =>
       [
         ...ltKeys.tokenOnChain(chainId, addr),
@@ -74,6 +77,7 @@ export const ltKeys = {
         `slippage:${slippageBps}`,
         managerAddress ? `manager:${managerAddress}` : 'manager:default',
         swapKey ? `swap:${swapKey}` : 'swap:default',
+        outputAsset ? `output:${outputAsset}` : 'output:default',
       ] as const,
     redeemPlanKey: (params: {
       chainId: number | undefined
@@ -82,6 +86,7 @@ export const ltKeys = {
       slippageBps: number
       managerAddress?: Address
       swapKey?: string
+      outputAsset?: Address
     }) =>
       typeof params.chainId === 'number'
         ? ltKeys.simulation.redeemPlanOnChain(
@@ -91,6 +96,7 @@ export const ltKeys = {
             params.slippageBps,
             params.managerAddress,
             params.swapKey,
+            params.outputAsset,
           )
         : ltKeys.simulation.redeemPlan(
             params.addr,
@@ -98,6 +104,7 @@ export const ltKeys = {
             params.slippageBps,
             params.managerAddress,
             params.swapKey,
+            params.outputAsset,
           ),
   },
   // External data sources (shared across all tokens)

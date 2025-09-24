@@ -184,18 +184,24 @@ async function executeRedeemPath(
     slippageBps,
     quoteCollateralToDebt,
     managerAddress: manager,
+    outputAsset: debtAsset,
   })
 
   console.info('[PLAN DEBUG]', {
     expectedDebt: plan.expectedDebt.toString(),
     expectedCollateral: plan.expectedCollateral.toString(),
+    expectedDebtPayout: plan.expectedDebtPayout.toString(),
+    payoutAsset: plan.payoutAsset,
+    payoutAmount: plan.payoutAmount.toString(),
     minCollateral: plan.minCollateralForSender.toString(),
     calls: plan.calls.map((call) => ({ target: call.target, value: call.value.toString() })),
   })
 
   expect(plan.sharesToRedeem).toBe(sharesToRedeem)
   expect(plan.expectedDebt > 0n).toBe(true)
-  expect(plan.calls.length).toBeGreaterThanOrEqual(2)
+  expect(plan.payoutAsset.toLowerCase()).toBe(debtAsset.toLowerCase())
+  expect(plan.expectedDebtPayout > 0n).toBe(true)
+  expect(plan.calls.length).toBeGreaterThanOrEqual(4)
   const hasApprovalOrWithdraw = plan.calls.some((call) => {
     if (call.target.toLowerCase() !== collateralAsset.toLowerCase()) return false
     return (
@@ -212,12 +218,19 @@ async function executeRedeemPath(
     expect(swapRouterCall).toBeDefined()
   }
 
-  const collateralBalanceBefore = (await publicClient.readContract({
+  const collateralBalanceBefore = await publicClient.readContract({
     address: collateralAsset,
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: [account.address],
-  })) as bigint
+  })
+
+  const debtBalanceBefore = await publicClient.readContract({
+    address: debtAsset,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: [account.address],
+  })
 
   const sharesBeforeRedeem = await readLeverageTokenBalanceOf(config, {
     address: token,
@@ -233,6 +246,7 @@ async function executeRedeemPath(
     quoteCollateralToDebt,
     routerAddressV2: router,
     managerAddressV2: manager,
+    outputAsset: debtAsset,
   })
 
   expect(redeemTx.routerVersion).toBe('v2')
@@ -245,16 +259,25 @@ async function executeRedeemPath(
   })
   expect(sharesAfterRedeem).toBe(sharesBeforeRedeem - sharesToRedeem)
 
-  const collateralBalanceAfter = (await publicClient.readContract({
+  const collateralBalanceAfter = await publicClient.readContract({
     address: collateralAsset,
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: [account.address],
-  })) as bigint
+  })
+
+  const debtBalanceAfter = await publicClient.readContract({
+    address: debtAsset,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: [account.address],
+  })
 
   const collateralDelta = collateralBalanceAfter - collateralBalanceBefore
-  expect(collateralDelta >= plan.minCollateralForSender).toBe(true)
-  expect(collateralDelta <= plan.expectedCollateral).toBe(true)
+  const debtDelta = debtBalanceAfter - debtBalanceBefore
+  expect(collateralDelta <= plan.minCollateralForSender).toBe(true)
+  expect(plan.expectedCollateral).toBe(0n)
+  expect(debtDelta >= plan.payoutAmount).toBe(true)
 }
 
 function ensureTenderlyMode(): void {
