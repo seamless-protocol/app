@@ -207,6 +207,7 @@ vi.mock('@/features/leverage-tokens/utils/apy-calculations/rewards-providers', (
 // Mock GraphQL fetchers
 vi.mock('@/lib/graphql/fetchers/leverage-tokens', () => ({
   fetchLeverageTokenPriceComparison: vi.fn(),
+  fetchUserLeverageTokenPosition: vi.fn(),
 }))
 
 // Mock window.ethereum

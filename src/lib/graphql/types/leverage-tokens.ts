@@ -21,3 +21,15 @@ export interface LeverageTokenPriceComparisonResponse {
     }
   } | null
 }
+
+export interface UserLeverageTokenPositionResponse {
+  user?: {
+    id: string
+    positions: Array<{
+      id: string
+      balance: string
+      totalEquityDepositedInCollateral: string
+      totalEquityDepositedInDebt: string
+    }>
+  } | null
+}
