@@ -36,6 +36,14 @@ interface LeverageTokenConfig {
   }
 }
 
+interface EarningsDisplay {
+  mintedDebt?: number
+  mintedCollateral?: number
+  mintedUsd?: number
+  earnedDebt?: number
+  earnedUsd?: number
+}
+
 interface InputStepProps {
   // Token data
   selectedToken: Token
@@ -62,6 +70,12 @@ interface InputStepProps {
   // Calculations
   expectedAmount: string
   selectedAssetSymbol: string
+  expectedCollateralAmount: string
+  expectedDebtAmount: string
+  earnings: EarningsDisplay
+  debtSymbol: string
+  collateralSymbol: string
+  isUserMetricsLoading: boolean
   disabledAssets?: Array<OutputAssetId>
 
   // Validation
@@ -98,6 +112,12 @@ export function InputStep({
   isApproving,
   expectedAmount,
   selectedAssetSymbol,
+  expectedCollateralAmount,
+  expectedDebtAmount,
+  earnings,
+  debtSymbol,
+  collateralSymbol,
+  isUserMetricsLoading,
   disabledAssets = [],
   canProceed,
   needsApproval,
@@ -107,6 +127,53 @@ export function InputStep({
   leverageTokenConfig,
 }: InputStepProps) {
   const redeemAmountId = useId()
+
+  const formatAssetValue = (value: number, symbol: string) =>
+    `${value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    })} ${symbol}`
+
+  const formatUsdValue = (value: number) =>
+    `${value < 0 ? '-' : ''}$${Math.abs(value).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`
+
+  const hasMintedDebt =
+    typeof earnings.mintedDebt === 'number' && Number.isFinite(earnings.mintedDebt)
+  const hasMintedCollateral =
+    typeof earnings.mintedCollateral === 'number' && Number.isFinite(earnings.mintedCollateral)
+  const hasMintedUsd = typeof earnings.mintedUsd === 'number' && Number.isFinite(earnings.mintedUsd)
+
+  const mintedPrimary = hasMintedDebt
+    ? formatAssetValue(earnings.mintedDebt as number, debtSymbol)
+    : hasMintedCollateral
+      ? formatAssetValue(earnings.mintedCollateral as number, collateralSymbol)
+      : undefined
+
+  const mintedUsd = hasMintedUsd ? formatUsdValue(earnings.mintedUsd as number) : undefined
+
+  const hasEarnedDebt =
+    typeof earnings.earnedDebt === 'number' && Number.isFinite(earnings.earnedDebt)
+  const hasEarnedUsd = typeof earnings.earnedUsd === 'number' && Number.isFinite(earnings.earnedUsd)
+
+  const earnedDebtValue = hasEarnedDebt ? (earnings.earnedDebt as number) : 0
+  const earnedDisplay = hasEarnedDebt
+    ? formatAssetValue(earnedDebtValue, debtSymbol)
+    : hasEarnedUsd
+      ? formatUsdValue(earnings.earnedUsd as number)
+      : undefined
+
+  const totalEarnedClass =
+    hasEarnedDebt || hasEarnedUsd
+      ? (hasEarnedDebt ? earnedDebtValue : (earnings.earnedUsd as number)) >= 0
+        ? 'text-green-400'
+        : 'text-red-400'
+      : 'text-slate-500'
+
+  const earnedUsd = hasEarnedUsd ? formatUsdValue(earnings.earnedUsd as number) : undefined
+  const showEarnedUsdSecondary = hasEarnedDebt && earnedUsd
 
   return (
     <div className="space-y-6">
@@ -139,11 +206,31 @@ export function InputStep({
           </div>
           <div>
             <span className="text-slate-400 block">Total Earned</span>
-            <span className="text-green-400 font-medium">$N/A</span>
+            {isUserMetricsLoading ? (
+              <Skeleton className="inline-block h-4 w-20" />
+            ) : earnedDisplay ? (
+              <div className="flex items-center gap-2">
+                <span className={`${totalEarnedClass} font-medium`}>{earnedDisplay}</span>
+                {showEarnedUsdSecondary ? (
+                  <span className="text-slate-400 text-xs">({earnedUsd})</span>
+                ) : null}
+              </div>
+            ) : (
+              <span className="text-slate-500 font-medium">$N/A</span>
+            )}
           </div>
           <div>
             <span className="text-slate-400 block">Originally Minted</span>
-            <span className="text-white font-medium">$N/A</span>
+            {isUserMetricsLoading ? (
+              <Skeleton className="inline-block h-4 w-20" />
+            ) : mintedPrimary ? (
+              <div className="flex items-center gap-2">
+                <span className="text-white font-medium">{mintedPrimary}</span>
+                {mintedUsd ? <span className="text-slate-400 text-xs">({mintedUsd})</span> : null}
+              </div>
+            ) : (
+              <span className="text-slate-500 font-medium">$N/A</span>
+            )}
           </div>
         </div>
       </Card>
@@ -322,6 +409,26 @@ export function InputStep({
                 <Skeleton className="inline-block h-4 w-24" />
               ) : (
                 `${expectedAmount} ${selectedAssetSymbol}`
+              )}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-400">Collateral amount</span>
+            <span className="text-slate-300">
+              {isCalculating ? (
+                <Skeleton className="inline-block h-3 w-16" />
+              ) : (
+                `${expectedCollateralAmount} ${collateralSymbol}`
+              )}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-400">Debt amount</span>
+            <span className="text-slate-300">
+              {isCalculating ? (
+                <Skeleton className="inline-block h-3 w-16" />
+              ) : (
+                `${expectedDebtAmount} ${debtSymbol}`
               )}
             </span>
           </div>

@@ -15,6 +15,10 @@ export const features = {
   // UI Display Features
   featuredTokensSection: import.meta.env['VITE_DISABLE_FEATURED_LEVERAGE_TOKENS'] !== 'true',
 
+  // Portfolio Features
+  availableRewards: import.meta.env['VITE_DISABLE_AVAILABLE_REWARDS'] !== 'true',
+  seamStaking: import.meta.env['VITE_DISABLE_SEAM_STAKING'] !== 'true',
+
   // Testing
   testMode: import.meta.env['VITE_TEST_MODE'] === 'mock',
 } as const
