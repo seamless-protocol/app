@@ -254,7 +254,35 @@ export function LeverageTokenRedeemModal({
     return preview.data?.collateral
   }, [exec.routerVersion, planPreview.plan?.expectedCollateral, preview.data?.collateral])
 
-  const expectedAmount = useMemo(
+  const expectedDebtRaw = useMemo(() => {
+    if (exec.routerVersion === RouterVersion.V2) {
+      return planPreview.plan?.expectedDebt
+    }
+    return preview.data?.debt
+  }, [exec.routerVersion, planPreview.plan?.expectedDebt, preview.data?.debt])
+
+  // Calculate expected amount based on selected asset
+  const expectedAmount = useMemo(() => {
+    const isCollateralSelected = selectedAsset === leverageTokenConfig.collateralAsset.symbol
+    const rawAmount = isCollateralSelected ? expectedCollateralRaw : expectedDebtRaw
+    const decimals = isCollateralSelected
+      ? leverageTokenConfig.collateralAsset.decimals
+      : leverageTokenConfig.debtAsset.decimals
+
+    return typeof rawAmount === 'bigint'
+      ? formatTokenAmountFromBase(rawAmount, decimals, TOKEN_AMOUNT_DISPLAY_DECIMALS)
+      : '0'
+  }, [
+    selectedAsset,
+    expectedCollateralRaw,
+    expectedDebtRaw,
+    leverageTokenConfig.collateralAsset.symbol,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.decimals,
+  ])
+
+  // Calculate both collateral and debt amounts for display
+  const expectedCollateralAmount = useMemo(
     () =>
       typeof expectedCollateralRaw === 'bigint'
         ? formatTokenAmountFromBase(
@@ -264,6 +292,18 @@ export function LeverageTokenRedeemModal({
           )
         : '0',
     [expectedCollateralRaw, leverageTokenConfig.collateralAsset.decimals],
+  )
+
+  const expectedDebtAmount = useMemo(
+    () =>
+      typeof expectedDebtRaw === 'bigint'
+        ? formatTokenAmountFromBase(
+            expectedDebtRaw,
+            leverageTokenConfig.debtAsset.decimals,
+            TOKEN_AMOUNT_DISPLAY_DECIMALS,
+          )
+        : '0',
+    [expectedDebtRaw, leverageTokenConfig.debtAsset.decimals],
   )
 
   const {
@@ -485,6 +525,8 @@ export function LeverageTokenRedeemModal({
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedAmount={expectedAmount}
+            expectedCollateralAmount={expectedCollateralAmount}
+            expectedDebtAmount={expectedDebtAmount}
             earnings={earnings}
             debtSymbol={leverageTokenConfig.debtAsset.symbol}
             collateralSymbol={leverageTokenConfig.collateralAsset.symbol}
