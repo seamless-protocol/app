@@ -127,7 +127,7 @@ For GitHub Actions, add this step before running tests:
 
 ```yaml
 - name: Install Foundry
-  uses: foundry-rs/foundry-toolchain@v1
+  uses: foundry-rs/foundry-toolchain@v2
   with:
     version: stable
 
