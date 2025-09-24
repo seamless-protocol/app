@@ -1,7 +1,7 @@
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import { readContracts } from 'wagmi/actions'
-import { leverageManagerAbi } from '../../../../lib/contracts/abis/leverageManager'
+import { leverageManagerV2Abi } from '../../../../lib/contracts/abis/leverageManagerV2'
 import { rebalanceAdapterAbi } from '../../../../lib/contracts/abis/rebalanceAdapter'
 import {
   getLeverageManagerAddress,
@@ -44,7 +44,7 @@ export async function fetchLeverageRatios(
     contracts: [
       {
         address: managerAddress,
-        abi: leverageManagerAbi,
+        abi: leverageManagerV2Abi,
         functionName: 'getLeverageTokenConfig',
         args: [tokenAddress],
         chainId: chainId as SupportedChainId,

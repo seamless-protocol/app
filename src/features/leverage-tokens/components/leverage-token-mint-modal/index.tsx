@@ -76,7 +76,7 @@ export function LeverageTokenMintModal({
 
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
-  const leverageRouterAddress = contractAddresses.leverageRouter
+  const leverageRouterAddress = contractAddresses.leverageRouterV2
 
   // Get real wallet balance for collateral asset
   const { balance: collateralBalance, isLoading: isCollateralBalanceLoading } = useTokenBalance({

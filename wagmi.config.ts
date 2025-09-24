@@ -27,8 +27,8 @@ export default defineConfig({
     {
       name: "LeverageRouter",
       abi: leverageRouterAbi,
-      address: contractAddresses[base.id]?.leverageRouter
-        ? { [base.id]: contractAddresses[base.id]?.leverageRouter! }
+      address: contractAddresses[base.id]?.leverageRouterV2
+        ? { [base.id]: contractAddresses[base.id]?.leverageRouterV2! }
         : undefined,
     },
     {
@@ -42,8 +42,8 @@ export default defineConfig({
     {
       name: "LeverageManager",
       abi: leverageManagerAbi,
-      address: contractAddresses[base.id]?.leverageManager
-        ? { [base.id]: contractAddresses[base.id]?.leverageManager! }
+      address: contractAddresses[base.id]?.leverageManagerV2
+        ? { [base.id]: contractAddresses[base.id]?.leverageManagerV2! }
         : undefined,
     },
     {

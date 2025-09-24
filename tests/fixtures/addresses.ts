@@ -63,12 +63,12 @@ export const LEVERAGE_FACTORY_ADDRESS = assertAddress(
 export const LEVERAGE_MANAGER_ADDRESS = assertAddress(
   'leverageManagerV2/leverageManager',
   BASE_CHAIN_ID,
-  (baseContracts.leverageManagerV2 ?? baseContracts.leverageManager) as Address | undefined,
+  baseContracts.leverageManagerV2 as Address | undefined,
 )
 export const LEVERAGE_ROUTER_ADDRESS = assertAddress(
   'leverageRouterV2/leverageRouter',
   BASE_CHAIN_ID,
-  (baseContracts.leverageRouterV2 ?? baseContracts.leverageRouter) as Address | undefined,
+  baseContracts.leverageRouterV2 as Address | undefined,
 )
 export const MULTICALL_EXECUTOR_ADDRESS = assertAddress(
   'multicall',
@@ -96,8 +96,8 @@ export interface LeverageTokenDefinition {
   chainId: number
   collateralSymbol: string
   debtSymbol: string
-  leverageManager?: Address
-  leverageRouter?: Address
+  leverageManagerV2?: Address
+  leverageRouterV2?: Address
   multicallExecutor?: Address
   rebalanceAdapter?: Address
   lendingAdapter?: Address
@@ -132,8 +132,8 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
     chainId: mainnet.id,
     collateralSymbol: 'weETH',
     debtSymbol: 'WETH',
-    leverageManager: TENDERLY_VNET_STACK.leverageManager,
-    leverageRouter: TENDERLY_VNET_STACK.leverageRouter,
+    leverageManagerV2: TENDERLY_VNET_STACK.leverageManager,
+    leverageRouterV2: TENDERLY_VNET_STACK.leverageRouter,
     multicallExecutor: TENDERLY_VNET_STACK.multicallExecutor,
     rebalanceAdapter: '0x42B2f80b25EFA106E8Ed2CE675b0CA2a3829eA16' as Address,
     lendingAdapter: '0xfC9414be7746920bc89bB979e112Ff962C013c00' as Address,
@@ -155,8 +155,8 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
     chainId: mainnet.id,
     collateralSymbol: 'cbBTC',
     debtSymbol: 'USDC',
-    leverageManager: TENDERLY_VNET_STACK.leverageManager,
-    leverageRouter: TENDERLY_VNET_STACK.leverageRouter,
+    leverageManagerV2: TENDERLY_VNET_STACK.leverageManager,
+    leverageRouterV2: TENDERLY_VNET_STACK.leverageRouter,
     multicallExecutor: TENDERLY_VNET_STACK.multicallExecutor,
     rebalanceAdapter: '0x21DaC768668cAb4a33f4069B4002bB4B1DA33d32' as Address,
     lendingAdapter: '0x1B1bCfd0b1FB7559407c2b73E0d6e606B2d26b69' as Address,
@@ -255,9 +255,7 @@ export function getLeverageTokenLabel(source: LeverageTokenSource, key?: Leverag
 
 export const TENDERLY_VNET_CONTRACT_OVERRIDES: Record<number, Partial<ContractAddresses>> = {
   [mainnet.id]: {
-    leverageManager: TENDERLY_VNET_STACK.leverageManager,
     leverageManagerV2: TENDERLY_VNET_STACK.leverageManager,
-    leverageRouter: TENDERLY_VNET_STACK.leverageRouter,
     leverageRouterV2: TENDERLY_VNET_STACK.leverageRouter,
     multicall: TENDERLY_VNET_STACK.multicallExecutor,
   },

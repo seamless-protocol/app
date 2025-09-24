@@ -24,22 +24,22 @@ describe('getContractAddresses', () => {
     const addressesModule = await import('@/lib/contracts/addresses')
     addressesModule.setContractAddressOverridesForTesting({})
 
-    const canonical = addressesModule.contractAddresses[base.id]?.leverageManager
+    const canonical = addressesModule.contractAddresses[base.id]?.leverageManagerV2
 
-    expect(addressesModule.getContractAddresses(base.id).leverageManager).toBe(canonical)
+    expect(addressesModule.getContractAddresses(base.id).leverageManagerV2).toBe(canonical)
   })
 
   it('merges overrides when override map is provided', async () => {
     const overrideAddress = '0x1111111111111111111111111111111111111111'
     const addressesModule = await import('@/lib/contracts/addresses')
     addressesModule.setContractAddressOverridesForTesting({
-      [base.id]: { leverageManager: overrideAddress },
+      [base.id]: { leverageManagerV2: overrideAddress },
     })
 
-    expect(addressesModule.getContractAddressOverrides()[base.id]?.leverageManager).toBe(
+    expect(addressesModule.getContractAddressOverrides()[base.id]?.leverageManagerV2).toBe(
       overrideAddress,
     )
 
-    expect(addressesModule.getContractAddresses(base.id).leverageManager).toBe(overrideAddress)
+    expect(addressesModule.getContractAddresses(base.id).leverageManagerV2).toBe(overrideAddress)
   })
 })

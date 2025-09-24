@@ -70,8 +70,6 @@ vi.mock('@/lib/contracts/addresses', () => {
   const contractAddresses: Record<number, ContractAddresses> = {
     [base.id]: {
       leverageTokenFactory: '0xE0b2e40EDeb53B96C923381509a25a615c1Abe57',
-      leverageManager: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8',
-      leverageRouter: '0xDbA92fC3dc10a17b96b6E807a908155C389A887C',
       leverageTokenImpl: '0x057A2a1CC13A9Af430976af912A27A05DE537673',
       leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C',
       leverageRouterV2: '0xfd46483b299197c616671b7df295ca5186c805c2',
@@ -101,7 +99,7 @@ vi.mock('@/lib/contracts/addresses', () => {
     (chainId: number): ContractAddresses => contractAddresses[chainId] ?? {},
   )
   const getLeverageManagerAddress = vi.fn(
-    (chainId: number) => getContractAddresses(chainId)?.leverageManager,
+    (chainId: number) => getContractAddresses(chainId)?.leverageManagerV2,
   )
 
   const getGovernanceAddresses = vi.fn((chainId: number) => {

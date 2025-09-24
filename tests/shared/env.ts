@@ -290,15 +290,12 @@ function buildAddressContext(
   const routerV2 = contracts.leverageRouterV2 as Address | undefined
   const tokenMap = contracts.tokens ?? {}
 
-  const managerOverride = definition.leverageManager
-  const routerOverride = definition.leverageRouter
+  const managerOverride = definition.leverageManagerV2
+  const routerOverride = definition.leverageRouterV2
   const executorOverride = definition.multicallExecutor
   const veloraOverride = definition.veloraAdapter
   const rebalanceOverride = definition.rebalanceAdapter
   const lendingOverride = definition.lendingAdapter
-
-  const resolvedManagerV2 = managerOverride ?? managerV2
-  const resolvedRouterV2 = routerOverride ?? routerV2
 
   const primaryManager = managerOverride ?? managerV2
   const primaryRouter = routerOverride ?? routerV2
@@ -337,8 +334,8 @@ function buildAddressContext(
     ),
   }
 
-  const managerV2Address = optionalAddress(resolvedManagerV2)
-  const routerV2Address = optionalAddress(resolvedRouterV2)
+  const managerV2Address = optionalAddress(primaryManager)
+  const routerV2Address = optionalAddress(primaryRouter)
   const executorAddress = optionalAddress(
     executorOverride ?? (contracts.multicall as Address | undefined),
   )
