@@ -294,7 +294,7 @@ export function LeverageTokenMintModal({
         leverageTokenAddress,
         amount: form.amount,
         amountRaw: form.amountRaw?.toString(),
-        chainId: chainId || 8453,
+        chainId: chainId || 0,
         feature: 'mint',
       })
 

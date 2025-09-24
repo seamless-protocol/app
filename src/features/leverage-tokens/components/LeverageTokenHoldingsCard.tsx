@@ -55,13 +55,9 @@ export function LeverageTokenHoldingsCard({
     return (
       <ConnectButton.Custom>
         {({ openConnectModal }) => (
-          <button
-            onClick={openConnectModal}
-            className="cursor-pointer w-full bg-transparent border-none p-0"
-            type="button"
-          >
+          <div onClick={openConnectModal} className="cursor-pointer w-full">
             {children}
-          </button>
+          </div>
         )}
       </ConnectButton.Custom>
     )

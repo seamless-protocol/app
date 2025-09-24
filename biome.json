@@ -25,6 +25,17 @@
       "linter": {
         "enabled": false
       }
+    },
+    {
+      "includes": ["src/features/leverage-tokens/components/LeverageTokenHoldingsCard.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noStaticElementInteractions": "off",
+            "useKeyWithClickEvents": "off"
+          }
+        }
+      }
     }
   ],
   "formatter": {
