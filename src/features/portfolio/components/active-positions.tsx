@@ -1,3 +1,4 @@
+import { TrendingUp } from 'lucide-react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { ArrowUpRight, Info, Minus, Plus } from '@/components/icons'
@@ -8,7 +9,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { cn } from '@/lib/utils/cn'
-import { TrendingUp } from 'lucide-react'
 
 export interface Position {
   id: string
