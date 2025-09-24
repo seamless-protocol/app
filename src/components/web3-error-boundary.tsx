@@ -1,7 +1,11 @@
+import * as Sentry from '@sentry/react'
 import { AlertCircle, RefreshCw, Wallet, Wifi } from 'lucide-react'
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('web3-error-boundary')
 
 interface Props {
   children: ReactNode
@@ -61,9 +65,41 @@ export class Web3ErrorBoundary extends Component<Props, State> {
   }
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Web3ErrorBoundary caught an error:', error, errorInfo)
     const errorType = this.parseWeb3Error(error)
     this.setState({ errorType })
+
+    logger.error('Web3ErrorBoundary caught an error', {
+      error,
+      errorInfo,
+      errorType,
+      errorCode: (error as { code?: number })?.code,
+      errorBoundary: 'Web3ErrorBoundary',
+      web3ErrorType: errorType,
+    })
+
+    // Send to Sentry with Web3 context
+    Sentry.captureException(error, {
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack,
+        },
+        web3: {
+          errorType,
+          errorCode: (error as { code?: number })?.code,
+          errorMessage: error.message,
+        },
+      },
+      tags: {
+        errorBoundary: 'Web3ErrorBoundary',
+        errorType: 'Web3Error',
+        web3ErrorType: errorType,
+      },
+      extra: {
+        errorInfo,
+        errorBoundary: 'Web3ErrorBoundary',
+        web3ErrorType: errorType,
+      },
+    })
   }
 
   private handleReset = () => {

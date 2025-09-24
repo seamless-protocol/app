@@ -30,12 +30,29 @@ export function initSentry() {
       replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
       // Release tracking
       release: import.meta.env['VITE_SENTRY_RELEASE'],
-      // Only send errors in production
+      // Enhanced error filtering and context
       beforeSend(event) {
+        // Log in development but don't send
         if (import.meta.env.MODE === 'development') {
           console.log('[Sentry] Event captured (dev mode, not sent):', event)
-          return null // Don't send in development
+          return null
         }
+
+        // Filter out known non-critical errors
+        if (event.exception) {
+          const error = event.exception.values?.[0]
+          if (error?.value?.includes('User rejected') || error?.value?.includes('User denied')) {
+            return null // Don't send user rejection errors
+          }
+        }
+
+        // Add additional context
+        event.tags = {
+          ...event.tags,
+          environment: import.meta.env['VITE_SENTRY_ENVIRONMENT'] || import.meta.env.MODE,
+          version: import.meta.env['VITE_SENTRY_RELEASE'] || 'unknown',
+        }
+
         return event
       },
     })

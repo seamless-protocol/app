@@ -1,5 +1,8 @@
 import type { Address } from 'viem'
+import { createLogger } from '@/lib/logger'
 import type { BaseRewardsAprData, RewardsAprFetcher } from './types'
+
+const logger = createLogger('merkl-rewards')
 
 // Types for Merkl API responses
 interface MerklOpportunity {
@@ -43,13 +46,13 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
    */
   async fetchRewardsApr(tokenAddress: Address, chainId?: number): Promise<BaseRewardsAprData> {
     try {
-      console.log(`[Merkl] Fetching rewards APR for token: ${tokenAddress}`)
+      logger.info('Fetching rewards APR for token', { tokenAddress })
 
       // Query Merkl for opportunities by token address, optionally filtered by chain ID
       const opportunities = await this.fetchOpportunitiesByToken(tokenAddress, chainId)
 
       if (!opportunities || opportunities.length === 0) {
-        console.log(`[Merkl] No opportunities found for token: ${tokenAddress}, returning default data`)
+        logger.info('No opportunities found for token, returning default data', { tokenAddress })
         return {
           rewardsAPR: 0,
         }
@@ -66,12 +69,14 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
         rewardsAPR: totalAPR / 100,
       }
 
-      console.log(
-        `[Merkl] Successfully fetched rewards APR: ${totalAPR}% from ${opportunities.length} opportunities`,
-      )
+      logger.info('Successfully fetched rewards APR', {
+        totalAPR,
+        opportunitiesCount: opportunities.length,
+        tokenAddress,
+      })
       return result
     } catch (error) {
-      console.error('[Merkl] Error fetching rewards APR:', error)
+      logger.error('Error fetching rewards APR', { error, tokenAddress })
       throw error
     }
   }
@@ -114,9 +119,9 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
       return Array.isArray(data) ? data : data.opportunities || []
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.error('[Merkl] Request timeout while fetching opportunities')
+        logger.error('Request timeout while fetching opportunities', { tokenAddress })
       } else {
-        console.error('[Merkl] Error fetching opportunities:', error)
+        logger.error('Error fetching opportunities', { error, tokenAddress })
       }
       throw error
     }
@@ -134,10 +139,10 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
       }
 
       // Fallback: if APR is not provided, return 0
-      console.warn('[Merkl] No APR found in opportunity data, returning 0')
+      logger.warn('No APR found in opportunity data, returning 0', { opportunity })
       return 0
     } catch (error) {
-      console.error('[Merkl] Error extracting APR from opportunity:', error)
+      logger.error('Error extracting APR from opportunity', { error, opportunity })
       return 0
     }
   }

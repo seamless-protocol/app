@@ -2,6 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('portfolio-data-fetcher')
+
 import { leverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   fetchAllLeverageTokenStateHistory,
@@ -142,7 +146,7 @@ function calculatePositionValues(
  * Uses real subgraph data from all supported chains with improved caching and error handling
  */
 export function usePortfolioDataFetcher() {
-  const { address } = useAccount()
+  const { address, chainId } = useAccount()
   // address = '0x0ec9a61bd923cbaf519b1baef839617f012344e2'
 
   return useQuery({
@@ -297,7 +301,7 @@ export function usePortfolioDataFetcher() {
           leverageTokenStates: groupedStates,
         }
       } catch (error) {
-        console.error('Error fetching portfolio data:', error)
+        logger.error('Error fetching portfolio data', { error, chainId: chainId ?? 0 })
         // Re-throw the error so TanStack Query can handle retries
         throw error
       }

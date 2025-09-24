@@ -1,11 +1,14 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { type Config, http } from 'wagmi'
 import { base, mainnet } from 'wagmi/chains'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('wagmi-config')
 
 const walletConnectProjectId = import.meta.env['VITE_WALLETCONNECT_PROJECT_ID']
 
 if (!walletConnectProjectId) {
-  console.warn(
+  logger.warn(
     'WalletConnect Project ID not found. Please add VITE_WALLETCONNECT_PROJECT_ID to your .env file',
   )
 }
@@ -31,8 +34,7 @@ const mainnetRpc =
 
 // Debug logging for Tenderly VNet mode
 if (useTenderlyVNet) {
-  console.log('[wagmi] Tenderly VNet mode enabled')
-  console.log('[wagmi] Base RPC:', baseRpc)
+  logger.info('Tenderly VNet mode enabled', { baseRpc })
 }
 
 // Use RainbowKit's getDefaultConfig which handles connectors automatically

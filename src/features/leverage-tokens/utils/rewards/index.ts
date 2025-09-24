@@ -1,6 +1,9 @@
 import type { Address, PublicClient, WalletClient } from 'viem'
+import { createLogger } from '@/lib/logger'
 import { MerklRewardClaimProvider } from './merkl'
 import type { BaseRewardClaimData, RewardClaimFetcher } from './types'
+
+const logger = createLogger('rewards-index')
 
 /**
  * Registry of reward claim providers
@@ -21,12 +24,18 @@ export async function fetchClaimableRewards(
   const allRewards: Array<BaseRewardClaimData> = []
   const providerPromises = REWARD_PROVIDERS.map(async (provider) => {
     try {
-      console.log(`[${provider.protocolName}] Fetching rewards...`)
+      logger.info('Fetching rewards', { provider: provider.protocolName })
       const rewards = await provider.fetchClaimableRewards(userAddress)
-      console.log(`[${provider.protocolName}] Found ${rewards.length} rewards`)
+      logger.info('Found rewards', {
+        provider: provider.protocolName,
+        rewardsCount: rewards.length,
+      })
       return rewards
     } catch (error) {
-      console.error(`[${provider.protocolName}] Provider failed:`, error)
+      logger.error('Provider failed', {
+        provider: provider.protocolName,
+        error,
+      })
       return [] // Return empty array for failed providers
     }
   })
@@ -39,7 +48,7 @@ export async function fetchClaimableRewards(
     allRewards.push(...rewards)
   }
 
-  console.log(`[Reward Claim] Total rewards found: ${allRewards.length}`)
+  logger.info('Total rewards found', { totalRewards: allRewards.length })
   return allRewards
 }
 
@@ -73,7 +82,7 @@ export async function claimRewards(
   for (const [protocol, protocolRewards] of rewardsByProvider.entries()) {
     const provider = REWARD_PROVIDERS.find((p) => p.protocolId === protocol)
     if (!provider) {
-      console.warn(`[Reward Claim] No provider found for protocol: ${protocol}`)
+      logger.warn('No provider found for protocol', { protocol })
       continue
     }
 
@@ -91,7 +100,7 @@ export async function claimRewards(
     // Return the first successful transaction hash
     return results[0] || ''
   } catch (error) {
-    console.error('[Reward Claim Provider] Claim failed:', error)
+    logger.error('Claim failed', { error, userAddress })
     throw error
   }
 }

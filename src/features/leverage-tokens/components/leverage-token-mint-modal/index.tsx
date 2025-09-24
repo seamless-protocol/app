@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('mint-modal')
+
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
@@ -70,7 +74,7 @@ export function LeverageTokenMintModal({
   }
 
   // Get user account information
-  const { address: hookUserAddress, isConnected } = useAccount()
+  const { address: hookUserAddress, isConnected, chainId } = useAccount()
   const wagmiConfig = useConfig()
   const userAddress = propUserAddress || hookUserAddress
 
@@ -283,8 +287,18 @@ export function LeverageTokenMintModal({
       })
       toSuccess()
     } catch (e: unknown) {
-      console.error('Mint failed', e)
-      setError((e as Error)?.message || 'Mint failed. Please try again.')
+      const error = e as Error
+      logger.error('Mint failed', {
+        error,
+        userAddress,
+        leverageTokenAddress,
+        amount: form.amount,
+        amountRaw: form.amountRaw?.toString(),
+        chainId: chainId || 8453,
+        feature: 'mint',
+      })
+
+      setError(error?.message || 'Mint failed. Please try again.')
       toError()
     }
   }

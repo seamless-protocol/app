@@ -1,4 +1,7 @@
+import { createLogger } from '@/lib/logger'
 import type { AprFetcher, BaseAprData } from './types'
+
+const logger = createLogger('etherfi-apr')
 
 /**
  * EtherFi-specific APR data interface
@@ -56,7 +59,7 @@ export class EtherFiAprProvider implements AprFetcher {
 
       return result
     } catch (error) {
-      console.error('Error fetching EtherFi APR:', error)
+      logger.error('Error fetching EtherFi APR', { error })
       throw new Error(
         `Failed to fetch EtherFi APR data: ${error instanceof Error ? error.message : 'Unknown error'}`,
       )

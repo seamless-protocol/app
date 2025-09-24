@@ -1,8 +1,11 @@
 import type { Address, PublicClient, WalletClient } from 'viem'
 import { merklDistributorAbi } from '@/lib/contracts/abis/merklDistributor'
+import { createLogger } from '@/lib/logger'
 import { CHAIN_IDS } from '@/lib/utils/chain-logos'
 import { getAllLeverageTokenConfigs } from '../../leverageTokens.config'
 import type { BaseRewardClaimData, RewardClaimFetcher } from './types'
+
+const logger = createLogger('merkl-rewards')
 
 /**
  * Supported chain IDs for Merkl rewards
@@ -73,7 +76,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
       const userRewards = await this.fetchUserRewardsFromMerkl(userAddress, this.supportedChainIds)
 
       if (!userRewards || userRewards.length === 0) {
-        console.log('[Merkl] No rewards found for user')
+        logger.info('No rewards found for user', { userAddress })
         return []
       }
 
@@ -111,14 +114,20 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
         }
       }
 
-      console.log(`[Merkl] Found ${allRewards.length} rewards (claimed + pending)`)
+      logger.info('Found rewards', {
+        totalRewards: allRewards.length,
+        userAddress,
+      })
       // Filter to only include Seamless-related rewards
       const seamlessRewards = this.filterSeamlessRewards(allRewards)
 
-      console.log(`[Merkl] Found ${seamlessRewards.length} Seamless-related claimable rewards`)
+      logger.info('Found Seamless-related claimable rewards', {
+        seamlessRewards: seamlessRewards.length,
+        userAddress,
+      })
       return seamlessRewards
     } catch (error) {
-      console.error('[Merkl] Error fetching claimable rewards:', error)
+      logger.error('Error fetching claimable rewards', { error, userAddress })
       throw error
     }
   }
@@ -132,7 +141,10 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
     client: { publicClient: PublicClient; walletClient: WalletClient },
   ): Promise<string> {
     try {
-      console.log(`[Merkl] Claiming ${rewards.length} rewards for user: ${userAddress}`)
+      logger.info('Claiming rewards for user', {
+        rewardsCount: rewards.length,
+        userAddress,
+      })
 
       if (rewards.length === 0) {
         throw new Error('No rewards to claim')
@@ -148,13 +160,19 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
         // Get the chain ID for this token (all rewards in a group should have the same chain ID)
         const chainId = tokenRewards[0]?.chainId
         if (!chainId || !this.supportedChainIds.includes(chainId)) {
-          console.warn(`[Merkl] Skipping rewards for unsupported chain: ${chainId}`)
+          logger.warn('Skipping rewards for unsupported chain', {
+            chainId: chainId || 0,
+            userAddress,
+          })
           continue
         }
 
         const distributorAddress = this.distributorAddresses[chainId]
         if (!distributorAddress) {
-          console.warn(`[Merkl] Skipping rewards for unsupported chain: ${chainId}`)
+          logger.warn('Skipping rewards for unsupported chain', {
+            chainId: chainId || 0,
+            userAddress,
+          })
           continue
         }
 
@@ -173,7 +191,11 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
       const results = await Promise.all(claimPromises)
       totalClaimed = results.reduce((sum, result) => sum + (result.success ? 1 : 0), 0)
 
-      console.log(`[Merkl] Successfully claimed ${totalClaimed}/${rewards.length} reward types`)
+      logger.info('Successfully claimed rewards', {
+        totalClaimed,
+        totalRewards: rewards.length,
+        userAddress,
+      })
 
       // Return the first successful transaction hash
       const successfulResult = results.find((result) => result.success)
@@ -183,7 +205,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
 
       return successfulResult.transactionHash
     } catch (error) {
-      console.error('[Merkl] Error claiming rewards:', error)
+      logger.error('Error claiming rewards', { error, userAddress })
       throw error
     }
   }
@@ -213,7 +235,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.warn('[Merkl] No rewards found for user:', userAddress)
+          logger.warn('No rewards found for user', { userAddress })
           return []
         }
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -223,9 +245,9 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
       return Array.isArray(data) ? data : []
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.error('[Merkl] Request timeout while fetching user rewards')
+        logger.error('Request timeout while fetching user rewards', { userAddress })
       } else {
-        console.error('[Merkl] Error fetching user rewards:', error)
+        logger.error('Error fetching user rewards', { error, userAddress })
       }
       throw error
     }
@@ -283,7 +305,10 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
       const amounts = rewards.map((reward) => BigInt(reward.claimableAmount))
       const proofs = rewards.map((reward) => reward.proof as ReadonlyArray<`0x${string}`>)
 
-      console.log(`[Merkl] Claiming ${rewards.length} rewards for token: ${tokenAddress}`)
+      logger.info('Claiming rewards for token', {
+        rewardsCount: rewards.length,
+        tokenAddress,
+      })
 
       const simulate = simulateContract ?? publicClient.simulateContract
       const write = writeContract ?? walletClient.writeContract
@@ -296,10 +321,13 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
         account: userAddress,
       })
 
-      console.log(`[Merkl] Simulation successful. Gas estimate: ${simulation.request.gas}`)
+      logger.info('Simulation successful', {
+        gasEstimate: simulation.request.gas?.toString(),
+        tokenAddress,
+      })
 
       // Now execute the actual transaction
-      console.log(`[Merkl] Executing claim transaction...`)
+      logger.info('Executing claim transaction', { tokenAddress })
       const txHash = await write(simulation.request)
 
       return {
@@ -307,7 +335,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
         transactionHash: txHash,
       }
     } catch (error) {
-      console.error(`[Merkl] Error claiming token rewards for ${tokenAddress}:`, error)
+      logger.error('Error claiming token rewards', { error, tokenAddress })
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

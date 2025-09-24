@@ -55,15 +55,13 @@ export function LeverageTokenHoldingsCard({
     return (
       <ConnectButton.Custom>
         {({ openConnectModal }) => (
-          <div
-            onClick={() => {
-              // Always use RainbowKit's openConnectModal for wallet connection
-              openConnectModal()
-            }}
-            className="cursor-pointer w-full"
+          <button
+            onClick={openConnectModal}
+            className="cursor-pointer w-full bg-transparent border-none p-0"
+            type="button"
           >
             {children}
-          </div>
+          </button>
         )}
       </ConnectButton.Custom>
     )

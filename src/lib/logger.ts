@@ -11,6 +11,9 @@ export interface LogContext {
   token?: string
   method?: string
   error?: unknown
+  feature?: string
+  transactionHash?: string
+  userAddress?: string
   [key: string]: unknown
 }
 
@@ -51,6 +54,9 @@ class BaseLogger {
     if (merged['token'] !== undefined) tags['token'] = String(merged['token'])
     if (merged['method'] !== undefined) tags['method'] = String(merged['method'])
     if (merged['feature'] !== undefined) tags['feature'] = String(merged['feature'])
+    if (merged['transactionHash'] !== undefined)
+      tags['transactionHash'] = String(merged['transactionHash'])
+    if (merged['userAddress'] !== undefined) tags['userAddress'] = String(merged['userAddress'])
 
     const sentryContext = {
       tags,

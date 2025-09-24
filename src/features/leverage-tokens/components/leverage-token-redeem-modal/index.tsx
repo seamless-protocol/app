@@ -592,7 +592,6 @@ function logRedeemDiagnostics(params: {
       netCollateral: net,
       slippageBps: result.plan.slippageBps,
     })
-    console.log('plan', result.plan)
     console.groupEnd()
     return
   }

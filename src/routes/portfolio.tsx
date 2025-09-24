@@ -44,20 +44,9 @@ function PortfolioPage() {
   const performanceData = usePortfolioPerformance()
   const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
 
-  // Console log for testing rewards data
-  console.log('🎁 Portfolio Rewards Data:', {
-    rewardsData,
-    isLoading: rewardsLoading,
-    hasRewards: rewardsData?.hasRewards,
-    hasClaimableRewards: rewardsData?.hasClaimableRewards,
-    totalClaimable: rewardsData?.totalClaimableAmount,
-    totalClaimed: rewardsData?.totalClaimedAmount,
-    totalEarned: rewardsData?.totalEarnedAmount,
-    tokenCount: rewardsData?.tokenCount,
-    claimableCount: rewardsData?.claimableCount,
-    claimedCount: rewardsData?.claimedCount,
-    rewardsCount: rewardsData?.claimableRewards?.length,
-  })
+  // TODO: Use rewardsData when rewards feature is implemented
+  console.log('Rewards data:', { rewardsData, rewardsLoading })
+
   const { data: stakingData, isLoading: stakingLoading } = usePortfolioStaking()
 
   // Extract data with fallbacks
@@ -225,23 +214,19 @@ function PortfolioPage() {
     } else if (action === 'redeem') {
       setIsRedeemModalOpen(true)
     } else {
-      console.log(`${action} action for position:`, position)
       // TODO: Implement other actions
     }
   }
 
   const handleClaimRewards = () => {
-    console.log('Claiming rewards...')
     // TODO: Implement claim rewards
   }
 
   const handleStake = () => {
-    console.log('Staking SEAM...')
     // TODO: Implement staking
   }
 
   const handleManageStaking = () => {
-    console.log('Managing staking...')
     // TODO: Navigate to staking page
   }
 

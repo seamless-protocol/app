@@ -1,6 +1,9 @@
+import { createLogger } from '@/lib/logger'
 import { LeverageTokenKey, leverageTokenConfigs } from '../../../leverageTokens.config'
 import { EtherFiAprProvider } from './etherfi'
 import type { BaseAprData } from './types'
+
+const logger = createLogger('apr-provider')
 
 /**
  * APR fetcher that routes to the appropriate APR provider based on token address and chain ID
@@ -18,7 +21,7 @@ export async function fetchAprForToken(
       switch (lowerTokenAddress) {
         case leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address.toLowerCase():
           provider = new EtherFiAprProvider()
-          console.log(`Fetching APR for ${tokenAddress} on chain ${chainId} using Ether.fi`)
+          logger.info('Fetching APR using Ether.fi', { tokenAddress, chainId })
           break
         default:
           throw new Error(`Unsupported token address: ${tokenAddress}`)
