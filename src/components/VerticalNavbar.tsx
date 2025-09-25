@@ -122,7 +122,7 @@ function NavigationItem({
                 'relative flex-shrink-0',
                 isActive
                   ? 'text-[var(--nav-icon-active)]'
-                  : 'text-[var(--nav-text)] group-hover:text-[var(--nav-icon-active)]',
+                  : 'text-[var(--nav-icon-default)] group-hover:text-[var(--nav-icon-active)]',
               )}
             >
               <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -254,7 +254,7 @@ function NavbarContent({
             tabIndex={0}
           >
             <div className="relative size-full" data-name="Seamless Logo">
-              <SeamlessLogo className="block size-full text-[var(--brand-primary)]" />
+              <SeamlessLogo className="block size-full" />
             </div>
           </motion.div>
           <div>

@@ -116,7 +116,12 @@
   --nav-text: var(--text-secondary);
   --nav-text-muted: var(--text-muted);
   --nav-text-active: var(--brand-secondary);
-  --nav-icon-active: var(--brand-primary);
+  --nav-icon-default: var(--text-secondary);
+  --nav-icon-active: var(--brand-secondary);
+  --logo-bg: #0b0d12;
+  --logo-icon: var(--brand-primary);
+  --nav-logo-bg: #0b0d12;
+  --nav-logo-icon: var(--brand-primary);
 
   /* Derived theme tokens */
   --background: var(--bg-hero);
@@ -283,7 +288,12 @@
   --nav-text: var(--text-secondary);
   --nav-text-muted: var(--text-muted);
   --nav-text-active: var(--brand-secondary);
-  --nav-icon-active: var(--brand-primary);
+  --nav-icon-default: var(--text-secondary);
+  --nav-icon-active: var(--brand-secondary);
+  --logo-bg: #ffffff;
+  --logo-icon: #0b0d12;
+  --nav-logo-bg: #f5f7fa;
+  --nav-logo-icon: #0b0d12;
 
   --color-blue-950: color-mix(in srgb, var(--brand-primary) 80%, black 65%);
   --color-green-400: color-mix(in srgb, var(--state-success-text) 55%, var(--bg-hero) 45%);

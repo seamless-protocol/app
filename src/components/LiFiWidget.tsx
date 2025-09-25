@@ -166,7 +166,7 @@ export function LiFiWidget() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="cursor-pointer absolute -top-4 -right-4 w-10 h-10 rounded-full backdrop-blur-sm text-[var(--nav-text)] hover:text-[var(--text-primary)] transition-colors z-50 flex items-center justify-center text-xl font-light shadow-lg bg-[color-mix(in_srgb,var(--surface-card) 85%,transparent)] hover:bg-[var(--nav-surface-hover)]"
+                className="cursor-pointer absolute -top-4 -right-4 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--divider-line)] bg-[var(--surface-card)] text-[var(--text-secondary)] shadow-lg transition-colors hover:text-[var(--text-primary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)]"
                 aria-label="Close swap widget"
               >
                 ×
