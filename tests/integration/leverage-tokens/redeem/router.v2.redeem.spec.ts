@@ -31,45 +31,24 @@ describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
 
   it(
     'redeems all minted shares into collateral asset via Uniswap v2 (baseline)',
-    async () =>
-      withFork(async (ctx) => {
-        await withRedeemEnv(async () => {
-          const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
-          const mintOutcome = await executeMintPath(ctx, scenario)
-          const redeemResult = await performRedeem(ctx, { ...scenario, ...mintOutcome })
-          assertRedeemPlan(
-            redeemResult.plan,
-            redeemResult.swap,
-            scenario.collateralAsset,
-            redeemResult.payoutAsset,
-          )
-          assertRedeemExecution(redeemResult, scenario.collateralAsset, scenario.debtAsset)
-        })
-      }),
+    async () => {
+      const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
+      assertRedeemPlan(result.plan, result.swap, result.collateralAsset, result.payoutAsset)
+      assertRedeemExecution(result, result.collateralAsset, result.debtAsset)
+    },
     120_000,
   )
 
   it(
     'redeems all minted shares into debt asset when alternate output is selected',
-    async () =>
-      withFork(async (ctx) => {
-        await withRedeemEnv(async () => {
-          const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
-          const mintOutcome = await executeMintPath(ctx, scenario)
-          const redeemResult = await performRedeem(ctx, {
-            ...scenario,
-            ...mintOutcome,
-            payoutAsset: scenario.debtAsset,
-          })
-          assertRedeemPlan(
-            redeemResult.plan,
-            redeemResult.swap,
-            scenario.collateralAsset,
-            redeemResult.payoutAsset,
-          )
-          assertRedeemExecution(redeemResult, scenario.collateralAsset, scenario.debtAsset)
-        })
-      }),
+    async () => {
+      const result = await runRedeemTest({
+        slippageBps: SLIPPAGE_BPS,
+        payoutAsset: ADDR.weth,
+      })
+      assertRedeemPlan(result.plan, result.swap, result.collateralAsset, result.payoutAsset)
+      assertRedeemExecution(result, result.collateralAsset, result.debtAsset)
+    },
     120_000,
   )
 })
@@ -84,6 +63,16 @@ type RedeemScenario = {
   slippageBps: number
   chainId: number
   swap: CollateralToDebtSwapConfig
+}
+
+async function runRedeemTest({ slippageBps, payoutAsset }: RedeemTestParams): Promise<RedeemExecutionResult> {
+  return withFork(async (ctx) =>
+    withRedeemEnv(async () => {
+      const scenario = await prepareRedeemScenario(ctx, slippageBps)
+      const mintOutcome = await executeMintPath(ctx, scenario)
+      return performRedeem(ctx, { ...scenario, ...mintOutcome, ...(payoutAsset ? { payoutAsset } : {}) })
+    }),
+  )
 }
 
 async function prepareRedeemScenario(
@@ -125,7 +114,11 @@ async function prepareRedeemScenario(
   }
 }
 
-async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario) {
+type MintExecution = {
+  sharesAfterMint: bigint
+}
+
+async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Promise<MintExecution> {
   const { account, config, publicClient } = ctx
   const previousAdapter = process.env['TEST_QUOTE_ADAPTER']
   process.env['TEST_QUOTE_ADAPTER'] = 'uniswapv2'
@@ -174,6 +167,13 @@ type RedeemExecutionResult = {
   slippageBps: number
   payoutAsset: Address | undefined
   swap: RedeemScenario['swap']
+  collateralAsset: Address
+  debtAsset: Address
+}
+
+type RedeemTestParams = {
+  slippageBps: number
+  payoutAsset?: Address
 }
 
 async function performRedeem(
@@ -292,10 +292,12 @@ async function performRedeem(
     slippageBps,
     payoutAsset,
     swap,
+    collateralAsset,
+    debtAsset,
   }
 }
 
-async function withRedeemEnv(run: () => Promise<void>): Promise<void> {
+async function withRedeemEnv<T>(run: () => Promise<T>): Promise<T> {
   const prevRouterVersion = process.env['VITE_ROUTER_VERSION']
   const prevExecutor = process.env['VITE_MULTICALL_EXECUTOR_ADDRESS']
 
@@ -307,7 +309,7 @@ async function withRedeemEnv(run: () => Promise<void>): Promise<void> {
   process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
 
   try {
-    await run()
+    return await run()
   } finally {
     if (prevRouterVersion) process.env['VITE_ROUTER_VERSION'] = prevRouterVersion
     else delete process.env['VITE_ROUTER_VERSION']
