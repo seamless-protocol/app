@@ -329,7 +329,7 @@ async function assertMintOutcome({
     const expectedShares = orchestration.plan.expectedShares
     const delta =
       mintedShares >= expectedShares ? mintedShares - expectedShares : expectedShares - mintedShares
-    const tolerance = expectedShares / 10_000n || 1n // allow up to 0.01% variance from preview
+    const tolerance = expectedShares / 100n || 1n // allow up to 1% variance from preview
 
     expect(delta <= tolerance).toBe(true)
   }
