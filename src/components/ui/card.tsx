@@ -7,7 +7,8 @@ const cardVariants = cva('flex flex-col gap-6 rounded-xl border', {
   variants: {
     variant: {
       default: 'bg-card text-card-foreground',
-      gradient: 'border-slate-700 bg-slate-800/50 backdrop-blur-sm',
+      gradient:
+        'border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)] text-[var(--text-primary)] backdrop-blur-sm',
     },
   },
   defaultVariants: {

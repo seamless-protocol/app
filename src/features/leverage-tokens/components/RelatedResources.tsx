@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
-import { useState, type CSSProperties, type ComponentType } from 'react'
+import { type ComponentType, type CSSProperties, useState } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent, CardHeader } from '../../../components/ui/card'
@@ -94,9 +94,7 @@ export function RelatedResources({
         )}
       >
         <div className="flex items-start space-x-3">
-          <div
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--resource-icon-bg)] transition-colors group-hover:bg-[var(--resource-icon-hover-bg)]"
-          >
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--resource-icon-bg)] transition-colors group-hover:bg-[var(--resource-icon-hover-bg)]">
             <Icon className="h-6 w-6 text-[var(--resource-color)]" />
           </div>
           <div className="flex-1 min-w-0">
@@ -104,9 +102,7 @@ export function RelatedResources({
               <h4 className="font-medium text-[var(--text-primary)] transition-colors group-hover:text-[var(--resource-color)]">
                 {item.title}
               </h4>
-              <ExternalLink
-                className="h-4 w-4 text-[var(--text-muted)] transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--resource-color)]"
-              />
+              <ExternalLink className="h-4 w-4 text-[var(--text-muted)] transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--resource-color)]" />
             </div>
             <p className="mb-3 text-sm leading-relaxed text-[var(--text-secondary)] transition-colors group-hover:text-[var(--text-primary)]">
               {item.description}

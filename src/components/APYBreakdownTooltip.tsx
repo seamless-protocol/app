@@ -3,6 +3,7 @@ import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverag
 import type { APYBreakdownData } from './APYBreakdown'
 import { APYBreakdown } from './APYBreakdown'
 import { Skeleton } from './ui/skeleton'
+import { cn } from './ui/utils'
 
 interface APYBreakdownTooltipProps {
   token: LeverageToken
@@ -42,8 +43,8 @@ export function APYBreakdownTooltip({
 
   if (finalIsLoading) {
     return (
-      <div className="p-4 min-w-[240px]">
-        <div className="text-sm font-semibold text-white mb-3">APY Breakdown</div>
+      <div className="min-w-[240px] space-y-3 rounded-lg border border-[var(--divider-line)] bg-[var(--surface-card)] p-4">
+        <div className="text-sm font-semibold text-[var(--text-primary)]">APY Breakdown</div>
         <div className="space-y-2">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-28" />
@@ -55,12 +56,21 @@ export function APYBreakdownTooltip({
 
   if (finalIsError || !finalApyData) {
     return (
-      <div className="p-4 min-w-[240px]">
-        <div className="text-sm font-semibold text-white mb-3">APY Breakdown</div>
-        <div className="text-sm text-slate-500">N/A</div>
+      <div className="min-w-[240px] space-y-2 rounded-lg border border-[var(--divider-line)] bg-[var(--surface-card)] p-4">
+        <div className="text-sm font-semibold text-[var(--text-primary)]">APY Breakdown</div>
+        <div className="text-sm text-[var(--state-error-text)]">Error loading yield data</div>
       </div>
     )
   }
 
-  return <APYBreakdown data={finalApyData} compact={compact} {...(className && { className })} />
+  return (
+    <APYBreakdown
+      data={finalApyData}
+      compact={compact}
+      className={cn(
+        'min-w-[240px] rounded-lg border border-[var(--divider-line)] bg-[var(--surface-card)]',
+        className,
+      )}
+    />
+  )
 }
