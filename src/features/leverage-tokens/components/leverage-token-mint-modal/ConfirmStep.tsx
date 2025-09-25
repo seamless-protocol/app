@@ -2,6 +2,8 @@ import { ArrowDownUp, TrendingUp, Zap } from 'lucide-react'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
+import { Skeleton } from '../../../../components/ui/skeleton'
+import { useTransactionGasEstimate } from '../../../../lib/hooks/useGasEstimate'
 
 interface Token {
   symbol: string
@@ -15,6 +17,7 @@ interface LeverageTokenConfig {
   symbol: string
   name: string
   leverageRatio: number
+  chainId: number
 }
 
 interface ConfirmStepProps {
@@ -32,6 +35,17 @@ export function ConfirmStep({
   leverageTokenConfig,
   onConfirm,
 }: ConfirmStepProps) {
+  // Get real-time gas estimation
+  const {
+    estimatedCostUsd,
+    isLoading: isGasLoading,
+    isError: isGasError,
+  } = useTransactionGasEstimate({
+    chainId: leverageTokenConfig.chainId,
+    transactionType: 'mint',
+    enabled: Boolean(leverageTokenConfig.chainId),
+  })
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -78,7 +92,13 @@ export function ConfirmStep({
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Estimated Gas</span>
-            <span className="text-white">$3.50</span>
+            {isGasLoading ? (
+              <Skeleton className="h-4 w-16" />
+            ) : isGasError ? (
+              <span className="text-red-400">Unable to estimate</span>
+            ) : (
+              <span className="text-white">{estimatedCostUsd}</span>
+            )}
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Total Cost</span>

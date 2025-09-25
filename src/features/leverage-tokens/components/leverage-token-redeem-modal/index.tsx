@@ -590,7 +590,12 @@ export function LeverageTokenRedeemModal({
             amount={form.amount}
             expectedAmount={expectedAmount}
             selectedAsset={selectedOutputAsset.symbol}
-            leverageTokenConfig={leverageTokenConfig}
+            leverageTokenConfig={{
+              symbol: leverageTokenConfig.symbol,
+              name: leverageTokenConfig.name,
+              leverageRatio: leverageTokenConfig.leverageRatio,
+              chainId: leverageTokenConfig.chainId,
+            }}
             onConfirm={handleConfirm}
           />
         )
