@@ -166,9 +166,9 @@ export function InputStep({
               variant="ghost"
               size="sm"
               onClick={onToggleAdvanced}
-              className="text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+              className="text-[var(--brand-secondary)] transition-colors hover:text-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]"
             >
-              <Settings className="mr-1 h-4 w-4" />
+              <Settings className="mr-1 h-4 w-4 text-[inherit]" />
               Advanced
             </Button>
           </div>

@@ -11,7 +11,7 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50',
         gradient:
-          'border-none bg-cta-gradient transition-all duration-200 hover:bg-cta-hover-gradient hover:shadow-lg hover:shadow-violet-500/25 hover:-translate-y-0.5 active:bg-cta-active-gradient active:translate-y-0 disabled:bg-cta-gradient disabled:text-[var(--cta-text)] disabled:opacity-[0.75]',
+          'border-none bg-cta-gradient transition-all duration-200 hover:bg-cta-hover-gradient hover:shadow-lg hover:shadow-violet-500/25 hover:-translate-y-0.5 active:bg-cta-active-gradient active:translate-y-0 disabled:bg-cta-gradient disabled:text-[var(--cta-text)] disabled:opacity-50 disabled:hover:bg-cta-gradient disabled:hover:shadow-none disabled:hover:translate-y-0 disabled:active:bg-cta-gradient disabled:active:translate-y-0',
         destructive:
           'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 disabled:opacity-50',
         outline:

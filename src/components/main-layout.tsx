@@ -19,6 +19,7 @@ import { ConnectButtonTest } from './ConnectButtonTest'
 import { LiFiWidget } from './LiFiWidget'
 import { ModeToggle } from './mode-toggle'
 import { Toaster } from './ui/sonner'
+import { Skeleton } from './ui/skeleton'
 import { type NavigationItem, VerticalNavbar } from './VerticalNavbar'
 import { WalletConnectButton } from './WalletConnectButton'
 
@@ -124,8 +125,14 @@ export function MainLayout({ children }: MainLayoutProps) {
   } = useProtocolTVL()
 
   const platformTVL = useMemo(() => {
-    if (isProtocolTvlLoading) return 'Loading...'
-    if (isProtocolTvlError) return '--'
+    if (isProtocolTvlLoading) {
+      return <Skeleton as="span" className="inline-block h-3 w-16 align-middle" />
+    }
+
+    if (isProtocolTvlError) {
+      return '--'
+    }
+
     if (typeof tvlUsd === 'number' && Number.isFinite(tvlUsd)) {
       return formatCurrency(tvlUsd, {
         decimals: 2,
@@ -133,8 +140,9 @@ export function MainLayout({ children }: MainLayoutProps) {
         millionDecimals: 2,
       })
     }
+
     return '--'
-  }, [isProtocolTvlLoading, isProtocolTvlError, tvlUsd])
+  }, [isProtocolTvlError, isProtocolTvlLoading, tvlUsd])
 
   // Determine current page from route
   const getCurrentPage = () => {

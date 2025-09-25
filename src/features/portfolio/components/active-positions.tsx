@@ -52,13 +52,13 @@ interface ActivePositionsProps {
 const getRiskLevelColor = (riskLevel: string) => {
   switch (riskLevel) {
     case 'low':
-      return 'text-green-400 bg-green-400/10 border-green-400/20'
+      return 'text-[var(--state-success-text)] bg-[color-mix(in_srgb,var(--state-success-text) 15%,transparent)] border-[color-mix(in_srgb,var(--state-success-text) 25%,transparent)]'
     case 'medium':
-      return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20'
+      return 'text-[var(--state-warning-text)] bg-[color-mix(in_srgb,var(--state-warning-text) 15%,transparent)] border-[color-mix(in_srgb,var(--state-warning-text) 25%,transparent)]'
     case 'high':
-      return 'text-red-400 bg-red-400/10 border-red-400/20'
+      return 'text-[var(--state-error-text)] bg-[color-mix(in_srgb,var(--state-error-text) 15%,transparent)] border-[color-mix(in_srgb,var(--state-error-text) 25%,transparent)]'
     default:
-      return 'text-slate-400 border-slate-600'
+      return 'text-[var(--text-secondary)] border-[var(--divider-line)]'
   }
 }
 
@@ -83,10 +83,10 @@ function PositionAPYDisplay({ position, isLoading }: { position: Position; isLoa
     return (
       <div className="cursor-help">
         <div className="flex items-center">
-          <p className="text-xs text-slate-400 mr-1">APY</p>
-          <Info className="h-3 w-3 text-slate-400" />
+          <p className="mr-1 text-xs text-[var(--text-secondary)]">APY</p>
+          <Info className="h-3 w-3 text-[var(--text-muted)]" />
         </div>
-        <div className="h-5 w-16 bg-slate-700/50 rounded animate-pulse" />
+        <div className="h-5 w-16 animate-pulse rounded bg-[var(--skeleton-base)]" />
       </div>
     )
   }
@@ -96,13 +96,13 @@ function PositionAPYDisplay({ position, isLoading }: { position: Position; isLoa
       <TooltipTrigger asChild>
         <div className="cursor-help">
           <div className="flex items-center">
-            <p className="text-xs text-slate-400 mr-1">APY</p>
-            <Info className="h-3 w-3 text-slate-400" />
+            <p className="mr-1 text-xs text-[var(--text-secondary)]">APY</p>
+            <Info className="h-3 w-3 text-[var(--text-muted)]" />
           </div>
-          <p className="font-medium text-purple-400">{displayAPY}</p>
+          <p className="font-medium text-[var(--brand-secondary)]">{displayAPY}</p>
         </div>
       </TooltipTrigger>
-      <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
+      <TooltipContent className="border border-[var(--divider-line)] bg-[var(--surface-card)] p-0 text-sm">
         {apyBreakdown &&
           position.leverageTokenAddress &&
           (() => {
@@ -235,11 +235,11 @@ export function ActivePositions({
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-medium text-white truncate group-hover:text-purple-300 transition-colors">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-medium text-[var(--text-primary)] truncate transition-colors group-hover:text-[var(--brand-secondary)]">
                               {position.name}
                             </h3>
-                            <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 lg:hidden" />
+                            <ArrowUpRight className="h-4 w-4 text-[var(--text-muted)] transition-colors opacity-0 group-hover:text-[var(--brand-secondary)] group-hover:opacity-100 lg:hidden" />
                           </div>
                           <div className="flex items-center space-x-2 mt-1">
                             <Badge className={getRiskLevelColor(position.riskLevel)}>
@@ -247,7 +247,7 @@ export function ActivePositions({
                                 position.riskLevel.slice(1)}{' '}
                               Risk
                             </Badge>
-                            <Badge className="text-slate-400 border-slate-600">
+                            <Badge className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] text-[var(--text-secondary)]">
                               {getTypeLabel(position.type)}
                             </Badge>
                           </div>
@@ -259,23 +259,33 @@ export function ActivePositions({
                         {/* First row: Current Value and Unrealized Gain */}
                         <div className="grid grid-cols-2 gap-4 lg:contents">
                           <div className="text-left">
-                            <p className="text-xs text-slate-400">Current Value</p>
-                            <p className="font-medium text-white">
+                            <p className="text-xs text-[var(--text-secondary)]">Current Value</p>
+                            <p className="font-medium text-[var(--text-primary)]">
                               {position.currentValue.amount} {position.currentValue.symbol}
                             </p>
-                            <p className="text-xs text-slate-400 mt-0.5">
+                            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                               {position.currentValue.usdValue}
                             </p>
                           </div>
                           <div className="text-left">
-                            <p className="text-xs text-slate-400">Unrealized Gain</p>
+                            <p className="text-xs text-[var(--text-secondary)]">Unrealized Gain</p>
                             <p
-                              className={`font-medium ${position.unrealizedGain.amount.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}
+                              className={cn(
+                                'font-medium',
+                                position.unrealizedGain.amount.startsWith('+')
+                                  ? 'text-[var(--state-success-text)]'
+                                  : 'text-[var(--state-error-text)]',
+                              )}
                             >
                               {position.unrealizedGain.amount} {position.unrealizedGain.symbol}
                             </p>
                             <p
-                              className={`text-xs ${position.unrealizedGain.percentage.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}
+                              className={cn(
+                                'text-xs',
+                                position.unrealizedGain.percentage.startsWith('+')
+                                  ? 'text-[var(--state-success-text)]'
+                                  : 'text-[var(--state-error-text)]',
+                              )}
                             >
                               {position.unrealizedGain.percentage}
                             </p>
@@ -289,11 +299,12 @@ export function ActivePositions({
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="lg:col-span-3 w-full lg:flex lg:items-center lg:justify-end lg:space-x-2">
+                    <div className="lg:col-span-3 w-full lg:flex lg:items-center lg:justify-end lg:space-x-2">
                         <div className="grid grid-cols-2 gap-2 lg:flex lg:gap-2">
                           <Button
                             size="sm"
-                            className="bg-green-600 hover:bg-green-500 text-white w-full lg:w-auto flex-1 lg:flex-none"
+                            variant="gradient"
+                            className="w-full lg:w-auto flex-1 lg:flex-none"
                             onClick={(e) => {
                               e.stopPropagation()
                               onAction(primaryAction, position)
@@ -305,7 +316,7 @@ export function ActivePositions({
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-slate-600 text-slate-300 hover:bg-slate-700 w-full lg:w-auto flex-1 lg:flex-none"
+                            className="w-full lg:w-auto flex-1 lg:flex-none border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]"
                             onClick={(e) => {
                               e.stopPropagation()
                               onAction(secondaryAction, position)
@@ -315,7 +326,7 @@ export function ActivePositions({
                             {secondaryLabel}
                           </Button>
                         </div>
-                        <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 hidden lg:block lg:ml-2" />
+                        <ArrowUpRight className="hidden h-4 w-4 text-[var(--text-muted)] transition-colors opacity-0 group-hover:text-[var(--brand-secondary)] group-hover:opacity-100 lg:block lg:ml-2" />
                       </div>
                     </div>
                   </div>
