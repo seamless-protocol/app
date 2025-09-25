@@ -44,4 +44,4 @@ jobs:
       with:
         pinata-jwt: ${{ secrets.PINATA_JWT }}
         source-dir: './dist'
-        pin-name: ${{ inputs.pin-name || format('Seamless Protocol - {0} - {1}', inputs.branch, github.sha) }}
+        pin-name: ${{ inputs.pin-name || format('Seamless Dapp - {0} - {1}', inputs.branch, substring(github.sha, 0, 7)) }}
