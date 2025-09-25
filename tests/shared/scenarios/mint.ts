@@ -1,6 +1,7 @@
 import { type Address, getAddress, type PublicClient, parseUnits } from 'viem'
-import { expect } from 'vitest'
 import { orchestrateMint } from '@/domain/mint'
+import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { createManagerPortV2 } from '@/domain/mint/ports'
 import {
   createDebtToCollateralQuote,
   type DebtToCollateralSwapConfig,
@@ -30,6 +31,15 @@ export type MintExecutionResult = {
   mintedShares: bigint
 }
 
+export type MintPlanResult = {
+  plan: Awaited<ReturnType<typeof planMintV2>>
+  collateralAsset: Address
+  debtAsset: Address
+  equityInInputAsset: bigint
+}
+
+export type MintPlanningContext = Pick<WithForkCtx, 'config' | 'publicClient'>
+
 export async function runMintTest({
   tokenDefinition,
   slippageBps = DEFAULT_SLIPPAGE_BPS,
@@ -38,6 +48,62 @@ export async function runMintTest({
   return withFork(async (ctx) =>
     runMintScenario({ ctx, tokenDefinition, slippageBps, equityAmountHuman }),
   )
+}
+
+export async function planMintTest({
+  ctx,
+  tokenDefinition,
+  slippageBps = DEFAULT_SLIPPAGE_BPS,
+  equityAmountHuman = DEFAULT_EQUITY_HUMAN,
+}: MintTestParams & { ctx: MintPlanningContext }): Promise<MintPlanResult> {
+  const setup = await prepareMintScenario({
+    config: ctx.config,
+    publicClient: ctx.publicClient,
+    tokenDefinition,
+    slippageBps,
+    equityAmountHuman,
+    ensureLiquidity: false,
+  })
+
+  const managerPort = createManagerPortV2({
+    config: ctx.config,
+    managerAddress: setup.manager,
+    routerAddress: setup.router,
+  })
+
+  const plan = await planMintV2({
+    config: ctx.config,
+    token: setup.token,
+    inputAsset: setup.collateralAsset,
+    equityInInputAsset: setup.equityInInputAsset,
+    slippageBps,
+    quoteDebtToCollateral: setup.quoteDebtToCollateral,
+    managerPort,
+    managerAddress: setup.manager,
+  })
+
+  return {
+    plan,
+    collateralAsset: setup.collateralAsset,
+    debtAsset: setup.debtAsset,
+    equityInInputAsset: setup.equityInInputAsset,
+  }
+}
+
+export async function ensureMintLiquidity({
+  ctx,
+  tokenDefinition,
+  slippageBps = DEFAULT_SLIPPAGE_BPS,
+  equityAmountHuman = DEFAULT_EQUITY_HUMAN,
+}: MintTestParams & { ctx: MintPlanningContext }): Promise<void> {
+  await prepareMintScenario({
+    config: ctx.config,
+    publicClient: ctx.publicClient,
+    tokenDefinition,
+    slippageBps,
+    equityAmountHuman,
+    ensureLiquidity: true,
+  })
 }
 
 type MintScenarioParams = {
@@ -53,67 +119,51 @@ async function runMintScenario({
   slippageBps,
   equityAmountHuman,
 }: MintScenarioParams): Promise<MintExecutionResult> {
-  const { account, publicClient, config } = ctx
-  const { addresses, token, manager, router } = resolveTokenAddresses(tokenDefinition)
-  return await withMintEnv(tokenDefinition.key, addresses.executor as Address, async () => {
-    const { collateralAsset, debtAsset, equityInInputAsset } = await fetchTokenAssets({
-      config,
-      manager,
-      token,
-      equityAmountHuman,
-    })
-    await fundAccount({
-      account: account.address,
-      collateralAsset,
-      router,
-      equityInInputAsset,
-    })
-
-    const effectiveSwapConfig = await ensureSwapLiquidity({
-      swapConfig: resolveDebtSwapConfig({ tokenDefinition, addresses }),
-      collateralAsset,
-      debtAsset,
-    })
-
-    const quoteDebtToCollateral = buildQuoteAdapter({
-      chainId: tokenDefinition.chainId,
-      router,
-      executor: addresses.executor as Address,
-      publicClient,
-      slippageBps,
-      swapConfig: effectiveSwapConfig,
-    })
-
-    const sharesBefore = await readLeverageTokenBalanceOf(config, {
-      address: token,
-      args: [account.address],
-    })
-
-    const orchestration = await orchestrateMint({
-      config,
-      account: account.address,
-      token,
-      inputAsset: collateralAsset,
-      equityInInputAsset,
-      slippageBps,
-      quoteDebtToCollateral,
-      routerAddressV2: router,
-      managerAddressV2: manager,
-    })
-
-    const receipt = await publicClient.waitForTransactionReceipt({ hash: orchestration.hash })
-    if (receipt.status !== 'success') {
-      throw new Error(`Mint transaction reverted: ${receipt.status}`)
-    }
-
-    const sharesAfter = await readLeverageTokenBalanceOf(config, {
-      address: token,
-      args: [account.address],
-    })
-    const mintedShares = sharesAfter - sharesBefore
-
-    return { orchestration, mintedShares }
+  const { account, config, publicClient } = ctx
+  const setup = await prepareMintScenario({
+    config,
+    publicClient,
+    tokenDefinition,
+    slippageBps,
+    equityAmountHuman,
   })
+
+  await fundAccount({
+    account: account.address,
+    collateralAsset: setup.collateralAsset,
+    router: setup.router,
+    equityInInputAsset: setup.equityInInputAsset,
+  })
+
+  const sharesBefore = await readLeverageTokenBalanceOf(config, {
+    address: setup.token,
+    args: [account.address],
+  })
+
+  const orchestration = await orchestrateMint({
+    config,
+    account: account.address,
+    token: setup.token,
+    inputAsset: setup.collateralAsset,
+    equityInInputAsset: setup.equityInInputAsset,
+    slippageBps,
+    quoteDebtToCollateral: setup.quoteDebtToCollateral,
+    routerAddressV2: setup.router,
+    managerAddressV2: setup.manager,
+  })
+
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: orchestration.hash })
+  if (receipt.status !== 'success') {
+    throw new Error(`Mint transaction reverted: ${receipt.status}`)
+  }
+
+  const sharesAfter = await readLeverageTokenBalanceOf(config, {
+    address: setup.token,
+    args: [account.address],
+  })
+  const mintedShares = sharesAfter - sharesBefore
+
+  return { orchestration, mintedShares }
 }
 
 function resolveTokenAddresses(tokenDefinition: LeverageTokenDefinition) {
@@ -130,30 +180,64 @@ function resolveTokenAddresses(tokenDefinition: LeverageTokenDefinition) {
   return { addresses, token, manager, router }
 }
 
-async function withMintEnv<T>(
-  tokenKey: string,
-  executor: Address,
-  run: () => Promise<T>,
-): Promise<T> {
-  const previousKey = process.env['E2E_LEVERAGE_TOKEN_KEY']
-  const previousExecutor = process.env['VITE_MULTICALL_EXECUTOR_ADDRESS']
-  const previousRouterVersion = process.env['VITE_ROUTER_VERSION']
+async function prepareMintScenario({
+  config,
+  publicClient,
+  tokenDefinition,
+  slippageBps,
+  equityAmountHuman,
+  ensureLiquidity = true,
+}: {
+  config: Parameters<typeof readLeverageTokenBalanceOf>[0]
+  publicClient: PublicClient
+  tokenDefinition: LeverageTokenDefinition
+  slippageBps: number
+  equityAmountHuman: string
+  ensureLiquidity?: boolean
+}): Promise<{
+  token: Address
+  manager: Address
+  router: Address
+  collateralAsset: Address
+  debtAsset: Address
+  equityInInputAsset: bigint
+  quoteDebtToCollateral: ReturnType<typeof buildQuoteAdapter>
+}> {
+  const { addresses, token, manager, router } = resolveTokenAddresses(tokenDefinition)
 
-  process.env['E2E_LEVERAGE_TOKEN_KEY'] = tokenKey
-  process.env['VITE_ROUTER_VERSION'] = 'v2'
-  process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
+  const { collateralAsset, debtAsset, equityInInputAsset } = await fetchTokenAssets({
+    config,
+    manager,
+    token,
+    equityAmountHuman,
+  })
 
-  try {
-    return await run()
-  } finally {
-    if (previousKey) process.env['E2E_LEVERAGE_TOKEN_KEY'] = previousKey
-    else delete process.env['E2E_LEVERAGE_TOKEN_KEY']
+  const swapConfig = resolveDebtSwapConfig({ tokenDefinition, addresses })
+  const effectiveSwapConfig = ensureLiquidity
+    ? await ensureSwapLiquidity({
+        swapConfig,
+        collateralAsset,
+        debtAsset,
+      })
+    : swapConfig
 
-    if (previousExecutor) process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = previousExecutor
-    else delete process.env['VITE_MULTICALL_EXECUTOR_ADDRESS']
+  const quoteDebtToCollateral = buildQuoteAdapter({
+    chainId: tokenDefinition.chainId,
+    router,
+    executor: addresses.executor as Address,
+    publicClient,
+    slippageBps,
+    swapConfig: effectiveSwapConfig,
+  })
 
-    if (previousRouterVersion) process.env['VITE_ROUTER_VERSION'] = previousRouterVersion
-    else delete process.env['VITE_ROUTER_VERSION']
+  return {
+    token,
+    manager,
+    router,
+    collateralAsset,
+    debtAsset,
+    equityInInputAsset,
+    quoteDebtToCollateral,
   }
 }
 
@@ -260,20 +344,32 @@ function resolveDebtSwapConfig({
 }
 
 export function assertMintResult({ orchestration, mintedShares }: MintExecutionResult): void {
-  expect(orchestration.routerVersion).toBe('v2')
-  expect(/^0x[0-9a-fA-F]{64}$/.test(orchestration.hash)).toBe(true)
+  if (orchestration.routerVersion !== 'v2') {
+    throw new Error(`Expected router version 'v2', received '${orchestration.routerVersion}'.`)
+  }
 
-  expect(mintedShares > 0n).toBe(true)
+  if (!/^0x[0-9a-fA-F]{64}$/.test(orchestration.hash)) {
+    throw new Error(`Invalid transaction hash returned from mint: ${orchestration.hash}`)
+  }
 
-  if (orchestration.routerVersion === 'v2') {
-    expect(mintedShares >= orchestration.plan.minShares).toBe(true)
+  if (mintedShares <= 0n) {
+    throw new Error('Mint produced zero shares; expected positive result.')
+  }
 
-    const expectedShares = orchestration.plan.expectedShares
-    const delta =
-      mintedShares >= expectedShares ? mintedShares - expectedShares : expectedShares - mintedShares
-    const tolerance = expectedShares / 100n || 1n // allow up to 1% variance from preview
+  const { plan } = orchestration
+  if (mintedShares < plan.minShares) {
+    throw new Error(`Minted shares ${mintedShares} fell below plan minimum ${plan.minShares}.`)
+  }
 
-    expect(delta <= tolerance).toBe(true)
+  const expectedShares = plan.expectedShares
+  const delta =
+    mintedShares >= expectedShares ? mintedShares - expectedShares : expectedShares - mintedShares
+  const tolerance = expectedShares / 100n || 1n // allow up to 1% variance from preview
+
+  if (delta > tolerance) {
+    throw new Error(
+      `Minted shares ${mintedShares} deviate from expected ${expectedShares} beyond tolerance ${tolerance}.`,
+    )
   }
 }
 

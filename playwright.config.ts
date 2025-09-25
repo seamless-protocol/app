@@ -35,7 +35,10 @@ export default defineConfig({
   retries: process.env['CI'] ? 0 : 0,
   workers: process.env['CI'] ? 1 : 1,
   // Keep tests short by default; individual expects can override
-  timeout: 30_000,
+  timeout: 45_000,
+  expect: {
+    timeout: 2_500,
+  },
   reporter: 'html',
 
   // Global setup to start Anvil before tests (skipped when using non-Anvil backend)
@@ -44,8 +47,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:3000',
     // Tighter default timeouts to reduce hang time
-    navigationTimeout: 15_000,
-    actionTimeout: 10_000,
+    navigationTimeout: 7_000,
+    actionTimeout: 6_000,
+    serviceWorkers: 'block',
     trace: 'on-first-retry',
   },
 
