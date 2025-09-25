@@ -128,7 +128,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       return (
         <div className="min-h-screen w-full flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-white mb-2">Token Not Found</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Token Not Found</h1>
             <p className="text-slate-400">The requested leverage token could not be found.</p>
           </div>
         </div>
@@ -328,7 +328,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                       />
                     </div>
                   </div>
-                  <h1 className="text-xl font-bold text-white leading-tight flex-1 min-w-0">
+                  <h1 className="text-xl font-bold text-[var(--text-primary)] leading-tight flex-1 min-w-0">
                     <span className="block truncate">{tokenConfig.name}</span>
                   </h1>
                 </div>
@@ -336,37 +336,31 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 {/* APY Badge - Mobile */}
                 <div className="flex items-center space-x-1">
                   <Badge className="bg-green-500/10 text-green-400 border-green-400/20 text-sm">
-                    {isApyError ? (
-                      <span className="text-slate-500">N/A</span>
-                    ) : isApyLoading ? (
-                      <Skeleton className="h-4 w-20" />
-                    ) : apyData?.totalAPY ? (
+                    {apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
                       <Skeleton className="h-4 w-20" />
                     )}
                   </Badge>
-                  {!isApyError && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          className="text-slate-400 hover:text-slate-300 transition-colors"
-                        >
-                          <Info className="h-3 w-3" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                        <APYBreakdownTooltip
-                          token={tokenConfig}
-                          {...(apyData && { apyData })}
-                          isLoading={isApyLoading ?? false}
-                          isError={isApyError ?? false}
-                          compact
-                        />
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-slate-400 hover:text-slate-300 transition-colors"
+                      >
+                        <Info className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
+                      <APYBreakdownTooltip
+                        token={tokenConfig}
+                        {...(apyData && { apyData })}
+                        isLoading={isApyLoading ?? false}
+                        isError={isApyError ?? false}
+                        compact
+                      />
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -440,40 +434,36 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     />
                   </div>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white">{tokenConfig.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+                  {tokenConfig.name}
+                </h1>
                 <div className="flex items-center space-x-1">
-                  <Badge className="bg-green-500/10 text-green-400 border-green-400/20">
-                    {isApyError ? (
-                      <span className="text-slate-500">N/A</span>
-                    ) : isApyLoading ? (
-                      <Skeleton className="h-4 w-20" />
-                    ) : apyData?.totalAPY ? (
+                  <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                    {apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
                       <Skeleton className="h-4 w-20" />
                     )}
                   </Badge>
-                  {!isApyError && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          className="text-slate-400 hover:text-slate-300 transition-colors"
-                        >
-                          <Info className="h-3 w-3" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                        <APYBreakdownTooltip
-                          token={tokenConfig}
-                          {...(apyData && { apyData })}
-                          isLoading={isApyLoading ?? false}
-                          isError={isApyError ?? false}
-                          compact
-                        />
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                      >
+                        <Info className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]">
+                      <APYBreakdownTooltip
+                        token={tokenConfig}
+                        {...(apyData && { apyData })}
+                        isLoading={isApyLoading ?? false}
+                        isError={isApyError ?? false}
+                        compact
+                      />
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -522,7 +512,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
               transition={{ duration: 0.4, delay: 0.3 }}
             >
               {isPriceDataLoading ? (
-                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8">
+                <div className="rounded-lg p-8 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
                   <div className="space-y-4">
                     <Skeleton className="h-6 w-32" />
                     <Skeleton className="h-64 w-full" />
@@ -535,12 +525,12 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                   </div>
                 </div>
               ) : priceDataError ? (
-                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8 text-center">
+                <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
                   <p className="text-red-400 mb-2">Failed to load price data</p>
                   <p className="text-slate-400 text-sm">{priceDataError.message}</p>
                 </div>
               ) : !priceHistoryData || priceHistoryData.length === 0 ? (
-                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8 text-center">
+                <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
                   <p className="text-slate-400">No price data available</p>
                 </div>
               ) : (
@@ -573,7 +563,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                   title="Price History"
                   subtitle={`Compare leverage token performance vs ${tokenConfig.collateralAsset.symbol}`}
                   height={320}
-                  className="bg-slate-900/80 border border-slate-700"
+                  className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]"
                 />
               )}
             </motion.div>

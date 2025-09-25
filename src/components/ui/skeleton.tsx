@@ -7,6 +7,9 @@ export interface SkeletonProps extends React.HTMLAttributes<HTMLElement> {
 
 export function Skeleton({ className, as: Component = 'div', ...props }: SkeletonProps) {
   return (
-    <Component className={cn('animate-pulse rounded-sm bg-slate-500/70', className)} {...props} />
+    <Component
+      className={cn('animate-pulse rounded-sm bg-[var(--skeleton-base)]', className)}
+      {...props}
+    />
   )
 }

@@ -67,6 +67,7 @@
   --border-strong: #d1d5db;
   --focus-ring: #506bdf;
   --skeleton-shimmer: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%);
+  --skeleton-base: #e5e7eb;
 
   /* Gradients */
   --gradient-violet: linear-gradient(135deg, #2a65c3 0%, #7c3aed 100%);
@@ -240,6 +241,7 @@
   --border-strong: #2b3445;
   --focus-ring: #506bdf;
   --skeleton-shimmer: linear-gradient(90deg, #151a26 0%, #1a1f2b 100%);
+  --skeleton-base: #232a39;
 
   --gradient-violet: linear-gradient(135deg, #2a65c3 0%, #7c3aed 100%);
   --gradient-ui-primary: var(--gradient-violet);

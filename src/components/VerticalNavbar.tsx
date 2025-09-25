@@ -261,7 +261,14 @@ function NavbarContent({
             <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)]">
               Seamless Protocol
             </h2>
-            <p className="text-xs text-[var(--nav-text-muted)]">Platform TVL: {platformTVL}</p>
+            <p className="text-xs text-[var(--nav-text-muted)] flex items-center gap-2">
+              <span>Platform TVL:</span>
+              {typeof platformTVL === 'string' || typeof platformTVL === 'number' ? (
+                <span className="text-[var(--nav-text)] font-semibold">{platformTVL}</span>
+              ) : (
+                platformTVL
+              )}
+            </p>
           </div>
         </div>
       </motion.div>

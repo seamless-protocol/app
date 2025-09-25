@@ -14,9 +14,7 @@ interface FeaturedLeverageTokenProps {
   token: LeverageToken
   onClick?: (token: LeverageToken) => void
   className?: string
-  apyData?: APYBreakdownData | undefined
-  isApyLoading?: boolean
-  isApyError?: boolean | undefined
+  apyData?: APYBreakdownData
 }
 
 export function FeaturedLeverageToken({
@@ -24,8 +22,6 @@ export function FeaturedLeverageToken({
   onClick,
   className = '',
   apyData,
-  isApyLoading = false,
-  isApyError = false,
 }: FeaturedLeverageTokenProps) {
   const handleClick = () => {
     onClick?.(token)
@@ -39,7 +35,7 @@ export function FeaturedLeverageToken({
       className={className}
     >
       <Card
-        className="bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-slate-700 hover:border-purple-500/50 transition-all duration-300 cursor-pointer transform hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10 w-full min-w-0"
+        className="w-full min-w-0 cursor-pointer transform transition-all duration-300 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] hover:border-[var(--nav-border-active)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10"
         onClick={handleClick}
       >
         <CardContent className="p-3 sm:p-4">
@@ -50,7 +46,9 @@ export function FeaturedLeverageToken({
                 <AssetDisplay asset={token.collateralAsset} size="sm" variant="logo-only" />
                 <AssetDisplay asset={token.debtAsset} size="sm" variant="logo-only" />
               </div>
-              <h3 className="font-medium text-white text-sm truncate min-w-0">{token.name}</h3>
+              <h3 className="font-medium text-sm truncate min-w-0 text-[var(--text-primary)]">
+                {token.name}
+              </h3>
             </div>
             {token.rank && (
               <Badge className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 border-yellow-500/30 text-xs flex-shrink-0">
@@ -63,47 +61,43 @@ export function FeaturedLeverageToken({
           <div className="space-y-2">
             {/* APY Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">APY</span>
-              {isApyError ? (
-                <span className="text-slate-500 font-medium">N/A</span>
-              ) : isApyLoading || !apyData ? (
-                <Skeleton className="h-4 w-16" />
+              <span className="text-sm text-[var(--text-secondary)]">APY</span>
+              {apyData?.totalAPY !== undefined ? (
+                <span className="text-[var(--state-success-text)] font-medium">
+                  {formatAPY(apyData.totalAPY, 2)}
+                </span>
               ) : (
-                <span className="text-green-400 font-medium">{formatAPY(apyData.totalAPY, 2)}</span>
+                <Skeleton className="h-4 w-16" />
               )}
             </div>
 
             {/* Reward APR Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">Reward APR</span>
-              {isApyError ? (
-                <span className="text-slate-500 font-medium">N/A</span>
-              ) : isApyLoading || !apyData ? (
-                <Skeleton className="h-4 w-16" />
-              ) : (
-                <span className="text-cyan-400 font-medium">
+              <span className="text-sm text-[var(--text-secondary)]">Reward APR</span>
+              {apyData?.rewardsAPR !== undefined ? (
+                <span className="text-[var(--accent-1)] font-medium">
                   {formatPercentage(apyData.rewardsAPR, { decimals: 2 })}
                 </span>
+              ) : (
+                <Skeleton className="h-4 w-16" />
               )}
             </div>
 
             {/* Points Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">Points</span>
-              {isApyError ? (
-                <span className="text-slate-500 font-medium">N/A</span>
-              ) : isApyLoading || !apyData ? (
-                <Skeleton className="h-4 w-16" />
-              ) : (
-                <span className="text-yellow-400 font-medium">
+              <span className="text-sm text-[var(--text-secondary)]">Points</span>
+              {apyData?.points !== undefined ? (
+                <span className="text-yellow-500 font-medium">
                   {`${apyData.points.toLocaleString()} x`}
                 </span>
+              ) : (
+                <Skeleton className="h-4 w-16" />
               )}
             </div>
 
             {/* Leverage Row with Divider */}
-            <div className="flex justify-between items-center pt-2 border-t border-slate-700">
-              <span className="text-slate-400 text-sm">Leverage</span>
+            <div className="flex justify-between items-center pt-2 border-t border-[var(--divider-line)]">
+              <span className="text-sm text-[var(--text-secondary)]">Leverage</span>
               <span className="text-purple-400 font-medium">{token.leverageRatio}x</span>
             </div>
           </div>
@@ -117,7 +111,7 @@ interface FeaturedLeverageTokensProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
-  apyDataMap?: Map<string, APYBreakdownData> | undefined // APY data map for all tokens
+  apyData?: APYBreakdownData // APY data for the first token
   isApyLoading?: boolean
   isApyError?: boolean
 }
@@ -126,9 +120,9 @@ export function FeaturedLeverageTokens({
   tokens,
   onTokenClick,
   className = '',
-  apyDataMap,
-  isApyLoading,
-  isApyError,
+  apyData,
+  isApyLoading: _isApyLoading,
+  isApyError: _isApyError,
 }: FeaturedLeverageTokensProps) {
   return (
     <motion.div
@@ -139,11 +133,11 @@ export function FeaturedLeverageTokens({
     >
       {/* Section Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-white flex items-center space-x-2">
+        <h2 className="text-xl font-semibold text-[var(--text-primary)] flex items-center space-x-2">
           <Zap className="h-5 w-5 text-yellow-400" />
           <span>Featured High-Reward Tokens</span>
         </h2>
-        <Badge variant="outline" className="text-yellow-400 border-yellow-400/30 bg-yellow-400/10">
+        <Badge variant="outline" className="text-yellow-500 border-yellow-500/30 bg-yellow-500/10">
           Top Rewards
         </Badge>
       </div>
@@ -157,9 +151,7 @@ export function FeaturedLeverageTokens({
               ...token,
               rank: index + 1,
             }}
-            apyData={apyDataMap?.get(token.address)}
-            isApyLoading={isApyLoading ?? false}
-            isApyError={isApyError || (!isApyLoading && !apyDataMap?.has(token.address))}
+            {...(apyData && { apyData })} // Pass APY data to all tokens
             {...(onTokenClick && { onClick: onTokenClick })}
           />
         ))}

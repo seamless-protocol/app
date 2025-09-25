@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { cn } from '@/lib/utils/cn'
 import { Card, CardContent, CardHeader, CardTitle } from './card'
 
 export interface PriceDataPoint {
@@ -123,15 +124,20 @@ export function PriceLineChart({
   const chartConfig = getChartConfig()
 
   return (
-    <Card className={`bg-slate-900/80 border-slate-700 ${className}`}>
+    <Card
+      className={cn(
+        'border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]',
+        className,
+      )}
+    >
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 space-y-3 sm:space-y-0">
         <div>
-          <CardTitle className="text-lg text-white">{title}</CardTitle>
-          <p className="text-sm text-slate-400 mt-1">{subtitle}</p>
+          <CardTitle className="text-lg text-[var(--text-primary)]">{title}</CardTitle>
+          <p className="text-sm text-[var(--text-muted)] mt-1">{subtitle}</p>
         </div>
 
         {/* Timeframe Selector */}
-        <div className="flex items-center space-x-1 bg-slate-800/50 rounded-lg p-1">
+        <div className="flex items-center space-x-1 rounded-lg p-1 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 90%,transparent)]">
           {timeframes.map((timeframe) => (
             <button
               type="button"
@@ -139,8 +145,8 @@ export function PriceLineChart({
               onClick={() => onTimeframeChange(timeframe)}
               className={`px-2 py-1 text-xs rounded transition-colors ${
                 selectedTimeframe === timeframe
-                  ? 'bg-purple-600 text-white'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                  ? 'bg-[var(--brand-secondary)] text-[var(--primary-foreground)] shadow-sm'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]'
               }`}
             >
               {timeframe}
@@ -161,12 +167,12 @@ export function PriceLineChart({
                     onClick={() => onLineVisibilityChange?.(line.key)}
                     className={`flex items-center space-x-2 px-3 py-1 rounded-md border transition-all ${
                       visibleLines[line.key]
-                        ? 'border-slate-600 bg-slate-800/50'
-                        : 'border-slate-700 bg-slate-900/50 opacity-50'
+                        ? 'border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]'
+                        : 'border-[var(--divider-line)]/60 bg-[color-mix(in_srgb,var(--surface-card) 85%,transparent)] opacity-60'
                     }`}
                   >
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: line.color }} />
-                    <span className="text-sm text-slate-300">{line.name}</span>
+                    <span className="text-sm text-[var(--text-secondary)]">{line.name}</span>
                   </button>
                 ))}
               </div>
@@ -199,10 +205,10 @@ export function PriceLineChart({
               />
               <RechartsTooltip
                 contentStyle={{
-                  backgroundColor: '#1E293B',
-                  border: '1px solid #334155',
+                  backgroundColor: 'var(--surface-card)',
+                  border: `1px solid var(--divider-line)`,
                   borderRadius: '8px',
-                  color: '#F8FAFC',
+                  color: 'var(--text-primary)',
                 }}
                 formatter={formatTooltipValue}
               />

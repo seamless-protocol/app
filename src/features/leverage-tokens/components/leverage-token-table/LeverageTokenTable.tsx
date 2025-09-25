@@ -1,30 +1,6 @@
 import { motion } from 'framer-motion'
 import { Info, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { createLogger } from '@/lib/logger'
-
-const logger = createLogger('leverage-token-table')
-
-// Helper function to get network name from chain ID
-const getNetworkName = (chainId: number): string => {
-  switch (chainId) {
-    case 8453:
-      return 'Base'
-    case 1:
-      return 'Ethereum'
-    case 137:
-      return 'Polygon'
-    case 42161:
-      return 'Arbitrum'
-    case 10:
-      return 'Optimism'
-    case 43114:
-      return 'Avalanche'
-    default:
-      return 'Unknown'
-  }
-}
-
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
@@ -70,64 +46,16 @@ interface LeverageTokenTableProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
-  apyDataMap?: Map<string, APYBreakdownData> | undefined // APY data map for all tokens
+  apyData?: APYBreakdownData // APY data for the first token (can be extended for multiple tokens)
   isApyLoading?: boolean
   isApyError?: boolean
-}
-
-// APY Cell Component
-function ApyCell({
-  token,
-  apyDataMap,
-  isApyLoading,
-  isApyError,
-}: {
-  token: LeverageToken
-  apyDataMap?: Map<string, APYBreakdownData> | undefined
-  isApyLoading?: boolean | undefined
-  isApyError?: boolean | undefined
-}) {
-  const tokenApyData = apyDataMap?.get(token.address)
-  const tokenApyError = isApyError || (!isApyLoading && !apyDataMap?.has(token.address))
-
-  return (
-    <div className="flex items-center justify-end space-x-1">
-      {tokenApyError ? (
-        <span className="text-slate-500 text-xs">N/A</span>
-      ) : isApyLoading || !tokenApyData ? (
-        <Skeleton className="h-6 w-20" />
-      ) : (
-        <span className="text-green-400 font-medium text-sm">
-          {formatAPY(tokenApyData.totalAPY, 2)}
-        </span>
-      )}
-      {!tokenApyError && tokenApyData && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button type="button" className="text-slate-400 hover:text-slate-300 transition-colors">
-              <Info className="h-3 w-3" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-            <APYBreakdownTooltip
-              token={token}
-              compact
-              apyData={tokenApyData}
-              isLoading={isApyLoading ?? false}
-              isError={tokenApyError}
-            />
-          </TooltipContent>
-        </Tooltip>
-      )}
-    </div>
-  )
 }
 
 export function LeverageTokenTable({
   tokens,
   onTokenClick,
   className,
-  apyDataMap,
+  apyData,
   isApyLoading,
   isApyError,
 }: LeverageTokenTableProps) {
@@ -135,7 +63,7 @@ export function LeverageTokenTable({
   const [filters, setFilters] = useState({
     collateralAsset: 'all',
     debtAsset: 'all',
-    network: 'all',
+    supplyCap: 'both',
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [pageSize] = useState(10) // Default page size, could be made configurable
@@ -187,12 +115,17 @@ export function LeverageTokenTable({
       filtered = filtered.filter((token) => token.debtAsset.symbol === filters.debtAsset)
     }
 
-    // Apply network filter
-    if (filters.network !== 'all') {
-      filtered = filtered.filter((token) => {
-        const networkName = getNetworkName(token.chainId)
-        return networkName === filters.network
-      })
+    // Apply supply cap filter
+    if (filters.supplyCap !== 'both') {
+      const isNearCapacity = (token: LeverageToken) =>
+        token.currentSupply && token.supplyCap
+          ? (token.currentSupply / token.supplyCap) * 100 >= 90
+          : false
+      if (filters.supplyCap === 'near-capacity') {
+        filtered = filtered.filter(isNearCapacity)
+      } else if (filters.supplyCap === 'available') {
+        filtered = filtered.filter((token) => !isNearCapacity(token))
+      }
     }
 
     // Sort the filtered data
@@ -221,7 +154,7 @@ export function LeverageTokenTable({
         case 'supplyCap':
           return item.supplyCap
         default:
-          logger.warn('Unknown sort key', { sortKey: key })
+          console.warn(`Unknown sort key: ${key}`)
           return 0
       }
     })
@@ -260,26 +193,19 @@ export function LeverageTokenTable({
     ]
   }
 
-  const getNetworkOptions = () => {
-    const networkCounts = tokens.reduce(
-      (acc, token) => {
-        const networkName = getNetworkName(token.chainId)
-        acc[networkName] = (acc[networkName] || 0) + 1
-        return acc
-      },
-      {} as Record<string, number>,
-    )
+  const getSupplyCapOptions = () => {
+    const nearCapacityCount = tokens.filter((token) =>
+      token.currentSupply && token.supplyCap
+        ? (token.currentSupply / token.supplyCap) * 100 >= 90
+        : false,
+    ).length
+    const availableCount = tokens.length - nearCapacityCount
 
-    const options = [{ value: 'all', label: 'All Networks', count: tokens.length }]
-
-    // Add network options sorted by count (descending)
-    Object.entries(networkCounts)
-      .sort(([, a], [, b]) => b - a)
-      .forEach(([networkName, count]) => {
-        options.push({ value: networkName, label: networkName, count })
-      })
-
-    return options
+    return [
+      { value: 'both', label: 'Both', count: sortedAndFilteredData.length },
+      { value: 'available', label: 'Available', count: availableCount },
+      { value: 'near-capacity', label: 'Near Capacity', count: nearCapacityCount },
+    ]
   }
 
   return (
@@ -288,7 +214,7 @@ export function LeverageTokenTable({
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900/80 border border-slate-700 rounded-lg p-4"
+        className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
@@ -308,24 +234,24 @@ export function LeverageTokenTable({
               onValueChange={(value) => setFilters((prev) => ({ ...prev, debtAsset: value }))}
             />
 
-            {/* Network Filter */}
+            {/* Supply Cap Filter */}
             <FilterDropdown
-              label="Network"
-              value={filters.network}
-              options={getNetworkOptions()}
-              onValueChange={(value) => setFilters((prev) => ({ ...prev, network: value }))}
+              label="Supply Cap"
+              value={filters.supplyCap}
+              options={getSupplyCapOptions()}
+              onValueChange={(value) => setFilters((prev) => ({ ...prev, supplyCap: value }))}
             />
           </div>
 
           {/* Search */}
           <div className="flex items-center space-x-3 lg:ml-auto">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)]" />
               <input
                 placeholder="Search leverage tokens..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 flex min-w-0 rounded-md border px-3 py-1 text-base outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive pl-10 w-64 bg-slate-800 border-slate-600 text-white h-8 transition-all duration-200 focus:w-80"
+                className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex min-w-0 rounded-md border px-3 py-1 text-base outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pl-10 w-64 h-8 transition-all duration-200 focus:w-80 bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] border-[var(--divider-line)] text-[var(--text-primary)]"
               />
             </div>
           </div>
@@ -335,14 +261,16 @@ export function LeverageTokenTable({
       {/* Mobile Cards View */}
       <div className="lg:hidden space-y-4">
         {currentItems.length === 0 ? (
-          <div className="text-center py-8 text-slate-400">No leverage tokens found</div>
+          <div className="py-8 text-center text-[var(--text-secondary)]">
+            No leverage tokens found
+          </div>
         ) : (
           currentItems.map((token) => (
             <LeverageTokenMobileCard
               key={token.address}
               token={token}
               {...(onTokenClick && { onTokenClick })}
-              apyDataMap={apyDataMap}
+              apyData={apyData}
               isApyLoading={isApyLoading}
               isApyError={isApyError}
             />
@@ -367,59 +295,59 @@ export function LeverageTokenTable({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="hidden lg:block bg-slate-900/80 border border-slate-700 rounded-lg overflow-hidden w-full"
+        className="hidden w-full overflow-hidden rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] lg:block"
       >
         <div className="overflow-x-auto w-full max-w-full">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700 hover:bg-slate-800/50">
-                <TableHead className="text-slate-300 font-medium py-4 px-6 min-w-[200px]">
+              <TableRow className="border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]">
+                <TableHead className="py-4 px-6 min-w-[200px] text-[var(--text-secondary)] font-medium">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors cursor-pointer"
+                    className="flex items-center space-x-2 transition-colors cursor-pointer hover:text-[var(--text-primary)]"
                     onClick={() => handleSort('name')}
                   >
                     <span>Leverage Token Name</span>
                     {getSortIcon('name')}
                   </button>
                 </TableHead>
-                <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
+                <TableHead className="py-4 px-6 text-right text-[var(--text-secondary)] font-medium">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
+                    className="ml-auto flex items-center space-x-2 transition-colors cursor-pointer hover:text-[var(--text-primary)]"
                     onClick={() => handleSort('tvl')}
                   >
                     <span>TVL (USD)</span>
                     {getSortIcon('tvl')}
                   </button>
                 </TableHead>
-                <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
+                <TableHead className="py-4 px-6 text-right text-[var(--text-secondary)] font-medium">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
+                    className="ml-auto flex items-center space-x-2 transition-colors cursor-pointer hover:text-[var(--text-primary)]"
                     onClick={() => handleSort('apy')}
                   >
                     <span>APY</span>
                     {getSortIcon('apy')}
                   </button>
                 </TableHead>
-                <TableHead className="text-slate-300 font-medium py-4 px-6 text-center">
+                <TableHead className="py-4 px-6 text-center text-[var(--text-secondary)] font-medium">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors mx-auto cursor-pointer"
+                    className="mx-auto flex items-center space-x-2 transition-colors cursor-pointer hover:text-[var(--text-primary)]"
                     onClick={() => handleSort('leverage')}
                   >
                     <span>Leverage</span>
                     {getSortIcon('leverage')}
                   </button>
                 </TableHead>
-                <TableHead className="text-slate-300 font-medium py-4 px-6 text-center">
+                <TableHead className="py-4 px-6 text-center text-[var(--text-secondary)] font-medium">
                   <span>Network</span>
                 </TableHead>
-                <TableHead className="text-slate-300 font-medium py-4 px-6 text-right min-w-[140px]">
+                <TableHead className="py-4 px-6 text-right text-[var(--text-secondary)] font-medium min-w-[140px]">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
+                    className="ml-auto flex items-center space-x-2 transition-colors cursor-pointer hover:text-[var(--text-primary)]"
                     onClick={() => handleSort('available')}
                   >
                     <span>Supply Cap</span>
@@ -438,7 +366,7 @@ export function LeverageTokenTable({
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="border-slate-700 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                    className="cursor-pointer border-[var(--divider-line)] transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]"
                     onClick={() => onTokenClick?.(token)}
                   >
                     <TableCell className="py-4 px-6">
@@ -453,7 +381,7 @@ export function LeverageTokenTable({
                                 {token.collateralAsset.name || token.collateralAsset.symbol}{' '}
                                 (Collateral)
                                 <br />
-                                <span className="text-slate-400 text-sm">
+                                <span className="text-sm text-[var(--text-secondary)]">
                                   Click to view on{' '}
                                   {
                                     getTokenExplorerInfo(
@@ -480,7 +408,7 @@ export function LeverageTokenTable({
                               <p className="font-medium">
                                 {token.debtAsset.name || token.debtAsset.symbol} (Debt)
                                 <br />
-                                <span className="text-slate-400 text-sm">
+                                <span className="text-sm text-[var(--text-secondary)]">
                                   Click to view on{' '}
                                   {
                                     getTokenExplorerInfo(token.chainId, token.debtAsset.address)
@@ -498,7 +426,9 @@ export function LeverageTokenTable({
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-slate-300 font-medium text-sm">{token.name}</span>
+                          <span className="text-sm font-medium text-[var(--text-primary)]">
+                            {token.name}
+                          </span>
                           {token.dataWarning && (
                             <Badge
                               variant="outline"
@@ -514,21 +444,43 @@ export function LeverageTokenTable({
 
                     <TableCell className="py-4 px-6 text-right">
                       {typeof token.tvlUsd === 'number' && Number.isFinite(token.tvlUsd) ? (
-                        <span className="text-slate-300 font-medium text-sm">
+                        <span className="text-sm font-medium text-[var(--text-secondary)]">
                           {formatCurrency(token.tvlUsd)}
                         </span>
                       ) : (
-                        <span className="text-slate-500 text-sm">—</span>
+                        <span className="text-sm text-[var(--text-muted)]">—</span>
                       )}
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-right">
-                      <ApyCell
-                        token={token}
-                        apyDataMap={apyDataMap}
-                        isApyLoading={isApyLoading}
-                        isApyError={isApyError}
-                      />
+                      <div className="flex items-center justify-end space-x-1">
+                        {apyData?.totalAPY ? (
+                          <span className="text-sm font-medium text-[var(--state-success-text)]">
+                            {formatAPY(apyData.totalAPY, 2)}
+                          </span>
+                        ) : (
+                          <Skeleton className="h-6 w-20" />
+                        )}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              className="text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)]"
+                            >
+                              <Info className="h-3 w-3" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
+                            <APYBreakdownTooltip
+                              token={token}
+                              compact
+                              {...(apyData && { apyData })}
+                              isLoading={isApyLoading ?? false}
+                              isError={isApyError ?? false}
+                            />
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-center">
@@ -536,11 +488,11 @@ export function LeverageTokenTable({
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-center">
-                      <div className="inline-flex items-center space-x-1 bg-slate-800/60 hover:bg-slate-700/60 px-2 py-1 rounded-full border border-slate-600/50 transition-colors">
+                      <div className="inline-flex items-center space-x-1 rounded-full border border-[var(--divider-line)] px-2 py-1 transition-colors bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 55%,transparent)]">
                         <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center">
                           <token.chainLogo className="w-3 h-3" />
                         </div>
-                        <span className="text-xs text-slate-300 font-medium">
+                        <span className="text-xs font-medium text-[var(--text-secondary)]">
                           {token.chainName}
                         </span>
                       </div>
