@@ -1,4 +1,5 @@
 import { type Address, parseUnits } from 'viem'
+import { base } from 'viem/chains'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
 import {
@@ -7,7 +8,6 @@ import {
 } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
-import { base } from 'viem/chains'
 import { ADDR, CHAIN_ID, mode, RPC } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
 import { approveIfNeeded, erc20Abi, seedUniswapV2PairLiquidity } from '../../../shared/funding'
