@@ -30,7 +30,17 @@ const TOKENS_UNDER_TEST = AVAILABLE_LEVERAGE_TOKENS.filter(
   (token) => token.chainId === DEFAULT_CHAIN_ID,
 )
 
-const SLIPPAGE_BPS = 50
+const DEFAULT_SLIPPAGE_BPS = 50
+
+type MintTestParams = {
+  tokenDefinition: (typeof AVAILABLE_LEVERAGE_TOKENS)[number]
+  slippageBps?: number
+}
+
+type MintExecutionResult = {
+  orchestration: Awaited<ReturnType<typeof orchestrateMint>>
+  mintedShares: bigint
+}
 
 if (mode !== 'tenderly') {
   throw new Error(
@@ -48,22 +58,34 @@ describe('Leverage Router V2 Mint (Tenderly VNet)', () => {
   for (const tokenDefinition of TOKENS_UNDER_TEST) {
     const testLabel = `${tokenDefinition.label} (${tokenDefinition.key})`
 
-    it(`mints shares successfully for ${testLabel}`, async () =>
-      withFork(async (ctx) =>
-        runMintScenario({ ctx, tokenDefinition }),
-      ))
+    it(`mints shares successfully for ${testLabel}`, async () => {
+      const result = await runMintTest({ tokenDefinition })
+      assertMintResult(result)
+    })
   }
 })
+
+async function runMintTest({
+  tokenDefinition,
+  slippageBps = DEFAULT_SLIPPAGE_BPS,
+}: MintTestParams): Promise<MintExecutionResult> {
+  return withFork(async (ctx) => runMintScenario({ ctx, tokenDefinition, slippageBps }))
+}
 
 type MintScenarioParams = {
   ctx: WithForkCtx
   tokenDefinition: (typeof AVAILABLE_LEVERAGE_TOKENS)[number]
+  slippageBps: number
 }
 
-async function runMintScenario({ ctx, tokenDefinition }: MintScenarioParams): Promise<void> {
+async function runMintScenario({
+  ctx,
+  tokenDefinition,
+  slippageBps,
+}: MintScenarioParams): Promise<MintExecutionResult> {
   const { account, publicClient, config } = ctx
   const { addresses, token, manager, router } = resolveTokenAddresses(tokenDefinition)
-  await withMintEnv(tokenDefinition.key, addresses.executor as Address, async () => {
+  return await withMintEnv(tokenDefinition.key, addresses.executor as Address, async () => {
     const { collateralAsset, debtAsset, equityInInputAsset } = await fetchTokenAssets({
       config,
       manager,
@@ -87,6 +109,7 @@ async function runMintScenario({ ctx, tokenDefinition }: MintScenarioParams): Pr
       router,
       executor: addresses.executor as Address,
       publicClient,
+      slippageBps,
       swapConfig: effectiveSwapConfig,
     })
 
@@ -101,20 +124,24 @@ async function runMintScenario({ ctx, tokenDefinition }: MintScenarioParams): Pr
       token,
       inputAsset: collateralAsset,
       equityInInputAsset,
-      slippageBps: SLIPPAGE_BPS,
+      slippageBps,
       quoteDebtToCollateral,
       routerAddressV2: router,
       managerAddressV2: manager,
     })
 
-    await assertMintOutcome({
-      orchestration,
-      publicClient,
-      token,
-      account: account.address,
-      config,
-      sharesBefore,
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: orchestration.hash })
+    if (receipt.status !== 'success') {
+      throw new Error(`Mint transaction reverted: ${receipt.status}`)
+    }
+
+    const sharesAfter = await readLeverageTokenBalanceOf(config, {
+      address: token,
+      args: [account.address],
     })
+    const mintedShares = sharesAfter - sharesBefore
+
+    return { orchestration, mintedShares }
   })
 }
 
@@ -132,11 +159,11 @@ function resolveTokenAddresses(tokenDefinition: (typeof AVAILABLE_LEVERAGE_TOKEN
   return { addresses, token, manager, router }
 }
 
-async function withMintEnv(
+async function withMintEnv<T>(
   tokenKey: string,
   executor: Address,
-  run: () => Promise<void>,
-): Promise<void> {
+  run: () => Promise<T>,
+): Promise<T> {
   const previousKey = process.env['E2E_LEVERAGE_TOKEN_KEY']
   const previousExecutor = process.env['VITE_MULTICALL_EXECUTOR_ADDRESS']
   const previousRouterVersion = process.env['VITE_ROUTER_VERSION']
@@ -146,7 +173,7 @@ async function withMintEnv(
   process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
 
   try {
-    await run()
+    return await run()
   } finally {
     if (previousKey) process.env['E2E_LEVERAGE_TOKEN_KEY'] = previousKey
     else delete process.env['E2E_LEVERAGE_TOKEN_KEY']
@@ -204,19 +231,21 @@ function buildQuoteAdapter({
   router,
   executor,
   publicClient,
+  slippageBps,
   swapConfig,
 }: {
   chainId: number
   router: Address
   executor: Address
   publicClient: PublicClient
+  slippageBps: number
   swapConfig: DebtToCollateralSwapConfig
 }) {
   const { quote } = createDebtToCollateralQuote({
     chainId,
     routerAddress: router,
     swap: swapConfig,
-    slippageBps: SLIPPAGE_BPS,
+    slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
     fromAddress: executor,
   })
@@ -257,32 +286,10 @@ function resolveDebtSwapConfig({
   return { type: 'uniswapV2', router: fallbackRouter }
 }
 
-async function assertMintOutcome({
-  orchestration,
-  publicClient,
-  token,
-  account,
-  config,
-  sharesBefore,
-}: {
-  orchestration: Awaited<ReturnType<typeof orchestrateMint>>
-  publicClient: PublicClient
-  token: Address
-  account: Address
-  config: Parameters<typeof readLeverageTokenBalanceOf>[0]
-  sharesBefore: bigint
-}) {
+function assertMintResult({ orchestration, mintedShares }: MintExecutionResult): void {
   expect(orchestration.routerVersion).toBe('v2')
   expect(/^0x[0-9a-fA-F]{64}$/.test(orchestration.hash)).toBe(true)
 
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: orchestration.hash })
-  expect(receipt.status).toBe('success')
-
-  const sharesAfter = await readLeverageTokenBalanceOf(config, {
-    address: token,
-    args: [account],
-  })
-  const mintedShares = sharesAfter - sharesBefore
   expect(mintedShares > 0n).toBe(true)
 
   if (orchestration.routerVersion === 'v2') {
