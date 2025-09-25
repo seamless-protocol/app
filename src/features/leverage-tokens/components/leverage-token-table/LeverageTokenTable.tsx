@@ -5,6 +5,26 @@ import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('leverage-token-table')
 
+// Helper function to get network name from chain ID
+const getNetworkName = (chainId: number): string => {
+  switch (chainId) {
+    case 8453:
+      return 'Base'
+    case 1:
+      return 'Ethereum'
+    case 137:
+      return 'Polygon'
+    case 42161:
+      return 'Arbitrum'
+    case 10:
+      return 'Optimism'
+    case 43114:
+      return 'Avalanche'
+    default:
+      return 'Unknown'
+  }
+}
+
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
@@ -67,7 +87,7 @@ export function LeverageTokenTable({
   const [filters, setFilters] = useState({
     collateralAsset: 'all',
     debtAsset: 'all',
-    supplyCap: 'both',
+    network: 'all',
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [pageSize] = useState(10) // Default page size, could be made configurable
@@ -119,17 +139,12 @@ export function LeverageTokenTable({
       filtered = filtered.filter((token) => token.debtAsset.symbol === filters.debtAsset)
     }
 
-    // Apply supply cap filter
-    if (filters.supplyCap !== 'both') {
-      const isNearCapacity = (token: LeverageToken) =>
-        token.currentSupply && token.supplyCap
-          ? (token.currentSupply / token.supplyCap) * 100 >= 90
-          : false
-      if (filters.supplyCap === 'near-capacity') {
-        filtered = filtered.filter(isNearCapacity)
-      } else if (filters.supplyCap === 'available') {
-        filtered = filtered.filter((token) => !isNearCapacity(token))
-      }
+    // Apply network filter
+    if (filters.network !== 'all') {
+      filtered = filtered.filter((token) => {
+        const networkName = getNetworkName(token.chainId)
+        return networkName === filters.network
+      })
     }
 
     // Sort the filtered data
@@ -197,19 +212,26 @@ export function LeverageTokenTable({
     ]
   }
 
-  const getSupplyCapOptions = () => {
-    const nearCapacityCount = tokens.filter((token) =>
-      token.currentSupply && token.supplyCap
-        ? (token.currentSupply / token.supplyCap) * 100 >= 90
-        : false,
-    ).length
-    const availableCount = tokens.length - nearCapacityCount
+  const getNetworkOptions = () => {
+    const networkCounts = tokens.reduce(
+      (acc, token) => {
+        const networkName = getNetworkName(token.chainId)
+        acc[networkName] = (acc[networkName] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>,
+    )
 
-    return [
-      { value: 'both', label: 'Both', count: sortedAndFilteredData.length },
-      { value: 'available', label: 'Available', count: availableCount },
-      { value: 'near-capacity', label: 'Near Capacity', count: nearCapacityCount },
-    ]
+    const options = [{ value: 'all', label: 'All Networks', count: tokens.length }]
+
+    // Add network options sorted by count (descending)
+    Object.entries(networkCounts)
+      .sort(([, a], [, b]) => b - a)
+      .forEach(([networkName, count]) => {
+        options.push({ value: networkName, label: networkName, count })
+      })
+
+    return options
   }
 
   return (
@@ -238,12 +260,12 @@ export function LeverageTokenTable({
               onValueChange={(value) => setFilters((prev) => ({ ...prev, debtAsset: value }))}
             />
 
-            {/* Supply Cap Filter */}
+            {/* Network Filter */}
             <FilterDropdown
-              label="Supply Cap"
-              value={filters.supplyCap}
-              options={getSupplyCapOptions()}
-              onValueChange={(value) => setFilters((prev) => ({ ...prev, supplyCap: value }))}
+              label="Network"
+              value={filters.network}
+              options={getNetworkOptions()}
+              onValueChange={(value) => setFilters((prev) => ({ ...prev, network: value }))}
             />
           </div>
 
