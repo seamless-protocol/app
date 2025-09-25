@@ -1,6 +1,6 @@
 import { type Address, parseUnits } from 'viem'
 import { base } from 'viem/chains'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
 import {
   type CollateralToDebtSwapConfig,
@@ -8,32 +8,36 @@ import {
 } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
-import { ADDR, CHAIN_ID, mode, RPC } from '../../../shared/env'
+import { ADDR, CHAIN_ID, mode } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
 import { approveIfNeeded, erc20Abi, seedUniswapV2PairLiquidity } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
 
-const redeemSuite = CHAIN_ID === base.id ? describe : describe.skip
+if (mode !== 'tenderly') {
+  throw new Error(
+    'Redeem integration requires a Tenderly backend. Update test configuration to use Tenderly VNet.',
+  )
+}
 
-redeemSuite('Leverage Router V2 Redeem (Tenderly VNet)', () => {
-  beforeAll(() => {
-    if (mode !== 'tenderly') {
-      console.warn('Skipping V2 redeem integration: requires Tenderly VNet via TEST_RPC_URL')
-    }
-  })
-  afterAll(() => {})
+if (CHAIN_ID !== base.id) {
+  throw new Error(
+    `Redeem integration currently targets Base (8453) only. Detected chain id ${CHAIN_ID}.`,
+  )
+}
 
+describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
   const SLIPPAGE_BPS = 50
 
   it(
     'redeems all minted shares into collateral asset via Uniswap v2 (baseline)',
     async () =>
       withFork(async (ctx) => {
-        ensureTenderlyMode()
-        const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
-        const mintOutcome = await executeMintPath(ctx, scenario)
-        await executeRedeemPath(ctx, { ...scenario, ...mintOutcome })
+        await withRedeemEnv(async () => {
+          const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
+          const mintOutcome = await executeMintPath(ctx, scenario)
+          await executeRedeemPath(ctx, { ...scenario, ...mintOutcome })
+        })
       }),
     120_000,
   )
@@ -42,13 +46,14 @@ redeemSuite('Leverage Router V2 Redeem (Tenderly VNet)', () => {
     'redeems all minted shares into debt asset when alternate output is selected',
     async () =>
       withFork(async (ctx) => {
-        ensureTenderlyMode()
-        const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
-        const mintOutcome = await executeMintPath(ctx, scenario)
-        await executeRedeemPath(ctx, {
-          ...scenario,
-          ...mintOutcome,
-          payoutAsset: scenario.debtAsset,
+        await withRedeemEnv(async () => {
+          const scenario = await prepareRedeemScenario(ctx, SLIPPAGE_BPS)
+          const mintOutcome = await executeMintPath(ctx, scenario)
+          await executeRedeemPath(ctx, {
+            ...scenario,
+            ...mintOutcome,
+            payoutAsset: scenario.debtAsset,
+          })
         })
       }),
     120_000,
@@ -73,13 +78,6 @@ async function prepareRedeemScenario(
 ): Promise<RedeemScenario> {
   const { config } = ctx
 
-  process.env['VITE_ROUTER_VERSION'] = 'v2'
-  const executor = ADDR.executor
-  if (!executor) {
-    throw new Error('Multicall executor address missing; update contract map for V2 harness')
-  }
-  process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
-
   const uniswapRouter =
     (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
     ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
@@ -88,14 +86,11 @@ async function prepareRedeemScenario(
   const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
   const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
 
-  console.info('[STEP] Using public RPC', { url: RPC.primary })
   const tokenConfig = getLeverageTokenConfig(token)
   const chainId = tokenConfig?.chainId ?? CHAIN_ID
-  console.info('[STEP] Chain ID', { chainId })
 
   const collateralAsset = ADDR.weeth
   const debtAsset = ADDR.weth
-  console.info('[STEP] Token assets', { collateralAsset, debtAsset })
 
   const decimals = await readErc20Decimals(config, collateralAsset)
   const equityInInputAsset = parseUnits('10', decimals)
@@ -183,19 +178,13 @@ async function executeRedeemPath(
     })
   }
 
-  console.info('[STEP] Planning redeem with shared swap adapter', {
-    sharesToRedeem: sharesToRedeem.toString(),
-  })
-
-  const { quote: quoteCollateralToDebt, adapterType } = createCollateralToDebtQuote({
+  const { quote: quoteCollateralToDebt } = createCollateralToDebtQuote({
     chainId,
     routerAddress: router,
     swap,
     slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
   })
-
-  console.info('[STEP] Using collateral swap adapter', { adapterType })
 
   const plan = await planRedeemV2({
     config,
@@ -205,16 +194,6 @@ async function executeRedeemPath(
     quoteCollateralToDebt,
     managerAddress: manager,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
-  })
-
-  console.info('[PLAN DEBUG]', {
-    expectedDebt: plan.expectedDebt.toString(),
-    expectedCollateral: plan.expectedCollateral.toString(),
-    expectedDebtPayout: plan.expectedDebtPayout.toString(),
-    payoutAsset: plan.payoutAsset,
-    payoutAmount: plan.payoutAmount.toString(),
-    minCollateral: plan.minCollateralForSender.toString(),
-    calls: plan.calls.map((call) => ({ target: call.target, value: call.value.toString() })),
   })
 
   expect(plan.sharesToRedeem).toBe(sharesToRedeem)
@@ -324,16 +303,29 @@ async function executeRedeemPath(
   expect(collateralDelta >= plan.minCollateralForSender).toBe(true)
   expect(isWithinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
 
-  const debtDeltaAbs = debtDelta >= 0n ? debtDelta : -debtDelta
-  const debtTolerance = (plan.expectedDebt * toleranceBps) / 10_000n + 1n
-  expect(debtDeltaAbs <= debtTolerance).toBe(true)
+const debtDeltaAbs = debtDelta >= 0n ? debtDelta : -debtDelta
+const debtTolerance = (plan.expectedDebt * toleranceBps) / 10_000n + 1n
+expect(debtDeltaAbs <= debtTolerance).toBe(true)
 }
 
-function ensureTenderlyMode(): void {
-  if (mode === 'tenderly') return
-  console.error('Integration requires Tenderly VNet. Configure TEST_RPC_URL.', {
-    mode,
-    rpc: RPC.primary,
-  })
-  throw new Error('TEST_RPC_URL missing or invalid for Tenderly mode')
+async function withRedeemEnv(run: () => Promise<void>): Promise<void> {
+  const prevRouterVersion = process.env['VITE_ROUTER_VERSION']
+  const prevExecutor = process.env['VITE_MULTICALL_EXECUTOR_ADDRESS']
+
+  process.env['VITE_ROUTER_VERSION'] = 'v2'
+  const executor = ADDR.executor
+  if (!executor) {
+    throw new Error('Multicall executor address missing; update contract map for V2 harness')
+  }
+  process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
+
+  try {
+    await run()
+  } finally {
+    if (prevRouterVersion) process.env['VITE_ROUTER_VERSION'] = prevRouterVersion
+    else delete process.env['VITE_ROUTER_VERSION']
+
+    if (prevExecutor) process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = prevExecutor
+    else delete process.env['VITE_MULTICALL_EXECUTOR_ADDRESS']
+  }
 }
