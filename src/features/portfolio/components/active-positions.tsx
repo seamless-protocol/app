@@ -235,7 +235,7 @@ export function ActivePositions({
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between">
                             <h3 className="font-medium text-[var(--text-primary)] truncate transition-colors group-hover:text-[var(--brand-secondary)]">
                               {position.name}
                             </h3>
@@ -299,7 +299,7 @@ export function ActivePositions({
                       </div>
 
                       {/* Action Buttons */}
-                    <div className="lg:col-span-3 w-full lg:flex lg:items-center lg:justify-end lg:space-x-2">
+                      <div className="lg:col-span-3 w-full lg:flex lg:items-center lg:justify-end lg:space-x-2">
                         <div className="grid grid-cols-2 gap-2 lg:flex lg:gap-2">
                           <Button
                             size="sm"

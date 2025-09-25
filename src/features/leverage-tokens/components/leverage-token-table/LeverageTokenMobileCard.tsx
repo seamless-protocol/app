@@ -75,12 +75,14 @@ export function LeverageTokenMobileCard({
             <div className="flex justify-between items-center">
               <span className="text-sm text-[var(--text-secondary)]">APY</span>
               <div className="flex items-center space-x-1">
-                {apyData?.totalAPY ? (
+                {isApyError ? (
+                  <span className="text-sm font-medium text-[var(--text-muted)]">N/A</span>
+                ) : isApyLoading || !apyData ? (
+                  <Skeleton className="h-4 w-16" />
+                ) : (
                   <span className="text-sm font-medium text-[var(--state-success-text)]">
                     {formatAPY(apyData.totalAPY, 2)}
                   </span>
-                ) : (
-                  <Skeleton className="h-4 w-16" />
                 )}
                 <Tooltip>
                   <TooltipTrigger asChild>

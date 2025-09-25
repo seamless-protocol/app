@@ -46,7 +46,7 @@ interface LeverageTokenTableProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
-  apyData?: APYBreakdownData // APY data for the first token (can be extended for multiple tokens)
+  apyDataMap?: Map<string, APYBreakdownData> | undefined
   isApyLoading?: boolean
   isApyError?: boolean
 }
@@ -55,7 +55,7 @@ export function LeverageTokenTable({
   tokens,
   onTokenClick,
   className,
-  apyData,
+  apyDataMap,
   isApyLoading,
   isApyError,
 }: LeverageTokenTableProps) {
@@ -67,6 +67,9 @@ export function LeverageTokenTable({
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [pageSize] = useState(10) // Default page size, could be made configurable
+
+  const apyLoading = isApyLoading ?? false
+  const apyError = isApyError ?? false
 
   const handleSort = (field: string) => {
     const currentField = sortBy.split('-')[0]
@@ -145,8 +148,7 @@ export function LeverageTokenTable({
         case 'name':
           return item.name
         case 'apy':
-          // Per-row APY is not modeled here; neutral sort value
-          return 0
+          return apyDataMap?.get(item.address)?.totalAPY ?? 0
         case 'leverage':
           return item.leverageRatio
         case 'currentSupply':
@@ -160,7 +162,7 @@ export function LeverageTokenTable({
     })
 
     return sorted
-  }, [tokens, sortBy, filters, searchQuery])
+  }, [tokens, sortBy, filters, searchQuery, apyDataMap])
 
   // Apply pagination to the filtered data
   const { currentItems, currentPage, totalPages, goToPage } = usePagination(
@@ -265,16 +267,21 @@ export function LeverageTokenTable({
             No leverage tokens found
           </div>
         ) : (
-          currentItems.map((token) => (
-            <LeverageTokenMobileCard
-              key={token.address}
-              token={token}
-              {...(onTokenClick && { onTokenClick })}
-              apyData={apyData}
-              isApyLoading={isApyLoading}
-              isApyError={isApyError}
-            />
-          ))
+          currentItems.map((token) => {
+            const tokenApyData = apyDataMap?.get(token.address)
+            const tokenApyError = apyError || (!apyLoading && !apyDataMap?.has(token.address))
+
+            return (
+              <LeverageTokenMobileCard
+                key={token.address}
+                token={token}
+                {...(onTokenClick && { onTokenClick })}
+                apyData={tokenApyData}
+                isApyLoading={apyLoading}
+                isApyError={tokenApyError}
+              />
+            )
+          })
         )}
 
         {/* Mobile Pagination */}
@@ -360,152 +367,161 @@ export function LeverageTokenTable({
               {currentItems.length === 0 ? (
                 <TableEmpty colSpan={6} />
               ) : (
-                currentItems.map((token, index) => (
-                  <motion.tr
-                    key={token.address}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="cursor-pointer border-[var(--divider-line)] transition-colors hover:bg-[color-mix(in_srgb,var(--brand-secondary) 22%,var(--surface-card) 78%)]"
-                    onClick={() => onTokenClick?.(token)}
-                  >
-                    <TableCell className="py-4 px-6">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex -space-x-1">
-                          <AssetDisplay
-                            asset={token.collateralAsset}
-                            size="md"
-                            variant="logo-only"
-                            tooltipContent={
-                              <p className="font-medium">
-                                {token.collateralAsset.name || token.collateralAsset.symbol}{' '}
-                                (Collateral)
-                                <br />
-                                <span className="text-sm text-[var(--text-secondary)]">
-                                  Click to view on{' '}
-                                  {
-                                    getTokenExplorerInfo(
-                                      token.chainId,
-                                      token.collateralAsset.address,
-                                    ).name
-                                  }
-                                </span>
-                              </p>
-                            }
-                            onClick={() =>
-                              window.open(
-                                getTokenExplorerInfo(token.chainId, token.collateralAsset.address)
-                                  .url,
-                                '_blank',
-                              )
-                            }
-                          />
-                          <AssetDisplay
-                            asset={token.debtAsset}
-                            size="md"
-                            variant="logo-only"
-                            tooltipContent={
-                              <p className="font-medium">
-                                {token.debtAsset.name || token.debtAsset.symbol} (Debt)
-                                <br />
-                                <span className="text-sm text-[var(--text-secondary)]">
-                                  Click to view on{' '}
-                                  {
-                                    getTokenExplorerInfo(token.chainId, token.debtAsset.address)
-                                      .name
-                                  }
-                                </span>
-                              </p>
-                            }
-                            onClick={() =>
-                              window.open(
-                                getTokenExplorerInfo(token.chainId, token.debtAsset.address).url,
-                                '_blank',
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-[var(--text-primary)]">
-                            {token.name}
-                          </span>
-                          {token.dataWarning && (
-                            <Badge
-                              variant="outline"
-                              className="bg-amber-500/10 text-amber-400 border-amber-400/30 text-[10px] px-1.5 py-0.5"
-                              title={token.dataWarning}
-                            >
-                              Partial data
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
+                currentItems.map((token, index) => {
+                  const tokenApyData = apyDataMap?.get(token.address)
+                  const tokenApyError = apyError || (!apyLoading && !apyDataMap?.has(token.address))
 
-                    <TableCell className="py-4 px-6 text-right">
-                      {typeof token.tvlUsd === 'number' && Number.isFinite(token.tvlUsd) ? (
-                        <span className="text-sm font-medium text-[var(--text-secondary)]">
-                          {formatCurrency(token.tvlUsd)}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-[var(--text-muted)]">—</span>
-                      )}
-                    </TableCell>
+                  return (
+                    <motion.tr
+                      key={token.address}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      className="cursor-pointer border-[var(--divider-line)] transition-colors hover:bg-[color-mix(in_srgb,var(--brand-secondary) 22%,var(--surface-card) 78%)]"
+                      onClick={() => onTokenClick?.(token)}
+                    >
+                      <TableCell className="py-4 px-6">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex -space-x-1">
+                            <AssetDisplay
+                              asset={token.collateralAsset}
+                              size="md"
+                              variant="logo-only"
+                              tooltipContent={
+                                <p className="font-medium">
+                                  {token.collateralAsset.name || token.collateralAsset.symbol}{' '}
+                                  (Collateral)
+                                  <br />
+                                  <span className="text-sm text-[var(--text-secondary)]">
+                                    Click to view on{' '}
+                                    {
+                                      getTokenExplorerInfo(
+                                        token.chainId,
+                                        token.collateralAsset.address,
+                                      ).name
+                                    }
+                                  </span>
+                                </p>
+                              }
+                              onClick={() =>
+                                window.open(
+                                  getTokenExplorerInfo(token.chainId, token.collateralAsset.address)
+                                    .url,
+                                  '_blank',
+                                )
+                              }
+                            />
+                            <AssetDisplay
+                              asset={token.debtAsset}
+                              size="md"
+                              variant="logo-only"
+                              tooltipContent={
+                                <p className="font-medium">
+                                  {token.debtAsset.name || token.debtAsset.symbol} (Debt)
+                                  <br />
+                                  <span className="text-sm text-[var(--text-secondary)]">
+                                    Click to view on{' '}
+                                    {
+                                      getTokenExplorerInfo(token.chainId, token.debtAsset.address)
+                                        .name
+                                    }
+                                  </span>
+                                </p>
+                              }
+                              onClick={() =>
+                                window.open(
+                                  getTokenExplorerInfo(token.chainId, token.debtAsset.address).url,
+                                  '_blank',
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-[var(--text-primary)]">
+                              {token.name}
+                            </span>
+                            {token.dataWarning && (
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-500/10 text-amber-400 border-amber-400/30 text-[10px] px-1.5 py-0.5"
+                                title={token.dataWarning}
+                              >
+                                Partial data
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
 
-                    <TableCell className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end space-x-1">
-                        {apyData?.totalAPY ? (
-                          <span className="text-sm font-medium text-[var(--state-success-text)]">
-                            {formatAPY(apyData.totalAPY, 2)}
+                      <TableCell className="py-4 px-6 text-right">
+                        {typeof token.tvlUsd === 'number' && Number.isFinite(token.tvlUsd) ? (
+                          <span className="text-sm font-medium text-[var(--text-secondary)]">
+                            {formatCurrency(token.tvlUsd)}
                           </span>
                         ) : (
-                          <Skeleton className="h-6 w-20" />
+                          <span className="text-sm text-[var(--text-muted)]">—</span>
                         )}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)]"
-                            >
-                              <Info className="h-3 w-3" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
-                            <APYBreakdownTooltip
-                              token={token}
-                              compact
-                              {...(apyData && { apyData })}
-                              isLoading={isApyLoading ?? false}
-                              isError={isApyError ?? false}
-                            />
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </TableCell>
+                      </TableCell>
 
-                    <TableCell className="py-4 px-6 text-center">
-                      <LeverageBadge leverage={token.leverageRatio} size="md" />
-                    </TableCell>
-
-                    <TableCell className="py-4 px-6 text-center">
-                      <div className="inline-flex items-center space-x-1 rounded-full border border-[var(--divider-line)] px-2 py-1 transition-colors bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 55%,transparent)]">
-                        <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center">
-                          <token.chainLogo className="w-3 h-3" />
+                      <TableCell className="py-4 px-6 text-right">
+                        <div className="flex items-center justify-end space-x-1">
+                          {tokenApyError ? (
+                            <span className="text-sm font-medium text-[var(--text-muted)]">
+                              N/A
+                            </span>
+                          ) : apyLoading || !tokenApyData ? (
+                            <Skeleton className="h-6 w-20" />
+                          ) : (
+                            <span className="text-sm font-medium text-[var(--state-success-text)]">
+                              {formatAPY(tokenApyData.totalAPY, 2)}
+                            </span>
+                          )}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                className="text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)]"
+                              >
+                                <Info className="h-3 w-3" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
+                              <APYBreakdownTooltip
+                                token={token}
+                                compact
+                                {...(tokenApyData && { apyData: tokenApyData })}
+                                isLoading={apyLoading}
+                                isError={tokenApyError}
+                              />
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
-                        <span className="text-xs font-medium text-[var(--text-secondary)]">
-                          {token.chainName}
-                        </span>
-                      </div>
-                    </TableCell>
+                      </TableCell>
 
-                    <TableCell className="py-4 px-6 text-right">
-                      <SupplyCap
-                        currentSupply={token.currentSupply ?? 0}
-                        supplyCap={token.supplyCap ?? 0}
-                      />
-                    </TableCell>
-                  </motion.tr>
-                ))
+                      <TableCell className="py-4 px-6 text-center">
+                        <LeverageBadge leverage={token.leverageRatio} size="md" />
+                      </TableCell>
+
+                      <TableCell className="py-4 px-6 text-center">
+                        <div className="inline-flex items-center space-x-1 rounded-full border border-[var(--divider-line)] px-2 py-1 transition-colors bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 55%,transparent)]">
+                          <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center">
+                            <token.chainLogo className="w-3 h-3" />
+                          </div>
+                          <span className="text-xs font-medium text-[var(--text-secondary)]">
+                            {token.chainName}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="py-4 px-6 text-right">
+                        <SupplyCap
+                          currentSupply={token.currentSupply ?? 0}
+                          supplyCap={token.supplyCap ?? 0}
+                        />
+                      </TableCell>
+                    </motion.tr>
+                  )
+                })
               )}
             </TableBody>
           </Table>

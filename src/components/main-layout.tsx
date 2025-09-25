@@ -1,5 +1,4 @@
 import { useLocation, useNavigate } from '@tanstack/react-router'
-import { useMemo } from 'react'
 import {
   BarChart3,
   BookOpen,
@@ -12,6 +11,7 @@ import {
   Vault,
   Vote,
 } from 'lucide-react'
+import { useMemo } from 'react'
 import { useProtocolTVL } from '@/features/leverage-tokens/hooks/useProtocolTVL'
 import { features } from '@/lib/config/features'
 import { formatCurrency } from '@/lib/utils/formatting'
@@ -118,11 +118,7 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
-  const {
-    tvlUsd,
-    isLoading: isProtocolTvlLoading,
-    isError: isProtocolTvlError,
-  } = useProtocolTVL()
+  const { tvlUsd, isLoading: isProtocolTvlLoading, isError: isProtocolTvlError } = useProtocolTVL()
 
   const platformTVL = useMemo(() => {
     if (isProtocolTvlLoading) {
