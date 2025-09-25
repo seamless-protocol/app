@@ -362,7 +362,12 @@ export function LeverageTokenMintModal({
             selectedToken={selectedTokenView}
             amount={form.amount}
             expectedTokens={expectedTokens}
-            leverageTokenConfig={leverageTokenConfig}
+            leverageTokenConfig={{
+              symbol: leverageTokenConfig.symbol,
+              name: leverageTokenConfig.name,
+              leverageRatio: leverageTokenConfig.leverageRatio,
+              chainId: leverageTokenConfig.chainId,
+            }}
             onConfirm={handleConfirm}
           />
         )
