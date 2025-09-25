@@ -20,13 +20,9 @@ if (mode !== 'tenderly') {
   )
 }
 
-if (CHAIN_ID !== base.id) {
-  throw new Error(
-    `Redeem integration currently targets Base (8453) only. Detected chain id ${CHAIN_ID}.`,
-  )
-}
+const redeemSuite = CHAIN_ID === base.id ? describe : describe.skip
 
-describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
+redeemSuite('Leverage Router V2 Redeem (Tenderly VNet)', () => {
   const SLIPPAGE_BPS = 50
 
   it('redeems all minted shares into collateral asset via Uniswap v2 (baseline)', async () => {
