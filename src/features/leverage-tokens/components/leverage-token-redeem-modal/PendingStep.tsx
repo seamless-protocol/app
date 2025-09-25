@@ -19,7 +19,9 @@ export function PendingStep({ amount, leverageTokenConfig }: PendingStepProps) {
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand-secondary) 20%,transparent)]">
           <Loader2 className="h-8 w-8 animate-spin text-[var(--brand-secondary)]" />
         </div>
-        <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">Processing Redemption</h3>
+        <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">
+          Processing Redemption
+        </h3>
         <p className="mx-auto max-w-sm text-[var(--text-secondary)]">
           Your redemption is being processed. This may take a few moments.
         </p>

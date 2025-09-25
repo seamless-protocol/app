@@ -22,7 +22,9 @@ export function ApproveStep({ selectedToken, amount, isApproving }: ApproveStepP
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand-secondary) 20%,transparent)]">
           <Loader2 className="h-8 w-8 animate-spin text-[var(--brand-secondary)]" />
         </div>
-        <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">Approve Token Spending</h3>
+        <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">
+          Approve Token Spending
+        </h3>
         <p className="mx-auto max-w-sm text-[var(--text-secondary)]">
           {isApproving
             ? 'Confirm the approval transaction in your wallet...'

@@ -23,7 +23,9 @@ export function SuccessStep({
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--state-success-text) 20%,transparent)]">
           <CheckCircle className="h-8 w-8 text-[var(--state-success-text)]" />
         </div>
-        <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">Redemption Completed!</h3>
+        <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">
+          Redemption Completed!
+        </h3>
         <p className="mx-auto max-w-sm text-[var(--text-secondary)]">
           Your {amount} leverage tokens have been successfully redeemed for {expectedAmount}{' '}
           {selectedAsset}.

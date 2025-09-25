@@ -180,7 +180,9 @@ export function InputStep({
             className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
           >
             <div className="flex items-center justify-between">
-              <div className="text-xs font-medium text-[var(--text-primary)]">Slippage Tolerance</div>
+              <div className="text-xs font-medium text-[var(--text-primary)]">
+                Slippage Tolerance
+              </div>
               <div className="flex items-center space-x-2">
                 {SLIPPAGE_PRESETS_PERCENT_DISPLAY.map((value) => (
                   <Button
@@ -280,7 +282,9 @@ export function InputStep({
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Current APY</span>
-            <span className="text-[var(--state-success-text)]">{apy ? formatAPY(apy, 2) : '0%'}</span>
+            <span className="text-[var(--state-success-text)]">
+              {apy ? formatAPY(apy, 2) : '0%'}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Management Fee</span>
@@ -292,7 +296,13 @@ export function InputStep({
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Approval Status</span>
-            <span className={cn(needsApproval ? 'text-[var(--state-warning-text)]' : 'text-[var(--state-success-text)]')}>
+            <span
+              className={cn(
+                needsApproval
+                  ? 'text-[var(--state-warning-text)]'
+                  : 'text-[var(--state-success-text)]',
+              )}
+            >
               {isAllowanceLoading ? (
                 <Skeleton className="inline-block h-3 w-16" />
               ) : needsApproval ? (
@@ -312,7 +322,12 @@ export function InputStep({
 
       {error && <Alert type="error" title="Error" description={error} />}
 
-      <Button onClick={onApprove} disabled={!canProceed} variant="gradient" className="h-12 w-full font-medium">
+      <Button
+        onClick={onApprove}
+        disabled={!canProceed}
+        variant="gradient"
+        className="h-12 w-full font-medium"
+      >
         {!isConnected
           ? 'Connect Wallet'
           : !canProceed && parseFloat(amount || '0') === 0

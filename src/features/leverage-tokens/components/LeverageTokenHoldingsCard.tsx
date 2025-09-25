@@ -163,7 +163,8 @@ export function LeverageTokenHoldingsCard({
                       data-test-id="mint-button"
                       type="button"
                       onClick={handleMintClick}
-                      className="w-full text-[var(--cta-text)] bg-[var(--cta-gradient)] hover:bg-[var(--cta-hover-gradient)] active:bg-[var(--cta-active-gradient)]"
+                      variant="gradient"
+                      className="w-full"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Mint
@@ -185,7 +186,7 @@ export function LeverageTokenHoldingsCard({
               ) : (
                 <>
                   {renderConnectButton(
-                    <div className="w-full flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 text-[var(--cta-text)] bg-[var(--cta-gradient)] hover:bg-[var(--cta-hover-gradient)] active:bg-[var(--cta-active-gradient)]">
+                    <div className="w-full flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-cta-gradient hover:bg-cta-hover-gradient active:bg-cta-active-gradient">
                       <Plus className="w-4 h-4 mr-2" />
                       Mint
                     </div>,

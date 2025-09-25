@@ -508,6 +508,22 @@
   }
 }
 
+@layer utilities {
+  .bg-cta-gradient {
+    background-color: var(--cta-fallback-bg);
+    background-image: var(--cta-gradient);
+    color: var(--cta-text);
+  }
+
+  .hover\:bg-cta-hover-gradient:hover {
+    background-image: var(--cta-hover-gradient);
+  }
+
+  .active\:bg-cta-active-gradient:active {
+    background-image: var(--cta-active-gradient);
+  }
+}
+
 @layer components {
   .lifi-widget button[role="tab"] {
     color: var(--text-secondary);

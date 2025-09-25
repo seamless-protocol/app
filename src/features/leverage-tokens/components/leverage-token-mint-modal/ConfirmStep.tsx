@@ -36,7 +36,9 @@ export function ConfirmStep({
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">Confirm Mint</h3>
-        <p className="text-[var(--text-secondary)]">Review your mint details and confirm the transaction</p>
+        <p className="text-[var(--text-secondary)]">
+          Review your mint details and confirm the transaction
+        </p>
       </div>
 
       <Card
@@ -61,7 +63,9 @@ export function ConfirmStep({
           <div className="flex items-center justify-between">
             <span className="text-sm text-[var(--text-secondary)]">Receiving</span>
             <div className="flex items-center">
-              <span className="mr-2 font-medium text-[var(--text-primary)]">{expectedTokens} tokens</span>
+              <span className="mr-2 font-medium text-[var(--text-primary)]">
+                {expectedTokens} tokens
+              </span>
               <TrendingUp className="h-4 w-4 text-[var(--brand-secondary)]" />
             </div>
           </div>
@@ -80,7 +84,9 @@ export function ConfirmStep({
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Target Leverage</span>
-            <span className="text-[var(--brand-secondary)]">{leverageTokenConfig.leverageRatio}x</span>
+            <span className="text-[var(--brand-secondary)]">
+              {leverageTokenConfig.leverageRatio}x
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Estimated Gas</span>

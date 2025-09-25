@@ -37,7 +37,9 @@ export function ConfirmStep({
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">Confirm Redemption</h3>
-        <p className="text-[var(--text-secondary)]">Review your redemption details and confirm the transaction</p>
+        <p className="text-[var(--text-secondary)]">
+          Review your redemption details and confirm the transaction
+        </p>
       </div>
 
       <Card
