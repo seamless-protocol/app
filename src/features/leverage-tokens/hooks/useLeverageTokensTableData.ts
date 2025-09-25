@@ -21,14 +21,14 @@ export function useLeverageTokensTableData() {
     type ManagerContractDescriptor =
       | {
           address: Address
-          abi: typeof leverageManagerAbi
+          abi: typeof leverageManagerV2Abi
           functionName: 'getLeverageTokenConfig'
           args: [Address]
           chainId: SupportedChainId
         }
       | {
           address: Address
-          abi: typeof leverageManagerAbi
+          abi: typeof leverageManagerV2Abi
           functionName: 'getLeverageTokenState'
           args: [Address]
           chainId: SupportedChainId
