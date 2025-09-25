@@ -7,13 +7,16 @@ import {
 } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
+import { base } from 'viem/chains'
 import { ADDR, CHAIN_ID, mode, RPC } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
 import { approveIfNeeded, erc20Abi, seedUniswapV2PairLiquidity } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
 
-describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
+const redeemSuite = CHAIN_ID === base.id ? describe : describe.skip
+
+redeemSuite('Leverage Router V2 Redeem (Tenderly VNet)', () => {
   beforeAll(() => {
     if (mode !== 'tenderly') {
       console.warn('Skipping V2 redeem integration: requires Tenderly VNet via TEST_RPC_URL')
