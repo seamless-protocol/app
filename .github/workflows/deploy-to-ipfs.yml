@@ -35,9 +35,8 @@ jobs:
       run: bun run build
 
     - name: Deploy to IPFS
-      run: |
-        echo "🚀 Deploying to IPFS..."
-        echo "📁 Source directory: ./dist"
-        echo "🏷️ Pin name: ${{ inputs.pin-name || format('Seamless Protocol - {0} - {1}', inputs.branch, github.sha) }}"
-        echo "✅ Deployment would happen here with Pinata SDK"
-        echo "📍 This is a placeholder - the actual deployment logic needs to be implemented"
+      uses: ./.github/actions/deploy-ipfs
+      with:
+        pinata-jwt: ${{ secrets.PINATA_JWT }}
+        source-dir: './dist'
+        pin-name: ${{ inputs.pin-name || format('Seamless Protocol - {0} - {1}', inputs.branch, github.sha) }}
