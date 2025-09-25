@@ -11,10 +11,14 @@ import {
   Vault,
   Vote,
 } from 'lucide-react'
+import { useMemo } from 'react'
+import { useProtocolTVL } from '@/features/leverage-tokens/hooks/useProtocolTVL'
 import { features } from '@/lib/config/features'
+import { formatCurrency } from '@/lib/utils/formatting'
 import { ConnectButtonTest } from './ConnectButtonTest'
 import { LiFiWidget } from './LiFiWidget'
 import { ModeToggle } from './mode-toggle'
+import { Skeleton } from './ui/skeleton'
 import { Toaster } from './ui/sonner'
 import { type NavigationItem, VerticalNavbar } from './VerticalNavbar'
 import { WalletConnectButton } from './WalletConnectButton'
@@ -114,6 +118,27 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
+  const { tvlUsd, isLoading: isProtocolTvlLoading, isError: isProtocolTvlError } = useProtocolTVL()
+
+  const platformTVL = useMemo(() => {
+    if (isProtocolTvlLoading) {
+      return <Skeleton as="span" className="inline-block h-3 w-16 align-middle" />
+    }
+
+    if (isProtocolTvlError) {
+      return '--'
+    }
+
+    if (typeof tvlUsd === 'number' && Number.isFinite(tvlUsd)) {
+      return formatCurrency(tvlUsd, {
+        decimals: 2,
+        thousandDecimals: 2,
+        millionDecimals: 2,
+      })
+    }
+
+    return '--'
+  }, [isProtocolTvlError, isProtocolTvlLoading, tvlUsd])
 
   // Determine current page from route
   const getCurrentPage = () => {
@@ -145,7 +170,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           onPageChange={handlePageChange}
           navigationItems={navigationItems}
           communitySection={communitySection}
-          platformTVL="$142.8M"
+          platformTVL={platformTVL}
         />
       </div>
 
@@ -164,7 +189,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     onPageChange={handlePageChange}
                     navigationItems={navigationItems}
                     communitySection={communitySection}
-                    platformTVL="$142.8M"
+                    platformTVL={platformTVL}
                     isMobile={true}
                   />
                 </div>

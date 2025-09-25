@@ -201,7 +201,7 @@ export function hasDeployedContracts(chainId: number): boolean {
  */
 export function getLeverageManagerAddress(chainId: number): Address | undefined {
   const addresses = getContractAddresses(chainId)
-  return addresses?.leverageManager
+  return addresses?.leverageManagerV2
 }
 
 /**

@@ -35,7 +35,7 @@ interface NavbarProps {
   onPageChange: (page: string) => void
   navigationItems: Array<NavigationItem>
   communitySection: CommunitySection
-  platformTVL: string
+  platformTVL: React.ReactNode
   isMobile?: boolean
 }
 
@@ -214,7 +214,7 @@ function NavbarContent({
   onPageChange: (pageId: string) => void
   navigationItems: Array<NavigationItem>
   communitySection: CommunitySection
-  platformTVL: string
+  platformTVL: React.ReactNode
   className?: string
 }) {
   return (
