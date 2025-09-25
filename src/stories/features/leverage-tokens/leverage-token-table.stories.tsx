@@ -329,14 +329,19 @@ const mockTokens = [
 export const Default: Story = {
   args: {
     tokens: mockTokens,
-    apyData: {
-      stakingYield: 8.2,
-      restakingYield: 2.1,
-      borrowRate: -4.3,
-      rewardsAPR: 1.5,
-      points: 4,
-      totalAPY: 7.5,
-    },
+    apyDataMap: new Map([
+      [
+        '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c',
+        {
+          stakingYield: 8.2,
+          restakingYield: 2.1,
+          borrowRate: -4.3,
+          rewardsAPR: 1.5,
+          points: 4,
+          totalAPY: 7.5,
+        },
+      ],
+    ]),
     isApyLoading: false,
     isApyError: false,
   },
@@ -345,14 +350,19 @@ export const Default: Story = {
 export const WithPagination: Story = {
   args: {
     tokens: mockTokens,
-    apyData: {
-      stakingYield: 8.2,
-      restakingYield: 2.1,
-      borrowRate: -4.3,
-      rewardsAPR: 1.5,
-      points: 4,
-      totalAPY: 7.5,
-    },
+    apyDataMap: new Map([
+      [
+        '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c',
+        {
+          stakingYield: 8.2,
+          restakingYield: 2.1,
+          borrowRate: -4.3,
+          rewardsAPR: 1.5,
+          points: 4,
+          totalAPY: 7.5,
+        },
+      ],
+    ]),
     isApyLoading: false,
     isApyError: false,
   },
@@ -369,14 +379,19 @@ export const WithPagination: Story = {
 export const NoPagination: Story = {
   args: {
     tokens: mockTokens.slice(0, 3), // Only 3 tokens
-    apyData: {
-      stakingYield: 8.2,
-      restakingYield: 2.1,
-      borrowRate: -4.3,
-      rewardsAPR: 1.5,
-      points: 4,
-      totalAPY: 7.5,
-    },
+    apyDataMap: new Map([
+      [
+        '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c',
+        {
+          stakingYield: 8.2,
+          restakingYield: 2.1,
+          borrowRate: -4.3,
+          rewardsAPR: 1.5,
+          points: 4,
+          totalAPY: 7.5,
+        },
+      ],
+    ]),
     isApyLoading: false,
     isApyError: false,
   },

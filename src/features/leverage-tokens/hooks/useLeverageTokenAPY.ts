@@ -25,7 +25,10 @@ export function useLeverageTokenAPY({
   enabled = true,
 }: UseLeverageTokenAPYOptions) {
   const config = useConfig()
-  const queryKey = tokenAddress ? ltKeys.apy(tokenAddress) : []
+  const queryKey =
+    tokenAddress && leverageToken?.chainId
+      ? [...ltKeys.tokenOnChain(leverageToken.chainId, tokenAddress), 'apy']
+      : []
 
   return useQuery({
     queryKey,
@@ -46,19 +49,71 @@ export function useLeverageTokenAPY({
         }
       }
 
-      // Fetch all required data in parallel
-      const [leverageRatios, aprData, borrowApyData, rewardsAPRData] = await Promise.all([
-        fetchLeverageRatios(tokenAddress, leverageToken.chainId, config),
-        fetchAprForToken(tokenAddress, leverageToken.chainId),
-        fetchBorrowApyForToken(tokenAddress, leverageToken.chainId, config),
-        fetchRewardsAprForToken(tokenAddress, leverageToken.chainId),
-      ])
+      // Check if this is a test token (Tenderly) that might not be registered
+      const isTestToken =
+        leverageToken.name.toLowerCase().includes('tenderly') ||
+        leverageToken.name.toLowerCase().includes('test')
+
+      if (isTestToken) {
+        // Test tokens aren't registered in the manager, return default data
+        return {
+          stakingYield: 0,
+          restakingYield: 0,
+          borrowRate: 0,
+          rewardsAPR: 0,
+          points: 0,
+          totalAPY: 0,
+        }
+      }
+
+      // Fetch all required data in parallel with individual error handling
+      const [leverageRatiosResult, aprDataResult, borrowApyDataResult, rewardsAPRDataResult] =
+        await Promise.allSettled([
+          fetchLeverageRatios(tokenAddress, leverageToken.chainId, config),
+          fetchAprForToken(tokenAddress, leverageToken.chainId),
+          fetchBorrowApyForToken(tokenAddress, leverageToken.chainId, config),
+          fetchRewardsAprForToken(tokenAddress, leverageToken.chainId),
+        ])
+
+      // If all requests failed, throw an error so React Query can handle it properly
+      const allFailed =
+        leverageRatiosResult.status === 'rejected' &&
+        aprDataResult.status === 'rejected' &&
+        borrowApyDataResult.status === 'rejected' &&
+        rewardsAPRDataResult.status === 'rejected'
+
+      if (allFailed) {
+        const errors = [
+          leverageRatiosResult.status === 'rejected' ? leverageRatiosResult.reason : null,
+          aprDataResult.status === 'rejected' ? aprDataResult.reason : null,
+          borrowApyDataResult.status === 'rejected' ? borrowApyDataResult.reason : null,
+          rewardsAPRDataResult.status === 'rejected' ? rewardsAPRDataResult.reason : null,
+        ].filter(Boolean)
+
+        throw new Error(
+          `APY calculation failed: Unable to fetch data from all sources. Errors: ${errors.map((e) => (e instanceof Error ? e.message : String(e))).join(', ')}`,
+        )
+      }
+
+      // Extract data with fallbacks
+      const leverageRatios =
+        leverageRatiosResult.status === 'fulfilled'
+          ? leverageRatiosResult.value
+          : { targetLeverage: 0, minLeverage: 0, maxLeverage: 0 }
+
+      const aprData =
+        aprDataResult.status === 'fulfilled'
+          ? aprDataResult.value
+          : { stakingAPR: 0, restakingAPR: 0, totalAPR: 0 }
+
+      const borrowApyData =
+        borrowApyDataResult.status === 'fulfilled' ? borrowApyDataResult.value : { borrowAPY: 0 }
+
+      const rewardsAPRData =
+        rewardsAPRDataResult.status === 'fulfilled' ? rewardsAPRDataResult.value : { rewardsAPR: 0 }
 
       const borrowAPY = borrowApyData.borrowAPY
-
       const targetLeverage = leverageRatios.targetLeverage
-
-      // Use the calculated leverage ratios
 
       // Staking Yield = Protocol APR * leverage (convert from percentage to decimal)
       const stakingYield =
@@ -97,8 +152,13 @@ export function useLeverageTokenAPY({
     enabled: enabled && !!tokenAddress,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retry: (failureCount, error) => {
+      // Only retry on network errors, not on business logic errors
+      if (failureCount >= 2) return false
+      if (error instanceof Error && error.message.includes('network')) return true
+      return false
+    },
+    retryDelay: 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   })

@@ -144,6 +144,13 @@ vi.mock('@/lib/contracts/addresses', () => {
 vi.mock('@/features/leverage-tokens/utils/queryKeys', () => ({
   ltKeys: {
     token: (addr: string) => ['leverage-tokens', 'tokens', addr],
+    tokenOnChain: (chainId: number, addr: string) => [
+      'leverage-tokens',
+      'chain',
+      chainId,
+      'token',
+      addr,
+    ],
     metadata: (addr: string) => ['leverage-tokens', 'tokens', addr, 'metadata'],
     user: (addr: string, owner: string) => ['leverage-tokens', 'tokens', addr, 'user', owner],
     supply: (addr: string) => ['leverage-tokens', 'tokens', addr, 'supply'],

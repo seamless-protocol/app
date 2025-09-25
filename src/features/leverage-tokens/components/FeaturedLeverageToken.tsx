@@ -14,7 +14,9 @@ interface FeaturedLeverageTokenProps {
   token: LeverageToken
   onClick?: (token: LeverageToken) => void
   className?: string
-  apyData?: APYBreakdownData
+  apyData?: APYBreakdownData | undefined
+  isApyLoading?: boolean
+  isApyError?: boolean | undefined
 }
 
 export function FeaturedLeverageToken({
@@ -22,6 +24,8 @@ export function FeaturedLeverageToken({
   onClick,
   className = '',
   apyData,
+  isApyLoading = false,
+  isApyError = false,
 }: FeaturedLeverageTokenProps) {
   const handleClick = () => {
     onClick?.(token)
@@ -60,34 +64,40 @@ export function FeaturedLeverageToken({
             {/* APY Row */}
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">APY</span>
-              {apyData?.totalAPY !== undefined ? (
-                <span className="text-green-400 font-medium">{formatAPY(apyData.totalAPY, 2)}</span>
-              ) : (
+              {isApyError ? (
+                <span className="text-slate-500 text-xs">N/A</span>
+              ) : isApyLoading || !apyData ? (
                 <Skeleton className="h-4 w-16" />
+              ) : (
+                <span className="text-green-400 font-medium">{formatAPY(apyData.totalAPY, 2)}</span>
               )}
             </div>
 
             {/* Reward APR Row */}
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">Reward APR</span>
-              {apyData?.rewardsAPR !== undefined ? (
+              {isApyError ? (
+                <span className="text-slate-500 text-xs">N/A</span>
+              ) : isApyLoading || !apyData ? (
+                <Skeleton className="h-4 w-16" />
+              ) : (
                 <span className="text-cyan-400 font-medium">
                   {formatPercentage(apyData.rewardsAPR, { decimals: 2 })}
                 </span>
-              ) : (
-                <Skeleton className="h-4 w-16" />
               )}
             </div>
 
             {/* Points Row */}
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">Points</span>
-              {apyData?.points !== undefined ? (
+              {isApyError ? (
+                <span className="text-slate-500 text-xs">N/A</span>
+              ) : isApyLoading || !apyData ? (
+                <Skeleton className="h-4 w-16" />
+              ) : (
                 <span className="text-yellow-400 font-medium">
                   {`${apyData.points.toLocaleString()} x`}
                 </span>
-              ) : (
-                <Skeleton className="h-4 w-16" />
               )}
             </div>
 
@@ -107,7 +117,7 @@ interface FeaturedLeverageTokensProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
-  apyData?: APYBreakdownData // APY data for the first token
+  apyDataMap?: Map<string, APYBreakdownData> | undefined // APY data map for all tokens
   isApyLoading?: boolean
   isApyError?: boolean
 }
@@ -116,9 +126,9 @@ export function FeaturedLeverageTokens({
   tokens,
   onTokenClick,
   className = '',
-  apyData,
-  isApyLoading: _isApyLoading,
-  isApyError: _isApyError,
+  apyDataMap,
+  isApyLoading,
+  isApyError,
 }: FeaturedLeverageTokensProps) {
   return (
     <motion.div
@@ -147,7 +157,9 @@ export function FeaturedLeverageTokens({
               ...token,
               rank: index + 1,
             }}
-            {...(apyData && { apyData })} // Pass APY data to all tokens
+            apyData={apyDataMap?.get(token.address)}
+            isApyLoading={isApyLoading ?? false}
+            isApyError={isApyError || (!isApyLoading && !apyDataMap?.has(token.address))}
             {...(onTokenClick && { onClick: onTokenClick })}
           />
         ))}

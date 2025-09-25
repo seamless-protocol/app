@@ -57,7 +57,7 @@ export function APYBreakdownTooltip({
     return (
       <div className="p-4 min-w-[240px]">
         <div className="text-sm font-semibold text-white mb-3">APY Breakdown</div>
-        <div className="text-sm text-red-400">Error loading yield data</div>
+        <div className="text-sm text-slate-500">N/A</div>
       </div>
     )
   }

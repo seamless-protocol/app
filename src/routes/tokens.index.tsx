@@ -27,10 +27,6 @@ export const Route = createFileRoute('/tokens/')({
       enabled: leverageTokens.length > 0,
     })
 
-    // Get APY data for the first token (for backward compatibility with current table design)
-    const firstToken = leverageTokens[0]
-    const apyData = firstToken ? tokensAPYData?.get(firstToken.address) : undefined
-
     const handleTokenClick = (token: LeverageToken) => {
       // Navigate to the specific token's page using the new chain ID-based route
       navigate({
@@ -48,7 +44,7 @@ export const Route = createFileRoute('/tokens/')({
               <FeaturedLeverageTokens
                 tokens={leverageTokens.slice(0, 3)} // Show top 3 tokens
                 onTokenClick={handleTokenClick}
-                {...(apyData && { apyData })}
+                apyDataMap={tokensAPYData}
                 isApyLoading={isApyLoading}
                 isApyError={isApyError}
               />
@@ -111,7 +107,7 @@ export const Route = createFileRoute('/tokens/')({
               <LeverageTokenTable
                 tokens={leverageTokens}
                 onTokenClick={handleTokenClick}
-                {...(apyData && { apyData })}
+                apyDataMap={tokensAPYData}
                 isApyLoading={isApyLoading}
                 isApyError={isApyError}
               />
