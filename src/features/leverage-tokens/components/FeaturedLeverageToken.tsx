@@ -65,7 +65,7 @@ export function FeaturedLeverageToken({
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">APY</span>
               {isApyError ? (
-                <span className="text-slate-500 text-xs">N/A</span>
+                <span className="text-slate-500 font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
                 <Skeleton className="h-4 w-16" />
               ) : (
@@ -77,7 +77,7 @@ export function FeaturedLeverageToken({
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">Reward APR</span>
               {isApyError ? (
-                <span className="text-slate-500 text-xs">N/A</span>
+                <span className="text-slate-500 font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
                 <Skeleton className="h-4 w-16" />
               ) : (
@@ -91,7 +91,7 @@ export function FeaturedLeverageToken({
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">Points</span>
               {isApyError ? (
-                <span className="text-slate-500 text-xs">N/A</span>
+                <span className="text-slate-500 font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
                 <Skeleton className="h-4 w-16" />
               ) : (

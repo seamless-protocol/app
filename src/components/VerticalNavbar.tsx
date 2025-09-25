@@ -99,7 +99,7 @@ function NavigationItem({
     <motion.button
       onClick={onClick}
       className={cn(
-        'w-full group relative rounded-xl border transition-all duration-200',
+        'w-full group relative rounded-xl border transition-all duration-200 cursor-pointer',
         isActive
           ? 'border-purple-500/30 bg-purple-500/10 text-white'
           : 'border-transparent hover:border-slate-600 text-slate-300 hover:text-white',
@@ -192,7 +192,7 @@ function SocialLink({ social }: { social: SocialLink }) {
     <button
       type="button"
       onClick={handleClick}
-      className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all duration-200 group"
+      className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all duration-200 group cursor-pointer"
       aria-label={`Open ${social.name} in new tab`}
       title={social.name}
     >

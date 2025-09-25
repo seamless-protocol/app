@@ -188,7 +188,7 @@ function TablePagination({
                   type="button"
                   onClick={() => onPageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground py-2 has-[>svg]:px-3 gap-1 sm:pl-2.5 h-9 px-3 disabled:opacity-50"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground py-2 has-[>svg]:px-3 gap-1 sm:pl-2.5 h-9 px-3 cursor-pointer"
                   aria-label="Go to previous page"
                 >
                   <ChevronLeft className="lucide lucide-chevron-left" />
@@ -209,7 +209,7 @@ function TablePagination({
                       onClick={() => onPageChange(page as number)}
                       data-active={page === currentPage}
                       className={cn(
-                        'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md h-9 w-9',
+                        'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md h-9 w-9 cursor-pointer',
                         page === currentPage
                           ? 'bg-primary text-primary-foreground'
                           : 'hover:bg-accent hover:text-accent-foreground',
@@ -227,7 +227,7 @@ function TablePagination({
                   type="button"
                   onClick={() => onPageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground py-2 has-[>svg]:px-3 gap-1 sm:pr-2.5 h-9 px-3 disabled:opacity-50"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground py-2 has-[>svg]:px-3 gap-1 sm:pr-2.5 h-9 px-3 cursor-pointer"
                   aria-label="Go to next page"
                 >
                   <span className="hidden sm:block">Next</span>
