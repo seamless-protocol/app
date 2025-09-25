@@ -1,7 +1,7 @@
 import type { Address } from 'viem'
 import { useReadContracts } from 'wagmi'
 import { lendingAdapterAbi } from '../../../lib/contracts/abis/lendingAdapter'
-import { leverageManagerAbi } from '../../../lib/contracts/abis/leverageManager'
+import { leverageManagerV2Abi } from '../../../lib/contracts/abis/leverageManagerV2'
 import { rebalanceAdapterAbi } from '../../../lib/contracts/abis/rebalanceAdapter'
 import { getLeverageManagerAddress, type SupportedChainId } from '../../../lib/contracts/addresses'
 import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
@@ -46,14 +46,14 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
     contracts: [
       {
         address: managerAddress,
-        abi: leverageManagerAbi,
+        abi: leverageManagerV2Abi,
         functionName: 'getLeverageTokenConfig',
         args: tokenAddress ? [tokenAddress] : undefined,
         chainId: chainId as SupportedChainId,
       },
       {
         address: managerAddress,
-        abi: leverageManagerAbi,
+        abi: leverageManagerV2Abi,
         functionName: 'getLeverageTokenState',
         args: tokenAddress ? [tokenAddress] : undefined,
         chainId: chainId as SupportedChainId,

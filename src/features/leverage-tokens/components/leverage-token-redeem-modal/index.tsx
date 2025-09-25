@@ -399,6 +399,9 @@ export function LeverageTokenRedeemModal({
       return
     }
     if (approveErr) {
+      toast.error('Approval failed', {
+        description: approveErr.message || 'Approval failed. Please try again.',
+      })
       setError(approveErr?.message || 'Approval failed. Please try again.')
       toError()
     }
@@ -457,7 +460,7 @@ export function LeverageTokenRedeemModal({
 
     toApprove()
     try {
-      approveAction()
+      await approveAction()
     } catch (_error) {
       setError('Approval failed. Please try again.')
       toError()
@@ -590,7 +593,12 @@ export function LeverageTokenRedeemModal({
             amount={form.amount}
             expectedAmount={expectedAmount}
             selectedAsset={selectedOutputAsset.symbol}
-            leverageTokenConfig={leverageTokenConfig}
+            leverageTokenConfig={{
+              symbol: leverageTokenConfig.symbol,
+              name: leverageTokenConfig.name,
+              leverageRatio: leverageTokenConfig.leverageRatio,
+              chainId: leverageTokenConfig.chainId,
+            }}
             onConfirm={handleConfirm}
           />
         )
@@ -703,7 +711,7 @@ function useApprovalFlow(params: {
 }) {
   const { tokenAddress, owner, spender, amountRaw, decimals, chainId } = params
 
-  const { isLoading, needsApproval, amountFormatted } = useTokenAllowance({
+  const { isLoading, needsApproval, amountFormatted, allowance } = useTokenAllowance({
     tokenAddress,
     ...(owner ? { owner } : {}),
     ...(spender ? { spender } : {}),
@@ -713,18 +721,25 @@ function useApprovalFlow(params: {
     decimals,
   })
 
+  const requiresExactAllowance =
+    typeof amountRaw === 'bigint' && amountRaw > 0n
+      ? allowance !== amountRaw
+      : Boolean(needsApproval)
+
   const approveState = useTokenApprove({
     tokenAddress,
     ...(spender ? { spender } : {}),
     ...(amountFormatted ? { amount: amountFormatted } : {}),
     decimals,
     chainId,
+    currentAllowance: allowance,
+    mode: 'exact',
     enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
   })
 
   return {
     isAllowanceLoading: isLoading,
-    needsApproval,
+    needsApproval: requiresExactAllowance,
     approve: approveState.approve,
     isPending: approveState.isPending,
     isApproved: approveState.isApproved,
