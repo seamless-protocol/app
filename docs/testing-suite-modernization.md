@@ -75,13 +75,14 @@ Backends resolve through a single `resolveBackend({chain, mode, scenario})` help
   - `bun test:integration --chain base --mode tenderly-static`
   - `bun test:integration --chain base --mode tenderly-jit`
   - `bun test:e2e --scenario leverage-mint`
-  - Leverage-token integration specs now fail fast when Tenderly isn’t selected (`mode !== 'tenderly'`) or when no Tenderly leverage tokens are configured, ensuring CI flags backend misconfigurations immediately.
+- Leverage-token integration specs now fail fast when Tenderly isn’t selected (`mode !== 'tenderly'`) or when no Tenderly leverage tokens are configured, ensuring CI flags backend misconfigurations immediately.
 - [ ] Establish artifacts directory conventions (`tests/.artifacts/<timestamp>/...`).
 - [ ] Collapse redundant env vars into the backend resolver (e.g., `TEST_RPC_URL`, `VITE_TEST_RPC_URL`, `TENDERLY_ADMIN_RPC_URL`). (In progress: integration runner now calls `resolveBackend`; Playwright/global env still pending.)
 - [ ] Introduce scenario registry scaffolding (`tests/shared/scenarios/index.ts`) with a Base `leverage-mint` entry and CLI flag wiring.
 - [ ] Document which leverage token source each scenario should use (Tenderly VNet vs prod) and align defaults accordingly.
-- [ ] Ensure integration mint specs pass for every Tenderly leverage token on Base and Mainnet (`tenderly-static` mode).
-- [ ] Ensure integration redeem spec passes for the Base `weETH/WETH` leverage token (`tenderly-static` mode).
+- [x] Ensure integration mint specs pass for every Tenderly leverage token on Base (`tenderly-static` mode). (Mainnet tenderly token coverage pending scenario registry.)
+- [x] Ensure integration redeem spec passes for the Base `weETH/WETH` leverage token (`tenderly-static` mode).
+  - ✅ Mint/redeem integration specs now share `runMintTest` / `runRedeemTest` orchestrators (encapsulated `withFork` + env resets) and centralized assertions, so Playwright can reuse the same scenario builders next.
 
 ### Phase 2 – Coverage Realignment (Weeks 2-4)
 - [ ] Define scenario config objects for leverage tokens (`tests/shared/scenarios/leverageTokens.ts`).

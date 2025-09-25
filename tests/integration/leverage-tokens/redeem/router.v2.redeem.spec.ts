@@ -29,28 +29,20 @@ if (CHAIN_ID !== base.id) {
 describe('Leverage Router V2 Redeem (Tenderly VNet)', () => {
   const SLIPPAGE_BPS = 50
 
-  it(
-    'redeems all minted shares into collateral asset via Uniswap v2 (baseline)',
-    async () => {
-      const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
-      assertRedeemPlan(result.plan, result.swap, result.collateralAsset, result.payoutAsset)
-      assertRedeemExecution(result, result.collateralAsset, result.debtAsset)
-    },
-    120_000,
-  )
+  it('redeems all minted shares into collateral asset via Uniswap v2 (baseline)', async () => {
+    const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
+    assertRedeemPlan(result.plan, result.swap, result.collateralAsset, result.payoutAsset)
+    assertRedeemExecution(result, result.collateralAsset, result.debtAsset)
+  }, 120_000)
 
-  it(
-    'redeems all minted shares into debt asset when alternate output is selected',
-    async () => {
-      const result = await runRedeemTest({
-        slippageBps: SLIPPAGE_BPS,
-        payoutAsset: ADDR.weth,
-      })
-      assertRedeemPlan(result.plan, result.swap, result.collateralAsset, result.payoutAsset)
-      assertRedeemExecution(result, result.collateralAsset, result.debtAsset)
-    },
-    120_000,
-  )
+  it('redeems all minted shares into debt asset when alternate output is selected', async () => {
+    const result = await runRedeemTest({
+      slippageBps: SLIPPAGE_BPS,
+      payoutAsset: ADDR.weth,
+    })
+    assertRedeemPlan(result.plan, result.swap, result.collateralAsset, result.payoutAsset)
+    assertRedeemExecution(result, result.collateralAsset, result.debtAsset)
+  }, 120_000)
 })
 
 type RedeemScenario = {
@@ -65,12 +57,19 @@ type RedeemScenario = {
   swap: CollateralToDebtSwapConfig
 }
 
-async function runRedeemTest({ slippageBps, payoutAsset }: RedeemTestParams): Promise<RedeemExecutionResult> {
+async function runRedeemTest({
+  slippageBps,
+  payoutAsset,
+}: RedeemTestParams): Promise<RedeemExecutionResult> {
   return withFork(async (ctx) =>
     withRedeemEnv(async () => {
       const scenario = await prepareRedeemScenario(ctx, slippageBps)
       const mintOutcome = await executeMintPath(ctx, scenario)
-      return performRedeem(ctx, { ...scenario, ...mintOutcome, ...(payoutAsset ? { payoutAsset } : {}) })
+      return performRedeem(ctx, {
+        ...scenario,
+        ...mintOutcome,
+        ...(payoutAsset ? { payoutAsset } : {}),
+      })
     }),
   )
 }
