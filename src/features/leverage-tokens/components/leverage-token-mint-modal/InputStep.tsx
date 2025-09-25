@@ -1,5 +1,5 @@
 import { ArrowDownUp, Percent, RefreshCw, Settings, TrendingUp } from 'lucide-react'
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { Alert } from '../../../../components/ui/alert'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
 import { Button } from '../../../../components/ui/button'
@@ -98,6 +98,15 @@ export function InputStep({
   apy,
 }: InputStepProps) {
   const mintAmountId = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Auto-focus and select the input when the component mounts
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -122,12 +131,13 @@ export function InputStep({
             <div className="flex-1">
               <div className="flex">
                 <Input
+                  ref={inputRef}
                   id={mintAmountId}
                   type="text"
                   placeholder="0"
                   value={amount}
                   onChange={(e) => onAmountChange(e.target.value)}
-                  className="text-lg px-3 h-auto focus:ring-0 focus:ring-offset-0 font-medium text-white"
+                  className="border-slate-700 text-lg px-3 h-auto focus:ring-0 focus:ring-offset-0 font-medium text-white"
                 />
                 <div className="flex items-center space-x-2 ml-4">
                   <FilterDropdown

@@ -1,5 +1,5 @@
 import { Percent, Settings, TrendingDown } from 'lucide-react'
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
@@ -123,6 +123,15 @@ export function InputStep({
   leverageTokenConfig,
 }: InputStepProps) {
   const redeemAmountId = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Auto-focus and select the input when the component mounts
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [])
 
   const formatAssetValue = (value: number, symbol: string) =>
     `${value.toLocaleString('en-US', {
@@ -251,12 +260,13 @@ export function InputStep({
           <div className="flex items-center justify-between mb-3">
             <div className="flex-1">
               <Input
+                ref={inputRef}
                 id={redeemAmountId}
                 type="text"
                 placeholder="0"
                 value={amount}
                 onChange={(e) => onAmountChange(e.target.value)}
-                className="border-0 bg-transparent text-2xl px-3 h-auto focus:ring-0 focus:ring-offset-0 font-medium text-white"
+                className="border-slate-700 bg-transparent text-2xl px-3 h-auto focus:ring-0 focus:ring-offset-0 font-medium text-white"
               />
               <div className="text-xs text-slate-400 mt-1">
                 {isUsdPriceLoading ? (
