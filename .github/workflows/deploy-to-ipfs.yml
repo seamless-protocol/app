@@ -1,0 +1,42 @@
+name: Deploy to IPFS
+
+on:
+  workflow_dispatch:  # Manual trigger only
+    inputs:
+      branch:
+        description: 'Branch to build and deploy'
+        required: true
+        default: 'main'
+        type: string
+      pin-name:
+        description: 'Custom name for the IPFS pin (optional)'
+        required: false
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.branch }}
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      run: bun install
+
+    - name: Build project
+      run: bun run build
+
+    - name: Deploy to IPFS
+      uses: ./.github/actions/deploy-ipfs
+      with:
+        pinata-jwt: ${{ secrets.PINATA_JWT }}
+        source-dir: './dist'
+        pin-name: ${{ inputs.pin-name || 'Seamless Protocol - ' + inputs.branch + ' - ' + github.sha }}
