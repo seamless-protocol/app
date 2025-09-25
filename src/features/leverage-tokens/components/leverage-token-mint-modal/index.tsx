@@ -268,7 +268,7 @@ export function LeverageTokenMintModal({
 
     toApprove()
     try {
-      await approveAction()
+      approveAction()
     } catch (_error) {
       setError('Approval failed. Please try again.')
       toError()
