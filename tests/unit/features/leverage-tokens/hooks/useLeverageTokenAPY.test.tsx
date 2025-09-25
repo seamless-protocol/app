@@ -21,9 +21,9 @@ describe('useLeverageTokenAPY', () => {
 
   const mockLeverageTokenConfig = {
     address: tokenAddress,
-    name: 'Test Leverage Token',
-    symbol: 'TLT',
-    description: 'Test leverage token for unit testing',
+    name: 'Mock Leverage Token',
+    symbol: 'MLT',
+    description: 'Mock leverage token for unit testing',
     decimals: 18,
     leverageRatio: 17,
     chainId,
