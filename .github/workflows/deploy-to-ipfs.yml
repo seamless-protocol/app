@@ -34,6 +34,11 @@ jobs:
     - name: Build project
       run: bun run build
 
+    - name: Install action dependencies
+      run: |
+        cd .github/actions/deploy-ipfs
+        npm install
+
     - name: Deploy to IPFS
       uses: ./.github/actions/deploy-ipfs
       with:
