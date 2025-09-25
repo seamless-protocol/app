@@ -129,7 +129,9 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
         <div className="min-h-screen w-full flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Token Not Found</h1>
-            <p className="text-slate-400">The requested leverage token could not be found.</p>
+            <p className="text-[var(--text-secondary)]">
+              The requested leverage token could not be found.
+            </p>
           </div>
         </div>
       )
@@ -273,7 +275,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                             {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol}
                             )
                             <br />
-                            <span className="text-slate-400 text-sm">
+                            <span className="text-sm text-[var(--text-secondary)]">
                               Click to view on{' '}
                               {
                                 getTokenExplorerInfo(
@@ -307,7 +309,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                           <p className="font-medium">
                             {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
                             <br />
-                            <span className="text-slate-400 text-sm">
+                            <span className="text-sm text-[var(--text-secondary)]">
                               Click to view on{' '}
                               {
                                 getTokenExplorerInfo(
@@ -335,7 +337,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
 
                 {/* APY Badge - Mobile */}
                 <div className="flex items-center space-x-1">
-                  <Badge className="bg-green-500/10 text-green-400 border-green-400/20 text-sm">
+                  <Badge className="text-sm border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]">
                     {apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
@@ -346,7 +348,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="text-slate-400 hover:text-slate-300 transition-colors"
+                        className="text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)]"
                       >
                         <Info className="h-3 w-3" />
                       </button>
@@ -379,7 +381,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                         <p className="font-medium">
                           {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol})
                           <br />
-                          <span className="text-slate-400 text-sm">
+                          <span className="text-sm text-[var(--text-secondary)]">
                             Click to view on{' '}
                             {
                               getTokenExplorerInfo(
@@ -413,7 +415,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                         <p className="font-medium">
                           {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
                           <br />
-                          <span className="text-slate-400 text-sm">
+                          <span className="text-sm text-[var(--text-secondary)]">
                             Click to view on{' '}
                             {
                               getTokenExplorerInfo(
@@ -438,7 +440,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                   {tokenConfig.name}
                 </h1>
                 <div className="flex items-center space-x-1">
-                  <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                  <Badge className="border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]">
                     {apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
@@ -468,7 +470,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
               </div>
 
               {/* Description */}
-              <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
+              <p className="text-[var(--text-secondary)] leading-relaxed text-sm sm:text-base">
                 {tokenConfig.description}
               </p>
             </motion.div>
@@ -526,12 +528,12 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 </div>
               ) : priceDataError ? (
                 <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
-                  <p className="text-red-400 mb-2">Failed to load price data</p>
-                  <p className="text-slate-400 text-sm">{priceDataError.message}</p>
+                  <p className="mb-2 text-[var(--state-error-text)]">Failed to load price data</p>
+                  <p className="text-sm text-[var(--text-secondary)]">{priceDataError.message}</p>
                 </div>
               ) : !priceHistoryData || priceHistoryData.length === 0 ? (
                 <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
-                  <p className="text-slate-400">No price data available</p>
+                  <p className="text-[var(--text-secondary)]">No price data available</p>
                 </div>
               ) : (
                 <PriceLineChart
@@ -547,13 +549,13 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                       key: 'weethPrice',
                       name: `${tokenConfig.collateralAsset.symbol} Price`,
                       dataKey: 'weethPrice',
-                      color: '#10B981',
+                      color: 'var(--chart-2)',
                     },
                     {
                       key: 'leverageTokenPrice',
                       name: 'Leverage Token Price',
                       dataKey: 'leverageTokenPrice',
-                      color: '#8B5CF6',
+                      color: 'var(--chart-1)',
                     },
                   ]}
                   visibleLines={{

@@ -21,7 +21,7 @@ export function SortArrowNeutral({ className = '', size = 'sm' }: SortArrowProps
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`lucide lucide-arrow-up-down ${sizeClasses[size]} text-slate-500 ${className}`}
+      className={`lucide lucide-arrow-up-down ${sizeClasses[size]} text-[var(--text-muted)] ${className}`}
       aria-hidden="true"
     >
       <path d="m21 16-4 4-4-4"></path>
@@ -44,7 +44,7 @@ export function SortArrowUp({ className = '', size = 'sm' }: SortArrowProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`lucide lucide-arrow-up ${sizeClasses[size]} text-purple-400 ${className}`}
+      className={`lucide lucide-arrow-up ${sizeClasses[size]} text-[var(--brand-secondary)] ${className}`}
       aria-hidden="true"
     >
       <path d="m5 12 7-7 7 7"></path>
@@ -65,7 +65,7 @@ export function SortArrowDown({ className = '', size = 'sm' }: SortArrowProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`lucide lucide-arrow-down ${sizeClasses[size]} text-purple-400 ${className}`}
+      className={`lucide lucide-arrow-down ${sizeClasses[size]} text-[var(--brand-secondary)] ${className}`}
       aria-hidden="true"
     >
       <path d="M12 5v14"></path>

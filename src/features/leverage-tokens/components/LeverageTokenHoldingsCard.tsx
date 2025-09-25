@@ -56,9 +56,16 @@ export function LeverageTokenHoldingsCard({
     return (
       <ConnectButton.Custom>
         {({ openConnectModal }) => (
-          <div onClick={openConnectModal} className="cursor-pointer w-full">
+          <button
+            type="button"
+            onClick={() => {
+              // Always use RainbowKit's openConnectModal for wallet connection
+              openConnectModal()
+            }}
+            className="cursor-pointer bg-transparent border-none p-0 w-full"
+          >
             {children}
-          </div>
+          </button>
         )}
       </ConnectButton.Custom>
     )
@@ -93,7 +100,7 @@ export function LeverageTokenHoldingsCard({
                     </div>
                   ) : (
                     <div className="w-8 h-8 rounded-full border-2 border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 85%,transparent)] flex items-center justify-center overflow-hidden">
-                      <Zap className="w-4 h-4 text-purple-400" />
+                      <Zap className="w-4 h-4 text-[var(--brand-secondary)]" />
                     </div>
                   )}
                   <div className="text-xl font-medium text-[var(--text-primary)]">
@@ -131,7 +138,7 @@ export function LeverageTokenHoldingsCard({
                       </div>
                     ) : (
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[color-mix(in_srgb,var(--surface-card) 80%,transparent)]">
-                        <Zap className="w-5 h-5 text-purple-400" />
+                        <Zap className="w-5 h-5 text-[var(--brand-secondary)]" />
                       </div>
                     )}
                     <div>
@@ -156,7 +163,7 @@ export function LeverageTokenHoldingsCard({
                       data-test-id="mint-button"
                       type="button"
                       onClick={handleMintClick}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white w-full"
+                      className="w-full text-[var(--cta-text)] bg-[var(--cta-gradient)] hover:bg-[var(--cta-hover-gradient)] active:bg-[var(--cta-active-gradient)]"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Mint
@@ -178,7 +185,7 @@ export function LeverageTokenHoldingsCard({
               ) : (
                 <>
                   {renderConnectButton(
-                    <div className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2">
+                    <div className="w-full flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 text-[var(--cta-text)] bg-[var(--cta-gradient)] hover:bg-[var(--cta-hover-gradient)] active:bg-[var(--cta-active-gradient)]">
                       <Plus className="w-4 h-4 mr-2" />
                       Mint
                     </div>,

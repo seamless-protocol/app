@@ -35,7 +35,7 @@ export function FeaturedLeverageToken({
       className={className}
     >
       <Card
-        className="w-full min-w-0 cursor-pointer transform transition-all duration-300 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] hover:border-[var(--nav-border-active)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10"
+        className="w-full min-w-0 cursor-pointer transform transition-all duration-300 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] hover:border-[var(--nav-border-active)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] hover:scale-[1.01] hover:shadow-[0_16px_40px_-18px_var(--nav-border-active)]"
         onClick={handleClick}
       >
         <CardContent className="p-3 sm:p-4">
@@ -51,7 +51,7 @@ export function FeaturedLeverageToken({
               </h3>
             </div>
             {token.rank && (
-              <Badge className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 border-yellow-500/30 text-xs flex-shrink-0">
+              <Badge className="text-xs flex-shrink-0 border-[color-mix(in_srgb,var(--tag-warning-text)_25%,transparent)] bg-[var(--tag-warning-bg)] text-[var(--tag-warning-text)]">
                 #{token.rank}
               </Badge>
             )}
@@ -87,7 +87,7 @@ export function FeaturedLeverageToken({
             <div className="flex justify-between items-center">
               <span className="text-sm text-[var(--text-secondary)]">Points</span>
               {apyData?.points !== undefined ? (
-                <span className="text-yellow-500 font-medium">
+                <span className="font-medium text-[var(--state-warning-text)]">
                   {`${apyData.points.toLocaleString()} x`}
                 </span>
               ) : (
@@ -98,7 +98,9 @@ export function FeaturedLeverageToken({
             {/* Leverage Row with Divider */}
             <div className="flex justify-between items-center pt-2 border-t border-[var(--divider-line)]">
               <span className="text-sm text-[var(--text-secondary)]">Leverage</span>
-              <span className="text-purple-400 font-medium">{token.leverageRatio}x</span>
+              <span className="font-medium text-[var(--brand-secondary)]">
+                {token.leverageRatio}x
+              </span>
             </div>
           </div>
         </CardContent>
@@ -134,10 +136,13 @@ export function FeaturedLeverageTokens({
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-[var(--text-primary)] flex items-center space-x-2">
-          <Zap className="h-5 w-5 text-yellow-400" />
+          <Zap className="h-5 w-5 text-[var(--state-warning-text)]" />
           <span>Featured High-Reward Tokens</span>
         </h2>
-        <Badge variant="outline" className="text-yellow-500 border-yellow-500/30 bg-yellow-500/10">
+        <Badge
+          variant="outline"
+          className="border-[color-mix(in_srgb,var(--tag-warning-text)_25%,transparent)] bg-[var(--tag-warning-bg)] text-[var(--tag-warning-text)]"
+        >
           Top Rewards
         </Badge>
       </div>

@@ -89,7 +89,7 @@ export function LeverageTokenDetailedMetrics({
                   {['a', 'b', 'c', 'd', 'e', 'f'].map((key) => (
                     <div
                       key={`metric-skel-${key}`}
-                      className="p-4 rounded-lg border bg-slate-800/50 border-slate-700"
+                      className="p-4 rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 90%,transparent)]"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <Skeleton className="h-3 w-28" />
@@ -101,7 +101,9 @@ export function LeverageTokenDetailedMetrics({
                 </div>
               ) : isError ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="text-red-500">Failed to load detailed metrics</div>
+                  <div className="text-[var(--state-error-text)]">
+                    Failed to load detailed metrics
+                  </div>
                 </div>
               ) : metrics ? (
                 Object.entries(metrics).map(([category, categoryMetrics]) => (

@@ -28,43 +28,51 @@ export function LiFiWidget() {
       integrator: 'seamless-protocol',
       variant: 'wide',
       subvariant: 'split',
-      appearance: 'system',
+      appearance: 'light',
       theme: {
         colorSchemes: {
           light: {
             palette: {
               primary: {
-                main: '#c924a6',
+                main: '#2A65C3',
               },
               secondary: {
-                main: '#9721cf',
+                main: '#7C3AED',
               },
               background: {
-                default: '#0e1629',
-                paper: '#161f34',
+                default: '#FAFAFB',
+                paper: '#FFFFFF',
               },
               text: {
-                primary: '#ffffff',
-                secondary: '#fffafa',
+                primary: '#111827',
+                secondary: '#4B5563',
               },
               common: {
-                black: '#dc7979',
+                black: '#0B0D12',
               },
               grey: {
-                200: '#eeeeee',
-                300: '#334155',
-                700: '#616161',
-                800: '#424242',
+                200: '#E5E7EB',
+                300: '#CBD5F5',
+                700: '#4B5563',
+                800: '#1D2432',
               },
             },
           },
           dark: {
             palette: {
               primary: {
-                main: '#5C67FF',
+                main: '#506BDF',
               },
               secondary: {
-                main: '#F7C2FF',
+                main: '#7C3AED',
+              },
+              background: {
+                default: '#0B0D12',
+                paper: '#151A26',
+              },
+              text: {
+                primary: '#F5F7FA',
+                secondary: '#C7CFD9',
               },
             },
           },
