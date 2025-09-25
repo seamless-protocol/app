@@ -169,7 +169,7 @@ describe('MerklRewardsAprProvider', () => {
       )
     })
 
-    it('should throw error when no opportunities found', async () => {
+    it('should return default data when no opportunities found', async () => {
       const provider = new MerklRewardsAprProvider()
 
       mockFetch.mockResolvedValueOnce({
@@ -177,9 +177,8 @@ describe('MerklRewardsAprProvider', () => {
         json: async () => ({ opportunities: [] }),
       } as unknown as Response)
 
-      await expect(provider.fetchRewardsApr(tokenAddress, chainId)).rejects.toThrow(
-        `No Merkl opportunities found for token: ${tokenAddress}`,
-      )
+      const result = await provider.fetchRewardsApr(tokenAddress, chainId)
+      expect(result).toEqual({ rewardsAPR: 0 })
     })
 
     it('should throw error when API returns 404 for opportunities', async () => {

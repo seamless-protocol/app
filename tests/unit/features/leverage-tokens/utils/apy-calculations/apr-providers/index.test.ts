@@ -196,9 +196,10 @@ describe('APR Providers', () => {
 
       await fetchAprForToken(supportedTokenAddress, chainId)
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        `Fetching APR for ${supportedTokenAddress} on chain ${chainId} using Ether.fi`,
-      )
+      expect(consoleSpy).toHaveBeenCalledWith('[apr-provider] Fetching APR using Ether.fi', {
+        chainId,
+        tokenAddress: supportedTokenAddress,
+      })
 
       consoleSpy.mockRestore()
     })

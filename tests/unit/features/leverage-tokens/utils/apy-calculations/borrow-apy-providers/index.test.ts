@@ -212,7 +212,11 @@ describe('Borrow APY Providers', () => {
       await fetchBorrowApyForToken(supportedTokenAddress, chainId, mockConfig)
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        `Fetching borrow APY for ${supportedTokenAddress} on chain ${chainId} using Morpho`,
+        '[borrow-apy-provider] Fetching borrow APY using Morpho',
+        {
+          chainId,
+          tokenAddress: supportedTokenAddress,
+        },
       )
 
       consoleSpy.mockRestore()
