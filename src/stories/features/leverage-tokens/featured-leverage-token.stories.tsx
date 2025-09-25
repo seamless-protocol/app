@@ -134,14 +134,19 @@ export const Default: Story = {
   args: {
     tokens: mockTokens,
     onTokenClick: (token) => console.log('Token clicked:', token),
-    apyData: {
-      totalAPY: 12.34,
-      rewardsAPR: 4.56,
-      points: 1250,
-      borrowRate: -2.1,
-      stakingYield: 8.78,
-      restakingYield: 0,
-    },
+    apyDataMap: new Map([
+      [
+        '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c',
+        {
+          totalAPY: 12.34,
+          rewardsAPR: 4.56,
+          points: 1250,
+          borrowRate: -2.1,
+          stakingYield: 8.78,
+          restakingYield: 0,
+        },
+      ],
+    ]),
     isApyLoading: false,
     isApyError: false,
   },

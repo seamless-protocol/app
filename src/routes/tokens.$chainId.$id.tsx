@@ -336,31 +336,37 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 {/* APY Badge - Mobile */}
                 <div className="flex items-center space-x-1">
                   <Badge className="bg-green-500/10 text-green-400 border-green-400/20 text-sm">
-                    {apyData?.totalAPY ? (
+                    {isApyError ? (
+                      <span className="text-slate-500">N/A</span>
+                    ) : isApyLoading ? (
+                      <Skeleton className="h-4 w-20" />
+                    ) : apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
                       <Skeleton className="h-4 w-20" />
                     )}
                   </Badge>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="text-slate-400 hover:text-slate-300 transition-colors"
-                      >
-                        <Info className="h-3 w-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                      <APYBreakdownTooltip
-                        token={tokenConfig}
-                        {...(apyData && { apyData })}
-                        isLoading={isApyLoading ?? false}
-                        isError={isApyError ?? false}
-                        compact
-                      />
-                    </TooltipContent>
-                  </Tooltip>
+                  {!isApyError && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-slate-400 hover:text-slate-300 transition-colors"
+                        >
+                          <Info className="h-3 w-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
+                        <APYBreakdownTooltip
+                          token={tokenConfig}
+                          {...(apyData && { apyData })}
+                          isLoading={isApyLoading ?? false}
+                          isError={isApyError ?? false}
+                          compact
+                        />
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
 
@@ -437,31 +443,37 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 <h1 className="text-2xl sm:text-3xl font-bold text-white">{tokenConfig.name}</h1>
                 <div className="flex items-center space-x-1">
                   <Badge className="bg-green-500/10 text-green-400 border-green-400/20">
-                    {apyData?.totalAPY ? (
+                    {isApyError ? (
+                      <span className="text-slate-500">N/A</span>
+                    ) : isApyLoading ? (
+                      <Skeleton className="h-4 w-20" />
+                    ) : apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
                       <Skeleton className="h-4 w-20" />
                     )}
                   </Badge>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="text-slate-400 hover:text-slate-300 transition-colors"
-                      >
-                        <Info className="h-3 w-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                      <APYBreakdownTooltip
-                        token={tokenConfig}
-                        {...(apyData && { apyData })}
-                        isLoading={isApyLoading ?? false}
-                        isError={isApyError ?? false}
-                        compact
-                      />
-                    </TooltipContent>
-                  </Tooltip>
+                  {!isApyError && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-slate-400 hover:text-slate-300 transition-colors"
+                        >
+                          <Info className="h-3 w-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
+                        <APYBreakdownTooltip
+                          token={tokenConfig}
+                          {...(apyData && { apyData })}
+                          isLoading={isApyLoading ?? false}
+                          isError={isApyError ?? false}
+                          compact
+                        />
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
 

@@ -14,7 +14,7 @@ import type { LeverageToken } from './LeverageTokenTable'
 interface LeverageTokenMobileCardProps {
   token: LeverageToken
   onTokenClick?: (token: LeverageToken) => void
-  apyData?: APYBreakdownData | undefined
+  apyDataMap?: Map<string, APYBreakdownData> | undefined
   isApyLoading?: boolean | undefined
   isApyError?: boolean | undefined
 }
@@ -22,7 +22,7 @@ interface LeverageTokenMobileCardProps {
 export function LeverageTokenMobileCard({
   token,
   onTokenClick,
-  apyData,
+  apyDataMap,
   isApyLoading,
   isApyError,
 }: LeverageTokenMobileCardProps) {
@@ -73,37 +73,58 @@ export function LeverageTokenMobileCard({
             <div className="flex justify-between items-center">
               <span className="text-slate-400 text-sm">APY</span>
               <div className="flex items-center space-x-1">
-                {apyData?.totalAPY ? (
-                  <span className="text-green-400 font-medium text-sm">
-                    {formatAPY(apyData.totalAPY, 2)}
-                  </span>
-                ) : (
-                  <Skeleton className="h-4 w-16" />
-                )}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="text-slate-400 hover:text-slate-300 active:text-slate-300 transition-colors touch-manipulation !min-w-0 !min-h-0"
-                    >
-                      <Info className="h-3 w-3" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    className="p-0 bg-slate-800 border-slate-700 text-sm z-50"
-                    side="top"
-                    align="end"
-                    sideOffset={8}
-                  >
-                    <APYBreakdownTooltip
-                      token={token}
-                      compact
-                      {...(apyData && { apyData })}
-                      isLoading={isApyLoading ?? false}
-                      isError={isApyError ?? false}
-                    />
-                  </TooltipContent>
-                </Tooltip>
+                {(() => {
+                  const tokenApyData = apyDataMap?.get(token.address)
+                  const tokenApyError =
+                    isApyError || (!isApyLoading && !apyDataMap?.has(token.address))
+
+                  if (tokenApyError) {
+                    return <span className="text-slate-500 text-xs">N/A</span>
+                  } else if (isApyLoading || !tokenApyData) {
+                    return <Skeleton className="h-4 w-16" />
+                  } else {
+                    return (
+                      <span className="text-green-400 font-medium text-sm">
+                        {formatAPY(tokenApyData.totalAPY, 2)}
+                      </span>
+                    )
+                  }
+                })()}
+                {(() => {
+                  const tokenApyData = apyDataMap?.get(token.address)
+                  const tokenApyError =
+                    isApyError || (!isApyLoading && !apyDataMap?.has(token.address))
+
+                  if (!tokenApyError && tokenApyData) {
+                    return (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="text-slate-400 hover:text-slate-300 active:text-slate-300 transition-colors touch-manipulation !min-w-0 !min-h-0"
+                          >
+                            <Info className="h-3 w-3" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          className="p-0 bg-slate-800 border-slate-700 text-sm z-50"
+                          side="top"
+                          align="end"
+                          sideOffset={8}
+                        >
+                          <APYBreakdownTooltip
+                            token={token}
+                            compact
+                            apyData={tokenApyData}
+                            isLoading={isApyLoading ?? false}
+                            isError={tokenApyError}
+                          />
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  }
+                  return null
+                })()}
               </div>
             </div>
 

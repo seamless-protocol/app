@@ -70,16 +70,64 @@ interface LeverageTokenTableProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
-  apyData?: APYBreakdownData // APY data for the first token (can be extended for multiple tokens)
+  apyDataMap?: Map<string, APYBreakdownData> | undefined // APY data map for all tokens
   isApyLoading?: boolean
   isApyError?: boolean
+}
+
+// APY Cell Component
+function ApyCell({
+  token,
+  apyDataMap,
+  isApyLoading,
+  isApyError,
+}: {
+  token: LeverageToken
+  apyDataMap?: Map<string, APYBreakdownData> | undefined
+  isApyLoading?: boolean | undefined
+  isApyError?: boolean | undefined
+}) {
+  const tokenApyData = apyDataMap?.get(token.address)
+  const tokenApyError = isApyError || (!isApyLoading && !apyDataMap?.has(token.address))
+
+  return (
+    <div className="flex items-center justify-end space-x-1">
+      {tokenApyError ? (
+        <span className="text-slate-500 text-xs">N/A</span>
+      ) : isApyLoading || !tokenApyData ? (
+        <Skeleton className="h-6 w-20" />
+      ) : (
+        <span className="text-green-400 font-medium text-sm">
+          {formatAPY(tokenApyData.totalAPY, 2)}
+        </span>
+      )}
+      {!tokenApyError && tokenApyData && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" className="text-slate-400 hover:text-slate-300 transition-colors">
+              <Info className="h-3 w-3" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
+            <APYBreakdownTooltip
+              token={token}
+              compact
+              apyData={tokenApyData}
+              isLoading={isApyLoading ?? false}
+              isError={tokenApyError}
+            />
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  )
 }
 
 export function LeverageTokenTable({
   tokens,
   onTokenClick,
   className,
-  apyData,
+  apyDataMap,
   isApyLoading,
   isApyError,
 }: LeverageTokenTableProps) {
@@ -294,7 +342,7 @@ export function LeverageTokenTable({
               key={token.address}
               token={token}
               {...(onTokenClick && { onTokenClick })}
-              apyData={apyData}
+              apyDataMap={apyDataMap}
               isApyLoading={isApyLoading}
               isApyError={isApyError}
             />
@@ -475,34 +523,12 @@ export function LeverageTokenTable({
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end space-x-1">
-                        {apyData?.totalAPY ? (
-                          <span className="text-green-400 font-medium text-sm">
-                            {formatAPY(apyData.totalAPY, 2)}
-                          </span>
-                        ) : (
-                          <Skeleton className="h-6 w-20" />
-                        )}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="text-slate-400 hover:text-slate-300 transition-colors"
-                            >
-                              <Info className="h-3 w-3" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                            <APYBreakdownTooltip
-                              token={token}
-                              compact
-                              {...(apyData && { apyData })}
-                              isLoading={isApyLoading ?? false}
-                              isError={isApyError ?? false}
-                            />
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
+                      <ApyCell
+                        token={token}
+                        apyDataMap={apyDataMap}
+                        isApyLoading={isApyLoading}
+                        isApyError={isApyError}
+                      />
                     </TableCell>
 
                     <TableCell className="py-4 px-6 text-center">

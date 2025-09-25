@@ -37,6 +37,21 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
     queryFn: async (): Promise<Map<string, APYBreakdownData>> => {
       const apyDataMap = new Map<string, APYBreakdownData>()
 
+      // Import APY calculation functions once (not per token)
+      const [
+        { fetchAprForToken },
+        { fetchBorrowApyForToken },
+        { fetchLeverageRatios },
+        { fetchRewardsAprForToken },
+        { leverageTokenConfigs },
+      ] = await Promise.all([
+        import('@/features/leverage-tokens/utils/apy-calculations/apr-providers'),
+        import('@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'),
+        import('@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'),
+        import('@/features/leverage-tokens/utils/apy-calculations/rewards-providers'),
+        import('@/features/leverage-tokens/leverageTokens.config'),
+      ])
+
       // For each token, fetch APY data
       const apyPromises = tokens
         .filter((token) => {
@@ -47,23 +62,6 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
         })
         .map(async (token) => {
           try {
-            // Import the APY calculation functions
-            const { fetchAprForToken } = await import(
-              '@/features/leverage-tokens/utils/apy-calculations/apr-providers'
-            )
-            const { fetchBorrowApyForToken } = await import(
-              '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
-            )
-            const { fetchLeverageRatios } = await import(
-              '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
-            )
-            const { fetchRewardsAprForToken } = await import(
-              '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
-            )
-            const { leverageTokenConfigs } = await import(
-              '@/features/leverage-tokens/leverageTokens.config'
-            )
-
             // Get token address - either from leverageTokenAddress (positions) or address (configs)
             const tokenAddress = (token.leverageTokenAddress || token.address) as `0x${string}`
 
@@ -127,30 +125,41 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
             return { tokenId, apyData: apyBreakdown }
           } catch (error) {
             const tokenId = token.id || token.address || token.leverageTokenAddress
-            logger.warn('Failed to calculate APY for token', { tokenId, error })
-            if (!tokenId) {
-              throw new Error(`No valid token ID found for token: ${JSON.stringify(token)}`)
-            }
-            return { tokenId, apyData: null }
+            logger.error('Failed to calculate APY for token', { tokenId, error })
+            // Re-throw the error so Sentry can catch it
+            throw error
           }
         })
 
       const results = await Promise.allSettled(apyPromises)
 
-      // Process results
+      // Process results and track failures
+      let hasFailures = false
       results.forEach((result) => {
         if (result.status === 'fulfilled' && result.value.apyData) {
           apyDataMap.set(result.value.tokenId, result.value.apyData)
+        } else if (result.status === 'rejected') {
+          hasFailures = true
         }
       })
+
+      // If all APY calculations failed, throw an error
+      if (hasFailures && apyDataMap.size === 0) {
+        throw new Error('All APY calculations failed')
+      }
 
       return apyDataMap
     },
     enabled: enabled && tokens.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retry: (failureCount, error) => {
+      // Only retry on network errors, not on business logic errors
+      if (failureCount >= 2) return false
+      if (error instanceof Error && error.message.includes('network')) return true
+      return false
+    },
+    retryDelay: 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   })
