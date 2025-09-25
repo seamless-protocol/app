@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
+import { cn } from '@/lib/utils/cn'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
@@ -32,9 +33,14 @@ export function FAQ({ title = 'Frequently Asked Questions', items, className = '
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card className={`bg-slate-900/80 border-slate-700 ${className}`}>
+      <Card
+        className={cn(
+          'border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] text-[var(--text-primary)]',
+          className,
+        )}
+      >
         <CardHeader>
-          <CardTitle className="text-white">{title}</CardTitle>
+          <CardTitle className="text-[var(--text-primary)]">{title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {items.map((faq) => (
@@ -46,21 +52,21 @@ export function FAQ({ title = 'Frequently Asked Questions', items, className = '
               <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full justify-between p-4 text-left bg-slate-800/50 hover:bg-slate-800/70 border border-slate-700 hover:border-slate-600 rounded-lg"
+                  className="w-full justify-between rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4 text-left text-[var(--text-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)]"
                 >
-                  <span className="text-white font-medium text-left break-words pr-2">
+                  <span className="pr-2 break-words text-left font-medium text-[var(--text-primary)]">
                     {faq.question}
                   </span>
                   {openFAQs.includes(faq.id) ? (
-                    <ChevronUp className="w-4 h-4 text-slate-400" />
+                    <ChevronUp className="h-4 w-4 text-[var(--text-muted)]" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                    <ChevronDown className="h-4 w-4 text-[var(--text-muted)]" />
                   )}
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
-                <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
-                  <p className="text-slate-300 leading-relaxed">{faq.answer}</p>
+                <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4">
+                  <p className="leading-relaxed text-[var(--text-secondary)]">{faq.answer}</p>
                 </div>
               </CollapsibleContent>
             </Collapsible>
