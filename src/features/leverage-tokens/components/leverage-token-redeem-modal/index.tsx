@@ -680,7 +680,6 @@ function logRedeemDiagnostics(params: {
       payoutAmount: payout,
       debtPayout,
     })
-    console.log('plan', result.plan)
     console.groupEnd()
     return
   }

@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { useConfig } from 'wagmi'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('positions-apy')
+
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { portfolioKeys } from '../utils/queryKeys'
@@ -123,7 +127,7 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
             return { tokenId, apyData: apyBreakdown }
           } catch (error) {
             const tokenId = token.id || token.address || token.leverageTokenAddress
-            console.warn(`Failed to calculate APY for token ${tokenId}:`, error)
+            logger.warn('Failed to calculate APY for token', { tokenId, error })
             if (!tokenId) {
               throw new Error(`No valid token ID found for token: ${JSON.stringify(token)}`)
             }

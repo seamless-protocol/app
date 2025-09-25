@@ -2,6 +2,10 @@ import { useMemo } from 'react'
 import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 import { useReadContracts } from 'wagmi'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('leverage-tokens-table-data')
+
 import type { LeverageToken } from '@/features/leverage-tokens/components/leverage-token-table'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import { leverageManagerAbi, leverageTokenAbi } from '@/lib/contracts'
@@ -119,7 +123,10 @@ export function useLeverageTokensTableData() {
   const tokens: Array<LeverageToken> = useMemo(() => {
     // If there's a critical error, return empty array to prevent crashes
     if (isManagerError && managerError) {
-      console.error('Critical error in useLeverageTokensTableData:', managerError)
+      logger.error('Critical error in useLeverageTokensTableData', {
+        error: managerError,
+        feature: 'leverage-tokens-table',
+      })
       return []
     }
 
@@ -134,7 +141,10 @@ export function useLeverageTokensTableData() {
 
       // Handle config call failure gracefully
       if (configRes && configRes.status !== 'success') {
-        console.warn(`Token ${cfg.address} not registered in manager:`, configRes.error)
+        logger.warn('Token not registered in manager', {
+          tokenAddress: cfg.address,
+          error: configRes.error,
+        })
       }
 
       if (stateRes && stateRes.status === 'success') {

@@ -1,6 +1,10 @@
 import { motion } from 'framer-motion'
 import { Info, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('leverage-token-table')
+
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
@@ -154,7 +158,7 @@ export function LeverageTokenTable({
         case 'supplyCap':
           return item.supplyCap
         default:
-          console.warn(`Unknown sort key: ${key}`)
+          logger.warn('Unknown sort key', { sortKey: key })
           return 0
       }
     })

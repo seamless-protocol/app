@@ -21,9 +21,7 @@ function StakingPage() {
   const { data: userStats, isLoading: isUserStatsLoading } = useStakingUserStats()
   const { data: rewardsData, isLoading: isRewardsLoading } = useStakingRewards()
 
-  const handleClaimRewards = () => {
-    console.log('Claim rewards to be implemented')
-  }
+  const handleClaimRewards = () => {}
 
   return (
     <div className="container mx-auto">

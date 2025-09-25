@@ -1,3 +1,4 @@
+import { createLogger } from '@/lib/logger'
 import { LEVERAGE_TOKEN_STATE_HISTORY_QUERY, USER_POSITIONS_QUERY } from '../queries/portfolio'
 import type {
   LeverageTokenState,
@@ -7,6 +8,8 @@ import type {
   UserPositionsResponse,
 } from '../types/portfolio'
 import { getSupportedChainIds, graphqlRequest } from '../utils'
+
+const logger = createLogger('portfolio-fetcher')
 
 /**
  * Fetch user positions across all supported chains
@@ -33,7 +36,7 @@ export async function fetchUserPositions(userAddress: string): Promise<UserPosit
         }
       }
     } catch (error) {
-      console.warn(`Failed to fetch user positions from chain ${chainId}:`, error)
+      logger.warn('Failed to fetch user positions from chain', { chainId, error })
       // Continue with other chains
     }
   }
@@ -108,10 +111,11 @@ export async function fetchAllLeverageTokenStateHistory(
         skip += batchSize
       }
     } catch (error) {
-      console.warn(
-        `Failed to fetch state history for token ${leverageTokenAddress} from chain ${chainId}:`,
+      logger.warn('Failed to fetch state history for token from chain', {
+        leverageTokenAddress,
+        chainId,
         error,
-      )
+      })
       // Continue with other chains
     }
   }

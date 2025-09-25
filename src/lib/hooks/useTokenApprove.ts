@@ -1,9 +1,13 @@
+import * as Sentry from '@sentry/react'
 import type { Address } from 'viem'
 import { parseUnits } from 'viem'
 import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { TX_SETTINGS } from '@/features/leverage-tokens/utils/constants'
 import type { SupportedChainId } from '@/lib/contracts'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('useTokenApprove')
 
 export interface UseTokenApproveParams {
   tokenAddress?: Address
@@ -54,9 +58,28 @@ export function useTokenApprove({
   // Execute approval
   const approve = () => {
     if (!enabled || !tokenAddress || !spender || approvalAmount === 0n) {
-      console.warn('useTokenApprove: Missing required parameters for approval')
+      logger.warn('Missing required parameters for approval', {
+        enabled,
+        tokenAddress,
+        spender,
+        approvalAmount: approvalAmount.toString(),
+        chainId,
+      })
       return
     }
+
+    // Track approval attempt
+    Sentry.addBreadcrumb({
+      message: 'Token approval initiated',
+      category: 'transaction',
+      level: 'info',
+      data: {
+        tokenAddress,
+        spender,
+        approvalAmount: approvalAmount.toString(),
+        chainId,
+      },
+    })
 
     writeContract({
       address: tokenAddress,

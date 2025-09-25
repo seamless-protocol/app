@@ -6,7 +6,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { WagmiProvider } from 'wagmi'
 import { validateEnv } from './lib/env'
+import { createLogger } from './lib/logger'
 import './index.css'
+
+const logger = createLogger('main')
+
 import { ErrorBoundary } from './components/error-boundary'
 import { RainbowThemeWrapper } from './components/rainbow-theme-wrapper'
 import { ThemeProvider } from './components/theme-provider'
@@ -21,7 +25,10 @@ import { router } from './router'
 try {
   validateEnv()
 } catch (error) {
-  console.error('Environment validation failed:', error)
+  logger.error('Environment validation failed', {
+    error,
+    environment: import.meta.env.MODE,
+  })
   // In development, show the error in the UI
   if (import.meta.env.DEV) {
     const errorDiv = document.createElement('div')

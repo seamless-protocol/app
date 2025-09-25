@@ -1,6 +1,10 @@
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import { readContract } from 'wagmi/actions'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('morpho-borrow-apy')
+
 import { lendingAdapterAbi, leverageManagerAbi } from '@/lib/contracts'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
 import { fetchMorphoMarketBorrowRate } from '@/lib/graphql/fetchers/morpho'
@@ -57,7 +61,7 @@ async function fetchMorphoMarketId(
 
     return marketId
   } catch (error) {
-    console.error('Error fetching Morpho market ID:', error)
+    logger.error('Error fetching Morpho market ID', { error, tokenAddress })
     throw new Error(
       `Failed to fetch Morpho market ID: ${error instanceof Error ? error.message : 'Unknown error'}`,
     )
@@ -103,7 +107,7 @@ export class MorphoBorrowApyProvider implements BorrowApyFetcher {
 
       return result
     } catch (error) {
-      console.error('Error fetching Morpho borrow APY:', error)
+      logger.error('Error fetching Morpho borrow APY', { error, tokenAddress })
       throw error
     }
   }

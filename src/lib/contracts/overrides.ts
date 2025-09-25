@@ -1,4 +1,7 @@
+import { createLogger } from '@/lib/logger'
 import type { ContractAddresses } from './addresses'
+
+const logger = createLogger('contract-overrides')
 
 export type ContractAddressOverrides = Record<number, Partial<ContractAddresses>>
 
@@ -14,7 +17,7 @@ function readOverrideEnv(): string | undefined {
       }
     }
   } catch (error) {
-    console.warn('[contracts] Unable to read VITE_CONTRACT_ADDRESS_OVERRIDES', error)
+    logger.warn('Unable to read VITE_CONTRACT_ADDRESS_OVERRIDES', { error })
   }
 
   const processEnvValue =
@@ -31,10 +34,10 @@ function getTenderlyOverrides(): string | undefined {
     (typeof import.meta !== 'undefined' && import.meta.env?.['VITE_USE_TENDERLY_VNET']) ||
     (typeof process !== 'undefined' && process.env['VITE_USE_TENDERLY_VNET'])
 
-  console.log(`🔍 [getTenderlyOverrides] VITE_USE_TENDERLY_VNET:`, useTenderlyVNet)
+  logger.info('Checking Tenderly VNet mode', { useTenderlyVNet })
 
   if (useTenderlyVNet === 'true') {
-    console.log(`✅ [getTenderlyOverrides] Using Tenderly VNet addresses`)
+    logger.info('Using Tenderly VNet addresses')
     // Return Tenderly VNet contract address overrides
     return JSON.stringify({
       '8453': {
@@ -68,7 +71,7 @@ function parseOverrides(rawOverrides: string): ContractAddressOverrides {
 
     return result
   } catch (error) {
-    console.warn('[contracts] Failed to parse VITE_CONTRACT_ADDRESS_OVERRIDES', error)
+    logger.warn('Failed to parse VITE_CONTRACT_ADDRESS_OVERRIDES', { error })
     return {}
   }
 }
