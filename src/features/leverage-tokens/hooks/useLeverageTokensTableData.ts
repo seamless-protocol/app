@@ -8,7 +8,7 @@ const logger = createLogger('leverage-tokens-table-data')
 
 import type { LeverageToken } from '@/features/leverage-tokens/components/leverage-token-table'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
-import { leverageManagerAbi, leverageTokenAbi } from '@/lib/contracts'
+import { leverageManagerV2Abi, leverageTokenAbi } from '@/lib/contracts'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
 import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
 import { STALE_TIME } from '../utils/constants'
@@ -54,7 +54,7 @@ export function useLeverageTokensTableData() {
       // getLeverageTokenConfig(token)
       contracts.push({
         address: managerAddress,
-        abi: leverageManagerAbi,
+        abi: leverageManagerV2Abi,
         functionName: 'getLeverageTokenConfig' as const,
         args: [cfg.address],
         chainId: cfg.chainId as SupportedChainId,
@@ -62,7 +62,7 @@ export function useLeverageTokensTableData() {
       // getLeverageTokenState(token)
       contracts.push({
         address: managerAddress,
-        abi: leverageManagerAbi,
+        abi: leverageManagerV2Abi,
         functionName: 'getLeverageTokenState' as const,
         args: [cfg.address],
         chainId: cfg.chainId as SupportedChainId,

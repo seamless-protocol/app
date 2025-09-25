@@ -407,7 +407,7 @@ export function LeverageTokenMintModal({
       }
       currentStep={currentStep}
       steps={steps}
-      className="max-w-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]"
+      className="max-w-lg border border-[var(--divider-line)] bg-[var(--surface-card)]"
     >
       {renderStepContent()}
     </MultiStepModal>
