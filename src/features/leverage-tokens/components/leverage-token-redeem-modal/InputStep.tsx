@@ -399,7 +399,9 @@ export function InputStep({
           <div className="flex justify-between">
             <span className="text-slate-400">Approval Status</span>
             <span className={needsApproval ? 'text-yellow-400' : 'text-green-400'}>
-              {isAllowanceLoading ? (
+              {!amount || parseFloat(amount || '0') === 0 ? (
+                <span className="text-slate-400">N/A</span>
+              ) : isAllowanceLoading ? (
                 <Skeleton className="inline-block h-3 w-16" />
               ) : needsApproval ? (
                 'Approval Required'
