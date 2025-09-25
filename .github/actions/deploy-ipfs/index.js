@@ -28,14 +28,15 @@ async function run() {
     // If updating existing, try to find and remove old version
     if (updateExisting) {
       try {
-        const existingFiles = await pinata.files.public.list()
-          .name(pinName)
-          .limit(1);
+        const existingFiles = await pinata.data.pinList({
+          name: pinName,
+          limit: 1
+        });
 
-        if (existingFiles.files.length > 0) {
-          const oldFile = existingFiles.files[0];
-          console.log(`🗑️ Removing old version: ${oldFile.cid}`);
-          await pinata.files.public.delete([oldFile.id]);
+        if (existingFiles.rows && existingFiles.rows.length > 0) {
+          const oldFile = existingFiles.rows[0];
+          console.log(`🗑️ Removing old version: ${oldFile.ipfs_pin_hash}`);
+          await pinata.data.unpin(oldFile.ipfs_pin_hash);
         }
       } catch (error) {
         console.log('⚠️ Could not remove old version:', error.message);
@@ -49,34 +50,37 @@ async function run() {
     // Upload directory to IPFS
     console.log('🚀 Uploading to IPFS...');
 
-    const result = await pinata.upload.public.fileArray(files)
-      .name(pinName)
-      .keyvalues({
-        'deployment': 'github-actions',
-        'repository': process.env.GITHUB_REPOSITORY,
-        'commit': process.env.GITHUB_SHA,
-        'branch': process.env.GITHUB_REF_NAME,
-        'timestamp': new Date().toISOString()
-      });
+    const result = await pinata.data.uploadFiles(files, {
+      pinataMetadata: {
+        name: pinName,
+        keyvalues: {
+          'deployment': 'github-actions',
+          'repository': process.env.GITHUB_REPOSITORY,
+          'commit': process.env.GITHUB_SHA,
+          'branch': process.env.GITHUB_REF_NAME,
+          'timestamp': new Date().toISOString()
+        }
+      }
+    });
 
     console.log('✅ Upload successful!');
-    console.log(`📍 IPFS Hash: ${result.cid}`);
-    console.log(`🌍 Gateway URL: https://gateway.pinata.cloud/ipfs/${result.cid}`);
+    console.log(`📍 IPFS Hash: ${result.IpfsHash}`);
+    console.log(`🌍 Gateway URL: https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`);
 
     // Set outputs
-    core.setOutput('ipfs-hash', result.cid);
-    core.setOutput('gateway-url', `https://gateway.pinata.cloud/ipfs/${result.cid}`);
+    core.setOutput('ipfs-hash', result.IpfsHash);
+    core.setOutput('gateway-url', `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`);
 
     // Create a summary
     await core.summary
       .addHeading('IPFS Deployment Successful! 🎉')
       .addTable([
         ['Property', 'Value'],
-        ['IPFS Hash', result.cid],
-        ['Gateway URL', `https://gateway.pinata.cloud/ipfs/${result.cid}`],
+        ['IPFS Hash', result.IpfsHash],
+        ['Gateway URL', `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`],
         ['Pin Name', pinName],
         ['Files Uploaded', files.length.toString()],
-        ['Upload Size', formatBytes(result.size)]
+        ['Upload Size', formatBytes(result.PinSize)]
       ])
       .write();
 
