@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { Address } from 'viem'
 import { useChainId, useReadContracts } from 'wagmi'
-import { leverageManagerAbi, leverageManagerV2Abi, leverageTokenAbi } from '@/lib/contracts'
+import { leverageManagerV2Abi, leverageTokenAbi } from '@/lib/contracts'
 import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 import { STALE_TIME } from '../utils/constants'
 
@@ -16,18 +16,14 @@ export function useLeverageTokenState(tokenAddress: Address, chainIdOverride?: n
   const walletChainId = useChainId()
   const chainId = chainIdOverride ?? walletChainId
   const contractAddresses = getContractAddresses(chainId)
-  const managerAddress = contractAddresses?.leverageManagerV2 ?? contractAddresses?.leverageManager
-  const isV2Manager = Boolean(
-    contractAddresses?.leverageManagerV2 && managerAddress === contractAddresses?.leverageManagerV2,
-  )
-  const managerAbi = isV2Manager ? leverageManagerV2Abi : leverageManagerAbi
+  const managerAddress = contractAddresses?.leverageManagerV2
 
   const contracts = useMemo(() => {
     if (!managerAddress || !tokenAddress) return []
     return [
       {
         address: managerAddress as Address,
-        abi: managerAbi,
+        abi: leverageManagerV2Abi,
         functionName: 'getLeverageTokenState' as const,
         args: [tokenAddress],
         chainId: chainId as SupportedChainId,
@@ -39,7 +35,7 @@ export function useLeverageTokenState(tokenAddress: Address, chainIdOverride?: n
         chainId: chainId as SupportedChainId,
       },
     ]
-  }, [managerAddress, managerAbi, tokenAddress, chainId])
+  }, [managerAddress, tokenAddress, chainId])
 
   const { data, isLoading, isError, error } = useReadContracts({
     contracts,
