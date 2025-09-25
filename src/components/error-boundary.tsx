@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react'
 import { AlertCircle } from 'lucide-react'
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
@@ -33,23 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo,
       errorBoundary: 'AppErrorBoundary',
       errorType: 'ReactError',
-    })
-
-    // Send to Sentry with React context
-    Sentry.captureException(error, {
-      contexts: {
-        react: {
-          componentStack: errorInfo.componentStack,
-        },
-      },
-      tags: {
-        errorBoundary: 'AppErrorBoundary',
-        errorType: 'ReactError',
-      },
-      extra: {
-        errorInfo,
-        errorBoundary: 'AppErrorBoundary',
-      },
+      componentStack: errorInfo.componentStack,
     })
   }
 
