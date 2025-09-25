@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { useChainId, useReadContracts } from 'wagmi'
-import { lendingAdapterAbi, leverageManagerAbi } from '@/lib/contracts'
+import { lendingAdapterAbi, leverageManagerV2Abi } from '@/lib/contracts'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
 import { STALE_TIME } from '../utils/constants'
 
@@ -33,7 +33,7 @@ export function useLeverageTokenCollateral(
     contracts: [
       {
         address: managerAddress,
-        abi: leverageManagerAbi,
+        abi: leverageManagerV2Abi,
         functionName: 'getLeverageTokenConfig',
         args: tokenAddress ? [tokenAddress] : undefined,
         chainId: chainId as SupportedChainId,
