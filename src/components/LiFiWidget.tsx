@@ -104,7 +104,7 @@ export function LiFiWidget() {
         <button
           type="button"
           onClick={handleSwapClick}
-          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-accent/50 rounded-md gap-1.5 has-[>svg]:px-2.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-3 h-9 sm:h-10 border border-slate-700 hover:border-purple-500/50"
+          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 has-[>svg]:px-2.5 text-[var(--nav-text)] hover:text-[var(--text-primary)] transition-colors px-3 h-9 sm:h-10 border border-[var(--nav-border)] hover:border-[var(--nav-border-active)] bg-[var(--nav-surface)] hover:bg-[var(--nav-surface-hover)]"
           aria-label="Open swap and bridge interface (Alt+S)"
           title="Swap & Bridge"
         >
@@ -127,7 +127,7 @@ export function LiFiWidget() {
         <button
           type="button"
           onClick={handleSwapClick}
-          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-accent/50 rounded-md gap-1.5 has-[>svg]:px-2.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-3 h-9 sm:h-10 border border-slate-700 hover:border-purple-500/50"
+          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 has-[>svg]:px-2.5 text-[var(--nav-text)] hover:text-[var(--text-primary)] transition-colors px-3 h-9 sm:h-10 border border-[var(--nav-border)] hover:border-[var(--nav-border-active)] bg-[var(--nav-surface)] hover:bg-[var(--nav-surface-hover)]"
           aria-label="Open swap and bridge interface (Alt+S)"
           title="Swap & Bridge"
         >
@@ -158,7 +158,7 @@ export function LiFiWidget() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="cursor-pointer absolute -top-4 -right-4 w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-50 flex items-center justify-center text-xl font-light shadow-lg"
+                className="cursor-pointer absolute -top-4 -right-4 w-10 h-10 rounded-full backdrop-blur-sm text-[var(--nav-text)] hover:text-[var(--text-primary)] transition-colors z-50 flex items-center justify-center text-xl font-light shadow-lg bg-[color-mix(in_srgb,var(--surface-card) 85%,transparent)] hover:bg-[var(--nav-surface-hover)]"
                 aria-label="Close swap widget"
               >
                 ×

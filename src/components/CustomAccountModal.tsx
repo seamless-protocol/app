@@ -1,8 +1,9 @@
 import { Copy, ExternalLink, LogOut, Moon, Palette, Settings, Sun, Wallet } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useDisconnect } from 'wagmi'
 import { getAddressExplorerUrl } from '../lib/utils/block-explorer'
+import { useTheme } from './theme-provider'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
@@ -26,8 +27,40 @@ interface CustomAccountModalProps {
 }
 
 export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAccountModalProps) {
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const { theme, setTheme } = useTheme()
+  const getSystemTheme = () =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light'
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
+    theme === 'system' ? getSystemTheme : () => theme,
+  )
   const { disconnect } = useDisconnect()
+
+  useEffect(() => {
+    if (theme === 'system') {
+      if (typeof window === 'undefined') return
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const handleChange = () => setResolvedTheme(mediaQuery.matches ? 'dark' : 'light')
+
+      handleChange()
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
+
+    setResolvedTheme(theme)
+    return undefined
+  }, [theme])
+
+  const isDarkMode = resolvedTheme === 'dark'
+  const appearanceTitle =
+    theme === 'system' ? 'System Theme' : isDarkMode ? 'Dark Mode' : 'Light Mode'
+  const appearanceDescription =
+    theme === 'system'
+      ? `System preference currently ${resolvedTheme === 'dark' ? 'dark' : 'light'}`
+      : isDarkMode
+        ? 'Dark theme is enabled'
+        : 'Light theme is enabled'
 
   const copyAddress = async () => {
     if (!account?.address) return
@@ -57,15 +90,15 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-slate-900/95 border-slate-700 max-w-md backdrop-blur-sm">
+      <DialogContent className="sm:max-w-lg max-w-md backdrop-blur-sm bg-[var(--surface-card)] border border-[var(--divider-line)] text-[var(--text-primary)]">
         <DialogHeader className="flex flex-col gap-2 text-center sm:text-left">
-          <DialogTitle className="text-lg leading-none font-semibold flex items-center space-x-3 text-white">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-              <Settings className="h-5 w-5 text-white" />
+          <DialogTitle className="text-lg leading-none font-semibold flex items-center space-x-3 text-[var(--text-primary)]">
+            <div className="w-8 h-8 bg-[var(--cta-gradient)] rounded-lg flex items-center justify-center">
+              <Settings className="h-5 w-5 text-[var(--cta-text)]" />
             </div>
             <span>{account ? 'Account Settings' : 'Settings'}</span>
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-400 mb-3">
+          <DialogDescription className="text-sm text-[var(--text-muted)] mb-3">
             {account
               ? 'Manage your wallet connection and app preferences'
               : 'Manage your app preferences'}
@@ -77,10 +110,10 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
           {account && chain && (
             <div className="space-y-3 mt-3">
               <div className="flex items-center space-x-2">
-                <Wallet className="h-4 w-4 text-purple-400" />
-                <h3 className="font-medium text-white">Wallet</h3>
+                <Wallet className="h-4 w-4 text-[var(--brand-secondary)]" />
+                <h3 className="font-medium text-[var(--text-primary)]">Wallet</h3>
               </div>
-              <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-slate-800/50 border-slate-700">
+              <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-[color-mix(in_srgb,var(--surface-card) 90%,transparent)] border-[var(--divider-line)]">
                 <div className="[&:last-child]:pb-6 p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-2">
@@ -88,7 +121,9 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                         <Wallet className="h-4 w-4 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-white">Connected Wallet</p>
+                        <p className="text-sm font-medium text-[var(--text-primary)]">
+                          Connected Wallet
+                        </p>
                         <Badge className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden [a&]:hover:bg-secondary/90 text-xs bg-green-500/20 text-green-400 border-green-500/30">
                           <div className="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
                           Connected
@@ -96,9 +131,9 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3 border border-slate-600">
+                  <div className="flex items-center justify-between bg-[color-mix(in_srgb,var(--surface-card) 75%,transparent)] rounded-lg p-3 border border-[var(--divider-line)]/80">
                     <div className="flex items-center space-x-2">
-                      <code className="text-sm text-slate-300 font-mono">
+                      <code className="text-sm text-[var(--text-secondary)] font-mono">
                         {account.address.slice(0, 6)}...{account.address.slice(-4)}
                       </code>
                     </div>
@@ -107,7 +142,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                         variant="ghost"
                         size="sm"
                         onClick={copyAddress}
-                        className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+                        className="h-8 w-8 p-0 text-[var(--nav-text)] hover:text-[var(--text-primary)] hover:bg-[var(--nav-surface-hover)]"
                         aria-label="Copy wallet address"
                       >
                         <Copy className="h-4 w-4" />
@@ -116,7 +151,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                         variant="ghost"
                         size="sm"
                         onClick={viewOnExplorer}
-                        className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+                        className="h-8 w-8 p-0 text-[var(--nav-text)] hover:text-[var(--text-primary)] hover:bg-[var(--nav-surface-hover)]"
                         aria-label="View on Etherscan"
                       >
                         <ExternalLink className="h-4 w-4" />
@@ -126,7 +161,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                   <Button
                     onClick={handleDisconnect}
                     variant="outline"
-                    className="w-full mt-3 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+                    className="w-full mt-3 border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Disconnect Wallet
@@ -139,30 +174,29 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
           {/* Appearance Settings - Always show */}
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
-              <Palette className="h-4 w-4 text-purple-400" />
-              <h3 className="font-medium text-white">Appearance</h3>
+              <Palette className="h-4 w-4 text-[var(--brand-secondary)]" />
+              <h3 className="font-medium text-[var(--text-primary)]">Appearance</h3>
             </div>
-            <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-slate-800/50 border-slate-700">
+            <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-[color-mix(in_srgb,var(--surface-card) 90%,transparent)] border-[var(--divider-line)]">
               <div className="[&:last-child]:pb-6 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-r from-slate-600 to-slate-800 rounded-lg flex items-center justify-center">
                       {isDarkMode ? (
-                        <Moon className="h-5 w-5 text-slate-300" />
+                        <Moon className="h-5 w-5 text-[var(--text-secondary)]" />
                       ) : (
-                        <Sun className="h-5 w-5 text-yellow-400" />
+                        <Sun className="h-5 w-5 text-[var(--state-warning-text)]" />
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-white">
-                        {isDarkMode ? 'Dark Mode' : 'Light Mode'}
-                      </p>
-                      <p className="text-sm text-slate-400">
-                        {isDarkMode ? 'Dark theme is enabled' : 'Light theme is enabled'}
-                      </p>
+                      <p className="font-medium text-[var(--text-primary)]">{appearanceTitle}</p>
+                      <p className="text-sm text-[var(--text-muted)]">{appearanceDescription}</p>
                     </div>
                   </div>
-                  <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
+                  <Switch
+                    checked={isDarkMode}
+                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                  />
                 </div>
               </div>
             </div>
@@ -173,7 +207,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
         <div className="pt-6">
           <Button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-[var(--cta-text)]"
           >
             Done
           </Button>

@@ -43,18 +43,20 @@ interface NavbarProps {
 const navItemVariants = {
   rest: {
     x: 0,
-    backgroundColor: 'rgba(30, 41, 59, 0.5)',
+    backgroundColor: 'var(--nav-surface)',
+    borderColor: 'var(--nav-border)',
     transition: { duration: 0.2 },
   },
   hover: {
     x: 8,
-    backgroundColor: 'rgba(100, 116, 139, 0.1)',
+    backgroundColor: 'var(--nav-surface-hover)',
+    borderColor: 'var(--nav-border-active)',
     transition: { duration: 0.2 },
   },
   active: {
     x: 4,
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-    borderColor: 'rgba(139, 92, 246, 0.3)',
+    backgroundColor: 'var(--nav-surface-active)',
+    borderColor: 'var(--nav-border-active)',
     transition: { duration: 0.2 },
   },
 }
@@ -99,10 +101,10 @@ function NavigationItem({
     <motion.button
       onClick={onClick}
       className={cn(
-        'w-full group relative rounded-xl border transition-all duration-200 cursor-pointer',
+        'w-full group relative rounded-xl border transition-all duration-200 cursor-pointer bg-[var(--nav-surface)] text-[var(--nav-text)]',
         isActive
-          ? 'border-purple-500/30 bg-purple-500/10 text-white'
-          : 'border-transparent hover:border-slate-600 text-slate-300 hover:text-white',
+          ? 'border-[var(--nav-border-active)] bg-[var(--nav-surface-active)] text-[var(--nav-text-active)]'
+          : 'border-[var(--nav-border)] hover:border-[var(--nav-border-active)] hover:bg-[var(--nav-surface-hover)] hover:text-[var(--nav-text-active)]',
       )}
       variants={navItemVariants}
       initial="rest"
@@ -118,7 +120,9 @@ function NavigationItem({
               variants={iconVariants}
               className={cn(
                 'relative flex-shrink-0',
-                isActive ? 'text-purple-400' : 'text-slate-400 group-hover:text-purple-400',
+                isActive
+                  ? 'text-[var(--nav-icon-active)]'
+                  : 'text-[var(--nav-text)] group-hover:text-[var(--nav-icon-active)]',
               )}
             >
               <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -129,7 +133,9 @@ function NavigationItem({
                 <h3
                   className={cn(
                     'font-medium text-sm sm:text-base truncate',
-                    isActive ? 'text-white' : 'text-slate-300 group-hover:text-white',
+                    isActive
+                      ? 'text-[var(--text-primary)]'
+                      : 'text-[var(--nav-text)] group-hover:text-[var(--text-primary)]',
                   )}
                 >
                   {item.title}
@@ -146,7 +152,9 @@ function NavigationItem({
               <p
                 className={cn(
                   'text-xs mt-1 truncate',
-                  isActive ? 'text-purple-200' : 'text-slate-500 group-hover:text-slate-400',
+                  isActive
+                    ? 'text-[var(--nav-text-active)]/85'
+                    : 'text-[var(--nav-text-muted)] group-hover:text-[var(--nav-text)]',
                 )}
               >
                 {item.description}
@@ -158,7 +166,9 @@ function NavigationItem({
             variants={chevronVariants}
             className={cn(
               'flex-shrink-0 ml-2',
-              isActive ? 'text-purple-400' : 'text-slate-500 group-hover:text-slate-400',
+              isActive
+                ? 'text-[var(--nav-icon-active)]'
+                : 'text-[var(--nav-text-muted)] group-hover:text-[var(--nav-icon-active)]',
             )}
           >
             <ChevronRight className="h-4 w-4" />
@@ -192,11 +202,11 @@ function SocialLink({ social }: { social: SocialLink }) {
     <button
       type="button"
       onClick={handleClick}
-      className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all duration-200 group cursor-pointer"
+      className="flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-200 group cursor-pointer bg-[var(--nav-surface)] border-[var(--nav-border)] hover:border-[var(--nav-border-active)] hover:bg-[var(--nav-surface-hover)]"
       aria-label={`Open ${social.name} in new tab`}
       title={social.name}
     >
-      <Icon className="h-3.5 w-3.5 text-slate-400 group-hover:text-purple-400 transition-colors duration-200" />
+      <Icon className="h-3.5 w-3.5 text-[var(--nav-text-muted)] group-hover:text-[var(--nav-icon-active)] transition-colors duration-200" />
     </button>
   )
 }
@@ -220,7 +230,8 @@ function NavbarContent({
   return (
     <motion.nav
       className={cn(
-        'bg-slate-900 w-full border-r border-slate-700 flex flex-col h-full',
+        'w-full border-r flex flex-col h-full',
+        'bg-[var(--nav-surface)] border-[var(--nav-border)]',
         className,
       )}
       initial={{ opacity: 0 }}
@@ -229,7 +240,7 @@ function NavbarContent({
     >
       {/* Logo Section */}
       <motion.div
-        className="p-4 sm:p-6 border-b border-slate-700"
+        className="p-4 sm:p-6 border-b border-[var(--nav-border)]"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -243,12 +254,14 @@ function NavbarContent({
             tabIndex={0}
           >
             <div className="relative size-full" data-name="Seamless Logo">
-              <SeamlessLogo className="block size-full text-white" />
+              <SeamlessLogo className="block size-full text-[var(--brand-primary)]" />
             </div>
           </motion.div>
           <div>
-            <h2 className="text-lg sm:text-xl font-bold text-white">Seamless Protocol</h2>
-            <p className="text-xs text-slate-400">Platform TVL: {platformTVL}</p>
+            <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)]">
+              Seamless Protocol
+            </h2>
+            <p className="text-xs text-[var(--nav-text-muted)]">Platform TVL: {platformTVL}</p>
           </div>
         </div>
       </motion.div>
@@ -268,10 +281,10 @@ function NavbarContent({
       </div>
 
       {/* Footer Section */}
-      <div className="px-3 sm:px-4 py-3 border-t border-slate-700">
+      <div className="px-3 sm:px-4 py-3 border-t border-[var(--nav-border)]">
         {/* Desktop Layout */}
         <div className="hidden sm:flex items-center justify-between">
-          <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--nav-text-muted)]">
             {communitySection.title}
           </h3>
           <div className="flex space-x-2">
@@ -283,7 +296,7 @@ function NavbarContent({
 
         {/* Mobile Layout - Centered */}
         <div className="sm:hidden flex flex-col items-center space-y-3">
-          <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--nav-text-muted)]">
             {communitySection.title}
           </h3>
           <div className="flex space-x-2">
@@ -295,14 +308,14 @@ function NavbarContent({
       </div>
 
       {/* Current Deployment Section */}
-      <div className="p-4 sm:p-6 border-t border-slate-700">
+      <div className="p-4 sm:p-6 border-t border-[var(--nav-border)]">
         <div className="space-y-3">
           <div className="text-center">
             <a
               href="https://github.com/seamless-protocol/app"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-slate-500 hover:text-purple-400 transition-colors duration-200 inline-flex items-center space-x-1"
+              className="text-xs inline-flex items-center space-x-1 transition-colors duration-200 text-[var(--nav-text-muted)] hover:text-[var(--nav-icon-active)]"
             >
               <Github className="h-3 w-3" />
               <span>Current Deployment</span>
@@ -321,7 +334,7 @@ function MobileMenuButton({ onClick }: { onClick: () => void }) {
       <Button
         variant="ghost"
         size="sm"
-        className="text-slate-400 hover:text-white hover:bg-slate-800 transition-colors p-2 h-10 w-10"
+        className="p-2 h-10 w-10 text-[var(--nav-text)] hover:text-[var(--text-primary)] hover:bg-[var(--nav-surface-hover)]"
         onClick={onClick}
         aria-label="Open mobile navigation menu"
       >
@@ -358,7 +371,7 @@ export function VerticalNavbar({
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetContent
             side="left"
-            className="w-[280px] xs:w-[300px] sm:w-80 p-0 bg-slate-900 border-slate-700"
+            className="w-[280px] xs:w-[300px] sm:w-80 p-0 border bg-[var(--nav-surface)] border-[var(--nav-border)]"
             aria-describedby={mobileNavDescriptionId}
           >
             <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
