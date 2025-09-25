@@ -1,5 +1,6 @@
 import { Percent, Settings, TrendingDown } from 'lucide-react'
-import { useEffect, useId, useRef } from 'react'
+import { useId } from 'react'
+import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
@@ -45,7 +46,6 @@ interface EarningsDisplay {
 }
 
 interface InputStepProps {
-  // Token data
   selectedToken: Token
   availableAssets: Array<Asset>
   amount: string
@@ -53,21 +53,15 @@ interface InputStepProps {
   onPercentageClick: (percentage: number) => void
   selectedAssetId: OutputAssetId
   onAssetChange: (asset: OutputAssetId) => void
-
-  // UI state
   showAdvanced: boolean
   onToggleAdvanced: () => void
   slippage: string
   onSlippageChange: (value: string) => void
-
-  // Loading states
   isLeverageTokenBalanceLoading: boolean
   isUsdPriceLoading: boolean
   isCalculating: boolean
   isAllowanceLoading: boolean
   isApproving: boolean
-
-  // Calculations
   expectedAmount: string
   selectedAssetSymbol: string
   earnings: EarningsDisplay
@@ -75,19 +69,11 @@ interface InputStepProps {
   collateralSymbol: string
   isUserMetricsLoading: boolean
   disabledAssets?: Array<OutputAssetId>
-
-  // Validation
   canProceed: boolean
   needsApproval: boolean
   isConnected: boolean
-
-  // Actions
   onApprove: () => void
-
-  // Error
   error?: string | undefined
-
-  // Config
   leverageTokenConfig: LeverageTokenConfig
 }
 
@@ -123,15 +109,6 @@ export function InputStep({
   leverageTokenConfig,
 }: InputStepProps) {
   const redeemAmountId = useId()
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  // Auto-focus and select the input when the component mounts
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus()
-      inputRef.current.select()
-    }
-  }, [])
 
   const formatAssetValue = (value: number, symbol: string) =>
     `${value.toLocaleString('en-US', {
@@ -173,22 +150,27 @@ export function InputStep({
   const totalEarnedClass =
     hasEarnedDebt || hasEarnedUsd
       ? (hasEarnedDebt ? earnedDebtValue : (earnings.earnedUsd as number)) >= 0
-        ? 'text-green-400'
-        : 'text-red-400'
-      : 'text-slate-500'
+        ? 'text-[var(--state-success-text)]'
+        : 'text-[var(--state-error-text)]'
+      : 'text-[var(--text-muted)]'
 
   const earnedUsd = hasEarnedUsd ? formatUsdValue(earnings.earnedUsd as number) : undefined
   const showEarnedUsdSecondary = hasEarnedDebt && earnedUsd
 
+  const balanceFloat = parseFloat(selectedToken.balance)
+  const pricePerToken = balanceFloat > 0 ? selectedToken.price / balanceFloat : 0
+
   return (
     <div className="space-y-6">
-      {/* Position Overview */}
-      <Card variant="gradient" className="p-4 gap-0">
-        <h4 className="text-sm font-medium text-white mb-3">Your Position</h4>
+      <Card
+        variant="gradient"
+        className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+      >
+        <h4 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Your Position</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-slate-400 block">Leverage Tokens</span>
-            <span className="text-white font-medium">
+            <span className="block text-[var(--text-secondary)]">Leverage Tokens</span>
+            <span className="font-medium text-[var(--text-primary)]">
               {isLeverageTokenBalanceLoading ? (
                 <Skeleton className="inline-block h-4 w-16" />
               ) : (
@@ -197,8 +179,8 @@ export function InputStep({
             </span>
           </div>
           <div>
-            <span className="text-slate-400 block">Current Value</span>
-            <span className="text-white font-medium">
+            <span className="block text-[var(--text-secondary)]">Current Value</span>
+            <span className="font-medium text-[var(--text-primary)]">
               {isUsdPriceLoading ? (
                 <Skeleton className="inline-block h-4 w-20" />
               ) : (
@@ -210,43 +192,44 @@ export function InputStep({
             </span>
           </div>
           <div>
-            <span className="text-slate-400 block">Total Earned</span>
+            <span className="block text-[var(--text-secondary)]">Total Earned</span>
             {isUserMetricsLoading ? (
               <Skeleton className="inline-block h-4 w-20" />
             ) : earnedDisplay ? (
               <div className="flex items-center gap-2">
-                <span className={`${totalEarnedClass} font-medium`}>{earnedDisplay}</span>
+                <span className={cn('font-medium', totalEarnedClass)}>{earnedDisplay}</span>
                 {showEarnedUsdSecondary ? (
-                  <span className="text-slate-400 text-xs">({earnedUsd})</span>
+                  <span className="text-xs text-[var(--text-secondary)]">({earnedUsd})</span>
                 ) : null}
               </div>
             ) : (
-              <span className="text-slate-500 font-medium">$N/A</span>
+              <span className="font-medium text-[var(--text-muted)]">$N/A</span>
             )}
           </div>
           <div>
-            <span className="text-slate-400 block">Originally Minted</span>
+            <span className="block text-[var(--text-secondary)]">Originally Minted</span>
             {isUserMetricsLoading ? (
               <Skeleton className="inline-block h-4 w-20" />
             ) : mintedPrimary ? (
               <div className="flex items-center gap-2">
-                <span className="text-white font-medium">{mintedPrimary}</span>
-                {mintedUsd ? <span className="text-slate-400 text-xs">({mintedUsd})</span> : null}
+                <span className="font-medium text-[var(--text-primary)]">{mintedPrimary}</span>
+                {mintedUsd ? (
+                  <span className="text-xs text-[var(--text-secondary)]">({mintedUsd})</span>
+                ) : null}
               </div>
             ) : (
-              <span className="text-slate-500 font-medium">$N/A</span>
+              <span className="font-medium text-[var(--text-muted)]">$N/A</span>
             )}
           </div>
         </div>
       </Card>
 
-      {/* Amount Input */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <label htmlFor={redeemAmountId} className="text-sm font-medium text-white">
+          <label htmlFor={redeemAmountId} className="text-sm font-medium text-[var(--text-primary)]">
             Redemption Amount (Tokens)
           </label>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-[var(--text-secondary)]">
             Available:{' '}
             {isLeverageTokenBalanceLoading ? (
               <Skeleton className="inline-block h-3 w-16" />
@@ -256,26 +239,25 @@ export function InputStep({
           </div>
         </div>
 
-        <Card variant="gradient" className="p-4 gap-0">
-          <div className="flex items-center justify-between mb-3">
+        <Card
+          variant="gradient"
+          className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+        >
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex-1">
               <Input
-                ref={inputRef}
                 id={redeemAmountId}
                 type="text"
                 placeholder="0"
                 value={amount}
                 onChange={(e) => onAmountChange(e.target.value)}
-                className="border-slate-700 bg-transparent text-2xl px-3 h-auto focus:ring-0 focus:ring-offset-0 font-medium text-white"
+                className="h-auto border-0 bg-transparent px-3 text-2xl font-medium text-[var(--text-primary)] focus:ring-0 focus:ring-offset-0"
               />
-              <div className="text-xs text-slate-400 mt-1">
+              <div className="mt-1 text-xs text-[var(--text-secondary)]">
                 {isUsdPriceLoading ? (
                   <Skeleton className="h-4 w-20" />
                 ) : (
-                  `≈ $${(
-                    parseFloat(amount || '0') *
-                      (selectedToken.price / parseFloat(selectedToken.balance))
-                  ).toLocaleString('en-US', {
+                  `≈ $${(parseFloat(amount || '0') * pricePerToken).toLocaleString('en-US', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}`
@@ -283,15 +265,14 @@ export function InputStep({
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 ml-4">
-              <div className="w-6 h-6 bg-purple-600/20 rounded-full flex items-center justify-center">
-                <TrendingDown className="h-3 w-3 text-purple-400" />
+            <div className="ml-4 flex items-center space-x-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand-secondary) 20%,transparent)]">
+                <TrendingDown className="h-3 w-3 text-[var(--brand-secondary)]" />
               </div>
-              <span className="text-sm font-medium text-white">Tokens</span>
+              <span className="text-sm font-medium text-[var(--text-primary)]">Tokens</span>
             </div>
           </div>
 
-          {/* Percentage shortcuts */}
           <div className="flex items-center justify-between">
             <div className="flex space-x-2">
               {AMOUNT_PERCENTAGE_PRESETS.map((percentage) => (
@@ -300,7 +281,7 @@ export function InputStep({
                   variant="outline"
                   size="sm"
                   onClick={() => onPercentageClick(percentage)}
-                  className="h-7 px-2 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                  className="h-7 border border-[var(--divider-line)] px-2 text-xs text-[var(--text-secondary)] transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]"
                 >
                   {percentage === 100 ? 'MAX' : `${percentage}%`}
                 </Button>
@@ -311,19 +292,21 @@ export function InputStep({
               variant="ghost"
               size="sm"
               onClick={onToggleAdvanced}
-              className="text-slate-400 hover:text-white"
+              className="text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
             >
-              <Settings className="h-4 w-4 mr-1" />
+              <Settings className="mr-1 h-4 w-4" />
               Advanced
             </Button>
           </div>
         </Card>
 
-        {/* Advanced Settings */}
         {showAdvanced && (
-          <Card variant="gradient" className="p-4 gap-0">
+          <Card
+            variant="gradient"
+            className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+          >
             <div className="flex items-center justify-between">
-              <div className="text-xs font-medium text-white">Slippage Tolerance</div>
+              <div className="text-xs font-medium text-[var(--text-primary)]">Slippage Tolerance</div>
               <div className="flex items-center space-x-2">
                 {SLIPPAGE_PRESETS_PERCENT_DISPLAY.map((value) => (
                   <Button
@@ -331,11 +314,12 @@ export function InputStep({
                     variant={slippage === value ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => onSlippageChange(value)}
-                    className={`h-8 px-3 text-xs ${
+                    className={cn(
+                      'h-8 px-3 text-xs transition-colors',
                       slippage === value
-                        ? 'bg-purple-600 text-white hover:bg-purple-500'
-                        : 'border-slate-600 text-slate-300 hover:bg-slate-700'
-                    }`}
+                        ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]'
+                        : 'border border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]',
+                    )}
                   >
                     {value}%
                   </Button>
@@ -345,10 +329,10 @@ export function InputStep({
                     type="text"
                     value={slippage}
                     onChange={(e) => onSlippageChange(e.target.value)}
-                    className="w-16 h-8 text-xs text-center bg-slate-900 border-slate-600 text-white"
+                    className="h-8 w-16 border border-[var(--divider-line)] bg-[var(--input-background)] text-center text-xs text-[var(--text-primary)]"
                     placeholder="0.5"
                   />
-                  <Percent className="h-3 w-3 text-slate-400" />
+                  <Percent className="h-3 w-3 text-[var(--text-muted)]" />
                 </div>
               </div>
             </div>
@@ -356,9 +340,8 @@ export function InputStep({
         )}
       </div>
 
-      {/* Asset Selection */}
       <div className="space-y-4">
-        <div className="text-sm font-medium text-white">Redeem to</div>
+        <div className="text-sm font-medium text-[var(--text-primary)]">Redeem to</div>
         <div className="flex space-x-3">
           {availableAssets.map((asset) => (
             <Button
@@ -366,11 +349,13 @@ export function InputStep({
               variant={selectedAssetId === asset.id ? 'default' : 'outline'}
               onClick={() => onAssetChange(asset.id)}
               disabled={disabledAssets.includes(asset.id)}
-              className={`flex-1 ${
+              className={cn(
+                'flex-1 transition-colors',
                 selectedAssetId === asset.id
-                  ? 'bg-purple-600 text-white hover:bg-purple-500'
-                  : 'border-slate-600 text-slate-300 hover:bg-slate-700'
-              } ${disabledAssets.includes(asset.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]'
+                  : 'border border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]',
+                disabledAssets.includes(asset.id) && 'cursor-not-allowed opacity-50',
+              )}
             >
               {asset.symbol}
             </Button>
@@ -378,30 +363,30 @@ export function InputStep({
         </div>
       </div>
 
-      {/* Transaction Summary */}
-      <Card variant="gradient" className="p-4 gap-2">
-        <h4 className="text-sm font-medium text-white mb-3">Transaction Summary</h4>
+      <Card
+        variant="gradient"
+        className="gap-2 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+      >
+        <h4 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Transaction Summary</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-400">Redeem Amount</span>
-            <span className="text-white">
+            <span className="text-[var(--text-secondary)]">Redeem Amount</span>
+            <span className="text-[var(--text-primary)]">
               {amount || '0'} {selectedToken.symbol}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Redemption Fee</span>
-            <span className="text-white">0.2%</span>
+            <span className="text-[var(--text-secondary)]">Redemption Fee</span>
+            <span className="text-[var(--text-primary)]">0.2%</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Slippage Tolerance</span>
-            <span className="text-white">{slippage}%</span>
+            <span className="text-[var(--text-secondary)]">Slippage Tolerance</span>
+            <span className="text-[var(--text-primary)]">{slippage}%</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Approval Status</span>
-            <span className={needsApproval ? 'text-yellow-400' : 'text-green-400'}>
-              {!amount || parseFloat(amount || '0') === 0 ? (
-                <span className="text-slate-400">N/A</span>
-              ) : isAllowanceLoading ? (
+            <span className="text-[var(--text-secondary)]">Approval Status</span>
+            <span className={cn(needsApproval ? 'text-[var(--state-warning-text)]' : 'text-[var(--state-success-text)]')}>
+              {isAllowanceLoading ? (
                 <Skeleton className="inline-block h-3 w-16" />
               ) : needsApproval ? (
                 'Approval Required'
@@ -411,8 +396,8 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between font-medium">
-            <span className="text-white">You will receive</span>
-            <span className="text-white">
+            <span className="text-[var(--text-primary)]">You will receive</span>
+            <span className="text-[var(--text-primary)]">
               {isCalculating ? (
                 <Skeleton className="inline-block h-4 w-24" />
               ) : (
@@ -423,29 +408,21 @@ export function InputStep({
         </div>
       </Card>
 
-      {/* Processing Notice */}
-      <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
-        <div className="flex items-center text-sm text-slate-300">
-          <TrendingDown className="h-4 w-4 mr-2 text-yellow-400 flex-shrink-0" />
+      <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-3">
+        <div className="flex items-center text-sm text-[var(--text-secondary)]">
+          <TrendingDown className="mr-2 h-4 w-4 text-[var(--state-warning-text)]" />
           <div>
-            <p className="font-medium text-white">Redemption Fee</p>
-            <p className="text-xs mt-1">
+            <p className="font-medium text-[var(--text-primary)]">Redemption Fee</p>
+            <p className="mt-1 text-xs">
               A 0.2% redemption fee applies to cover rebalancing costs.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Error Display */}
       {error && <Alert type="error" title="Error" description={error} />}
 
-      {/* Action Button */}
-      <Button
-        onClick={onApprove}
-        disabled={!canProceed}
-        variant="gradient"
-        className="w-full h-12 font-medium"
-      >
+      <Button onClick={onApprove} disabled={!canProceed} variant="gradient" className="h-12 w-full font-medium">
         {!isConnected
           ? 'Connect Wallet'
           : !canProceed && parseFloat(amount || '0') === 0

@@ -20,48 +20,54 @@ export function SuccessStep({
   return (
     <div className="space-y-6 text-center">
       <div className="flex flex-col items-center">
-        <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-          <CheckCircle className="h-8 w-8 text-green-400" />
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--state-success-text) 20%,transparent)]">
+          <CheckCircle className="h-8 w-8 text-[var(--state-success-text)]" />
         </div>
-        <h3 className="text-lg font-medium text-white mb-2">Redemption Completed!</h3>
-        <p className="text-slate-400 text-center max-w-sm">
+        <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">Redemption Completed!</h3>
+        <p className="mx-auto max-w-sm text-[var(--text-secondary)]">
           Your {amount} leverage tokens have been successfully redeemed for {expectedAmount}{' '}
           {selectedAsset}.
         </p>
       </div>
 
-      <Card variant="gradient" className="p-4">
-        <div className="text-sm space-y-2">
+      <Card
+        variant="gradient"
+        className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+      >
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-400">Redeemed</span>
-            <span className="text-white">{amount} tokens</span>
+            <span className="text-[var(--text-secondary)]">Redeemed</span>
+            <span className="text-[var(--text-primary)]">{amount} tokens</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Received</span>
-            <span className="text-white">
+            <span className="text-[var(--text-secondary)]">Received</span>
+            <span className="text-[var(--text-primary)]">
               {expectedAmount} {selectedAsset}
             </span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">Transaction</span>
+          <div className="flex items-center justify-between">
+            <span className="text-[var(--text-secondary)]">Transaction</span>
             <button
               type="button"
               onClick={() => window.open(`https://basescan.org/tx/${transactionHash}`, '_blank')}
-              className="text-purple-400 hover:underline flex items-center"
+              className="flex items-center text-[var(--brand-secondary)] underline-offset-2 transition-colors hover:text-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)] hover:underline"
             >
               View on Basescan
-              <ExternalLink className="h-3 w-3 ml-1" />
+              <ExternalLink className="ml-1 h-3 w-3" />
             </button>
           </div>
         </div>
       </Card>
 
-      <Card variant="gradient" className="p-4">
-        <div className="flex items-start text-sm">
-          <TrendingDown className="h-4 w-4 text-purple-400 mr-2 mt-0.5 flex-shrink-0" />
-          <div className="text-slate-300">
-            <p className="font-medium text-white">Redemption complete</p>
-            <p className="text-xs mt-1">
+      <Card
+        variant="gradient"
+        className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+      >
+        <div className="flex items-start text-sm text-[var(--text-secondary)]">
+          <TrendingDown className="mr-2 mt-0.5 h-4 w-4 text-[var(--brand-secondary)]" />
+          <div>
+            <p className="font-medium text-[var(--text-primary)]">Redemption complete</p>
+            <p className="mt-1 text-xs">
               Your {selectedAsset} has been transferred to your wallet. Track your remaining
               positions in your Portfolio.
             </p>
@@ -69,7 +75,7 @@ export function SuccessStep({
         </div>
       </Card>
 
-      <Button onClick={onClose} variant="gradient" className="w-full h-12 font-medium">
+      <Button onClick={onClose} variant="gradient" className="h-12 w-full font-medium">
         Done
       </Button>
     </div>

@@ -11,11 +11,11 @@ export function ErrorStep({ error, onRetry, onClose }: ErrorStepProps) {
   return (
     <div className="space-y-6 text-center">
       <div className="flex flex-col items-center">
-        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
-          <AlertTriangle className="h-8 w-8 text-red-400" />
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--state-error-text) 20%,transparent)]">
+          <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />
         </div>
-        <h3 className="text-lg font-medium text-white mb-2">Transaction Failed</h3>
-        <p className="text-slate-400 text-center max-w-sm">
+        <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">Transaction Failed</h3>
+        <p className="mx-auto max-w-sm text-[var(--text-secondary)]">
           {error || 'Something went wrong with your mint. Please try again.'}
         </p>
       </div>
@@ -24,7 +24,7 @@ export function ErrorStep({ error, onRetry, onClose }: ErrorStepProps) {
         <Button
           onClick={onRetry}
           variant="outline"
-          className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800"
+          className="flex-1 border-[var(--divider-line)] text-[var(--text-secondary)] transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]"
         >
           Try Again
         </Button>

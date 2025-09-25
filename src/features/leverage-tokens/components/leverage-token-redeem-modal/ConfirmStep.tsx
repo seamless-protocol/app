@@ -36,62 +36,68 @@ export function ConfirmStep({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-lg font-medium text-white mb-2">Confirm Redemption</h3>
-        <p className="text-slate-400">Review your redemption details and confirm the transaction</p>
+        <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">Confirm Redemption</h3>
+        <p className="text-[var(--text-secondary)]">Review your redemption details and confirm the transaction</p>
       </div>
 
-      <Card variant="gradient" className="p-4 gap-0">
+      <Card
+        variant="gradient"
+        className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+      >
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-slate-400 text-sm">Redeeming</span>
+            <span className="text-sm text-[var(--text-secondary)]">Redeeming</span>
             <div className="flex items-center">
-              <span className="text-white font-medium mr-2">
+              <span className="mr-2 font-medium text-[var(--text-primary)]">
                 {amount} {selectedToken.symbol}
               </span>
-              <TrendingDown className="h-4 w-4 text-purple-400" />
+              <TrendingDown className="h-4 w-4 text-[var(--brand-secondary)]" />
             </div>
           </div>
 
           <div className="flex justify-center py-2">
-            <ArrowDownUp className="h-4 w-4 text-slate-400" />
+            <ArrowDownUp className="h-4 w-4 text-[var(--text-muted)]" />
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-slate-400 text-sm">Receiving</span>
+            <span className="text-sm text-[var(--text-secondary)]">Receiving</span>
             <div className="flex items-center">
-              <span className="text-white font-medium mr-2">
+              <span className="mr-2 font-medium text-[var(--text-primary)]">
                 {expectedAmount} {selectedAsset}
               </span>
-              <TrendingDown className="h-4 w-4 text-green-400" />
+              <TrendingDown className="h-4 w-4 text-[var(--state-success-text)]" />
             </div>
           </div>
         </div>
       </Card>
 
-      <Card variant="gradient" className="p-4">
-        <h4 className="text-sm font-medium text-white mb-3">Final Summary</h4>
+      <Card
+        variant="gradient"
+        className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+      >
+        <h4 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Final Summary</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-400">Leverage Token</span>
-            <span className="text-white">{leverageTokenConfig.name}</span>
+            <span className="text-[var(--text-secondary)]">Leverage Token</span>
+            <span className="text-[var(--text-primary)]">{leverageTokenConfig.name}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Redeem Asset</span>
-            <span className="text-white">{selectedAsset}</span>
+            <span className="text-[var(--text-secondary)]">Redeem Asset</span>
+            <span className="text-[var(--text-primary)]">{selectedAsset}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Redemption Fee</span>
-            <span className="text-white">0.2%</span>
+            <span className="text-[var(--text-secondary)]">Redemption Fee</span>
+            <span className="text-[var(--text-primary)]">0.2%</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Estimated Gas</span>
-            <span className="text-white">$2.80</span>
+            <span className="text-[var(--text-secondary)]">Estimated Gas</span>
+            <span className="text-[var(--text-primary)]">$2.80</span>
           </div>
         </div>
       </Card>
 
-      <Button onClick={onConfirm} variant="gradient" className="w-full h-12 font-medium">
-        <Zap className="h-4 w-4 mr-2" />
+      <Button onClick={onConfirm} variant="gradient" className="h-12 w-full font-medium">
+        <Zap className="mr-2 h-4 w-4" />
         Confirm Redemption
       </Button>
     </div>
