@@ -10,6 +10,7 @@ const BASE_UNISWAP_V2_ROUTER = '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' as A
 export enum LeverageTokenKey {
   WEETH_WETH_17X = 'weeth-weth-17x',
   WEETH_WETH_17X_TENDERLY = 'weeth-weth-17x-tenderly',
+  CBBTC_USDC_2X_TENDERLY = 'cbbtc-usdc-2x-tenderly',
   // Add more token keys here as they are added
   // ANOTHER_TOKEN = 'another-token',
 }
@@ -205,6 +206,42 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       collateralToDebt: {
         type: 'uniswapV2',
         router: BASE_UNISWAP_V2_ROUTER,
+      },
+    },
+  },
+  [LeverageTokenKey.CBBTC_USDC_2X_TENDERLY]: {
+    address: '0x662c3f931D4101b7e2923f8493D6b35368a991aD' as Address,
+    name: 'cbBTC / USDC 2x Leverage Token (Tenderly)',
+    symbol: 'CBBTC-USDC-2x',
+    description:
+      'Tenderly VNet deployment of the cbBTC / USDC 2x leverage token used for automated integration testing.',
+    decimals: 18,
+    leverageRatio: 2,
+    chainId: 8453,
+    chainName: 'Base (Tenderly VNet)',
+    chainLogo: BaseLogo,
+    supplyCap: 200,
+    isTestOnly: true,
+    collateralAsset: {
+      symbol: 'cbBTC',
+      name: 'Coinbase Wrapped BTC',
+      address: '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf' as Address,
+      decimals: 8,
+    },
+    debtAsset: {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as Address,
+      decimals: 6,
+    },
+    swaps: {
+      debtToCollateral: {
+        type: 'uniswapV3',
+        poolKey: 'usdc-cbbtc',
+      },
+      collateralToDebt: {
+        type: 'uniswapV3',
+        poolKey: 'usdc-cbbtc',
       },
     },
   },
