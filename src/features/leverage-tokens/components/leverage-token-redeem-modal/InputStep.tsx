@@ -49,6 +49,7 @@ interface InputStepProps {
   selectedToken: Token
   availableAssets: Array<Asset>
   amount: string
+  redemptionFee?: bigint | undefined
   onAmountChange: (value: string) => void
   onPercentageClick: (percentage: number) => void
   selectedAssetId: OutputAssetId
@@ -66,6 +67,7 @@ interface InputStepProps {
   isCalculating: boolean
   isAllowanceLoading: boolean
   isApproving: boolean
+  isRedemptionFeeLoading?: boolean | undefined
 
   // Calculations
   expectedAmount: string
@@ -121,6 +123,8 @@ export function InputStep({
   onApprove,
   error,
   leverageTokenConfig,
+  redemptionFee,
+  isRedemptionFeeLoading,
 }: InputStepProps) {
   const redeemAmountId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -390,7 +394,15 @@ export function InputStep({
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Redemption Fee</span>
-            <span className="text-white">0.2%</span>
+            <span className="text-white">
+              {isRedemptionFeeLoading ? (
+                <Skeleton className="inline-block h-4 w-12" />
+              ) : typeof redemptionFee === 'bigint' ? (
+                `${Number(redemptionFee) / 100}%`
+              ) : (
+                <Skeleton className="inline-block h-4 w-12" />
+              )}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Slippage Tolerance</span>
@@ -430,7 +442,13 @@ export function InputStep({
           <div>
             <p className="font-medium text-white">Redemption Fee</p>
             <p className="text-xs mt-1">
-              A 0.2% redemption fee applies to cover rebalancing costs.
+              {isRedemptionFeeLoading ? (
+                <Skeleton className="inline-block h-3 w-48" />
+              ) : typeof redemptionFee === 'bigint' ? (
+                `A ${Number(redemptionFee) / 100}% redemption fee applies to cover rebalancing costs.`
+              ) : (
+                'A redemption fee applies to cover rebalancing costs.'
+              )}
             </p>
           </div>
         </div>
