@@ -63,7 +63,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
             <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
               <Settings className="h-5 w-5 text-white" />
             </div>
-            <span>{account ? 'Account Settings' : 'Settings'}</span>
+            <span>Settings</span>
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-400 mb-3">
             {account
