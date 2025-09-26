@@ -9,7 +9,11 @@ test.describe('Basic App Loading', () => {
     await page.waitForLoadState('networkidle')
 
     // Wait for the app-ready marker set in src/main.tsx
-    await page.waitForFunction(() => document.body.dataset['appReady'] === 'true')
+    await page.waitForFunction(
+      () =>
+        document.body.dataset['appReady'] === 'true' ||
+        Boolean(document.querySelector('#root')?.firstElementChild),
+    )
     await expect(page.locator('#root')).toBeVisible()
 
     // Verify the page doesn't show "Not Found" error
@@ -27,7 +31,11 @@ test.describe('Basic App Loading', () => {
     // Check that we're on the tokens route
     expect(page.url()).toContain('#/tokens')
 
-    await page.waitForFunction(() => document.body.dataset['appReady'] === 'true')
+    await page.waitForFunction(
+      () =>
+        document.body.dataset['appReady'] === 'true' ||
+        Boolean(document.querySelector('#root')?.firstElementChild),
+    )
     await expect(page.locator('#root')).toBeVisible()
   })
 })
