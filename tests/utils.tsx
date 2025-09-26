@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type RenderHookOptions, renderHook } from '@testing-library/react'
 import { vi } from 'vitest'
-import { useAccount, useChainId } from 'wagmi'
+import { useAccount, useChainId, usePublicClient } from 'wagmi'
 
 // Utility to create deterministic hashes from strings
 export function makeHash(name: string): string {
@@ -32,8 +32,18 @@ export const mockSetup = {
     // Just need to configure their return values
     const mockUseAccount = useAccount as any
     const mockUseChainId = useChainId as any
+    const mockUsePublicClient = usePublicClient as any
     mockUseAccount.mockReturnValue({ address: ownerAddress })
     mockUseChainId.mockReturnValue(chainId)
+    mockUsePublicClient.mockReturnValue({
+      getChainId: () => Promise.resolve(chainId),
+      chain: { id: chainId },
+      transport: { url: 'http://localhost:8545' },
+      waitForTransactionReceipt: vi.fn().mockResolvedValue({
+        status: 'success',
+        transactionHash: '0xtxhash',
+      }),
+    })
   },
 
   // Clear all mocks (useful in beforeEach)

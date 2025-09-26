@@ -32,8 +32,9 @@ export function useMintForm(params: {
   }, [amount])
 
   const hasBalance = useMemo(() => {
-    const n = Number(amount || '0')
-    return Number.isFinite(n) && n <= walletBalanceNum + 1e-12
+    if (!amount || amount === '') return false
+    const n = Number(amount)
+    return Number.isFinite(n) && n > 0 && n <= walletBalanceNum + 1e-12
   }, [amount, walletBalanceNum])
 
   const minAmountOk = useMemo(() => {
