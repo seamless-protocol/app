@@ -2,18 +2,10 @@ import { useCallback, useMemo, useState } from 'react'
 import { parseUnits } from 'viem'
 
 export function useRedeemForm(params: {
-  leverageTokenConfig: {
-    symbol: string
-    name: string
-    collateralAsset: {
-      symbol: string
-      name: string
-      decimals: number
-    }
-  }
+  leverageTokenDecimals: number
   leverageTokenBalanceFormatted: string
 }) {
-  const { leverageTokenConfig, leverageTokenBalanceFormatted } = params
+  const { leverageTokenDecimals, leverageTokenBalanceFormatted } = params
 
   // Form state
   const [amount, setAmount] = useState('')
@@ -26,6 +18,12 @@ export function useRedeemForm(params: {
   // Handle percentage shortcuts
   const onPercent = useCallback((pct: number, tokenBalance: string) => {
     const n = Math.max(0, Math.min(100, pct))
+    if (n === 100) {
+      // Preserve the full precision of the wallet balance when redeeming MAX
+      setAmount(tokenBalance)
+      return
+    }
+
     const balance = parseFloat(tokenBalance)
     const next = ((balance * n) / 100).toFixed(6)
     setAmount(next)
@@ -36,11 +34,11 @@ export function useRedeemForm(params: {
     const n = Number(amount)
     if (!amount || !Number.isFinite(n) || n <= 0) return undefined
     try {
-      return parseUnits(amount, leverageTokenConfig.collateralAsset.decimals)
+      return parseUnits(amount, leverageTokenDecimals)
     } catch {
       return undefined
     }
-  }, [amount, leverageTokenConfig.collateralAsset.decimals])
+  }, [amount, leverageTokenDecimals])
 
   const isAmountValid = useMemo(() => {
     const n = Number(amount || '0')

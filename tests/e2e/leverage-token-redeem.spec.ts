@@ -119,7 +119,7 @@ test.describe('Leverage token redeem flow', () => {
 
     await page.getByRole('button', { name: 'Confirm Redemption' }).click()
 
-    await expect(page.getByRole('heading', { name: 'Processing Redeem' })).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'Processing Redemption' })).toBeVisible({
       timeout: 10_000,
     })
     await expect(page.getByRole('heading', { name: 'Redemption Completed!' })).toBeVisible({

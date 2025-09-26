@@ -180,7 +180,7 @@ export function LeverageTokenRedeemModal({
 
   // Format balances for display
   const leverageTokenBalanceFormatted = leverageTokenBalance
-    ? formatUnits(leverageTokenBalance, leverageTokenConfig.collateralAsset.decimals) // Assuming same decimals
+    ? formatUnits(leverageTokenBalance, leverageTokenConfig.decimals)
     : '0'
 
   const {
@@ -213,7 +213,7 @@ export function LeverageTokenRedeemModal({
 
   // Form state and logic
   const form = useRedeemForm({
-    leverageTokenConfig,
+    leverageTokenDecimals: leverageTokenConfig.decimals,
     leverageTokenBalanceFormatted,
   })
 
