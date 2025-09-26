@@ -46,6 +46,7 @@ const navigationItems = [
     icon: Coins,
     description: 'Stake SEAM tokens',
     badge: 'New',
+    externalUrl: 'https://legacy.seamlessprotocol.com/#/?tab=Staking',
   },
   {
     id: 'governance',
@@ -137,7 +138,13 @@ function NavbarWrapper({ currentPage }: { currentPage: string }) {
       <div className="hidden lg:block w-80 flex-shrink-0">
         <VerticalNavbar
           currentPage={page}
-          onPageChange={setPage}
+          onPageChange={(pageId, options) => {
+            if (options?.externalUrl) {
+              window.open(options.externalUrl, '_blank', 'noopener,noreferrer')
+              return
+            }
+            setPage(pageId)
+          }}
           navigationItems={navigationItems}
           communitySection={communitySection}
           platformTVL="$142.8M"
@@ -155,7 +162,13 @@ function NavbarWrapper({ currentPage }: { currentPage: string }) {
                 <div className="lg:hidden">
                   <VerticalNavbar
                     currentPage={page}
-                    onPageChange={setPage}
+                    onPageChange={(pageId, options) => {
+                      if (options?.externalUrl) {
+                        window.open(options.externalUrl, '_blank', 'noopener,noreferrer')
+                        return
+                      }
+                      setPage(pageId)
+                    }}
                     navigationItems={navigationItems}
                     communitySection={communitySection}
                     platformTVL="$142.8M"
@@ -209,7 +222,11 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   args: {
     currentPage: 'portfolio',
-    onPageChange: () => {},
+    onPageChange: (_pageId: string, options?: { externalUrl?: string }) => {
+      if (options?.externalUrl) {
+        window.open(options.externalUrl, '_blank', 'noopener,noreferrer')
+      }
+    },
     navigationItems,
     communitySection,
     platformTVL: '$142.8M',

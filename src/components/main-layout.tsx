@@ -60,6 +60,7 @@ const navigationItems = [
     description: 'Stake SEAM tokens',
     badge: 'New',
     subtitle: 'Stake SEAM tokens to earn protocol rewards',
+    externalUrl: 'https://legacy.seamlessprotocol.com/#/?tab=Staking',
   },
   features.governance && {
     id: 'governance',
@@ -153,7 +154,14 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   const currentPage = getCurrentPage()
 
-  const handlePageChange = (pageId: string) => {
+  const handlePageChange = (pageId: string, options?: { externalUrl?: string }) => {
+    if (options?.externalUrl) {
+      if (typeof window !== 'undefined') {
+        window.open(options.externalUrl, '_blank', 'noopener,noreferrer')
+      }
+      return
+    }
+
     const route = routeMapping[pageId]
     if (route) {
       // biome-ignore lint/suspicious/noExplicitAny: route mapping is safe here
