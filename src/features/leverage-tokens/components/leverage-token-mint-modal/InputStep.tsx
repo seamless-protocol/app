@@ -70,6 +70,8 @@ interface InputStepProps {
   // Config
   leverageTokenConfig: LeverageTokenConfig
   apy?: number | undefined
+  mintFee?: bigint | undefined
+  isMintFeeLoading?: boolean | undefined
 }
 
 export function InputStep({
@@ -96,6 +98,8 @@ export function InputStep({
   error,
   leverageTokenConfig,
   apy,
+  mintFee,
+  isMintFeeLoading,
 }: InputStepProps) {
   const mintAmountId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -299,7 +303,15 @@ export function InputStep({
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Management Fee</span>
-            <span className="text-white">2.0%</span>
+            <span className="text-white">
+              {isMintFeeLoading ? (
+                <Skeleton className="inline-block h-4 w-12" />
+              ) : typeof mintFee === 'bigint' ? (
+                `${Number(mintFee) / 100}%`
+              ) : (
+                <Skeleton className="inline-block h-4 w-12" />
+              )}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Slippage Tolerance</span>

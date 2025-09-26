@@ -46,6 +46,8 @@ interface LeverageTokenMintModalProps {
   leverageTokenAddress: `0x${string}` // Token address to look up config
   apy?: number // Optional APY prop - if not provided, will default to 0
   userAddress?: `0x${string}` // Optional user address - if not provided, will use useAccount
+  mintFee?: bigint | undefined // Mint fee from contract
+  isMintFeeLoading?: boolean | undefined // Loading state for mint fee
 }
 
 // Hoisted to avoid re-creating on every render
@@ -64,6 +66,8 @@ export function LeverageTokenMintModal({
   leverageTokenAddress,
   apy,
   userAddress: propUserAddress,
+  mintFee,
+  isMintFeeLoading,
 }: LeverageTokenMintModalProps) {
   // Get leverage token configuration by address
   const leverageTokenConfig = getLeverageTokenConfig(leverageTokenAddress)
@@ -344,6 +348,8 @@ export function LeverageTokenMintModal({
             error={error || undefined}
             leverageTokenConfig={leverageTokenConfig}
             apy={apy ?? undefined}
+            mintFee={mintFee}
+            isMintFeeLoading={isMintFeeLoading}
           />
         )
 

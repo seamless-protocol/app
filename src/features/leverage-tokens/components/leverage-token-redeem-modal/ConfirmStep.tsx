@@ -25,6 +25,8 @@ interface ConfirmStepProps {
   expectedAmount: string
   selectedAsset: string
   leverageTokenConfig: LeverageTokenConfig
+  redemptionFee?: bigint | undefined
+  isRedemptionFeeLoading?: boolean | undefined
   onConfirm: () => void
 }
 
@@ -34,6 +36,8 @@ export function ConfirmStep({
   expectedAmount,
   selectedAsset,
   leverageTokenConfig,
+  redemptionFee,
+  isRedemptionFeeLoading,
   onConfirm,
 }: ConfirmStepProps) {
   // Get real-time gas estimation
@@ -95,7 +99,15 @@ export function ConfirmStep({
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Redemption Fee</span>
-            <span className="text-white">0.2%</span>
+            <span className="text-white">
+              {isRedemptionFeeLoading ? (
+                <Skeleton className="inline-block h-4 w-12" />
+              ) : typeof redemptionFee === 'bigint' ? (
+                `${Number(redemptionFee) / 100}%`
+              ) : (
+                <Skeleton className="inline-block h-4 w-12" />
+              )}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Estimated Gas</span>

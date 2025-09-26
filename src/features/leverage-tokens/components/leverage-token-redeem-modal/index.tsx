@@ -46,6 +46,8 @@ interface LeverageTokenRedeemModalProps {
   onClose: () => void
   leverageTokenAddress: `0x${string}` // Token address to look up config
   userAddress?: `0x${string}` // Optional user address - if not provided, will use useAccount
+  redemptionFee?: bigint | undefined // Redemption fee from contract
+  isRedemptionFeeLoading?: boolean | undefined // Loading state for redemption fee
 }
 
 // Hoisted to avoid re-creating on every render
@@ -63,6 +65,8 @@ export function LeverageTokenRedeemModal({
   onClose,
   leverageTokenAddress,
   userAddress: propUserAddress,
+  redemptionFee,
+  isRedemptionFeeLoading,
 }: LeverageTokenRedeemModalProps) {
   const queryClient = useQueryClient()
 
@@ -570,6 +574,8 @@ export function LeverageTokenRedeemModal({
             onApprove={handleApprove}
             error={error || redeemBlockingError}
             leverageTokenConfig={leverageTokenConfig}
+            redemptionFee={redemptionFee}
+            isRedemptionFeeLoading={isRedemptionFeeLoading}
             disabledAssets={disabledOutputAssets}
           />
         )
@@ -596,6 +602,8 @@ export function LeverageTokenRedeemModal({
               leverageRatio: leverageTokenConfig.leverageRatio,
               chainId: leverageTokenConfig.chainId,
             }}
+            redemptionFee={redemptionFee}
+            isRedemptionFeeLoading={isRedemptionFeeLoading}
             onConfirm={handleConfirm}
           />
         )

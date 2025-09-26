@@ -20,6 +20,7 @@ import { LeverageTokenMintModal } from '@/features/leverage-tokens/components/le
 import { LeverageTokenRedeemModal } from '@/features/leverage-tokens/components/leverage-token-redeem-modal'
 import { RelatedResources } from '@/features/leverage-tokens/components/RelatedResources'
 import { useLeverageTokenCollateral } from '@/features/leverage-tokens/hooks/useLeverageTokenCollateral'
+import { useLeverageTokenConfig } from '@/features/leverage-tokens/hooks/useLeverageTokenConfig'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
 import { useLeverageTokenState } from '@/features/leverage-tokens/hooks/useLeverageTokenState'
@@ -55,6 +56,12 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       isLoading: isDetailedMetricsLoading,
       isError: isDetailedMetricsError,
     } = useLeverageTokenDetailedMetrics(tokenAddress as Address)
+
+    // Fetch contract config to get both mint and redeem fees
+    const { config: contractConfig, isLoading: isContractConfigLoading } = useLeverageTokenConfig(
+      tokenAddress as Address,
+      chainId,
+    )
 
     // Live on-chain state for TVL (equity) in debt asset units
     const { data: stateData, isLoading: isStateLoading } = useLeverageTokenState(
@@ -649,6 +656,8 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           isOpen={isMintModalOpen}
           onClose={() => setIsMintModalOpen(false)}
           leverageTokenAddress={tokenAddress as Address}
+          mintFee={contractConfig?.mintTokenFee}
+          isMintFeeLoading={isContractConfigLoading}
           {...(userAddress && { userAddress })}
           {...(apyData?.totalAPY && { apy: apyData.totalAPY })}
         />
@@ -658,6 +667,8 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           isOpen={isRedeemModalOpen}
           onClose={() => setIsRedeemModalOpen(false)}
           leverageTokenAddress={tokenAddress as Address}
+          redemptionFee={contractConfig?.redeemTokenFee}
+          isRedemptionFeeLoading={isContractConfigLoading}
           {...(userAddress && { userAddress })}
         />
       </div>
