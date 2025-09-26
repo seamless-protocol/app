@@ -69,7 +69,7 @@ export function FeaturedLeverageToken({
               {isApyError ? (
                 <span className="text-[var(--text-muted)] font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
-                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-5 w-20" />
               ) : (
                 <span className="text-[var(--state-success-text)] font-medium">
                   {formatAPY(apyData.totalAPY, 2)}
@@ -83,7 +83,7 @@ export function FeaturedLeverageToken({
               {isApyError ? (
                 <span className="text-[var(--text-muted)] font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
-                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-5 w-20" />
               ) : (
                 <span className="text-[var(--accent-1)] font-medium">
                   {formatPercentage(apyData.rewardsAPR, { decimals: 2 })}
@@ -97,7 +97,7 @@ export function FeaturedLeverageToken({
               {isApyError ? (
                 <span className="text-[var(--text-muted)] font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
-                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-5 w-20" />
               ) : (
                 <span className="font-medium text-[var(--state-warning-text)]">
                   {`${apyData.points.toLocaleString()} x`}

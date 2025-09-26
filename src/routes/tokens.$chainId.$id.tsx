@@ -230,37 +230,145 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     ]
 
     return (
-      <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb Navigation */}
-        <BreadcrumbNavigation
-          items={[
-            {
-              label: 'Leverage Tokens',
-              onClick: () => navigate({ to: '/tokens' }),
-            },
-            {
-              label: tokenConfig.name,
-              isActive: true,
-            },
-          ]}
-          onBack={() => navigate({ to: '/tokens' })}
-        />
+      <div className="min-h-screen w-full overflow-hidden">
+        <div className="w-full max-w-7xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-4 lg:px-8">
+          {/* Breadcrumb Navigation */}
+          <BreadcrumbNavigation
+            items={[
+              {
+                label: 'Leverage Tokens',
+                onClick: () => navigate({ to: '/tokens' }),
+              },
+              {
+                label: tokenConfig.name,
+                isActive: true,
+              },
+            ]}
+            onBack={() => navigate({ to: '/tokens' })}
+          />
 
-        {/* Two-Column Grid Layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Left Column - Main Content */}
-          <div className="xl:col-span-2 space-y-6">
-            {/* Page Header */}
-            <motion.div
-              className="space-y-4 pb-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              {/* Mobile Layout */}
-              <div className="flex flex-col space-y-4 sm:hidden">
-                {/* Token Icons and Name */}
-                <div className="flex items-center space-x-3">
+          {/* Two-Column Grid Layout */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Left Column - Main Content */}
+            <div className="xl:col-span-2 space-y-6">
+              {/* Page Header */}
+              <motion.div
+                className="space-y-4 pb-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+              >
+                {/* Mobile Layout */}
+                <div className="flex flex-col space-y-4 sm:hidden">
+                  {/* Token Icons and Name */}
+                  <div className="flex items-center space-x-3">
+                    <div className="flex -space-x-1">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
+                        style={{ zIndex: 2 }}
+                      >
+                        <AssetDisplay
+                          asset={tokenConfig.collateralAsset}
+                          size="lg"
+                          variant="logo-only"
+                          tooltipContent={
+                            <p className="font-medium">
+                              {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol}
+                              )
+                              <br />
+                              <span className="text-sm text-[var(--text-secondary)]">
+                                Click to view on{' '}
+                                {
+                                  getTokenExplorerInfo(
+                                    tokenConfig.chainId,
+                                    tokenConfig.collateralAsset.address,
+                                  ).name
+                                }
+                              </span>
+                            </p>
+                          }
+                          onClick={() =>
+                            window.open(
+                              getTokenExplorerInfo(
+                                tokenConfig.chainId,
+                                tokenConfig.collateralAsset.address,
+                              ).url,
+                              '_blank',
+                            )
+                          }
+                        />
+                      </div>
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
+                        style={{ zIndex: 1 }}
+                      >
+                        <AssetDisplay
+                          asset={tokenConfig.debtAsset}
+                          size="lg"
+                          variant="logo-only"
+                          tooltipContent={
+                            <p className="font-medium">
+                              {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
+                              <br />
+                              <span className="text-sm text-[var(--text-secondary)]">
+                                Click to view on{' '}
+                                {
+                                  getTokenExplorerInfo(
+                                    tokenConfig.chainId,
+                                    tokenConfig.debtAsset.address,
+                                  ).name
+                                }
+                              </span>
+                            </p>
+                          }
+                          onClick={() =>
+                            window.open(
+                              getTokenExplorerInfo(tokenConfig.chainId, tokenConfig.debtAsset.address)
+                                .url,
+                              '_blank',
+                            )
+                          }
+                        />
+                      </div>
+                    </div>
+                    <h1 className="text-xl font-bold text-[var(--text-primary)] leading-tight flex-1 min-w-0">
+                      <span className="block truncate">{tokenConfig.name}</span>
+                    </h1>
+                  </div>
+
+                  {/* APY Badge - Mobile */}
+                  <div className="flex items-center space-x-1">
+                    <Badge className="text-sm border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]">
+                      {apyData?.totalAPY ? (
+                        `${formatAPY(apyData.totalAPY, 2)} APY`
+                      ) : (
+                        <Skeleton className="h-4 w-20" />
+                      )}
+                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)]"
+                        >
+                          <Info className="h-3 w-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
+                        <APYBreakdownTooltip
+                          token={tokenConfig}
+                          {...(apyData && { apyData })}
+                          isLoading={isApyLoading ?? false}
+                          isError={isApyError ?? false}
+                          compact
+                        />
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden sm:flex items-center space-x-3">
                   <div className="flex -space-x-1">
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
@@ -272,8 +380,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                         variant="logo-only"
                         tooltipContent={
                           <p className="font-medium">
-                            {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol}
-                            )
+                            {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol})
                             <br />
                             <span className="text-sm text-[var(--text-secondary)]">
                               Click to view on{' '}
@@ -330,157 +437,188 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                       />
                     </div>
                   </div>
-                  <h1 className="text-xl font-bold text-[var(--text-primary)] leading-tight flex-1 min-w-0">
-                    <span className="block truncate">{tokenConfig.name}</span>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+                    {tokenConfig.name}
                   </h1>
-                </div>
-
-                {/* APY Badge - Mobile */}
-                <div className="flex items-center space-x-1">
-                  <Badge className="text-sm border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]">
-                    {apyData?.totalAPY ? (
-                      `${formatAPY(apyData.totalAPY, 2)} APY`
-                    ) : (
-                      <Skeleton className="h-4 w-20" />
-                    )}
-                  </Badge>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)]"
-                      >
-                        <Info className="h-3 w-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
-                      <APYBreakdownTooltip
-                        token={tokenConfig}
-                        {...(apyData && { apyData })}
-                        isLoading={isApyLoading ?? false}
-                        isError={isApyError ?? false}
-                        compact
-                      />
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-
-              {/* Desktop Layout */}
-              <div className="hidden sm:flex items-center space-x-3">
-                <div className="flex -space-x-1">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
-                    style={{ zIndex: 2 }}
-                  >
-                    <AssetDisplay
-                      asset={tokenConfig.collateralAsset}
-                      size="lg"
-                      variant="logo-only"
-                      tooltipContent={
-                        <p className="font-medium">
-                          {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol})
-                          <br />
-                          <span className="text-sm text-[var(--text-secondary)]">
-                            Click to view on{' '}
-                            {
-                              getTokenExplorerInfo(
-                                tokenConfig.chainId,
-                                tokenConfig.collateralAsset.address,
-                              ).name
-                            }
-                          </span>
-                        </p>
-                      }
-                      onClick={() =>
-                        window.open(
-                          getTokenExplorerInfo(
-                            tokenConfig.chainId,
-                            tokenConfig.collateralAsset.address,
-                          ).url,
-                          '_blank',
-                        )
-                      }
-                    />
-                  </div>
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
-                    style={{ zIndex: 1 }}
-                  >
-                    <AssetDisplay
-                      asset={tokenConfig.debtAsset}
-                      size="lg"
-                      variant="logo-only"
-                      tooltipContent={
-                        <p className="font-medium">
-                          {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
-                          <br />
-                          <span className="text-sm text-[var(--text-secondary)]">
-                            Click to view on{' '}
-                            {
-                              getTokenExplorerInfo(
-                                tokenConfig.chainId,
-                                tokenConfig.debtAsset.address,
-                              ).name
-                            }
-                          </span>
-                        </p>
-                      }
-                      onClick={() =>
-                        window.open(
-                          getTokenExplorerInfo(tokenConfig.chainId, tokenConfig.debtAsset.address)
-                            .url,
-                          '_blank',
-                        )
-                      }
-                    />
+                  <div className="flex items-center space-x-1">
+                    <Badge className="border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]">
+                      {apyData?.totalAPY ? (
+                        `${formatAPY(apyData.totalAPY, 2)} APY`
+                      ) : (
+                        <Skeleton className="h-4 w-20" />
+                      )}
+                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                        >
+                          <Info className="h-3 w-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]">
+                        <APYBreakdownTooltip
+                          token={tokenConfig}
+                          {...(apyData && { apyData })}
+                          isLoading={isApyLoading ?? false}
+                          isError={isApyError ?? false}
+                          compact
+                        />
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
-                  {tokenConfig.name}
-                </h1>
-                <div className="flex items-center space-x-1">
-                  <Badge className="border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]">
-                    {apyData?.totalAPY ? (
-                      `${formatAPY(apyData.totalAPY, 2)} APY`
-                    ) : (
-                      <Skeleton className="h-4 w-20" />
-                    )}
-                  </Badge>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
-                      >
-                        <Info className="h-3 w-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]">
-                      <APYBreakdownTooltip
-                        token={tokenConfig}
-                        {...(apyData && { apyData })}
-                        isLoading={isApyLoading ?? false}
-                        isError={isApyError ?? false}
-                        compact
-                      />
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
 
-              {/* Description */}
-              <p className="text-[var(--text-secondary)] leading-relaxed text-sm sm:text-base">
-                {tokenConfig.description}
-              </p>
-            </motion.div>
+                {/* Description */}
+                <p className="text-[var(--text-secondary)] leading-relaxed text-sm sm:text-base">
+                  {tokenConfig.description}
+                </p>
+              </motion.div>
 
-            {/* Current Holdings - Mobile Only */}
+              {/* Current Holdings - Mobile Only */}
+              <motion.div
+                className="xl:hidden"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <LeverageTokenHoldingsCard
+                  userPosition={{
+                    hasPosition,
+                    balance: userSharesFormatted,
+                    balanceUSD: userEquityUsdFormatted,
+                    shareToken: tokenConfig.symbol,
+                    isConnected,
+                  }}
+                  collateralAsset={tokenConfig.collateralAsset}
+                  debtAsset={tokenConfig.debtAsset}
+                  isLoading={isUserPosLoading}
+                  onMint={handleMint}
+                  onRedeem={handleRedeem}
+                />
+              </motion.div>
+
+              {/* Key Metrics */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+              >
+                <StatCardList cards={keyMetricsCards} maxColumns={3} />
+              </motion.div>
+
+              {/* Price History Chart */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+              >
+                {isPriceDataLoading ? (
+                  <div className="rounded-lg p-8 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
+                    <div className="space-y-4">
+                      <Skeleton className="h-6 w-32" />
+                      <Skeleton className="h-64 w-full" />
+                      <div className="flex justify-center space-x-2">
+                        <Skeleton className="h-8 w-12" />
+                        <Skeleton className="h-8 w-12" />
+                        <Skeleton className="h-8 w-12" />
+                        <Skeleton className="h-8 w-12" />
+                      </div>
+                    </div>
+                  </div>
+                ) : priceDataError ? (
+                  <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
+                    <p className="mb-2 text-[var(--state-error-text)]">Failed to load price data</p>
+                    <p className="text-sm text-[var(--text-secondary)]">{priceDataError.message}</p>
+                  </div>
+                ) : !priceHistoryData || priceHistoryData.length === 0 ? (
+                  <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
+                    <p className="text-[var(--text-secondary)]">No price data available</p>
+                  </div>
+                ) : (
+                  <PriceLineChart
+                    data={priceHistoryData}
+                    selectedTimeframe={selectedTimeframe}
+                    onTimeframeChange={(timeframe) =>
+                      setSelectedTimeframe(timeframe as typeof selectedTimeframe)
+                    }
+                    timeframes={['1W', '1M', '3M', '6M', '1Y']}
+                    chartType="comparison"
+                    chartLines={[
+                      {
+                        key: 'weethPrice',
+                        name: `${tokenConfig.collateralAsset.symbol} Price`,
+                        dataKey: 'weethPrice',
+                        color: 'var(--chart-2)',
+                      },
+                      {
+                        key: 'leverageTokenPrice',
+                        name: 'Leverage Token Price',
+                        dataKey: 'leverageTokenPrice',
+                        color: 'var(--chart-1)',
+                      },
+                    ]}
+                    visibleLines={{
+                      weethPrice: true,
+                      leverageTokenPrice: true,
+                    }}
+                    title="Price History"
+                    subtitle={`Compare leverage token performance vs ${tokenConfig.collateralAsset.symbol}`}
+                    height={320}
+                    className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]"
+                  />
+                )}
+              </motion.div>
+
+              {/* Detailed Metrics */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.4 }}
+              >
+                <LeverageTokenDetailedMetrics
+                  metrics={detailedMetrics}
+                  title="Token Details & Risk Parameters"
+                  description="Comprehensive leverage token parameters and settings"
+                  defaultOpen={false}
+                  isLoading={isDetailedMetricsLoading}
+                  isError={isDetailedMetricsError}
+                />
+              </motion.div>
+
+              {/* Related Resources - Only show if there are resources */}
+              {tokenConfig.relatedResources &&
+                (tokenConfig.relatedResources.underlyingPlatforms.length > 0 ||
+                  tokenConfig.relatedResources.additionalRewards.length > 0) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 }}
+                  >
+                    <RelatedResources
+                      underlyingPlatforms={tokenConfig.relatedResources.underlyingPlatforms}
+                      additionalRewards={tokenConfig.relatedResources.additionalRewards}
+                    />
+                  </motion.div>
+                )}
+
+              {/* FAQ Section */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.7 }}
+              >
+                <FAQ items={faqData} />
+              </motion.div>
+            </div>
+
+            {/* Right Column - Current Holdings (Desktop Only) */}
             <motion.div
-              className="xl:hidden"
+              className="hidden xl:block xl:col-span-1 space-y-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
+              transition={{ duration: 0.4, delay: 0.6 }}
             >
               <LeverageTokenHoldingsCard
                 userPosition={{
@@ -497,161 +635,25 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 onRedeem={handleRedeem}
               />
             </motion.div>
-
-            {/* Key Metrics */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
-              <StatCardList cards={keyMetricsCards} maxColumns={3} />
-            </motion.div>
-
-            {/* Price History Chart */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
-              {isPriceDataLoading ? (
-                <div className="rounded-lg p-8 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
-                  <div className="space-y-4">
-                    <Skeleton className="h-6 w-32" />
-                    <Skeleton className="h-64 w-full" />
-                    <div className="flex justify-center space-x-2">
-                      <Skeleton className="h-8 w-12" />
-                      <Skeleton className="h-8 w-12" />
-                      <Skeleton className="h-8 w-12" />
-                      <Skeleton className="h-8 w-12" />
-                    </div>
-                  </div>
-                </div>
-              ) : priceDataError ? (
-                <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
-                  <p className="mb-2 text-[var(--state-error-text)]">Failed to load price data</p>
-                  <p className="text-sm text-[var(--text-secondary)]">{priceDataError.message}</p>
-                </div>
-              ) : !priceHistoryData || priceHistoryData.length === 0 ? (
-                <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
-                  <p className="text-[var(--text-secondary)]">No price data available</p>
-                </div>
-              ) : (
-                <PriceLineChart
-                  data={priceHistoryData}
-                  selectedTimeframe={selectedTimeframe}
-                  onTimeframeChange={(timeframe) =>
-                    setSelectedTimeframe(timeframe as typeof selectedTimeframe)
-                  }
-                  timeframes={['1W', '1M', '3M', '6M', '1Y']}
-                  chartType="comparison"
-                  chartLines={[
-                    {
-                      key: 'weethPrice',
-                      name: `${tokenConfig.collateralAsset.symbol} Price`,
-                      dataKey: 'weethPrice',
-                      color: 'var(--chart-2)',
-                    },
-                    {
-                      key: 'leverageTokenPrice',
-                      name: 'Leverage Token Price',
-                      dataKey: 'leverageTokenPrice',
-                      color: 'var(--chart-1)',
-                    },
-                  ]}
-                  visibleLines={{
-                    weethPrice: true,
-                    leverageTokenPrice: true,
-                  }}
-                  title="Price History"
-                  subtitle={`Compare leverage token performance vs ${tokenConfig.collateralAsset.symbol}`}
-                  height={320}
-                  className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]"
-                />
-              )}
-            </motion.div>
-
-            {/* Detailed Metrics */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.4 }}
-            >
-              <LeverageTokenDetailedMetrics
-                metrics={detailedMetrics}
-                title="Token Details & Risk Parameters"
-                description="Comprehensive leverage token parameters and settings"
-                defaultOpen={false}
-                isLoading={isDetailedMetricsLoading}
-                isError={isDetailedMetricsError}
-              />
-            </motion.div>
-
-            {/* Related Resources - Only show if there are resources */}
-            {tokenConfig.relatedResources &&
-              (tokenConfig.relatedResources.underlyingPlatforms.length > 0 ||
-                tokenConfig.relatedResources.additionalRewards.length > 0) && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.5 }}
-                >
-                  <RelatedResources
-                    underlyingPlatforms={tokenConfig.relatedResources.underlyingPlatforms}
-                    additionalRewards={tokenConfig.relatedResources.additionalRewards}
-                  />
-                </motion.div>
-              )}
-
-            {/* FAQ Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.7 }}
-            >
-              <FAQ items={faqData} />
-            </motion.div>
           </div>
 
-          {/* Right Column - Current Holdings (Desktop Only) */}
-          <motion.div
-            className="hidden xl:block xl:col-span-1 space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.6 }}
-          >
-            <LeverageTokenHoldingsCard
-              userPosition={{
-                hasPosition,
-                balance: userSharesFormatted,
-                balanceUSD: userEquityUsdFormatted,
-                shareToken: tokenConfig.symbol,
-                isConnected,
-              }}
-              collateralAsset={tokenConfig.collateralAsset}
-              debtAsset={tokenConfig.debtAsset}
-              isLoading={isUserPosLoading}
-              onMint={handleMint}
-              onRedeem={handleRedeem}
-            />
-          </motion.div>
+          {/* Mint Modal */}
+          <LeverageTokenMintModal
+            isOpen={isMintModalOpen}
+            onClose={() => setIsMintModalOpen(false)}
+            leverageTokenAddress={tokenAddress as Address}
+            {...(userAddress && { userAddress })}
+            {...(apyData?.totalAPY && { apy: apyData.totalAPY })}
+          />
+
+          {/* Redeem Modal */}
+          <LeverageTokenRedeemModal
+            isOpen={isRedeemModalOpen}
+            onClose={() => setIsRedeemModalOpen(false)}
+            leverageTokenAddress={tokenAddress as Address}
+            {...(userAddress && { userAddress })}
+          />
         </div>
-
-        {/* Mint Modal */}
-        <LeverageTokenMintModal
-          isOpen={isMintModalOpen}
-          onClose={() => setIsMintModalOpen(false)}
-          leverageTokenAddress={tokenAddress as Address}
-          {...(userAddress && { userAddress })}
-          {...(apyData?.totalAPY && { apy: apyData.totalAPY })}
-        />
-
-        {/* Redeem Modal */}
-        <LeverageTokenRedeemModal
-          isOpen={isRedeemModalOpen}
-          onClose={() => setIsRedeemModalOpen(false)}
-          leverageTokenAddress={tokenAddress as Address}
-          {...(userAddress && { userAddress })}
-        />
       </div>
     )
   },

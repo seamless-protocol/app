@@ -249,202 +249,204 @@ function PortfolioPage() {
   }
 
   return (
-    <motion.div
-      className="space-y-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* Portfolio Value Cards */}
+    <div className="mx-auto max-w-7xl lg:px-8">
       <motion.div
+        className="space-y-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
+        transition={{ duration: 0.5 }}
       >
-        <StatCardList
-          maxColumns={3}
-          cards={[
-            {
-              title: 'Total Portfolio Value',
-              stat: portfolioLoading ? (
-                <Skeleton className="h-6 w-24" />
-              ) : summary.totalValue < 0.01 ? (
-                '< $0.01'
-              ) : (
-                `$${summary.totalValue.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 6,
-                })}`
-              ),
-              caption: portfolioLoading ? (
-                <Skeleton className="h-4 w-16" />
-              ) : (
-                <div
-                  className={`flex items-center text-sm ${
-                    summary.changeAmount >= 0 ? 'text-green-400' : 'text-red-400'
-                  }`}
-                >
-                  {summary.changeAmount >= 0 ? (
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                  ) : (
-                    <TrendingUp className="h-3 w-3 mr-1 rotate-180" />
-                  )}
-                  ${Math.abs(summary.changeAmount).toLocaleString()} (
-                  {summary.changePercent.toFixed(2)}%)
-                </div>
-              ),
-              icon: <DollarSign />,
-              iconBgClass: 'bg-purple-500/20',
-              iconTextClass: 'text-purple-400',
-            },
-            {
-              title: 'Total Earnings',
-              stat: portfolioLoading ? (
-                <Skeleton className="h-6 w-24" />
-              ) : (
-                `${summary.changeAmount >= 0 ? '+' : ''}$${Math.abs(
-                  summary.changeAmount,
-                ).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 6,
-                })}`
-              ),
-              caption: portfolioLoading ? (
-                <Skeleton className="h-4 w-20" />
-              ) : (
-                `${summary.changePercent >= 0 ? '+' : ''}${summary.changePercent.toFixed(2)}% total return`
-              ),
-              icon: <TrendingUp />,
-              iconBgClass: summary.changeAmount >= 0 ? 'bg-green-500/20' : 'bg-red-500/20',
-              iconTextClass: summary.changeAmount >= 0 ? 'text-green-400' : 'text-red-400',
-            },
-            {
-              title: 'Active Positions',
-              stat: portfolioLoading ? (
-                <Skeleton className="h-6 w-8" />
-              ) : (
-                summary.activePositions.toString()
-              ),
-              caption: portfolioLoading ? (
-                <Skeleton className="h-4 w-24" />
-              ) : (
-                `Across ${summary.activePositions} strategies`
-              ),
-              icon: <Target />,
-              iconBgClass: 'bg-cyan-500/20',
-              iconTextClass: 'text-cyan-400',
-            },
-          ]}
-        />
-      </motion.div>
-
-      {/* Portfolio Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
-        <div className="relative">
-          <PortfolioPerformanceChart
-            data={performanceData.data}
-            selectedTimeframe={performanceData.selectedTimeframe}
-            onTimeframeChange={performanceData.setSelectedTimeframe}
-          />
-          {performanceData.isLoading && (
-            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-              <div className="text-slate-400">Loading chart data...</div>
-            </div>
-          )}
-        </div>
-      </motion.div>
-
-      {/* Available Rewards & Staking Section */}
-      {(features.availableRewards || features.seamStaking) && (
+        {/* Portfolio Value Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className={`grid gap-6 ${
-            features.availableRewards && features.seamStaking
-              ? 'grid-cols-1 lg:grid-cols-2'
-              : 'grid-cols-1'
-          }`}
+          transition={{ duration: 0.4, delay: 0.1 }}
         >
-          {features.availableRewards && (
-            <div className="relative">
-              <AvailableRewards
-                tokenAddresses={[]}
-                accruingAmount={'$0.00'}
-                seamToken={'$0.00'}
-                protocolFees={'$0.00'}
-                onClaim={handleClaimRewards}
-              />
-              {rewardsLoading && (
-                <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-                  <div className="h-5 w-24 bg-slate-700/50 rounded animate-pulse" />
-                </div>
-              )}
-            </div>
-          )}
-
-          {features.seamStaking && (
-            <div className="relative">
-              <SEAMStaking
-                stakedAmount={stakingData?.stakedAmount || '0.00'}
-                earnedRewards={stakingData?.earnedRewards || '0.00'}
-                apy={stakingData?.apy || '0.00'}
-                onStake={handleStake}
-                onManage={handleManageStaking}
-              />
-              {stakingLoading && (
-                <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-                  <div className="text-slate-400">Loading staking data...</div>
-                </div>
-              )}
-            </div>
-          )}
+          <StatCardList
+            maxColumns={3}
+            cards={[
+              {
+                title: 'Total Portfolio Value',
+                stat: portfolioLoading ? (
+                  <Skeleton className="h-6 w-24" />
+                ) : summary.totalValue < 0.01 ? (
+                  '< $0.01'
+                ) : (
+                  `$${summary.totalValue.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 6,
+                  })}`
+                ),
+                caption: portfolioLoading ? (
+                  <Skeleton className="h-4 w-16" />
+                ) : (
+                  <div
+                    className={`flex items-center text-sm ${
+                      summary.changeAmount >= 0 ? 'text-green-400' : 'text-red-400'
+                    }`}
+                  >
+                    {summary.changeAmount >= 0 ? (
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                    ) : (
+                      <TrendingUp className="h-3 w-3 mr-1 rotate-180" />
+                    )}
+                    ${Math.abs(summary.changeAmount).toLocaleString()} (
+                    {summary.changePercent.toFixed(2)}%)
+                  </div>
+                ),
+                icon: <DollarSign />,
+                iconBgClass: 'bg-purple-500/20',
+                iconTextClass: 'text-purple-400',
+              },
+              {
+                title: 'Total Earnings',
+                stat: portfolioLoading ? (
+                  <Skeleton className="h-6 w-24" />
+                ) : (
+                  `${summary.changeAmount >= 0 ? '+' : ''}$${Math.abs(
+                    summary.changeAmount,
+                  ).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 6,
+                  })}`
+                ),
+                caption: portfolioLoading ? (
+                  <Skeleton className="h-4 w-20" />
+                ) : (
+                  `${summary.changePercent >= 0 ? '+' : ''}${summary.changePercent.toFixed(2)}% total return`
+                ),
+                icon: <TrendingUp />,
+                iconBgClass: summary.changeAmount >= 0 ? 'bg-green-500/20' : 'bg-red-500/20',
+                iconTextClass: summary.changeAmount >= 0 ? 'text-green-400' : 'text-red-400',
+              },
+              {
+                title: 'Active Positions',
+                stat: portfolioLoading ? (
+                  <Skeleton className="h-6 w-8" />
+                ) : (
+                  summary.activePositions.toString()
+                ),
+                caption: portfolioLoading ? (
+                  <Skeleton className="h-4 w-24" />
+                ) : (
+                  `Across ${summary.activePositions} strategies`
+                ),
+                icon: <Target />,
+                iconBgClass: 'bg-cyan-500/20',
+                iconTextClass: 'text-cyan-400',
+              },
+            ]}
+          />
         </motion.div>
-      )}
 
-      {/* Active Positions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.4 }}
-      >
-        <ActivePositions
-          positions={positions}
-          onAction={handlePositionAction}
-          onPositionClick={handlePositionClick}
-          apyLoading={positionsAPYLoading}
-        />
+        {/* Portfolio Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <div className="relative">
+            <PortfolioPerformanceChart
+              data={performanceData.data}
+              selectedTimeframe={performanceData.selectedTimeframe}
+              onTimeframeChange={performanceData.setSelectedTimeframe}
+            />
+            {performanceData.isLoading && (
+              <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
+                <div className="text-slate-400">Loading chart data...</div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Available Rewards & Staking Section */}
+        {(features.availableRewards || features.seamStaking) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className={`grid gap-6 ${
+              features.availableRewards && features.seamStaking
+                ? 'grid-cols-1 lg:grid-cols-2'
+                : 'grid-cols-1'
+            }`}
+          >
+            {features.availableRewards && (
+              <div className="relative">
+                <AvailableRewards
+                  tokenAddresses={[]}
+                  accruingAmount={'$0.00'}
+                  seamToken={'$0.00'}
+                  protocolFees={'$0.00'}
+                  onClaim={handleClaimRewards}
+                />
+                {rewardsLoading && (
+                  <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
+                    <div className="h-5 w-24 bg-slate-700/50 rounded animate-pulse" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {features.seamStaking && (
+              <div className="relative">
+                <SEAMStaking
+                  stakedAmount={stakingData?.stakedAmount || '0.00'}
+                  earnedRewards={stakingData?.earnedRewards || '0.00'}
+                  apy={stakingData?.apy || '0.00'}
+                  onStake={handleStake}
+                  onManage={handleManageStaking}
+                />
+                {stakingLoading && (
+                  <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
+                    <div className="text-slate-400">Loading staking data...</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* Active Positions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
+          <ActivePositions
+            positions={positions}
+            onAction={handlePositionAction}
+            onPositionClick={handlePositionClick}
+            apyLoading={positionsAPYLoading}
+          />
+        </motion.div>
+
+        {/* Mint Modal */}
+        {selectedPosition && (
+          <LeverageTokenMintModal
+            isOpen={isMintModalOpen}
+            onClose={() => {
+              setIsMintModalOpen(false)
+              setSelectedPosition(null)
+            }}
+            leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
+            {...(userAddress && { userAddress })}
+          />
+        )}
+
+        {/* Redeem Modal */}
+        {selectedPosition && (
+          <LeverageTokenRedeemModal
+            isOpen={isRedeemModalOpen}
+            onClose={() => {
+              setIsRedeemModalOpen(false)
+              setSelectedPosition(null)
+            }}
+            leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
+            {...(userAddress && { userAddress })}
+          />
+        )}
       </motion.div>
-
-      {/* Mint Modal */}
-      {selectedPosition && (
-        <LeverageTokenMintModal
-          isOpen={isMintModalOpen}
-          onClose={() => {
-            setIsMintModalOpen(false)
-            setSelectedPosition(null)
-          }}
-          leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
-          {...(userAddress && { userAddress })}
-        />
-      )}
-
-      {/* Redeem Modal */}
-      {selectedPosition && (
-        <LeverageTokenRedeemModal
-          isOpen={isRedeemModalOpen}
-          onClose={() => {
-            setIsRedeemModalOpen(false)
-            setSelectedPosition(null)
-          }}
-          leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
-          {...(userAddress && { userAddress })}
-        />
-      )}
-    </motion.div>
+    </div>
   )
 }
