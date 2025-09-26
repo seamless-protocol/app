@@ -1,6 +1,7 @@
 import type { Preview } from '@storybook/react-vite'
 import '../src/index.css'
 import '@rainbow-me/rainbowkit/styles.css'
+import { withTheme } from './decorators'
 
 const preview: Preview = {
   parameters: {
@@ -18,6 +19,7 @@ const preview: Preview = {
       test: 'todo'
     }
   },
+  decorators: [withTheme],
 };
 
 export default preview;

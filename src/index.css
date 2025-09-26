@@ -3,8 +3,18 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* RainbowKit Modal Background Override */
+/* RainbowKit Modal Background Override - Light Mode */
 [data-rk] {
+  --rk-colors-modalBackground: var(--surface-card) !important;
+  --rk-colors-modalText: var(--text-primary) !important;
+  --rk-colors-modalTextSecondary: var(--text-secondary) !important;
+  --rk-colors-accentColor: var(--brand-secondary) !important;
+  --rk-colors-generalBorder: var(--divider-line) !important;
+  --rk-colors-profileAction: var(--brand-secondary) !important;
+}
+
+/* RainbowKit Dark Mode Override */
+.dark [data-rk] {
   --rk-colors-modalBackground: #1e293b !important;
   --rk-colors-modalText: #ffffff !important;
   --rk-colors-modalTextSecondary: #ffffff !important;

@@ -143,7 +143,7 @@ function NavigationItem({
                 {item.badge && (
                   <Badge
                     variant="secondary"
-                    className="text-xs bg-purple-500/20 text-purple-400 border-purple-500/30 px-1.5 py-0.5"
+                    className="text-xs bg-[color-mix(in_srgb,var(--brand-secondary) 20%,transparent)] text-[var(--brand-secondary)] border-[color-mix(in_srgb,var(--brand-secondary) 30%,transparent)] px-1.5 py-0.5"
                   >
                     {item.badge}
                   </Badge>
@@ -153,7 +153,7 @@ function NavigationItem({
                 className={cn(
                   'text-xs mt-1 truncate',
                   isActive
-                    ? 'text-[var(--nav-text-active)]/85'
+                    ? 'text-[var(--text-secondary)]'
                     : 'text-[var(--nav-text-muted)] group-hover:text-[var(--nav-text)]',
                 )}
               >
@@ -179,7 +179,7 @@ function NavigationItem({
       {/* Active Indicator */}
       {isActive && (
         <motion.div
-          className="absolute left-0 top-1/2 w-1 bg-gradient-to-b from-purple-500 to-pink-500 rounded-r-full"
+          className="absolute left-0 top-1/2 w-1 bg-gradient-to-b from-[var(--brand-secondary)] to-[var(--brand-primary)] rounded-r-full"
           style={{ height: '60%' }}
           initial={{ scaleY: 0, y: '-50%' }}
           animate={{ scaleY: 1, y: '-50%' }}

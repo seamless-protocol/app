@@ -145,9 +145,9 @@ function NavbarWrapper({ currentPage }: { currentPage: string }) {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col bg-slate-950">
+      <div className="flex-1 flex flex-col bg-[var(--bg-hero)]">
         {/* Header with Mobile Menu */}
-        <div className="border-b border-slate-700 bg-slate-900 backdrop-blur-sm shrink-0">
+        <div className="border-b border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 95%,transparent)] backdrop-blur-sm shrink-0">
           <div className="px-3 sm:px-4 py-3 sm:py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
@@ -164,10 +164,10 @@ function NavbarWrapper({ currentPage }: { currentPage: string }) {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-base sm:text-lg font-semibold text-white truncate">
+                  <h1 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] truncate">
                     {content.title}
                   </h1>
-                  <p className="text-xs sm:text-sm text-slate-400 hidden sm:block truncate">
+                  <p className="text-xs sm:text-sm text-[var(--text-secondary)] hidden sm:block truncate">
                     {content.subtitle}
                   </p>
                 </div>
