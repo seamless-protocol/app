@@ -25,8 +25,16 @@ declare global {
 
 function markAppReady() {
   if (typeof window === 'undefined') return
-  window.__APP_READY__ = true
-  document.body.dataset['appReady'] = 'true'
+  const mark = () => {
+    window.__APP_READY__ = true
+    document.body.dataset['appReady'] = 'true'
+  }
+
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(() => setTimeout(mark, 0))
+  } else {
+    setTimeout(mark, 0)
+  }
 }
 
 // Validate environment variables before app starts
