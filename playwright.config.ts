@@ -65,6 +65,7 @@ export default defineConfig({
     command: `bunx --bun vite --port 3000 --host 127.0.0.1 --strictPort`,
     url: 'http://127.0.0.1:3000', // Explicit URL for Playwright to wait for
     env: {
+      VITE_E2E: '1',
       VITE_TEST_MODE: 'mock',
       VITE_BASE_RPC_URL: BASE_RPC_URL,
       VITE_ANVIL_RPC_URL: BASE_RPC_URL,

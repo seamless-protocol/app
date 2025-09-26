@@ -71,21 +71,38 @@ if (!rootElement) {
   throw new Error('Failed to find root element')
 }
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <ThemeProvider defaultTheme="system">
-        <WagmiProvider config={features.testMode ? testConfig : prodConfig}>
-          <QueryClientProvider client={queryClient}>
-            <RainbowThemeWrapper>
-              <RouterProvider router={router} />
-              <ReactQueryDevtools initialIsOpen={false} />
-            </RainbowThemeWrapper>
-          </QueryClientProvider>
-        </WagmiProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
-  </StrictMode>,
-)
+console.log('[app] Booting Seamless front-end', {
+  viteE2EFlag: import.meta.env['VITE_E2E'],
+  mode: import.meta.env.MODE,
+})
 
-queueMicrotask(markAppReady)
+try {
+  const root = createRoot(rootElement)
+  root.render(
+    <StrictMode>
+      <ErrorBoundary>
+        <ThemeProvider defaultTheme="system">
+          <WagmiProvider config={features.testMode ? testConfig : prodConfig}>
+            <QueryClientProvider client={queryClient}>
+              <RainbowThemeWrapper>
+                <RouterProvider router={router} />
+                <ReactQueryDevtools initialIsOpen={false} />
+              </RainbowThemeWrapper>
+            </QueryClientProvider>
+          </WagmiProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
+    </StrictMode>,
+  )
+
+  queueMicrotask(markAppReady)
+} catch (error) {
+  console.error('[app] Failed to initialize application', error)
+  if (typeof document !== 'undefined') {
+    document.body.dataset['appReady'] = 'error'
+  }
+  if (typeof window !== 'undefined') {
+    window.__APP_READY__ = false
+  }
+  throw error
+}
