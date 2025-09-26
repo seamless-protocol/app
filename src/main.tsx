@@ -17,6 +17,18 @@ import { config as prodConfig } from './lib/config/wagmi.config'
 import { testConfig } from './lib/config/wagmi.config.test'
 import { router } from './router'
 
+declare global {
+  interface Window {
+    __APP_READY__?: boolean
+  }
+}
+
+function markAppReady() {
+  if (typeof window === 'undefined') return
+  window.__APP_READY__ = true
+  document.body.dataset['appReady'] = 'true'
+}
+
 // Validate environment variables before app starts
 try {
   validateEnv()
@@ -67,3 +79,5 @@ createRoot(rootElement).render(
     </ErrorBoundary>
   </StrictMode>,
 )
+
+queueMicrotask(markAppReady)
