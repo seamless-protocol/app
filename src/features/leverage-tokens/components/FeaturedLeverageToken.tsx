@@ -141,7 +141,7 @@ export function FeaturedLeverageTokens({
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-white flex items-center space-x-2">
           <Zap className="h-5 w-5 text-yellow-400" />
-          <span>Featured High-Reward Tokens</span>
+          <span>Featured</span>
         </h2>
         <Badge variant="outline" className="text-yellow-400 border-yellow-400/30 bg-yellow-400/10">
           Top Rewards
