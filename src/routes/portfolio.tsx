@@ -12,6 +12,7 @@ import { LeverageTokenRedeemModal } from '@/features/leverage-tokens/components/
 import type { Position } from '@/features/portfolio/components/active-positions'
 import { ActivePositions } from '@/features/portfolio/components/active-positions'
 import { AvailableRewards } from '@/features/portfolio/components/available-rewards'
+import { MorphoVaultsInfoCard } from '@/features/portfolio/components/morpho-vaults-info-card'
 import { PortfolioPerformanceChart } from '@/features/portfolio/components/portfolio-performance-chart'
 import { SEAMStaking } from '@/features/portfolio/components/seam-staking'
 import {
@@ -336,6 +337,14 @@ function PortfolioPage() {
             },
           ]}
         />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.15 }}
+      >
+        <MorphoVaultsInfoCard />
       </motion.div>
 
       {/* Portfolio Chart */}

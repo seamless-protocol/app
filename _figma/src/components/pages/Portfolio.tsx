@@ -290,6 +290,45 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet, onView
         </Card>
       </motion.div>
 
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.25 }}
+      >
+        <Card className="bg-slate-900/80 border border-blue-600/40 shadow-[0_0_45px_rgba(37,99,235,0.12)]">
+          <CardContent className="p-6">
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-slate-950 font-semibold">
+                  M
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Where can I view/manage my Seamless Vaults?
+                  </h3>
+                  <p className="text-slate-300 leading-relaxed">
+                    Your Seamless Vault (powered by Morpho) positions are now managed directly in the Morpho App. This includes depositing, withdrawing, and claiming any rewards earned from the Seamless Vaults on Morpho.
+                  </p>
+                </div>
+
+                <div>
+                  <Button
+                    className="bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-2"
+                    onClick={() => window.open('https://app.morpho.org/ethereum/dashboard', '_blank', 'noopener,noreferrer')}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Open Morpho App
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Portfolio Chart */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
