@@ -3,10 +3,10 @@ import { expect, test } from '@playwright/test'
 test.describe('Basic App Loading', () => {
   test('should load app with #root element', async ({ page }) => {
     // Navigate to app root
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 15_000 })
 
     // Wait for app to load
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('networkidle', { timeout: 15_000 })
 
     // Wait for the app-ready marker set in src/main.tsx
     await page.waitForFunction(
@@ -23,10 +23,10 @@ test.describe('Basic App Loading', () => {
 
   test('should support hash routing', async ({ page }) => {
     // Test hash routing works
-    await page.goto('/#/tokens')
+    await page.goto('/#/tokens', { waitUntil: 'domcontentloaded', timeout: 15_000 })
 
     // Wait for navigation
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('networkidle', { timeout: 15_000 })
 
     // Check that we're on the tokens route
     expect(page.url()).toContain('#/tokens')

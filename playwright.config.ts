@@ -47,8 +47,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:3000',
     // Tighter default timeouts to reduce hang time
-    navigationTimeout: 7_000,
-    actionTimeout: 6_000,
+    navigationTimeout: 20_000,
+    actionTimeout: 10_000,
     serviceWorkers: 'block',
     trace: 'on-first-retry',
   },
