@@ -22,13 +22,13 @@ export function SEAMStaking({
 }: SEAMStakingProps) {
   return (
     <Card
-      className={`bg-slate-900/80 border-slate-700 hover:bg-slate-900/90 transition-all duration-300 ${className}`}
+      className={`bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] transition-all duration-300 ${className}`}
     >
       <CardHeader className="pb-4">
-        <CardTitle className="text-white flex items-center">
+        <CardTitle className="text-foreground flex items-center">
           <Lock className="h-5 w-5 mr-2 text-purple-400" />
           SEAM Staking
-          <Badge className="ml-2 bg-purple-500/20 text-purple-300 border-purple-500/30">
+          <Badge className="ml-2 bg-purple-500/20 text-purple-400 border-purple-500/30 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30">
             {apy} APY
           </Badge>
         </CardTitle>
@@ -37,19 +37,19 @@ export function SEAMStaking({
         <div className="space-y-4">
           {/* Staked Amount */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-slate-400">Staked Amount</span>
-            <span className="text-white font-semibold">{stakedAmount} SEAM</span>
+            <span className="text-[var(--text-secondary)]">Staked Amount</span>
+            <span className="text-foreground font-semibold">{stakedAmount} SEAM</span>
           </div>
 
           {/* Earned Rewards */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-slate-400">Earned Rewards</span>
+            <span className="text-[var(--text-secondary)]">Earned Rewards</span>
             <span className="text-green-400 font-semibold">+{earnedRewards} SEAM</span>
           </div>
 
           {/* APY with border */}
-          <div className="flex justify-between items-center py-2 pb-4 border-b border-slate-700">
-            <span className="text-slate-400">APY</span>
+          <div className="flex justify-between items-center py-2 pb-4 border-b border-[var(--divider-line)]">
+            <span className="text-[var(--text-secondary)]">APY</span>
             <span className="text-purple-400 font-semibold">{apy}%</span>
           </div>
 
@@ -62,7 +62,7 @@ export function SEAMStaking({
             <Button
               onClick={onManage}
               variant="outline"
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              className="border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]"
             >
               <ExternalLink className="h-4 w-4 mr-1" />
               Manage

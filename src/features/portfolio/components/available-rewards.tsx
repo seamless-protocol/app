@@ -22,10 +22,10 @@ export function AvailableRewards({
 }: AvailableRewardsProps) {
   return (
     <Card
-      className={`bg-slate-900/80 border-slate-700 hover:bg-slate-900/90 transition-all duration-300 ${className}`}
+      className={`bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] transition-all duration-300 ${className}`}
     >
       <CardHeader className="pb-4">
-        <CardTitle className="text-white flex items-center">
+        <CardTitle className="text-foreground flex items-center">
           <Award className="h-5 w-5 mr-2 text-yellow-400" />
           Available Rewards
         </CardTitle>
@@ -34,7 +34,7 @@ export function AvailableRewards({
         <div className="space-y-4">
           {/* Accruing Rewards with Token Logos */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-slate-400">Accruing</span>
+            <span className="text-[var(--text-secondary)]">Accruing</span>
             <div className="flex items-center space-x-3">
               <div className="flex items-center relative">
                 {tokenAddresses.map((tokenAddress, index) => (
@@ -51,20 +51,20 @@ export function AvailableRewards({
                   </div>
                 ))}
               </div>
-              <span className="text-white font-semibold">{accruingAmount}</span>
+              <span className="text-foreground font-semibold">{accruingAmount}</span>
             </div>
           </div>
 
           {/* SEAM Tokens */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-slate-400">SEAM Tokens</span>
-            <span className="text-white font-semibold">{seamToken} SEAM</span>
+            <span className="text-[var(--text-secondary)]">SEAM Tokens</span>
+            <span className="text-foreground font-semibold">{seamToken} SEAM</span>
           </div>
 
           {/* Protocol Fees */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-slate-400">Protocol Fees</span>
-            <span className="text-white font-semibold">{protocolFees}</span>
+            <span className="text-[var(--text-secondary)]">Protocol Fees</span>
+            <span className="text-foreground font-semibold">{protocolFees}</span>
           </div>
 
           {/* Claim Button */}

@@ -51,7 +51,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
 
   const getSortIcon = (key: string) => {
     if (sortConfig.key !== key) {
-      return <ArrowUpDown className="h-3 w-3 text-slate-500" />
+      return <ArrowUpDown className="h-3 w-3 text-[var(--text-muted)]" />
     }
     return sortConfig.direction === 'asc' ? (
       <ArrowUp className="h-3 w-3 text-purple-400" />
@@ -63,29 +63,29 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
   return (
     <div className={className}>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Vault Strategies</h2>
-        <p className="text-slate-400">Browse and invest in curated DeFi strategies</p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Vault Strategies</h2>
+        <p className="text-[var(--text-secondary)]">Browse and invest in curated DeFi strategies</p>
       </div>
 
-      <div className="bg-slate-900/80 border border-slate-700 rounded overflow-hidden">
+      <div className="bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)] rounded overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700 hover:bg-slate-800/50">
-                <TableHead className="text-slate-300 font-medium py-4 px-6">
+              <TableRow className="border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]">
+                <TableHead className="text-[var(--text-secondary)] font-medium py-4 px-6">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors cursor-pointer"
+                    className="flex items-center space-x-2 hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                     onClick={() => handleSort('name')}
                   >
                     <span>Vault</span>
                     {getSortIcon('name')}
                   </button>
                 </TableHead>
-                <TableHead className="text-slate-300 font-medium py-4 px-6">
+                <TableHead className="text-[var(--text-secondary)] font-medium py-4 px-6">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors cursor-pointer"
+                    className="flex items-center space-x-2 hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                     onClick={() => handleSort('asset')}
                   >
                     <span>Assets</span>
@@ -95,7 +95,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
+                    className="flex items-center space-x-2 hover:text-[var(--text-primary)] transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('apy')}
                   >
                     <span>APY</span>
@@ -105,7 +105,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
+                    className="flex items-center space-x-2 hover:text-[var(--text-primary)] transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('tvl')}
                   >
                     <span>TVL</span>
@@ -115,7 +115,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-center">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors mx-auto cursor-pointer"
+                    className="flex items-center space-x-2 hover:text-[var(--text-primary)] transition-colors mx-auto cursor-pointer"
                     onClick={() => handleSort('riskLevel')}
                   >
                     <span>Risk</span>
@@ -125,7 +125,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 <TableHead className="text-slate-300 font-medium py-4 px-6 text-right">
                   <button
                     type="button"
-                    className="flex items-center space-x-2 hover:text-white transition-colors ml-auto cursor-pointer"
+                    className="flex items-center space-x-2 hover:text-[var(--text-primary)] transition-colors ml-auto cursor-pointer"
                     onClick={() => handleSort('participants')}
                   >
                     <span>Participants</span>
@@ -141,7 +141,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 sortedData.map((strategy, index) => (
                   <motion.tr
                     key={strategy.id}
-                    className="border-slate-700 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                    className="border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] transition-colors cursor-pointer"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -151,10 +151,10 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                     <TableCell className="py-4 px-6">
                       <div className="flex flex-col space-y-1">
                         <div className="flex items-center space-x-2">
-                          <h4 className="font-medium text-white text-sm">{strategy.name}</h4>
+                          <h4 className="font-medium text-foreground text-sm">{strategy.name}</h4>
                           <Badge
                             variant="secondary"
-                            className="text-xs bg-slate-800/60 hover:bg-slate-700/60 border-slate-600/50 text-slate-300"
+                            className="text-xs bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] border-[var(--divider-line)] text-[var(--text-secondary)]"
                           >
                             <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center mr-1">
                               {getChainLogo(strategy.chainId as ChainId) ? (
@@ -167,7 +167,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                                   })()}
                                 </div>
                               ) : (
-                                <div className="w-3 h-3 rounded-full bg-slate-600 flex items-center justify-center text-xs font-medium text-white">
+                                <div className="w-3 h-3 rounded-full bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] flex items-center justify-center text-xs font-medium text-foreground">
                                   {strategy.chainId === CHAIN_IDS.BASE ? 'B' : 'E'}
                                 </div>
                               )}
@@ -175,7 +175,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                             {strategy.chainId === CHAIN_IDS.BASE ? 'Base' : 'Ethereum'}
                           </Badge>
                         </div>
-                        <p className="text-xs text-slate-400 line-clamp-2">
+                        <p className="text-xs text-[var(--text-muted)] line-clamp-2">
                           {strategy.description}
                         </p>
                       </div>
@@ -196,7 +196,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                       </div>
                     </TableCell>
                     <TableCell className="py-4 px-6 text-right">
-                      <span className="text-slate-300 font-medium text-sm">
+                      <span className="text-[var(--text-secondary)] font-medium text-sm">
                         {formatCurrency(strategy.tvl, { includeDollarSign: true })}
                       </span>
                     </TableCell>
@@ -209,8 +209,8 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                     </TableCell>
                     <TableCell className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end space-x-1">
-                        <Users className="h-3 w-3 text-slate-400" />
-                        <span className="text-slate-300 text-sm">
+                        <Users className="h-3 w-3 text-[var(--text-muted)]" />
+                        <span className="text-[var(--text-secondary)] text-sm">
                           {strategy.participants?.toLocaleString()}
                         </span>
                       </div>

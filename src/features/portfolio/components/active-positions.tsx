@@ -132,12 +132,17 @@ export function ActivePositions({
   const activeCount = positions.length
 
   return (
-    <Card className={cn('bg-slate-900/80 border-slate-700', className)}>
+    <Card
+      className={cn(
+        'bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]',
+        className,
+      )}
+    >
       <CardContent className="p-6">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Active Positions</h3>
-            <Badge className="bg-slate-800 text-slate-300 border-transparent">
+            <h3 className="text-lg font-semibold text-foreground">Active Positions</h3>
+            <Badge className="bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] text-[var(--text-secondary)] border-[var(--divider-line)]">
               {activeCount} Active Position{activeCount !== 1 ? 's' : ''}
             </Badge>
           </div>
@@ -145,11 +150,13 @@ export function ActivePositions({
           <div className="space-y-4">
             {positions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-                  <TrendingUp className="h-8 w-8 text-slate-500" />
+                <div className="w-16 h-16 rounded-full bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] flex items-center justify-center mb-4">
+                  <TrendingUp className="h-8 w-8 text-[var(--text-muted)]" />
                 </div>
-                <h3 className="text-lg font-medium text-slate-300 mb-2">No Active Positions</h3>
-                <p className="text-sm text-slate-500 max-w-sm">
+                <h3 className="text-lg font-medium text-[var(--text-secondary)] mb-2">
+                  No Active Positions
+                </h3>
+                <p className="text-sm text-[var(--text-muted)] max-w-sm">
                   Mint leverage tokens to see your active positions and start earning rewards.
                 </p>
               </div>
@@ -165,7 +172,7 @@ export function ActivePositions({
                   // biome-ignore lint/a11y/useSemanticElements: Cannot use button here due to nested button elements (tooltip triggers)
                   <div
                     key={position.id}
-                    className="w-full text-left bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:bg-slate-800/70 hover:border-purple-500/50 transition-all duration-200 cursor-pointer group"
+                    className="w-full text-left bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] border border-[var(--divider-line)] rounded-lg p-4 hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] hover:border-[var(--nav-border-active)] transition-all duration-200 cursor-pointer group"
                     onClick={() => onPositionClick?.(position)}
                     role="button"
                     tabIndex={0}
@@ -184,7 +191,7 @@ export function ActivePositions({
                           className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
                             isLeverageToken && position.collateralAsset && position.debtAsset
                               ? ''
-                              : 'bg-slate-700/50 border border-slate-600 p-1'
+                              : 'bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] border border-[var(--divider-line)] p-1'
                           }`}
                         >
                           {isLeverageToken && position.collateralAsset && position.debtAsset ? (

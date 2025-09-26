@@ -63,7 +63,7 @@ export function ConnectionStatusCard() {
               transition={{ duration: 0.5 }}
               className="w-full max-w-2xl"
             >
-              <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+              <Card className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] backdrop-blur-sm">
                 <CardContent className="p-8 text-center">
                   <motion.div
                     initial={{ scale: 0 }}
@@ -79,7 +79,9 @@ export function ConnectionStatusCard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
                   >
-                    <h2 className="text-xl font-semibold text-white mb-3">Connect Your Wallet</h2>
+                    <h2 className="text-xl font-semibold text-foreground mb-3">
+                      Connect Your Wallet
+                    </h2>
                     <p className="text-slate-400 mb-6 max-w-md mx-auto">
                       Connect your wallet to access Seamless Protocol's advanced DeFi strategies,
                       track your portfolio, and start earning optimized yields.
