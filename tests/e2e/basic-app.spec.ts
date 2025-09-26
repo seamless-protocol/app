@@ -8,7 +8,8 @@ test.describe('Basic App Loading', () => {
     // Wait for app to load
     await page.waitForLoadState('networkidle')
 
-    // Verify the React app loaded by checking for #root element
+    // Wait until the React tree hydrates so #root has content
+    await page.waitForFunction(() => document.querySelector('#root')?.childElementCount ?? 0)
     await expect(page.locator('#root')).toBeVisible()
 
     // Verify the page doesn't show "Not Found" error
@@ -26,7 +27,7 @@ test.describe('Basic App Loading', () => {
     // Check that we're on the tokens route
     expect(page.url()).toContain('#/tokens')
 
-    // Verify app loaded (should have #root element)
+    await page.waitForFunction(() => document.querySelector('#root')?.childElementCount ?? 0)
     await expect(page.locator('#root')).toBeVisible()
   })
 })
