@@ -143,9 +143,6 @@ export function FeaturedLeverageTokens({
           <Zap className="h-5 w-5 text-yellow-400" />
           <span>Featured</span>
         </h2>
-        <Badge variant="outline" className="text-yellow-400 border-yellow-400/30 bg-yellow-400/10">
-          Top Rewards
-        </Badge>
       </div>
 
       {/* Cards Grid */}
