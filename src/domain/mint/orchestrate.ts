@@ -107,8 +107,15 @@ export async function orchestrateMint(params: {
 
   if (version === RouterVersion.V2) {
     if (!quoteDebtToCollateral) throw new Error('quoteDebtToCollateral is required for router v2')
-    const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
-    const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
+    const env =
+      (typeof import.meta !== 'undefined' &&
+        (import.meta as unknown as { env?: Record<string, string | undefined> }).env) ||
+      ((typeof process !== 'undefined' && process.env
+        ? (process.env as Record<string, string | undefined>)
+        : undefined) ??
+        {})
+    const envRouterV2 = env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
+    const envManagerV2 = env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
     const routerAddressV2 = params.routerAddressV2 || envRouterV2
     const managerAddressV2 = params.managerAddressV2 || envManagerV2
 

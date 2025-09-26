@@ -10,7 +10,6 @@ import {
   createUniswapV3QuoteAdapter,
   type UniswapV3QuoteOptions,
 } from '@/domain/shared/adapters/uniswapV3'
-import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
 import { ADDR, CHAIN_ID, mode, RPC } from './env'
 import { readErc20Decimals } from './erc20'
@@ -21,6 +20,7 @@ export type MintSetupParams = {
   publicClient: PublicClient
   config: Parameters<typeof readLeverageTokenBalanceOf>[0]
   slippageBps?: number
+  chainIdOverride?: number
 }
 
 export type MintOutcome = {
@@ -42,6 +42,7 @@ export async function executeSharedMint({
   publicClient,
   config,
   slippageBps = 50,
+  chainIdOverride,
 }: MintSetupParams): Promise<MintOutcome> {
   const resolvedSlippageBps = Number(process.env['TEST_SLIPPAGE_BPS'] ?? slippageBps ?? 50)
   if (mode !== 'tenderly') {
@@ -64,8 +65,7 @@ export async function executeSharedMint({
   const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
 
   console.info('[SHARED MINT] Using public RPC', { url: RPC.primary })
-  const tokenConfig = getLeverageTokenConfig(token)
-  const chainId = tokenConfig?.chainId ?? CHAIN_ID
+  const chainId = chainIdOverride ?? CHAIN_ID
   console.info('[SHARED MINT] Chain ID', { chainId })
 
   const collateralAsset = ADDR.weeth

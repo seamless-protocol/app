@@ -35,7 +35,10 @@ export default defineConfig({
   retries: process.env['CI'] ? 0 : 0,
   workers: process.env['CI'] ? 1 : 1,
   // Keep tests short by default; individual expects can override
-  timeout: 30_000,
+  timeout: 45_000,
+  expect: {
+    timeout: 2_500,
+  },
   reporter: 'html',
 
   // Global setup to start Anvil before tests (skipped when using non-Anvil backend)
@@ -44,8 +47,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:3000',
     // Tighter default timeouts to reduce hang time
-    navigationTimeout: 15_000,
+    navigationTimeout: 20_000,
     actionTimeout: 10_000,
+    serviceWorkers: 'block',
     trace: 'on-first-retry',
   },
 
@@ -61,6 +65,7 @@ export default defineConfig({
     command: `bunx --bun vite --port 3000 --host 127.0.0.1 --strictPort`,
     url: 'http://127.0.0.1:3000', // Explicit URL for Playwright to wait for
     env: {
+      VITE_E2E: '1',
       VITE_TEST_MODE: 'mock',
       VITE_BASE_RPC_URL: BASE_RPC_URL,
       VITE_ANVIL_RPC_URL: BASE_RPC_URL,

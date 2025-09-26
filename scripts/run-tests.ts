@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import process from 'node:process'
 import { z } from 'zod'
+import { getContractAddresses } from '../src/lib/contracts/addresses'
 import { resolveBackend } from '../tests/shared/backend'
 // Import the Tenderly VNet helper (explicit .ts for Bun execution)
 import { createVNet, deleteVNet } from './tenderly-vnet.ts'
@@ -266,23 +267,34 @@ async function runForChainOption(
       console.log(`[run-tests] Overriding RPC for chain ${chainId}: ${mappedRpc}`)
     }
 
+    const envSeed: Record<string, string> = {
+      ...process.env,
+      TEST_CHAIN: backend.chainKey,
+      TEST_MODE: backend.mode,
+      TEST_SCENARIO: backend.scenario.key,
+      TEST_RPC_URL: effectiveRpc,
+      VITE_TEST_RPC_URL: effectiveRpc,
+      VITE_BASE_RPC_URL: effectiveRpc,
+      TENDERLY_ADMIN_RPC_URL: backend.adminRpcUrl,
+      E2E_TOKEN_SOURCE: backend.scenario.leverageTokenSource,
+      E2E_LEVERAGE_TOKEN_KEY: backend.scenario.defaultLeverageTokenKey,
+      ...(backend.contractOverrides
+        ? { VITE_CONTRACT_ADDRESS_OVERRIDES: JSON.stringify(backend.contractOverrides) }
+        : {}),
+    }
+
+    const overrideForChain = backend.contractOverrides?.[backend.canonicalChainId]
+    const canonicalAddresses = getContractAddresses(backend.canonicalChainId)
+    const executorAddress =
+      (overrideForChain?.multicall as string | undefined) ??
+      (canonicalAddresses.multicall as string | undefined)
+    if (executorAddress && !envSeed['VITE_MULTICALL_EXECUTOR_ADDRESS']) {
+      envSeed['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executorAddress
+    }
+
     const env = withTestDefaults(
       testType,
-      {
-        ...process.env,
-        TEST_CHAIN: backend.chainKey,
-        TEST_MODE: backend.mode,
-        TEST_SCENARIO: backend.scenario.key,
-        TEST_RPC_URL: effectiveRpc,
-        VITE_TEST_RPC_URL: effectiveRpc,
-        VITE_BASE_RPC_URL: effectiveRpc,
-        TENDERLY_ADMIN_RPC_URL: backend.adminRpcUrl,
-        E2E_TOKEN_SOURCE: backend.scenario.leverageTokenSource,
-        E2E_LEVERAGE_TOKEN_KEY: backend.scenario.defaultLeverageTokenKey,
-        ...(backend.contractOverrides
-          ? { VITE_CONTRACT_ADDRESS_OVERRIDES: JSON.stringify(backend.contractOverrides) }
-          : {}),
-      },
+      envSeed,
       backend.executionKind === 'anvil' ? 'anvil' : 'tenderly',
     )
 
@@ -309,6 +321,16 @@ function withTestDefaults(
     const currentRpc = env['TEST_RPC_URL']
     if (backend === 'tenderly' || currentRpc?.includes('tenderly')) {
       env['VITE_INCLUDE_TEST_TOKENS'] = 'true'
+    }
+  }
+
+  if (!env['VITE_ETHEREUM_RPC_URL']) {
+    const mainnetFallback =
+      env['VITE_MAINNET_RPC_URL'] || env['TEST_RPC_URL'] || env['VITE_BASE_RPC_URL']
+    if (mainnetFallback) {
+      env['VITE_ETHEREUM_RPC_URL'] = mainnetFallback
+    } else {
+      env['VITE_ETHEREUM_RPC_URL'] = 'https://eth.llamarpc.com'
     }
   }
 
