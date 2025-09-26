@@ -324,6 +324,16 @@ function withTestDefaults(
     }
   }
 
+  if (!env['VITE_ETHEREUM_RPC_URL']) {
+    const mainnetFallback =
+      env['VITE_MAINNET_RPC_URL'] || env['TEST_RPC_URL'] || env['VITE_BASE_RPC_URL']
+    if (mainnetFallback) {
+      env['VITE_ETHEREUM_RPC_URL'] = mainnetFallback
+    } else {
+      env['VITE_ETHEREUM_RPC_URL'] = 'https://eth.llamarpc.com'
+    }
+  }
+
   if (isUiSuite && !env['E2E_TOKEN_SOURCE']) {
     const currentRpc = env['TEST_RPC_URL']
     if (backend === 'tenderly') env['E2E_TOKEN_SOURCE'] = 'tenderly'
