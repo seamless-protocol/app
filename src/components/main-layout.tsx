@@ -60,6 +60,7 @@ const navigationItems = [
     description: 'Stake SEAM tokens',
     badge: 'New',
     subtitle: 'Stake SEAM tokens to earn protocol rewards',
+    externalUrl: 'https://legacy.seamlessprotocol.com/#/?tab=Staking',
   },
   features.governance && {
     id: 'governance',
