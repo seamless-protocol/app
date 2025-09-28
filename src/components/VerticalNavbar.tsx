@@ -16,6 +16,7 @@ export interface NavigationItem {
   description: string
   subtitle?: string
   badge?: string
+  externalUrl?: string
 }
 
 interface SocialLink {
@@ -32,7 +33,7 @@ interface CommunitySection {
 
 interface NavbarProps {
   currentPage: string
-  onPageChange: (page: string) => void
+  onPageChange: (page: string, options?: { externalUrl?: string }) => void
   navigationItems: Array<NavigationItem>
   communitySection: CommunitySection
   platformTVL: React.ReactNode
@@ -91,13 +92,22 @@ function NavigationItem({
 }: {
   item: NavigationItem
   isActive: boolean
-  onClick: () => void
+  onClick: (options?: { externalUrl?: string }) => void
 }) {
   const Icon = item.icon
 
+  const handleClick = () => {
+    if (item.externalUrl) {
+      onClick({ externalUrl: item.externalUrl })
+      return
+    }
+
+    onClick()
+  }
+
   return (
     <motion.button
-      onClick={onClick}
+      onClick={handleClick}
       className={cn(
         'w-full group relative rounded-xl border transition-all duration-200 cursor-pointer',
         isActive
@@ -211,7 +221,7 @@ function NavbarContent({
   className,
 }: {
   currentPage: string
-  onPageChange: (pageId: string) => void
+  onPageChange: (pageId: string, options?: { externalUrl?: string }) => void
   navigationItems: Array<NavigationItem>
   communitySection: CommunitySection
   platformTVL: React.ReactNode
@@ -261,7 +271,7 @@ function NavbarContent({
               key={item.id}
               item={item}
               isActive={currentPage === item.id}
-              onClick={() => onPageChange(item.id)}
+              onClick={(options) => onPageChange(item.id, options)}
             />
           ))}
         </div>
@@ -343,8 +353,16 @@ export function VerticalNavbar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const mobileNavDescriptionId = useId()
 
-  const handlePageChange = (pageId: string) => {
-    onPageChange(pageId)
+  const handlePageChange = (pageId: string, options?: { externalUrl?: string }) => {
+    if (options?.externalUrl) {
+      if (typeof window !== 'undefined') {
+        window.open(options.externalUrl, '_blank', 'noopener,noreferrer')
+      }
+      setIsMobileMenuOpen(false)
+      return
+    }
+
+    onPageChange(pageId, options)
     setIsMobileMenuOpen(false) // Close mobile menu when page changes
   }
 

@@ -67,6 +67,7 @@ const navigationItems = [
     icon: Vote,
     description: 'Participate in decisions',
     subtitle: 'Participate in protocol governance and voting',
+    externalUrl: 'https://legacy.seamlessprotocol.com/#/governance',
   },
 ].filter(Boolean) as Array<NavigationItem>
 
@@ -153,7 +154,14 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   const currentPage = getCurrentPage()
 
-  const handlePageChange = (pageId: string) => {
+  const handlePageChange = (pageId: string, options?: { externalUrl?: string }) => {
+    if (options?.externalUrl) {
+      if (typeof window !== 'undefined') {
+        window.open(options.externalUrl, '_blank', 'noopener,noreferrer')
+      }
+      return
+    }
+
     const route = routeMapping[pageId]
     if (route) {
       // biome-ignore lint/suspicious/noExplicitAny: route mapping is safe here
