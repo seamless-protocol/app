@@ -84,7 +84,7 @@ function VaultsPage() {
                 asChild
               >
                 <a
-                  href="https://app.morpho.org/ethereum/dashboard"
+                  href="https://app.morpho.org/base/dashboard"
                   target="_blank"
                   rel="noreferrer noopener"
                 >
