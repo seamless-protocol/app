@@ -44,6 +44,8 @@ export async function executeMintV2(params: {
   routerAddress: Address
   /** Multicall executor address (required for audit-fixes ABI) */
   multicallExecutor: Address
+  /** Chain ID to execute the transaction on */
+  chainId: number
 }) {
   const {
     config,
@@ -53,6 +55,7 @@ export async function executeMintV2(params: {
     maxSwapCostInCollateralAsset,
     routerAddress,
     multicallExecutor,
+    chainId,
   } = params
 
   // No allowance handling here; UI should perform approvals beforehand
@@ -76,8 +79,9 @@ export async function executeMintV2(params: {
     // deposit(token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, swapCalls)
     args,
     account,
+    chainId,
   })
 
-  const hash = await writeLeverageRouterV2Deposit(config, { ...request })
+  const hash = await writeLeverageRouterV2Deposit(config, { ...request, chainId })
   return { hash }
 }

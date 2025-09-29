@@ -106,6 +106,7 @@ export function useMintExecution(params: {
           ...(quoteDebtToCollateral ? { quoteDebtToCollateral } : {}),
           ...(routerAddressV2 ? { routerAddressV2 } : {}),
           ...(managerAddressV2 ? { managerAddressV2 } : {}),
+          chainId: targetChainId,
         })
         setHash(hash)
         setStatus('pending')

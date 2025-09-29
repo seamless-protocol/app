@@ -121,6 +121,7 @@ export async function executeSharedMint({
     quoteDebtToCollateral,
     routerAddressV2: router,
     managerAddressV2: manager,
+    chainId,
   })
   if (res.routerVersion !== 'v2') {
     throw new Error(`Unexpected router version: ${res.routerVersion}`)

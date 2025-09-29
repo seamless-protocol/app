@@ -31,6 +31,7 @@ export interface UseMintWithRouterParams {
   maxSwapCostInCollateralAsset?: MaxSwapCostArg
   quoteDebtToCollateral?: QuoteFn
   quoteInputToCollateral?: QuoteFn
+  chainId: number
 }
 
 /**
@@ -48,6 +49,7 @@ export function useMintWithRouter() {
       maxSwapCostInCollateralAsset,
       quoteDebtToCollateral,
       quoteInputToCollateral,
+      chainId,
     }) =>
       orchestrateMint({
         config,
@@ -61,6 +63,7 @@ export function useMintWithRouter() {
           : {}),
         ...(typeof quoteDebtToCollateral !== 'undefined' ? { quoteDebtToCollateral } : {}),
         ...(typeof quoteInputToCollateral !== 'undefined' ? { quoteInputToCollateral } : {}),
+        chainId,
       }),
   })
 }

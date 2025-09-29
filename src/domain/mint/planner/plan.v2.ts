@@ -74,6 +74,8 @@ export async function planMintV2(params: {
   managerPort?: ManagerPort
   /** Optional explicit LeverageManagerV2 address (for VNet/custom) */
   managerAddress?: Address
+  /** Chain ID to execute the transaction on */
+  chainId: number
 }): Promise<MintPlanV2> {
   const {
     config,
@@ -84,11 +86,13 @@ export async function planMintV2(params: {
     quoteDebtToCollateral,
     managerPort,
     managerAddress,
+    chainId,
   } = params
 
   const { collateralAsset, debtAsset } = await getManagerAssets({
     config,
     token,
+    chainId,
     ...(managerAddress ? { managerAddress } : {}),
   })
 
@@ -183,15 +187,18 @@ async function getManagerAssets(args: {
   config: Config
   token: TokenArg
   managerAddress?: Address
+  chainId: number
 }) {
-  const { config, token, managerAddress } = args
+  const { config, token, managerAddress, chainId } = args
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
     ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
+    chainId,
   })
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
     ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
+    chainId,
   })
   return { collateralAsset, debtAsset }
 }

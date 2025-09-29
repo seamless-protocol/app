@@ -80,6 +80,7 @@ export async function planMintTest({
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
     managerPort,
     managerAddress: setup.manager,
+    chainId: tokenDefinition.chainId,
   })
 
   return {
@@ -150,6 +151,7 @@ async function runMintScenario({
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
     routerAddressV2: setup.router,
     managerAddressV2: setup.manager,
+    chainId: tokenDefinition.chainId,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash: orchestration.hash })

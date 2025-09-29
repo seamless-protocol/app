@@ -90,6 +90,8 @@ export async function orchestrateMint(params: {
   /** Optional overrides for V2 when using VNet/custom deployments */
   routerAddressV2?: Address
   managerAddressV2?: Address
+  /** Chain ID to execute the transaction on */
+  chainId: number
 }): Promise<OrchestrateMintResult> {
   const {
     config,
@@ -135,6 +137,7 @@ export async function orchestrateMint(params: {
       ...(quoteInputToCollateral ? { quoteInputToCollateral } : {}),
       managerPort,
       ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
+      chainId: params.chainId,
     })
 
     const tx = await executeMintV2({
@@ -170,6 +173,7 @@ export async function orchestrateMint(params: {
       ...(typeof maxSwapCostInCollateralAsset !== 'undefined'
         ? { maxSwapCostInCollateralAsset }
         : {}),
+      chainId: params.chainId,
     })
     return { routerVersion: 'v2' as const, plan, ...tx }
   }
