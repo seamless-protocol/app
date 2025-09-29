@@ -21,6 +21,7 @@ interface ResourceItem {
   title: string
   description: string
   url: string
+  getUrl?: (ctx: { address?: Address }) => string
   icon: React.ComponentType<{ className?: string }>
   badge: {
     text: string
@@ -163,7 +164,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           id: 'merkl-rewards',
           title: 'Merkl Rewards',
           description: 'Additional DeFi rewards and incentive tracking',
-          url: 'https://merkl.xyz/',
+          // Default goes to dashboard; if connected, deep-link to user page
+          url: 'https://app.merkl.xyz/users/',
+          getUrl: ({ address }) =>
+            address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
           icon: TrendingUp,
           badge: {
             text: 'Incentives',
