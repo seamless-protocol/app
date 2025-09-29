@@ -176,7 +176,13 @@ export function PriceLineChart({
 
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} style={{ cursor: 'default' }}>
-              <CartesianGrid stroke="#334155" strokeDasharray="3 3" strokeOpacity={0.3} />
+              <CartesianGrid
+                stroke="#64748B"
+                strokeDasharray="3 3"
+                strokeOpacity={0.55}
+                vertical
+                horizontal
+              />
               <XAxis
                 dataKey="date"
                 axisLine={false}
