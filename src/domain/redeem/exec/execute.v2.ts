@@ -84,6 +84,6 @@ export async function executeRedeemV2(params: {
     chainId,
   })
 
-  const hash = await writeLeverageRouterV2Redeem(config, { ...request })
+  const hash = await writeLeverageRouterV2Redeem(config, { ...request, chainId })
   return { hash }
 }
