@@ -81,6 +81,8 @@ export async function orchestrateRedeem(params: {
   managerAddressV2?: Address
   /** Optional override for the desired payout asset (defaults to collateral). */
   outputAsset?: Address
+  /** Chain ID to execute the transaction on */
+  chainId: number
 }): Promise<OrchestrateRedeemResult> {
   const {
     config,
@@ -90,6 +92,7 @@ export async function orchestrateRedeem(params: {
     slippageBps = DEFAULT_SLIPPAGE_BPS,
     quoteCollateralToDebt,
     outputAsset,
+    chainId,
   } = params
 
   const version = detectRedeemRouterVersion()
@@ -107,6 +110,7 @@ export async function orchestrateRedeem(params: {
       sharesToRedeem,
       slippageBps,
       quoteCollateralToDebt,
+      chainId,
       ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
       ...(outputAsset ? { outputAsset } : {}),
     })
@@ -136,6 +140,7 @@ export async function orchestrateRedeem(params: {
         (() => {
           throw new Error('LeverageRouterV2 address required for router v2 flow')
         })(),
+      chainId,
     })
     return { routerVersion: 'v2' as const, plan, ...tx }
   }

@@ -214,6 +214,7 @@ async function performRedeem(
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
+    chainId,
     managerAddress: manager,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
@@ -244,6 +245,7 @@ async function performRedeem(
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
+    chainId,
     routerAddressV2: router,
     managerAddressV2: manager,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),

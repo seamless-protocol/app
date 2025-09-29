@@ -74,6 +74,7 @@ export async function executeMintV2(params: {
     plan.calls,
   ] satisfies DepositParams['args']
 
+  console.log('🦄 ~ executeMintV2 ~ chainId:', chainId)
   const { request } = await simulateLeverageRouterV2Deposit(config, {
     address: routerAddress,
     // deposit(token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, swapCalls)

@@ -180,7 +180,7 @@ export function LeverageTokenMintModal({
     ...(userAddress ? { account: userAddress } : {}),
     inputAsset: leverageTokenConfig.collateralAsset.address,
     slippageBps,
-    targetChainId: leverageTokenConfig.chainId,
+    
   })
 
   // Reset state when modal opens

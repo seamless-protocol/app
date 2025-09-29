@@ -108,11 +108,13 @@ export async function planMintV2(params: {
     ? await managerPort.idealPreview({
         token,
         userCollateral: userCollateralOut,
+        chainId,
       })
     : await (async () => {
         const r = await readLeverageManagerV2PreviewMint(config, {
           ...(managerAddress ? { address: managerAddress } : {}),
           args: [token, userCollateralOut],
+          chainId,
         })
         return {
           targetCollateral: r.collateral,
@@ -144,11 +146,12 @@ export async function planMintV2(params: {
 
   const totalCollateral = userCollateralOut + debtQuote.out
   const final = managerPort
-    ? await managerPort.finalPreview({ token, totalCollateral })
+    ? await managerPort.finalPreview({ token, totalCollateral, chainId })
     : await (async () => {
         const r = await readLeverageManagerV2PreviewMint(config, {
           ...(managerAddress ? { address: managerAddress } : {}),
           args: [token, totalCollateral],
+          chainId,
         })
         return { previewDebt: r.debt, previewShares: r.shares }
       })()

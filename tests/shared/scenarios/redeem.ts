@@ -137,6 +137,7 @@ export async function planRedeemTest({
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
+    chainId: scenario.chainId,
     managerAddress: scenario.manager,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })

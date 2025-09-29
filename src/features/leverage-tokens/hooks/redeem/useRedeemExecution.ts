@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Address } from 'viem'
-import { usePublicClient, useSwitchChain } from 'wagmi'
+import { useChainId, usePublicClient, useSwitchChain } from 'wagmi'
 import type { OrchestrateRedeemResult } from '@/domain/redeem'
 import { RouterVersion } from '@/domain/redeem/planner/types'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
@@ -16,7 +16,6 @@ interface UseRedeemExecutionParams {
   account?: Address
   slippageBps: number
   chainId: SupportedChainId
-  targetChainId: number
   routerAddress?: Address
   managerAddress?: Address
   swap?: CollateralToDebtSwapConfig
@@ -28,13 +27,13 @@ export function useRedeemExecution({
   account,
   slippageBps,
   chainId,
-  targetChainId,
   routerAddress,
   managerAddress,
   swap,
   outputAsset,
 }: UseRedeemExecutionParams) {
   const { switchChainAsync } = useSwitchChain()
+  const activeChainId = useChainId()
   const [status, setStatus] = useState<Status>('idle')
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState<Error | undefined>(undefined)
@@ -74,8 +73,8 @@ export function useRedeemExecution({
       setStatus('submitting')
       setError(undefined)
       try {
-        if (chainId !== targetChainId) {
-          await switchChainAsync({ chainId: targetChainId })
+        if (activeChainId !== chainId) {
+          await switchChainAsync({ chainId })
         }
 
         const result = await redeemWithRouter.mutateAsync({
@@ -83,6 +82,7 @@ export function useRedeemExecution({
           account,
           sharesToRedeem,
           slippageBps,
+          chainId,
           ...(quote ? { quoteCollateralToDebt: quote } : {}),
           ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
           ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
@@ -109,6 +109,7 @@ export function useRedeemExecution({
     },
     [
       account,
+      activeChainId,
       managerAddress,
       quote,
       quoteError?.message,
@@ -121,7 +122,6 @@ export function useRedeemExecution({
       token,
       publicClient,
       chainId,
-      targetChainId,
       switchChainAsync,
     ],
   )

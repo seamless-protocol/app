@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Address, PublicClient } from 'viem'
-import { useConfig, usePublicClient, useSwitchChain } from 'wagmi'
+import { useChainId, useConfig, usePublicClient, useSwitchChain } from 'wagmi'
 import { orchestrateMint } from '@/domain/mint'
 import { RouterVersion } from '@/domain/mint/planner/types'
 import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
@@ -16,10 +16,10 @@ export function useMintExecution(params: {
   account?: Address
   inputAsset: Address // collateral asset
   slippageBps: number
-  targetChainId: number
 }) {
   const { switchChainAsync } = useSwitchChain()
-  const { token, account, inputAsset, slippageBps, targetChainId } = params
+  const activeChainId = useChainId()
+  const { token, account, inputAsset, slippageBps } = params
   const [status, setStatus] = useState<Status>('idle')
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState<Error | undefined>(undefined)
@@ -92,8 +92,8 @@ export function useMintExecution(params: {
           quoteDebtToCollateral = quote
         }
 
-        if (chainId !== targetChainId) {
-          await switchChainAsync({ chainId: targetChainId })
+        if (activeChainId !== chainId) {
+          await switchChainAsync({ chainId })
         }
 
         const { hash } = await orchestrateMint({
@@ -106,7 +106,7 @@ export function useMintExecution(params: {
           ...(quoteDebtToCollateral ? { quoteDebtToCollateral } : {}),
           ...(routerAddressV2 ? { routerAddressV2 } : {}),
           ...(managerAddressV2 ? { managerAddressV2 } : {}),
-          chainId: targetChainId,
+          chainId,
         })
         setHash(hash)
         setStatus('pending')
@@ -122,6 +122,7 @@ export function useMintExecution(params: {
     },
     [
       account,
+      activeChainId,
       config,
       token,
       inputAsset,
@@ -133,7 +134,6 @@ export function useMintExecution(params: {
       chainPublicClient,
       activePublicClient,
       multicallExecutorAddress,
-      targetChainId,
       switchChainAsync,
     ],
   )

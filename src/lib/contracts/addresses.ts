@@ -107,9 +107,9 @@ const baseContracts: ContractAddresses = {
 }
 
 const mainnetContracts: ContractAddresses = {
-  ...baseContracts,
+  // Mainnet only defines token addresses
+  // Protocol contracts (manager, router, etc.) come from Tenderly VNet overrides
   tokens: {
-    ...baseContracts.tokens,
     usdc: '0xA0b86991c6218B36C1d19D4a2e9Eb0cE3606eB48' as Address,
     weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
     weeth: '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee' as Address,

@@ -43,6 +43,7 @@ describe('planRedeemV2 collateral padding', () => {
       slippageBps: 50,
       quoteCollateralToDebt: quoteWithFloor as any,
       managerAddress: '0x2222222222222222222222222222222222222222' as Address,
+      chainId: 1,
     })
 
     expect(plan.expectedTotalCollateral).toBe(100n)
@@ -73,6 +74,7 @@ describe('planRedeemV2 collateral padding', () => {
       quoteCollateralToDebt: quoteWithFloor as any,
       managerAddress: '0x2222222222222222222222222222222222222222' as Address,
       outputAsset: '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
+      chainId: 1,
     })
 
     expect(plan.payoutAsset.toLowerCase()).toBe('0xdddddddddddddddddddddddddddddddddddddddd')
