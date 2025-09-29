@@ -1,7 +1,6 @@
 import type { Address } from 'viem'
-import { useReadContracts } from 'wagmi'
-import { leverageManagerV2Abi } from '../../../lib/contracts/abis/leverageManagerV2'
-import { getLeverageManagerAddress, type SupportedChainId } from '../../../lib/contracts/addresses'
+import { getLeverageManagerAddress } from '../../../lib/contracts/addresses'
+import { useReadLeverageManagerV2GetLeverageTokenConfig } from '../../../lib/contracts/generated'
 import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { STALE_TIME } from '../utils/constants'
 
@@ -21,7 +20,8 @@ export interface UseLeverageTokenConfigResult {
 
 /**
  * Hook to fetch the leverage token configuration from the contract.
- * This includes both mint and redemption fees.
+ * This includes mint and redemption fees but NOT management fee.
+ * Management fee should be fetched separately where needed for display.
  */
 export function useLeverageTokenConfig(
   tokenAddress?: Address,
@@ -33,34 +33,24 @@ export function useLeverageTokenConfig(
   const managerAddress = chainId ? getLeverageManagerAddress(chainId) : undefined
 
   const {
-    data: managerData,
-    isLoading: isManagerLoading,
-    isError: isManagerError,
-    error: managerError,
-  } = useReadContracts({
-    contracts: [
-      {
-        address: managerAddress,
-        abi: leverageManagerV2Abi,
-        functionName: 'getLeverageTokenConfig',
-        args: tokenAddress ? [tokenAddress] : undefined,
-        chainId: chainId as SupportedChainId,
-      },
-    ],
+    data: configData,
+    isLoading: isConfigLoading,
+    isError: isConfigError,
+    error: configError,
+  } = useReadLeverageManagerV2GetLeverageTokenConfig({
+    address: managerAddress,
+    args: tokenAddress ? [tokenAddress] : undefined,
+    chainId,
     query: {
       enabled: Boolean(tokenAddress && managerAddress),
-      staleTime: STALE_TIME.supply,
-      refetchInterval: 30_000,
+      staleTime: STALE_TIME.metadata,
     },
   })
 
-  const managerConfigRes = managerData?.[0]
-  const config = managerConfigRes?.status === 'success' ? managerConfigRes.result : undefined
-
   return {
-    config,
-    isLoading: isManagerLoading,
-    isError: isManagerError,
-    error: managerError,
+    config: configData,
+    isLoading: isConfigLoading,
+    isError: isConfigError,
+    error: configError,
   }
 }

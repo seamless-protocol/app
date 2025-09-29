@@ -40,6 +40,11 @@ function getTenderlyOverrides(): string | undefined {
     logger.info('Using Tenderly VNet addresses')
     // Return Tenderly VNet contract address overrides
     return JSON.stringify({
+      '1': {
+        leverageManagerV2: '0x575572D9cF8692d5a8e8EE5312445D0A6856c55f',
+        leverageRouterV2: '0x71E826cC335DaBac3dAF4703B2119983e1Bc843B',
+        multicall: '0x8db50770F8346e7D98886410490E9101718869EB',
+      },
       '8453': {
         leverageManager: '0x575572D9cF8692d5a8e8EE5312445D0A6856c55f',
         leverageRouter: '0x71E826cC335DaBac3dAF4703B2119983e1Bc843B',

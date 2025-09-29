@@ -318,7 +318,7 @@ export function Portfolio({ currentNetwork, isConnected, onConnectWallet, onView
                 <div>
                   <Button
                     className="bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-2"
-                    onClick={() => window.open('https://app.morpho.org/ethereum/dashboard', '_blank', 'noopener,noreferrer')}
+                    onClick={() => window.open('https://app.morpho.org/base/dashboard', '_blank', 'noopener,noreferrer')}
                   >
                     <ExternalLink className="h-4 w-4" />
                     Open Morpho App

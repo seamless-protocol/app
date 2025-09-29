@@ -439,6 +439,7 @@ function PortfolioPage() {
           }}
           leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
           {...(userAddress && { userAddress })}
+          {...(selectedPosition.apy && { apy: parseFloat(selectedPosition.apy) })}
         />
       )}
 

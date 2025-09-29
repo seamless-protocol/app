@@ -1,6 +1,6 @@
 import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
 import type { Address } from 'viem'
-import { BaseLogo } from '@/components/icons/logos'
+import { BaseLogo, EthereumLogo } from '@/components/icons/logos'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
 
@@ -221,9 +221,9 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       'Tenderly VNet deployment of the cbBTC / USDC 2x leverage token used for automated integration testing.',
     decimals: 18,
     leverageRatio: 2,
-    chainId: 8453,
-    chainName: 'Base (Tenderly VNet)',
-    chainLogo: BaseLogo,
+    chainId: 1,
+    chainName: 'Ethereum (Tenderly VNet)',
+    chainLogo: EthereumLogo,
     supplyCap: 200,
     isTestOnly: true,
     collateralAsset: {
