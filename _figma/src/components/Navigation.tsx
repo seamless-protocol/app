@@ -92,10 +92,10 @@ const socialLinks = [
     url: 'https://seamlessprotocol.discourse.group/'
   },
   {
-    id: 'twitter',
-    name: 'Twitter',
+    id: 'X',
+    name: 'X',
     icon: Twitter,
-    url: 'https://twitter.com/seamlessprotocol'
+    url: 'https://x.com/SeamlessFi'
   },
   {
     id: 'github',
