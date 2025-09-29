@@ -53,6 +53,7 @@ const navigationItems = [
     title: 'Governance',
     icon: Vote,
     description: 'Participate in decisions',
+    externalUrl: 'https://legacy.seamlessprotocol.com/#/governance',
   },
 ]
 
@@ -132,19 +133,22 @@ function NavbarWrapper({ currentPage }: { currentPage: string }) {
   const [page, setPage] = useState(currentPage)
   const content = pageContent[page as keyof typeof pageContent] || pageContent.portfolio
 
+  const handleNavigation = (pageId: string, options?: { externalUrl?: string }) => {
+    if (options?.externalUrl) {
+      window.open(options.externalUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    setPage(pageId)
+  }
+
   return (
     <div className="h-screen flex">
       {/* Desktop Navigation - Hidden on mobile */}
       <div className="hidden lg:block w-80 flex-shrink-0">
         <VerticalNavbar
           currentPage={page}
-          onPageChange={(pageId, options) => {
-            if (options?.externalUrl) {
-              window.open(options.externalUrl, '_blank', 'noopener,noreferrer')
-              return
-            }
-            setPage(pageId)
-          }}
+          onPageChange={handleNavigation}
           navigationItems={navigationItems}
           communitySection={communitySection}
           platformTVL="$142.8M"
@@ -162,13 +166,7 @@ function NavbarWrapper({ currentPage }: { currentPage: string }) {
                 <div className="lg:hidden">
                   <VerticalNavbar
                     currentPage={page}
-                    onPageChange={(pageId, options) => {
-                      if (options?.externalUrl) {
-                        window.open(options.externalUrl, '_blank', 'noopener,noreferrer')
-                        return
-                      }
-                      setPage(pageId)
-                    }}
+                    onPageChange={handleNavigation}
                     navigationItems={navigationItems}
                     communitySection={communitySection}
                     platformTVL="$142.8M"

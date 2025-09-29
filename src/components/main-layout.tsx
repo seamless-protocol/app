@@ -68,6 +68,7 @@ const navigationItems = [
     icon: Vote,
     description: 'Participate in decisions',
     subtitle: 'Participate in protocol governance and voting',
+    externalUrl: 'https://legacy.seamlessprotocol.com/#/governance',
   },
 ].filter(Boolean) as Array<NavigationItem>
 
