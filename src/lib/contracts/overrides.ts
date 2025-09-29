@@ -41,14 +41,18 @@ function getTenderlyOverrides(): string | undefined {
     // Return Tenderly VNet contract address overrides
     return JSON.stringify({
       '1': {
+        leverageManager: '0x575572D9cF8692d5a8e8EE5312445D0A6856c55f',
         leverageManagerV2: '0x575572D9cF8692d5a8e8EE5312445D0A6856c55f',
+        leverageRouter: '0x71E826cC335DaBac3dAF4703B2119983e1Bc843B',
         leverageRouterV2: '0x71E826cC335DaBac3dAF4703B2119983e1Bc843B',
         multicall: '0x8db50770F8346e7D98886410490E9101718869EB',
       },
       '8453': {
-        leverageManager: '0x575572D9cF8692d5a8e8EE5312445D0A6856c55f',
-        leverageRouter: '0x71E826cC335DaBac3dAF4703B2119983e1Bc843B',
-        multicall: '0x8db50770F8346e7D98886410490E9101718869EB',
+        leverageManager: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C',
+        leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C',
+        leverageRouter: '0xfd46483b299197c616671B7dF295cA5186c805c2',
+        leverageRouterV2: '0xfd46483b299197c616671B7dF295cA5186c805c2',
+        multicall: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd',
       },
     })
   }
