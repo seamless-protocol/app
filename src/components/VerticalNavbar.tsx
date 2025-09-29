@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { ChevronRight, Github, Menu } from 'lucide-react'
 import type * as React from 'react'
 import { useId, useState } from 'react'
+import { getRepoCommitUrl, getShortCommitHash } from '@/lib/config/buildInfo'
 import { SeamlessLogo } from './icons'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
@@ -309,13 +310,15 @@ function NavbarContent({
         <div className="space-y-3">
           <div className="text-center">
             <a
-              href="https://github.com/seamless-protocol/app"
+              href={getRepoCommitUrl()}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-slate-500 hover:text-purple-400 transition-colors duration-200 inline-flex items-center space-x-1"
             >
               <Github className="h-3 w-3" />
-              <span>Current Deployment</span>
+              <span>
+                Current Deployment{getShortCommitHash() ? ` @ ${getShortCommitHash()}` : ''}
+              </span>
             </a>
           </div>
         </div>

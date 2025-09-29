@@ -3,6 +3,24 @@ import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { execSync } from 'node:child_process'
+
+function resolveCommitHash(): string {
+  try {
+    const hash = execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim()
+    return hash
+  } catch {
+    // Fallback to env-provided commit if available
+    return (
+      process.env['VITE_COMMIT_SHA'] ||
+      process.env['VERCEL_GIT_COMMIT_SHA'] ||
+      process.env['GITHUB_SHA'] ||
+      ''
+    )
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => ({
@@ -45,6 +63,11 @@ export default defineConfig(({ command, mode }) => ({
     sourcemap: mode !== 'production',
     // Asset inlining threshold
     assetsInlineLimit: 4096,
+  },
+
+  // Inject build metadata
+  define: {
+    __APP_COMMIT_HASH__: JSON.stringify(resolveCommitHash()),
   },
 
   // Development server

@@ -28,7 +28,8 @@ export function LiFiWidget() {
       integrator: 'seamless-protocol',
       variant: 'wide',
       subvariant: 'split',
-      appearance: 'system',
+      // Force dark mode since the app doesn't support light mode yet
+      appearance: 'dark',
       theme: {
         colorSchemes: {
           light: {
@@ -61,10 +62,62 @@ export function LiFiWidget() {
           dark: {
             palette: {
               primary: {
-                main: '#5C67FF',
+                main: '#c924a6',
               },
               secondary: {
-                main: '#F7C2FF',
+                main: '#9721cf',
+              },
+              background: {
+                default: '#0e1629',
+                paper: '#161f34',
+              },
+              text: {
+                primary: '#ffffff',
+                secondary: '#fffafa',
+              },
+              common: {
+                black: '#dc7979',
+              },
+              grey: {
+                200: '#eeeeee',
+                300: '#334155',
+                700: '#616161',
+                800: '#424242',
+              },
+            },
+          },
+        },
+        components: {
+          MuiListItemButton: {
+            styleOverrides: {
+              root: {
+                '&.Mui-selected': {
+                  backgroundColor: '#334155',
+                  color: '#ffffff',
+                },
+                '&.Mui-selected .MuiTypography-root': {
+                  color: '#ffffff',
+                },
+              },
+            },
+          },
+          MuiListItem: {
+            styleOverrides: {
+              root: {
+                '&.Mui-selected': {
+                  backgroundColor: '#334155',
+                  color: '#ffffff',
+                },
+              },
+            },
+          },
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                '&.Mui-selected': {
+                  backgroundColor: '#334155',
+                  color: '#ffffff',
+                },
               },
             },
           },
