@@ -68,7 +68,13 @@ describe('useMintPreview', () => {
       )
       const { result, rerender } = renderHook(
         ({ amount }) =>
-          useMintPreview({ config: cfg, token, equityInCollateralAsset: amount, debounceMs: 200 }),
+          useMintPreview({
+            config: cfg,
+            token,
+            equityInCollateralAsset: amount,
+            chainId: 8453,
+            debounceMs: 200,
+          }),
         {
           wrapper: ({ children }) => wrapper(children),
           initialProps: { amount: 0n as bigint | undefined },
@@ -98,7 +104,13 @@ describe('useMintPreview', () => {
     const { useMintPreview } = await import('@/features/leverage-tokens/hooks/mint/useMintPreview')
     renderHook(
       () =>
-        useMintPreview({ config: cfg, token, equityInCollateralAsset: undefined, debounceMs: 50 }),
+        useMintPreview({
+          config: cfg,
+          token,
+          equityInCollateralAsset: undefined,
+          chainId: 8453,
+          debounceMs: 50,
+        }),
       { wrapper: ({ children }) => wrapper(children) },
     )
     const { readLeverageManagerPreviewMint } = await import('@/lib/contracts/generated')

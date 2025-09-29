@@ -2,13 +2,8 @@ import { expect, test } from '@playwright/test'
 import { erc20Abi, type Hash } from 'viem'
 import { mainnet } from 'viem/chains'
 import type { Config } from 'wagmi'
-import {
-  account,
-  publicClient,
-  revertSnapshot,
-  takeSnapshot,
-} from '../shared/clients'
 import { getLeverageTokenAddress, getLeverageTokenDefinition } from '../fixtures/addresses'
+import { account, publicClient, revertSnapshot, takeSnapshot } from '../shared/clients'
 import {
   ensureRedeemSetup,
   planRedeemTest,

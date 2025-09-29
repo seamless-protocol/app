@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Address, PublicClient } from 'viem'
-import { useConfig, usePublicClient } from 'wagmi'
+import { useChainId, useConfig, usePublicClient } from 'wagmi'
 import { orchestrateMint } from '@/domain/mint'
 import { RouterVersion } from '@/domain/mint/planner/types'
 import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
@@ -16,8 +16,11 @@ export function useMintExecution(params: {
   account?: Address
   inputAsset: Address // collateral asset
   slippageBps: number
+  targetChainId: number
 }) {
-  const { token, account, inputAsset, slippageBps } = params
+  const { switchChain } = useSwitchChain()
+  const activeChainId = useChainId()
+  const { token, account, inputAsset, slippageBps, targetChainId } = params
   const [status, setStatus] = useState<Status>('idle')
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState<Error | undefined>(undefined)
@@ -90,6 +93,10 @@ export function useMintExecution(params: {
           quoteDebtToCollateral = quote
         }
 
+        if (chainId !== targetChainId) {
+          switchChain({ chainId: targetChainId })
+        }
+
         const { hash } = await orchestrateMint({
           config,
           account,
@@ -126,6 +133,9 @@ export function useMintExecution(params: {
       chainPublicClient,
       activePublicClient,
       multicallExecutorAddress,
+      targetChainId,
+      activeChainId,
+      switchChain,
     ],
   )
 
