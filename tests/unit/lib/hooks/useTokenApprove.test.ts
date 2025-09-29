@@ -7,6 +7,8 @@ import { hookTestUtils, makeAddr, mockData } from '../../../utils'
 vi.mock('wagmi', () => ({
   useWriteContract: vi.fn(),
   useWaitForTransactionReceipt: vi.fn(),
+  useChainId: vi.fn(() => 8453),
+  useSwitchChain: vi.fn(() => ({ switchChain: vi.fn() })),
 }))
 
 // Mock viem functions
