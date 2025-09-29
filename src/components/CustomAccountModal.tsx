@@ -97,8 +97,14 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                     </div>
                   </div>
                   <div className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3 border border-slate-600">
-                    <div className="flex items-center space-x-2">
-                      <code className="text-sm text-slate-300 font-mono">
+                    <div className="flex flex-col">
+                      {/* Prefer ENS name when available, fallback to address */}
+                      <span className="text-sm text-white">
+                        {account.displayName && !account.displayName.startsWith('0x')
+                          ? account.displayName
+                          : `${account.address.slice(0, 6)}...${account.address.slice(-4)}`}
+                      </span>
+                      <code className="text-xs text-slate-400 font-mono">
                         {account.address.slice(0, 6)}...{account.address.slice(-4)}
                       </code>
                     </div>
@@ -117,7 +123,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                         size="sm"
                         onClick={viewOnExplorer}
                         className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
-                        aria-label="View on Etherscan"
+                        aria-label="View on Explorer"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
