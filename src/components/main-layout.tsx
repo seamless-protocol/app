@@ -89,10 +89,10 @@ const communitySection = {
       url: 'https://discord.gg/seamlessprotocol',
     },
     {
-      id: 'twitter',
-      name: 'Twitter',
+      id: 'X',
+      name: 'X',
       icon: Twitter,
-      url: 'https://twitter.com/seamlessprotocol',
+      url: 'https://x.com/SeamlessFi',
     },
     {
       id: 'github',
