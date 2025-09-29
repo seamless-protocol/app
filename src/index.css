@@ -498,11 +498,10 @@ body,
 }
 
 /* LiFi Widget Brand Styling */
- .lifi-widget .MuiButton-containedPrimary {
+.lifi-widget .MuiButton-containedPrimary {
   background: linear-gradient(to right, #9333ea 0%, #db2777 100%) !important;
   border: none !important;
   border-radius: 6px !important;
   font-size: 14px !important;
   font-weight: 500 !important;
 }
-
