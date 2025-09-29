@@ -67,7 +67,7 @@ export const Default: Story = {
         id: 'merkl',
         title: 'Merkl Rewards',
         description: 'Additional DeFi rewards and incentive tracking',
-        url: 'https://merkl.xyz/',
+        url: 'https://app.merkl.xyz/users/',
         icon: TrendingUp,
         badge: {
           text: 'Incentives',
