@@ -32,13 +32,6 @@ const navigationItems = [
     description: 'Discover leverage token opportunities',
     subtitle: 'Discover leverage token opportunities tailored to your goals',
   },
-  features.morphoVaults && {
-    id: 'vaults',
-    title: 'Vaults',
-    icon: Vault,
-    description: 'Secure yield strategies',
-    subtitle: 'Secure yield strategies for your digital assets',
-  },
   features.portfolio && {
     id: 'portfolio',
     title: 'Portfolio',
@@ -69,6 +62,14 @@ const navigationItems = [
     description: 'Participate in decisions',
     subtitle: 'Participate in protocol governance and voting',
     externalUrl: 'https://legacy.seamlessprotocol.com/#/governance',
+  },
+  // Place Vaults at the end of the list
+  features.morphoVaults && {
+    id: 'vaults',
+    title: 'Vaults',
+    icon: Vault,
+    description: 'Secure yield strategies',
+    subtitle: 'Secure yield strategies for your digital assets',
   },
 ].filter(Boolean) as Array<NavigationItem>
 
@@ -106,11 +107,11 @@ const communitySection = {
 // Route mapping
 const routeMapping: Record<string, string> = {
   explore: '/tokens',
-  vaults: '/vaults',
   portfolio: '/portfolio',
   analytics: '/analytics',
   staking: '/staking',
   governance: '/governance',
+  vaults: '/vaults',
 }
 
 interface MainLayoutProps {
@@ -165,8 +166,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
     const route = routeMapping[pageId]
     if (route) {
-      // biome-ignore lint/suspicious/noExplicitAny: route mapping is safe here
-      navigate({ to: route as any })
+      navigate({ to: route })
     }
   }
 
