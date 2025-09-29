@@ -8,6 +8,7 @@ const logger = createLogger('mint-modal')
 
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses } from '../../../../lib/contracts/addresses'
+import { useReadLeverageManagerV2GetManagementFee } from '../../../../lib/contracts/generated'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
@@ -46,8 +47,6 @@ interface LeverageTokenMintModalProps {
   leverageTokenAddress: `0x${string}` // Token address to look up config
   apy?: number // Optional APY prop - if not provided, will default to 0
   userAddress?: `0x${string}` // Optional user address - if not provided, will use useAccount
-  mintFee?: bigint | undefined // Mint fee from contract
-  isMintFeeLoading?: boolean | undefined // Loading state for mint fee
 }
 
 // Hoisted to avoid re-creating on every render
@@ -66,8 +65,6 @@ export function LeverageTokenMintModal({
   leverageTokenAddress,
   apy,
   userAddress: propUserAddress,
-  mintFee,
-  isMintFeeLoading,
 }: LeverageTokenMintModalProps) {
   // Get leverage token configuration by address
   const leverageTokenConfig = getLeverageTokenConfig(leverageTokenAddress)
@@ -85,6 +82,19 @@ export function LeverageTokenMintModal({
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
   const leverageRouterAddress = contractAddresses.leverageRouter
+  const leverageManagerAddress = contractAddresses.leverageManagerV2
+
+  // Fetch management fee for display (independent from core config)
+  const { data: managementFee, isLoading: isManagementFeeLoading } =
+    useReadLeverageManagerV2GetManagementFee({
+      address: leverageManagerAddress,
+      args: [leverageTokenAddress],
+      chainId: leverageTokenConfig.chainId,
+      query: {
+        enabled: Boolean(leverageTokenAddress && leverageManagerAddress),
+        staleTime: 60_000, // Cache for 1 minute - fee rarely changes
+      },
+    })
 
   // Get real wallet balance for collateral asset
   const { balance: collateralBalance, isLoading: isCollateralBalanceLoading } = useTokenBalance({
@@ -348,8 +358,8 @@ export function LeverageTokenMintModal({
             error={error || undefined}
             leverageTokenConfig={leverageTokenConfig}
             apy={apy ?? undefined}
-            mintFee={mintFee}
-            isMintFeeLoading={isMintFeeLoading}
+            managementFee={managementFee}
+            isManagementFeeLoading={isManagementFeeLoading}
           />
         )
 
