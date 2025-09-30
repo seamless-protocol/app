@@ -13,24 +13,42 @@ if (!walletConnectProjectId) {
   )
 }
 
-// Tenderly VNet mode detection - enable whenever the flag or a test RPC is present
+// Optional JSON map to direct chain RPCs in mock/test modes
+// Example: {"8453":"https://virtual.base...","1":"https://virtual.mainnet..."}
+function readTestRpcUrlMap(): Record<string, string> | undefined {
+  const raw = import.meta.env['VITE_TEST_RPC_URL_MAP']
+  if (!raw) return undefined
+  try {
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return undefined
+    return parsed as Record<string, string>
+  } catch {
+    return undefined
+  }
+}
+
+// Tenderly VNet mode detection - enable whenever the flag, a test RPC, or a URL map is present
 const testRpcCandidate =
   import.meta.env['VITE_TEST_RPC_URL'] ||
   import.meta.env['VITE_TENDERLY_VNET_PRIMARY_RPC'] ||
   import.meta.env['VITE_TENDERLY_RPC_URL']
+const rpcMap = readTestRpcUrlMap()
 
 const useTenderlyVNet =
-  import.meta.env['VITE_USE_TENDERLY_VNET'] === 'true' || Boolean(testRpcCandidate)
+  import.meta.env['VITE_USE_TENDERLY_VNET'] === 'true' || Boolean(testRpcCandidate || rpcMap)
 
-// Resolve RPC URLs with Tenderly VNet support
-const baseRpc = useTenderlyVNet
-  ? testRpcCandidate || import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org'
-  : import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org'
+// Resolve RPC URLs (prefer map if provided)
+const baseRpc =
+  (rpcMap?.['8453'] || rpcMap?.['base']) ??
+  (useTenderlyVNet
+    ? testRpcCandidate || import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org'
+    : import.meta.env['VITE_BASE_RPC_URL'] || 'https://mainnet.base.org')
 
 const mainnetRpc =
-  import.meta.env['VITE_MAINNET_RPC_URL'] ||
-  import.meta.env['VITE_ETHEREUM_RPC_URL'] ||
-  'https://eth.llamarpc.com'
+  (rpcMap?.['1'] || rpcMap?.['mainnet']) ??
+  (import.meta.env['VITE_MAINNET_RPC_URL'] ||
+    import.meta.env['VITE_ETHEREUM_RPC_URL'] ||
+    'https://eth.llamarpc.com')
 
 // Debug logging for Tenderly VNet mode
 if (useTenderlyVNet) {
