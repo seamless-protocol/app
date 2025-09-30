@@ -1,7 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
-import { useAccount, useConfig } from 'wagmi'
+import { useAccount, useConfig, usePublicClient } from 'wagmi'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('mint-modal')
@@ -27,6 +28,7 @@ import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
+import { invalidateAfterReceipt } from '../../utils/invalidateAfterReceipt'
 import { ApproveStep } from './ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
 import { ErrorStep } from './ErrorStep'
@@ -79,6 +81,8 @@ export function LeverageTokenMintModal({
   // Get user account information
   const { address: hookUserAddress, isConnected, chainId } = useAccount()
   const wagmiConfig = useConfig()
+  const publicClient = usePublicClient({ chainId: leverageTokenConfig.chainId })
+  const queryClient = useQueryClient()
   const userAddress = propUserAddress || hookUserAddress
 
   // Get leverage router address for allowance check
@@ -329,6 +333,7 @@ export function LeverageTokenMintModal({
 
   // Handle mint confirmation
   const handleConfirm = async () => {
+    if (!publicClient) return
     if (!userAddress || !isConnected || !form.amountRaw) return
     toPending()
     try {
@@ -337,6 +342,18 @@ export function LeverageTokenMintModal({
       toast.success('Leverage tokens minted successfully!', {
         description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} tokens`,
       })
+      // Invalidate balances/state after 1 confirmation to reflect fresh shares
+      try {
+        await invalidateAfterReceipt(publicClient, queryClient, {
+          hash,
+          token: leverageTokenAddress,
+          chainId: leverageTokenConfig.chainId,
+          owner: userAddress,
+          includeUser: true,
+        })
+      } catch (_) {
+        // Best-effort invalidation; non-fatal for UX
+      }
       toSuccess()
     } catch (e: unknown) {
       const error = e as Error
