@@ -150,9 +150,7 @@ function assertMintedShares(
   // Basic sanity
   expect(mintedShares > 0n).toBeTruthy()
 
-  // Allow the same tolerance used for expectedShares to apply to minShares as well.
-  // This guards against tiny repricing between plan and execution without hiding genuine failures.
-  const tolerance = scenario.expectedShares / 100n || 1n // 1%
+  const tolerance = scenario.expectedShares / 100n || 1n // 1% for expectedShares comparison only
 
   // Debug aid for CI flakiness investigations
   console.info('[Mint][Debug]', {
@@ -162,7 +160,8 @@ function assertMintedShares(
     tolerance: tolerance.toString(),
   })
 
-  expect(mintedShares + tolerance >= scenario.minShares).toBeTruthy()
+  // Enforce minShares strictly
+  expect(mintedShares >= scenario.minShares).toBeTruthy()
 
   const delta =
     mintedShares >= scenario.expectedShares
@@ -170,3 +169,5 @@ function assertMintedShares(
       : scenario.expectedShares - mintedShares
   expect(delta <= tolerance).toBeTruthy()
 }
+// Skip entire file when not running against a mainnet (Tenderly) backend
+test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== mainnet.id, 'Mainnet-only E2E suite')

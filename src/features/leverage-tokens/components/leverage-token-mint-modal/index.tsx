@@ -6,6 +6,7 @@ import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('mint-modal')
 
+import { createManagerPortV2 } from '@/domain/mint/ports'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useReadLeverageManagerV2GetManagementFee } from '../../../../lib/contracts/generated'
@@ -26,7 +27,6 @@ import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
-import { createManagerPortV2 } from '@/domain/mint/ports'
 import { ApproveStep } from './ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
 import { ErrorStep } from './ErrorStep'

@@ -163,3 +163,5 @@ async function readErc20Balance(asset: `0x${string}`): Promise<bigint> {
     args: [account.address],
   })
 }
+// Skip entire file when not running against a mainnet (Tenderly) backend
+test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== mainnet.id, 'Mainnet-only E2E suite')

@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import { planMintV2 } from '@/domain/mint/planner/plan.v2'
-import type { ManagerPort } from '@/domain/mint/ports'
 import type { QuoteFn } from '@/domain/mint/planner/types'
+import type { ManagerPort } from '@/domain/mint/ports'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 
 interface UseMintPlanPreviewParams {
