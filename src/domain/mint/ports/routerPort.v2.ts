@@ -38,13 +38,12 @@ export function createRouterPortV2(params: {
   config: Config
   routerAddress: Address
 }): RouterPortV2 {
-  const { config, routerAddress } = params
+  const { config, routerAddress: _routerAddress } = params
   return {
     mode: 'v2',
     supportsUserConversion: false,
     async previewDeposit({ token, collateralFromSender }) {
       const res = await readLeverageRouterV2PreviewDeposit(config, {
-        address: routerAddress,
         args: [token, collateralFromSender],
       })
       return { collateral: res.collateral, debt: res.debt, shares: res.shares }
@@ -59,11 +58,21 @@ export function createRouterPortV2(params: {
       account,
     }) {
       const { request } = await simulateLeverageRouterV2Deposit(config, {
-        address: routerAddress,
-        args: [token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, calls],
+        args: [
+          token,
+          collateralFromSender,
+          flashLoanAmount,
+          minShares,
+          multicallExecutor,
+          calls,
+        ],
         account,
       })
-      const hash = await writeLeverageRouterV2Deposit(config, { ...request })
+      const hash = await writeLeverageRouterV2Deposit(config, {
+        args: request.args,
+        account,
+        ...(request.value ? { value: request.value } : {}),
+      })
       return { hash }
     },
   }

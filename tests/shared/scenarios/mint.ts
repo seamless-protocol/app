@@ -209,7 +209,6 @@ async function prepareMintScenario({
 
   const { collateralAsset, debtAsset, equityInInputAsset } = await fetchTokenAssets({
     config,
-    manager,
     token,
     equityAmountHuman,
   })
@@ -245,12 +244,10 @@ async function prepareMintScenario({
 
 async function fetchTokenAssets({
   config,
-  manager,
   token,
   equityAmountHuman,
 }: {
   config: Parameters<typeof readLeverageTokenBalanceOf>[0]
-  manager: Address
   token: Address
   equityAmountHuman: string
 }) {

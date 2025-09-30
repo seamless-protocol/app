@@ -9,6 +9,7 @@
 
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   simulateLeverageRouterV2Deposit,
   writeLeverageRouterV2Deposit,
@@ -53,7 +54,7 @@ export async function executeMintV2(params: {
     account,
     plan,
     maxSwapCostInCollateralAsset,
-    routerAddress,
+    routerAddress: _routerAddress,
     multicallExecutor,
     chainId,
   } = params
@@ -74,14 +75,19 @@ export async function executeMintV2(params: {
     plan.calls,
   ] satisfies DepositParams['args']
 
+  const chain = chainId as SupportedChainId
   const { request } = await simulateLeverageRouterV2Deposit(config, {
-    address: routerAddress,
     // deposit(token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, swapCalls)
     args,
     account,
-    chainId,
+    chainId: chain,
   })
 
-  const hash = await writeLeverageRouterV2Deposit(config, { ...request, chainId })
+  const hash = await writeLeverageRouterV2Deposit(config, {
+    args: request.args,
+    account,
+    ...(request.value ? { value: request.value } : {}),
+    chainId: chain,
+  })
   return { hash }
 }

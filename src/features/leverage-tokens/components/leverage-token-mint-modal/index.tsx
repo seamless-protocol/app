@@ -9,7 +9,7 @@ const logger = createLogger('mint-modal')
 
 import { createManagerPortV2 } from '@/domain/mint/ports'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
-import { getContractAddresses } from '../../../../lib/contracts/addresses'
+import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
 import { useReadLeverageManagerV2GetManagementFee } from '../../../../lib/contracts/generated'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
@@ -94,9 +94,8 @@ export function LeverageTokenMintModal({
   // Fetch management fee for display (independent from core config)
   const { data: managementFee, isLoading: isManagementFeeLoading } =
     useReadLeverageManagerV2GetManagementFee({
-      address: leverageManagerAddress,
       args: [leverageTokenAddress],
-      chainId: leverageTokenConfig.chainId,
+      chainId: leverageTokenConfig.chainId as SupportedChainId,
       query: {
         enabled: Boolean(leverageTokenAddress && leverageManagerAddress),
         staleTime: 60_000, // Cache for 1 minute - fee rarely changes
