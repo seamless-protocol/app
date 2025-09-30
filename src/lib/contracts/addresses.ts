@@ -107,13 +107,21 @@ const baseContracts: ContractAddresses = {
 }
 
 const mainnetContracts: ContractAddresses = {
-  // Mainnet only defines token addresses
+  // Core Protocol
+  leverageTokenFactory: '0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82' as Address,
+  leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C' as Address,
+  leverageTokenImpl: '0xfE9101349354E278970489F935a54905DE2E1856' as Address,
+  leverageRouterV2: '0x71E826cC335DaBac3dAF4703B2119983e1Bc843B' as Address,
+
   // Protocol contracts (manager, router, etc.) come from Tenderly VNet overrides
   tokens: {
     usdc: '0xA0b86991c6218B36C1d19D4a2e9Eb0cE3606eB48' as Address,
     weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
     weeth: '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee' as Address,
   },
+
+  // Helpers
+  multicall: '0x16D02Ebd89988cAd1Ce945807b963aB7A9Fd22E1' as Address,
 }
 
 export const contractAddresses: Record<number, ContractAddresses> = {
