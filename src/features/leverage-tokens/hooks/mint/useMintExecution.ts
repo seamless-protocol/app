@@ -46,15 +46,18 @@ export function useMintExecution(params: {
     | undefined
 
   const routerAddressV2 = useMemo(() => {
-    return envRouterV2 ?? (addresses.leverageRouterV2 as Address | undefined)
+    // Prefer chain-scoped addresses (respects Tenderly overrides), fallback to env
+    return (addresses.leverageRouterV2 as Address | undefined) ?? envRouterV2
   }, [envRouterV2, addresses.leverageRouterV2])
 
   const managerAddressV2 = useMemo(() => {
-    return envManagerV2 ?? (addresses.leverageManagerV2 as Address | undefined)
+    // Prefer chain-scoped addresses (respects Tenderly overrides), fallback to env
+    return (addresses.leverageManagerV2 as Address | undefined) ?? envManagerV2
   }, [envManagerV2, addresses.leverageManagerV2])
 
   const multicallExecutorAddress = useMemo(() => {
-    return envMulticallExecutor ?? (addresses.multicall as Address | undefined)
+    // Prefer chain-scoped multicall (respects Tenderly overrides), fallback to env
+    return (addresses.multicall as Address | undefined) ?? envMulticallExecutor
   }, [envMulticallExecutor, addresses.multicall])
 
   const canSubmit = useMemo(() => Boolean(account), [account])

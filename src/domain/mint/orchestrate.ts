@@ -12,7 +12,7 @@
 import type { Address, Hash } from 'viem'
 import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
-import { contractAddresses } from '@/lib/contracts/addresses'
+import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeMintV1 } from './exec/execute.v1'
 import { executeMintV2 } from './exec/execute.v2'
 import { planMintV2 } from './planner/plan.v2'
@@ -106,6 +106,7 @@ export async function orchestrateMint(params: {
   } = params
 
   const version = detectRouterVersion()
+  console.log("🦄 ~ orchestrateMint ~ version:", version);
 
   if (version === RouterVersion.V2) {
     if (!quoteDebtToCollateral) throw new Error('quoteDebtToCollateral is required for router v2')
@@ -118,8 +119,16 @@ export async function orchestrateMint(params: {
         {})
     const envRouterV2 = env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
     const envManagerV2 = env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
-    const routerAddressV2 = params.routerAddressV2 || envRouterV2
-    const managerAddressV2 = params.managerAddressV2 || envManagerV2
+    // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit overrides
+    const chainAddresses = getContractAddresses(params.chainId)
+    const routerAddressV2 =
+      params.routerAddressV2 ||
+      (chainAddresses.leverageRouterV2 as Address | undefined) ||
+      envRouterV2
+    const managerAddressV2 =
+      params.managerAddressV2 ||
+      (chainAddresses.leverageManagerV2 as Address | undefined) ||
+      envManagerV2
 
     const managerPort = createManagerPortV2({
       config,
@@ -152,13 +161,17 @@ export async function orchestrateMint(params: {
         expectedTotalCollateral: plan.expectedTotalCollateral,
         expectedDebt: plan.expectedDebt,
       },
+      // Router must exist on the same chain as the token
       routerAddress:
         routerAddressV2 ||
-        (contractAddresses[base.id]?.leverageRouterV2 as Address | undefined) ||
+        (contractAddresses[params.chainId]?.leverageRouterV2 as Address | undefined) ||
         (() => {
-          throw new Error('LeverageRouterV2 address required for router v2 flow')
+          throw new Error(
+            'LeverageRouterV2 address required for router v2 flow on chain ' + params.chainId,
+          )
         })(),
       multicallExecutor:
+        (getContractAddresses(params.chainId).multicall as Address | undefined) ||
         (typeof import.meta !== 'undefined'
           ? ((import.meta as unknown as { env?: Record<string, string | undefined> })?.env?.[
               'VITE_MULTICALL_EXECUTOR_ADDRESS'
@@ -168,7 +181,9 @@ export async function orchestrateMint(params: {
           ? (process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] as Address | undefined)
           : undefined) ||
         ((): Address => {
-          throw new Error('Multicall executor address required for router v2 flow')
+          throw new Error(
+            'Multicall executor address required for router v2 flow on chain ' + params.chainId,
+          )
         })(),
       ...(typeof maxSwapCostInCollateralAsset !== 'undefined'
         ? { maxSwapCostInCollateralAsset }

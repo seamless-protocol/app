@@ -58,6 +58,11 @@ export async function executeMintV2(params: {
     chainId,
   } = params
 
+  console.log(
+    '🦄 ~ executeMintV2 ~ chainId: herrrrrrrrreeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    chainId,
+  )
+
   // No allowance handling here; UI should perform approvals beforehand
 
   void (
