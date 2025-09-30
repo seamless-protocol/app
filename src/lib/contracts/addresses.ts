@@ -32,6 +32,13 @@ export interface ContractAddresses {
   // V2 surfaces (distinct addresses when deployed)
   leverageManagerV2?: Address
   leverageRouterV2?: Address
+  // Adapters + Factories
+  morphoLendingAdapterFactory?: Address
+  morphoLendingAdapterImpl?: Address
+  rebalanceAdapter?: Address
+  lendingAdapter?: Address
+  veloraAdapter?: Address
+  pricingAdapter?: Address
   morphoVaultFactory?: Address
   // Tokens
   stakedSeam?: Address
@@ -109,9 +116,17 @@ const baseContracts: ContractAddresses = {
 const mainnetContracts: ContractAddresses = {
   // Core Protocol
   leverageTokenFactory: '0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82' as Address,
-  leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C' as Address,
-  leverageTokenImpl: '0xfE9101349354E278970489F935a54905DE2E1856' as Address,
-  leverageRouterV2: '0x71E826cC335DaBac3dAF4703B2119983e1Bc843B' as Address,
+  leverageManagerV2: '0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351' as Address, // proxy
+  leverageTokenImpl: '0xfE9101349354E278970489F935a54905DE2E1856' as Address, // implementation
+  leverageRouterV2: '0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA' as Address,
+
+  // Adapters + Factories (periphery)
+  morphoLendingAdapterFactory: '0xce05FbEd9260810Bdded179ADfdaf737BE7ded71' as Address,
+  morphoLendingAdapterImpl: '0x00c66934EBCa0F2A845812bC368B230F6da11A5C' as Address,
+  veloraAdapter: '0xc4E5812976279cBcec943A6a148C95eAAC7Db6BA' as Address,
+  pricingAdapter: '0x44CCEBEA0dAc17105e91a59E182f65f8D176c88f' as Address,
+  rebalanceAdapter: '0x0a4490233Fd6Ea02873af11c744d286DC3d6C127' as Address,
+  lendingAdapter: '0xB22cd280b29e581e34423E86F65fd259F456D335' as Address,
 
   // Protocol contracts (manager, router, etc.) come from Tenderly VNet overrides
   tokens: {
