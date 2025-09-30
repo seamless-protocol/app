@@ -11,6 +11,7 @@ export enum LeverageTokenKey {
   WEETH_WETH_17X = 'weeth-weth-17x',
   WEETH_WETH_17X_TENDERLY = 'weeth-weth-17x-tenderly',
   CBBTC_USDC_2X_TENDERLY = 'cbbtc-usdc-2x-tenderly',
+  WSTETH_WETH_2X_MAINNET = 'wsteth-weth-2x-mainnet',
   // Add more token keys here as they are added
   // ANOTHER_TOKEN = 'another-token',
 }
@@ -175,6 +176,40 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           },
         },
       ],
+    },
+  },
+  [LeverageTokenKey.WSTETH_WETH_2X_MAINNET]: {
+    address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
+    name: 'wstETH / WETH 2x Leverage Token',
+    symbol: 'WSTETH-WETH-2x',
+    description:
+      'wstETH / WETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Wrapped Ether',
+    decimals: 18,
+    leverageRatio: 2,
+    chainId: 1,
+    chainName: 'Ethereum',
+    chainLogo: EthereumLogo,
+    collateralAsset: {
+      symbol: 'wstETH',
+      name: 'Wrapped stETH',
+      address: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address,
+      decimals: 18,
+    },
+    debtAsset: {
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
+      decimals: 18,
+    },
+    swaps: {
+      debtToCollateral: {
+        type: 'lifi',
+        allowBridges: 'none',
+      },
+      collateralToDebt: {
+        type: 'lifi',
+        allowBridges: 'none',
+      },
     },
   },
   [LeverageTokenKey.WEETH_WETH_17X_TENDERLY]: {
