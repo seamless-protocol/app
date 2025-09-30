@@ -24,6 +24,10 @@ const redeemContext: RedeemPlanningContext = {
   account,
 }
 
+// Skip entire file when not running against Mainnet canonical chain
+// Must be placed before any tests are declared
+test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== MAINNET_CHAIN_ID, 'Mainnet-only E2E suite')
+
 test.describe('Mainnet leverage token redeem flow', () => {
   let baseSnapshot: Hash
   let sharesToRedeem: bigint

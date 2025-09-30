@@ -214,7 +214,7 @@ async function prepareMintScenario({
     equityAmountHuman,
   })
 
-  const swapConfig = resolveDebtSwapConfig({ tokenDefinition, addresses })
+  const swapConfig = resolveDebtSwapConfig({ tokenDefinition })
   const effectiveSwapConfig = ensureLiquidity
     ? await ensureSwapLiquidity({
         swapConfig,
@@ -313,25 +313,21 @@ function buildQuoteAdapter({
 
 function resolveDebtSwapConfig({
   tokenDefinition,
-  addresses,
 }: {
   tokenDefinition: LeverageTokenDefinition
-  addresses: ReturnType<typeof getAddressesForToken>
 }): DebtToCollateralSwapConfig {
   if (tokenDefinition.swap?.useLiFi ?? process.env['TEST_USE_LIFI'] === '1') {
     return { type: 'lifi', allowBridges: 'none' }
   }
 
-  if (tokenDefinition.swap?.uniswapV2Router) {
-    return { type: 'uniswapV2', router: tokenDefinition.swap.uniswapV2Router }
+  const v3Config = tokenDefinition.swap?.uniswapV3
+  // Prefer Uniswap V3 when poolKey is provided (Tenderly tokens aim for deterministic v3 routes)
+  if (v3Config?.poolKey) {
+    return { type: 'uniswapV3', poolKey: v3Config.poolKey }
   }
 
-  const v3Config = tokenDefinition.swap?.uniswapV3
-  if (v3Config?.poolKey) {
-    if (!addresses.uniswapV3?.pool) {
-      throw new Error('Uniswap V3 configuration missing for leverage token')
-    }
-    return { type: 'uniswapV3', poolKey: v3Config.poolKey }
+  if (tokenDefinition.swap?.uniswapV2Router) {
+    return { type: 'uniswapV2', router: tokenDefinition.swap.uniswapV2Router }
   }
 
   const fallbackRouter =

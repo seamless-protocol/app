@@ -29,6 +29,10 @@ const mintPlanningContext: MintPlanningContext = {
   publicClient,
 }
 
+// Skip entire file when not running against Base canonical chain
+// Must be placed before any tests are declared
+test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== base.id, 'Base-only E2E suite')
+
 test.describe('Leverage token mint flow', () => {
   let snapshotId: Hash
 
