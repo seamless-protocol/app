@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { erc20Abi, type Hash } from 'viem'
+import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
 import {
   ADDR,
@@ -56,7 +57,7 @@ test.describe('Leverage token mint flow', () => {
     })
     const balanceBefore = await readLeverageTokenBalance()
 
-    await page.goto('/#/tokens')
+    await page.goto('/#/tokens', { waitUntil: 'domcontentloaded' })
     await page.waitForLoadState('networkidle')
 
     // Connect mock wallet if needed
@@ -150,3 +151,5 @@ function assertMintedShares(
   const tolerance = scenario.expectedShares / 100n || 1n
   expect(delta <= tolerance).toBeTruthy()
 }
+// Skip when not running against Base canonical chain
+test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== base.id, 'Base-only E2E suite')

@@ -61,7 +61,7 @@ test.describe('Mainnet leverage token mint flow', () => {
     })
     const balanceBefore = await readLeverageTokenBalance()
 
-    await page.goto('/#/tokens')
+    await page.goto('/#/tokens', { waitUntil: 'domcontentloaded' })
     await page.waitForLoadState('networkidle')
 
     // Connect mock wallet if needed

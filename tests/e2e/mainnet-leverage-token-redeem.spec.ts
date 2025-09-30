@@ -75,7 +75,7 @@ test.describe('Mainnet leverage token redeem flow', () => {
     const collateralBalanceBefore = await readErc20Balance(collateralAsset)
     const payoutAddress = payoutAsset ?? collateralAsset
 
-    await page.goto('/#/tokens')
+    await page.goto('/#/tokens', { waitUntil: 'domcontentloaded' })
     await page.waitForLoadState('domcontentloaded')
 
     const connectButton = page.getByTestId('connect-mock')

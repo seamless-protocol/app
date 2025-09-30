@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { erc20Abi, type Hash } from 'viem'
+import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
 import {
   account,
@@ -73,7 +74,7 @@ test.describe('Leverage token redeem flow', () => {
     const collateralBalanceBefore = await readErc20Balance(collateralAsset)
     const payoutAddress = payoutAsset ?? collateralAsset
 
-    await page.goto('/#/tokens')
+    await page.goto('/#/tokens', { waitUntil: 'domcontentloaded' })
     await page.waitForLoadState('domcontentloaded')
 
     const connectButton = page.getByTestId('connect-mock')
@@ -159,3 +160,5 @@ async function readErc20Balance(asset: `0x${string}`): Promise<bigint> {
     args: [account.address],
   })
 }
+// Skip when not running against Base canonical chain
+test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== base.id, 'Base-only E2E suite')
