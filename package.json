@@ -29,7 +29,8 @@
     "test:integration:tenderly": "bun scripts/run-tests.ts integration",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "wagmi": "wagmi generate"
+    "wagmi": "wagmi generate",
+    "test:integration:wsteth": "TEST_CHAIN=mainnet TEST_MODE=tenderly-static E2E_LEVERAGE_TOKEN_KEY=wsteth-weth-2x bunx vitest -c vitest.integration.config.ts --run tests/integration/leverage-tokens/redeem/router.v2.mainnet.redeem.spec.ts"
   },
   "dependencies": {
     "@lifi/widget": "^3.30.11",

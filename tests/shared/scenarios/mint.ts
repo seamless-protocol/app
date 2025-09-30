@@ -255,11 +255,9 @@ async function fetchTokenAssets({
   equityAmountHuman: string
 }) {
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    address: manager,
     args: [token],
   })
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    address: manager,
     args: [token],
   })
 

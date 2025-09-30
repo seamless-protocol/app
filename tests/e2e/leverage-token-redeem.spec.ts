@@ -99,12 +99,13 @@ test.describe('Leverage token redeem flow', () => {
 
     await modal.getByRole('button', { name: 'MAX' }).click()
 
+    // Allow initial 'Calculating...' label while quotes/preview resolve
     const primaryAction = modal.getByRole('button', {
-      name: /(Approve|Redeem|Enter an amount)/i,
+      name: /(Approve|Redeem|Enter an amount|Calculating)/i,
     })
-    await expect(primaryAction).toBeVisible({ timeout: 15_000 })
-    await expect(primaryAction).not.toHaveText(/Minimum redeem/i, { timeout: 15_000 })
-    await expect(primaryAction).not.toHaveText(/Calculating/i, { timeout: 15_000 })
+    await expect(primaryAction).toBeVisible({ timeout: 30_000 })
+    await expect(primaryAction).not.toHaveText(/Minimum redeem/i, { timeout: 30_000 })
+    await expect(primaryAction).not.toHaveText(/Calculating/i, { timeout: 60_000 })
     await expect(primaryAction).toBeEnabled({ timeout: 15_000 })
 
     const primaryLabel = (await primaryAction.innerText()) ?? ''

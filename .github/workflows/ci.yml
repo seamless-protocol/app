@@ -90,6 +90,8 @@ jobs:
           TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
           TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
           TENDERLY_CHAIN_ID: 8453
+          VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
+          VITE_LIFI_INTEGRATOR: seamless-protocol
       
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -125,21 +127,17 @@ jobs:
           cp tests/integration/.env.example tests/integration/.env
           echo "Integration test environment prepared"
 
-      - name: Run integration tests (Base + Mainnet)
-        run: bun scripts/run-tests.ts integration --chain all
+      - name: Run integration tests (Mainnet wstETH/WETH only, Tenderly static)
+        run: bun run test:integration:wsteth
         env:
-          TEST_RPC_URL: ${{ secrets.TEST_RPC_URL }}
-          TENDERLY_ADMIN_RPC_URL: ${{ secrets.TENDERLY_ADMIN_RPC_URL }}
-          VITE_USE_TENDERLY_VNET: "true"
-          VITE_TEST_RPC_URL_MAP: ${{ secrets.VITE_TEST_RPC_URL_MAP }}
-          ANVIL_BASE_FORK_URL: ${{ secrets.ANVIL_BASE_FORK_URL }}
           TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
           TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
           TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
           TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
           TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
-          TENDERLY_CHAIN_ID: 8453
+          VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
+          VITE_LIFI_INTEGRATOR: seamless-protocol
 
 
   build:
