@@ -1,108 +1,29 @@
-import type { Abi } from 'viem'
-
 export const rebalanceAdapterAbi = [
   {
-    type: 'function',
-    name: 'getAuctionDuration',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'uint120',
-        internalType: 'uint120',
-      },
+    inputs: [
+      { internalType: 'address', name: 'implementation', type: 'address' },
+      { internalType: 'bytes', name: '_data', type: 'bytes' },
     ],
-    stateMutability: 'view',
+    stateMutability: 'payable',
+    type: 'constructor',
   },
   {
-    type: 'function',
-    name: 'getCollateralRatioThreshold',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
+    inputs: [{ internalType: 'address', name: 'target', type: 'address' }],
+    name: 'AddressEmptyCode',
+    type: 'error',
   },
   {
-    type: 'function',
-    name: 'getLeverageTokenMinCollateralRatio',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
+    inputs: [{ internalType: 'address', name: 'implementation', type: 'address' }],
+    name: 'ERC1967InvalidImplementation',
+    type: 'error',
   },
+  { inputs: [], name: 'ERC1967NonPayable', type: 'error' },
+  { inputs: [], name: 'FailedCall', type: 'error' },
   {
-    type: 'function',
-    name: 'getLeverageTokenMaxCollateralRatio',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
+    anonymous: false,
+    inputs: [{ indexed: true, internalType: 'address', name: 'implementation', type: 'address' }],
+    name: 'Upgraded',
+    type: 'event',
   },
-  {
-    type: 'function',
-    name: 'getLeverageTokenTargetCollateralRatio',
-    inputs: [],
-    outputs: [
-      {
-        name: 'targetCollateralRatio',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getRebalanceReward',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getInitialPriceMultiplier',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getMinPriceMultiplier',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-] as const satisfies Abi
+  { stateMutability: 'payable', type: 'fallback' },
+] as const
