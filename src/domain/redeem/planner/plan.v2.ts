@@ -78,8 +78,15 @@ export async function planRedeemV2(params: {
   /** Chain ID to execute the transaction on */
   chainId: number
 }): Promise<RedeemPlanV2> {
-  const { config, token, sharesToRedeem, slippageBps, quoteCollateralToDebt, managerAddress, chainId } =
-    params
+  const {
+    config,
+    token,
+    sharesToRedeem,
+    slippageBps,
+    quoteCollateralToDebt,
+    managerAddress,
+    chainId,
+  } = params
 
   const { collateralAsset, debtAsset } = await getManagerAssets({
     config,

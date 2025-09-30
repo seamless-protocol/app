@@ -9,7 +9,6 @@
  */
 
 import type { Address, Hash } from 'viem'
-import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
 import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeRedeemV1 } from './exec/execute.v1'
@@ -141,7 +140,7 @@ export async function orchestrateRedeem(params: {
           : undefined) ||
         ((): Address => {
           throw new Error(
-            'Multicall executor address required for router v2 flow on chain ' + chainId,
+            `Multicall executor address required for router v2 flow on chain ${chainId}`,
           )
         })(),
       swapCalls: plan.calls,
@@ -150,7 +149,7 @@ export async function orchestrateRedeem(params: {
         (contractAddresses[chainId]?.leverageRouterV2 as Address | undefined) ||
         (() => {
           throw new Error(
-            'LeverageRouterV2 address required for router v2 flow on chain ' + chainId,
+            `LeverageRouterV2 address required for router v2 flow on chain ${chainId}`,
           )
         })(),
       chainId,

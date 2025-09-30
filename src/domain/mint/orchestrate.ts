@@ -10,7 +10,6 @@
 
 // import { getPublicClient } from '@wagmi/core'
 import type { Address, Hash } from 'viem'
-import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
 import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeMintV1 } from './exec/execute.v1'
@@ -106,7 +105,7 @@ export async function orchestrateMint(params: {
   } = params
 
   const version = detectRouterVersion()
-  console.log("🦄 ~ orchestrateMint ~ version:", version);
+  console.log('🦄 ~ orchestrateMint ~ version:', version)
 
   if (version === RouterVersion.V2) {
     if (!quoteDebtToCollateral) throw new Error('quoteDebtToCollateral is required for router v2')
@@ -167,7 +166,7 @@ export async function orchestrateMint(params: {
         (contractAddresses[params.chainId]?.leverageRouterV2 as Address | undefined) ||
         (() => {
           throw new Error(
-            'LeverageRouterV2 address required for router v2 flow on chain ' + params.chainId,
+            `LeverageRouterV2 address required for router v2 flow on chain ${params.chainId}`,
           )
         })(),
       multicallExecutor:
@@ -182,7 +181,7 @@ export async function orchestrateMint(params: {
           : undefined) ||
         ((): Address => {
           throw new Error(
-            'Multicall executor address required for router v2 flow on chain ' + params.chainId,
+            `Multicall executor address required for router v2 flow on chain ${params.chainId}`,
           )
         })(),
       ...(typeof maxSwapCostInCollateralAsset !== 'undefined'
