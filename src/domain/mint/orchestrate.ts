@@ -105,7 +105,6 @@ export async function orchestrateMint(params: {
   } = params
 
   const version = detectRouterVersion()
-  console.log('🦄 ~ orchestrateMint ~ version:', version)
 
   if (version === RouterVersion.V2) {
     if (!quoteDebtToCollateral) throw new Error('quoteDebtToCollateral is required for router v2')
