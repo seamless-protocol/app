@@ -27,6 +27,7 @@ type V2Calls = RedeemParams['args'][4]
  * @param multicallExecutor Multicall executor address for V2 calls
  * @param swapCalls Array of calls for any necessary swaps during redemption
  * @param routerAddress Explicit LeverageRouterV2 address (required for VNet/custom deployments)
+ * @param chainId Chain ID to execute the transaction on
  */
 export async function executeRedeemV2(params: {
   config: Config
@@ -38,6 +39,7 @@ export async function executeRedeemV2(params: {
   swapCalls: V2Calls
   /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
   routerAddress: Address
+  chainId: number
 }): Promise<{ hash: Hash }> {
   const {
     config,
@@ -48,6 +50,7 @@ export async function executeRedeemV2(params: {
     multicallExecutor,
     swapCalls,
     routerAddress,
+    chainId,
   } = params
 
   // No allowance handling here; UI should perform approvals beforehand
@@ -68,6 +71,7 @@ export async function executeRedeemV2(params: {
       address: routerAddress,
       account,
       args,
+      chainId,
     })
     return { hash }
   }
@@ -77,8 +81,9 @@ export async function executeRedeemV2(params: {
     // redeem(token, shares, minCollateralForSender, multicallExecutor, swapCalls)
     args,
     account,
+    chainId,
   })
 
-  const hash = await writeLeverageRouterV2Redeem(config, { ...request })
+  const hash = await writeLeverageRouterV2Redeem(config, { ...request, chainId })
   return { hash }
 }

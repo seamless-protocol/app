@@ -167,6 +167,10 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
       uniswapV3: {
         poolKey: 'usdc-cbbtc',
         fee: 500,
+        // Provide pool address for determinism and to enable v3 preference in tests
+        pool: '0x54e58c986818903d2D86dafe03F5F5e6C2CA6710' as Address,
+        quoter: '0x61fFE014bA17989E743c5F6cB21bF9697530B21e' as Address,
+        router: '0xE592427A0AEce92De3Edee1F18E0157C05861564' as Address,
       },
     },
   },

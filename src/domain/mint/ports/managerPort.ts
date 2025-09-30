@@ -15,7 +15,7 @@ export interface ManagerPort {
    * Ideal preview using only the user's collateral contribution.
    * Returns targetCollateral, idealDebt, idealShares.
    */
-  idealPreview(args: { token: Address; userCollateral: bigint }): Promise<{
+  idealPreview(args: { token: Address; userCollateral: bigint; chainId: number }): Promise<{
     targetCollateral: bigint
     idealDebt: bigint
     idealShares: bigint
@@ -25,7 +25,7 @@ export interface ManagerPort {
    * Final preview using total collateral (user + swap out).
    * Returns previewDebt, previewShares.
    */
-  finalPreview(args: { token: Address; totalCollateral: bigint }): Promise<{
+  finalPreview(args: { token: Address; totalCollateral: bigint; chainId: number }): Promise<{
     previewDebt: bigint
     previewShares: bigint
   }>
@@ -44,11 +44,12 @@ export function createManagerPortV2(params: {
   const { config, managerAddress, routerAddress } = params
 
   return {
-    async idealPreview({ token, userCollateral }) {
+    async idealPreview({ token, userCollateral, chainId }) {
       if (routerAddress) {
         const routerPreview = await readLeverageRouterV2PreviewDeposit(config, {
           address: routerAddress,
           args: [token, userCollateral],
+          chainId,
         })
         return {
           targetCollateral: routerPreview.collateral,
@@ -59,6 +60,7 @@ export function createManagerPortV2(params: {
       const managerPreview = await readLeverageManagerV2PreviewMint(config, {
         ...(managerAddress ? { address: managerAddress } : {}),
         args: [token, userCollateral],
+        chainId,
       })
       return {
         targetCollateral: managerPreview.collateral,
@@ -67,10 +69,11 @@ export function createManagerPortV2(params: {
       }
     },
 
-    async finalPreview({ token, totalCollateral }) {
+    async finalPreview({ token, totalCollateral, chainId }) {
       const managerPreview = await readLeverageManagerV2PreviewDeposit(config, {
         ...(managerAddress ? { address: managerAddress } : {}),
         args: [token, totalCollateral],
+        chainId,
       })
       return {
         previewDebt: managerPreview.debt,

@@ -9,9 +9,8 @@
  */
 
 import type { Address, Hash } from 'viem'
-import { base } from 'viem/chains'
 import type { Config } from 'wagmi'
-import { contractAddresses } from '@/lib/contracts/addresses'
+import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeRedeemV1 } from './exec/execute.v1'
 import { executeRedeemV2 } from './exec/execute.v2'
 import { planRedeemV2 } from './planner/plan.v2'
@@ -81,6 +80,8 @@ export async function orchestrateRedeem(params: {
   managerAddressV2?: Address
   /** Optional override for the desired payout asset (defaults to collateral). */
   outputAsset?: Address
+  /** Chain ID to execute the transaction on */
+  chainId: number
 }): Promise<OrchestrateRedeemResult> {
   const {
     config,
@@ -90,6 +91,7 @@ export async function orchestrateRedeem(params: {
     slippageBps = DEFAULT_SLIPPAGE_BPS,
     quoteCollateralToDebt,
     outputAsset,
+    chainId,
   } = params
 
   const version = detectRedeemRouterVersion()
@@ -98,8 +100,16 @@ export async function orchestrateRedeem(params: {
     if (!quoteCollateralToDebt) throw new Error('quoteCollateralToDebt is required for router v2')
     const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
     const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
-    const routerAddressV2 = params.routerAddressV2 || envRouterV2
-    const managerAddressV2 = params.managerAddressV2 || envManagerV2
+    // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit/env overrides
+    const chainAddresses = getContractAddresses(chainId)
+    const routerAddressV2 =
+      params.routerAddressV2 ||
+      (chainAddresses.leverageRouterV2 as Address | undefined) ||
+      envRouterV2
+    const managerAddressV2 =
+      params.managerAddressV2 ||
+      (chainAddresses.leverageManagerV2 as Address | undefined) ||
+      envManagerV2
 
     const plan = await planRedeemV2({
       config,
@@ -107,6 +117,7 @@ export async function orchestrateRedeem(params: {
       sharesToRedeem,
       slippageBps,
       quoteCollateralToDebt,
+      chainId,
       ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
       ...(outputAsset ? { outputAsset } : {}),
     })
@@ -118,6 +129,7 @@ export async function orchestrateRedeem(params: {
       sharesToRedeem: plan.sharesToRedeem,
       minCollateralForSender: plan.minCollateralForSender,
       multicallExecutor:
+        (getContractAddresses(chainId).multicall as Address | undefined) ||
         (typeof import.meta !== 'undefined'
           ? ((import.meta as unknown as { env?: Record<string, string | undefined> })?.env?.[
               'VITE_MULTICALL_EXECUTOR_ADDRESS'
@@ -127,15 +139,20 @@ export async function orchestrateRedeem(params: {
           ? (process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] as Address | undefined)
           : undefined) ||
         ((): Address => {
-          throw new Error('Multicall executor address required for router v2 flow')
+          throw new Error(
+            `Multicall executor address required for router v2 flow on chain ${chainId}`,
+          )
         })(),
       swapCalls: plan.calls,
       routerAddress:
         routerAddressV2 ||
-        (contractAddresses[base.id]?.leverageRouterV2 as Address | undefined) ||
+        (contractAddresses[chainId]?.leverageRouterV2 as Address | undefined) ||
         (() => {
-          throw new Error('LeverageRouterV2 address required for router v2 flow')
+          throw new Error(
+            `LeverageRouterV2 address required for router v2 flow on chain ${chainId}`,
+          )
         })(),
+      chainId,
     })
     return { routerVersion: 'v2' as const, plan, ...tx }
   }

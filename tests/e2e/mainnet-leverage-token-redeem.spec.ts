@@ -1,16 +1,9 @@
 import { expect, test } from '@playwright/test'
 import { erc20Abi, type Hash } from 'viem'
-import { base } from 'viem/chains'
+import { mainnet } from 'viem/chains'
 import type { Config } from 'wagmi'
-import {
-  account,
-  DEFAULT_CHAIN_ID,
-  LEVERAGE_TOKEN_ADDRESS,
-  publicClient,
-  revertSnapshot,
-  takeSnapshot,
-} from '../shared/clients'
-import { LEVERAGE_TOKEN_DEFINITION } from '../shared/env'
+import { getLeverageTokenAddress, getLeverageTokenDefinition } from '../fixtures/addresses'
+import { account, publicClient, revertSnapshot, takeSnapshot } from '../shared/clients'
 import {
   ensureRedeemSetup,
   planRedeemTest,
@@ -18,9 +11,11 @@ import {
 } from '../shared/scenarios/redeem'
 import { wagmiConfig } from '../shared/wagmi'
 
-const { E2E_CHAIN_ID, E2E_LEVERAGE_TOKEN_ADDRESS } = process.env
-const chainId = E2E_CHAIN_ID ?? `${DEFAULT_CHAIN_ID}`
-const leverageTokenAddress = (E2E_LEVERAGE_TOKEN_ADDRESS ?? LEVERAGE_TOKEN_ADDRESS) as `0x${string}`
+// Mainnet Tenderly VNet configuration for cbBTC/USDC 2x
+const MAINNET_CHAIN_ID = mainnet.id
+const TOKEN_KEY = 'cbbtc-usdc-2x'
+const leverageTokenDefinition = getLeverageTokenDefinition('tenderly', TOKEN_KEY)
+const leverageTokenAddress = getLeverageTokenAddress('tenderly', TOKEN_KEY)
 const SLIPPAGE_BPS = 50
 
 const redeemContext: RedeemPlanningContext = {
@@ -29,17 +24,23 @@ const redeemContext: RedeemPlanningContext = {
   account,
 }
 
-// Skip entire file when not running against Base canonical chain
+// Skip entire file when not running against Mainnet canonical chain
 // Must be placed before any tests are declared
-test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== base.id, 'Base-only E2E suite')
+test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== MAINNET_CHAIN_ID, 'Mainnet-only E2E suite')
 
-test.describe('Leverage token redeem flow', () => {
+test.describe('Mainnet leverage token redeem flow', () => {
   let baseSnapshot: Hash
   let sharesToRedeem: bigint
   let collateralAsset: `0x${string}`
   let payoutAsset: `0x${string}` | undefined
 
   test.beforeAll(async () => {
+    // Skip if not running against mainnet Tenderly VNet
+    const chainId = await publicClient.getChainId()
+    if (chainId !== MAINNET_CHAIN_ID) {
+      test.skip()
+    }
+
     baseSnapshot = await takeSnapshot()
   })
 
@@ -49,7 +50,7 @@ test.describe('Leverage token redeem flow', () => {
 
     const setup = await ensureRedeemSetup({
       ctx: redeemContext,
-      tokenDefinition: LEVERAGE_TOKEN_DEFINITION,
+      tokenDefinition: leverageTokenDefinition,
       slippageBps: SLIPPAGE_BPS,
     })
 
@@ -62,12 +63,12 @@ test.describe('Leverage token redeem flow', () => {
     await revertSnapshot(baseSnapshot)
   })
 
-  test('redeems leverage tokens through the modal', async ({ page }) => {
+  test('redeems cbBTC/USDC leverage tokens through the modal', async ({ page }) => {
     test.setTimeout(120_000)
 
     const { plan } = await planRedeemTest({
       ctx: redeemContext,
-      tokenDefinition: LEVERAGE_TOKEN_DEFINITION,
+      tokenDefinition: leverageTokenDefinition,
       sharesToRedeem,
       slippageBps: SLIPPAGE_BPS,
     })
@@ -87,8 +88,10 @@ test.describe('Leverage token redeem flow', () => {
       await expect(connectButton).toBeHidden({ timeout: 5_000 })
     }
 
-    await page.goto(`/#/tokens/${chainId}/${leverageTokenAddress}`)
-    await expect(page).toHaveURL(new RegExp(`/#/tokens/${chainId}/${leverageTokenAddress}`, 'i'))
+    await page.goto(`/#/tokens/${MAINNET_CHAIN_ID}/${leverageTokenAddress}`)
+    await expect(page).toHaveURL(
+      new RegExp(`/#/tokens/${MAINNET_CHAIN_ID}/${leverageTokenAddress}`, 'i'),
+    )
 
     const redeemButton = page.getByRole('button', { name: /^Redeem$/ })
     await expect(redeemButton).toBeVisible({ timeout: 15_000 })
@@ -164,5 +167,5 @@ async function readErc20Balance(asset: `0x${string}`): Promise<bigint> {
     args: [account.address],
   })
 }
-// Skip when not running against Base canonical chain
-test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== base.id, 'Base-only E2E suite')
+// Skip entire file when not running against a mainnet (Tenderly) backend
+test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== mainnet.id, 'Mainnet-only E2E suite')

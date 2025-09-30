@@ -10,7 +10,11 @@ import {
   createUniswapV3QuoteAdapter,
   type UniswapV3QuoteOptions,
 } from '@/domain/shared/adapters/uniswapV3'
-import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
+import {
+  readLeverageManagerV2GetLeverageTokenCollateralAsset,
+  readLeverageManagerV2GetLeverageTokenDebtAsset,
+  readLeverageTokenBalanceOf,
+} from '@/lib/contracts/generated'
 import { ADDR, CHAIN_ID, mode, RPC } from './env'
 import { readErc20Decimals } from './erc20'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
@@ -68,8 +72,14 @@ export async function executeSharedMint({
   const chainId = chainIdOverride ?? CHAIN_ID
   console.info('[SHARED MINT] Chain ID', { chainId })
 
-  const collateralAsset = ADDR.weeth
-  const debtAsset = ADDR.weth
+  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
+    address: manager,
+    args: [token],
+  })
+  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
+    address: manager,
+    args: [token],
+  })
   console.info('[SHARED MINT] Token assets', { collateralAsset, debtAsset })
 
   const decimals = await readErc20Decimals(config, collateralAsset)
@@ -121,6 +131,7 @@ export async function executeSharedMint({
     quoteDebtToCollateral,
     routerAddressV2: router,
     managerAddressV2: manager,
+    chainId,
   })
   if (res.routerVersion !== 'v2') {
     throw new Error(`Unexpected router version: ${res.routerVersion}`)

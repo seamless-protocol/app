@@ -75,13 +75,23 @@ export async function planRedeemV2(params: {
   managerAddress?: Address
   /** Optional explicit output asset for user payout (defaults to collateral). */
   outputAsset?: Address
+  /** Chain ID to execute the transaction on */
+  chainId: number
 }): Promise<RedeemPlanV2> {
-  const { config, token, sharesToRedeem, slippageBps, quoteCollateralToDebt, managerAddress } =
-    params
+  const {
+    config,
+    token,
+    sharesToRedeem,
+    slippageBps,
+    quoteCollateralToDebt,
+    managerAddress,
+    chainId,
+  } = params
 
   const { collateralAsset, debtAsset } = await getManagerAssets({
     config,
     token,
+    chainId,
     ...(managerAddress ? { managerAddress } : {}),
   })
 
@@ -89,6 +99,7 @@ export async function planRedeemV2(params: {
   const initialPreview = await readLeverageManagerV2PreviewRedeem(config, {
     ...(managerAddress ? { address: managerAddress } : {}),
     args: [token, sharesToRedeem],
+    chainId,
   })
 
   const totalCollateralAvailable = initialPreview.collateral
@@ -211,15 +222,18 @@ async function getManagerAssets(args: {
   config: Config
   token: TokenArg
   managerAddress?: Address
+  chainId: number
 }) {
-  const { config, token, managerAddress } = args
+  const { config, token, managerAddress, chainId } = args
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
     ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
+    chainId,
   })
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
     ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
+    chainId,
   })
   return { collateralAsset, debtAsset }
 }

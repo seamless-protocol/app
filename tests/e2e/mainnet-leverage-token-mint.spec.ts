@@ -1,17 +1,9 @@
 import { expect, test } from '@playwright/test'
 import { erc20Abi, type Hash } from 'viem'
-import { base } from 'viem/chains'
+import { mainnet } from 'viem/chains'
 import type { Config } from 'wagmi'
-import {
-  ADDR,
-  account,
-  DEFAULT_CHAIN_ID,
-  LEVERAGE_TOKEN_ADDRESS,
-  publicClient,
-  revertSnapshot,
-  takeSnapshot,
-} from '../shared/clients'
-import { LEVERAGE_TOKEN_DEFINITION } from '../shared/env'
+import { getLeverageTokenAddress, getLeverageTokenDefinition } from '../fixtures/addresses'
+import { account, publicClient, revertSnapshot, takeSnapshot } from '../shared/clients'
 import { topUpErc20, topUpNative } from '../shared/funding'
 import {
   ensureMintLiquidity,
@@ -20,43 +12,55 @@ import {
 } from '../shared/scenarios/mint'
 import { wagmiConfig } from '../shared/wagmi'
 
-const { E2E_CHAIN_ID, E2E_LEVERAGE_TOKEN_ADDRESS } = process.env
-const chainId = E2E_CHAIN_ID ?? `${DEFAULT_CHAIN_ID}`
-const leverageTokenAddress = (E2E_LEVERAGE_TOKEN_ADDRESS ?? LEVERAGE_TOKEN_ADDRESS) as `0x${string}`
-const MINT_AMOUNT = '1'
+// Mainnet Tenderly VNet configuration for cbBTC/USDC 2x
+const MAINNET_CHAIN_ID = mainnet.id
+const TOKEN_KEY = 'cbbtc-usdc-2x'
+const leverageTokenDefinition = getLeverageTokenDefinition('tenderly', TOKEN_KEY)
+const leverageTokenAddress = getLeverageTokenAddress('tenderly', TOKEN_KEY)
+
+// cbBTC address on mainnet
+const CBBTC_ADDRESS = '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf' as `0x${string}`
+const MINT_AMOUNT = '0.01' // Minimum mint amount for cbBTC
+
 const mintPlanningContext: MintPlanningContext = {
   config: wagmiConfig as Config,
   publicClient,
 }
 
-// Skip entire file when not running against Base canonical chain
+// Skip entire file when not running against Mainnet canonical chain
 // Must be placed before any tests are declared
-test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== base.id, 'Base-only E2E suite')
+test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== MAINNET_CHAIN_ID, 'Mainnet-only E2E suite')
 
-test.describe('Leverage token mint flow', () => {
+test.describe('Mainnet leverage token mint flow', () => {
   let snapshotId: Hash
 
   test.beforeEach(async () => {
+    // Skip if not running against mainnet Tenderly VNet
+    const chainId = await publicClient.getChainId()
+    if (chainId !== MAINNET_CHAIN_ID) {
+      test.skip()
+    }
+
     snapshotId = await takeSnapshot()
     await ensureMintLiquidity({
       ctx: mintPlanningContext,
-      tokenDefinition: LEVERAGE_TOKEN_DEFINITION,
+      tokenDefinition: leverageTokenDefinition,
       equityAmountHuman: MINT_AMOUNT,
     })
     await topUpNative(account.address, '5')
-    await topUpErc20(ADDR.weeth, account.address, '50')
+    await topUpErc20(CBBTC_ADDRESS, account.address, '1')
   })
 
   test.afterEach(async () => {
     await revertSnapshot(snapshotId)
   })
 
-  test('mints leverage tokens through the modal', async ({ page }) => {
+  test('mints cbBTC/USDC leverage tokens through the modal', async ({ page }) => {
     test.setTimeout(120_000)
 
     const { plan } = await planMintTest({
       ctx: mintPlanningContext,
-      tokenDefinition: LEVERAGE_TOKEN_DEFINITION,
+      tokenDefinition: leverageTokenDefinition,
       equityAmountHuman: MINT_AMOUNT,
     })
     const balanceBefore = await readLeverageTokenBalance()
@@ -72,11 +76,13 @@ test.describe('Leverage token mint flow', () => {
       await expect(page.getByTestId('connected-address')).toBeVisible({ timeout: 15_000 })
     }
 
-    await page.goto(`/#/tokens/${chainId}/${leverageTokenAddress}`)
+    await page.goto(`/#/tokens/${MAINNET_CHAIN_ID}/${leverageTokenAddress}`)
     await page.waitForLoadState('networkidle')
-    await expect(page).toHaveURL(new RegExp(`/#/tokens/${chainId}/${leverageTokenAddress}`, 'i'))
+    await expect(page).toHaveURL(
+      new RegExp(`/#/tokens/${MAINNET_CHAIN_ID}/${leverageTokenAddress}`, 'i'),
+    )
 
-    // Open the mint modal (button lives inside the holdings card when connected)
+    // Open the mint modal
     const mintButton = page.getByRole('button', { name: /^Mint$/ })
     await expect(mintButton, 'Mint action should be visible').toBeVisible({ timeout: 15_000 })
     await mintButton.click()
@@ -145,15 +151,27 @@ function assertMintedShares(
   scenario: { expectedShares: bigint; minShares: bigint },
 ): void {
   const mintedShares = after - before
+  // Basic sanity
   expect(mintedShares > 0n).toBeTruthy()
+
+  const tolerance = scenario.expectedShares / 100n || 1n // 1% for expectedShares comparison only
+
+  // Debug aid for CI flakiness investigations
+  console.info('[Mint][Debug]', {
+    mintedShares: mintedShares.toString(),
+    minShares: scenario.minShares.toString(),
+    expectedShares: scenario.expectedShares.toString(),
+    tolerance: tolerance.toString(),
+  })
+
+  // Enforce minShares strictly
   expect(mintedShares >= scenario.minShares).toBeTruthy()
 
   const delta =
     mintedShares >= scenario.expectedShares
       ? mintedShares - scenario.expectedShares
       : scenario.expectedShares - mintedShares
-  const tolerance = scenario.expectedShares / 100n || 1n
   expect(delta <= tolerance).toBeTruthy()
 }
-// Skip when not running against Base canonical chain
-test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== base.id, 'Base-only E2E suite')
+// Skip entire file when not running against a mainnet (Tenderly) backend
+test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== mainnet.id, 'Mainnet-only E2E suite')

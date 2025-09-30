@@ -252,7 +252,7 @@ export function InputStep({
             {isCalculating && (
               <div className="flex items-center text-xs text-slate-400">
                 <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                <Skeleton className="h-3 w-20" />
+                Calculating...
               </div>
             )}
           </div>
@@ -332,9 +332,11 @@ export function InputStep({
             </span>
           </div>
           <Separator className="my-2 bg-slate-700" />
-          <div className="flex justify-between font-medium">
+          <div className="flex justify-between font-medium items-center">
             <span className="text-white">You will receive</span>
-            <span className="text-white">{expectedTokens} tokens</span>
+            <span className="text-white">
+              {isCalculating ? 'Calculating...' : `${expectedTokens} tokens`}
+            </span>
           </div>
         </div>
       </Card>

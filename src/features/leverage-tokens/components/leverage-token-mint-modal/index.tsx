@@ -6,6 +6,7 @@ import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('mint-modal')
 
+import { createManagerPortV2 } from '@/domain/mint/ports'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useReadLeverageManagerV2GetManagementFee } from '../../../../lib/contracts/generated'
@@ -19,9 +20,10 @@ import {
   MIN_MINT_AMOUNT_DISPLAY,
   TOKEN_AMOUNT_DISPLAY_DECIMALS,
 } from '../../constants'
+import { useDebtToCollateralQuote } from '../../hooks/mint/useDebtToCollateralQuote'
 import { useMintExecution } from '../../hooks/mint/useMintExecution'
 import { useMintForm } from '../../hooks/mint/useMintForm'
-import { useMintPreview } from '../../hooks/mint/useMintPreview'
+import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
@@ -81,7 +83,8 @@ export function LeverageTokenMintModal({
 
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
-  const leverageRouterAddress = contractAddresses.leverageRouter
+  const leverageRouterAddress =
+    contractAddresses.leverageRouterV2 ?? contractAddresses.leverageRouter
   const leverageManagerAddress = contractAddresses.leverageManagerV2
 
   // Fetch management fee for display (independent from core config)
@@ -152,11 +155,44 @@ export function LeverageTokenMintModal({
     minAmountFormatted: MIN_MINT_AMOUNT_DISPLAY,
   })
 
-  const preview = useMintPreview({
+  // Removed legacy manager/router preview in favor of route-aware plan preview
+
+  // Optional: route-aware plan preview (uses the actual swap configuration)
+  const quoteDebtToCollateral = useDebtToCollateralQuote({
+    chainId: leverageTokenConfig.chainId,
+    ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
+    ...(leverageTokenConfig.swaps?.debtToCollateral
+      ? { swap: leverageTokenConfig.swaps.debtToCollateral }
+      : {}),
+    slippageBps,
+    requiresQuote: Boolean(leverageTokenConfig.swaps?.debtToCollateral),
+    ...(contractAddresses.multicall ? { fromAddress: contractAddresses.multicall } : {}),
+  })
+
+  // Prefer router-aware preview path to align with tests/integration
+  const managerPort = useMemo(() => {
+    if (!leverageManagerAddress && !leverageRouterAddress) return undefined
+    try {
+      return createManagerPortV2({
+        config: wagmiConfig,
+        ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
+        ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
+      })
+    } catch (_) {
+      return undefined
+    }
+  }, [leverageManagerAddress, leverageRouterAddress, wagmiConfig])
+
+  const planPreview = useMintPlanPreview({
     config: wagmiConfig,
     token: leverageTokenAddress,
+    inputAsset: leverageTokenConfig.collateralAsset.address,
     equityInCollateralAsset: form.amountRaw,
+    slippageBps,
     chainId: leverageTokenConfig.chainId,
+    ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
+    ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
+    ...(managerPort ? { managerPort } : {}),
   })
 
   const {
@@ -225,15 +261,14 @@ export function LeverageTokenMintModal({
     }
   }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
 
-  const expectedTokens = useMemo(
-    () =>
-      formatTokenAmountFromBase(
-        preview.data?.shares,
-        leverageTokenConfig.decimals,
-        TOKEN_AMOUNT_DISPLAY_DECIMALS,
-      ),
-    [preview.data?.shares, leverageTokenConfig.decimals],
-  )
+  const expectedTokens = useMemo(() => {
+    const shares = planPreview.plan?.expectedShares
+    return formatTokenAmountFromBase(
+      shares,
+      leverageTokenConfig.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [planPreview.plan?.expectedShares, leverageTokenConfig.decimals])
 
   // Available tokens for minting (only collateral asset for now)
   const availableTokens: Array<Token> = [
@@ -261,11 +296,14 @@ export function LeverageTokenMintModal({
 
   // Validate mint
   const canProceed = () => {
+    const requiresQuote = Boolean(leverageTokenConfig.swaps?.debtToCollateral)
+    const quoteReady = !requiresQuote || quoteDebtToCollateral.status === 'ready'
     return (
       form.isAmountValid &&
       form.hasBalance &&
       form.minAmountOk &&
-      !preview.isLoading &&
+      !planPreview.isLoading &&
+      quoteReady &&
       parseFloat(expectedTokens) > 0 &&
       isConnected &&
       !isAllowanceLoading
@@ -347,7 +385,11 @@ export function LeverageTokenMintModal({
             onSlippageChange={setSlippage}
             isCollateralBalanceLoading={isCollateralBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
-            isCalculating={preview.isLoading}
+            isCalculating={
+              planPreview.isLoading ||
+              (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
+                quoteDebtToCollateral.status !== 'ready')
+            }
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedTokens={expectedTokens}
@@ -355,7 +397,7 @@ export function LeverageTokenMintModal({
             needsApproval={needsApproval()}
             isConnected={isConnected}
             onApprove={handleApprove}
-            error={error || undefined}
+            error={error || planPreview.error?.message || undefined}
             leverageTokenConfig={leverageTokenConfig}
             apy={apy ?? undefined}
             managementFee={managementFee}
@@ -461,7 +503,7 @@ function useApprovalFlow(params: {
     ...(spender ? { spender } : {}),
     ...(amountFormatted ? { amount: amountFormatted } : {}),
     decimals,
-    chainId,
+    targetChainId: chainId,
     enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
   })
 

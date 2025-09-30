@@ -1,9 +1,8 @@
 import * as Sentry from '@sentry/react'
 import type { Address } from 'viem'
 import { parseUnits } from 'viem'
-import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { useChainId, useSwitchChain, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { TX_SETTINGS } from '@/features/leverage-tokens/utils/constants'
-import type { SupportedChainId } from '@/lib/contracts'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
 import { createLogger } from '@/lib/logger'
 
@@ -14,7 +13,7 @@ export interface UseTokenApproveParams {
   spender?: Address
   amount?: string // Amount in human-readable format (e.g., "100.5")
   decimals?: number // Token decimals
-  chainId: number
+  targetChainId: number
   enabled?: boolean
 }
 
@@ -27,9 +26,12 @@ export function useTokenApprove({
   spender,
   amount,
   decimals = 18,
-  chainId,
+  targetChainId,
   enabled = true,
 }: UseTokenApproveParams) {
+  const activeChainId = useChainId()
+  const { switchChain } = useSwitchChain()
+
   // Calculate approval amount
   const approvalAmount = amount ? parseUnits(amount, decimals) : 0n
 
@@ -63,9 +65,14 @@ export function useTokenApprove({
         tokenAddress,
         spender,
         approvalAmount: approvalAmount.toString(),
-        chainId,
+        targetChainId,
       })
       return
+    }
+
+    // switch chains if needed
+    if (targetChainId !== activeChainId) {
+      switchChain({ chainId: targetChainId })
     }
 
     // Track approval attempt
@@ -77,7 +84,7 @@ export function useTokenApprove({
         tokenAddress,
         spender,
         approvalAmount: approvalAmount.toString(),
-        chainId,
+        targetChainId,
       },
     })
 
@@ -86,7 +93,7 @@ export function useTokenApprove({
       abi: leverageTokenAbi,
       functionName: 'approve',
       args: [spender, approvalAmount],
-      chainId: chainId as SupportedChainId,
+      chainId: targetChainId,
     })
   }
 

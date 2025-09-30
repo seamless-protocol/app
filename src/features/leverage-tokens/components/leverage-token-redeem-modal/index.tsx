@@ -238,6 +238,7 @@ export function LeverageTokenRedeemModal({
     ...(userAddress ? { account: userAddress } : {}),
     slippageBps,
     chainId: leverageTokenConfig.chainId as SupportedChainId,
+
     ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
     ...(leverageTokenConfig.swaps?.collateralToDebt
@@ -734,7 +735,7 @@ function useApprovalFlow(params: {
     ...(spender ? { spender } : {}),
     ...(amountFormatted ? { amount: amountFormatted } : {}),
     decimals,
-    chainId,
+    targetChainId: chainId,
     enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
   })
 
