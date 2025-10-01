@@ -1,13 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Award, ExternalLink } from 'lucide-react'
+import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useGA } from '@/lib/config/ga4.config'
 
 export const Route = createFileRoute('/vaults')({
   component: () => <VaultsPage />,
 })
 
 function VaultsPage() {
+  const analytics = useGA()
+
+  // Track page view when component mounts
+  useEffect(() => {
+    analytics.trackPageView('Vaults', '/vaults')
+
+    // Track feature discovery for vaults
+    analytics.featureDiscovered('vaults', 'navigation')
+  }, [analytics])
+
   return (
     <div className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 lg:px-8 py-2 xs:py-3 sm:py-4 lg:py-8">
       <div className="space-y-8 max-w-4xl mx-auto">

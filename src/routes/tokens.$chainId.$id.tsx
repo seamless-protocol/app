@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Info } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
@@ -27,6 +27,7 @@ import { useLeverageTokenUserPosition } from '@/features/leverage-tokens/hooks/u
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
 import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
+import { useGA } from '@/lib/config/ga4.config'
 import { useExplorer } from '@/lib/hooks/useExplorer'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 import { CHAIN_IDS } from '@/lib/utils/chain-logos'
@@ -38,6 +39,15 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     const { isConnected, address: userAddress } = useAccount()
     const navigate = useNavigate()
     const explorer = useExplorer()
+    const analytics = useGA()
+
+    // Track page view when component mounts
+    useEffect(() => {
+      analytics.trackPageView('Leverage Token Detail', `/tokens/${routeChainId}/${tokenAddress}`)
+
+      // Track feature discovery for leverage token details
+      analytics.featureDiscovered('leverage_token_details', 'navigation')
+    }, [analytics, routeChainId, tokenAddress])
     const [selectedTimeframe, setSelectedTimeframe] = useState<'1W' | '1M' | '3M' | '6M' | '1Y'>(
       '3M',
     )

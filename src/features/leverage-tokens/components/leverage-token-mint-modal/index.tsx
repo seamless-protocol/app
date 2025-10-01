@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig, usePublicClient } from 'wagmi'
+import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('mint-modal')
@@ -70,6 +71,9 @@ export function LeverageTokenMintModal({
   apy,
   userAddress: propUserAddress,
 }: LeverageTokenMintModalProps) {
+  const { trackLeverageTokenMinted, trackTransactionError } = useTransactionGA()
+  const analytics = useGA()
+
   // Get leverage token configuration by address
   const leverageTokenConfig = getLeverageTokenConfig(leverageTokenAddress)
 
@@ -241,7 +245,10 @@ export function LeverageTokenMintModal({
     form.setAmount('')
     setError('')
     setTransactionHash('')
-  }, [toInput, form.setAmount])
+
+    // Track funnel step: mint modal opened
+    analytics.funnelStep('mint_leverage_token', 'modal_opened', 1)
+  }, [toInput, form.setAmount, analytics])
 
   useEffect(() => {
     if (isOpen) resetModal()
@@ -348,10 +355,24 @@ export function LeverageTokenMintModal({
   const handleConfirm = async () => {
     if (!publicClient) return
     if (!userAddress || !isConnected || !form.amountRaw) return
+
+    // Track funnel step: mint transaction initiated
+    analytics.funnelStep('mint_leverage_token', 'transaction_initiated', 2)
+
     toPending()
     try {
       const hash = await exec.mint(form.amountRaw)
       setTransactionHash(hash)
+
+      // Track successful mint transaction
+      const tokenSymbol = leverageTokenConfig.symbol
+      const amount = form.amount
+      const usdValue = parseFloat(form.amount) * (selectedToken.price || 0)
+      trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
+
+      // Track funnel step: mint transaction completed
+      analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
+
       toast.success('Leverage tokens minted successfully!', {
         description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} tokens`,
       })
@@ -373,6 +394,10 @@ export function LeverageTokenMintModal({
       toSuccess()
     } catch (e: unknown) {
       const error = e as Error
+
+      // Track mint transaction error
+      trackTransactionError('mint_failed', 'leverage_token', error.message)
+
       logger.error('Mint failed', {
         error,
         userAddress,
