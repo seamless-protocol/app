@@ -58,14 +58,7 @@ export function createRouterPortV2(params: {
       account,
     }) {
       const { request } = await simulateLeverageRouterV2Deposit(config, {
-        args: [
-          token,
-          collateralFromSender,
-          flashLoanAmount,
-          minShares,
-          multicallExecutor,
-          calls,
-        ],
+        args: [token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, calls],
         account,
       })
       const hash = await writeLeverageRouterV2Deposit(config, {
