@@ -27,6 +27,8 @@ export type WithForkCtx = {
 }
 
 export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise<T> {
+  // NOTE: Static VNets don't support proper snapshot/revert - state accumulates across tests
+  // This causes test failures when running the full suite, though tests pass individually
   console.info('[STEP] Take snapshot')
   const snap: Hash = await takeSnapshot()
   console.info('[STEP] Snapshot taken', { snap })
@@ -59,5 +61,6 @@ export async function withFork<T>(fn: (ctx: WithForkCtx) => Promise<T>): Promise
     return await fn(ctx)
   } finally {
     await revertSnapshot(snap)
+    // NOTE: revert doesn't actually work with static VNets - state persists
   }
 }

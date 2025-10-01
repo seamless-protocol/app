@@ -64,6 +64,7 @@ export function useRedeemPlanPreview({
         sharesToRedeem,
         slippageBps,
         quoteCollateralToDebt: quote,
+        chainId,
         ...(managerAddress ? { managerAddress } : {}),
         ...(outputAsset ? { outputAsset } : {}),
       })

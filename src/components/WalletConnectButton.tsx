@@ -59,9 +59,14 @@ export function WalletConnectButton() {
 
               return (
                 <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
-                  {/* Network Indicator */}
+                  {/* Network Indicator - Clickable for switching */}
                   <div className="hidden md:block">
-                    <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] border border-[var(--divider-line)]">
+                    <button
+                      type="button"
+                      onClick={openChainModal}
+                      className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] border border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] transition-all cursor-pointer"
+                      aria-label="Switch network"
+                    >
                       {chain.hasIcon && (
                         <div className="w-3 h-3">
                           <div
@@ -81,7 +86,7 @@ export function WalletConnectButton() {
                         </div>
                       )}
                       <span className="text-xs text-[var(--text-secondary)]">{chain.name}</span>
-                    </div>
+                    </button>
                   </div>
 
                   {/* Wallet Button */}

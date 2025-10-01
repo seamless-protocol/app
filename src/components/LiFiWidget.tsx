@@ -28,7 +28,6 @@ export function LiFiWidget() {
       integrator: 'seamless-protocol',
       variant: 'wide',
       subvariant: 'split',
-      appearance: 'light',
       theme: {
         colorSchemes: {
           light: {

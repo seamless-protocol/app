@@ -28,7 +28,7 @@ describe('ManagerPort V2', () => {
       treasuryFee: 0n,
     })
     const port = createManagerPortV2({ config: DUMMY_CONFIG, routerAddress: '0xrouter' as Address })
-    const res = await port.idealPreview({ token: TOKEN, userCollateral: 1000n })
+    const res = await port.idealPreview({ token: TOKEN, userCollateral: 1000n, chainId: 1 })
     expect(res).toEqual({ targetCollateral: 2000n, idealDebt: 1000n, idealShares: 100n })
   })
 
@@ -46,7 +46,7 @@ describe('ManagerPort V2', () => {
       config: DUMMY_CONFIG,
       managerAddress: '0xmanager' as Address,
     })
-    const res = await port.finalPreview({ token: TOKEN, totalCollateral: 1994n })
+    const res = await port.finalPreview({ token: TOKEN, totalCollateral: 1994n, chainId: 1 })
     expect(res).toEqual({ previewDebt: 999n, previewShares: 55n })
   })
 })
@@ -64,9 +64,9 @@ describe('ManagerPort V1', () => {
       config: DUMMY_CONFIG,
       managerAddress: '0xmanager' as Address,
     })
-    const ideal = await port.idealPreview({ token: TOKEN, userCollateral: 1000n })
+    const ideal = await port.idealPreview({ token: TOKEN, userCollateral: 1000n, chainId: 1 })
     expect(ideal).toEqual({ targetCollateral: 2000n, idealDebt: 1000n, idealShares: 100n })
-    const final = await port.finalPreview({ token: TOKEN, totalCollateral: 1994n })
+    const final = await port.finalPreview({ token: TOKEN, totalCollateral: 1994n, chainId: 1 })
     expect(final).toEqual({ previewDebt: 1000n, previewShares: 100n })
   })
 })

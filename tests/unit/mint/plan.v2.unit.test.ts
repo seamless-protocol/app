@@ -43,6 +43,7 @@ describe('planMintV2 validations', () => {
           approvalTarget: '0x3333333333333333333333333333333333333333' as Address,
           calldata: '0x',
         }),
+        chainId: 8453,
       }),
     ).rejects.toThrowError(/collateral-only/i)
   })

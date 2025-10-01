@@ -96,7 +96,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
             <div className="w-8 h-8 bg-[var(--cta-gradient)] rounded-lg flex items-center justify-center">
               <Settings className="h-5 w-5 text-[var(--cta-text)]" />
             </div>
-            <span>{account ? 'Account Settings' : 'Settings'}</span>
+            <span>Settings</span>
           </DialogTitle>
           <DialogDescription className="text-sm text-[var(--text-muted)] mb-3">
             {account
@@ -132,8 +132,14 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                     </div>
                   </div>
                   <div className="flex items-center justify-between bg-[color-mix(in_srgb,var(--surface-card) 75%,transparent)] rounded-lg p-3 border border-[var(--divider-line)]/80">
-                    <div className="flex items-center space-x-2">
-                      <code className="text-sm text-[var(--text-secondary)] font-mono">
+                    <div className="flex flex-col">
+                      {/* Prefer ENS name when available, fallback to address */}
+                      <span className="text-sm text-[var(--text-primary)]">
+                        {account.displayName && !account.displayName.startsWith('0x')
+                          ? account.displayName
+                          : `${account.address.slice(0, 6)}...${account.address.slice(-4)}`}
+                      </span>
+                      <code className="text-xs text-[var(--text-secondary)] font-mono">
                         {account.address.slice(0, 6)}...{account.address.slice(-4)}
                       </code>
                     </div>
@@ -151,8 +157,8 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                         variant="ghost"
                         size="sm"
                         onClick={viewOnExplorer}
-                        className="h-8 w-8 p-0 text-[var(--nav-text)] hover:text-[var(--text-primary)] hover:bg-[var(--nav-surface-hover)]"
-                        aria-label="View on Etherscan"
+                        className="h-8 w-8 p-0 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--nav-surface-hover)]"
+                        aria-label="View on Explorer"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>

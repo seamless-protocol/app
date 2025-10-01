@@ -3,20 +3,14 @@ import { getPublicClient } from '@wagmi/core'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
-import { RouterVersion } from '@/domain/mint/planner/types'
-import { detectRouterVersion } from '@/domain/mint/utils/detectVersion'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
-import { getContractAddresses } from '@/lib/contracts/addresses'
-import {
-  readLeverageManagerPreviewRedeem,
-  readLeverageManagerV2PreviewRedeem,
-} from '@/lib/contracts/generated'
+import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
+import { readLeverageManagerV2PreviewRedeem } from '@/lib/contracts/generated'
 
 export interface RedeemPreviewResult {
   collateral: bigint
   debt: bigint
   shares: bigint
-  equity?: bigint
   tokenFee?: bigint
   treasuryFee?: bigint
 }
@@ -37,17 +31,7 @@ export function useRedeemPreview(params: {
   // Derive active chain id from wagmi config for multi-chain cache isolation
   const detectedChainId = chainId ?? getPublicClient(config)?.chain?.id
   const contracts = detectedChainId ? getContractAddresses(detectedChainId) : undefined
-
-  const requestedVersion = detectRouterVersion()
   const managerV2Address = contracts?.leverageManagerV2
-  const managerV1Address = contracts?.leverageManager
-  const effectiveVersion = (() => {
-    if (requestedVersion === RouterVersion.V2) return RouterVersion.V2
-    if (!managerV1Address && managerV2Address) return RouterVersion.V2
-    return RouterVersion.V1
-  })()
-  const useV2 = effectiveVersion === RouterVersion.V2 && Boolean(managerV2Address)
-  const managerAddress = useV2 ? managerV2Address : (managerV1Address ?? managerV2Address)
 
   const amountForKey = enabled && typeof debounced === 'bigint' ? (debounced as bigint) : 0n
   const queryKey = ltKeys.simulation.redeemKey({
@@ -58,38 +42,25 @@ export function useRedeemPreview(params: {
 
   const query = useQuery<RedeemPreviewResult, Error>({
     queryKey,
-    // Only executes when enabled=true
     queryFn: async () => {
-      if (useV2 && managerV2Address) {
-        const res = await readLeverageManagerV2PreviewRedeem(config, {
-          address: managerV2Address,
-          args: [token, debounced ?? 0n],
-        })
-
-        return {
-          collateral: res.collateral,
-          debt: res.debt,
-          shares: res.shares,
-          tokenFee: res.tokenFee,
-          treasuryFee: res.treasuryFee,
-        }
+      if (!managerV2Address || typeof debounced !== 'bigint') {
+        throw new Error('Redeem preview unavailable: manager V2 address or input missing')
       }
 
-      const res = await readLeverageManagerPreviewRedeem(config, {
-        ...(managerAddress ? { address: managerAddress } : {}),
-        args: [token, debounced ?? 0n],
+      const res = await readLeverageManagerV2PreviewRedeem(config, {
+        args: [token, debounced],
+        chainId: detectedChainId as SupportedChainId,
       })
 
       return {
         collateral: res.collateral,
         debt: res.debt,
         shares: res.shares,
-        equity: res.equity,
         tokenFee: res.tokenFee,
         treasuryFee: res.treasuryFee,
       }
     },
-    enabled,
+    enabled: enabled && Boolean(managerV2Address),
     retry: false,
     refetchOnWindowFocus: false,
     // Keep behavior deterministic for keystroke-driven UX

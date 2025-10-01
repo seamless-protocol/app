@@ -41,6 +41,7 @@ describe('executeMintV2', () => {
       plan,
       routerAddress: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as `0x${string}`,
       multicallExecutor: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as `0x${string}`,
+      chainId: 8453,
     })
     expect(res.hash).toBe('0xhash')
 
@@ -74,6 +75,7 @@ describe('executeMintV2', () => {
       maxSwapCostInCollateralAsset: overrideMaxSwapCost,
       routerAddress: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as `0x${string}`,
       multicallExecutor: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as `0x${string}`,
+      chainId: 8453,
     })
     const { simulateLeverageRouterV2Deposit } = await import('@/lib/contracts/generated')
     const callArgs = (simulateLeverageRouterV2Deposit as any).mock.calls[0][1].args

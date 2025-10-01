@@ -49,6 +49,7 @@ interface InputStepProps {
   selectedToken: Token
   availableAssets: Array<Asset>
   amount: string
+  redemptionFee?: bigint | undefined
   onAmountChange: (value: string) => void
   onPercentageClick: (percentage: number) => void
   selectedAssetId: OutputAssetId
@@ -62,6 +63,9 @@ interface InputStepProps {
   isCalculating: boolean
   isAllowanceLoading: boolean
   isApproving: boolean
+  isRedemptionFeeLoading?: boolean | undefined
+
+  // Calculations
   expectedAmount: string
   selectedAssetSymbol: string
   earnings: EarningsDisplay
@@ -107,6 +111,8 @@ export function InputStep({
   onApprove,
   error,
   leverageTokenConfig,
+  redemptionFee,
+  isRedemptionFeeLoading,
 }: InputStepProps) {
   const redeemAmountId = useId()
 
@@ -382,7 +388,15 @@ export function InputStep({
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Redemption Fee</span>
-            <span className="text-[var(--text-primary)]">0.2%</span>
+            <span className="text-[var(--text-primary)]">
+              {isRedemptionFeeLoading ? (
+                <Skeleton className="inline-block h-4 w-12" />
+              ) : typeof redemptionFee === 'bigint' ? (
+                `${Number(redemptionFee) / 100}%`
+              ) : (
+                <Skeleton className="inline-block h-4 w-12" />
+              )}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Slippage Tolerance</span>
@@ -424,8 +438,14 @@ export function InputStep({
           <TrendingDown className="mr-2 h-4 w-4 text-[var(--state-warning-text)]" />
           <div>
             <p className="font-medium text-[var(--text-primary)]">Redemption Fee</p>
-            <p className="mt-1 text-xs">
-              A 0.2% redemption fee applies to cover rebalancing costs.
+            <p className="text-xs mt-1">
+              {isRedemptionFeeLoading ? (
+                <Skeleton className="inline-block h-3 w-48" />
+              ) : typeof redemptionFee === 'bigint' ? (
+                `A ${Number(redemptionFee) / 100}% redemption fee applies to cover rebalancing costs.`
+              ) : (
+                'A redemption fee applies to cover rebalancing costs.'
+              )}
             </p>
           </div>
         </div>

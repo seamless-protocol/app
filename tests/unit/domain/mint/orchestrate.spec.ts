@@ -51,6 +51,7 @@ describe('orchestrateMint', () => {
       token,
       inputAsset,
       equityInInputAsset: 1000n,
+      chainId: 8453,
     })
     expect(res.routerVersion).toBe('v1')
     expect(res.hash).toBe('0xhash_v1')
@@ -69,6 +70,7 @@ describe('orchestrateMint', () => {
       token,
       inputAsset,
       equityInInputAsset: 1000n,
+      chainId: 8453,
       quoteDebtToCollateral,
       routerAddressV2: '0xrouter' as Address,
       managerAddressV2: '0xmanager' as Address,

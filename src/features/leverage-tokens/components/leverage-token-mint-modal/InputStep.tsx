@@ -56,6 +56,8 @@ interface InputStepProps {
   error?: string | undefined
   leverageTokenConfig: LeverageTokenConfig
   apy?: number | undefined
+  managementFee?: bigint | undefined
+  isManagementFeeLoading?: boolean | undefined
 }
 
 export function InputStep({
@@ -82,6 +84,8 @@ export function InputStep({
   error,
   leverageTokenConfig,
   apy,
+  managementFee,
+  isManagementFeeLoading,
 }: InputStepProps) {
   const mintAmountId = useId()
 
@@ -231,8 +235,8 @@ export function InputStep({
             <div className="text-sm text-[var(--text-secondary)]">You will receive</div>
             {isCalculating && (
               <div className="flex items-center text-xs text-[var(--text-secondary)]">
-                <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
-                <Skeleton className="h-3 w-20" />
+                <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                Calculating...
               </div>
             )}
           </div>
@@ -288,7 +292,15 @@ export function InputStep({
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Management Fee</span>
-            <span className="text-[var(--text-primary)]">2.0%</span>
+            <span className="text-[var(--text-primary)]">
+              {isManagementFeeLoading ? (
+                <Skeleton className="inline-block h-4 w-12" />
+              ) : typeof managementFee === 'bigint' ? (
+                `${Number(managementFee) / 100}%`
+              ) : (
+                'N/A'
+              )}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Slippage Tolerance</span>
@@ -313,9 +325,11 @@ export function InputStep({
             </span>
           </div>
           <Separator className="my-2 bg-[var(--divider-line)]" />
-          <div className="flex justify-between font-medium">
+          <div className="flex justify-between font-medium items-center">
             <span className="text-[var(--text-primary)]">You will receive</span>
-            <span className="text-[var(--text-primary)]">{expectedTokens} tokens</span>
+            <span className="text-[var(--text-primary)]">
+              {isCalculating ? 'Calculating...' : `${expectedTokens} tokens`}
+            </span>
           </div>
         </div>
       </Card>

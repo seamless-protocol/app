@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Address } from 'viem'
-import { usePublicClient } from 'wagmi'
+import { useChainId, usePublicClient, useSwitchChain } from 'wagmi'
 import type { OrchestrateRedeemResult } from '@/domain/redeem'
 import { RouterVersion } from '@/domain/redeem/planner/types'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
@@ -32,6 +32,8 @@ export function useRedeemExecution({
   swap,
   outputAsset,
 }: UseRedeemExecutionParams) {
+  const { switchChainAsync } = useSwitchChain()
+  const activeChainId = useChainId()
   const [status, setStatus] = useState<Status>('idle')
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState<Error | undefined>(undefined)
@@ -71,11 +73,16 @@ export function useRedeemExecution({
       setStatus('submitting')
       setError(undefined)
       try {
+        if (activeChainId !== chainId) {
+          await switchChainAsync({ chainId })
+        }
+
         const result = await redeemWithRouter.mutateAsync({
           token,
           account,
           sharesToRedeem,
           slippageBps,
+          chainId,
           ...(quote ? { quoteCollateralToDebt: quote } : {}),
           ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
           ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
@@ -102,6 +109,7 @@ export function useRedeemExecution({
     },
     [
       account,
+      activeChainId,
       managerAddress,
       quote,
       quoteError?.message,
@@ -113,6 +121,8 @@ export function useRedeemExecution({
       outputAsset,
       token,
       publicClient,
+      chainId,
+      switchChainAsync,
     ],
   )
 

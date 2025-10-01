@@ -8,7 +8,7 @@ export const Route = createRootRoute({
       <MainLayout>
         <Outlet />
       </MainLayout>
-      <TanStackRouterDevtools />
+      {import.meta.env.DEV && <TanStackRouterDevtools />}
     </>
   ),
   notFoundComponent: () => (

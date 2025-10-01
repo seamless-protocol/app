@@ -7,6 +7,8 @@ import { hookTestUtils, makeAddr, mockData } from '../../../utils'
 vi.mock('wagmi', () => ({
   useWriteContract: vi.fn(),
   useWaitForTransactionReceipt: vi.fn(),
+  useChainId: vi.fn(() => 8453),
+  useSwitchChain: vi.fn(() => ({ switchChain: vi.fn() })),
 }))
 
 // Mock viem functions
@@ -58,7 +60,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '100',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -101,7 +103,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount,
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -131,7 +133,7 @@ describe('useTokenApprove', () => {
           tokenAddress,
           spender: spenderAddress,
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -165,7 +167,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '100',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -177,7 +179,7 @@ describe('useTokenApprove', () => {
         abi: expect.any(Array), // leverageTokenAbi
         functionName: 'approve',
         args: [spenderAddress, BigInt('100000000000000000000')], // 100 * 10^18
-        chainId: chainId,
+        chainId,
       })
     })
 
@@ -205,7 +207,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '100',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: false,
         }),
       )
@@ -238,7 +240,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '100',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -270,7 +272,7 @@ describe('useTokenApprove', () => {
           tokenAddress,
           amount: '100',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -304,7 +306,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '0',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -340,7 +342,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '100',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -374,7 +376,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '100',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -410,7 +412,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '100',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -444,7 +446,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '100',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -479,7 +481,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '100',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -517,7 +519,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount,
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -553,7 +555,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount,
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -584,7 +586,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '0',
           decimals,
-          chainId,
+          targetChainId: chainId,
           enabled: true,
         }),
       )
@@ -618,7 +620,7 @@ describe('useTokenApprove', () => {
           spender: spenderAddress,
           amount: '100',
           decimals,
-          chainId: mainnetChainId,
+          targetChainId: mainnetChainId,
           enabled: true,
         }),
       )

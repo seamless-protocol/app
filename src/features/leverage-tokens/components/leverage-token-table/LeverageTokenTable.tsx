@@ -178,7 +178,7 @@ export function LeverageTokenTable({
       count: tokens.filter((token) => token.collateralAsset.symbol === asset).length,
     }))
 
-    return [{ value: 'all', label: 'All Assets', count: sortedAndFilteredData.length }, ...options]
+    return [{ value: 'all', label: 'All', count: sortedAndFilteredData.length }, ...options]
   }
 
   const getDebtAssetOptions = () => {
@@ -189,10 +189,7 @@ export function LeverageTokenTable({
       count: tokens.filter((token) => token.debtAsset.symbol === asset).length,
     }))
 
-    return [
-      { value: 'all', label: 'All Debt Assets', count: sortedAndFilteredData.length },
-      ...options,
-    ]
+    return [{ value: 'all', label: 'All', count: sortedAndFilteredData.length }, ...options]
   }
 
   const getSupplyCapOptions = () => {
@@ -222,7 +219,7 @@ export function LeverageTokenTable({
           <div className="flex flex-wrap items-center gap-4">
             {/* Collateral Asset Filter */}
             <FilterDropdown
-              label="Collateral"
+              label="Collateral Asset"
               value={filters.collateralAsset}
               options={getCollateralAssetOptions()}
               onValueChange={(value) => setFilters((prev) => ({ ...prev, collateralAsset: value }))}

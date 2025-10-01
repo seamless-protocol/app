@@ -12,6 +12,7 @@ import { LeverageTokenRedeemModal } from '@/features/leverage-tokens/components/
 import type { Position } from '@/features/portfolio/components/active-positions'
 import { ActivePositions } from '@/features/portfolio/components/active-positions'
 import { AvailableRewards } from '@/features/portfolio/components/available-rewards'
+import { MorphoVaultsInfoCard } from '@/features/portfolio/components/morpho-vaults-info-card'
 import { PortfolioPerformanceChart } from '@/features/portfolio/components/portfolio-performance-chart'
 import { SEAMStaking } from '@/features/portfolio/components/seam-staking'
 import {
@@ -352,8 +353,8 @@ function PortfolioPage() {
               onTimeframeChange={performanceData.setSelectedTimeframe}
             />
             {performanceData.isLoading && (
-              <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-                <div className="text-slate-400">Loading chart data...</div>
+              <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] backdrop-blur-sm flex items-center justify-center rounded-xl">
+                <div className="text-[var(--text-secondary)]">Loading chart data...</div>
               </div>
             )}
           </div>
@@ -373,39 +374,110 @@ function PortfolioPage() {
           >
             {features.availableRewards && (
               <div className="relative">
-                <AvailableRewards
-                  tokenAddresses={[]}
-                  accruingAmount={'$0.00'}
-                  seamToken={'$0.00'}
-                  protocolFees={'$0.00'}
-                  onClaim={handleClaimRewards}
-                />
-                {rewardsLoading && (
-                  <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-                    <div className="h-5 w-24 bg-slate-700/50 rounded animate-pulse" />
+                {rewardsLoading ? (
+                  <div className="bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)] rounded-lg p-6">
+                    {/* Header skeleton */}
+                    <div className="flex items-center mb-4">
+                      <Skeleton className="h-5 w-5 mr-2 rounded" />
+                      <Skeleton className="h-6 w-32" />
+                    </div>
+                    
+                    {/* Content skeleton */}
+                    <div className="space-y-4">
+                      {/* Accruing row with token logos */}
+                      <div className="flex justify-between items-center py-2">
+                        <Skeleton className="h-4 w-16" />
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center">
+                            <Skeleton className="h-6 w-6 rounded-full" />
+                            <Skeleton className="h-6 w-6 rounded-full -ml-2" />
+                          </div>
+                          <Skeleton className="h-4 w-12" />
+                        </div>
+                      </div>
+                      
+                      {/* SEAM Tokens row */}
+                      <div className="flex justify-between items-center py-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                      
+                      {/* Protocol Fees row */}
+                      <div className="flex justify-between items-center py-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                      
+                      {/* Button skeleton */}
+                      <Skeleton className="h-10 w-full mt-2" />
+                    </div>
                   </div>
+                ) : (
+                  <AvailableRewards
+                    tokenAddresses={[]}
+                    accruingAmount={'$0.00'}
+                    seamToken={'$0.00'}
+                    protocolFees={'$0.00'}
+                    onClaim={handleClaimRewards}
+                  />
                 )}
               </div>
             )}
 
             {features.seamStaking && (
               <div className="relative">
-                <SEAMStaking
-                  stakedAmount={stakingData?.stakedAmount || '0.00'}
-                  earnedRewards={stakingData?.earnedRewards || '0.00'}
-                  apy={stakingData?.apy || '0.00'}
-                  onStake={handleStake}
-                  onManage={handleManageStaking}
-                />
-                {stakingLoading && (
-                  <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-                    <div className="text-slate-400">Loading staking data...</div>
+                {stakingLoading ? (
+                  <div className="bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)] rounded-lg p-6">
+                    {/* Header skeleton */}
+                    <div className="flex items-center mb-4">
+                      <Skeleton className="h-5 w-5 mr-2 rounded" />
+                      <Skeleton className="h-6 w-24 mr-2" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                    
+                    {/* Content skeleton */}
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center py-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                      <div className="flex justify-between items-center py-2 pb-4 border-b border-[var(--divider-line)]">
+                        <Skeleton className="h-4 w-8" />
+                        <Skeleton className="h-4 w-12" />
+                      </div>
+                      
+                      {/* Button skeletons */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    </div>
                   </div>
+                ) : (
+                  <SEAMStaking
+                    stakedAmount={stakingData?.stakedAmount || '0.00'}
+                    earnedRewards={stakingData?.earnedRewards || '0.00'}
+                    apy={stakingData?.apy || '0.00'}
+                    onStake={handleStake}
+                    onManage={handleManageStaking}
+                  />
                 )}
               </div>
             )}
           </motion.div>
         )}
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.35 }}
+        >
+          <MorphoVaultsInfoCard />
+        </motion.div>
 
         {/* Active Positions */}
         <motion.div
@@ -431,6 +503,7 @@ function PortfolioPage() {
             }}
             leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
             {...(userAddress && { userAddress })}
+            {...(selectedPosition.apy && { apy: parseFloat(selectedPosition.apy) })}
           />
         )}
 
