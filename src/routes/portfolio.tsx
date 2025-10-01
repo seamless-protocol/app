@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { DollarSign, Target, TrendingUp } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Address } from 'viem'
 import { useAccount } from 'wagmi'
 import { ConnectionStatusCard } from '@/components/ConnectionStatusCard'
@@ -22,6 +22,7 @@ import {
 import { usePortfolioRewards } from '@/features/portfolio/hooks/usePortfolioRewards'
 import { usePortfolioStaking } from '@/features/portfolio/hooks/usePortfolioStaking'
 import { features } from '@/lib/config/features'
+import { useGA } from '@/lib/config/ga4.config'
 import { formatNumber } from '@/lib/utils/formatting'
 
 export const Route = createFileRoute('/portfolio')({
@@ -31,6 +32,12 @@ export const Route = createFileRoute('/portfolio')({
 function PortfolioPage() {
   const { isConnected, address: userAddress } = useAccount()
   const navigate = useNavigate()
+  const analytics = useGA()
+
+  // Track page view when component mounts
+  useEffect(() => {
+    analytics.trackPageView('Portfolio', '/portfolio')
+  }, [analytics])
 
   // Modal state
   const [isMintModalOpen, setIsMintModalOpen] = useState(false)

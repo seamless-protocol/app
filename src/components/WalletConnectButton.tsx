@@ -1,11 +1,14 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Wallet } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useWalletGA } from '@/lib/config/ga4.config'
 import { CustomAccountModal } from './CustomAccountModal'
 import { Button } from './ui/button'
 
 export function WalletConnectButton() {
   const [customAccountModalOpen, setCustomAccountModalOpen] = useState(false)
+  const { trackWalletConnected } = useWalletGA()
+  const hasTrackedConnection = useRef(false)
 
   return (
     <ConnectButton.Custom>
@@ -18,6 +21,16 @@ export function WalletConnectButton() {
           account &&
           chain &&
           (!authenticationStatus || authenticationStatus === 'authenticated')
+
+        // Track wallet connection state changes
+        if (connected && account && !hasTrackedConnection.current) {
+          // Determine wallet type from account displayName or use generic
+          const walletType = account.displayName || 'Unknown'
+          trackWalletConnected(walletType)
+          hasTrackedConnection.current = true
+        } else if (!connected) {
+          hasTrackedConnection.current = false
+        }
 
         return (
           <div

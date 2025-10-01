@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
+import { useEffect } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FeaturedLeverageTokens } from '@/features/leverage-tokens/components/FeaturedLeverageToken'
 import {
@@ -9,10 +10,17 @@ import {
 import { useLeverageTokensTableData } from '@/features/leverage-tokens/hooks/useLeverageTokensTableData'
 import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
 import { features } from '@/lib/config/features'
+import { useGA } from '@/lib/config/ga4.config'
 
 export const Route = createFileRoute('/tokens/')({
   component: () => {
     const navigate = useNavigate()
+    const analytics = useGA()
+
+    // Track page view when component mounts
+    useEffect(() => {
+      analytics.trackPageView('Leverage Tokens', '/tokens')
+    }, [analytics])
 
     // Fetch live leverage token table data
     const { data: leverageTokens = [], isLoading, isError, error } = useLeverageTokensTableData()

@@ -11,9 +11,10 @@ import {
   Vault,
   Vote,
 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useProtocolTVL } from '@/features/leverage-tokens/hooks/useProtocolTVL'
 import { features } from '@/lib/config/features'
+import { useGA } from '@/lib/config/ga4.config'
 import { formatCurrency } from '@/lib/utils/formatting'
 import { ConnectButtonTest } from './ConnectButtonTest'
 import { LiFiWidget } from './LiFiWidget'
@@ -121,7 +122,15 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
+  const analytics = useGA()
   const { tvlUsd, isLoading: isProtocolTvlLoading, isError: isProtocolTvlError } = useProtocolTVL()
+
+  // Track navigation between pages
+  useEffect(() => {
+    const currentPath = location.pathname
+    const fromPage = document.referrer ? new URL(document.referrer).pathname : 'direct'
+    analytics.navigation(fromPage, currentPath)
+  }, [location.pathname, analytics])
 
   const platformTVL = useMemo(() => {
     if (isProtocolTvlLoading) {

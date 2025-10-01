@@ -5,6 +5,7 @@ import { formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 import type { OrchestrateRedeemResult } from '@/domain/redeem'
 import { RouterVersion } from '@/domain/redeem/planner/types'
+import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
@@ -65,6 +66,8 @@ export function LeverageTokenRedeemModal({
   leverageTokenAddress,
   userAddress: propUserAddress,
 }: LeverageTokenRedeemModalProps) {
+  const { trackLeverageTokenRedeemed, trackTransactionError } = useTransactionGA()
+  const analytics = useGA()
   const queryClient = useQueryClient()
 
   // Get leverage token configuration by address
@@ -384,7 +387,10 @@ export function LeverageTokenRedeemModal({
     setSelectedOutputId('collateral')
     setTransactionHash('')
     setError('')
-  }, [toInput, form.setAmount])
+
+    // Track funnel step: redeem modal opened
+    analytics.funnelStep('redeem_leverage_token', 'modal_opened', 1)
+  }, [toInput, form.setAmount, analytics])
 
   useEffect(() => {
     if (isOpen) resetModal()
@@ -484,9 +490,21 @@ export function LeverageTokenRedeemModal({
     }
 
     try {
+      // Track funnel step: redeem transaction initiated
+      analytics.funnelStep('redeem_leverage_token', 'transaction_initiated', 2)
+
       toPending()
       const result = await exec.redeem(form.amountRaw)
       setTransactionHash(result.hash)
+
+      // Track successful redeem transaction
+      const tokenSymbol = leverageTokenConfig.symbol
+      const amount = form.amount
+      const usdValue = parseFloat(form.amount) * (selectedOutputAsset.price || 0)
+      trackLeverageTokenRedeemed(tokenSymbol, amount, usdValue)
+
+      // Track funnel step: redeem transaction completed
+      analytics.funnelStep('redeem_leverage_token', 'transaction_completed', 3)
 
       if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
         logRedeemDiagnostics({
@@ -527,7 +545,12 @@ export function LeverageTokenRedeemModal({
 
       toSuccess()
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Redemption failed. Please try again.')
+      // Track redeem transaction error
+      const errorMessage =
+        error instanceof Error ? error.message : 'Redemption failed. Please try again.'
+      trackTransactionError('redeem_failed', 'leverage_token', errorMessage)
+
+      setError(errorMessage)
       toError()
     }
   }
