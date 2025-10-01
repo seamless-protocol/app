@@ -210,7 +210,7 @@ process.env['E2E_LEVERAGE_TOKEN_LABEL'] = leverageTokenLabel
 process.env['E2E_CHAIN_ID'] ||= String(canonicalChainId)
 
 type LeverageTokenAddresses = {
-  factory: Address
+  factory?: Address
   manager: Address
   managerV1?: Address
   managerV2?: Address
@@ -265,11 +265,6 @@ function buildAddressContext(
   const primaryRouter = routerOverride ?? routerV2 ?? routerV1
 
   const result: LeverageTokenAddresses = {
-    factory: ensureAddress(
-      'leverageTokenFactory',
-      definition.chainId,
-      contracts.leverageTokenFactory as Address | undefined,
-    ),
     manager: ensureAddress(
       'leverageManager',
       definition.chainId,
@@ -298,6 +293,7 @@ function buildAddressContext(
     ),
   }
 
+  const factoryAddress = optionalAddress(contracts.leverageTokenFactory as Address | undefined)
   const managerV1Address = optionalAddress(resolvedManagerV1)
   const managerV2Address = optionalAddress(resolvedManagerV2)
   const routerV1Address = optionalAddress(resolvedRouterV1)
@@ -309,6 +305,7 @@ function buildAddressContext(
   const rebalanceAddress = optionalAddress(rebalanceOverride)
   const lendingAddress = optionalAddress(lendingOverride)
 
+  if (factoryAddress) result.factory = factoryAddress
   if (managerV1Address) result.managerV1 = managerV1Address
   if (managerV2Address) result.managerV2 = managerV2Address
   if (routerV1Address) result.routerV1 = routerV1Address

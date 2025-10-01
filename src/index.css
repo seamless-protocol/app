@@ -505,16 +505,3 @@ body,
   font-size: 14px !important;
   font-weight: 500 !important;
 }
-
-.lifi-widget .MuiTab-textColorPrimary {
-  color: var(--text-primary) !important;
-}
-
-.lifi-widget .MuiTab-textColorPrimary.Mui-selected {
-  background-color: #334155 !important;
-  border-radius: 12px !important;
-}
-
-.lifi-widget .MuiButton-containedPrimary:hover {
-  background: linear-gradient(to right, #7c3aed 0%, #be185d 100%) !important;
-}

@@ -28,10 +28,9 @@ export function LiFiWidget() {
       integrator: 'seamless-protocol',
       variant: 'wide',
       subvariant: 'split',
-      appearance: 'system',
       theme: {
         colorSchemes: {
-          light: {
+          dark: {
             palette: {
               primary: {
                 main: '#c924a6',
@@ -55,16 +54,6 @@ export function LiFiWidget() {
                 300: '#334155',
                 700: '#616161',
                 800: '#424242',
-              },
-            },
-          },
-          dark: {
-            palette: {
-              primary: {
-                main: '#5C67FF',
-              },
-              secondary: {
-                main: '#F7C2FF',
               },
             },
           },

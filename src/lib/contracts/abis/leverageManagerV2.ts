@@ -1,2007 +1,910 @@
 export const leverageManagerV2Abi = [
+  { inputs: [], name: 'AccessControlBadConfirmation', type: 'error' },
   {
-    type: 'function',
-    name: 'BASE_RATIO',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'DEFAULT_ADMIN_ROLE',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'FEE_MANAGER_ROLE',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'UPGRADER_ROLE',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'UPGRADE_INTERFACE_VERSION',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'string',
-        internalType: 'string',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'chargeManagementFee',
     inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
+      { internalType: 'address', name: 'account', type: 'address' },
+      { internalType: 'bytes32', name: 'neededRole', type: 'bytes32' },
     ],
-    outputs: [],
-    stateMutability: 'nonpayable',
+    name: 'AccessControlUnauthorizedAccount',
+    type: 'error',
   },
   {
-    type: 'function',
-    name: 'convertCollateralToDebt',
+    inputs: [{ internalType: 'address', name: 'target', type: 'address' }],
+    name: 'AddressEmptyCode',
+    type: 'error',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'implementation', type: 'address' }],
+    name: 'ERC1967InvalidImplementation',
+    type: 'error',
+  },
+  { inputs: [], name: 'ERC1967NonPayable', type: 'error' },
+  { inputs: [], name: 'FailedCall', type: 'error' },
+  {
     inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'collateral',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'rounding',
-        type: 'uint8',
-        internalType: 'enum Math.Rounding',
-      },
+      { internalType: 'uint256', name: 'fee', type: 'uint256' },
+      { internalType: 'uint256', name: 'maxFee', type: 'uint256' },
     ],
-    outputs: [
-      {
-        name: 'debt',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
+    name: 'FeeTooHigh',
+    type: 'error',
+  },
+  { inputs: [], name: 'InvalidCollateralRatios', type: 'error' },
+  { inputs: [], name: 'InvalidInitialization', type: 'error' },
+  { inputs: [], name: 'InvalidLeverageTokenAssets', type: 'error' },
+  {
+    inputs: [{ internalType: 'uint256', name: 'initialCollateralRatio', type: 'uint256' }],
+    name: 'InvalidLeverageTokenInitialCollateralRatio',
+    type: 'error',
   },
   {
-    type: 'function',
-    name: 'convertCollateralToShares',
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'InvalidLeverageTokenStateAfterRebalance',
+    type: 'error',
+  },
+  { inputs: [], name: 'LeverageTokenNotEligibleForRebalance', type: 'error' },
+  { inputs: [], name: 'NotInitializing', type: 'error' },
+  {
     inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'collateral',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'rounding',
-        type: 'uint8',
-        internalType: 'enum Math.Rounding',
-      },
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'address', name: 'caller', type: 'address' },
     ],
-    outputs: [
-      {
-        name: 'shares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
+    name: 'NotRebalancer',
+    type: 'error',
+  },
+  { inputs: [], name: 'ReentrancyGuardReentrantCall', type: 'error' },
+  {
+    inputs: [{ internalType: 'address', name: 'token', type: 'address' }],
+    name: 'SafeERC20FailedOperation',
+    type: 'error',
   },
   {
-    type: 'function',
-    name: 'convertDebtToCollateral',
     inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'debt',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'rounding',
-        type: 'uint8',
-        internalType: 'enum Math.Rounding',
-      },
+      { internalType: 'uint256', name: 'actual', type: 'uint256' },
+      { internalType: 'uint256', name: 'expected', type: 'uint256' },
     ],
-    outputs: [
-      {
-        name: 'collateral',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
+    name: 'SlippageTooHigh',
+    type: 'error',
   },
+  { inputs: [], name: 'UUPSUnauthorizedCallContext', type: 'error' },
   {
-    type: 'function',
-    name: 'convertSharesToCollateral',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'shares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'rounding',
-        type: 'uint8',
-        internalType: 'enum Math.Rounding',
-      },
-    ],
-    outputs: [
-      {
-        name: 'collateral',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
+    inputs: [{ internalType: 'bytes32', name: 'slot', type: 'bytes32' }],
+    name: 'UUPSUnsupportedProxiableUUID',
+    type: 'error',
   },
+  { inputs: [], name: 'ZeroAddressTreasury', type: 'error' },
   {
-    type: 'function',
-    name: 'convertSharesToDebt',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'shares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'rounding',
-        type: 'uint8',
-        internalType: 'enum Math.Rounding',
-      },
-    ],
-    outputs: [
-      {
-        name: 'debt',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'convertToAssets',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'shares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        name: 'equityInCollateralAsset',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'convertToShares',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'equityInCollateralAsset',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        name: 'shares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'createNewLeverageToken',
-    inputs: [
-      {
-        name: 'tokenConfig',
-        type: 'tuple',
-        internalType: 'struct LeverageTokenConfig',
-        components: [
-          {
-            name: 'lendingAdapter',
-            type: 'address',
-            internalType: 'contract ILendingAdapter',
-          },
-          {
-            name: 'rebalanceAdapter',
-            type: 'address',
-            internalType: 'contract IRebalanceAdapterBase',
-          },
-          {
-            name: 'mintTokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'redeemTokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-      {
-        name: 'name',
-        type: 'string',
-        internalType: 'string',
-      },
-      {
-        name: 'symbol',
-        type: 'string',
-        internalType: 'string',
-      },
-    ],
-    outputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'deposit',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'collateral',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'minShares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        name: 'actionData',
-        type: 'tuple',
-        internalType: 'struct ActionData',
-        components: [
-          {
-            name: 'collateral',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'shares',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'tokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'treasuryFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-    ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'getDefaultManagementFeeAtCreation',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getFeeAdjustedTotalSupply',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    outputs: [
-      {
-        name: '',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getLastManagementFeeAccrualTimestamp',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    outputs: [
-      {
-        name: '',
-        type: 'uint120',
-        internalType: 'uint120',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getLeverageTokenActionFee',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'action',
-        type: 'uint8',
-        internalType: 'enum ExternalAction',
-      },
-    ],
-    outputs: [
-      {
-        name: 'fee',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getLeverageTokenCollateralAsset',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    outputs: [
-      {
-        name: 'collateralAsset',
-        type: 'address',
-        internalType: 'contract IERC20',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getLeverageTokenConfig',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    outputs: [
-      {
-        name: 'config',
-        type: 'tuple',
-        internalType: 'struct LeverageTokenConfig',
-        components: [
-          {
-            name: 'lendingAdapter',
-            type: 'address',
-            internalType: 'contract ILendingAdapter',
-          },
-          {
-            name: 'rebalanceAdapter',
-            type: 'address',
-            internalType: 'contract IRebalanceAdapterBase',
-          },
-          {
-            name: 'mintTokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'redeemTokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getLeverageTokenDebtAsset',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    outputs: [
-      {
-        name: 'debtAsset',
-        type: 'address',
-        internalType: 'contract IERC20',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getLeverageTokenFactory',
-    inputs: [],
-    outputs: [
-      {
-        name: 'factory',
-        type: 'address',
-        internalType: 'contract IBeaconProxyFactory',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getLeverageTokenInitialCollateralRatio',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    outputs: [
-      {
-        name: '',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getLeverageTokenLendingAdapter',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    outputs: [
-      {
-        name: 'adapter',
-        type: 'address',
-        internalType: 'contract ILendingAdapter',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getLeverageTokenRebalanceAdapter',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    outputs: [
-      {
-        name: 'module',
-        type: 'address',
-        internalType: 'contract IRebalanceAdapterBase',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getLeverageTokenState',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    outputs: [
-      {
-        name: 'state',
-        type: 'tuple',
-        internalType: 'struct LeverageTokenState',
-        components: [
-          {
-            name: 'collateralInDebtAsset',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'equity',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'collateralRatio',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getManagementFee',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-    ],
-    outputs: [
-      {
-        name: 'fee',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getRoleAdmin',
-    inputs: [
-      {
-        name: 'role',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
-    ],
-    outputs: [
-      {
-        name: '',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getTreasury',
-    inputs: [],
-    outputs: [
-      {
-        name: 'treasury',
-        type: 'address',
-        internalType: 'address',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getTreasuryActionFee',
-    inputs: [
-      {
-        name: 'action',
-        type: 'uint8',
-        internalType: 'enum ExternalAction',
-      },
-    ],
-    outputs: [
-      {
-        name: 'fee',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'grantRole',
-    inputs: [
-      {
-        name: 'role',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
-      {
-        name: 'account',
-        type: 'address',
-        internalType: 'address',
-      },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'hasRole',
-    inputs: [
-      {
-        name: 'role',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
-      {
-        name: 'account',
-        type: 'address',
-        internalType: 'address',
-      },
-    ],
-    outputs: [
-      {
-        name: '',
-        type: 'bool',
-        internalType: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'initialize',
-    inputs: [
-      {
-        name: 'initialAdmin',
-        type: 'address',
-        internalType: 'address',
-      },
-      {
-        name: 'treasury',
-        type: 'address',
-        internalType: 'address',
-      },
-      {
-        name: 'leverageTokenFactory',
-        type: 'address',
-        internalType: 'contract IBeaconProxyFactory',
-      },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'mint',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'shares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'maxCollateral',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        name: 'actionData',
-        type: 'tuple',
-        internalType: 'struct ActionData',
-        components: [
-          {
-            name: 'collateral',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'shares',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'tokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'treasuryFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-    ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'previewDeposit',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'collateral',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        name: '',
-        type: 'tuple',
-        internalType: 'struct ActionData',
-        components: [
-          {
-            name: 'collateral',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'shares',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'tokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'treasuryFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'previewMint',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'shares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        name: '',
-        type: 'tuple',
-        internalType: 'struct ActionData',
-        components: [
-          {
-            name: 'collateral',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'shares',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'tokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'treasuryFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'previewRedeem',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'shares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        name: '',
-        type: 'tuple',
-        internalType: 'struct ActionData',
-        components: [
-          {
-            name: 'collateral',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'shares',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'tokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'treasuryFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'previewWithdraw',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'collateral',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        name: '',
-        type: 'tuple',
-        internalType: 'struct ActionData',
-        components: [
-          {
-            name: 'collateral',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'shares',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'tokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'treasuryFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'proxiableUUID',
-    inputs: [],
-    outputs: [
-      {
-        name: '',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'rebalance',
-    inputs: [
-      {
-        name: 'leverageToken',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'actions',
-        type: 'tuple[]',
-        internalType: 'struct RebalanceAction[]',
-        components: [
-          {
-            name: 'actionType',
-            type: 'uint8',
-            internalType: 'enum ActionType',
-          },
-          {
-            name: 'amount',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-      {
-        name: 'tokenIn',
-        type: 'address',
-        internalType: 'contract IERC20',
-      },
-      {
-        name: 'tokenOut',
-        type: 'address',
-        internalType: 'contract IERC20',
-      },
-      {
-        name: 'amountIn',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'amountOut',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'redeem',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'shares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'minCollateral',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        name: 'actionData',
-        type: 'tuple',
-        internalType: 'struct ActionData',
-        components: [
-          {
-            name: 'collateral',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'shares',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'tokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'treasuryFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-    ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'renounceRole',
-    inputs: [
-      {
-        name: 'role',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
-      {
-        name: 'callerConfirmation',
-        type: 'address',
-        internalType: 'address',
-      },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'revokeRole',
-    inputs: [
-      {
-        name: 'role',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
-      {
-        name: 'account',
-        type: 'address',
-        internalType: 'address',
-      },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'setDefaultManagementFeeAtCreation',
-    inputs: [
-      {
-        name: 'fee',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'setManagementFee',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'fee',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'setTreasury',
-    inputs: [
-      {
-        name: 'treasury',
-        type: 'address',
-        internalType: 'address',
-      },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'setTreasuryActionFee',
-    inputs: [
-      {
-        name: 'action',
-        type: 'uint8',
-        internalType: 'enum ExternalAction',
-      },
-      {
-        name: 'fee',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'supportsInterface',
-    inputs: [
-      {
-        name: 'interfaceId',
-        type: 'bytes4',
-        internalType: 'bytes4',
-      },
-    ],
-    outputs: [
-      {
-        name: '',
-        type: 'bool',
-        internalType: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'upgradeToAndCall',
-    inputs: [
-      {
-        name: 'newImplementation',
-        type: 'address',
-        internalType: 'address',
-      },
-      {
-        name: 'data',
-        type: 'bytes',
-        internalType: 'bytes',
-      },
-    ],
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    name: 'withdraw',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'collateral',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'maxShares',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        name: 'actionData',
-        type: 'tuple',
-        internalType: 'struct ActionData',
-        components: [
-          {
-            name: 'collateral',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'shares',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'tokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'treasuryFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
-      },
-    ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'event',
+    anonymous: false,
+    inputs: [{ indexed: false, internalType: 'uint256', name: 'fee', type: 'uint256' }],
     name: 'DefaultManagementFeeAtCreationSet',
-    inputs: [
-      {
-        name: 'fee',
-        type: 'uint256',
-        indexed: false,
-        internalType: 'uint256',
-      },
-    ],
-    anonymous: false,
+    type: 'event',
   },
   {
-    type: 'event',
+    anonymous: false,
+    inputs: [{ indexed: false, internalType: 'uint64', name: 'version', type: 'uint64' }],
     name: 'Initialized',
-    inputs: [
-      {
-        name: 'version',
-        type: 'uint64',
-        indexed: false,
-        internalType: 'uint64',
-      },
-    ],
-    anonymous: false,
+    type: 'event',
   },
   {
-    type: 'event',
-    name: 'LeverageManagerInitialized',
+    anonymous: false,
     inputs: [
       {
-        name: 'leverageTokenFactory',
-        type: 'address',
         indexed: false,
         internalType: 'contract IBeaconProxyFactory',
+        name: 'leverageTokenFactory',
+        type: 'address',
       },
     ],
-    anonymous: false,
+    name: 'LeverageManagerInitialized',
+    type: 'event',
   },
   {
-    type: 'event',
-    name: 'LeverageTokenActionFeeSet',
+    anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: 'contract ILeverageToken',
         name: 'leverageToken',
         type: 'address',
-        indexed: true,
-        internalType: 'contract ILeverageToken',
       },
-      {
-        name: 'action',
-        type: 'uint8',
-        indexed: true,
-        internalType: 'enum ExternalAction',
-      },
-      {
-        name: 'fee',
-        type: 'uint256',
-        indexed: false,
-        internalType: 'uint256',
-      },
+      { indexed: true, internalType: 'enum ExternalAction', name: 'action', type: 'uint8' },
+      { indexed: false, internalType: 'uint256', name: 'fee', type: 'uint256' },
     ],
-    anonymous: false,
+    name: 'LeverageTokenActionFeeSet',
+    type: 'event',
   },
   {
-    type: 'event',
-    name: 'LeverageTokenCreated',
+    anonymous: false,
     inputs: [
+      { indexed: true, internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { indexed: false, internalType: 'contract IERC20', name: 'collateralAsset', type: 'address' },
+      { indexed: false, internalType: 'contract IERC20', name: 'debtAsset', type: 'address' },
       {
-        name: 'token',
-        type: 'address',
-        indexed: true,
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'collateralAsset',
-        type: 'address',
-        indexed: false,
-        internalType: 'contract IERC20',
-      },
-      {
-        name: 'debtAsset',
-        type: 'address',
-        indexed: false,
-        internalType: 'contract IERC20',
-      },
-      {
-        name: 'config',
-        type: 'tuple',
-        indexed: false,
-        internalType: 'struct LeverageTokenConfig',
         components: [
+          { internalType: 'contract ILendingAdapter', name: 'lendingAdapter', type: 'address' },
           {
-            name: 'lendingAdapter',
-            type: 'address',
-            internalType: 'contract ILendingAdapter',
-          },
-          {
+            internalType: 'contract IRebalanceAdapterBase',
             name: 'rebalanceAdapter',
             type: 'address',
-            internalType: 'contract IRebalanceAdapterBase',
           },
-          {
-            name: 'mintTokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'redeemTokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
+          { internalType: 'uint256', name: 'mintTokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'redeemTokenFee', type: 'uint256' },
         ],
+        indexed: false,
+        internalType: 'struct LeverageTokenConfig',
+        name: 'config',
+        type: 'tuple',
       },
     ],
-    anonymous: false,
+    name: 'LeverageTokenCreated',
+    type: 'event',
   },
   {
-    type: 'event',
-    name: 'ManagementFeeCharged',
+    anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: 'contract ILeverageToken',
         name: 'leverageToken',
         type: 'address',
-        indexed: true,
-        internalType: 'contract ILeverageToken',
       },
-      {
-        name: 'sharesFee',
-        type: 'uint256',
-        indexed: false,
-        internalType: 'uint256',
-      },
+      { indexed: false, internalType: 'uint256', name: 'sharesFee', type: 'uint256' },
     ],
-    anonymous: false,
+    name: 'ManagementFeeCharged',
+    type: 'event',
   },
   {
-    type: 'event',
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { indexed: false, internalType: 'uint256', name: 'fee', type: 'uint256' },
+    ],
     name: 'ManagementFeeSet',
-    inputs: [
-      {
-        name: 'token',
-        type: 'address',
-        indexed: true,
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'fee',
-        type: 'uint256',
-        indexed: false,
-        internalType: 'uint256',
-      },
-    ],
-    anonymous: false,
+    type: 'event',
   },
   {
-    type: 'event',
-    name: 'Mint',
+    anonymous: false,
     inputs: [
+      { indexed: true, internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { indexed: true, internalType: 'address', name: 'sender', type: 'address' },
       {
-        name: 'token',
-        type: 'address',
-        indexed: true,
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'sender',
-        type: 'address',
-        indexed: true,
-        internalType: 'address',
-      },
-      {
-        name: 'actionData',
-        type: 'tuple',
+        components: [
+          { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'shares', type: 'uint256' },
+          { internalType: 'uint256', name: 'tokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'treasuryFee', type: 'uint256' },
+        ],
         indexed: false,
         internalType: 'struct ActionData',
-        components: [
-          {
-            name: 'collateral',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'shares',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'tokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'treasuryFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
+        name: 'actionData',
+        type: 'tuple',
       },
     ],
-    anonymous: false,
+    name: 'Mint',
+    type: 'event',
   },
   {
-    type: 'event',
-    name: 'Rebalance',
+    anonymous: false,
     inputs: [
+      { indexed: true, internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { indexed: true, internalType: 'address', name: 'sender', type: 'address' },
       {
-        name: 'token',
-        type: 'address',
-        indexed: true,
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'sender',
-        type: 'address',
-        indexed: true,
-        internalType: 'address',
-      },
-      {
+        components: [
+          { internalType: 'uint256', name: 'collateralInDebtAsset', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'equity', type: 'uint256' },
+          { internalType: 'uint256', name: 'collateralRatio', type: 'uint256' },
+        ],
+        indexed: false,
+        internalType: 'struct LeverageTokenState',
         name: 'stateBefore',
         type: 'tuple',
-        indexed: false,
-        internalType: 'struct LeverageTokenState',
-        components: [
-          {
-            name: 'collateralInDebtAsset',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'equity',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'collateralRatio',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
       },
       {
+        components: [
+          { internalType: 'uint256', name: 'collateralInDebtAsset', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'equity', type: 'uint256' },
+          { internalType: 'uint256', name: 'collateralRatio', type: 'uint256' },
+        ],
+        indexed: false,
+        internalType: 'struct LeverageTokenState',
         name: 'stateAfter',
         type: 'tuple',
-        indexed: false,
-        internalType: 'struct LeverageTokenState',
-        components: [
-          {
-            name: 'collateralInDebtAsset',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'equity',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'collateralRatio',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
       },
       {
-        name: 'actions',
-        type: 'tuple[]',
+        components: [
+          { internalType: 'enum ActionType', name: 'actionType', type: 'uint8' },
+          { internalType: 'uint256', name: 'amount', type: 'uint256' },
+        ],
         indexed: false,
         internalType: 'struct RebalanceAction[]',
-        components: [
-          {
-            name: 'actionType',
-            type: 'uint8',
-            internalType: 'enum ActionType',
-          },
-          {
-            name: 'amount',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
+        name: 'actions',
+        type: 'tuple[]',
       },
     ],
-    anonymous: false,
+    name: 'Rebalance',
+    type: 'event',
   },
   {
-    type: 'event',
-    name: 'Redeem',
+    anonymous: false,
     inputs: [
+      { indexed: true, internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { indexed: true, internalType: 'address', name: 'sender', type: 'address' },
       {
-        name: 'token',
-        type: 'address',
-        indexed: true,
-        internalType: 'contract ILeverageToken',
-      },
-      {
-        name: 'sender',
-        type: 'address',
-        indexed: true,
-        internalType: 'address',
-      },
-      {
-        name: 'actionData',
-        type: 'tuple',
+        components: [
+          { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'shares', type: 'uint256' },
+          { internalType: 'uint256', name: 'tokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'treasuryFee', type: 'uint256' },
+        ],
         indexed: false,
         internalType: 'struct ActionData',
-        components: [
-          {
-            name: 'collateral',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'debt',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'shares',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'tokenFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-          {
-            name: 'treasuryFee',
-            type: 'uint256',
-            internalType: 'uint256',
-          },
-        ],
+        name: 'actionData',
+        type: 'tuple',
       },
     ],
-    anonymous: false,
+    name: 'Redeem',
+    type: 'event',
   },
   {
-    type: 'event',
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'bytes32', name: 'role', type: 'bytes32' },
+      { indexed: true, internalType: 'bytes32', name: 'previousAdminRole', type: 'bytes32' },
+      { indexed: true, internalType: 'bytes32', name: 'newAdminRole', type: 'bytes32' },
+    ],
     name: 'RoleAdminChanged',
-    inputs: [
-      {
-        name: 'role',
-        type: 'bytes32',
-        indexed: true,
-        internalType: 'bytes32',
-      },
-      {
-        name: 'previousAdminRole',
-        type: 'bytes32',
-        indexed: true,
-        internalType: 'bytes32',
-      },
-      {
-        name: 'newAdminRole',
-        type: 'bytes32',
-        indexed: true,
-        internalType: 'bytes32',
-      },
-    ],
-    anonymous: false,
+    type: 'event',
   },
   {
-    type: 'event',
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'bytes32', name: 'role', type: 'bytes32' },
+      { indexed: true, internalType: 'address', name: 'account', type: 'address' },
+      { indexed: true, internalType: 'address', name: 'sender', type: 'address' },
+    ],
     name: 'RoleGranted',
-    inputs: [
-      {
-        name: 'role',
-        type: 'bytes32',
-        indexed: true,
-        internalType: 'bytes32',
-      },
-      {
-        name: 'account',
-        type: 'address',
-        indexed: true,
-        internalType: 'address',
-      },
-      {
-        name: 'sender',
-        type: 'address',
-        indexed: true,
-        internalType: 'address',
-      },
-    ],
-    anonymous: false,
+    type: 'event',
   },
   {
-    type: 'event',
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'bytes32', name: 'role', type: 'bytes32' },
+      { indexed: true, internalType: 'address', name: 'account', type: 'address' },
+      { indexed: true, internalType: 'address', name: 'sender', type: 'address' },
+    ],
     name: 'RoleRevoked',
-    inputs: [
-      {
-        name: 'role',
-        type: 'bytes32',
-        indexed: true,
-        internalType: 'bytes32',
-      },
-      {
-        name: 'account',
-        type: 'address',
-        indexed: true,
-        internalType: 'address',
-      },
-      {
-        name: 'sender',
-        type: 'address',
-        indexed: true,
-        internalType: 'address',
-      },
-    ],
-    anonymous: false,
+    type: 'event',
   },
   {
-    type: 'event',
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'enum ExternalAction', name: 'action', type: 'uint8' },
+      { indexed: false, internalType: 'uint256', name: 'fee', type: 'uint256' },
+    ],
     name: 'TreasuryActionFeeSet',
-    inputs: [
-      {
-        name: 'action',
-        type: 'uint8',
-        indexed: true,
-        internalType: 'enum ExternalAction',
-      },
-      {
-        name: 'fee',
-        type: 'uint256',
-        indexed: false,
-        internalType: 'uint256',
-      },
-    ],
-    anonymous: false,
+    type: 'event',
   },
   {
-    type: 'event',
+    anonymous: false,
+    inputs: [{ indexed: false, internalType: 'address', name: 'treasury', type: 'address' }],
     name: 'TreasurySet',
-    inputs: [
-      {
-        name: 'treasury',
-        type: 'address',
-        indexed: false,
-        internalType: 'address',
-      },
-    ],
-    anonymous: false,
-  },
-  {
     type: 'event',
-    name: 'Upgraded',
-    inputs: [
-      {
-        name: 'implementation',
-        type: 'address',
-        indexed: true,
-        internalType: 'address',
-      },
-    ],
+  },
+  {
     anonymous: false,
+    inputs: [{ indexed: true, internalType: 'address', name: 'implementation', type: 'address' }],
+    name: 'Upgraded',
+    type: 'event',
   },
   {
-    type: 'error',
-    name: 'AccessControlBadConfirmation',
     inputs: [],
+    name: 'BASE_RATIO',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'AccessControlUnauthorizedAccount',
+    inputs: [],
+    name: 'DEFAULT_ADMIN_ROLE',
+    outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'FEE_MANAGER_ROLE',
+    outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'UPGRADER_ROLE',
+    outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'UPGRADE_INTERFACE_VERSION',
+    outputs: [{ internalType: 'string', name: '', type: 'string' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'chargeManagementFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+      { internalType: 'enum Math.Rounding', name: 'rounding', type: 'uint8' },
+    ],
+    name: 'convertCollateralToDebt',
+    outputs: [{ internalType: 'uint256', name: 'debt', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+      { internalType: 'enum Math.Rounding', name: 'rounding', type: 'uint8' },
+    ],
+    name: 'convertCollateralToShares',
+    outputs: [{ internalType: 'uint256', name: 'shares', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'debt', type: 'uint256' },
+      { internalType: 'enum Math.Rounding', name: 'rounding', type: 'uint8' },
+    ],
+    name: 'convertDebtToCollateral',
+    outputs: [{ internalType: 'uint256', name: 'collateral', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'shares', type: 'uint256' },
+      { internalType: 'enum Math.Rounding', name: 'rounding', type: 'uint8' },
+    ],
+    name: 'convertSharesToCollateral',
+    outputs: [{ internalType: 'uint256', name: 'collateral', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'shares', type: 'uint256' },
+      { internalType: 'enum Math.Rounding', name: 'rounding', type: 'uint8' },
+    ],
+    name: 'convertSharesToDebt',
+    outputs: [{ internalType: 'uint256', name: 'debt', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'shares', type: 'uint256' },
+    ],
+    name: 'convertToAssets',
+    outputs: [{ internalType: 'uint256', name: 'equityInCollateralAsset', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'equityInCollateralAsset', type: 'uint256' },
+    ],
+    name: 'convertToShares',
+    outputs: [{ internalType: 'uint256', name: 'shares', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [
       {
-        name: 'account',
+        components: [
+          { internalType: 'contract ILendingAdapter', name: 'lendingAdapter', type: 'address' },
+          {
+            internalType: 'contract IRebalanceAdapterBase',
+            name: 'rebalanceAdapter',
+            type: 'address',
+          },
+          { internalType: 'uint256', name: 'mintTokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'redeemTokenFee', type: 'uint256' },
+        ],
+        internalType: 'struct LeverageTokenConfig',
+        name: 'tokenConfig',
+        type: 'tuple',
+      },
+      { internalType: 'string', name: 'name', type: 'string' },
+      { internalType: 'string', name: 'symbol', type: 'string' },
+    ],
+    name: 'createNewLeverageToken',
+    outputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+      { internalType: 'uint256', name: 'minShares', type: 'uint256' },
+    ],
+    name: 'deposit',
+    outputs: [
+      {
+        components: [
+          { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'shares', type: 'uint256' },
+          { internalType: 'uint256', name: 'tokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'treasuryFee', type: 'uint256' },
+        ],
+        internalType: 'struct ActionData',
+        name: 'actionData',
+        type: 'tuple',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getDefaultManagementFeeAtCreation',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'getFeeAdjustedTotalSupply',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'getLastManagementFeeAccrualTimestamp',
+    outputs: [{ internalType: 'uint120', name: '', type: 'uint120' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'enum ExternalAction', name: 'action', type: 'uint8' },
+    ],
+    name: 'getLeverageTokenActionFee',
+    outputs: [{ internalType: 'uint256', name: 'fee', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'getLeverageTokenCollateralAsset',
+    outputs: [{ internalType: 'contract IERC20', name: 'collateralAsset', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'getLeverageTokenConfig',
+    outputs: [
+      {
+        components: [
+          { internalType: 'contract ILendingAdapter', name: 'lendingAdapter', type: 'address' },
+          {
+            internalType: 'contract IRebalanceAdapterBase',
+            name: 'rebalanceAdapter',
+            type: 'address',
+          },
+          { internalType: 'uint256', name: 'mintTokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'redeemTokenFee', type: 'uint256' },
+        ],
+        internalType: 'struct LeverageTokenConfig',
+        name: 'config',
+        type: 'tuple',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'getLeverageTokenDebtAsset',
+    outputs: [{ internalType: 'contract IERC20', name: 'debtAsset', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getLeverageTokenFactory',
+    outputs: [{ internalType: 'contract IBeaconProxyFactory', name: 'factory', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'getLeverageTokenInitialCollateralRatio',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'getLeverageTokenLendingAdapter',
+    outputs: [{ internalType: 'contract ILendingAdapter', name: 'adapter', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'getLeverageTokenRebalanceAdapter',
+    outputs: [{ internalType: 'contract IRebalanceAdapterBase', name: 'module', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'getLeverageTokenState',
+    outputs: [
+      {
+        components: [
+          { internalType: 'uint256', name: 'collateralInDebtAsset', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'equity', type: 'uint256' },
+          { internalType: 'uint256', name: 'collateralRatio', type: 'uint256' },
+        ],
+        internalType: 'struct LeverageTokenState',
+        name: 'state',
+        type: 'tuple',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'contract ILeverageToken', name: 'token', type: 'address' }],
+    name: 'getManagementFee',
+    outputs: [{ internalType: 'uint256', name: 'fee', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'bytes32', name: 'role', type: 'bytes32' }],
+    name: 'getRoleAdmin',
+    outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getTreasury',
+    outputs: [{ internalType: 'address', name: 'treasury', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'enum ExternalAction', name: 'action', type: 'uint8' }],
+    name: 'getTreasuryActionFee',
+    outputs: [{ internalType: 'uint256', name: 'fee', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'bytes32', name: 'role', type: 'bytes32' },
+      { internalType: 'address', name: 'account', type: 'address' },
+    ],
+    name: 'grantRole',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'bytes32', name: 'role', type: 'bytes32' },
+      { internalType: 'address', name: 'account', type: 'address' },
+    ],
+    name: 'hasRole',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'address', name: 'initialAdmin', type: 'address' },
+      { internalType: 'address', name: 'treasury', type: 'address' },
+      {
+        internalType: 'contract IBeaconProxyFactory',
+        name: 'leverageTokenFactory',
         type: 'address',
-        internalType: 'address',
-      },
-      {
-        name: 'neededRole',
-        type: 'bytes32',
-        internalType: 'bytes32',
       },
     ],
+    name: 'initialize',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'AddressEmptyCode',
     inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'shares', type: 'uint256' },
+      { internalType: 'uint256', name: 'maxCollateral', type: 'uint256' },
+    ],
+    name: 'mint',
+    outputs: [
       {
-        name: 'target',
-        type: 'address',
-        internalType: 'address',
+        components: [
+          { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'shares', type: 'uint256' },
+          { internalType: 'uint256', name: 'tokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'treasuryFee', type: 'uint256' },
+        ],
+        internalType: 'struct ActionData',
+        name: 'actionData',
+        type: 'tuple',
       },
     ],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'ERC1967InvalidImplementation',
     inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+    ],
+    name: 'previewDeposit',
+    outputs: [
       {
-        name: 'implementation',
-        type: 'address',
-        internalType: 'address',
+        components: [
+          { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'shares', type: 'uint256' },
+          { internalType: 'uint256', name: 'tokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'treasuryFee', type: 'uint256' },
+        ],
+        internalType: 'struct ActionData',
+        name: '',
+        type: 'tuple',
       },
     ],
+    stateMutability: 'view',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'ERC1967NonPayable',
-    inputs: [],
-  },
-  {
-    type: 'error',
-    name: 'FailedCall',
-    inputs: [],
-  },
-  {
-    type: 'error',
-    name: 'FeeTooHigh',
     inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'shares', type: 'uint256' },
+    ],
+    name: 'previewMint',
+    outputs: [
       {
-        name: 'fee',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'maxFee',
-        type: 'uint256',
-        internalType: 'uint256',
+        components: [
+          { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'shares', type: 'uint256' },
+          { internalType: 'uint256', name: 'tokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'treasuryFee', type: 'uint256' },
+        ],
+        internalType: 'struct ActionData',
+        name: '',
+        type: 'tuple',
       },
     ],
+    stateMutability: 'view',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'InvalidCollateralRatios',
-    inputs: [],
-  },
-  {
-    type: 'error',
-    name: 'InvalidInitialization',
-    inputs: [],
-  },
-  {
-    type: 'error',
-    name: 'InvalidLeverageTokenAssets',
-    inputs: [],
-  },
-  {
-    type: 'error',
-    name: 'InvalidLeverageTokenInitialCollateralRatio',
     inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'shares', type: 'uint256' },
+    ],
+    name: 'previewRedeem',
+    outputs: [
       {
-        name: 'initialCollateralRatio',
-        type: 'uint256',
-        internalType: 'uint256',
+        components: [
+          { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'shares', type: 'uint256' },
+          { internalType: 'uint256', name: 'tokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'treasuryFee', type: 'uint256' },
+        ],
+        internalType: 'struct ActionData',
+        name: '',
+        type: 'tuple',
       },
     ],
+    stateMutability: 'view',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'InvalidLeverageTokenStateAfterRebalance',
     inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+    ],
+    name: 'previewWithdraw',
+    outputs: [
       {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
+        components: [
+          { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'shares', type: 'uint256' },
+          { internalType: 'uint256', name: 'tokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'treasuryFee', type: 'uint256' },
+        ],
+        internalType: 'struct ActionData',
+        name: '',
+        type: 'tuple',
       },
     ],
+    stateMutability: 'view',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'LeverageTokenNotEligibleForRebalance',
     inputs: [],
+    name: 'proxiableUUID',
+    outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'NotInitializing',
-    inputs: [],
-  },
-  {
-    type: 'error',
-    name: 'NotRebalancer',
     inputs: [
+      { internalType: 'contract ILeverageToken', name: 'leverageToken', type: 'address' },
       {
-        name: 'token',
-        type: 'address',
-        internalType: 'contract ILeverageToken',
+        components: [
+          { internalType: 'enum ActionType', name: 'actionType', type: 'uint8' },
+          { internalType: 'uint256', name: 'amount', type: 'uint256' },
+        ],
+        internalType: 'struct RebalanceAction[]',
+        name: 'actions',
+        type: 'tuple[]',
       },
-      {
-        name: 'caller',
-        type: 'address',
-        internalType: 'address',
-      },
+      { internalType: 'contract IERC20', name: 'tokenIn', type: 'address' },
+      { internalType: 'contract IERC20', name: 'tokenOut', type: 'address' },
+      { internalType: 'uint256', name: 'amountIn', type: 'uint256' },
+      { internalType: 'uint256', name: 'amountOut', type: 'uint256' },
     ],
+    name: 'rebalance',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'ReentrancyGuardReentrantCall',
-    inputs: [],
-  },
-  {
-    type: 'error',
-    name: 'SafeERC20FailedOperation',
     inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'shares', type: 'uint256' },
+      { internalType: 'uint256', name: 'minCollateral', type: 'uint256' },
+    ],
+    name: 'redeem',
+    outputs: [
       {
-        name: 'token',
-        type: 'address',
-        internalType: 'address',
+        components: [
+          { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'shares', type: 'uint256' },
+          { internalType: 'uint256', name: 'tokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'treasuryFee', type: 'uint256' },
+        ],
+        internalType: 'struct ActionData',
+        name: 'actionData',
+        type: 'tuple',
       },
     ],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'SlippageTooHigh',
     inputs: [
-      {
-        name: 'actual',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
-      {
-        name: 'expected',
-        type: 'uint256',
-        internalType: 'uint256',
-      },
+      { internalType: 'bytes32', name: 'role', type: 'bytes32' },
+      { internalType: 'address', name: 'callerConfirmation', type: 'address' },
     ],
+    name: 'renounceRole',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'UUPSUnauthorizedCallContext',
-    inputs: [],
-  },
-  {
-    type: 'error',
-    name: 'UUPSUnsupportedProxiableUUID',
     inputs: [
-      {
-        name: 'slot',
-        type: 'bytes32',
-        internalType: 'bytes32',
-      },
+      { internalType: 'bytes32', name: 'role', type: 'bytes32' },
+      { internalType: 'address', name: 'account', type: 'address' },
     ],
+    name: 'revokeRole',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    type: 'error',
-    name: 'ZeroAddressTreasury',
-    inputs: [],
+    inputs: [{ internalType: 'uint256', name: 'fee', type: 'uint256' }],
+    name: 'setDefaultManagementFeeAtCreation',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'fee', type: 'uint256' },
+    ],
+    name: 'setManagementFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'treasury', type: 'address' }],
+    name: 'setTreasury',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'enum ExternalAction', name: 'action', type: 'uint8' },
+      { internalType: 'uint256', name: 'fee', type: 'uint256' },
+    ],
+    name: 'setTreasuryActionFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'bytes4', name: 'interfaceId', type: 'bytes4' }],
+    name: 'supportsInterface',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'address', name: 'newImplementation', type: 'address' },
+      { internalType: 'bytes', name: 'data', type: 'bytes' },
+    ],
+    name: 'upgradeToAndCall',
+    outputs: [],
+    stateMutability: 'payable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'contract ILeverageToken', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+      { internalType: 'uint256', name: 'maxShares', type: 'uint256' },
+    ],
+    name: 'withdraw',
+    outputs: [
+      {
+        components: [
+          { internalType: 'uint256', name: 'collateral', type: 'uint256' },
+          { internalType: 'uint256', name: 'debt', type: 'uint256' },
+          { internalType: 'uint256', name: 'shares', type: 'uint256' },
+          { internalType: 'uint256', name: 'tokenFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'treasuryFee', type: 'uint256' },
+        ],
+        internalType: 'struct ActionData',
+        name: 'actionData',
+        type: 'tuple',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
 ] as const

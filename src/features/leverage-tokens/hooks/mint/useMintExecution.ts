@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Address, PublicClient } from 'viem'
-import { useConfig, usePublicClient } from 'wagmi'
+import { useChainId, useConfig, usePublicClient, useSwitchChain } from 'wagmi'
 import { orchestrateMint } from '@/domain/mint'
 import { RouterVersion } from '@/domain/mint/planner/types'
 import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
@@ -17,6 +17,8 @@ export function useMintExecution(params: {
   inputAsset: Address // collateral asset
   slippageBps: number
 }) {
+  const { switchChainAsync } = useSwitchChain()
+  const activeChainId = useChainId()
   const { token, account, inputAsset, slippageBps } = params
   const [status, setStatus] = useState<Status>('idle')
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
@@ -44,15 +46,18 @@ export function useMintExecution(params: {
     | undefined
 
   const routerAddressV2 = useMemo(() => {
-    return envRouterV2 ?? (addresses.leverageRouterV2 as Address | undefined)
+    // Prefer chain-scoped addresses (respects Tenderly overrides), fallback to env
+    return (addresses.leverageRouterV2 as Address | undefined) ?? envRouterV2
   }, [envRouterV2, addresses.leverageRouterV2])
 
   const managerAddressV2 = useMemo(() => {
-    return envManagerV2 ?? (addresses.leverageManagerV2 as Address | undefined)
+    // Prefer chain-scoped addresses (respects Tenderly overrides), fallback to env
+    return (addresses.leverageManagerV2 as Address | undefined) ?? envManagerV2
   }, [envManagerV2, addresses.leverageManagerV2])
 
   const multicallExecutorAddress = useMemo(() => {
-    return envMulticallExecutor ?? (addresses.multicall as Address | undefined)
+    // Prefer chain-scoped multicall (respects Tenderly overrides), fallback to env
+    return (addresses.multicall as Address | undefined) ?? envMulticallExecutor
   }, [envMulticallExecutor, addresses.multicall])
 
   const canSubmit = useMemo(() => Boolean(account), [account])
@@ -90,6 +95,10 @@ export function useMintExecution(params: {
           quoteDebtToCollateral = quote
         }
 
+        if (activeChainId !== chainId) {
+          await switchChainAsync({ chainId })
+        }
+
         const { hash } = await orchestrateMint({
           config,
           account,
@@ -100,6 +109,7 @@ export function useMintExecution(params: {
           ...(quoteDebtToCollateral ? { quoteDebtToCollateral } : {}),
           ...(routerAddressV2 ? { routerAddressV2 } : {}),
           ...(managerAddressV2 ? { managerAddressV2 } : {}),
+          chainId,
         })
         setHash(hash)
         setStatus('pending')
@@ -115,6 +125,7 @@ export function useMintExecution(params: {
     },
     [
       account,
+      activeChainId,
       config,
       token,
       inputAsset,
@@ -126,6 +137,7 @@ export function useMintExecution(params: {
       chainPublicClient,
       activePublicClient,
       multicallExecutorAddress,
+      switchChainAsync,
     ],
   )
 

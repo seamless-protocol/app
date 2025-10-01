@@ -7,7 +7,7 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
-import { BASE_WETH, ETH_SENTINEL } from '@/lib/contracts/addresses'
+import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads (explicit address may be provided when using VNets/custom deployments)
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
@@ -74,6 +74,8 @@ export async function planMintV2(params: {
   managerPort?: ManagerPort
   /** Optional explicit LeverageManagerV2 address (for VNet/custom) */
   managerAddress?: Address
+  /** Chain ID to execute the transaction on */
+  chainId: number
 }): Promise<MintPlanV2> {
   const {
     config,
@@ -84,11 +86,13 @@ export async function planMintV2(params: {
     quoteDebtToCollateral,
     managerPort,
     managerAddress,
+    chainId,
   } = params
 
   const { collateralAsset, debtAsset } = await getManagerAssets({
     config,
     token,
+    chainId,
     ...(managerAddress ? { managerAddress } : {}),
   })
 
@@ -104,11 +108,12 @@ export async function planMintV2(params: {
     ? await managerPort.idealPreview({
         token,
         userCollateral: userCollateralOut,
+        chainId,
       })
     : await (async () => {
         const r = await readLeverageManagerV2PreviewMint(config, {
-          ...(managerAddress ? { address: managerAddress } : {}),
           args: [token, userCollateralOut],
+          chainId: chainId as SupportedChainId,
         })
         return {
           targetCollateral: r.collateral,
@@ -140,11 +145,11 @@ export async function planMintV2(params: {
 
   const totalCollateral = userCollateralOut + debtQuote.out
   const final = managerPort
-    ? await managerPort.finalPreview({ token, totalCollateral })
+    ? await managerPort.finalPreview({ token, totalCollateral, chainId })
     : await (async () => {
         const r = await readLeverageManagerV2PreviewMint(config, {
-          ...(managerAddress ? { address: managerAddress } : {}),
           args: [token, totalCollateral],
+          chainId: chainId as SupportedChainId,
         })
         return { previewDebt: r.debt, previewShares: r.shares }
       })()
@@ -183,15 +188,16 @@ async function getManagerAssets(args: {
   config: Config
   token: TokenArg
   managerAddress?: Address
+  chainId: number
 }) {
-  const { config, token, managerAddress } = args
+  const { config, token, chainId } = args
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
+    chainId: chainId as SupportedChainId,
   })
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
+    chainId: chainId as SupportedChainId,
   })
   return { collateralAsset, debtAsset }
 }

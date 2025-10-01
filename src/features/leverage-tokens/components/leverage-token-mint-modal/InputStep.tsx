@@ -70,8 +70,8 @@ interface InputStepProps {
   // Config
   leverageTokenConfig: LeverageTokenConfig
   apy?: number | undefined
-  mintFee?: bigint | undefined
-  isMintFeeLoading?: boolean | undefined
+  managementFee?: bigint | undefined
+  isManagementFeeLoading?: boolean | undefined
 }
 
 export function InputStep({
@@ -98,8 +98,8 @@ export function InputStep({
   error,
   leverageTokenConfig,
   apy,
-  mintFee,
-  isMintFeeLoading,
+  managementFee,
+  isManagementFeeLoading,
 }: InputStepProps) {
   const mintAmountId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -252,7 +252,7 @@ export function InputStep({
             {isCalculating && (
               <div className="flex items-center text-xs text-slate-400">
                 <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                <Skeleton className="h-3 w-20" />
+                Calculating...
               </div>
             )}
           </div>
@@ -304,12 +304,12 @@ export function InputStep({
           <div className="flex justify-between">
             <span className="text-slate-400">Management Fee</span>
             <span className="text-white">
-              {isMintFeeLoading ? (
+              {isManagementFeeLoading ? (
                 <Skeleton className="inline-block h-4 w-12" />
-              ) : typeof mintFee === 'bigint' ? (
-                `${Number(mintFee) / 100}%`
+              ) : typeof managementFee === 'bigint' ? (
+                `${Number(managementFee) / 100}%`
               ) : (
-                <Skeleton className="inline-block h-4 w-12" />
+                'N/A'
               )}
             </span>
           </div>
@@ -332,9 +332,11 @@ export function InputStep({
             </span>
           </div>
           <Separator className="my-2 bg-slate-700" />
-          <div className="flex justify-between font-medium">
+          <div className="flex justify-between font-medium items-center">
             <span className="text-white">You will receive</span>
-            <span className="text-white">{expectedTokens} tokens</span>
+            <span className="text-white">
+              {isCalculating ? 'Calculating...' : `${expectedTokens} tokens`}
+            </span>
           </div>
         </div>
       </Card>

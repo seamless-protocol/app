@@ -6,15 +6,7 @@ import { hookTestUtils } from '../../../../../utils.tsx'
 
 describe('useRedeemForm', () => {
   const defaultParams = {
-    leverageTokenConfig: {
-      symbol: 'weETH',
-      name: 'Wrapped Ether',
-      collateralAsset: {
-        symbol: 'WETH',
-        name: 'Wrapped Ether',
-        decimals: 18,
-      },
-    },
+    leverageTokenDecimals: 18,
     leverageTokenBalanceFormatted: '10.5',
   }
 
@@ -142,23 +134,17 @@ describe('useRedeemForm', () => {
     })
     expect(result.current.amount).toBe('0.000000')
 
-    // Test percentage over 100
+    // Test percentage over 100 - should clamp to 100% and preserve full precision
     act(() => {
       result.current.onPercent(150, '10.5')
     })
-    expect(result.current.amount).toBe('10.500000')
+    expect(result.current.amount).toBe('10.5') // 100% preserves full precision
   })
 
   it('should handle different decimal places', () => {
     const paramsWithDifferentDecimals = {
       ...defaultParams,
-      leverageTokenConfig: {
-        ...defaultParams.leverageTokenConfig,
-        collateralAsset: {
-          ...defaultParams.leverageTokenConfig.collateralAsset,
-          decimals: 6,
-        },
-      },
+      leverageTokenDecimals: 6,
     }
 
     const { result } = hookTestUtils.renderHookWithQuery(() =>

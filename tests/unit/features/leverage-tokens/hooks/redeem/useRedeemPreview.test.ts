@@ -1,19 +1,13 @@
 import { waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
-import { detectRouterVersion } from '@/domain/mint/utils/detectVersion'
 import { useRedeemPreview } from '@/features/leverage-tokens/hooks/redeem/useRedeemPreview'
 import { getContractAddresses } from '@/lib/contracts/addresses'
-import {
-  readLeverageManagerPreviewRedeem,
-  readLeverageManagerV2PreviewRedeem,
-} from '@/lib/contracts/generated'
+import { readLeverageManagerV2PreviewRedeem } from '@/lib/contracts/generated'
 import { hookTestUtils, makeAddr, mockSetup } from '../../../../../utils.tsx'
 
 // Mock dependencies
-const mockReadLeverageManagerPreviewRedeem = readLeverageManagerPreviewRedeem as Mock
 const mockReadLeverageManagerV2PreviewRedeem = readLeverageManagerV2PreviewRedeem as Mock
 const mockGetContractAddresses = getContractAddresses as Mock
-const mockDetectRouterVersion = detectRouterVersion as Mock
 
 describe('useRedeemPreview', () => {
   const mockToken = makeAddr('token')
@@ -33,7 +27,6 @@ describe('useRedeemPreview', () => {
   } as any
 
   const mockAddresses = {
-    leverageManager: makeAddr('manager'),
     leverageManagerV2: makeAddr('managerV2'),
   }
 
@@ -41,17 +34,8 @@ describe('useRedeemPreview', () => {
     collateral: 1000000000000000000n,
     debt: 800000000000000000n,
     shares: 1000000000000000000n,
-    equity: 200000000000000000n,
     tokenFee: 1000000000000000n, // 0.1%
     treasuryFee: 500000000000000n, // 0.05%
-  }
-
-  const mockPreviewResultV2 = {
-    collateral: 1000000000000000000n,
-    debt: 800000000000000000n,
-    shares: 1000000000000000000n,
-    tokenFee: 1000000000000000n,
-    treasuryFee: 500000000000000n,
   }
 
   beforeEach(() => {
@@ -60,9 +44,7 @@ describe('useRedeemPreview', () => {
 
     // Setup mocks
     mockGetContractAddresses.mockReturnValue(mockAddresses)
-    mockDetectRouterVersion.mockReturnValue('v1' as any)
-    mockReadLeverageManagerPreviewRedeem.mockResolvedValue(mockPreviewResult)
-    mockReadLeverageManagerV2PreviewRedeem.mockResolvedValue(mockPreviewResultV2)
+    mockReadLeverageManagerV2PreviewRedeem.mockResolvedValue(mockPreviewResult)
   })
 
   it('should initialize with loading state', () => {
@@ -80,7 +62,7 @@ describe('useRedeemPreview', () => {
     expect(result.current.error).toBeNull()
   })
 
-  it('should fetch preview data successfully for v1', async () => {
+  it('should fetch preview data successfully', async () => {
     const { result } = hookTestUtils.renderHookWithQuery(() =>
       useRedeemPreview({
         config: mockConfig,
@@ -96,33 +78,9 @@ describe('useRedeemPreview', () => {
 
     expect(result.current.data).toEqual(mockPreviewResult)
     expect(result.current.error).toBeNull()
-    expect(mockReadLeverageManagerPreviewRedeem).toHaveBeenCalledWith(mockConfig, {
-      address: mockAddresses.leverageManager,
-      args: [mockToken, mockSharesToRedeem],
-    })
-  })
-
-  it('should fetch preview data successfully for v2', async () => {
-    mockDetectRouterVersion.mockReturnValue('v2' as any)
-
-    const { result } = hookTestUtils.renderHookWithQuery(() =>
-      useRedeemPreview({
-        config: mockConfig,
-        token: mockToken,
-        sharesToRedeem: mockSharesToRedeem,
-        chainId: mockChainId,
-      }),
-    )
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    expect(result.current.data).toEqual(mockPreviewResultV2)
-    expect(result.current.error).toBeNull()
     expect(mockReadLeverageManagerV2PreviewRedeem).toHaveBeenCalledWith(mockConfig, {
-      address: mockAddresses.leverageManagerV2,
       args: [mockToken, mockSharesToRedeem],
+      chainId: mockChainId,
     })
   })
 
@@ -137,7 +95,7 @@ describe('useRedeemPreview', () => {
     )
 
     expect(result.current.isLoading).toBe(false)
-    expect(mockReadLeverageManagerPreviewRedeem).not.toHaveBeenCalled()
+    expect(mockReadLeverageManagerV2PreviewRedeem).not.toHaveBeenCalled()
   })
 
   it('should handle undefined shares to redeem', () => {
@@ -151,7 +109,7 @@ describe('useRedeemPreview', () => {
     )
 
     expect(result.current.isLoading).toBe(false)
-    expect(mockReadLeverageManagerPreviewRedeem).not.toHaveBeenCalled()
+    expect(mockReadLeverageManagerV2PreviewRedeem).not.toHaveBeenCalled()
   })
 
   it('should handle debouncing correctly', async () => {
@@ -177,25 +135,25 @@ describe('useRedeemPreview', () => {
     rerender({ sharesToRedeem: 4000000000000000000n as bigint | undefined })
 
     // Should not have called the contract yet due to debouncing
-    expect(mockReadLeverageManagerPreviewRedeem).not.toHaveBeenCalled()
+    expect(mockReadLeverageManagerV2PreviewRedeem).not.toHaveBeenCalled()
 
     // Wait for debounce to complete
     await waitFor(
       () => {
-        expect(mockReadLeverageManagerPreviewRedeem).toHaveBeenCalledTimes(1)
+        expect(mockReadLeverageManagerV2PreviewRedeem).toHaveBeenCalledTimes(1)
       },
       { timeout: 200 },
     )
 
-    expect(mockReadLeverageManagerPreviewRedeem).toHaveBeenCalledWith(mockConfig, {
-      address: mockAddresses.leverageManager,
+    expect(mockReadLeverageManagerV2PreviewRedeem).toHaveBeenCalledWith(mockConfig, {
       args: [mockToken, 4000000000000000000n],
+      chainId: mockChainId,
     })
   })
 
   it('should handle contract errors', async () => {
     const mockError = new Error('Contract call failed')
-    mockReadLeverageManagerPreviewRedeem.mockRejectedValue(mockError)
+    mockReadLeverageManagerV2PreviewRedeem.mockRejectedValue(mockError)
 
     const { result } = hookTestUtils.renderHookWithQuery(() =>
       useRedeemPreview({
@@ -214,36 +172,8 @@ describe('useRedeemPreview', () => {
     expect(result.current.error).toBe(mockError)
   })
 
-  it('should handle missing manager address for v1', async () => {
+  it('should handle missing manager V2 address', () => {
     mockGetContractAddresses.mockReturnValue({
-      ...mockAddresses,
-      leverageManager: undefined,
-    })
-
-    const { result } = hookTestUtils.renderHookWithQuery(() =>
-      useRedeemPreview({
-        config: mockConfig,
-        token: mockToken,
-        sharesToRedeem: mockSharesToRedeem,
-        chainId: mockChainId,
-      }),
-    )
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    // When leverageManager is undefined but leverageManagerV2 exists, it should upgrade to V2 and call the V2 function
-    expect(mockReadLeverageManagerV2PreviewRedeem).toHaveBeenCalledWith(mockConfig, {
-      address: mockAddresses.leverageManagerV2,
-      args: [mockToken, mockSharesToRedeem],
-    })
-  })
-
-  it('should handle missing manager v2 address for v2', async () => {
-    mockDetectRouterVersion.mockReturnValue('v2' as any)
-    mockGetContractAddresses.mockReturnValue({
-      ...mockAddresses,
       leverageManagerV2: undefined,
     })
 
@@ -256,15 +186,10 @@ describe('useRedeemPreview', () => {
       }),
     )
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    // When leverageManagerV2 is undefined, it should fall back to V1 manager
-    expect(mockReadLeverageManagerPreviewRedeem).toHaveBeenCalledWith(mockConfig, {
-      address: mockAddresses.leverageManager,
-      args: [mockToken, mockSharesToRedeem],
-    })
+    // When leverageManagerV2 is undefined, the query should be disabled and not loading
+    expect(result.current.isLoading).toBe(false)
+    expect(mockReadLeverageManagerV2PreviewRedeem).not.toHaveBeenCalled()
+    expect(result.current.data).toBeUndefined()
   })
 
   it('should use correct query key structure', async () => {
@@ -306,12 +231,12 @@ describe('useRedeemPreview', () => {
     rerender({ sharesToRedeem: mockSharesToRedeem as bigint | undefined })
 
     // Should not call immediately
-    expect(mockReadLeverageManagerPreviewRedeem).not.toHaveBeenCalled()
+    expect(mockReadLeverageManagerV2PreviewRedeem).not.toHaveBeenCalled()
 
     // Wait for the longer debounce
     await waitFor(
       () => {
-        expect(mockReadLeverageManagerPreviewRedeem).toHaveBeenCalled()
+        expect(mockReadLeverageManagerV2PreviewRedeem).toHaveBeenCalled()
       },
       { timeout: 600 },
     )

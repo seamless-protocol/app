@@ -7,7 +7,7 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
-import { BASE_WETH, ETH_SENTINEL } from '@/lib/contracts/addresses'
+import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -75,20 +75,30 @@ export async function planRedeemV2(params: {
   managerAddress?: Address
   /** Optional explicit output asset for user payout (defaults to collateral). */
   outputAsset?: Address
+  /** Chain ID to execute the transaction on */
+  chainId: number
 }): Promise<RedeemPlanV2> {
-  const { config, token, sharesToRedeem, slippageBps, quoteCollateralToDebt, managerAddress } =
-    params
+  const {
+    config,
+    token,
+    sharesToRedeem,
+    slippageBps,
+    quoteCollateralToDebt,
+    managerAddress,
+    chainId,
+  } = params
 
   const { collateralAsset, debtAsset } = await getManagerAssets({
     config,
     token,
+    chainId,
     ...(managerAddress ? { managerAddress } : {}),
   })
 
   // Initial preview to understand the redemption
   const initialPreview = await readLeverageManagerV2PreviewRedeem(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token, sharesToRedeem],
+    chainId: chainId as SupportedChainId,
   })
 
   const totalCollateralAvailable = initialPreview.collateral
@@ -211,15 +221,16 @@ async function getManagerAssets(args: {
   config: Config
   token: TokenArg
   managerAddress?: Address
+  chainId: number
 }) {
-  const { config, token, managerAddress } = args
+  const { config, token, chainId } = args
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
+    chainId: chainId as SupportedChainId,
   })
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
+    chainId: chainId as SupportedChainId,
   })
   return { collateralAsset, debtAsset }
 }

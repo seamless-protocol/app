@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
 import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
+import type { Address } from 'viem'
+import { useAccount } from 'wagmi'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent, CardHeader } from '../../../components/ui/card'
 import {
@@ -14,6 +16,7 @@ interface ResourceItem {
   title: string
   description: string
   url: string
+  getUrl?: (ctx: { address?: Address }) => string
   icon: React.ComponentType<{ className?: string }>
   badge: {
     text: string
@@ -49,6 +52,7 @@ export function RelatedResources({
   className,
 }: RelatedResourcesProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const { address } = useAccount()
 
   const getBadgeClasses = (color: ResourceItem['badge']['color']) => {
     const colorMap = {
@@ -132,10 +136,11 @@ export function RelatedResources({
 
   const renderResourceItem = (item: ResourceItem) => {
     const Icon = item.icon
+    const href = item.getUrl ? (address ? item.getUrl({ address }) : item.getUrl({})) : item.url
     return (
       <a
         key={item.id}
-        href={item.url}
+        href={href}
         target="_blank"
         rel="noopener noreferrer"
         className={`group block p-4 border rounded-lg transition-all duration-200 ${

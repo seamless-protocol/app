@@ -43,6 +43,7 @@ type Step = {
  * - Quotes are same-chain (Base -> Base) by default.
  * - Uses router as fromAddress since router executes the swap inside router calls.
  */
+
 export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
   const {
     chainId = base.id,
@@ -51,18 +52,17 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     slippageBps = DEFAULT_SLIPPAGE_BPS,
     // Always use li.quest as documented by LiFi for /v1/quote
     baseUrl = opts.baseUrl ?? 'https://li.quest',
-    // Support both browser (import.meta.env) and Node.js (process.env) environments
-    apiKey = opts.apiKey ??
-      (typeof import.meta !== 'undefined' && import.meta.env
-        ? (import.meta.env['VITE_LIFI_API_KEY'] as string | undefined)
-        : process.env['LIFI_API_KEY']),
+    // Read from Vite env in browser; avoid referencing process.env in client bundles
+    apiKey = opts.apiKey ?? import.meta.env['VITE_LIFI_API_KEY'] ?? import.meta.env['LIFI_API_KEY'],
     order = 'CHEAPEST',
-    // Support both browser and Node.js environments for integrator
-    integrator = typeof import.meta !== 'undefined' && import.meta.env
-      ? (import.meta.env['VITE_LIFI_INTEGRATOR'] as string | undefined)
-      : process.env['LIFI_INTEGRATOR'],
+    // Support browser env only; tests can pass via opts
+    integrator = opts.integrator ??
+      import.meta.env['VITE_LIFI_INTEGRATOR'] ??
+      import.meta.env['LIFI_INTEGRATOR'],
     allowBridges,
   } = opts
+
+  console.log('apiKey', apiKey)
 
   const headers = buildHeaders(apiKey)
   const slippage = bpsToDecimalString(slippageBps)
@@ -85,7 +85,7 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       ...(allowBridges ? { allowBridges } : {}),
     })
 
-    if (process.env['LIFI_DEBUG'] === '1') {
+    if ((import.meta.env['VITE_LIFI_DEBUG'] ?? import.meta.env['LIFI_DEBUG']) === '1') {
       // Intentionally avoid logging the API key value
       console.info('[LiFi] quote', {
         baseUrl,

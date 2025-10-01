@@ -18,7 +18,7 @@ export interface LogContext {
 }
 
 class BaseLogger {
-  private isDev = import.meta.env.DEV
+  private isDev = resolveIsDev()
 
   constructor(
     private namespace: string,
@@ -93,3 +93,13 @@ export function createLogger(namespace: string, defaults?: LogContext) {
 }
 
 export type Logger = ReturnType<typeof createLogger>
+
+function resolveIsDev(): boolean {
+  const viteEnv =
+    typeof import.meta !== 'undefined'
+      ? (import.meta as { env?: { DEV?: boolean } }).env
+      : undefined
+  if (viteEnv && typeof viteEnv.DEV === 'boolean') return viteEnv.DEV
+  const nodeEnv = typeof process !== 'undefined' ? process.env['NODE_ENV'] : undefined
+  return nodeEnv !== 'production'
+}

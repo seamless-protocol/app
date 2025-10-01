@@ -25,6 +25,7 @@ export interface UseRedeemWithRouterParams {
   account: AccountArg
   sharesToRedeem: SharesToRedeemArg
   slippageBps?: number
+  chainId: number
 
   quoteCollateralToDebt?: QuoteFn
   routerAddress?: Address
@@ -43,6 +44,7 @@ export function useRedeemWithRouter() {
       account,
       sharesToRedeem,
       slippageBps,
+      chainId,
       quoteCollateralToDebt,
       routerAddress,
       managerAddress,
@@ -53,6 +55,7 @@ export function useRedeemWithRouter() {
         account,
         token,
         sharesToRedeem,
+        chainId,
         ...(typeof slippageBps !== 'undefined' ? { slippageBps } : {}),
         ...(typeof quoteCollateralToDebt !== 'undefined' ? { quoteCollateralToDebt } : {}),
         ...(typeof routerAddress !== 'undefined' ? { routerAddressV2: routerAddress } : {}),

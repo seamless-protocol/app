@@ -19,6 +19,7 @@ import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
 import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
+import { useLeverageTokenConfig } from '../../hooks/useLeverageTokenConfig'
 import { useLeverageTokenEarnings } from '../../hooks/useLeverageTokenEarnings'
 import { useLeverageTokenUserMetrics } from '../../hooks/useLeverageTokenUserMetrics'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
@@ -46,8 +47,6 @@ interface LeverageTokenRedeemModalProps {
   onClose: () => void
   leverageTokenAddress: `0x${string}` // Token address to look up config
   userAddress?: `0x${string}` // Optional user address - if not provided, will use useAccount
-  redemptionFee?: bigint | undefined // Redemption fee from contract
-  isRedemptionFeeLoading?: boolean | undefined // Loading state for redemption fee
 }
 
 // Hoisted to avoid re-creating on every render
@@ -65,8 +64,6 @@ export function LeverageTokenRedeemModal({
   onClose,
   leverageTokenAddress,
   userAddress: propUserAddress,
-  redemptionFee,
-  isRedemptionFeeLoading,
 }: LeverageTokenRedeemModalProps) {
   const queryClient = useQueryClient()
 
@@ -89,6 +86,12 @@ export function LeverageTokenRedeemModal({
     contractAddresses.leverageRouterV2 ?? contractAddresses.leverageRouter
   const leverageManagerAddress =
     contractAddresses.leverageManagerV2 ?? contractAddresses.leverageManager
+
+  // Fetch contract config for redemption fee
+  const { config: contractConfig, isLoading: isContractConfigLoading } = useLeverageTokenConfig(
+    leverageTokenAddress,
+    leverageTokenConfig.chainId,
+  )
 
   // Get real wallet balance for leverage tokens
   const {
@@ -184,7 +187,7 @@ export function LeverageTokenRedeemModal({
 
   // Format balances for display
   const leverageTokenBalanceFormatted = leverageTokenBalance
-    ? formatUnits(leverageTokenBalance, leverageTokenConfig.collateralAsset.decimals) // Assuming same decimals
+    ? formatUnits(leverageTokenBalance, leverageTokenConfig.decimals)
     : '0'
 
   const {
@@ -217,7 +220,7 @@ export function LeverageTokenRedeemModal({
 
   // Form state and logic
   const form = useRedeemForm({
-    leverageTokenConfig,
+    leverageTokenDecimals: leverageTokenConfig.decimals,
     leverageTokenBalanceFormatted,
   })
 
@@ -235,6 +238,7 @@ export function LeverageTokenRedeemModal({
     ...(userAddress ? { account: userAddress } : {}),
     slippageBps,
     chainId: leverageTokenConfig.chainId as SupportedChainId,
+
     ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
     ...(leverageTokenConfig.swaps?.collateralToDebt
@@ -574,8 +578,8 @@ export function LeverageTokenRedeemModal({
             onApprove={handleApprove}
             error={error || redeemBlockingError}
             leverageTokenConfig={leverageTokenConfig}
-            redemptionFee={redemptionFee}
-            isRedemptionFeeLoading={isRedemptionFeeLoading}
+            redemptionFee={contractConfig?.redeemTokenFee}
+            isRedemptionFeeLoading={isContractConfigLoading}
             disabledAssets={disabledOutputAssets}
           />
         )
@@ -602,8 +606,8 @@ export function LeverageTokenRedeemModal({
               leverageRatio: leverageTokenConfig.leverageRatio,
               chainId: leverageTokenConfig.chainId,
             }}
-            redemptionFee={redemptionFee}
-            isRedemptionFeeLoading={isRedemptionFeeLoading}
+            redemptionFee={contractConfig?.redeemTokenFee}
+            isRedemptionFeeLoading={isContractConfigLoading}
             onConfirm={handleConfirm}
           />
         )
@@ -731,7 +735,7 @@ function useApprovalFlow(params: {
     ...(spender ? { spender } : {}),
     ...(amountFormatted ? { amount: amountFormatted } : {}),
     decimals,
-    chainId,
+    targetChainId: chainId,
     enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
   })
 

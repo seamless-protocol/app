@@ -1,6 +1,6 @@
 import { Building2, Coins, Globe, TrendingUp } from 'lucide-react'
 import type { Address } from 'viem'
-import { BaseLogo } from '@/components/icons/logos'
+import { BaseLogo, EthereumLogo } from '@/components/icons/logos'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
 
@@ -11,6 +11,7 @@ export enum LeverageTokenKey {
   WEETH_WETH_17X = 'weeth-weth-17x',
   WEETH_WETH_17X_TENDERLY = 'weeth-weth-17x-tenderly',
   CBBTC_USDC_2X_TENDERLY = 'cbbtc-usdc-2x-tenderly',
+  WSTETH_WETH_2X_MAINNET = 'wsteth-weth-2x-mainnet',
   // Add more token keys here as they are added
   // ANOTHER_TOKEN = 'another-token',
 }
@@ -21,6 +22,7 @@ interface ResourceItem {
   title: string
   description: string
   url: string
+  getUrl?: (ctx: { address?: Address }) => string
   icon: React.ComponentType<{ className?: string }>
   badge: {
     text: string
@@ -163,7 +165,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           id: 'merkl-rewards',
           title: 'Merkl Rewards',
           description: 'Additional DeFi rewards and incentive tracking',
-          url: 'https://merkl.xyz/',
+          // Default goes to dashboard; if connected, deep-link to user page
+          url: 'https://app.merkl.xyz/users/',
+          getUrl: ({ address }) =>
+            address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
           icon: TrendingUp,
           badge: {
             text: 'Incentives',
@@ -171,6 +176,40 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           },
         },
       ],
+    },
+  },
+  [LeverageTokenKey.WSTETH_WETH_2X_MAINNET]: {
+    address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
+    name: 'wstETH / WETH 2x Leverage Token',
+    symbol: 'WSTETH-WETH-2x',
+    description:
+      'wstETH / WETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Wrapped Ether',
+    decimals: 18,
+    leverageRatio: 2,
+    chainId: 1,
+    chainName: 'Ethereum',
+    chainLogo: EthereumLogo,
+    collateralAsset: {
+      symbol: 'wstETH',
+      name: 'Wrapped stETH',
+      address: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address,
+      decimals: 18,
+    },
+    debtAsset: {
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
+      decimals: 18,
+    },
+    swaps: {
+      debtToCollateral: {
+        type: 'lifi',
+        allowBridges: 'none',
+      },
+      collateralToDebt: {
+        type: 'lifi',
+        allowBridges: 'none',
+      },
     },
   },
   [LeverageTokenKey.WEETH_WETH_17X_TENDERLY]: {
@@ -217,9 +256,9 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       'Tenderly VNet deployment of the cbBTC / USDC 2x leverage token used for automated integration testing.',
     decimals: 18,
     leverageRatio: 2,
-    chainId: 8453,
-    chainName: 'Base (Tenderly VNet)',
-    chainLogo: BaseLogo,
+    chainId: 1,
+    chainName: 'Ethereum (Tenderly VNet)',
+    chainLogo: EthereumLogo,
     supplyCap: 200,
     isTestOnly: true,
     collateralAsset: {
@@ -231,7 +270,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     debtAsset: {
       symbol: 'USDC',
       name: 'USD Coin',
-      address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as Address,
+      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Address,
       decimals: 6,
     },
     swaps: {

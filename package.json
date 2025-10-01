@@ -20,13 +20,17 @@
     "test:integration:raw": "vitest -c vitest.integration.config.ts --run tests/integration",
     "anvil:base": "bash ./scripts/anvil-base.sh",
     "test:e2e": "bun scripts/run-tests.ts e2e",
+    "test:e2e:base": "bun scripts/run-tests.ts e2e --chain base",
+    "test:e2e:mainnet": "bun scripts/run-tests.ts e2e --chain mainnet",
+    "test:e2e:all": "bun scripts/run-tests.ts e2e --chain all",
     "test:e2e:local": "TEST_RPC_URL=http://127.0.0.1:8545 bunx playwright test",
     "test:e2e:anvil": "TEST_RPC_URL=http://127.0.0.1:8545 bun scripts/run-tests.ts e2e",
     "test:e2e:tenderly": "bun scripts/run-tests.ts e2e",
     "test:integration:tenderly": "bun scripts/run-tests.ts integration",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "wagmi": "wagmi generate"
+    "wagmi": "wagmi generate",
+    "test:integration:wsteth": "TEST_CHAIN=mainnet TEST_MODE=tenderly-static E2E_LEVERAGE_TOKEN_KEY=wsteth-weth-2x bunx vitest -c vitest.integration.config.ts --run tests/integration/leverage-tokens/redeem/router.v2.mainnet.redeem.spec.ts"
   },
   "dependencies": {
     "@lifi/widget": "^3.30.11",

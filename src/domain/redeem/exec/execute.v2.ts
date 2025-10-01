@@ -9,6 +9,7 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   simulateLeverageRouterV2Redeem,
   writeLeverageRouterV2Redeem,
@@ -27,6 +28,7 @@ type V2Calls = RedeemParams['args'][4]
  * @param multicallExecutor Multicall executor address for V2 calls
  * @param swapCalls Array of calls for any necessary swaps during redemption
  * @param routerAddress Explicit LeverageRouterV2 address (required for VNet/custom deployments)
+ * @param chainId Chain ID to execute the transaction on
  */
 export async function executeRedeemV2(params: {
   config: Config
@@ -38,6 +40,7 @@ export async function executeRedeemV2(params: {
   swapCalls: V2Calls
   /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
   routerAddress: Address
+  chainId: number
 }): Promise<{ hash: Hash }> {
   const {
     config,
@@ -47,7 +50,8 @@ export async function executeRedeemV2(params: {
     minCollateralForSender,
     multicallExecutor,
     swapCalls,
-    routerAddress,
+    routerAddress: _routerAddress,
+    chainId,
   } = params
 
   // No allowance handling here; UI should perform approvals beforehand
@@ -63,22 +67,29 @@ export async function executeRedeemV2(params: {
   const skipSimulate =
     (typeof process !== 'undefined' && process.env['TEST_SKIP_SIMULATE'] === '1') || false
 
+  const chain = chainId as SupportedChainId
+
   if (skipSimulate) {
     const hash = await writeLeverageRouterV2Redeem(config, {
-      address: routerAddress,
       account,
       args,
+      chainId: chain,
     })
     return { hash }
   }
 
   const { request } = await simulateLeverageRouterV2Redeem(config, {
-    address: routerAddress,
     // redeem(token, shares, minCollateralForSender, multicallExecutor, swapCalls)
     args,
     account,
+    chainId: chain,
   })
 
-  const hash = await writeLeverageRouterV2Redeem(config, { ...request })
+  const hash = await writeLeverageRouterV2Redeem(config, {
+    args: request.args,
+    account,
+    ...(request.value ? { value: request.value } : {}),
+    chainId: chain,
+  })
   return { hash }
 }
