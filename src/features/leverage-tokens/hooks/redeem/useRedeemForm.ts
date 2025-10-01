@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { parseUnits } from 'viem'
+import { formatUnits, parseUnits } from 'viem'
 
 export function useRedeemForm(params: {
   leverageTokenDecimals: number
@@ -15,19 +15,32 @@ export function useRedeemForm(params: {
     if (value === '' || /^\d*\.?\d*$/.test(value)) setAmount(value)
   }, [])
 
-  // Handle percentage shortcuts
-  const onPercent = useCallback((pct: number, tokenBalance: string) => {
-    const n = Math.max(0, Math.min(100, pct))
-    if (n === 100) {
-      // Preserve the full precision of the wallet balance when redeeming MAX
-      setAmount(tokenBalance)
-      return
-    }
-
-    const balance = parseFloat(tokenBalance)
-    const next = ((balance * n) / 100).toFixed(6)
-    setAmount(next)
-  }, [])
+  // Handle percentage shortcuts (MAX uses exact balance; others floor in base units)
+  const onPercent = useCallback(
+    (pct: number, tokenBalance: string) => {
+      const n = Math.max(0, Math.min(100, pct))
+      try {
+        const balanceRaw = parseUnits(tokenBalance || '0', leverageTokenDecimals)
+        if (n === 100) {
+          // Use exact wallet balance string for MAX
+          setAmount(tokenBalance)
+          return
+        }
+        // Floor via integer math in base units
+        const amountRaw = (balanceRaw * BigInt(n)) / 100n
+        const asUnits = formatUnits(amountRaw, leverageTokenDecimals)
+        const [intPart, fracPart = ''] = asUnits.split('.')
+        const formatted = `${intPart}.${fracPart.slice(0, 6).padEnd(6, '0')}`
+        setAmount(formatted)
+      } catch {
+        // Fallback to float math (legacy behavior)
+        const balance = parseFloat(tokenBalance)
+        const next = ((balance * n) / 100).toFixed(6)
+        setAmount(next)
+      }
+    },
+    [leverageTokenDecimals],
+  )
 
   // Validation helpers
   const amountRaw = useMemo(() => {

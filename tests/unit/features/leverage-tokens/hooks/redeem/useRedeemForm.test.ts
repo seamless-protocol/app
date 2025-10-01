@@ -218,6 +218,22 @@ describe('useRedeemForm', () => {
     })
 
     expect(result.current.amount).toBe('5.000000')
+
+  })
+
+  it('should floor amounts for non-100% percentages using base-unit math', () => {
+    const { result } = hookTestUtils.renderHookWithQuery(() => useRedeemForm(defaultParams))
+
+    // a balance slightly above 1.0 by 1 wei (18 decimals)
+    const balanceWithRoundingEdge = '1.000000000000000001'
+
+    act(() => {
+      result.current.onPercent(50, balanceWithRoundingEdge)
+    })
+
+    // 50% floors to exactly 0.5 tokens
+    expect(result.current.amountRaw).toEqual(parseUnits('0.5', 18))
+    expect(result.current.amount).toBe('0.500000')
   })
 
   it('should handle empty string input gracefully', () => {

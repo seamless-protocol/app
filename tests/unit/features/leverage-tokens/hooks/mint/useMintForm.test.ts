@@ -126,7 +126,6 @@ describe('useMintForm', () => {
     expect(result.current.amountRaw).toEqual(parseUnits('5.25', 18))
   })
 
-
   it('should use exact wallet balance for 100% (MAX)', () => {
     const params = { ...defaultParams, walletBalanceFormatted: '10.5' }
     const { result } = hookTestUtils.renderHookWithQuery(() => useMintForm(params))
