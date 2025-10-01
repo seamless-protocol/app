@@ -52,11 +52,17 @@ export function useMintForm(params: {
       const n = Math.max(0, Math.min(100, pct))
       try {
         const walletRaw = parseUnits(walletBalanceFormatted || '0', decimals)
-        const amountRaw = n === 100 ? walletRaw : (walletRaw * BigInt(n)) / 100n
-        const asUnits = formatUnits(amountRaw, decimals)
-        const [intPart, fracPart = ''] = asUnits.split('.')
-        const formatted = `${intPart}.${fracPart.slice(0, TOKEN_AMOUNT_DISPLAY_DECIMALS).padEnd(TOKEN_AMOUNT_DISPLAY_DECIMALS, '0')}`
-        setAmount(formatted)
+        if (n === 100) {
+          // For MAX, show the exact wallet balance (match redeem behavior)
+          setAmount(walletBalanceFormatted)
+        } else {
+          // For other percentages, floor in base units and format to display precision
+          const amountRaw = (walletRaw * BigInt(n)) / 100n
+          const asUnits = formatUnits(amountRaw, decimals)
+          const [intPart, fracPart = ''] = asUnits.split('.')
+          const formatted = `${intPart}.${fracPart.slice(0, TOKEN_AMOUNT_DISPLAY_DECIMALS).padEnd(TOKEN_AMOUNT_DISPLAY_DECIMALS, '0')}`
+          setAmount(formatted)
+        }
       } catch {
         const next = ((walletBalanceNum * n) / 100).toFixed(TOKEN_AMOUNT_DISPLAY_DECIMALS)
         setAmount(next)

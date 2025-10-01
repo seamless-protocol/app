@@ -218,7 +218,6 @@ describe('useRedeemForm', () => {
     })
 
     expect(result.current.amount).toBe('5.000000')
-
   })
 
   it('should floor amounts for non-100% percentages using base-unit math', () => {

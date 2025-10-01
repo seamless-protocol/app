@@ -137,7 +137,7 @@ describe('useMintForm', () => {
     // amountRaw should exactly equal the parsed wallet balance
     expect(result.current.amountRaw).toEqual(parseUnits(params.walletBalanceFormatted, 18))
     // string formatting maintains 6 decimals for display
-    expect(result.current.amount).toBe('10.500000')
+    expect(result.current.amount).toBe('10.5')
   })
 
   it('should floor amounts for non-100% percentages using base-unit math', () => {
@@ -166,7 +166,7 @@ describe('useMintForm', () => {
     act(() => {
       result.current.onPercent(150)
     })
-    expect(result.current.amount).toBe('10.500000')
+    expect(result.current.amount).toBe('10.5')
   })
 
   it('should handle different decimal places', () => {
