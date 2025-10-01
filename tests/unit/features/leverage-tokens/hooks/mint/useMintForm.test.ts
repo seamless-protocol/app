@@ -126,6 +126,34 @@ describe('useMintForm', () => {
     expect(result.current.amountRaw).toEqual(parseUnits('5.25', 18))
   })
 
+
+  it('should use exact wallet balance for 100% (MAX)', () => {
+    const params = { ...defaultParams, walletBalanceFormatted: '10.5' }
+    const { result } = hookTestUtils.renderHookWithQuery(() => useMintForm(params))
+
+    act(() => {
+      result.current.onPercent(100)
+    })
+
+    // amountRaw should exactly equal the parsed wallet balance
+    expect(result.current.amountRaw).toEqual(parseUnits(params.walletBalanceFormatted, 18))
+    // string formatting maintains 6 decimals for display
+    expect(result.current.amount).toBe('10.500000')
+  })
+
+  it('should floor amounts for non-100% percentages using base-unit math', () => {
+    const params = { ...defaultParams, walletBalanceFormatted: '1.000000000000000001' }
+    const { result } = hookTestUtils.renderHookWithQuery(() => useMintForm(params))
+
+    act(() => {
+      result.current.onPercent(50)
+    })
+
+    // 50% of 1.000000000000000001 in base units floors to exactly 0.5
+    expect(result.current.amountRaw).toEqual(parseUnits('0.5', 18))
+    expect(result.current.amount).toBe('0.500000')
+  })
+
   it('should clamp percentage to 0-100 range', () => {
     const { result } = hookTestUtils.renderHookWithQuery(() => useMintForm(defaultParams))
 
