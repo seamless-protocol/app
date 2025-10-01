@@ -67,8 +67,9 @@ describeOrSkip('LiFi adapter live smoke', () => {
         router: target.router,
       })
 
-      // Use a small target out to avoid rate and liquidity issues
-      const toAmount = parseUnits('0.005', 18)
+      // Use a small target on Base and a larger one on Mainnet to avoid min-size issues
+      const toAmount =
+        target.chainId === mainnet.id ? parseUnits('0.2', 18) : parseUnits('0.005', 18)
 
       const res = await quote({
         inToken: target.inToken,

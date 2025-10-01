@@ -275,7 +275,10 @@ async function calculateCollateralNeededForDebt(args: {
 
   let previous: bigint | undefined
   let lastRequired: bigint | undefined
-  for (let i = 0; i < 12; i++) {
+  // Reduce iteration cap and tolerate tiny oscillations to speed up sizing.
+  const MAX_ITERATIONS = 4
+  const CONVERGENCE_BPS = 1n // stop when change <= 1 bp
+  for (let i = 0; i < MAX_ITERATIONS; i++) {
     if (attempt <= 0n) {
       attempt = 1n
     }
@@ -300,7 +303,15 @@ async function calculateCollateralNeededForDebt(args: {
       throw new Error('Insufficient collateral to repay debt')
     }
 
-    if (required === attempt || (typeof previous !== 'undefined' && required === previous)) {
+    // Stop if converged or oscillating between two adjacent values,
+    // or if relative delta is within 1 bp (buffer applied below).
+    const converged = required === attempt
+    const oscillating = typeof previous !== 'undefined' && required === previous
+    const relDeltaBps =
+      required === 0n
+        ? 0n
+        : ((required > attempt ? required - attempt : attempt - required) * 10_000n) / required
+    if (converged || oscillating || relDeltaBps <= CONVERGENCE_BPS) {
       return { required: applyRequiredBuffer({ required, maxCollateralAvailable: upperBound }) }
     }
 
