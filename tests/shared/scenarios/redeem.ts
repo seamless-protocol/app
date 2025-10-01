@@ -85,6 +85,9 @@ export async function ensureRedeemSetup({
 
   const previousEquity = process.env['TEST_EQUITY_AMOUNT']
   process.env['TEST_EQUITY_AMOUNT'] = '10'
+  // Simple fix: when scenario prefers LiFi, force mint helper to use LiFi
+  const prevUseLifi = process.env['TEST_USE_LIFI']
+  if (scenario.swap.type === 'lifi') process.env['TEST_USE_LIFI'] = '1'
   try {
     await executeSharedMint({
       account: ctx.account,
@@ -92,10 +95,18 @@ export async function ensureRedeemSetup({
       config: ctx.config,
       slippageBps,
       chainIdOverride: scenario.chainId,
+      // Ensure we mint the exact leverage token we're about to redeem
+      addresses: {
+        token: scenario.token,
+        manager: scenario.manager,
+        router: scenario.router,
+      },
     })
   } finally {
     if (typeof previousEquity === 'string') process.env['TEST_EQUITY_AMOUNT'] = previousEquity
     else delete process.env['TEST_EQUITY_AMOUNT']
+    if (typeof prevUseLifi === 'string') process.env['TEST_USE_LIFI'] = prevUseLifi
+    else delete process.env['TEST_USE_LIFI']
   }
 
   const sharesToRedeem = await readLeverageTokenBalanceOf(ctx.config, {
@@ -170,11 +181,9 @@ async function resolveRedeemScenario({
   const router = (addresses.routerV2 ?? addresses.router) as Address
 
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(ctx.config, {
-    address: manager,
     args: [token],
   })
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(ctx.config, {
-    address: manager,
     args: [token],
   })
 

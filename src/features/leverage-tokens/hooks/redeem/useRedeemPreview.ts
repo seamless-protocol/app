@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
-import { getContractAddresses } from '@/lib/contracts/addresses'
+import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 import { readLeverageManagerV2PreviewRedeem } from '@/lib/contracts/generated'
 
 export interface RedeemPreviewResult {
@@ -48,8 +48,8 @@ export function useRedeemPreview(params: {
       }
 
       const res = await readLeverageManagerV2PreviewRedeem(config, {
-        address: managerV2Address,
         args: [token, debounced],
+        chainId: detectedChainId as SupportedChainId,
       })
 
       return {

@@ -30,6 +30,14 @@ const QUOTE_TARGETS: Array<{
     outToken: '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee' as Address,
     amountIn: parseUnits('0.5', 18),
   },
+  {
+    label: 'Mainnet WETH → wstETH',
+    chainId: mainnet.id,
+    router: '0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA' as Address,
+    inToken: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
+    outToken: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address,
+    amountIn: parseUnits('0.5', 18),
+  },
 ]
 
 const describeOrSkip = LIVE ? describe : describe.skip

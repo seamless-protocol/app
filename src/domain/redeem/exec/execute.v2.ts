@@ -9,6 +9,7 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   simulateLeverageRouterV2Redeem,
   writeLeverageRouterV2Redeem,
@@ -49,7 +50,7 @@ export async function executeRedeemV2(params: {
     minCollateralForSender,
     multicallExecutor,
     swapCalls,
-    routerAddress,
+    routerAddress: _routerAddress,
     chainId,
   } = params
 
@@ -66,24 +67,29 @@ export async function executeRedeemV2(params: {
   const skipSimulate =
     (typeof process !== 'undefined' && process.env['TEST_SKIP_SIMULATE'] === '1') || false
 
+  const chain = chainId as SupportedChainId
+
   if (skipSimulate) {
     const hash = await writeLeverageRouterV2Redeem(config, {
-      address: routerAddress,
       account,
       args,
-      chainId,
+      chainId: chain,
     })
     return { hash }
   }
 
   const { request } = await simulateLeverageRouterV2Redeem(config, {
-    address: routerAddress,
     // redeem(token, shares, minCollateralForSender, multicallExecutor, swapCalls)
     args,
     account,
-    chainId,
+    chainId: chain,
   })
 
-  const hash = await writeLeverageRouterV2Redeem(config, { ...request, chainId })
+  const hash = await writeLeverageRouterV2Redeem(config, {
+    args: request.args,
+    account,
+    ...(request.value ? { value: request.value } : {}),
+    chainId: chain,
+  })
   return { hash }
 }

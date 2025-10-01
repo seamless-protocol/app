@@ -276,8 +276,10 @@ async function runForChainOption(
       VITE_TEST_RPC_URL: effectiveRpc,
       VITE_BASE_RPC_URL: effectiveRpc,
       TENDERLY_ADMIN_RPC_URL: backend.adminRpcUrl,
-      E2E_TOKEN_SOURCE: backend.scenario.leverageTokenSource,
-      E2E_LEVERAGE_TOKEN_KEY: backend.scenario.defaultLeverageTokenKey,
+      E2E_TOKEN_SOURCE: process.env['E2E_TOKEN_SOURCE'] ?? backend.scenario.leverageTokenSource,
+      // Respect an explicitly provided token key if present
+      E2E_LEVERAGE_TOKEN_KEY:
+        process.env['E2E_LEVERAGE_TOKEN_KEY'] ?? backend.scenario.defaultLeverageTokenKey,
       ...(backend.contractOverrides
         ? { VITE_CONTRACT_ADDRESS_OVERRIDES: JSON.stringify(backend.contractOverrides) }
         : {}),

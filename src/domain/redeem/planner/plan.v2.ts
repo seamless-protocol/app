@@ -7,7 +7,7 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
-import { BASE_WETH, ETH_SENTINEL } from '@/lib/contracts/addresses'
+import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -97,9 +97,8 @@ export async function planRedeemV2(params: {
 
   // Initial preview to understand the redemption
   const initialPreview = await readLeverageManagerV2PreviewRedeem(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token, sharesToRedeem],
-    chainId,
+    chainId: chainId as SupportedChainId,
   })
 
   const totalCollateralAvailable = initialPreview.collateral
@@ -224,16 +223,14 @@ async function getManagerAssets(args: {
   managerAddress?: Address
   chainId: number
 }) {
-  const { config, token, managerAddress, chainId } = args
+  const { config, token, chainId } = args
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
-    chainId,
+    chainId: chainId as SupportedChainId,
   })
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
-    chainId,
+    chainId: chainId as SupportedChainId,
   })
   return { collateralAsset, debtAsset }
 }

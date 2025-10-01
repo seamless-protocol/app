@@ -1,12 +1,9 @@
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import { readContracts } from 'wagmi/actions'
-import { leverageManagerAbi } from '../../../../lib/contracts/abis/leverageManager'
+import { leverageManagerV2Abi } from '@/lib/contracts'
 import { rebalanceAdapterAbi } from '../../../../lib/contracts/abis/rebalanceAdapter'
-import {
-  getLeverageManagerAddress,
-  type SupportedChainId,
-} from '../../../../lib/contracts/addresses'
+import { getLeverageManagerAddress } from '../../../../lib/contracts/addresses'
 
 export interface LeverageRatios {
   minLeverage: number
@@ -40,66 +37,47 @@ export async function fetchLeverageRatios(
   }
 
   // Step 1: Get leverage token config from LeverageManager
-  const managerResults = await readContracts(config, {
+  const [{ rebalanceAdapter: rebalanceAdapterAddress }] = await readContracts(config, {
+    allowFailure: false,
     contracts: [
       {
         address: managerAddress,
-        abi: leverageManagerAbi,
+        abi: leverageManagerV2Abi,
         functionName: 'getLeverageTokenConfig',
         args: [tokenAddress],
-        chainId: chainId as SupportedChainId,
+        chainId,
       },
     ],
   })
 
-  const [managerResult] = managerResults
-
-  if (!managerResult?.result || managerResult.status !== 'success') {
-    throw new Error('Failed to get leverage token config')
-  }
-
-  const rebalanceAdapterAddress = managerResult.result.rebalanceAdapter as Address
-
   // Step 2: Get collateral ratios from RebalanceAdapter
-  const ratioResults = await readContracts(config, {
+  const [minResult, maxResult, targetResult] = await readContracts(config, {
+    allowFailure: false,
     contracts: [
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getLeverageTokenMinCollateralRatio',
-        chainId: chainId as SupportedChainId,
+        chainId,
       },
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getLeverageTokenMaxCollateralRatio',
-        chainId: chainId as SupportedChainId,
+        chainId,
       },
       {
         address: rebalanceAdapterAddress,
         abi: rebalanceAdapterAbi,
         functionName: 'getLeverageTokenTargetCollateralRatio',
-        chainId: chainId as SupportedChainId,
+        chainId,
       },
     ],
   })
 
-  const [minResult, maxResult, targetResult] = ratioResults
-
-  if (
-    !minResult?.result ||
-    !maxResult?.result ||
-    !targetResult?.result ||
-    minResult.status !== 'success' ||
-    maxResult.status !== 'success' ||
-    targetResult.status !== 'success'
-  ) {
-    throw new Error('Failed to fetch leverage ratios')
-  }
-
-  const minLeverage = Number(collateralRatioToLeverage(minResult.result as bigint)) / 1e18
-  const maxLeverage = Number(collateralRatioToLeverage(maxResult.result as bigint)) / 1e18
-  const targetLeverage = Number(collateralRatioToLeverage(targetResult.result as bigint)) / 1e18
+  const minLeverage = Number(collateralRatioToLeverage(minResult)) / 1e18
+  const maxLeverage = Number(collateralRatioToLeverage(maxResult)) / 1e18
+  const targetLeverage = Number(collateralRatioToLeverage(targetResult)) / 1e18
 
   return {
     minLeverage,

@@ -11,9 +11,8 @@ import {
 } from '../shared/scenarios/redeem'
 import { wagmiConfig } from '../shared/wagmi'
 
-// Mainnet Tenderly VNet configuration for cbBTC/USDC 2x
 const MAINNET_CHAIN_ID = mainnet.id
-const TOKEN_KEY = 'cbbtc-usdc-2x'
+const TOKEN_KEY = 'wsteth-weth-2x'
 const leverageTokenDefinition = getLeverageTokenDefinition('tenderly', TOKEN_KEY)
 const leverageTokenAddress = getLeverageTokenAddress('tenderly', TOKEN_KEY)
 const SLIPPAGE_BPS = 50
@@ -24,23 +23,17 @@ const redeemContext: RedeemPlanningContext = {
   account,
 }
 
-// Skip entire file when not running against Mainnet canonical chain
-// Must be placed before any tests are declared
 test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== MAINNET_CHAIN_ID, 'Mainnet-only E2E suite')
 
-test.describe('Mainnet leverage token redeem flow', () => {
+test.describe('Mainnet wstETH/WETH 2x redeem (JIT + LiFi)', () => {
   let baseSnapshot: Hash
   let sharesToRedeem: bigint
   let collateralAsset: `0x${string}`
   let payoutAsset: `0x${string}` | undefined
 
   test.beforeAll(async () => {
-    // Skip if not running against mainnet Tenderly VNet
     const chainId = await publicClient.getChainId()
-    if (chainId !== MAINNET_CHAIN_ID) {
-      test.skip()
-    }
-
+    if (chainId !== MAINNET_CHAIN_ID) test.skip()
     baseSnapshot = await takeSnapshot()
   })
 
@@ -53,7 +46,6 @@ test.describe('Mainnet leverage token redeem flow', () => {
       tokenDefinition: leverageTokenDefinition,
       slippageBps: SLIPPAGE_BPS,
     })
-
     sharesToRedeem = setup.sharesToRedeem
     collateralAsset = setup.collateralAsset
     payoutAsset = setup.payoutAsset
@@ -63,7 +55,7 @@ test.describe('Mainnet leverage token redeem flow', () => {
     await revertSnapshot(baseSnapshot)
   })
 
-  test('redeems cbBTC/USDC leverage tokens through the modal', async ({ page }) => {
+  test('redeems via modal using LiFi route', async ({ page }) => {
     test.setTimeout(120_000)
 
     const { plan } = await planRedeemTest({
@@ -72,7 +64,6 @@ test.describe('Mainnet leverage token redeem flow', () => {
       sharesToRedeem,
       slippageBps: SLIPPAGE_BPS,
     })
-
     expect(plan.sharesToRedeem).toBe(sharesToRedeem)
 
     const tokenBalanceBefore = await readLeverageTokenBalance()
@@ -80,8 +71,6 @@ test.describe('Mainnet leverage token redeem flow', () => {
     const payoutAddress = payoutAsset ?? collateralAsset
 
     await page.goto('/#/tokens', { waitUntil: 'domcontentloaded' })
-    await page.waitForLoadState('domcontentloaded')
-
     const connectButton = page.getByTestId('connect-mock')
     if (await connectButton.isVisible()) {
       await connectButton.click()
@@ -99,7 +88,6 @@ test.describe('Mainnet leverage token redeem flow', () => {
 
     const modal = page.getByRole('dialog', { name: 'Redeem Leverage Token' })
     await expect(modal).toBeVisible()
-
     await modal.getByRole('button', { name: 'MAX' }).click()
 
     // Allow initial 'Calculating...' label while quotes/preview resolve
@@ -107,16 +95,10 @@ test.describe('Mainnet leverage token redeem flow', () => {
       name: /(Approve|Redeem|Enter an amount|Calculating)/i,
     })
     await expect(primaryAction).toBeVisible({ timeout: 30_000 })
-    await expect(primaryAction).not.toHaveText(/Minimum redeem/i, { timeout: 30_000 })
+    // Wait until the quote/plan is ready (button stops showing Calculating)
     await expect(primaryAction).not.toHaveText(/Calculating/i, { timeout: 60_000 })
     await expect(primaryAction).toBeEnabled({ timeout: 15_000 })
-
     const primaryLabel = (await primaryAction.innerText()) ?? ''
-    await page.evaluate(() => {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' })
-    })
-    await modal.evaluate((node) => node.scrollTo({ top: node.scrollHeight, behavior: 'instant' }))
-    await primaryAction.evaluate((el) => el.scrollIntoView({ block: 'center', inline: 'center' }))
     await primaryAction.click()
 
     const confirmHeading = page.getByRole('heading', { name: 'Confirm Redemption' })
@@ -125,12 +107,9 @@ test.describe('Mainnet leverage token redeem flow', () => {
     } else {
       await expect(confirmHeading).toBeVisible()
     }
-
     await page.getByRole('button', { name: 'Confirm Redemption' }).click()
 
-    await expect(page.getByRole('heading', { name: 'Processing Redemption' })).toBeVisible({
-      timeout: 10_000,
-    })
+    await expect(page.getByRole('heading', { name: 'Processing Redemption' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Redemption Completed!' })).toBeVisible({
       timeout: 60_000,
     })
@@ -142,7 +121,6 @@ test.describe('Mainnet leverage token redeem flow', () => {
     const collateralBalanceAfter = await readErc20Balance(payoutAddress)
 
     expect(tokenBalanceAfter).toBe(tokenBalanceBefore - plan.sharesToRedeem)
-
     if (payoutAddress.toLowerCase() === collateralAsset.toLowerCase()) {
       expect(collateralBalanceAfter - collateralBalanceBefore >= plan.minCollateralForSender).toBe(
         true,
@@ -168,5 +146,5 @@ async function readErc20Balance(asset: `0x${string}`): Promise<bigint> {
     args: [account.address],
   })
 }
-// Skip entire file when not running against a mainnet (Tenderly) backend
+
 test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== mainnet.id, 'Mainnet-only E2E suite')

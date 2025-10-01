@@ -1,5 +1,5 @@
 import type { Address } from 'viem'
-import { getLeverageManagerAddress } from '../../../lib/contracts/addresses'
+import { getLeverageManagerAddress, type SupportedChainId } from '../../../lib/contracts/addresses'
 import { useReadLeverageManagerV2GetLeverageTokenConfig } from '../../../lib/contracts/generated'
 import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { STALE_TIME } from '../utils/constants'
@@ -38,9 +38,8 @@ export function useLeverageTokenConfig(
     isError: isConfigError,
     error: configError,
   } = useReadLeverageManagerV2GetLeverageTokenConfig({
-    address: managerAddress,
     args: tokenAddress ? [tokenAddress] : undefined,
-    chainId,
+    chainId: chainId as SupportedChainId | undefined,
     query: {
       enabled: Boolean(tokenAddress && managerAddress),
       staleTime: STALE_TIME.metadata,

@@ -25,6 +25,20 @@ export type MintSetupParams = {
   config: Parameters<typeof readLeverageTokenBalanceOf>[0]
   slippageBps?: number
   chainIdOverride?: number
+  // Optional: override addresses to ensure we mint the same token
+  // that the calling scenario is planning to redeem.
+  addresses?: {
+    token: Address
+    manager: Address
+    router: Address
+    uniswapV3?: {
+      pool: Address
+      fee: number
+      quoter?: Address
+      router?: Address
+      tickSpacing?: number
+    }
+  }
 }
 
 export type MintOutcome = {
@@ -47,6 +61,7 @@ export async function executeSharedMint({
   config,
   slippageBps = 50,
   chainIdOverride,
+  addresses,
 }: MintSetupParams): Promise<MintOutcome> {
   const resolvedSlippageBps = Number(process.env['TEST_SLIPPAGE_BPS'] ?? slippageBps ?? 50)
   if (mode !== 'tenderly') {
@@ -64,20 +79,18 @@ export async function executeSharedMint({
   }
   process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
 
-  const token: Address = ADDR.leverageToken
-  const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
-  const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
+  const token: Address = (addresses?.token ?? ADDR.leverageToken) as Address
+  const manager: Address = (addresses?.manager ?? ADDR.managerV2 ?? ADDR.manager) as Address
+  const router: Address = (addresses?.router ?? ADDR.routerV2 ?? ADDR.router) as Address
 
   console.info('[SHARED MINT] Using public RPC', { url: RPC.primary })
   const chainId = chainIdOverride ?? CHAIN_ID
   console.info('[SHARED MINT] Chain ID', { chainId })
 
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    address: manager,
     args: [token],
   })
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    address: manager,
     args: [token],
   })
   console.info('[SHARED MINT] Token assets', { collateralAsset, debtAsset })
@@ -95,7 +108,7 @@ export async function executeSharedMint({
 
   const quoteAdapterPreference = (process.env['TEST_QUOTE_ADAPTER'] ?? '').toLowerCase()
   const useLiFi = process.env['TEST_USE_LIFI'] === '1'
-  const uniswapV3Config = ADDR.uniswapV3
+  const uniswapV3Config = addresses?.uniswapV3 ?? ADDR.uniswapV3
   const canUseV3 = Boolean(
     uniswapV3Config?.quoter &&
       uniswapV3Config?.router &&

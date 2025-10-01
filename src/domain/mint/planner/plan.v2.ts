@@ -7,7 +7,7 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
-import { BASE_WETH, ETH_SENTINEL } from '@/lib/contracts/addresses'
+import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads (explicit address may be provided when using VNets/custom deployments)
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
@@ -112,9 +112,8 @@ export async function planMintV2(params: {
       })
     : await (async () => {
         const r = await readLeverageManagerV2PreviewMint(config, {
-          ...(managerAddress ? { address: managerAddress } : {}),
           args: [token, userCollateralOut],
-          chainId,
+          chainId: chainId as SupportedChainId,
         })
         return {
           targetCollateral: r.collateral,
@@ -149,9 +148,8 @@ export async function planMintV2(params: {
     ? await managerPort.finalPreview({ token, totalCollateral, chainId })
     : await (async () => {
         const r = await readLeverageManagerV2PreviewMint(config, {
-          ...(managerAddress ? { address: managerAddress } : {}),
           args: [token, totalCollateral],
-          chainId,
+          chainId: chainId as SupportedChainId,
         })
         return { previewDebt: r.debt, previewShares: r.shares }
       })()
@@ -192,16 +190,14 @@ async function getManagerAssets(args: {
   managerAddress?: Address
   chainId: number
 }) {
-  const { config, token, managerAddress, chainId } = args
+  const { config, token, chainId } = args
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
-    chainId,
+    chainId: chainId as SupportedChainId,
   })
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
-    chainId,
+    chainId: chainId as SupportedChainId,
   })
   return { collateralAsset, debtAsset }
 }
