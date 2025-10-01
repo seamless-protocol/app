@@ -165,7 +165,6 @@ async function performRedeem(
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 
-<<<<<<< HEAD
   const collateralBalanceBefore = await publicClient.readContract({
     address: collateralAsset,
     abi: erc20Abi,
@@ -179,21 +178,6 @@ async function performRedeem(
     functionName: 'balanceOf',
     args: [account.address],
   })
-=======
-  const collateralBalanceBefore = await publicClient.readContract({
-    address: collateralAsset,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: [account.address],
-  })
-
-  const debtBalanceBefore = await publicClient.readContract({
-    address: debtAsset,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: [account.address],
-  })
->>>>>>> origin/main
 
   const sharesBeforeRedeem = await readLeverageTokenBalanceOf(config, {
     address: token,
