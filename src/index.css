@@ -46,11 +46,11 @@
   --link-hover: #1c3785;
 
   /* Brand & Accents */
-  --brand-primary: #2a65c3;
-  --brand-secondary: #7c3aed;
+  --brand-primary: #a16cfe;
+  --brand-secondary: #a16cfe;
   --brand-tertiary: #506bdf;
-  --accent-1: #06b6d4;
-  --accent-2: #ec4899;
+  --accent-1: #22d3ee;
+  --accent-2: #f9a8d4;
 
   /* Legacy aliases */
   --brand-purple: var(--brand-secondary);
@@ -118,11 +118,11 @@
   --tag-info-text: var(--state-info-text);
 
   /* Sidebar/Navigation */
-  --nav-surface: rgba(255, 255, 255, 0.92);
-  --nav-surface-hover: rgba(80, 107, 223, 0.12);
-  --nav-surface-active: rgba(124, 58, 237, 0.18);
-  --nav-border: rgba(229, 231, 235, 0.8);
-  --nav-border-active: rgba(124, 58, 237, 0.35);
+  --nav-surface: #fafafb;
+  --nav-surface-hover: rgba(100, 116, 139, 0.1);
+  --nav-surface-active: rgba(139, 92, 246, 0.1);
+  --nav-border: #e5e7eb;
+  --nav-border-active: rgba(139, 92, 246, 0.3);
   --nav-text: var(--text-secondary);
   --nav-text-muted: var(--text-muted);
   --nav-text-active: var(--brand-secondary);
@@ -225,18 +225,18 @@
 }
 
 .dark {
-  --bg-hero: #0b0d12;
-  --bg-section: #0f1420;
-  --surface-card: #151a26;
-  --surface-elevated: #1d2432;
-  --surface-super: #252e3e;
-  --overlay-backdrop: #0b0d12cc;
-  --divider-line: #2b3445;
+  --bg-hero: #0f172a;
+  --bg-section: #0f172a;
+  --surface-card: #1e293b;
+  --surface-elevated: #334155;
+  --surface-super: #475569;
+  --overlay-backdrop: #0f172acc;
+  --divider-line: #334155;
   --divider: var(--divider-line);
 
-  --text-primary: #f5f7fa;
-  --text-secondary: #c7cfd9;
-  --text-muted: #8a93a3;
+  --text-primary: #ffffff;
+  --text-secondary: #d1d5db;
+  --text-muted: #6b7280;
   --link-normal: #97b0f6;
   --link-hover: #c3d3ff;
 
@@ -290,11 +290,11 @@
   --color-slate-300: var(--text-muted);
   --color-slate-200: var(--border-subtle);
 
-  --nav-surface: rgba(21, 26, 38, 0.88);
-  --nav-surface-hover: rgba(80, 107, 223, 0.18);
-  --nav-surface-active: rgba(124, 58, 237, 0.28);
-  --nav-border: rgba(36, 48, 67, 0.75);
-  --nav-border-active: rgba(112, 84, 220, 0.35);
+  --nav-surface: #0f172a;
+  --nav-surface-hover: rgba(100, 116, 139, 0.1);
+  --nav-surface-active: rgba(139, 92, 246, 0.1);
+  --nav-border: #334155;
+  --nav-border-active: rgba(139, 92, 246, 0.3);
   --nav-text: var(--text-secondary);
   --nav-text-muted: var(--text-muted);
   --nav-text-active: var(--brand-secondary);
