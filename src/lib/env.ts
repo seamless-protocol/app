@@ -3,10 +3,7 @@
  */
 
 // Required environment variables that must be present
-const REQUIRED_ENV_VARS = [
-  'VITE_WALLETCONNECT_PROJECT_ID',
-    'VITE_THEGRAPH_API_KEY',
-] as const
+const REQUIRED_ENV_VARS = ['VITE_WALLETCONNECT_PROJECT_ID', 'VITE_THEGRAPH_API_KEY'] as const
 
 type RequiredEnvVar = (typeof REQUIRED_ENV_VARS)[number]
 
