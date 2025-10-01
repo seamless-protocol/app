@@ -68,7 +68,8 @@ export function useRedeemPreview(params: {
   })
 
   // Map React Query statuses to the previous API surface
-  const isLoading = enabled ? query.isPending || query.isFetching : false
+  const isLoading =
+    enabled && Boolean(managerV2Address) ? query.isPending || query.isFetching : false
   const data = query.data
   const error = query.error
 

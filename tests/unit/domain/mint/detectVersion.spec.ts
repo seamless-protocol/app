@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { RouterVersion } from '@/domain/mint/planner/types'
+
+// Unmock the function we want to test
+vi.unmock('@/domain/mint/utils/detectVersion')
+
 import { detectRouterVersion } from '@/domain/mint/utils/detectVersion'
 
 describe('detectRouterVersion', () => {

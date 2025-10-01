@@ -74,7 +74,8 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     apiKey = opts.apiKey ?? readEnv('VITE_LIFI_API_KEY') ?? readEnv('LIFI_API_KEY'),
     order = 'CHEAPEST',
     // Support browser env only; tests can pass via opts
-    integrator = opts.integrator ?? readEnv('VITE_LIFI_INTEGRATOR') ?? readEnv('LIFI_INTEGRATOR'),
+    integrator =
+      opts.integrator ?? readEnv('VITE_LIFI_INTEGRATOR') ?? readEnv('LIFI_INTEGRATOR'),
     allowBridges,
   } = opts
 

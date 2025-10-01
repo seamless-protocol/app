@@ -138,7 +138,6 @@ jobs:
           TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless-protocol
-
   test-integration-mainnet-jit:
     name: Integration Tests (Mainnet, Tenderly JIT)
     runs-on: ubuntu-latest

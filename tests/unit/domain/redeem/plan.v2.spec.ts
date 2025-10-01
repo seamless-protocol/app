@@ -2,6 +2,9 @@ import type { Address } from 'viem'
 import { decodeFunctionData, erc20Abi } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 
+// Unmock the function we want to test
+vi.unmock('@/domain/redeem/planner/plan.v2')
+
 vi.mock('@/lib/contracts/generated', () => ({
   readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(
     async () => '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC' as Address,
