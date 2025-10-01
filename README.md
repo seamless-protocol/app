@@ -151,6 +151,7 @@ bun build
 ## Documentation
 
 - **[Adding Leverage Tokens](docs/adding-leverage-tokens.md)** - Complete guide for adding new leverage tokens to the protocol
+- **[Adding New Chains](docs/adding-new-chains.md)** - Comprehensive guide for adding support for new blockchain networks
 - **[IPFS Deployment](docs/ipfs-deployment.md)** - Instructions for deploying to IPFS using GitHub Actions
 
 ## Contributing
