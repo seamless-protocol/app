@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
 import { mainnet } from 'viem/chains'
+import { describe, expect, it } from 'vitest'
 import { ADDR, CHAIN_ID, mode } from '../../../shared/env'
 import { executeSharedMint } from '../../../shared/mintHelpers'
 import { withFork } from '../../../shared/withFork'
@@ -41,4 +41,3 @@ mintSuite('Leverage Router V2 Mint (Tenderly VNet, Mainnet wstETH/WETH 2x)', () 
     })
   }, 120_000)
 })
-
