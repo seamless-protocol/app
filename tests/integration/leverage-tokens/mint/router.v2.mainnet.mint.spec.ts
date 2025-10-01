@@ -1,3 +1,4 @@
+import type { Address } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
 import { ADDR, CHAIN_ID, mode } from '../../../shared/env'
@@ -28,8 +29,8 @@ mintSuite('Leverage Router V2 Mint (Tenderly VNet, Mainnet wstETH/WETH 2x)', () 
           chainIdOverride: mainnet.id,
           addresses: {
             token: ADDR.leverageToken,
-            manager: (ADDR.managerV2 ?? ADDR.manager)!,
-            router: (ADDR.routerV2 ?? ADDR.router)!,
+            manager: (ADDR.managerV2 ?? ADDR.manager) as Address,
+            router: (ADDR.routerV2 ?? ADDR.router) as Address,
             ...(ADDR.uniswapV3 ? { uniswapV3: ADDR.uniswapV3 } : {}),
           },
         })
