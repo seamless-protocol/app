@@ -22,7 +22,7 @@ export function SEAMStaking({
 }: SEAMStakingProps) {
   return (
     <Card
-      className={`bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] transition-all duration-300 ${className}`}
+      className={`bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] border border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_45%,transparent)] transition-all duration-300 ${className}`}
     >
       <CardHeader className="pb-4">
         <CardTitle className="text-foreground flex items-center">
@@ -62,7 +62,7 @@ export function SEAMStaking({
             <Button
               onClick={onManage}
               variant="outline"
-              className="border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]"
+              className="border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)]"
             >
               <ExternalLink className="h-4 w-4 mr-1" />
               Manage

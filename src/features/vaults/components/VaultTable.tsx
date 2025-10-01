@@ -67,11 +67,11 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
         <p className="text-[var(--text-secondary)]">Browse and invest in curated DeFi strategies</p>
       </div>
 
-      <div className="bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)] rounded overflow-hidden">
+      <div className="bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] border border-[var(--divider-line)] rounded overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]">
+              <TableRow className="border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)]">
                 <TableHead className="text-[var(--text-secondary)] font-medium py-4 px-6">
                   <button
                     type="button"
@@ -141,7 +141,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                 sortedData.map((strategy, index) => (
                   <motion.tr
                     key={strategy.id}
-                    className="border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] transition-colors cursor-pointer"
+                    className="border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] transition-colors cursor-pointer"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -154,7 +154,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                           <h4 className="font-medium text-foreground text-sm">{strategy.name}</h4>
                           <Badge
                             variant="secondary"
-                            className="text-xs bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] border-[var(--divider-line)] text-[var(--text-secondary)]"
+                            className="text-xs bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_45%,transparent)] border-[var(--divider-line)] text-[var(--text-secondary)]"
                           >
                             <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center mr-1">
                               {getChainLogo(strategy.chainId as ChainId) ? (
@@ -167,7 +167,7 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                                   })()}
                                 </div>
                               ) : (
-                                <div className="w-3 h-3 rounded-full bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] flex items-center justify-center text-xs font-medium text-foreground">
+                                <div className="w-3 h-3 rounded-full bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] flex items-center justify-center text-xs font-medium text-foreground">
                                   {strategy.chainId === CHAIN_IDS.BASE ? 'B' : 'E'}
                                 </div>
                               )}

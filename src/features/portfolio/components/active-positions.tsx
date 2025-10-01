@@ -52,11 +52,11 @@ interface ActivePositionsProps {
 const getRiskLevelColor = (riskLevel: string) => {
   switch (riskLevel) {
     case 'low':
-      return 'text-[var(--state-success-text)] bg-[color-mix(in_srgb,var(--state-success-text) 15%,transparent)] border-[color-mix(in_srgb,var(--state-success-text) 25%,transparent)]'
+      return 'text-[var(--state-success-text)] bg-[color-mix(in_srgb,var(--state-success-text)_15%,transparent)] border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)]'
     case 'medium':
-      return 'text-[var(--state-warning-text)] bg-[color-mix(in_srgb,var(--state-warning-text) 15%,transparent)] border-[color-mix(in_srgb,var(--state-warning-text) 25%,transparent)]'
+      return 'text-[var(--state-warning-text)] bg-[color-mix(in_srgb,var(--state-warning-text)_15%,transparent)] border-[color-mix(in_srgb,var(--state-warning-text)_25%,transparent)]'
     case 'high':
-      return 'text-[var(--state-error-text)] bg-[color-mix(in_srgb,var(--state-error-text) 15%,transparent)] border-[color-mix(in_srgb,var(--state-error-text) 25%,transparent)]'
+      return 'text-[var(--state-error-text)] bg-[color-mix(in_srgb,var(--state-error-text)_15%,transparent)] border-[color-mix(in_srgb,var(--state-error-text)_25%,transparent)]'
     default:
       return 'text-[var(--text-secondary)] border-[var(--divider-line)]'
   }
@@ -134,7 +134,7 @@ export function ActivePositions({
   return (
     <Card
       className={cn(
-        'bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]',
+        'bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] border border-[var(--divider-line)]',
         className,
       )}
     >
@@ -142,7 +142,7 @@ export function ActivePositions({
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-foreground">Active Positions</h3>
-            <Badge className="bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] text-[var(--text-secondary)] border-[var(--divider-line)]">
+            <Badge className="bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] text-[var(--text-secondary)] border-[var(--divider-line)]">
               {activeCount} Active Position{activeCount !== 1 ? 's' : ''}
             </Badge>
           </div>
@@ -150,7 +150,7 @@ export function ActivePositions({
           <div className="space-y-4">
             {positions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] flex items-center justify-center mb-4">
                   <TrendingUp className="h-8 w-8 text-[var(--text-muted)]" />
                 </div>
                 <h3 className="text-lg font-medium text-[var(--text-secondary)] mb-2">
@@ -172,7 +172,7 @@ export function ActivePositions({
                   // biome-ignore lint/a11y/useSemanticElements: Cannot use button here due to nested button elements (tooltip triggers)
                   <div
                     key={position.id}
-                    className="w-full text-left bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] border border-[var(--divider-line)] rounded-lg p-4 hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] hover:border-[var(--nav-border-active)] transition-all duration-200 cursor-pointer group"
+                    className="w-full text-left bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] border border-[var(--divider-line)] rounded-lg p-4 hover:bg-[color-mix(in_srgb,var(--surface-elevated)_45%,transparent)] hover:border-[var(--nav-border-active)] transition-all duration-200 cursor-pointer group"
                     onClick={() => onPositionClick?.(position)}
                     role="button"
                     tabIndex={0}
@@ -191,7 +191,7 @@ export function ActivePositions({
                           className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
                             isLeverageToken && position.collateralAsset && position.debtAsset
                               ? ''
-                              : 'bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] border border-[var(--divider-line)] p-1'
+                              : 'bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] border border-[var(--divider-line)] p-1'
                           }`}
                         >
                           {isLeverageToken && position.collateralAsset && position.debtAsset ? (
@@ -254,7 +254,7 @@ export function ActivePositions({
                                 position.riskLevel.slice(1)}{' '}
                               Risk
                             </Badge>
-                            <Badge className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] text-[var(--text-secondary)]">
+                            <Badge className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] text-[var(--text-secondary)]">
                               {getTypeLabel(position.type)}
                             </Badge>
                           </div>
@@ -323,7 +323,7 @@ export function ActivePositions({
                           <Button
                             size="sm"
                             variant="outline"
-                            className="w-full lg:w-auto flex-1 lg:flex-none border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]"
+                            className="w-full lg:w-auto flex-1 lg:flex-none border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] hover:text-[var(--text-primary)]"
                             onClick={(e) => {
                               e.stopPropagation()
                               onAction(secondaryAction, position)

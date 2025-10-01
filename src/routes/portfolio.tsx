@@ -78,7 +78,7 @@ function PortfolioPage() {
         {/* Portfolio Summary Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Total Portfolio Value Card */}
-          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-6 w-6 rounded-full" />
@@ -88,7 +88,7 @@ function PortfolioPage() {
           </div>
 
           {/* Total Earnings Card */}
-          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-4 w-28" />
               <Skeleton className="h-6 w-6 rounded-full" />
@@ -98,7 +98,7 @@ function PortfolioPage() {
           </div>
 
           {/* Active Positions Card */}
-          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-4 w-28" />
               <Skeleton className="h-6 w-6 rounded-full" />
@@ -109,7 +109,7 @@ function PortfolioPage() {
         </div>
 
         {/* Portfolio Performance Chart Skeleton */}
-        <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+        <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] p-6">
           <div className="flex items-center justify-between mb-6">
             <Skeleton className="h-6 w-40" />
             <div className="flex space-x-2">
@@ -123,7 +123,7 @@ function PortfolioPage() {
         </div>
 
         {/* Active Positions Table Skeleton */}
-        <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+        <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] p-6">
           <Skeleton className="h-6 w-32 mb-4" />
           <div className="space-y-4">
             {/* Table header */}
@@ -152,7 +152,7 @@ function PortfolioPage() {
         {/* Rewards and Staking Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Available Rewards Card */}
-          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-6 w-6 rounded-full" />
               <Skeleton className="h-4 w-20" />
@@ -170,7 +170,7 @@ function PortfolioPage() {
           </div>
 
           {/* SEAM Staking Card */}
-          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-6 w-6 rounded-full" />
               <div className="flex items-center space-x-2">
@@ -353,7 +353,7 @@ function PortfolioPage() {
               onTimeframeChange={performanceData.setSelectedTimeframe}
             />
             {performanceData.isLoading && (
-              <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] backdrop-blur-sm flex items-center justify-center rounded-xl">
+              <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] backdrop-blur-sm flex items-center justify-center rounded-xl">
                 <div className="text-[var(--text-secondary)]">Loading chart data...</div>
               </div>
             )}
@@ -375,7 +375,7 @@ function PortfolioPage() {
             {features.availableRewards && (
               <div className="relative">
                 {rewardsLoading ? (
-                  <div className="bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)] rounded-lg p-6">
+                  <div className="bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] border border-[var(--divider-line)] rounded-lg p-6">
                     {/* Header skeleton */}
                     <div className="flex items-center mb-4">
                       <Skeleton className="h-5 w-5 mr-2 rounded" />
@@ -427,7 +427,7 @@ function PortfolioPage() {
             {features.seamStaking && (
               <div className="relative">
                 {stakingLoading ? (
-                  <div className="bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)] rounded-lg p-6">
+                  <div className="bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] border border-[var(--divider-line)] rounded-lg p-6">
                     {/* Header skeleton */}
                     <div className="flex items-center mb-4">
                       <Skeleton className="h-5 w-5 mr-2 rounded" />

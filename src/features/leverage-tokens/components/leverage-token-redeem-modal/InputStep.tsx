@@ -170,7 +170,7 @@ export function InputStep({
     <div className="space-y-6">
       <Card
         variant="gradient"
-        className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+        className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-4"
       >
         <h4 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Your Position</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -250,7 +250,7 @@ export function InputStep({
 
         <Card
           variant="gradient"
-          className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+          className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-4"
         >
           <div className="mb-3 flex items-center justify-between">
             <div className="flex-1">
@@ -275,7 +275,7 @@ export function InputStep({
             </div>
 
             <div className="ml-4 flex items-center space-x-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand-secondary) 20%,transparent)]">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand-secondary)_20%,transparent)]">
                 <TrendingDown className="h-3 w-3 text-[var(--brand-secondary)]" />
               </div>
               <span className="text-sm font-medium text-[var(--text-primary)]">Tokens</span>
@@ -290,7 +290,7 @@ export function InputStep({
                   variant="outline"
                   size="sm"
                   onClick={() => onPercentageClick(percentage)}
-                  className="h-7 border border-[var(--divider-line)] px-2 text-xs text-[var(--text-secondary)] transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]"
+                  className="h-7 border border-[var(--divider-line)] px-2 text-xs text-[var(--text-secondary)] transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] hover:text-[var(--text-primary)]"
                 >
                   {percentage === 100 ? 'MAX' : `${percentage}%`}
                 </Button>
@@ -301,7 +301,7 @@ export function InputStep({
               variant="ghost"
               size="sm"
               onClick={onToggleAdvanced}
-              className="text-[var(--brand-secondary)] transition-colors hover:text-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]"
+              className="text-[var(--brand-secondary)] transition-colors hover:text-[color-mix(in_srgb,var(--brand-secondary)_85%,black_15%)]"
             >
               <Settings className="mr-1 h-4 w-4 text-[inherit]" />
               Advanced
@@ -312,7 +312,7 @@ export function InputStep({
         {showAdvanced && (
           <Card
             variant="gradient"
-            className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+            className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-4"
           >
             <div className="flex items-center justify-between">
               <div className="text-xs font-medium text-[var(--text-primary)]">
@@ -328,8 +328,8 @@ export function InputStep({
                     className={cn(
                       'h-8 px-3 text-xs transition-colors',
                       slippage === value
-                        ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]'
-                        : 'border border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]',
+                        ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary)_85%,black_15%)]'
+                        : 'border border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] hover:text-[var(--text-primary)]',
                     )}
                   >
                     {value}%
@@ -363,8 +363,8 @@ export function InputStep({
               className={cn(
                 'flex-1 transition-colors',
                 selectedAssetId === asset.id
-                  ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]'
-                  : 'border border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]',
+                  ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary)_85%,black_15%)]'
+                  : 'border border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] hover:text-[var(--text-primary)]',
                 disabledAssets.includes(asset.id) && 'cursor-not-allowed opacity-50',
               )}
             >
@@ -376,7 +376,7 @@ export function InputStep({
 
       <Card
         variant="gradient"
-        className="gap-2 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+        className="gap-2 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-4"
       >
         <h4 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Transaction Summary</h4>
         <div className="space-y-2 text-sm">
@@ -433,7 +433,7 @@ export function InputStep({
         </div>
       </Card>
 
-      <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-3">
+      <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-3">
         <div className="flex items-center text-sm text-[var(--text-secondary)]">
           <TrendingDown className="mr-2 h-4 w-4 text-[var(--state-warning-text)]" />
           <div>

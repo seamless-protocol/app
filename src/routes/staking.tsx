@@ -27,7 +27,7 @@ function StakingPage() {
     <div className="min-h-screen w-full overflow-hidden">
       <div className="w-full max-w-7xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-4 lg:px-8">
         {/* Base Chain Network Requirement Notice */}
-        <div className="bg-[color-mix(in_srgb,var(--brand-primary) 15%,transparent)] border border-[color-mix(in_srgb,var(--brand-primary) 25%,transparent)] rounded-lg p-4 mb-8">
+        <div className="bg-[color-mix(in_srgb,var(--brand-primary)_15%,transparent)] border border-[color-mix(in_srgb,var(--brand-primary)_25%,transparent)] rounded-lg p-4 mb-8">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-[var(--brand-primary)] rounded-lg flex items-center justify-center">
               <Network className="h-5 w-5 text-foreground" />
@@ -37,7 +37,7 @@ function StakingPage() {
                 <h3 className="font-semibold text-foreground">Base Chain Required</h3>
                 <Badge
                   variant="outline"
-                  className="border-[color-mix(in_srgb,var(--brand-primary) 25%,transparent)] text-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary) 10%,transparent)]"
+                  className="border-[color-mix(in_srgb,var(--brand-primary)_25%,transparent)] text-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary)_10%,transparent)]"
                 >
                   Base
                 </Badge>
@@ -55,7 +55,7 @@ function StakingPage() {
           {/* Right Panel - Stake Widget Placeholder (shows first on mobile) */}
           <div className="xl:col-span-1 xl:order-2 order-1">
             <div className="sticky top-6">
-              <Card className="bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]">
+              <Card className="bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] border border-[var(--divider-line)]">
                 <CardContent>
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -98,7 +98,7 @@ function StakingPage() {
               />
 
               {/* Claimable Rewards - Custom card with claim button */}
-              <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border-[var(--divider-line)]">
+              <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] border-[var(--divider-line)]">
                 <div className="[&:last-child]:pb-6 p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -121,7 +121,7 @@ function StakingPage() {
                         !rewardsData?.claimableRewardsAmount ||
                         rewardsData.claimableRewardsAmount === '0.00 SEAM'
                       }
-                      className="bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] text-foreground px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_45%,transparent)] text-foreground px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Claim
                     </Button>
@@ -170,7 +170,7 @@ function StakingPage() {
             </div>
 
             {/* Rewards Table */}
-            <Card className="bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]">
+            <Card className="bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] border border-[var(--divider-line)]">
               <CardContent>
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <h3 className="text-lg text-foreground">Implement Rewards Table</h3>

@@ -91,7 +91,7 @@ export function PortfolioPerformanceChart({
 
   return (
     <Card
-      className={`bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)] ${className}`}
+      className={`bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] border border-[var(--divider-line)] ${className}`}
     >
       <CardHeader className="pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
@@ -164,7 +164,7 @@ export function PortfolioPerformanceChart({
             </ResponsiveContainer>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 rounded-full bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] flex items-center justify-center mb-4">
                 <TrendingUp className="h-8 w-8 text-[var(--text-muted)]" />
               </div>
               <h3 className="text-lg font-medium text-[var(--text-secondary)] mb-2">

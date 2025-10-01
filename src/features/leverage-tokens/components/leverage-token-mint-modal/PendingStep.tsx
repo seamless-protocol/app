@@ -25,7 +25,7 @@ export function PendingStep({ selectedToken, amount, leverageTokenConfig }: Pend
   return (
     <div className="space-y-6 text-center">
       <div className="flex flex-col items-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand-secondary) 20%,transparent)]">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand-secondary)_20%,transparent)]">
           <Loader2 className="h-8 w-8 animate-spin text-[var(--brand-secondary)]" />
         </div>
         <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">Processing Mint</h3>
@@ -36,7 +36,7 @@ export function PendingStep({ selectedToken, amount, leverageTokenConfig }: Pend
 
       <Card
         variant="gradient"
-        className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+        className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-4"
       >
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">

@@ -79,7 +79,7 @@ export function LeverageTokenHoldingsCard({
     >
       <Card
         className={cn(
-          'border border-[var(--divider-line)] text-[var(--text-primary)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]',
+          'border border-[var(--divider-line)] text-[var(--text-primary)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]',
           className,
         )}
         data-testid="leverage-token-holdings-card"
@@ -99,7 +99,7 @@ export function LeverageTokenHoldingsCard({
                       <AssetDisplay asset={debtAsset} size="md" variant="logo-only" />
                     </div>
                   ) : (
-                    <div className="w-8 h-8 rounded-full border-2 border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 85%,transparent)] flex items-center justify-center overflow-hidden">
+                    <div className="w-8 h-8 rounded-full border-2 border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_85%,transparent)] flex items-center justify-center overflow-hidden">
                       <Zap className="w-4 h-4 text-[var(--brand-secondary)]" />
                     </div>
                   )}

@@ -213,7 +213,7 @@ export function LeverageTokenTable({
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+        className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-4"
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
@@ -250,7 +250,7 @@ export function LeverageTokenTable({
                 placeholder="Search leverage tokens..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex min-w-0 rounded-md border px-3 py-1 text-base outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pl-10 w-64 h-8 transition-all duration-200 focus:w-80 bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] border-[var(--divider-line)] text-[var(--text-primary)]"
+                className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex min-w-0 rounded-md border px-3 py-1 text-base outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pl-10 w-64 h-8 transition-all duration-200 focus:w-80 bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] border-[var(--divider-line)] text-[var(--text-primary)]"
               />
             </div>
           </div>
@@ -299,12 +299,12 @@ export function LeverageTokenTable({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="hidden w-full overflow-hidden rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] lg:block"
+        className="hidden w-full overflow-hidden rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] lg:block"
       >
         <div className="overflow-x-auto w-full max-w-full">
           <Table>
             <TableHeader>
-              <TableRow className="border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]">
+              <TableRow className="border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)]">
                 <TableHead className="py-4 px-6 min-w-[200px] text-[var(--text-secondary)] font-medium">
                   <button
                     type="button"
@@ -374,7 +374,7 @@ export function LeverageTokenTable({
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="cursor-pointer border-[var(--divider-line)] transition-colors hover:bg-[color-mix(in_srgb,var(--brand-secondary) 22%,var(--surface-card) 78%)]"
+                      className="cursor-pointer border-[var(--divider-line)] transition-colors hover:bg-[color-mix(in_srgb,var(--brand-secondary)_22%,var(--surface-card)_78%)]"
                       onClick={() => onTokenClick?.(token)}
                     >
                       <TableCell className="py-4 px-6">
@@ -482,7 +482,7 @@ export function LeverageTokenTable({
                                 <Info className="h-3 w-3" />
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
+                            <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]">
                               <APYBreakdownTooltip
                                 token={token}
                                 compact
@@ -500,7 +500,7 @@ export function LeverageTokenTable({
                       </TableCell>
 
                       <TableCell className="py-4 px-6 text-center">
-                        <div className="inline-flex items-center space-x-1 rounded-full border border-[var(--divider-line)] px-2 py-1 transition-colors bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 55%,transparent)]">
+                        <div className="inline-flex items-center space-x-1 rounded-full border border-[var(--divider-line)] px-2 py-1 transition-colors bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_55%,transparent)]">
                           <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center">
                             <token.chainLogo className="w-3 h-3" />
                           </div>

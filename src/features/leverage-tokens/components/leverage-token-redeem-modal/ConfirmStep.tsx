@@ -62,7 +62,7 @@ export function ConfirmStep({
 
       <Card
         variant="gradient"
-        className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+        className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-4"
       >
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -93,7 +93,7 @@ export function ConfirmStep({
 
       <Card
         variant="gradient"
-        className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+        className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-4"
       >
         <h4 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Final Summary</h4>
         <div className="space-y-2 text-sm">

@@ -37,7 +37,7 @@ export function LeverageTokenMobileCard({
       transition={{ duration: 0.3 }}
     >
       <Card
-        className="w-full cursor-pointer transform transition-all duration-300 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] hover:border-[var(--nav-border-active)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10"
+        className="w-full cursor-pointer transform transition-all duration-300 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] hover:border-[var(--nav-border-active)] hover:bg-[color-mix(in_srgb,var(--surface-elevated)_45%,transparent)] hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10"
         onClick={handleClick}
       >
         <CardContent className="p-4">
@@ -94,7 +94,7 @@ export function LeverageTokenMobileCard({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent
-                    className="z-50 p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]"
+                    className="z-50 p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]"
                     side="top"
                     align="end"
                     sideOffset={8}
@@ -120,7 +120,7 @@ export function LeverageTokenMobileCard({
             {/* Network Row */}
             <div className="flex justify-between items-center">
               <span className="text-sm text-[var(--text-secondary)]">Network</span>
-              <div className="inline-flex items-center space-x-1 rounded-full border border-[var(--divider-line)] px-2 py-1 bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]">
+              <div className="inline-flex items-center space-x-1 rounded-full border border-[var(--divider-line)] px-2 py-1 bg-[color-mix(in_srgb,var(--surface-elevated)_35%,transparent)]">
                 <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center">
                   <token.chainLogo className="w-3 h-3" />
                 </div>

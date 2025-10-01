@@ -24,7 +24,7 @@ function StatCard({
     <div
       data-slot="card"
       className={cn(
-        'flex flex-col gap-6 rounded-xl border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] text-[var(--text-primary)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)]',
+        'flex flex-col gap-6 rounded-xl border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] text-[var(--text-primary)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--surface-elevated)_45%,transparent)]',
         className,
       )}
     >

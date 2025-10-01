@@ -354,7 +354,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                           <Info className="h-3 w-3" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
+                      <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]">
                         <APYBreakdownTooltip
                           token={tokenConfig}
                           {...(apyData && { apyData })}
@@ -457,7 +457,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                           <Info className="h-3 w-3" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]">
+                      <TooltipContent className="p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] border border-[var(--divider-line)]">
                         <APYBreakdownTooltip
                           token={tokenConfig}
                           {...(apyData && { apyData })}
@@ -515,7 +515,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                 transition={{ duration: 0.4, delay: 0.3 }}
               >
                 {isPriceDataLoading ? (
-                  <div className="rounded-lg p-8 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
+                  <div className="rounded-lg p-8 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_94%,transparent)]">
                     <div className="space-y-4">
                       <Skeleton className="h-6 w-32" />
                       <Skeleton className="h-64 w-full" />
@@ -528,12 +528,12 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     </div>
                   </div>
                 ) : priceDataError ? (
-                  <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
+                  <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_94%,transparent)]">
                     <p className="mb-2 text-[var(--state-error-text)]">Failed to load price data</p>
                     <p className="text-sm text-[var(--text-secondary)]">{priceDataError.message}</p>
                   </div>
                 ) : !priceHistoryData || priceHistoryData.length === 0 ? (
-                  <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
+                  <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_94%,transparent)]">
                     <p className="text-[var(--text-secondary)]">No price data available</p>
                   </div>
                 ) : (
@@ -566,7 +566,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     title="Price History"
                     subtitle={`Compare leverage token performance vs ${tokenConfig.collateralAsset.symbol}`}
                     height={320}
-                    className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]"
+                    className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card)_94%,transparent)]"
                   />
                 )}
               </motion.div>
