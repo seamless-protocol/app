@@ -1,4 +1,4 @@
-import { type Address, parseUnits } from 'viem'
+import { type Address, erc20Abi, parseUnits } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
 import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
@@ -10,7 +10,7 @@ import {
 } from '@/lib/contracts/generated'
 import { ADDR, CHAIN_ID, mode } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
-import { approveIfNeeded, seedUniswapV2PairLiquidity } from '../../../shared/funding'
+import { approveIfNeeded } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
 
@@ -145,18 +145,11 @@ async function performRedeem(
   const sharesToRedeem = sharesAfterMint
   await approveIfNeeded(token, router, sharesToRedeem)
 
-  // For determinism in tests, seed Uniswap v2 pair liquidity and use v2 routing
-  const uniswapV2Router = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D' as Address
-  await seedUniswapV2PairLiquidity({
-    router: uniswapV2Router,
-    tokenA: collateralAsset,
-    tokenB: debtAsset,
-  })
-
+  // Mirror production: use LiFi for the repay leg (same-chain, bridges disabled)
   const { quote: quoteCollateralToDebt } = createCollateralToDebtQuote({
     chainId,
     routerAddress: router,
-    swap: { type: 'uniswapV2', router: uniswapV2Router },
+    swap: { type: 'lifi', allowBridges: 'none' },
     slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
   })
@@ -172,19 +165,19 @@ async function performRedeem(
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 
-  const collateralBalanceBefore = (await publicClient.readContract({
+  const collateralBalanceBefore = await publicClient.readContract({
     address: collateralAsset,
-    abi: (await import('../../../shared/funding')).erc20Abi,
+    abi: erc20Abi,
     functionName: 'balanceOf',
     args: [account.address],
-  })) as bigint
+  })
 
-  const debtBalanceBefore = (await publicClient.readContract({
+  const debtBalanceBefore = await publicClient.readContract({
     address: debtAsset,
-    abi: (await import('../../../shared/funding')).erc20Abi,
+    abi: erc20Abi,
     functionName: 'balanceOf',
     args: [account.address],
-  })) as bigint
+  })
 
   const sharesBeforeRedeem = await readLeverageTokenBalanceOf(config, {
     address: token,
@@ -216,14 +209,14 @@ async function performRedeem(
 
   const collateralBalanceAfter = await publicClient.readContract({
     address: collateralAsset,
-    abi: (await import('../../../shared/funding')).erc20Abi,
+    abi: erc20Abi,
     functionName: 'balanceOf',
     args: [account.address],
   })
 
   const debtBalanceAfter = await publicClient.readContract({
     address: debtAsset,
-    abi: (await import('../../../shared/funding')).erc20Abi,
+    abi: erc20Abi,
     functionName: 'balanceOf',
     args: [account.address],
   })

@@ -14,7 +14,7 @@ import {
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
 import { calculateMinCollateralForSender } from '../utils/slippage'
-import type { QuoteFn } from './types'
+import type { Quote, QuoteFn } from './types'
 
 // Local structural types (avoid brittle codegen coupling)
 type TokenArg = Address
@@ -132,7 +132,7 @@ export async function planRedeemV2(params: {
   const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeCollateralPath ? ETH_SENTINEL : collateralAsset
 
-  const collateralNeededForDebt = await calculateCollateralNeededForDebt({
+  const sizing = await calculateCollateralNeededForDebt({
     debtAsset,
     debtToRepay,
     quoteCollateralToDebt,
@@ -140,19 +140,18 @@ export async function planRedeemV2(params: {
     inTokenForQuote,
   })
 
-  // Ensure we have enough collateral to repay the debt
-  if (collateralNeededForDebt > totalCollateralAvailable) {
+  const requiredForDebt = sizing.required
+  if (requiredForDebt > totalCollateralAvailable) {
     throw new Error('Insufficient collateral to repay debt')
   }
 
-  // Pad the swap input slightly so rounding/flooring during execution does not leave us
-  // a few wei short when repaying debt (e.g. Uniswap V2 floors amountsOut). Single wei
-  // padding keeps amountOutMin effectively unchanged but gives Morpho pulls a cushion.
-  const padding =
-    collateralNeededForDebt > 0n && totalCollateralAvailable > collateralNeededForDebt ? 1n : 0n
-  const paddedCollateralForDebt = collateralNeededForDebt + padding
+  const padding = sizing.exactOut
+    ? 0n
+    : requiredForDebt > 0n && totalCollateralAvailable > requiredForDebt
+      ? 1n
+      : 0n
+  const paddedCollateralForDebt = requiredForDebt + padding
   const remainingCollateral = totalCollateralAvailable - paddedCollateralForDebt
-  // Build the collateral->debt swap calls
   const { calls: swapCalls } = await buildCollateralToDebtSwapCalls({
     collateralAsset,
     debtAsset,
@@ -160,6 +159,7 @@ export async function planRedeemV2(params: {
     quoteCollateralToDebt,
     inTokenForQuote,
     useNativeCollateralPath,
+    ...(sizing.preQuote ? { preQuote: sizing.preQuote } : {}),
   })
 
   const collateralAddr = getAddress(collateralAsset)
@@ -241,13 +241,30 @@ async function calculateCollateralNeededForDebt(args: {
   quoteCollateralToDebt: QuoteFn
   maxCollateralAvailable: bigint
   inTokenForQuote: Address
-}): Promise<bigint> {
+}): Promise<{ required: bigint; preQuote?: Quote; exactOut?: boolean }> {
   const { debtAsset, debtToRepay, quoteCollateralToDebt, maxCollateralAvailable, inTokenForQuote } =
     args
 
-  if (debtToRepay <= 0n) return 0n
+  if (debtToRepay <= 0n) return { required: 0n }
   if (maxCollateralAvailable <= 0n) {
     throw new Error('No collateral available to repay debt')
+  }
+
+  // Try a single exact-out quote first; fall back to iterative exact-in sizing if unavailable.
+  try {
+    const qo = await quoteCollateralToDebt({
+      inToken: inTokenForQuote,
+      outToken: debtAsset,
+      amountIn: 0n,
+      amountOut: debtToRepay,
+      intent: 'exactOut',
+    })
+    if (typeof qo.maxIn === 'bigint' && qo.maxIn > 0n) {
+      const required = qo.maxIn > maxCollateralAvailable ? maxCollateralAvailable : qo.maxIn
+      return { required, preQuote: qo, exactOut: true }
+    }
+  } catch {
+    // ignore and fallback to iterative sizing below
   }
 
   const upperBound = maxCollateralAvailable
@@ -257,6 +274,7 @@ async function calculateCollateralNeededForDebt(args: {
   }
 
   let previous: bigint | undefined
+  let lastRequired: bigint | undefined
   for (let i = 0; i < 12; i++) {
     if (attempt <= 0n) {
       attempt = 1n
@@ -277,18 +295,24 @@ async function calculateCollateralNeededForDebt(args: {
     }
 
     const required = mulDivCeil(debtToRepay, attempt, quote.out)
+    lastRequired = required
     if (required > upperBound) {
       throw new Error('Insufficient collateral to repay debt')
     }
 
     if (required === attempt || (typeof previous !== 'undefined' && required === previous)) {
-      return applyRequiredBuffer({ required, maxCollateralAvailable: upperBound })
+      return { required: applyRequiredBuffer({ required, maxCollateralAvailable: upperBound }) }
     }
 
     previous = attempt
     attempt = required
   }
 
+  if (typeof lastRequired === 'bigint') {
+    return {
+      required: applyRequiredBuffer({ required: lastRequired, maxCollateralAvailable: upperBound }),
+    }
+  }
   throw new Error('Collateral sizing did not converge within iteration limit')
 }
 
@@ -317,6 +341,7 @@ async function buildCollateralToDebtSwapCalls(args: {
   quoteCollateralToDebt: QuoteFn
   inTokenForQuote: Address
   useNativeCollateralPath: boolean
+  preQuote?: Quote
 }): Promise<{ calls: V2Calls; expectedDebtOut: bigint }> {
   const {
     collateralAsset,
@@ -331,11 +356,13 @@ async function buildCollateralToDebtSwapCalls(args: {
     return { calls: [], expectedDebtOut: 0n }
   }
 
-  const quote = await quoteCollateralToDebt({
-    inToken: inTokenForQuote,
-    outToken: debtAsset,
-    amountIn: collateralAmount,
-  })
+  const quote =
+    args.preQuote ??
+    (await quoteCollateralToDebt({
+      inToken: inTokenForQuote,
+      outToken: debtAsset,
+      amountIn: collateralAmount,
+    }))
 
   const calls: V2Calls = []
 

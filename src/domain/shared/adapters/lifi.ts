@@ -25,6 +25,7 @@ type StepEstimate = {
   toAmount?: string
   toAmountMin?: string
   approvalAddress?: string
+  fromAmount?: string
 }
 
 type TransactionRequest = {
@@ -44,6 +45,23 @@ type Step = {
  * - Uses router as fromAddress since router executes the swap inside router calls.
  */
 
+function readEnv(name: string): string | undefined {
+  // Prefer Vite/Vitest env when available (browser/E2E/dev server)
+  if (typeof import.meta !== 'undefined') {
+    const env = (import.meta as unknown as { env?: Record<string, unknown> }).env
+    if (env && Object.hasOwn(env, name)) {
+      const v = env[name]
+      return typeof v === 'string' ? v : v != null ? String(v) : undefined
+    }
+    // If import.meta.env exists but key is missing, treat as undefined
+    if (env) return undefined
+  }
+  // Node/test fallback without referencing a non-existent global in browsers
+  if (typeof import.meta === 'undefined' && typeof process !== 'undefined' && process.env) {
+    return process.env[name]
+  }
+  return undefined
+}
 export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
   const {
     chainId = base.id,
@@ -53,26 +71,24 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     // Always use li.quest as documented by LiFi for /v1/quote
     baseUrl = opts.baseUrl ?? 'https://li.quest',
     // Read from Vite env in browser; avoid referencing process.env in client bundles
-    apiKey = opts.apiKey ?? import.meta.env['VITE_LIFI_API_KEY'] ?? import.meta.env['LIFI_API_KEY'],
+    apiKey = opts.apiKey ?? readEnv('VITE_LIFI_API_KEY') ?? readEnv('LIFI_API_KEY'),
     order = 'CHEAPEST',
     // Support browser env only; tests can pass via opts
-    integrator = opts.integrator ??
-      import.meta.env['VITE_LIFI_INTEGRATOR'] ??
-      import.meta.env['LIFI_INTEGRATOR'],
+    integrator = opts.integrator ?? readEnv('VITE_LIFI_INTEGRATOR') ?? readEnv('LIFI_INTEGRATOR'),
     allowBridges,
   } = opts
-
-  console.log('apiKey', apiKey)
 
   const headers = buildHeaders(apiKey)
   const slippage = bpsToDecimalString(slippageBps)
 
-  return async ({ inToken, outToken, amountIn }) => {
+  return async ({ inToken, outToken, amountIn, amountOut, intent }) => {
     const url = buildQuoteUrl(baseUrl, {
       chainId,
       inToken,
       outToken,
       amountIn,
+      ...(typeof amountOut === 'bigint' ? { amountOut } : {}),
+      ...(intent ? { intent } : {}),
       router,
       // The on-chain swap is executed inside the router flow. When a MulticallExecutor
       // is used, it may be the effective token holder and caller for the swap.
@@ -85,12 +101,13 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       ...(allowBridges ? { allowBridges } : {}),
     })
 
-    if ((import.meta.env['VITE_LIFI_DEBUG'] ?? import.meta.env['LIFI_DEBUG']) === '1') {
+    if ((readEnv('VITE_LIFI_DEBUG') ?? readEnv('LIFI_DEBUG')) === '1') {
       // Intentionally avoid logging the API key value
       console.info('[LiFi] quote', {
         baseUrl,
         hasApiKey: Boolean(apiKey),
         url: url.toString(),
+        intent: intent ?? 'exactIn',
       })
     }
     const res = await fetch(url.toString(), { method: 'GET', headers })
@@ -118,6 +135,8 @@ function buildQuoteUrl(
     inToken: Address
     outToken: Address
     amountIn: bigint
+    amountOut?: bigint
+    intent?: 'exactIn' | 'exactOut'
     router: Address
     fromAddress: Address
     slippage: string
@@ -126,12 +145,24 @@ function buildQuoteUrl(
     allowBridges?: string
   },
 ): URL {
-  const url = new URL('/v1/quote', baseUrl)
+  // Use LiFi's dedicated endpoints for clarity:
+  // - exact-in:  /v1/quote (fromAmount in query)
+  // - exact-out: /v1/quote/toAmount (toAmount in query)
+  const url = new URL(params.intent === 'exactOut' ? '/v1/quote/toAmount' : '/v1/quote', baseUrl)
   url.searchParams.set('fromChain', String(params.chainId))
   url.searchParams.set('toChain', String(params.chainId))
   url.searchParams.set('fromToken', getAddress(params.inToken))
   url.searchParams.set('toToken', getAddress(params.outToken))
-  url.searchParams.set('fromAmount', params.amountIn.toString())
+  // Per LiFi docs, exact-out quotes must provide `toAmount`.
+  // Exact-in quotes provide `fromAmount`.
+  if (params.intent === 'exactOut') {
+    if (typeof params.amountOut !== 'bigint') {
+      throw new Error('LiFi exact-out quote requires amountOut')
+    }
+    url.searchParams.set('toAmount', params.amountOut.toString())
+  } else {
+    url.searchParams.set('fromAmount', params.amountIn.toString())
+  }
   url.searchParams.set('fromAddress', getAddress(params.fromAddress))
   url.searchParams.set('slippage', params.slippage)
   if (params.integrator) url.searchParams.set('integrator', params.integrator)
@@ -149,10 +180,12 @@ function mapStepToQuote(step: Step) {
 
   const outStr = step.estimate?.toAmountMin || step.estimate?.toAmount
   const out = outStr ? BigInt(outStr) : 0n
+  const maxIn = step.estimate?.fromAmount ? BigInt(step.estimate.fromAmount) : undefined
 
   return {
     out,
     minOut: out,
+    ...(typeof maxIn === 'bigint' ? { maxIn } : {}),
     approvalTarget: getAddress(approvalTarget),
     calldata: data,
   }

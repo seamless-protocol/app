@@ -402,9 +402,11 @@ export function LeverageTokenMintModal({
             isCollateralBalanceLoading={isCollateralBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
             isCalculating={
-              planPreview.isLoading ||
-              (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
-                quoteDebtToCollateral.status !== 'ready')
+              typeof form.amountRaw === 'bigint' &&
+              form.amountRaw > 0n &&
+              (planPreview.isLoading ||
+                (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
+                  quoteDebtToCollateral.status !== 'ready'))
             }
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
