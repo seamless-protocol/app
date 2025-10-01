@@ -148,6 +148,11 @@ bun build
 # Deploy dist/ folder to IPFS
 ```
 
+## Documentation
+
+- **[Adding Leverage Tokens](docs/adding-leverage-tokens.md)** - Complete guide for adding new leverage tokens to the protocol
+- **[IPFS Deployment](docs/ipfs-deployment.md)** - Instructions for deploying to IPFS using GitHub Actions
+
 ## Contributing
 
 Please ensure all code passes checks before submitting PRs:
