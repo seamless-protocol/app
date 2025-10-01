@@ -139,11 +139,45 @@ jobs:
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless-protocol
 
+  test-integration-mainnet-jit:
+    name: Integration Tests (Mainnet, Tenderly JIT)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run mainnet JIT integration (wstETH/WETH redeem)
+        run: bun scripts/run-tests.ts integration -- tests/integration/leverage-tokens/redeem/router.v2.mainnet.redeem.spec.ts tests/integration/leverage-tokens/mint/router.v2.mainnet.mint.spec.ts
+        env:
+          # Tenderly JIT VNet credentials (required)
+          TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
+          TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
+          TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
+          TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
+          TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
+          # Target mainnet for the JIT fork
+          TENDERLY_CHAIN_ID: '1'
+          TEST_MODE: tenderly-jit
+          TEST_CHAIN: mainnet
+          # LiFi rate-limit controls
+          VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
+          VITE_LIFI_INTEGRATOR: seamless-protocol
+
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [check, test-unit, test-e2e, test-integration]
+    needs: [check, test-unit, test-e2e, test-integration, test-integration-mainnet-jit]
     
     steps:
       - name: Checkout code

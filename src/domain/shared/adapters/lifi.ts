@@ -46,20 +46,25 @@ type Step = {
  */
 
 function readEnv(name: string): string | undefined {
-  // Prefer Vite/Vitest env when available (browser/E2E/dev server)
-  if (typeof import.meta !== 'undefined') {
-    const env = (import.meta as unknown as { env?: Record<string, unknown> }).env
+  // Prefer Vite/Vitest env when available (browser/dev server)
+  // Note: in Node ESM, import.meta is defined but import.meta.env is undefined.
+  try {
+    const anyImportMeta = import.meta as unknown as { env?: Record<string, unknown> }
+    const env = anyImportMeta?.env
     if (env && Object.hasOwn(env, name)) {
       const v = env[name]
       return typeof v === 'string' ? v : v != null ? String(v) : undefined
     }
-    // If import.meta.env exists but key is missing, treat as undefined
-    if (env) return undefined
+  } catch {
+    // ignore and fall back
   }
-  // Node/test fallback without referencing a non-existent global in browsers
-  if (typeof import.meta === 'undefined' && typeof process !== 'undefined' && process.env) {
-    return process.env[name]
+
+  // Fallback to process.env when not available via import.meta.env
+  if (typeof process !== 'undefined' && process.env && name in process.env) {
+    const v = process.env[name]
+    return typeof v === 'string' ? v : v != null ? String(v) : undefined
   }
+
   return undefined
 }
 export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
