@@ -25,6 +25,8 @@ process.env['VITE_TEST_RPC_URL'] = BASE_RPC_URL
 process.env['TENDERLY_ADMIN_RPC_URL'] = ADMIN_RPC_URL
 process.env['VITE_CONTRACT_ADDRESS_OVERRIDES'] =
   process.env['VITE_CONTRACT_ADDRESS_OVERRIDES'] ?? ''
+process.env['VITE_LIFI_INTEGRATOR'] = process.env['VITE_LIFI_INTEGRATOR'] ?? ''
+process.env['VITE_LIFI_API_KEY'] = process.env['VITE_LIFI_API_KEY'] ?? ''
 
 export default defineConfig({
   testDir: './tests/e2e',

@@ -43,30 +43,6 @@ type Step = {
  * - Quotes are same-chain (Base -> Base) by default.
  * - Uses router as fromAddress since router executes the swap inside router calls.
  */
-function readEnv(name: string): string | undefined {
-  try {
-    const meta = import.meta as unknown as { env?: Record<string, string | undefined> }
-    if (meta?.env?.[name]) return meta.env[name]
-  } catch {
-    // ignore
-  }
-  // Allow Node/test environments to supply secrets without breaking the browser bundle.
-  // Safely access process via globalThis without using any.
-  const g: unknown = globalThis
-  if (
-    typeof g === 'object' &&
-    g !== null &&
-    'process' in g &&
-    typeof (g as { process?: unknown }).process === 'object' &&
-    (g as { process?: { env?: Record<string, string | undefined> } }).process?.env
-  ) {
-    const val = (g as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[
-      name
-    ]
-    if (val) return val
-  }
-  return undefined
-}
 
 export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
   const {
@@ -77,12 +53,16 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     // Always use li.quest as documented by LiFi for /v1/quote
     baseUrl = opts.baseUrl ?? 'https://li.quest',
     // Read from Vite env in browser; avoid referencing process.env in client bundles
-    apiKey = opts.apiKey ?? readEnv('VITE_LIFI_API_KEY') ?? readEnv('LIFI_API_KEY'),
+    apiKey = opts.apiKey ?? import.meta.env['VITE_LIFI_API_KEY'] ?? import.meta.env['LIFI_API_KEY'],
     order = 'CHEAPEST',
     // Support browser env only; tests can pass via opts
-    integrator = opts.integrator ?? readEnv('VITE_LIFI_INTEGRATOR') ?? readEnv('LIFI_INTEGRATOR'),
+    integrator = opts.integrator ??
+      import.meta.env['VITE_LIFI_INTEGRATOR'] ??
+      import.meta.env['LIFI_INTEGRATOR'],
     allowBridges,
   } = opts
+
+  console.log('apiKey', apiKey)
 
   const headers = buildHeaders(apiKey)
   const slippage = bpsToDecimalString(slippageBps)
@@ -105,7 +85,7 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       ...(allowBridges ? { allowBridges } : {}),
     })
 
-    if ((readEnv('VITE_LIFI_DEBUG') ?? readEnv('LIFI_DEBUG')) === '1') {
+    if ((import.meta.env['VITE_LIFI_DEBUG'] ?? import.meta.env['LIFI_DEBUG']) === '1') {
       // Intentionally avoid logging the API key value
       console.info('[LiFi] quote', {
         baseUrl,
