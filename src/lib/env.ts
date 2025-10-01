@@ -5,9 +5,7 @@
 // Required environment variables that must be present
 const REQUIRED_ENV_VARS = [
   'VITE_WALLETCONNECT_PROJECT_ID',
-  'VITE_BASE_RPC_URL',
-  'VITE_ETHEREUM_RPC_URL',
-  'VITE_THEGRAPH_API_KEY',
+    'VITE_THEGRAPH_API_KEY',
 ] as const
 
 type RequiredEnvVar = (typeof REQUIRED_ENV_VARS)[number]
