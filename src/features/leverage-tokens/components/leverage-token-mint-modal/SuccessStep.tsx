@@ -1,9 +1,9 @@
 import { CheckCircle, ExternalLink } from 'lucide-react'
-import { useChainId } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
-import { getTxExplorerInfo } from '../../../../lib/utils/block-explorer'
+import { getBlockExplorerName, getTxExplorerUrl } from '../../../../lib/utils/block-explorer'
 
 interface Token {
   symbol: string
@@ -28,8 +28,12 @@ export function SuccessStep({
   transactionHash,
   onClose,
 }: SuccessStepProps) {
-  const chainId = useChainId()
-  const { url: txUrl, name: explorerName } = getTxExplorerInfo(chainId, transactionHash)
+  const { chain } = useAccount()
+  const explorerBase = chain?.blockExplorers?.default?.url?.replace(/\/+$/, '')
+  const explorerName = chain?.blockExplorers?.default?.name ?? getBlockExplorerName(chain?.id ?? 1)
+  const txUrl = explorerBase
+    ? `${explorerBase}/tx/${transactionHash.toLowerCase()}`
+    : getTxExplorerUrl(chain?.id ?? 1, transactionHash)
   return (
     <div className="space-y-6 text-center">
       <div className="flex flex-col items-center">
