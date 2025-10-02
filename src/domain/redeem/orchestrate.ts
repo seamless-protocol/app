@@ -129,7 +129,7 @@ export async function orchestrateRedeem(params: {
       sharesToRedeem: plan.sharesToRedeem,
       minCollateralForSender: plan.minCollateralForSender,
       multicallExecutor:
-        (getContractAddresses(chainId).multicall as Address | undefined) ||
+        (getContractAddresses(chainId).multicallExecutor as Address | undefined) ||
         (typeof import.meta !== 'undefined'
           ? ((import.meta as unknown as { env?: Record<string, string | undefined> })?.env?.[
               'VITE_MULTICALL_EXECUTOR_ADDRESS'

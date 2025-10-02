@@ -288,8 +288,8 @@ async function runForChainOption(
     const overrideForChain = backend.contractOverrides?.[backend.canonicalChainId]
     const canonicalAddresses = getContractAddresses(backend.canonicalChainId)
     const executorAddress =
-      (overrideForChain?.multicall as string | undefined) ??
-      (canonicalAddresses.multicall as string | undefined)
+      (overrideForChain?.multicallExecutor as string | undefined) ??
+      (canonicalAddresses.multicallExecutor as string | undefined)
     if (executorAddress && !envSeed['VITE_MULTICALL_EXECUTOR_ADDRESS']) {
       envSeed['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executorAddress
     }

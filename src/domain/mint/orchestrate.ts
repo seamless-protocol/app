@@ -169,7 +169,7 @@ export async function orchestrateMint(params: {
           )
         })(),
       multicallExecutor:
-        (getContractAddresses(params.chainId).multicall as Address | undefined) ||
+        (getContractAddresses(params.chainId).multicallExecutor as Address | undefined) ||
         (typeof import.meta !== 'undefined'
           ? ((import.meta as unknown as { env?: Record<string, string | undefined> })?.env?.[
               'VITE_MULTICALL_EXECUTOR_ADDRESS'

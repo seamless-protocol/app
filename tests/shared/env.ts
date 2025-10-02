@@ -299,7 +299,7 @@ function buildAddressContext(
   const routerV1Address = optionalAddress(resolvedRouterV1)
   const routerV2Address = optionalAddress(resolvedRouterV2)
   const executorAddress = optionalAddress(
-    executorOverride ?? (contracts.multicall as Address | undefined),
+    executorOverride ?? (contracts.multicallExecutor as Address | undefined),
   )
   const veloraAddress = optionalAddress(veloraOverride)
   const rebalanceAddress = optionalAddress(rebalanceOverride)

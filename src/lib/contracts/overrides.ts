@@ -53,7 +53,7 @@ function getTenderlyOverrides(): string | undefined {
         pricingAdapter: '0x44CCEBEA0dAc17105e91a59E182f65f8D176c88f',
         rebalanceAdapter: '0x0a4490233Fd6Ea02873af11c744d286DC3d6C127',
         lendingAdapter: '0xB22cd280b29e581e34423E86F65fd259F456D335',
-        multicall: '0x16D02Ebd89988cAd1Ce945807b963aB7A9Fd22E1',
+        multicallExecutor: '0x16D02Ebd89988cAd1Ce945807b963aB7A9Fd22E1',
         tokens: {
           usdc: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
           weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -65,7 +65,7 @@ function getTenderlyOverrides(): string | undefined {
         leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C',
         leverageRouter: '0xfd46483b299197c616671B7dF295cA5186c805c2',
         leverageRouterV2: '0xfd46483b299197c616671B7dF295cA5186c805c2',
-        multicall: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd',
+        multicallExecutor: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd',
       },
     })
   }

@@ -181,7 +181,9 @@ export function LeverageTokenMintModal({
       : {}),
     slippageBps,
     requiresQuote: Boolean(leverageTokenConfig.swaps?.debtToCollateral),
-    ...(contractAddresses.multicall ? { fromAddress: contractAddresses.multicall } : {}),
+    ...(contractAddresses.multicallExecutor
+      ? { fromAddress: contractAddresses.multicallExecutor }
+      : {}),
   })
 
   // Prefer router-aware preview path to align with tests/integration
