@@ -14,7 +14,7 @@ export async function fetchLeverageTokenPriceComparison(
 ): Promise<LeverageTokenPriceComparisonResponse> {
   const result = await graphqlRequest<LeverageTokenPriceComparisonResponse>(chainId, {
     query: LEVERAGE_TOKEN_PRICE_COMPARISON_QUERY,
-    variables: { address, first: 1000 },
+    variables: { address: address.toLowerCase(), first: 1000 },
   })
 
   return result || { leverageToken: null }
