@@ -153,6 +153,9 @@ describe('useRedeemPreview', () => {
 
   it('should handle contract errors', async () => {
     const mockError = new Error('Contract call failed')
+
+    // Clear any previous mock calls and set up the error
+    mockReadLeverageManagerV2PreviewRedeem.mockClear()
     mockReadLeverageManagerV2PreviewRedeem.mockRejectedValue(mockError)
 
     const { result } = hookTestUtils.renderHookWithQuery(() =>
@@ -164,12 +167,16 @@ describe('useRedeemPreview', () => {
       }),
     )
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
+    // Wait for the error to be set, which indicates the query has completed
+    await waitFor(
+      () => {
+        expect(result.current.error).toBe(mockError)
+      },
+      { timeout: 3000 },
+    )
 
     expect(result.current.data).toBeUndefined()
-    expect(result.current.error).toBe(mockError)
+    expect(result.current.isLoading).toBe(false)
   })
 
   it('should handle missing manager V2 address', () => {
