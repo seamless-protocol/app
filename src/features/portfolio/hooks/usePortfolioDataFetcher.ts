@@ -6,13 +6,16 @@ import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('portfolio-data-fetcher')
 
-import { leverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
+import {
+  getLeverageTokenConfig,
+  leverageTokenConfigs,
+} from '@/features/leverage-tokens/leverageTokens.config'
 import {
   fetchAllLeverageTokenStateHistory,
   fetchUserPositions,
 } from '@/lib/graphql/fetchers/portfolio'
 import type { LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
-import { useUsdPrices } from '@/lib/prices/useUsdPrices'
+import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
 import type { Position } from '../components/active-positions'
 import type { PortfolioDataPoint } from '../components/portfolio-performance-chart'
 import {
@@ -94,11 +97,17 @@ function calculatePositionValues(
   }
 
   const equityPerToken = BigInt(mostRecentState.equityPerTokenInCollateral)
-  const totalSupply = BigInt(mostRecentState.totalSupply)
-  const positionValue = (balance * equityPerToken) / totalSupply
+  const positionValue = (balance * equityPerToken) / BigInt(1e18)
+
+  // Get the collateral asset decimals from the leverage token config
+  const leverageTokenAddress = userPosition.leverageToken.id.toLowerCase()
+  const tokenConfig = Object.values(leverageTokenConfigs).find(
+    (config) => config.address.toLowerCase() === leverageTokenAddress,
+  )
+  const collateralDecimals = tokenConfig?.collateralAsset?.decimals || 18
 
   // Convert from wei to collateral asset units
-  const positionValueInCollateralAsset = Number(formatUnits(positionValue, 18))
+  const positionValueInCollateralAsset = Number(formatUnits(positionValue, collateralDecimals))
 
   // Get collateral asset price in USD
   const collateralAssetAddress =
@@ -110,7 +119,7 @@ function calculatePositionValues(
 
   // Calculate deposited amount (what user originally put in)
   const depositedInCollateral = BigInt(userPosition.totalEquityDepositedInCollateral || '0')
-  const depositedInCollateralAsset = Number(formatUnits(depositedInCollateral, 18))
+  const depositedInCollateralAsset = Number(formatUnits(depositedInCollateral, collateralDecimals))
   const depositedInUSD = collateralAssetPriceUsd
     ? depositedInCollateralAsset * collateralAssetPriceUsd
     : 0
@@ -121,24 +130,28 @@ function calculatePositionValues(
     depositedInUSD > 0 ? (unrealizedGainAmount / depositedInUSD) * 100 : 0
 
   // Get the collateral asset symbol from the leverage token config
-  const leverageTokenAddress = userPosition.leverageToken.id.toLowerCase()
-  const tokenConfig = Object.values(leverageTokenConfigs).find(
-    (config) => config.address.toLowerCase() === leverageTokenAddress,
-  )
   const collateralSymbol = tokenConfig?.collateralAsset?.symbol || 'UNKNOWN'
 
-  return {
+  const result = {
     currentValue: {
       amount: positionValueInCollateralAsset.toFixed(4),
       symbol: collateralSymbol, // Use actual collateral asset symbol
-      usdValue: `$${positionValueInUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      usdValue: collateralAssetPriceUsd
+        ? `$${positionValueInUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : '$0.00 (unpriced)',
     },
     unrealizedGain: {
-      amount: `${unrealizedGainAmount >= 0 ? '+' : '-'}${Math.abs(unrealizedGainAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      amount: collateralAssetPriceUsd
+        ? `${unrealizedGainAmount >= 0 ? '+' : '-'}${Math.abs(unrealizedGainAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : '—',
       symbol: 'USD', // This is correct since unrealized gain is in USD
-      percentage: `${unrealizedGainPercentage >= 0 ? '+' : ''}${unrealizedGainPercentage.toFixed(2)}%`,
+      percentage: collateralAssetPriceUsd
+        ? `${unrealizedGainPercentage >= 0 ? '+' : ''}${unrealizedGainPercentage.toFixed(2)}%`
+        : '—',
     },
   }
+
+  return result
 }
 
 /**
@@ -283,6 +296,7 @@ export function usePortfolioDataFetcher() {
 
         // For now, we'll calculate totalValue in the performance hook where we have USD prices
         // This is a temporary solution - in the future we should fetch prices here too
+
         const summary: PortfolioSummary = {
           totalValue: 0, // Will be calculated in usePortfolioPerformance with USD prices
           totalEarnings: 0, // Will be calculated in usePortfolioWithTotalValue
@@ -333,25 +347,52 @@ export function usePortfolioDataFetcher() {
 export function usePortfolioWithTotalValue() {
   const { data: portfolioQueryData, isLoading, isError, error } = usePortfolioDataFetcher()
 
-  // Get unique collateral asset addresses from user positions (like old app)
-  const collateralAssetAddresses = useMemo(() => {
-    if (!portfolioQueryData?.rawUserPositions.length) return []
+  // Get unique collateral asset addresses grouped by chain ID
+  const addressesByChain = useMemo(() => {
+    if (!portfolioQueryData?.rawUserPositions.length) return {}
 
-    const addresses = new Set<string>()
+    const chainMap = new Map<number, Set<string>>()
+
     portfolioQueryData.rawUserPositions.forEach((position) => {
       if (position.leverageToken.lendingAdapter.collateralAsset) {
-        addresses.add(position.leverageToken.lendingAdapter.collateralAsset.toLowerCase())
+        // Get the chain ID from the leverage token config
+        const leverageTokenConfig = getLeverageTokenConfig(
+          position.leverageToken.id as `0x${string}`,
+        )
+        const chainId = leverageTokenConfig?.chainId || 1 // Fallback to Ethereum
+
+        if (!chainMap.has(chainId)) {
+          chainMap.set(chainId, new Set<string>())
+        }
+        chainMap
+          .get(chainId)
+          ?.add(position.leverageToken.lendingAdapter.collateralAsset.toLowerCase())
       }
     })
-    return Array.from(addresses)
+
+    // Convert Map to Record for the hook
+    const result: Record<number, Array<string>> = {}
+    for (const [chainId, addresses] of chainMap.entries()) {
+      result[chainId] = Array.from(addresses)
+    }
+
+    return result
   }, [portfolioQueryData?.rawUserPositions])
 
-  // Fetch prices for all collateral assets used in user positions (like old app)
-  const { data: usdPrices = {} } = useUsdPrices({
-    chainId: 8453, // Base chain
-    addresses: collateralAssetAddresses,
-    enabled: collateralAssetAddresses.length > 0,
+  // Fetch prices for all collateral assets across all chains
+  const { data: usdPricesByChain = {} } = useUsdPricesMultiChain({
+    byChain: addressesByChain,
+    enabled: Object.keys(addressesByChain).length > 0,
   })
+
+  // Flatten the multi-chain prices into a single map for backward compatibility
+  const usdPrices = useMemo(() => {
+    const flattened: Record<string, number> = {}
+    for (const chainPrices of Object.values(usdPricesByChain)) {
+      Object.assign(flattened, chainPrices)
+    }
+    return flattened
+  }, [usdPricesByChain])
 
   // Calculate current portfolio metrics (value, deposited, change)
   const portfolioMetrics = useMemo(() => {

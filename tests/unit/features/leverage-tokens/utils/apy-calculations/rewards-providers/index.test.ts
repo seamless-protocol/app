@@ -33,36 +33,43 @@ describe('Rewards Providers', () => {
       })
     })
 
-    it('should throw error for unsupported chain ID', async () => {
-      const unsupportedChainId = 1 // Ethereum
+    it('should work for Ethereum chain ID', async () => {
+      const ethereumChainId = 1 // Ethereum
 
-      await expect(fetchRewardsAprForToken(tokenAddress, unsupportedChainId)).rejects.toThrow(
-        'No rewards APR provider found for chain ID: 1',
-      )
+      const result = await fetchRewardsAprForToken(tokenAddress, ethereumChainId)
+
+      // Should return actual rewards APR data from Merkl provider
+      expect(result).toHaveProperty('rewardsAPR')
     })
 
-    it('should throw error for unsupported chain ID 2', async () => {
+    it('should work for unsupported chain ID 2', async () => {
       const unsupportedChainId = 137 // Polygon
 
-      await expect(fetchRewardsAprForToken(tokenAddress, unsupportedChainId)).rejects.toThrow(
-        'No rewards APR provider found for chain ID: 137',
-      )
+      const result = await fetchRewardsAprForToken(tokenAddress, unsupportedChainId)
+
+      expect(result).toEqual({
+        rewardsAPR: 0,
+      })
     })
 
     it('should handle case where chain ID is 0', async () => {
       const chainIdZero = 0
 
-      await expect(fetchRewardsAprForToken(tokenAddress, chainIdZero)).rejects.toThrow(
-        'No rewards APR provider found for chain ID: 0',
-      )
+      const result = await fetchRewardsAprForToken(tokenAddress, chainIdZero)
+
+      expect(result).toEqual({
+        rewardsAPR: 0,
+      })
     })
 
     it('should handle negative chain ID', async () => {
       const negativeChainId = -1
 
-      await expect(fetchRewardsAprForToken(tokenAddress, negativeChainId)).rejects.toThrow(
-        'No rewards APR provider found for chain ID: -1',
-      )
+      const result = await fetchRewardsAprForToken(tokenAddress, negativeChainId)
+
+      expect(result).toEqual({
+        rewardsAPR: 0,
+      })
     })
   })
 
@@ -111,21 +118,22 @@ describe('Rewards Providers', () => {
   describe('future extensibility', () => {
     it('should be easy to add new chain support', async () => {
       // This test documents the expected behavior when new chains are added
-      // Currently only Base (8453) is supported
-      const supportedChains = [8453]
-      const unsupportedChains = [1, 137, 56, 42161] // Ethereum, Polygon, BSC, Arbitrum
+      // Currently both Base (8453) and Ethereum (1) are supported
+      const supportedChains = [8453, 1] // Base and Ethereum
+      const unsupportedChains = [137, 56, 42161] // Polygon, BSC, Arbitrum
 
-      // Test supported chain
+      // Test supported chains
       for (const chainId of supportedChains) {
         const result = await fetchRewardsAprForToken(tokenAddress, chainId)
-        expect(result).toEqual({ rewardsAPR: 0 })
+        expect(result).toHaveProperty('rewardsAPR')
       }
 
-      // Test unsupported chains
+      // Test unsupported chains - should work but return default data
       for (const chainId of unsupportedChains) {
-        await expect(fetchRewardsAprForToken(tokenAddress, chainId)).rejects.toThrow(
-          `No rewards APR provider found for chain ID: ${chainId}`,
-        )
+        const result = await fetchRewardsAprForToken(tokenAddress, chainId)
+        expect(result).toEqual({
+          rewardsAPR: 0,
+        })
       }
     })
   })

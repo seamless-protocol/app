@@ -5,7 +5,11 @@ import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
 import { Input } from '../../../../components/ui/input'
 import { Skeleton } from '../../../../components/ui/skeleton'
-import { AMOUNT_PERCENTAGE_PRESETS, SLIPPAGE_PRESETS_PERCENT_DISPLAY } from '../../constants'
+import {
+  AMOUNT_PERCENTAGE_PRESETS,
+  MIN_REDEEM_AMOUNT_DISPLAY,
+  SLIPPAGE_PRESETS_PERCENT_DISPLAY,
+} from '../../constants'
 
 type OutputAssetId = 'collateral' | 'debt'
 
@@ -470,8 +474,8 @@ export function InputStep({
             ? 'Enter an amount'
             : !canProceed && parseFloat(amount || '0') > parseFloat(selectedToken.balance)
               ? 'Insufficient tokens'
-              : !canProceed && parseFloat(amount || '0') < 0.01
-                ? 'Minimum redeem: 0.01'
+              : !canProceed && parseFloat(amount || '0') < parseFloat(MIN_REDEEM_AMOUNT_DISPLAY)
+                ? `Minimum redeem: ${MIN_REDEEM_AMOUNT_DISPLAY}`
                 : isCalculating
                   ? 'Calculating...'
                   : isAllowanceLoading

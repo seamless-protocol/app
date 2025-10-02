@@ -4,6 +4,9 @@
 // Minimum mint amount displayed in token units (string to preserve precision in inputs)
 export const MIN_MINT_AMOUNT_DISPLAY = '0.01'
 
+// Minimum redeem amount displayed in token units (string to preserve precision in inputs)
+export const MIN_REDEEM_AMOUNT_DISPLAY = '0.01'
+
 // Default slippage tolerance shown in the UI (percent as string)
 export const DEFAULT_SLIPPAGE_PERCENT_DISPLAY = '0.5'
 
