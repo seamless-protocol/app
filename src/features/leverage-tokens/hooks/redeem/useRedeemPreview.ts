@@ -61,7 +61,7 @@ export function useRedeemPreview(params: {
       }
     },
     enabled: enabled && Boolean(managerV2Address),
-    retry: false,
+    retry: 1,
     refetchOnWindowFocus: false,
     // Keep behavior deterministic for keystroke-driven UX
     staleTime: 0,

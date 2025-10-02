@@ -1,7 +1,9 @@
 import { CheckCircle, ExternalLink } from 'lucide-react'
+import { useAccount } from 'wagmi'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
+import { getBlockExplorerName, getTxExplorerUrl } from '../../../../lib/utils/block-explorer'
 
 interface Token {
   symbol: string
@@ -26,6 +28,12 @@ export function SuccessStep({
   transactionHash,
   onClose,
 }: SuccessStepProps) {
+  const { chain } = useAccount()
+  const explorerBase = chain?.blockExplorers?.default?.url?.replace(/\/+$/, '')
+  const explorerName = chain?.blockExplorers?.default?.name ?? getBlockExplorerName(chain?.id ?? 1)
+  const txUrl = explorerBase
+    ? `${explorerBase}/tx/${transactionHash.toLowerCase()}`
+    : getTxExplorerUrl(chain?.id ?? 1, transactionHash)
   return (
     <div className="space-y-6 text-center">
       <div className="flex flex-col items-center">
@@ -55,10 +63,10 @@ export function SuccessStep({
             <span className="text-slate-400">Transaction</span>
             <button
               type="button"
-              onClick={() => window.open(`https://etherscan.io/tx/${transactionHash}`, '_blank')}
+              onClick={() => window.open(txUrl, '_blank')}
               className="text-purple-400 hover:underline flex items-center"
             >
-              View on Etherscan
+              View on {explorerName}
               <ExternalLink className="h-3 w-3 ml-1" />
             </button>
           </div>

@@ -1,46 +1,62 @@
-export function getTokenExplorerUrl(chainId: number, tokenAddress: string): string {
-  const cleanAddress = tokenAddress.toLowerCase()
+import type { Chain } from 'viem'
+import { features } from '@/lib/config/features'
+import { config as prodConfig } from '@/lib/config/wagmi.config'
+import { testConfig } from '@/lib/config/wagmi.config.test'
 
-  switch (chainId) {
-    case 1: // Ethereum Mainnet
-      return `https://etherscan.io/token/${cleanAddress}`
-    case 8453: // Base Mainnet
-      return `https://basescan.org/token/${cleanAddress}`
-    default:
-      // Fallback to Ethereum mainnet for unknown chains
-      return `https://etherscan.io/token/${cleanAddress}`
+function getChains(): ReadonlyArray<Chain> {
+  try {
+    return (features.testMode ? testConfig : prodConfig).chains
+  } catch {
+    // Extremely defensive fallback: return empty list to trigger default URLs below
+    return [] as const
   }
+}
+
+function getExplorerBase(chainId: number): { url: string; name: string } {
+  const chain = getChains().find((c) => c.id === chainId)
+  const url = chain?.blockExplorers?.default?.url
+  const name = chain?.blockExplorers?.default?.name
+  if (url && name) return { url: stripTrailingSlash(url), name }
+
+  // Fallbacks for known chains (Etherscan family), then generic
+  switch (chainId) {
+    case 11155111:
+      return { url: 'https://sepolia.etherscan.io', name: 'Etherscan' }
+    case 84532:
+      return { url: 'https://sepolia.basescan.org', name: 'Basescan' }
+    case 8453:
+      return { url: 'https://basescan.org', name: 'Basescan' }
+    case 1:
+      return { url: 'https://etherscan.io', name: 'Etherscan' }
+    default:
+      return { url: 'https://etherscan.io', name: 'Block Explorer' }
+  }
+}
+
+function stripTrailingSlash(input: string): string {
+  return input.replace(/\/+$/, '')
+}
+
+export function getTokenExplorerUrl(chainId: number, tokenAddress: string): string {
+  const { url } = getExplorerBase(chainId)
+  const cleanAddress = tokenAddress.toLowerCase()
+  return `${url}/token/${cleanAddress}`
 }
 
 export function getAddressExplorerUrl(chainId: number, address: string): string {
+  const { url } = getExplorerBase(chainId)
   const cleanAddress = address.toLowerCase()
-
-  switch (chainId) {
-    case 1: // Ethereum Mainnet
-      return `https://etherscan.io/address/${cleanAddress}`
-    case 8453: // Base Mainnet
-      return `https://basescan.org/address/${cleanAddress}`
-    case 11155111: // Sepolia Testnet
-      return `https://sepolia.etherscan.io/address/${cleanAddress}`
-    case 84532: // Base Sepolia Testnet
-      return `https://sepolia.basescan.org/address/${cleanAddress}`
-    default:
-      // Fallback to Ethereum mainnet for unknown chains
-      return `https://etherscan.io/address/${cleanAddress}`
-  }
+  return `${url}/address/${cleanAddress}`
 }
 
 export function getBlockExplorerName(chainId: number): string {
-  switch (chainId) {
-    case 1: // Ethereum Mainnet
-    case 11155111: // Sepolia Testnet
-      return 'Etherscan'
-    case 8453: // Base Mainnet
-    case 84532: // Base Sepolia Testnet
-      return 'Basescan'
-    default:
-      return 'Block Explorer'
-  }
+  return getExplorerBase(chainId).name
+}
+
+export function getTxExplorerUrl(chainId: number, txHash: string): string {
+  const { url } = getExplorerBase(chainId)
+  const cleanHash = txHash.toLowerCase()
+  return `${url}/tx/${cleanHash}`
 }
 
 export function getTokenExplorerInfo(
@@ -49,6 +65,13 @@ export function getTokenExplorerInfo(
 ): { url: string; name: string } {
   return {
     url: getTokenExplorerUrl(chainId, tokenAddress),
+    name: getBlockExplorerName(chainId),
+  }
+}
+
+export function getTxExplorerInfo(chainId: number, txHash: string): { url: string; name: string } {
+  return {
+    url: getTxExplorerUrl(chainId, txHash),
     name: getBlockExplorerName(chainId),
   }
 }

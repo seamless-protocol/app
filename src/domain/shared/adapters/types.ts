@@ -9,6 +9,8 @@ export type Quote = {
   out: bigint
   // Explicit minOut field for PRD clarity (alias of out)
   minOut?: bigint
+  // For exact-out quotes: maximum input the router may spend to achieve `out` under slippage
+  maxIn?: bigint
   // Optional deadline (if provided by the aggregator/DEX)
   deadline?: bigint
   // Target to approve before submitting calldata

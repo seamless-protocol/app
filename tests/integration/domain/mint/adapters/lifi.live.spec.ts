@@ -31,11 +31,11 @@ const QUOTE_TARGETS: Array<{
     amountIn: parseUnits('0.5', 18),
   },
   {
-    label: 'Mainnet WETH → wstETH',
+    label: 'Mainnet wstETH → WETH',
     chainId: mainnet.id,
     router: '0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA' as Address,
-    inToken: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
-    outToken: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address,
+    inToken: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address, // wstETH
+    outToken: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address, // WETH
     amountIn: parseUnits('0.5', 18),
   },
 ]
@@ -59,6 +59,32 @@ describeOrSkip('LiFi adapter live smoke', () => {
       expect(res.calldata.startsWith('0x')).toBe(true)
       expect(/^0x[a-fA-F0-9]{40}$/.test(res.approvalTarget)).toBe(true)
       expect(res.out).toBeGreaterThan(0n)
+    })
+
+    it(`returns maxIn and minOut >= requested (exact-out) (${target.label})`, async () => {
+      const quote = createLifiQuoteAdapter({
+        chainId: target.chainId,
+        router: target.router,
+      })
+
+      // Use a small target on Base and a larger one on Mainnet to avoid min-size issues
+      const toAmount =
+        target.chainId === mainnet.id ? parseUnits('0.2', 18) : parseUnits('0.005', 18)
+
+      const res = await quote({
+        inToken: target.inToken,
+        outToken: target.outToken,
+        amountIn: 0n,
+        amountOut: toAmount,
+        intent: 'exactOut',
+      })
+
+      expect(res.calldata.startsWith('0x')).toBe(true)
+      expect(/^0x[a-fA-F0-9]{40}$/.test(res.approvalTarget)).toBe(true)
+      // Adapter maps out := toAmountMin || toAmount
+      expect(res.out).toBeGreaterThanOrEqual(toAmount)
+      expect(typeof res.maxIn === 'bigint').toBe(true)
+      expect((res.maxIn ?? 0n) > 0n).toBe(true)
     })
   }
 })

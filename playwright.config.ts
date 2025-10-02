@@ -76,13 +76,13 @@ export default defineConfig({
       ...(process.env['VITE_LIFI_INTEGRATOR'] || process.env['LIFI_INTEGRATOR']
         ? {
             VITE_LIFI_INTEGRATOR:
-              process.env['VITE_LIFI_INTEGRATOR'] ?? process.env['LIFI_INTEGRATOR']!,
+process.env['VITE_LIFI_INTEGRATOR'] ?? process.env['LIFI_INTEGRATOR']!,
           }
         : {}),
       ...(process.env['VITE_LIFI_API_KEY'] || process.env['LIFI_API_KEY']
         ? {
             VITE_LIFI_API_KEY:
-              process.env['VITE_LIFI_API_KEY'] ?? process.env['LIFI_API_KEY']!,
+process.env['VITE_LIFI_API_KEY'] ?? process.env['LIFI_API_KEY']!,
           }
         : {}),
       VITE_TEST_PRIVATE_KEY: ANVIL_DEFAULT_PRIVATE_KEY,
