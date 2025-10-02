@@ -1,4 +1,5 @@
 import { ExternalLink } from 'lucide-react'
+import { useExplorer } from '@/lib/hooks/useExplorer'
 import { getBestAssetColor } from '@/lib/utils/asset-colors'
 import { cn } from '@/lib/utils/cn'
 import { getTokenLogo, getTokenLogoComponent } from '@/lib/utils/token-logos'
@@ -104,6 +105,7 @@ export function AssetDisplay({
   variant = 'default',
 }: AssetDisplayProps) {
   const sizeConfig = sizeClasses[size]
+  const explorer = useExplorer()
 
   // Determine if we're in single asset mode or multiple assets mode
   const isSingleAsset = asset && assets.length === 0
@@ -172,7 +174,9 @@ export function AssetDisplay({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>View {asset.name || asset.symbol} on Etherscan</p>
+            <p>
+              View {asset.name || asset.symbol} on {explorer.name}
+            </p>
           </TooltipContent>
         </Tooltip>
       )

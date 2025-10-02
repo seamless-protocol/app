@@ -1,8 +1,7 @@
 import { CheckCircle, ExternalLink, TrendingDown } from 'lucide-react'
-import { useAccount } from 'wagmi'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
-import { getBlockExplorerName, getTxExplorerUrl } from '../../../../lib/utils/block-explorer'
+import { useExplorer } from '../../../../lib/hooks/useExplorer'
 
 interface SuccessStepProps {
   amount: string
@@ -19,12 +18,8 @@ export function SuccessStep({
   transactionHash,
   onClose,
 }: SuccessStepProps) {
-  const { chain } = useAccount()
-  const explorerBase = chain?.blockExplorers?.default?.url?.replace(/\/+$/, '')
-  const explorerName = chain?.blockExplorers?.default?.name ?? getBlockExplorerName(chain?.id ?? 1)
-  const txUrl = explorerBase
-    ? `${explorerBase}/tx/${transactionHash.toLowerCase()}`
-    : getTxExplorerUrl(chain?.id ?? 1, transactionHash)
+  const explorer = useExplorer()
+  const txUrl = explorer.txUrl(transactionHash)
   return (
     <div className="space-y-6 text-center">
       <div className="flex flex-col items-center">
@@ -57,7 +52,7 @@ export function SuccessStep({
               onClick={() => window.open(txUrl, '_blank')}
               className="text-purple-400 hover:underline flex items-center"
             >
-              View on {explorerName}
+              View on {explorer.name}
               <ExternalLink className="h-3 w-3 ml-1" />
             </button>
           </div>
