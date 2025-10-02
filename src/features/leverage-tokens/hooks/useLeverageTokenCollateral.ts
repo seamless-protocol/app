@@ -1,8 +1,10 @@
+import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import { useChainId, useReadContracts } from 'wagmi'
 import { lendingAdapterAbi, leverageManagerV2Abi } from '@/lib/contracts'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
 import { STALE_TIME } from '../utils/constants'
+import { ltKeys } from '../utils/queryKeys'
 
 export interface UseLeverageTokenCollateralResult {
   collateral?: bigint | undefined
@@ -74,6 +76,14 @@ export function useLeverageTokenCollateral(
 
   const collateral =
     lendingData && lendingData[0]?.status === 'success' ? lendingData[0].result : undefined
+
+  // Additional query with custom key for invalidation purposes
+  useQuery({
+    queryKey: tokenAddress ? ltKeys.collateral(tokenAddress) : ['collateral', 'disabled'],
+    queryFn: () => collateral,
+    enabled: Boolean(collateral !== undefined),
+    staleTime: STALE_TIME.supply,
+  })
 
   return {
     collateral,

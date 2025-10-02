@@ -24,12 +24,15 @@ export async function invalidateLeverageTokenQueries(
   // Reconstruct keys inline to avoid coupling to helper exports at runtime
   // ['leverage-tokens', 'tokens', token, 'state']
   const stateKey = ['leverage-tokens', 'tokens', token, 'state'] as const
+  // ['leverage-tokens', 'tokens', token, 'collateral']
+  const collateralKey = ['leverage-tokens', 'tokens', token, 'collateral'] as const
   // ['leverage-tokens', 'table-data']
   const tableKey = ['leverage-tokens', 'table-data'] as const
   // ['leverage-tokens', 'protocol-tvl']
   const protocolKey = ['leverage-tokens', 'protocol-tvl'] as const
 
   tasks.push(queryClient.invalidateQueries({ queryKey: stateKey, refetchType }))
+  tasks.push(queryClient.invalidateQueries({ queryKey: collateralKey, refetchType }))
   tasks.push(queryClient.invalidateQueries({ queryKey: tableKey, refetchType }))
   tasks.push(queryClient.invalidateQueries({ queryKey: protocolKey, refetchType }))
 
