@@ -4,7 +4,7 @@
  */
 
 import { useLocation } from '@tanstack/react-router'
-import { useCallback, useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 // Extend the global Window interface to include gtag
 declare global {
@@ -253,7 +253,7 @@ export const useGA = () => {
   }, [location.pathname])
 
   // Memoized tracking functions to prevent unnecessary re-renders
-  const analytics = useCallback(
+  const analytics = useMemo(
     () => ({
       // Basic event tracking
       trackEvent,
@@ -272,7 +272,7 @@ export const useGA = () => {
     [],
   )
 
-  return analytics()
+  return analytics
 }
 
 /**
