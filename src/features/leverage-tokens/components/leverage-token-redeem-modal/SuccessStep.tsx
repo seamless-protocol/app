@@ -1,6 +1,8 @@
 import { CheckCircle, ExternalLink, TrendingDown } from 'lucide-react'
+import { useChainId } from 'wagmi'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
+import { getTxExplorerInfo } from '../../../../lib/utils/block-explorer'
 
 interface SuccessStepProps {
   amount: string
@@ -17,6 +19,8 @@ export function SuccessStep({
   transactionHash,
   onClose,
 }: SuccessStepProps) {
+  const chainId = useChainId()
+  const { url: txUrl, name: explorerName } = getTxExplorerInfo(chainId, transactionHash)
   return (
     <div className="space-y-6 text-center">
       <div className="flex flex-col items-center">
@@ -46,10 +50,10 @@ export function SuccessStep({
             <span className="text-slate-400">Transaction</span>
             <button
               type="button"
-              onClick={() => window.open(`https://basescan.org/tx/${transactionHash}`, '_blank')}
+              onClick={() => window.open(txUrl, '_blank')}
               className="text-purple-400 hover:underline flex items-center"
             >
-              View on Basescan
+              View on {explorerName}
               <ExternalLink className="h-3 w-3 ml-1" />
             </button>
           </div>
