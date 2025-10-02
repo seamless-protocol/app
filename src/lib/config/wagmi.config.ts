@@ -1,7 +1,7 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { fallback, http } from 'viem'
 import type { Config } from 'wagmi'
-import { base, mainnet } from 'wagmi/chains'
+import { mainnet } from 'wagmi/chains'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('wagmi-config')
@@ -79,9 +79,12 @@ if (useTenderlyVNet) {
 export const config = getDefaultConfig({
   appName: 'Seamless Protocol',
   projectId: walletConnectProjectId || 'YOUR_PROJECT_ID',
-  chains: [base, mainnet],
+  chains: [
+    // base, // Commented out until launch
+    mainnet,
+  ],
   transports: {
-    [base.id]: fallback(baseCandidates.map((u) => http(u))),
+    // [base.id]: fallback(baseCandidates.map((u) => http(u))), // Commented out until launch
     [mainnet.id]: fallback(mainnetCandidates.map((u) => http(u))),
   },
   ssr: false, // Critical for IPFS deployment - we're a pure client-side app
