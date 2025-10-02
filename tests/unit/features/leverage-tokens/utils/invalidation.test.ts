@@ -22,13 +22,17 @@ describe('invalidateLeverageTokenQueries', () => {
       refetchType: 'active',
     })
 
-    // Expect at least 4 invalidations: state, tableData, protocolTvl, user
+    // Expect at least 5 invalidations: state, collateral, tableData, protocolTvl, user
     expect(spy).toHaveBeenCalled()
 
     // Build expected calls
     const expected = [
       {
         queryKey: ['leverage-tokens', 'tokens', token, 'state'] as const,
+        refetchType: 'active' as const,
+      },
+      {
+        queryKey: ['leverage-tokens', 'tokens', token, 'collateral'] as const,
         refetchType: 'active' as const,
       },
       { queryKey: ['leverage-tokens', 'table-data'] as const, refetchType: 'active' as const },
