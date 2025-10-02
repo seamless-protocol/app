@@ -18,7 +18,6 @@ export async function fetchRewardsAprForToken(
   const provider = new MerklRewardsAprProvider()
 
   try {
-    // note: use 0x616a4E1db48e22028f6bbf20444Cd3b8e3273738 for testing
     return await provider.fetchRewardsApr(tokenAddress)
   } catch (error) {
     logger.error('Provider failed, returning default data', { error, tokenAddress, chainId })

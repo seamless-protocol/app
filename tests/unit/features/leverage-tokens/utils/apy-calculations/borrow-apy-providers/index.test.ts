@@ -85,13 +85,25 @@ describe('Borrow APY Providers', () => {
       )
     })
 
-    it('should throw error for unsupported token address on Base', async () => {
+    it('should work for any token address on Base', async () => {
       const unsupportedTokenAddress = '0x1234567890123456789012345678901234567890' as Address
+      const mockBorrowApyData = { borrowAPY: 0.0387 }
 
-      await expect(
-        fetchBorrowApyForToken(unsupportedTokenAddress, chainId, mockConfig),
-      ).rejects.toThrow(
-        'Unsupported token address for borrow APY: 0x1234567890123456789012345678901234567890',
+      const mockProviderInstance = {
+        protocolId: 'morpho',
+        protocolName: 'Morpho',
+        fetchBorrowApy: vi.fn().mockResolvedValue(mockBorrowApyData),
+      }
+
+      vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
+
+      const result = await fetchBorrowApyForToken(unsupportedTokenAddress, chainId, mockConfig)
+
+      expect(result).toEqual(mockBorrowApyData)
+      expect(mockProviderInstance.fetchBorrowApy).toHaveBeenCalledWith(
+        unsupportedTokenAddress,
+        chainId,
+        mockConfig,
       )
     })
 
@@ -99,6 +111,15 @@ describe('Borrow APY Providers', () => {
       const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
         ?.address as Address
       const ethereumChainId = 1 // Ethereum
+      const mockBorrowApyData = { borrowAPY: 0.0387 }
+
+      const mockProviderInstance = {
+        protocolId: 'morpho',
+        protocolName: 'Morpho',
+        fetchBorrowApy: vi.fn().mockResolvedValue(mockBorrowApyData),
+      }
+
+      vi.mocked(MorphoBorrowApyProvider).mockImplementation(() => mockProviderInstance)
 
       const result = await fetchBorrowApyForToken(
         supportedTokenAddress,
@@ -106,8 +127,12 @@ describe('Borrow APY Providers', () => {
         mockConfig,
       )
 
-      // Should return actual borrow APY data from Morpho provider
-      expect(result).toHaveProperty('borrowAPY')
+      expect(result).toEqual(mockBorrowApyData)
+      expect(mockProviderInstance.fetchBorrowApy).toHaveBeenCalledWith(
+        supportedTokenAddress,
+        ethereumChainId,
+        mockConfig,
+      )
     })
 
     it('should propagate provider errors', async () => {

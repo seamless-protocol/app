@@ -97,24 +97,64 @@ describe('APR Providers', () => {
       expect(mockProviderInstance.fetchApr).toHaveBeenCalledWith()
     })
 
-    it('should throw error for unsupported token address on Base', async () => {
+    it('should work for any token address on Base', async () => {
       const unsupportedTokenAddress = '0x1234567890123456789012345678901234567890' as Address
+      const mockAprData = {
+        sevenDayApr: 5.2,
+        sevenDayRestakingApr: 2.1,
+        bufferEth: 1000,
+        totalAPR: 7.3,
+        stakingAPR: 5.2,
+        restakingAPR: 2.1,
+        metadata: {
+          raw: {},
+          useRestakingApr: true,
+        },
+      }
 
-      await expect(fetchAprForToken(unsupportedTokenAddress, chainId)).rejects.toThrow(
-        'Unsupported token address: 0x1234567890123456789012345678901234567890',
-      )
+      const mockProviderInstance = {
+        protocolId: 'etherfi',
+        protocolName: 'Ether.fi',
+        fetchApr: vi.fn().mockResolvedValue(mockAprData),
+      }
+
+      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
+
+      const result = await fetchAprForToken(unsupportedTokenAddress, chainId)
+
+      expect(result).toEqual(mockAprData)
+      expect(mockProviderInstance.fetchApr).toHaveBeenCalledWith()
     })
 
     it('should work for Ethereum chain ID', async () => {
       const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
         ?.address as Address
       const ethereumChainId = 1 // Ethereum
+      const mockAprData = {
+        sevenDayApr: 5.2,
+        sevenDayRestakingApr: 2.1,
+        bufferEth: 1000,
+        totalAPR: 7.3,
+        stakingAPR: 5.2,
+        restakingAPR: 2.1,
+        metadata: {
+          raw: {},
+          useRestakingApr: true,
+        },
+      }
+
+      const mockProviderInstance = {
+        protocolId: 'etherfi',
+        protocolName: 'Ether.fi',
+        fetchApr: vi.fn().mockResolvedValue(mockAprData),
+      }
+
+      vi.mocked(EtherFiAprProvider).mockImplementation(() => mockProviderInstance)
 
       const result = await fetchAprForToken(supportedTokenAddress, ethereumChainId)
 
-      // Should return actual APR data from EtherFi provider
-      expect(result).toHaveProperty('stakingAPR')
-      expect(result).toHaveProperty('totalAPR')
+      expect(result).toEqual(mockAprData)
+      expect(mockProviderInstance.fetchApr).toHaveBeenCalledWith()
     })
 
     it('should propagate provider errors', async () => {
