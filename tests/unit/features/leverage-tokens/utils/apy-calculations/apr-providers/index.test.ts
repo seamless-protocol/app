@@ -105,14 +105,16 @@ describe('APR Providers', () => {
       )
     })
 
-    it('should throw error for unsupported chain ID', async () => {
+    it('should work for Ethereum chain ID', async () => {
       const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
         ?.address as Address
-      const unsupportedChainId = 1 // Ethereum
+      const ethereumChainId = 1 // Ethereum
 
-      await expect(fetchAprForToken(supportedTokenAddress, unsupportedChainId)).rejects.toThrow(
-        'Unsupported chain ID: 1',
-      )
+      const result = await fetchAprForToken(supportedTokenAddress, ethereumChainId)
+
+      // Should return actual APR data from EtherFi provider
+      expect(result).toHaveProperty('stakingAPR')
+      expect(result).toHaveProperty('totalAPR')
     })
 
     it('should propagate provider errors', async () => {

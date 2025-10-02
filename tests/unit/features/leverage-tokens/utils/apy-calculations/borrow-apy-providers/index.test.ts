@@ -95,14 +95,19 @@ describe('Borrow APY Providers', () => {
       )
     })
 
-    it('should throw error for unsupported chain ID', async () => {
+    it('should work for Ethereum chain ID', async () => {
       const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
         ?.address as Address
-      const unsupportedChainId = 1 // Ethereum
+      const ethereumChainId = 1 // Ethereum
 
-      await expect(
-        fetchBorrowApyForToken(supportedTokenAddress, unsupportedChainId, mockConfig),
-      ).rejects.toThrow('Unsupported chain ID for borrow APY: 1')
+      const result = await fetchBorrowApyForToken(
+        supportedTokenAddress,
+        ethereumChainId,
+        mockConfig,
+      )
+
+      // Should return actual borrow APY data from Morpho provider
+      expect(result).toHaveProperty('borrowAPY')
     })
 
     it('should propagate provider errors', async () => {

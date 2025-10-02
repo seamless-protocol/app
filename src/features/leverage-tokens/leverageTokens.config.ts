@@ -190,6 +190,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainId: 1,
     chainName: 'Ethereum',
     chainLogo: EthereumLogo,
+    supplyCap: 200,
     collateralAsset: {
       symbol: 'wstETH',
       name: 'Wrapped stETH',

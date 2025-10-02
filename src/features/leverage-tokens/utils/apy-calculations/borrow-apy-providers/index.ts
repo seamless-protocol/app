@@ -1,38 +1,21 @@
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import { createLogger } from '@/lib/logger'
-import { LeverageTokenKey, leverageTokenConfigs } from '../../../leverageTokens.config'
 import { MorphoBorrowApyProvider } from './morpho'
 import type { BaseBorrowApyData } from './types'
 
 const logger = createLogger('borrow-apy-provider')
 
 /**
- * Borrow APY fetcher that routes to the appropriate provider based on token address and chain ID
+ * Borrow APY fetcher that routes to the appropriate provider based on chain ID
  */
 export async function fetchBorrowApyForToken(
   tokenAddress: Address,
   chainId: number,
   config: Config,
 ): Promise<BaseBorrowApyData> {
-  // Inline provider selection
-  let provider: MorphoBorrowApyProvider
-  const lowerTokenAddress = tokenAddress.toLowerCase()
+  logger.info('Fetching borrow APY using Morpho', { tokenAddress, chainId })
 
-  switch (chainId) {
-    case 8453: // Base
-      switch (lowerTokenAddress) {
-        case leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address.toLowerCase():
-          provider = new MorphoBorrowApyProvider()
-          logger.info('Fetching borrow APY using Morpho', { tokenAddress, chainId })
-          break
-        default:
-          throw new Error(`Unsupported token address for borrow APY: ${tokenAddress}`)
-      }
-      break
-    default:
-      throw new Error(`Unsupported chain ID for borrow APY: ${chainId}`)
-  }
-
+  const provider = new MorphoBorrowApyProvider()
   return await provider.fetchBorrowApy(tokenAddress, chainId, config)
 }

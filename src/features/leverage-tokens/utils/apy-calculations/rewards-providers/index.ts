@@ -1,7 +1,7 @@
 import type { Address } from 'viem'
 import { createLogger } from '@/lib/logger'
 import { MerklRewardsAprProvider } from './merkl'
-import type { BaseRewardsAprData, RewardsAprFetcher } from './types'
+import type { BaseRewardsAprData } from './types'
 
 const logger = createLogger('rewards-apr-provider')
 
@@ -13,17 +13,9 @@ export async function fetchRewardsAprForToken(
   tokenAddress: Address,
   chainId: number,
 ): Promise<BaseRewardsAprData> {
-  // Inline provider selection
-  let provider: RewardsAprFetcher
+  logger.info('Fetching rewards APR using Merkl', { tokenAddress, chainId })
 
-  switch (chainId) {
-    case 8453: // Base
-      provider = new MerklRewardsAprProvider()
-      logger.info('Fetching rewards APR for Base chain using Merkl', { tokenAddress })
-      break
-    default:
-      throw new Error(`No rewards APR provider found for chain ID: ${chainId}`)
-  }
+  const provider = new MerklRewardsAprProvider()
 
   try {
     // note: use 0x616a4E1db48e22028f6bbf20444Cd3b8e3273738 for testing
