@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
-import { parseUnits } from 'viem'
+import { formatUnits, parseUnits } from 'viem'
+import { TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
 
 export function useMintForm(params: {
   decimals: number
@@ -49,12 +50,26 @@ export function useMintForm(params: {
   const onPercent = useCallback(
     (pct: number) => {
       const n = Math.max(0, Math.min(100, pct))
-      const next = ((walletBalanceNum * n) / 100).toFixed(6)
-      setAmount(next)
+      try {
+        const walletRaw = parseUnits(walletBalanceFormatted || '0', decimals)
+        if (n === 100) {
+          // For MAX, show the exact wallet balance (match redeem behavior)
+          setAmount(walletBalanceFormatted)
+        } else {
+          // For other percentages, floor in base units and format to display precision
+          const amountRaw = (walletRaw * BigInt(n)) / 100n
+          const asUnits = formatUnits(amountRaw, decimals)
+          const [intPart, fracPart = ''] = asUnits.split('.')
+          const formatted = `${intPart}.${fracPart.slice(0, TOKEN_AMOUNT_DISPLAY_DECIMALS).padEnd(TOKEN_AMOUNT_DISPLAY_DECIMALS, '0')}`
+          setAmount(formatted)
+        }
+      } catch {
+        const next = ((walletBalanceNum * n) / 100).toFixed(TOKEN_AMOUNT_DISPLAY_DECIMALS)
+        setAmount(next)
+      }
     },
-    [walletBalanceNum],
+    [decimals, walletBalanceFormatted, walletBalanceNum],
   )
-
   return {
     amount,
     setAmount,

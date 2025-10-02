@@ -2,7 +2,7 @@ import { Copy, ExternalLink, LogOut, Moon, Palette, Settings, Sun, Wallet } from
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useDisconnect } from 'wagmi'
-import { getAddressExplorerUrl } from '../lib/utils/block-explorer'
+import { useExplorer } from '@/lib/hooks/useExplorer'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
@@ -28,6 +28,7 @@ interface CustomAccountModalProps {
 export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAccountModalProps) {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const { disconnect } = useDisconnect()
+  const explorer = useExplorer()
 
   const copyAddress = async () => {
     if (!account?.address) return
@@ -43,9 +44,9 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
   }
 
   const viewOnExplorer = () => {
-    if (!account?.address || !chain?.id) return
-    const explorerUrl = getAddressExplorerUrl(chain.id, account.address)
-    window.open(explorerUrl, '_blank', 'noopener,noreferrer')
+    if (!account?.address) return
+    const url = explorer.addressUrl(account.address)
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const handleDisconnect = () => {
@@ -123,7 +124,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                         size="sm"
                         onClick={viewOnExplorer}
                         className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
-                        aria-label="View on Explorer"
+                        aria-label={`View on ${explorer.name}`}
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>

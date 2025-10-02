@@ -103,8 +103,20 @@ export function LeverageTokenMintModal({
     })
 
   // Get real wallet balance for collateral asset
-  const { balance: collateralBalance, isLoading: isCollateralBalanceLoading } = useTokenBalance({
+  const {
+    balance: collateralBalance,
+    isLoading: isCollateralBalanceLoading,
+    refetch: refetchCollateralBalance,
+  } = useTokenBalance({
     tokenAddress: leverageTokenConfig.collateralAsset.address,
+    userAddress: userAddress as `0x${string}`,
+    chainId: leverageTokenConfig.chainId,
+    enabled: Boolean(userAddress && isConnected),
+  })
+
+  // Track user's leverage token balance for immediate holdings refresh after mint
+  const { refetch: refetchLeverageTokenBalance } = useTokenBalance({
+    tokenAddress: leverageTokenAddress,
     userAddress: userAddress as `0x${string}`,
     chainId: leverageTokenConfig.chainId,
     enabled: Boolean(userAddress && isConnected),
@@ -341,7 +353,7 @@ export function LeverageTokenMintModal({
       toast.success('Leverage tokens minted successfully!', {
         description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} tokens`,
       })
-      // Invalidate balances/state after 1 confirmation to reflect fresh shares
+      // Invalidate protocol state and refresh wallet balances after 1 confirmation
       try {
         await invalidateAfterReceipt(publicClient, queryClient, {
           hash,
@@ -350,6 +362,9 @@ export function LeverageTokenMintModal({
           owner: userAddress,
           includeUser: true,
         })
+        // Proactively refresh balances used by the UI
+        refetchCollateralBalance?.()
+        refetchLeverageTokenBalance?.()
       } catch (_) {
         // Best-effort invalidation; non-fatal for UX
       }
