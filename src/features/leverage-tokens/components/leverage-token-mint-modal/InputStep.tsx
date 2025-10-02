@@ -9,7 +9,11 @@ import { Input } from '../../../../components/ui/input'
 import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import { formatAPY } from '../../../../lib/utils/formatting'
-import { AMOUNT_PERCENTAGE_PRESETS, SLIPPAGE_PRESETS_PERCENT_DISPLAY } from '../../constants'
+import {
+  AMOUNT_PERCENTAGE_PRESETS,
+  MIN_MINT_AMOUNT_DISPLAY,
+  SLIPPAGE_PRESETS_PERCENT_DISPLAY,
+} from '../../constants'
 
 interface Token {
   symbol: string
@@ -357,8 +361,8 @@ export function InputStep({
             ? 'Enter an amount'
             : !canProceed && parseFloat(amount || '0') > parseFloat(selectedToken.balance)
               ? 'Insufficient balance'
-              : !canProceed && parseFloat(amount || '0') < 0.01
-                ? 'Minimum mint: 0.01'
+              : !canProceed && parseFloat(amount || '0') < parseFloat(MIN_MINT_AMOUNT_DISPLAY)
+                ? `Minimum mint: ${MIN_MINT_AMOUNT_DISPLAY}`
                 : isCalculating
                   ? 'Calculating...'
                   : isAllowanceLoading
