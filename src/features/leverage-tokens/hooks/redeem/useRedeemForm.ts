@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { formatUnits, parseUnits } from 'viem'
+import { MIN_REDEEM_AMOUNT_DISPLAY } from '../../constants'
 
 export function useRedeemForm(params: {
   leverageTokenDecimals: number
@@ -66,7 +67,7 @@ export function useRedeemForm(params: {
 
   const minAmountOk = useMemo(() => {
     const inputAmount = parseFloat(amount)
-    const minRedeem = 0.01 // Minimum redeem amount
+    const minRedeem = parseFloat(MIN_REDEEM_AMOUNT_DISPLAY)
     return Number.isFinite(inputAmount) && inputAmount >= minRedeem
   }, [amount])
 
