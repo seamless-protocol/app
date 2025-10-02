@@ -90,7 +90,7 @@ vi.mock('@/lib/contracts/addresses', () => {
       governorShort: '0x8768c789C6df8AF1a92d96dE823b4F80010Db294',
       timelockLong: '0xA96448469520666EDC351eff7676af2247b16718',
       governorLong: '0x04faA2826DbB38a7A4E9a5E3dB26b9E389E761B6',
-      multicall: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd',
+      multicallExecutor: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd',
       escrowSeam: '0x998e44232BEF4F8B033e5A5175BDC97F2B10d5e5',
       rewardsController: '0x2C6dC2CE7747E726A590082ADB3d7d08F52ADB93',
       vaults: {

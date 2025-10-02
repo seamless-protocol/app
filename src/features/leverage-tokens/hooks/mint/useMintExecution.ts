@@ -56,9 +56,9 @@ export function useMintExecution(params: {
   }, [envManagerV2, addresses.leverageManagerV2])
 
   const multicallExecutorAddress = useMemo(() => {
-    // Prefer chain-scoped multicall (respects Tenderly overrides), fallback to env
-    return (addresses.multicall as Address | undefined) ?? envMulticallExecutor
-  }, [envMulticallExecutor, addresses.multicall])
+    // Prefer chain-scoped multicallExecutor (respects Tenderly overrides), fallback to env
+    return (addresses.multicallExecutor as Address | undefined) ?? envMulticallExecutor
+  }, [envMulticallExecutor, addresses.multicallExecutor])
 
   const canSubmit = useMemo(() => Boolean(account), [account])
 

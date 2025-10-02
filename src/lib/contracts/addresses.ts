@@ -52,7 +52,7 @@ export interface ContractAddresses {
   }
 
   // Helper Contracts
-  multicall?: Address
+  multicallExecutor?: Address
   priceOracle?: Address
 
   // Governance (detailed)
@@ -101,7 +101,7 @@ const baseContracts: ContractAddresses = {
   governorLong: '0x04faA2826DbB38a7A4E9a5E3dB26b9E389E761B6' as Address,
 
   // Helpers
-  multicall: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd' as Address,
+  multicallExecutor: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd' as Address,
 
   // Ecosystem
   escrowSeam: '0x998e44232BEF4F8B033e5A5175BDC97F2B10d5e5' as Address,
@@ -136,7 +136,7 @@ const mainnetContracts: ContractAddresses = {
   },
 
   // Helpers
-  multicall: '0x16D02Ebd89988cAd1Ce945807b963aB7A9Fd22E1' as Address,
+  multicallExecutor: '0x16D02Ebd89988cAd1Ce945807b963aB7A9Fd22E1' as Address,
 }
 
 export const contractAddresses: Record<number, ContractAddresses> = {

@@ -71,9 +71,9 @@ export const LEVERAGE_ROUTER_ADDRESS = assertAddress(
   (baseContracts.leverageRouterV2 ?? baseContracts.leverageRouter) as Address | undefined,
 )
 export const MULTICALL_EXECUTOR_ADDRESS = assertAddress(
-  'multicall',
+  'multicallExecutor',
   BASE_CHAIN_ID,
-  baseContracts.multicall,
+  baseContracts.multicallExecutor,
 )
 
 export const BASE_TENDERLY_VNET_PRIMARY_RPC =
@@ -289,7 +289,7 @@ export const TENDERLY_VNET_CONTRACT_OVERRIDES: Record<number, Partial<ContractAd
     leverageManagerV2: MAINNET_TENDERLY_VNET_STACK.leverageManager,
     leverageRouter: MAINNET_TENDERLY_VNET_STACK.leverageRouter,
     leverageRouterV2: MAINNET_TENDERLY_VNET_STACK.leverageRouter,
-    multicall: MAINNET_TENDERLY_VNET_STACK.multicallExecutor,
+    multicallExecutor: MAINNET_TENDERLY_VNET_STACK.multicallExecutor,
   },
   [base.id]: {
     leverageTokenFactory: '0xA6737ca46336A7714E311597c6C07A18A3aFdCB8' as Address,
@@ -298,7 +298,7 @@ export const TENDERLY_VNET_CONTRACT_OVERRIDES: Record<number, Partial<ContractAd
     leverageRouter: BASE_TENDERLY_VNET_STACK.leverageRouter,
     leverageRouterV2: BASE_TENDERLY_VNET_STACK.leverageRouter,
     leverageTokenImpl: '0xfFEF572c179AC02F6285B0da7CB27176A725a8A1' as Address,
-    multicall: BASE_TENDERLY_VNET_STACK.multicallExecutor,
+    multicallExecutor: BASE_TENDERLY_VNET_STACK.multicallExecutor,
     tokens: {
       ...(baseContracts.tokens?.usdc ? { usdc: baseContracts.tokens.usdc } : {}),
       weth: BASE_WETH,
