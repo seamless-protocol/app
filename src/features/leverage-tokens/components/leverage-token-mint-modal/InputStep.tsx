@@ -9,7 +9,11 @@ import { Input } from '../../../../components/ui/input'
 import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import { formatAPY } from '../../../../lib/utils/formatting'
-import { AMOUNT_PERCENTAGE_PRESETS, MIN_MINT_AMOUNT_DISPLAY, SLIPPAGE_PRESETS_PERCENT_DISPLAY } from '../../constants'
+import {
+  AMOUNT_PERCENTAGE_PRESETS,
+  MIN_MINT_AMOUNT_DISPLAY,
+  SLIPPAGE_PRESETS_PERCENT_DISPLAY,
+} from '../../constants'
 
 interface Token {
   symbol: string

@@ -34,12 +34,10 @@ function _calculatePortfolioValueAtTimestamp(
 
     // Calculate position value: balance * equity per token (using collateral asset like old app)
     const equityPerToken = BigInt(closestState.equityPerTokenInCollateral)
-    const totalSupply = BigInt(closestState.totalSupply)
-
-    const positionValue = (balance * equityPerToken) / totalSupply
+    const positionValue = (balance * equityPerToken) / BigInt(1e18)
 
     // The positionValue is in collateral asset units, convert from wei to collateral asset
-    // Both balance and equityPerToken are in 18 decimals, so the result is also in 18 decimals
+    // Use 18 decimals as fallback since we don't have access to token config here
     const positionValueInCollateralAsset = Number(formatUnits(positionValue, 18))
 
     // Get collateral asset price in USD from CoinGecko (like old app)
@@ -132,11 +130,10 @@ export function calculatePortfolioMetrics(
 
     // Calculate current position value: balance * equity per token (using collateral asset like old app)
     const equityPerToken = BigInt(mostRecentState.equityPerTokenInCollateral)
-    const totalSupply = BigInt(mostRecentState.totalSupply)
-
-    const positionValue = (balance * equityPerToken) / totalSupply
+    const positionValue = (balance * equityPerToken) / BigInt(1e18)
 
     // Convert from wei to collateral asset units
+    // Use 18 decimals as fallback since we don't have access to token config here
     const positionValueInCollateralAsset = Number(formatUnits(positionValue, 18))
 
     // Get collateral asset price in USD (like old app)
@@ -152,6 +149,7 @@ export function calculatePortfolioMetrics(
     // Calculate deposited amount (what user originally put in)
     // This uses the totalEquityDepositedInCollateral field from the position (like old app)
     const depositedInCollateral = BigInt(position.totalEquityDepositedInCollateral || '0')
+    // Use 18 decimals as fallback since we don't have access to token config here
     const depositedInCollateralAsset = Number(formatUnits(depositedInCollateral, 18))
     const depositedInUSD = collateralAssetPriceUsd
       ? depositedInCollateralAsset * collateralAssetPriceUsd

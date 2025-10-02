@@ -5,7 +5,11 @@ import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
 import { Input } from '../../../../components/ui/input'
 import { Skeleton } from '../../../../components/ui/skeleton'
-import { AMOUNT_PERCENTAGE_PRESETS, MIN_REDEEM_AMOUNT_DISPLAY, SLIPPAGE_PRESETS_PERCENT_DISPLAY } from '../../constants'
+import {
+  AMOUNT_PERCENTAGE_PRESETS,
+  MIN_REDEEM_AMOUNT_DISPLAY,
+  SLIPPAGE_PRESETS_PERCENT_DISPLAY,
+} from '../../constants'
 
 type OutputAssetId = 'collateral' | 'debt'
 

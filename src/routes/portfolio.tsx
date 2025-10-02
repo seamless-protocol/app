@@ -22,6 +22,7 @@ import {
 import { usePortfolioRewards } from '@/features/portfolio/hooks/usePortfolioRewards'
 import { usePortfolioStaking } from '@/features/portfolio/hooks/usePortfolioStaking'
 import { features } from '@/lib/config/features'
+import { formatNumber } from '@/lib/utils/formatting'
 
 export const Route = createFileRoute('/portfolio')({
   component: PortfolioPage,
@@ -44,10 +45,10 @@ function PortfolioPage() {
     positionsAPYLoading,
   } = usePortfolioWithTotalValue()
   const performanceData = usePortfolioPerformance()
-  const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
+  const { isLoading: rewardsLoading } = usePortfolioRewards()
 
   // TODO: Use rewardsData when rewards feature is implemented
-  console.log('Rewards data:', { rewardsData, rewardsLoading })
+  // console.log('Rewards data:', { rewardsData, rewardsLoading })
 
   const { data: stakingData, isLoading: stakingLoading } = usePortfolioStaking()
 
@@ -269,13 +270,8 @@ function PortfolioPage() {
               title: 'Total Portfolio Value',
               stat: portfolioLoading ? (
                 <Skeleton className="h-6 w-24" />
-              ) : summary.totalValue < 0.01 ? (
-                '< $0.01'
               ) : (
-                `$${summary.totalValue.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 6,
-                })}`
+                `$${formatNumber(summary.totalValue, { decimals: 2, thousandDecimals: 2, millionDecimals: 2 })}`
               ),
               caption: portfolioLoading ? (
                 <Skeleton className="h-4 w-16" />

@@ -120,7 +120,7 @@ export function formatNumber(
   if (value >= 1000) {
     return `${(value / 1000).toFixed(thousandDecimals)}K`
   }
-  
+
   // Smart decimal handling for small amounts
   if (value > 0) {
     // For any non-zero value, avoid showing 0.00
@@ -154,4 +154,3 @@ export function formatTokenAmountFromBase(
   const n = Number(formatUnits(value, decimals))
   return Number.isFinite(n) ? n.toFixed(displayDecimals) : '0'
 }
-
