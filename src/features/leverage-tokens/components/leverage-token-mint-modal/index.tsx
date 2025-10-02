@@ -114,6 +114,14 @@ export function LeverageTokenMintModal({
     enabled: Boolean(userAddress && isConnected),
   })
 
+  // Track user's leverage token balance for immediate holdings refresh after mint
+  const { refetch: refetchLeverageTokenBalance } = useTokenBalance({
+    tokenAddress: leverageTokenAddress,
+    userAddress: userAddress as `0x${string}`,
+    chainId: leverageTokenConfig.chainId,
+    enabled: Boolean(userAddress && isConnected),
+  })
+
   // Get USD price for collateral asset
   const { data: usdPriceMap, isLoading: isUsdPriceLoading } = useUsdPrices({
     chainId: leverageTokenConfig.chainId,
@@ -354,8 +362,9 @@ export function LeverageTokenMintModal({
           owner: userAddress,
           includeUser: true,
         })
-        // Proactively refresh the user's collateral balance shown in the modal
+        // Proactively refresh balances used by the UI
         refetchCollateralBalance?.()
+        refetchLeverageTokenBalance?.()
       } catch (_) {
         // Best-effort invalidation; non-fatal for UX
       }
