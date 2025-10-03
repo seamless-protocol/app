@@ -14,19 +14,17 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const sampleMetrics = {
-  'Leverage': [
+  Leverage: [
     {
       label: 'Current Leverage',
       value: '12.34x',
       highlight: true,
       color: 'text-white',
-      tooltip: 'The current leverage ratio for this token.',
     },
     {
       label: 'Min - Max Leverage',
       value: '8.00x - 20.00x',
       color: 'text-white',
-      tooltip: 'The minimum and maximum leverage range allowed.',
     },
   ],
   Fees: [
