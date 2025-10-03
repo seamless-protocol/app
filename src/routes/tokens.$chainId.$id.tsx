@@ -237,7 +237,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       {
         title: 'Target Leverage',
         stat: `${tokenConfig.leverageRatio}x`,
-        caption: `Max leverage ratio`,
       },
     ]
 
@@ -537,7 +536,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     leverageTokenPrice: true,
                   }}
                   title="Price History"
-                  subtitle={`Compare leverage token performance vs ${tokenConfig.collateralAsset.symbol}`}
                   height={320}
                   className="border border-border bg-card"
                 />

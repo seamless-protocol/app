@@ -14,19 +14,17 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const sampleMetrics = {
-  'Leverage Settings': [
+  Leverage: [
     {
       label: 'Current Leverage',
       value: '12.34x',
       highlight: true,
       color: 'text-white',
-      tooltip: 'The current leverage ratio for this token.',
     },
     {
       label: 'Min - Max Leverage',
       value: '8.00x - 20.00x',
       color: 'text-white',
-      tooltip: 'The minimum and maximum leverage range allowed.',
     },
   ],
   Fees: [
@@ -44,26 +42,24 @@ const sampleMetrics = {
       tooltip: 'Fee charged when redeeming leverage tokens.',
     },
   ],
-  'Auction Parameters': [
+  'Dutch Auction Parameters': [
     {
       label: 'Dutch Auction Duration',
       value: '4 hours',
       color: 'text-white',
-      tooltip: 'Duration of the Dutch auction for token redemptions.',
     },
     {
       label: 'Initial Price Multiplier',
       value: '1.050x',
       color: 'text-white',
-      tooltip: 'Initial price multiplier for the auction.',
     },
   ],
-  'Risk Management': [
+  'Pre-liquidation': [
     {
       label: 'Pre-liquidation Leverage',
       value: '16.00x',
       color: 'text-white',
-      tooltip: 'Leverage threshold before liquidation is triggered.',
+      tooltip: 'Leverage threshold that triggers pre-liquidation protection',
     },
     {
       label: 'Rebalance Reward',

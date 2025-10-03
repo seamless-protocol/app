@@ -10,6 +10,7 @@ import { StatCardList } from '@/components/StatCardList'
 import { Skeleton } from '@/components/ui/skeleton'
 import { LeverageTokenMintModal } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
 import { LeverageTokenRedeemModal } from '@/features/leverage-tokens/components/leverage-token-redeem-modal'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import type { Position } from '@/features/portfolio/components/active-positions'
 import { ActivePositions } from '@/features/portfolio/components/active-positions'
 import { AvailableRewards } from '@/features/portfolio/components/available-rewards'
@@ -251,14 +252,22 @@ function PortfolioPage() {
 
   const handlePositionClick = (position: Position) => {
     if (position.type === 'leverage-token') {
-      // Extract the leverage token address from the position ID
-      // The position ID format is typically: {userAddress}-{leverageTokenAddress}
-      const leverageTokenAddress = position.id.split('-')[1]
+      // Use the leverageTokenAddress field directly from the position
+      const leverageTokenAddress = position.leverageTokenAddress
       if (leverageTokenAddress) {
+        // Get the token config to determine the correct chain ID
+        const tokenConfig = getLeverageTokenConfig(leverageTokenAddress as `0x${string}`)
+        if (!tokenConfig) {
+          throw new Error(
+            `Leverage token configuration not found for address: ${leverageTokenAddress}`,
+          )
+        }
+        const chainId = tokenConfig.chainId.toString()
+
         navigate({
           to: '/tokens/$chainId/$id',
           params: {
-            chainId: '8453', // Base chain ID
+            chainId,
             id: leverageTokenAddress,
           },
         })

@@ -17,7 +17,7 @@ export interface MetricItem {
   value: string
   highlight?: boolean
   color?: string
-  tooltip: string
+  tooltip?: string
 }
 
 export interface LeverageTokenMetrics {
@@ -126,21 +126,23 @@ export function LeverageTokenDetailedMetrics({
                               <span className="text-sm text-secondary-foreground">
                                 {metric.label}
                               </span>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    className="text-muted-foreground hover:text-secondary-foreground transition-colors"
-                                  >
-                                    <Info className="h-3 w-3" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent className="p-0 text-sm bg-card border border-border">
-                                  <div className="p-3 max-w-xs">
-                                    <p className="text-sm text-foreground">{metric.tooltip}</p>
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
+                              {metric.tooltip && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="text-muted-foreground hover:text-secondary-foreground transition-colors"
+                                    >
+                                      <Info className="h-3 w-3" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="p-0 text-sm bg-card border border-border">
+                                    <div className="p-3 max-w-xs">
+                                      <p className="text-foreground text-sm">{metric.tooltip}</p>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
                             </div>
                           </div>
                           <p className={cn('text-lg font-semibold text-foreground', metric.color)}>

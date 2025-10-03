@@ -325,13 +325,19 @@ export function LeverageTokenMintModal({
     return (
       form.isAmountValid &&
       form.hasBalance &&
-      form.minAmountOk &&
       !planPreview.isLoading &&
       quoteReady &&
       parseFloat(expectedTokens) > 0 &&
       isConnected &&
       !isAllowanceLoading
     )
+  }
+
+  // Check if amount is below minimum for warning
+  const isBelowMinimum = () => {
+    const amount = parseFloat(form.amount || '0')
+    const minAmount = parseFloat(MIN_MINT_AMOUNT_DISPLAY)
+    return amount > 0 && amount < minAmount
   }
 
   // Handle approval step
@@ -465,6 +471,7 @@ export function LeverageTokenMintModal({
             apy={apy ?? undefined}
             managementFee={managementFee}
             isManagementFeeLoading={isManagementFeeLoading}
+            isBelowMinimum={isBelowMinimum()}
           />
         )
 

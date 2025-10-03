@@ -323,19 +323,17 @@ function transformDetailedMetricsData(
       : 'N/A'
 
   return {
-    'Leverage Settings': [
+    Leverage: [
       {
         label: 'Current Leverage',
         value: currentLeverage,
         highlight: true,
         color: 'text-white',
-        tooltip: 'The current leverage ratio for this token.',
       },
       {
         label: 'Min - Max Leverage',
         value: `${minLeverage} - ${maxLeverage}`,
         color: 'text-white',
-        tooltip: 'The minimum and maximum leverage range allowed.',
       },
     ],
     Fees: [
@@ -343,7 +341,7 @@ function transformDetailedMetricsData(
         label: 'Mint Token Fee',
         value: mintTokenFee,
         highlight: true,
-        color: 'text-green-400',
+        color: 'text-white',
         tooltip: 'Fee charged when minting new leverage tokens.',
       },
       {
@@ -353,32 +351,29 @@ function transformDetailedMetricsData(
         tooltip: 'Fee charged when redeeming leverage tokens.',
       },
     ],
-    'Auction Parameters': [
+    'Dutch Auction Parameters': [
       {
         label: 'Dutch Auction Duration',
         value: dutchAuctionDuration,
         color: 'text-white',
-        tooltip: 'Duration of the Dutch auction for token redemptions.',
       },
       {
         label: 'Initial Price Multiplier',
         value: initialPriceMultiplier,
         color: 'text-white',
-        tooltip: 'Initial price multiplier for the auction.',
       },
       {
         label: 'Min Price Multiplier',
         value: minPriceMultiplier,
         color: 'text-white',
-        tooltip: 'Minimum price multiplier for the auction.',
       },
     ],
-    'Risk Management': [
+    'Pre-liquidation': [
       {
         label: 'Pre-liquidation Leverage',
         value: preLiquidationLeverage,
         color: 'text-white',
-        tooltip: 'Leverage threshold before liquidation is triggered.',
+        tooltip: 'Leverage threshold that triggers pre-liquidation protection',
       },
       {
         label: 'Rebalance Reward',
