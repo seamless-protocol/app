@@ -323,7 +323,7 @@ function transformDetailedMetricsData(
       : 'N/A'
 
   return {
-    'Leverage': [
+    Leverage: [
       {
         label: 'Current Leverage',
         value: currentLeverage,
@@ -334,7 +334,6 @@ function transformDetailedMetricsData(
         label: 'Min - Max Leverage',
         value: `${minLeverage} - ${maxLeverage}`,
         color: 'text-white',
-        tooltip: 'The minimum and maximum leverage range allowed.',
       },
     ],
     Fees: [
