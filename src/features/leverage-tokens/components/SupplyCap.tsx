@@ -19,7 +19,10 @@ export function SupplyCap({ currentSupply, supplyCap, className }: SupplyCapProp
     <div className={cn('flex flex-col items-end space-y-1', className)}>
       <div className="flex items-center space-x-2">
         <span
-          className={cn('text-sm font-medium', isNearCapacity ? 'text-red-400' : 'text-slate-300')}
+          className={cn(
+            'text-sm font-medium',
+            isNearCapacity ? 'text-[var(--state-error-text)]' : 'text-foreground',
+          )}
         >
           {available.toLocaleString()}
         </span>
@@ -30,17 +33,17 @@ export function SupplyCap({ currentSupply, supplyCap, className }: SupplyCapProp
                 <WarningIcon />
               </div>
             </TooltipTrigger>
-            <TooltipContent className="px-3 py-1.5 bg-black text-sm">
-              <p className="font-medium text-red-400">
+            <TooltipContent className="px-3 py-1.5 text-sm border border-border bg-card text-foreground">
+              <p className="font-medium text-[var(--state-error-text)]">
                 Supply cap {fillPercentage.toFixed(1)}% full
                 <br />
-                <span className="text-slate-400 text-sm">Minting may be limited</span>
+                <span className="text-secondary-foreground text-sm">Minting may be limited</span>
               </p>
             </TooltipContent>
           </Tooltip>
         )}
       </div>
-      <span className="text-xs text-slate-500">of {supplyCap.toLocaleString()}</span>
+      <span className="text-xs text-muted-foreground">of {supplyCap.toLocaleString()}</span>
     </div>
   )
 }

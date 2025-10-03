@@ -92,15 +92,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="relative sm:max-w-lg max-w-md backdrop-blur-sm bg-card border border-border text-foreground">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close settings"
-          className="cursor-pointer absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--divider-line)] bg-[var(--surface-card)] text-secondary-foreground shadow-sm transition-colors hover:text-foreground hover:bg-accent"
-        >
-          ×
-        </button>
+      <DialogContent className="backdrop-blur-sm bg-card border border-border text-foreground">
         <DialogHeader className="flex flex-col gap-2 text-center sm:text-left">
           <DialogTitle className="text-lg leading-none font-semibold flex items-center space-x-3 text-foreground">
             <div className="w-8 h-8 bg-[var(--cta-gradient)] rounded-lg flex items-center justify-center">
@@ -175,11 +167,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                       </Button>
                     </div>
                   </div>
-                  <Button
-                    onClick={handleDisconnect}
-                    variant="outline"
-                    className="w-full mt-3 border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50"
-                  >
+                  <Button onClick={handleDisconnect} variant="destructive" className="w-full mt-3">
                     <LogOut className="h-4 w-4 mr-2" />
                     Disconnect Wallet
                   </Button>
