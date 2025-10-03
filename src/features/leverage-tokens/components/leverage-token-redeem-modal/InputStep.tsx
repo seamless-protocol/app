@@ -95,6 +95,9 @@ interface InputStepProps {
 
   // Config
   leverageTokenConfig: LeverageTokenConfig
+
+  // Warning
+  isBelowMinimum?: boolean | undefined
 }
 
 export function InputStep({
@@ -129,6 +132,7 @@ export function InputStep({
   leverageTokenConfig,
   redemptionFee,
   isRedemptionFeeLoading,
+  isBelowMinimum,
 }: InputStepProps) {
   const redeemAmountId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -461,6 +465,15 @@ export function InputStep({
       {/* Error Display */}
       {error && <Alert type="error" title="Error" description={error} />}
 
+      {/* Warning Display */}
+      {isBelowMinimum && (
+        <Alert
+          type="warning"
+          title="Low Amount Warning"
+          description={`The amount you're redeeming is below the recommended minimum of ${MIN_REDEEM_AMOUNT_DISPLAY}. Gas costs may exceed the transaction value.`}
+        />
+      )}
+
       {/* Action Button */}
       <Button
         onClick={onApprove}
@@ -474,17 +487,15 @@ export function InputStep({
             ? 'Enter an amount'
             : !canProceed && parseFloat(amount || '0') > parseFloat(selectedToken.balance)
               ? 'Insufficient tokens'
-              : !canProceed && parseFloat(amount || '0') < parseFloat(MIN_REDEEM_AMOUNT_DISPLAY)
-                ? `Minimum redeem: ${MIN_REDEEM_AMOUNT_DISPLAY}`
-                : isCalculating
-                  ? 'Calculating...'
-                  : isAllowanceLoading
-                    ? 'Checking allowance...'
-                    : isApproving
-                      ? 'Approving...'
-                      : needsApproval
-                        ? `Approve ${selectedToken.symbol}`
-                        : `Redeem ${leverageTokenConfig.symbol}`}
+              : isCalculating
+                ? 'Calculating...'
+                : isAllowanceLoading
+                  ? 'Checking allowance...'
+                  : isApproving
+                    ? 'Approving...'
+                    : needsApproval
+                      ? `Approve ${selectedToken.symbol}`
+                      : `Redeem ${leverageTokenConfig.symbol}`}
       </Button>
     </div>
   )
