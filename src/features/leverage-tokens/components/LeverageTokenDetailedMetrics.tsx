@@ -16,7 +16,7 @@ export interface MetricItem {
   value: string
   highlight?: boolean
   color?: string
-  tooltip: string
+  tooltip?: string
 }
 
 export interface LeverageTokenMetrics {
@@ -122,21 +122,23 @@ export function LeverageTokenDetailedMetrics({
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-1">
                               <span className="text-slate-400 text-sm">{metric.label}</span>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    className="text-slate-400 hover:text-slate-300 transition-colors"
-                                  >
-                                    <Info className="h-3 w-3" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                                  <div className="p-3 max-w-xs">
-                                    <p className="text-white text-sm">{metric.tooltip}</p>
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
+                              {metric.tooltip && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="text-slate-400 hover:text-slate-300 transition-colors"
+                                    >
+                                      <Info className="h-3 w-3" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
+                                    <div className="p-3 max-w-xs">
+                                      <p className="text-white text-sm">{metric.tooltip}</p>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
                             </div>
                           </div>
                           <p className={`text-lg font-semibold ${metric.color || 'text-white'}`}>
