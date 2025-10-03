@@ -45,7 +45,6 @@ const navigationItems = [
     title: 'Staking',
     icon: Coins,
     description: 'Stake SEAM tokens',
-    badge: 'New',
     externalUrl: 'https://legacy.seamlessprotocol.com/#/?tab=Staking',
   },
   {
