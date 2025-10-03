@@ -351,24 +351,21 @@ function transformDetailedMetricsData(
         tooltip: 'Fee charged when redeeming leverage tokens.',
       },
     ],
-    'Auction Parameters': [
+    'Dutch Auction Parameters': [
       {
         label: 'Dutch Auction Duration',
         value: dutchAuctionDuration,
         color: 'text-white',
-        tooltip: 'Duration of the Dutch auction for token redemptions.',
       },
       {
         label: 'Initial Price Multiplier',
         value: initialPriceMultiplier,
         color: 'text-white',
-        tooltip: 'Initial price multiplier for the auction.',
       },
       {
         label: 'Min Price Multiplier',
         value: minPriceMultiplier,
         color: 'text-white',
-        tooltip: 'Minimum price multiplier for the auction.',
       },
     ],
     'Pre-liquidation': [
