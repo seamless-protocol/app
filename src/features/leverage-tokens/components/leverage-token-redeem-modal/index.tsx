@@ -13,7 +13,11 @@ import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
-import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
+import {
+  DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+  MIN_REDEEM_AMOUNT_DISPLAY,
+  TOKEN_AMOUNT_DISPLAY_DECIMALS,
+} from '../../constants'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
 import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
@@ -430,13 +434,19 @@ export function LeverageTokenRedeemModal({
     return (
       form.isAmountValid &&
       form.hasBalance &&
-      form.minAmountOk &&
       !isCalculating &&
       typeof expectedPayoutRaw === 'bigint' &&
       isConnected &&
       !isAllowanceLoading &&
       exec.canSubmit
     )
+  }
+
+  // Check if amount is below minimum for warning
+  const isBelowMinimum = () => {
+    const amount = parseFloat(form.amount || '0')
+    const minAmount = parseFloat(MIN_REDEEM_AMOUNT_DISPLAY)
+    return amount > 0 && amount < minAmount
   }
 
   // Handle amount input changes (with error clearing)
@@ -604,6 +614,7 @@ export function LeverageTokenRedeemModal({
             redemptionFee={contractConfig?.redeemTokenFee}
             isRedemptionFeeLoading={isContractConfigLoading}
             disabledAssets={disabledOutputAssets}
+            isBelowMinimum={isBelowMinimum()}
           />
         )
 
