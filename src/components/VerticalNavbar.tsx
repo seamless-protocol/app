@@ -261,8 +261,8 @@ function NavbarContent({
             <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)]">
               Seamless Protocol
             </h2>
-            <p className="text-xs text-[var(--nav-text-muted)] flex items-center gap-2">
-              <span>Platform TVL:</span>
+            <p className="text-xs text-muted-foreground flex items-center gap-2">
+              <span className="text-muted-foreground">Platform TVL:</span>
               {typeof platformTVL === 'string' || typeof platformTVL === 'number' ? (
                 <span className="text-foreground font-semibold">{platformTVL}</span>
               ) : (

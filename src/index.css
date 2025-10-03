@@ -689,8 +689,8 @@ html.dark [data-rk] {
   background: var(--text-muted);
 }
 
-/* Selection styling for dark theme */
-::selection {
+/* Selection styling (dark only) */
+.dark ::selection {
   background-color: var(--brand-purple);
   color: var(--text-primary);
 }

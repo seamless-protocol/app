@@ -1,15 +1,31 @@
 import { LiFiWidget as LiFiWidgetComponent, type WidgetConfig } from '@lifi/widget'
 import { motion } from 'framer-motion'
 import { ArrowUpDown } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { useAccount, useConnectorClient } from 'wagmi'
+import { useTheme } from '@/components/theme-provider'
 
 export function LiFiWidget() {
   const { isConnected, address } = useAccount()
   const { data: client } = useConnectorClient()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { theme } = useTheme()
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
+
+  useEffect(() => {
+    if (theme === 'system') {
+      if (typeof window === 'undefined') return
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const handleChange = () => setResolvedTheme(mediaQuery.matches ? 'dark' : 'light')
+      handleChange()
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
+    setResolvedTheme(theme)
+    return undefined
+  }, [theme])
 
   // Handle click when wallet is not connected
   const handleSwapClick = () => {
@@ -28,7 +44,8 @@ export function LiFiWidget() {
       integrator: 'seamless-protocol',
       variant: 'wide',
       subvariant: 'split',
-      appearance: 'light',
+      // Keep LiFi in sync with app mode; do not let it drive mode
+      appearance: resolvedTheme,
       theme: {
         colorSchemes: {
           light: {
@@ -97,7 +114,7 @@ export function LiFiWidget() {
       // Hide some UI elements to keep it clean
       hiddenUI: ['appearance', 'language'],
     }),
-    [],
+    [resolvedTheme],
   )
 
   // Show a clickable button when wallet is not connected
@@ -166,7 +183,7 @@ export function LiFiWidget() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="cursor-pointer absolute -top-4 -right-4 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--divider-line)] bg-[var(--surface-card)] text-[var(--text-secondary)] shadow-lg transition-colors hover:text-[var(--text-primary)] hover:bg-accent"
+                className="cursor-pointer absolute -top-4 -right-4 z-[2000] flex h-10 w-10 items-center justify-center rounded-full border border-[var(--divider-line)] bg-[var(--surface-card)] text-[var(--text-secondary)] shadow-lg transition-colors"
                 aria-label="Close swap widget"
               >
                 ×
