@@ -543,7 +543,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     leverageTokenPrice: true,
                   }}
                   title="Price History"
-                  subtitle={`Compare leverage token performance vs ${tokenConfig.collateralAsset.symbol}`}
                   height={320}
                   className="bg-slate-900/80 border border-slate-700"
                 />
