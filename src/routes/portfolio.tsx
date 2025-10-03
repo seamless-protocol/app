@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { DollarSign, Target, TrendingUp } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import type { Address } from 'viem'
 import { useAccount } from 'wagmi'
 import { ConnectionStatusCard } from '@/components/ConnectionStatusCard'
@@ -70,6 +70,14 @@ function PortfolioPage() {
   }
   const positions = portfolioData?.positions || []
 
+  // Accessible IDs for landmark headings (declare before any early return)
+  const headingId = useId()
+  const summaryHeadingId = useId()
+  const performanceHeadingId = useId()
+  const rewardsHeadingId = useId()
+  const vaultsHeadingId = useId()
+  const positionsHeadingId = useId()
+
   // Show connection status card if wallet is not connected
   if (!isConnected) {
     return (
@@ -82,7 +90,7 @@ function PortfolioPage() {
   // Show loading state only for main portfolio data
   if (portfolioLoading) {
     return (
-      <div className="space-y-6" role="main" aria-busy>
+      <main className="space-y-6" aria-busy>
         {/* Portfolio Summary Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Total Portfolio Value Card */}
@@ -198,7 +206,7 @@ function PortfolioPage() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     )
   }
 
@@ -260,22 +268,22 @@ function PortfolioPage() {
   return (
     <motion.main
       className="space-y-8"
-      aria-labelledby="portfolio-heading"
+      aria-labelledby={headingId}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h1 id="portfolio-heading" className="sr-only">
+      <h1 id={headingId} className="sr-only">
         Portfolio
       </h1>
       {/* Portfolio Value Cards */}
       <motion.section
-        aria-labelledby="portfolio-summary-heading"
+        aria-labelledby={summaryHeadingId}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
       >
-        <h2 id="portfolio-summary-heading" className="sr-only">
+        <h2 id={summaryHeadingId} className="sr-only">
           Portfolio Summary
         </h2>
         <StatCardList
@@ -360,12 +368,12 @@ function PortfolioPage() {
 
       {/* Portfolio Chart */}
       <motion.section
-        aria-labelledby="portfolio-performance-heading"
+        aria-labelledby={performanceHeadingId}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <h2 id="portfolio-performance-heading" className="sr-only">
+        <h2 id={performanceHeadingId} className="sr-only">
           Portfolio Performance
         </h2>
         <div className="relative">
@@ -385,7 +393,7 @@ function PortfolioPage() {
       {/* Available Rewards & Staking Section */}
       {(features.availableRewards || features.seamStaking) && (
         <motion.section
-          aria-labelledby="rewards-staking-heading"
+          aria-labelledby={rewardsHeadingId}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
@@ -395,7 +403,7 @@ function PortfolioPage() {
               : 'grid-cols-1'
           }`}
         >
-          <h2 id="rewards-staking-heading" className="sr-only">
+          <h2 id={rewardsHeadingId} className="sr-only">
             Rewards and Staking
           </h2>
           {features.availableRewards && (
@@ -435,12 +443,12 @@ function PortfolioPage() {
       )}
 
       <motion.section
-        aria-labelledby="vaults-info-heading"
+        aria-labelledby={vaultsHeadingId}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.35 }}
       >
-        <h2 id="vaults-info-heading" className="sr-only">
+        <h2 id={vaultsHeadingId} className="sr-only">
           Morpho Vaults Information
         </h2>
         <MorphoVaultsInfoCard />
@@ -448,12 +456,12 @@ function PortfolioPage() {
 
       {/* Active Positions */}
       <motion.section
-        aria-labelledby="active-positions-heading"
+        aria-labelledby={positionsHeadingId}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
       >
-        <h2 id="active-positions-heading" className="sr-only">
+        <h2 id={positionsHeadingId} className="sr-only">
           Active Positions
         </h2>
         <ActivePositions

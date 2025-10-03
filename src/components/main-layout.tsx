@@ -216,7 +216,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <h1 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] truncate">
                     {navigationItems.find((item) => item.id === currentPage)?.title || 'Page'}
                   </h1>
-                  <p className="text-xs sm:text-sm text-[var(--text-muted)] hidden sm:block truncate">
+                  <p className="text-xs sm:text-sm text-secondary-foreground hidden sm:block truncate">
                     {navigationItems.find((item) => item.id === currentPage)?.subtitle ||
                       'Page description'}
                   </p>

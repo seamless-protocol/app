@@ -22,11 +22,11 @@ export function AvailableRewards({
 }: AvailableRewardsProps) {
   return (
     <Card
-      className={`bg-slate-900/80 border-slate-700 hover:bg-slate-900/90 transition-all duration-300 ${className}`}
+      className={`bg-card border-border hover:bg-accent transition-all duration-300 ${className}`}
     >
       <CardHeader className="pb-4">
-        <CardTitle className="text-white flex items-center">
-          <Award className="h-5 w-5 mr-2 text-yellow-400" />
+        <CardTitle className="text-foreground flex items-center">
+          <Award className="h-5 w-5 mr-2 text-brand-purple" />
           Available Rewards
         </CardTitle>
       </CardHeader>
@@ -34,7 +34,7 @@ export function AvailableRewards({
         <div className="space-y-4">
           {/* Accruing Rewards with Token Logos */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-slate-400">Accruing</span>
+            <span className="text-secondary-foreground">Accruing</span>
             <div className="flex items-center space-x-3">
               <div className="flex items-center relative">
                 {tokenAddresses.map((tokenAddress, index) => (
@@ -51,27 +51,24 @@ export function AvailableRewards({
                   </div>
                 ))}
               </div>
-              <span className="text-white font-semibold">{accruingAmount}</span>
+              <span className="text-foreground font-semibold">{accruingAmount}</span>
             </div>
           </div>
 
           {/* SEAM Tokens */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-slate-400">SEAM Tokens</span>
-            <span className="text-white font-semibold">{seamToken} SEAM</span>
+            <span className="text-secondary-foreground">SEAM Tokens</span>
+            <span className="text-foreground font-semibold">{seamToken} SEAM</span>
           </div>
 
           {/* Protocol Fees */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-slate-400">Protocol Fees</span>
-            <span className="text-white font-semibold">{protocolFees}</span>
+            <span className="text-secondary-foreground">Protocol Fees</span>
+            <span className="text-foreground font-semibold">{protocolFees}</span>
           </div>
 
           {/* Claim Button */}
-          <Button
-            onClick={onClaim}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white mt-2"
-          >
+          <Button onClick={onClaim} variant="gradient" className="w-full mt-2">
             <Zap className="h-4 w-4 mr-2" />
             Claim All Rewards
           </Button>

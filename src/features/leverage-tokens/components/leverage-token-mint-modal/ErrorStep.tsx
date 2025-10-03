@@ -8,12 +8,13 @@ interface ErrorStepProps {
 }
 
 export function ErrorStep({ error, onRetry, onClose }: ErrorStepProps) {
-  const { icon, title, message, showRetry } = getErrorDisplay(error || '', 'Transaction Failed')
+  const { icon, title, message, showRetry, severity } = getErrorDisplay(error || '', 'Transaction Failed')
+  const bgClass = severity === 'warning' ? 'bg-[var(--tag-warning-bg)]' : severity === 'info' ? 'bg-[var(--tag-info-bg)]' : 'bg-[var(--tag-error-bg)]'
 
   return (
     <div className="space-y-6 text-center">
       <div className="flex flex-col items-center">
-        <div className="w-16 h-16 bg-[var(--tag-error-bg)] rounded-full flex items-center justify-center mb-4">
+        <div className={`w-16 h-16 ${bgClass} rounded-full flex items-center justify-center mb-4`}>
           {icon}
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">{title}</h3>

@@ -1,11 +1,14 @@
 import { AlertTriangle, WifiOff, XCircle } from 'lucide-react'
 import { classifyError, type LeverageTokenError } from './errors'
 
+export type ErrorSeverity = 'info' | 'warning' | 'error'
+
 export interface ErrorDisplayConfig {
   icon: React.ReactNode
   title: string
   message: string
   showRetry: boolean
+  severity: ErrorSeverity
 }
 
 /**
@@ -31,6 +34,7 @@ export function getErrorDisplay(
         title: 'Transaction Cancelled',
         message: 'You cancelled the transaction in your wallet. No changes were made.',
         showRetry: true,
+        severity: 'warning',
       }
 
     case 'CHAIN_MISMATCH':
@@ -39,6 +43,7 @@ export function getErrorDisplay(
         title: 'Wrong Network',
         message: 'Please switch to the correct network in your wallet and try again.',
         showRetry: true,
+        severity: 'warning',
       }
 
     case 'INSUFFICIENT_BALANCE':
@@ -47,6 +52,7 @@ export function getErrorDisplay(
         title: 'Insufficient Balance',
         message: "You don't have enough tokens to complete this transaction.",
         showRetry: false,
+        severity: 'error',
       }
 
     case 'STALE_ORACLE':
@@ -55,6 +61,7 @@ export function getErrorDisplay(
         title: 'Price Data Outdated',
         message: 'The price data is temporarily outdated. Please try again in a few moments.',
         showRetry: true,
+        severity: 'warning',
       }
 
     case 'REBALANCING_IN_PROGRESS':
@@ -63,6 +70,7 @@ export function getErrorDisplay(
         title: 'Rebalancing in Progress',
         message: 'The protocol is currently rebalancing. Please wait a few minutes and try again.',
         showRetry: true,
+        severity: 'warning',
       }
 
     case 'INSUFFICIENT_LIQUIDITY':
@@ -72,6 +80,7 @@ export function getErrorDisplay(
         message:
           "There isn't enough liquidity to complete this transaction. Please try a smaller amount.",
         showRetry: true,
+        severity: 'warning',
       }
 
     default:
@@ -86,6 +95,7 @@ export function getErrorDisplay(
           title: 'Transaction Cancelled',
           message: 'You cancelled the transaction in your wallet. No changes were made.',
           showRetry: true,
+          severity: 'warning',
         }
       }
 
@@ -100,6 +110,7 @@ export function getErrorDisplay(
           title: 'Transaction Cancelled',
           message: 'You cancelled the transaction in your wallet. No changes were made.',
           showRetry: true,
+          severity: 'warning',
         }
       }
 
@@ -108,6 +119,7 @@ export function getErrorDisplay(
         title: defaultTitle,
         message: error || 'Something went wrong with your transaction. Please try again.',
         showRetry: true,
+        severity: 'warning',
       }
   }
 }
