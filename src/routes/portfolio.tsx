@@ -82,11 +82,11 @@ function PortfolioPage() {
   // Show loading state only for main portfolio data
   if (portfolioLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" role="main" aria-busy>
         {/* Portfolio Summary Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Total Portfolio Value Card */}
-          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-6 w-6 rounded-full" />
@@ -96,7 +96,7 @@ function PortfolioPage() {
           </div>
 
           {/* Total Earnings Card */}
-          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-4 w-28" />
               <Skeleton className="h-6 w-6 rounded-full" />
@@ -106,7 +106,7 @@ function PortfolioPage() {
           </div>
 
           {/* Active Positions Card */}
-          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-4 w-28" />
               <Skeleton className="h-6 w-6 rounded-full" />
@@ -117,7 +117,7 @@ function PortfolioPage() {
         </div>
 
         {/* Portfolio Performance Chart Skeleton */}
-        <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+        <div className="rounded-lg border border-border bg-card p-6">
           <div className="flex items-center justify-between mb-6">
             <Skeleton className="h-6 w-40" />
             <div className="flex space-x-2">
@@ -131,11 +131,11 @@ function PortfolioPage() {
         </div>
 
         {/* Active Positions Table Skeleton */}
-        <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+        <div className="rounded-lg border border-border bg-card p-6">
           <Skeleton className="h-6 w-32 mb-4" />
           <div className="space-y-4">
             {/* Table header */}
-            <div className="flex justify-between items-center py-3 border-b border-slate-700">
+            <div className="flex justify-between items-center py-3 border-b border-border">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-4 w-16" />
               <Skeleton className="h-4 w-20" />
@@ -160,7 +160,7 @@ function PortfolioPage() {
         {/* Rewards and Staking Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Available Rewards Card */}
-          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-6 w-6 rounded-full" />
               <Skeleton className="h-4 w-20" />
@@ -178,7 +178,7 @@ function PortfolioPage() {
           </div>
 
           {/* SEAM Staking Card */}
-          <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 96%,transparent)] p-6">
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-6 w-6 rounded-full" />
               <div className="flex items-center space-x-2">
@@ -258,18 +258,26 @@ function PortfolioPage() {
   }
 
   return (
-    <motion.div
+    <motion.main
       className="space-y-8"
+      aria-labelledby="portfolio-heading"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      <h1 id="portfolio-heading" className="sr-only">
+        Portfolio
+      </h1>
       {/* Portfolio Value Cards */}
-      <motion.div
+      <motion.section
+        aria-labelledby="portfolio-summary-heading"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
       >
+        <h2 id="portfolio-summary-heading" className="sr-only">
+          Portfolio Summary
+        </h2>
         <StatCardList
           maxColumns={3}
           cards={[
@@ -285,7 +293,9 @@ function PortfolioPage() {
               ) : (
                 <div
                   className={`flex items-center text-sm ${
-                    summary.changeAmount >= 0 ? 'text-green-400' : 'text-red-400'
+                    summary.changeAmount >= 0
+                      ? 'text-[var(--state-success-text)]'
+                      : 'text-[var(--state-error-text)]'
                   }`}
                 >
                   {summary.changeAmount >= 0 ? (
@@ -298,8 +308,8 @@ function PortfolioPage() {
                 </div>
               ),
               icon: <DollarSign />,
-              iconBgClass: 'bg-purple-500/20',
-              iconTextClass: 'text-purple-400',
+              iconBgClass: 'bg-[color-mix(in_srgb,var(--brand-secondary)_20%,transparent)]',
+              iconTextClass: 'text-brand-purple',
             },
             {
               title: 'Total Earnings',
@@ -319,8 +329,14 @@ function PortfolioPage() {
                 `${summary.changePercent >= 0 ? '+' : ''}${summary.changePercent.toFixed(2)}% total return`
               ),
               icon: <TrendingUp />,
-              iconBgClass: summary.changeAmount >= 0 ? 'bg-green-500/20' : 'bg-red-500/20',
-              iconTextClass: summary.changeAmount >= 0 ? 'text-green-400' : 'text-red-400',
+              iconBgClass:
+                summary.changeAmount >= 0
+                  ? 'bg-[color-mix(in_srgb,var(--state-success-text)_18%,transparent)]'
+                  : 'bg-[color-mix(in_srgb,var(--state-error-text)_18%,transparent)]',
+              iconTextClass:
+                summary.changeAmount >= 0
+                  ? 'text-[var(--state-success-text)]'
+                  : 'text-[var(--state-error-text)]',
             },
             {
               title: 'Active Positions',
@@ -335,19 +351,23 @@ function PortfolioPage() {
                 `Across ${summary.activePositions} strategies`
               ),
               icon: <Target />,
-              iconBgClass: 'bg-cyan-500/20',
-              iconTextClass: 'text-cyan-400',
+              iconBgClass: 'bg-[color-mix(in_srgb,var(--accent-1)_18%,transparent)]',
+              iconTextClass: 'text-[var(--accent-1)]',
             },
           ]}
         />
-      </motion.div>
+      </motion.section>
 
       {/* Portfolio Chart */}
-      <motion.div
+      <motion.section
+        aria-labelledby="portfolio-performance-heading"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
+        <h2 id="portfolio-performance-heading" className="sr-only">
+          Portfolio Performance
+        </h2>
         <div className="relative">
           <PortfolioPerformanceChart
             data={performanceData.data}
@@ -355,16 +375,17 @@ function PortfolioPage() {
             onTimeframeChange={performanceData.setSelectedTimeframe}
           />
           {performanceData.isLoading && (
-            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-              <div className="text-slate-400">Loading chart data...</div>
+            <div className="absolute inset-0 bg-[var(--overlay-backdrop)] backdrop-blur-sm flex items-center justify-center rounded-xl">
+              <div className="text-secondary-foreground">Loading chart data...</div>
             </div>
           )}
         </div>
-      </motion.div>
+      </motion.section>
 
       {/* Available Rewards & Staking Section */}
       {(features.availableRewards || features.seamStaking) && (
-        <motion.div
+        <motion.section
+          aria-labelledby="rewards-staking-heading"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
@@ -374,6 +395,9 @@ function PortfolioPage() {
               : 'grid-cols-1'
           }`}
         >
+          <h2 id="rewards-staking-heading" className="sr-only">
+            Rewards and Staking
+          </h2>
           {features.availableRewards && (
             <div className="relative">
               <AvailableRewards
@@ -384,7 +408,7 @@ function PortfolioPage() {
                 onClaim={handleClaimRewards}
               />
               {rewardsLoading && (
-                <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
+                <div className="absolute inset-0 bg-[var(--overlay-backdrop)] backdrop-blur-sm flex items-center justify-center rounded-xl">
                   <div className="h-5 w-24 bg-slate-700/50 rounded animate-pulse" />
                 </div>
               )}
@@ -401,36 +425,44 @@ function PortfolioPage() {
                 onManage={handleManageStaking}
               />
               {stakingLoading && (
-                <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
-                  <div className="text-slate-400">Loading staking data...</div>
+                <div className="absolute inset-0 bg-[var(--overlay-backdrop)] backdrop-blur-sm flex items-center justify-center rounded-xl">
+                  <div className="text-secondary-foreground">Loading staking data...</div>
                 </div>
               )}
             </div>
           )}
-        </motion.div>
+        </motion.section>
       )}
 
-      <motion.div
+      <motion.section
+        aria-labelledby="vaults-info-heading"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.35 }}
       >
+        <h2 id="vaults-info-heading" className="sr-only">
+          Morpho Vaults Information
+        </h2>
         <MorphoVaultsInfoCard />
-      </motion.div>
+      </motion.section>
 
       {/* Active Positions */}
-      <motion.div
+      <motion.section
+        aria-labelledby="active-positions-heading"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
       >
+        <h2 id="active-positions-heading" className="sr-only">
+          Active Positions
+        </h2>
         <ActivePositions
           positions={positions}
           onAction={handlePositionAction}
           onPositionClick={handlePositionClick}
           apyLoading={positionsAPYLoading}
         />
-      </motion.div>
+      </motion.section>
 
       {/* Mint Modal */}
       {selectedPosition && (
@@ -458,6 +490,6 @@ function PortfolioPage() {
           {...(userAddress && { userAddress })}
         />
       )}
-    </motion.div>
+    </motion.main>
   )
 }

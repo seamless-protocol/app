@@ -120,7 +120,7 @@ export const AllStates: Story = {
           </Button>
         </div>
 
-        <div className="text-sm text-slate-400 max-w-md">
+        <div className="text-sm text-secondary-foreground max-w-md">
           <p>This story allows you to test all the different states of the modal:</p>
           <ul className="mt-2 space-y-1 list-disc list-inside">
             <li>Input step with amount selection</li>
