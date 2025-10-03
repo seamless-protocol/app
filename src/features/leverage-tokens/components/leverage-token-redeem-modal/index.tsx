@@ -52,12 +52,12 @@ interface LeverageTokenRedeemModalProps {
 
 // Hoisted to avoid re-creating on every render
 const REDEEM_STEPS: Array<StepConfig> = [
-  { id: 'input', label: 'Input', progress: 25 },
-  { id: 'approve', label: 'Approve', progress: 50 },
-  { id: 'confirm', label: 'Confirm', progress: 75 },
-  { id: 'pending', label: 'Processing', progress: 90 },
+  { id: 'input', label: 'Input', progress: 17 },
+  { id: 'approve', label: 'Approve', progress: 33 },
+  { id: 'confirm', label: 'Confirm', progress: 50 },
+  { id: 'pending', label: 'Processing', progress: 67 },
   { id: 'success', label: 'Success', progress: 100 },
-  { id: 'error', label: 'Error', progress: 50 },
+  { id: 'error', label: 'Error', progress: 100 },
 ]
 
 export function LeverageTokenRedeemModal({

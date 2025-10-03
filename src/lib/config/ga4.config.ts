@@ -30,13 +30,11 @@ export const isGA4Available = (): boolean => {
  */
 export const trackPageView = (pageTitle: string, pagePath?: string): void => {
   if (!isGA4Available()) {
-    console.warn('[GA4] Google Analytics not available')
     return
   }
 
   const measurementId = import.meta.env['VITE_GA4_MEASUREMENT_ID']
   if (!measurementId) {
-    console.warn('[GA4] No Measurement ID provided')
     return
   }
 
@@ -51,7 +49,6 @@ export const trackPageView = (pageTitle: string, pagePath?: string): void => {
  */
 export const trackEvent = (eventName: string, parameters?: Record<string, unknown>): void => {
   if (!isGA4Available()) {
-    console.warn('[GA4] Google Analytics not available')
     return
   }
 
