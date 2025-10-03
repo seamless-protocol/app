@@ -234,7 +234,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       {
         title: 'Target Leverage',
         stat: `${tokenConfig.leverageRatio}x`,
-        caption: `Max leverage ratio`,
       },
     ]
 
