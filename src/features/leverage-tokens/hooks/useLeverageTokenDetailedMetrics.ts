@@ -323,7 +323,7 @@ function transformDetailedMetricsData(
       : 'N/A'
 
   return {
-    'Leverage Settings': [
+    'Leverage': [
       {
         label: 'Current Leverage',
         value: currentLeverage,
