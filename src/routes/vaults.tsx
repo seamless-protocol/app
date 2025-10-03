@@ -21,15 +21,15 @@ function VaultsPage() {
   }, [analytics])
 
   return (
-    <div className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 lg:px-8 py-2 xs:py-3 sm:py-4 lg:py-8">
+    <div className="max-w-7xl mx-auto py-2 xs:py-3 sm:py-4 lg:py-8">
       <div className="space-y-8 max-w-4xl mx-auto">
         {/* Hero */}
         <div className="text-center space-y-6">
           <div className="space-y-4">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
               Seamless Vaults (Powered by Morpho)
             </h1>
-            <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+            <p className="text-lg text-secondary-foreground max-w-2xl mx-auto">
               Access institutional-grade yield strategies through Seamless Protocol's partnership
               with Morpho. Earn competitive returns with battle-tested security.
             </p>
@@ -39,39 +39,39 @@ function VaultsPage() {
         {/* Backlog: TVL/APY cards intentionally omitted for launch */}
 
         {/* CTA Card */}
-        <Card className="bg-gradient-to-br from-purple-500/10 via-slate-900/80 to-cyan-500/10 border border-purple-500/20 hover:border-purple-500/30 transition-all duration-300">
+        <Card className="bg-card border border-border">
           <CardContent className="p-8 text-center space-y-8">
             <div className="space-y-6">
-              <h2 className="text-3xl font-bold text-white">Ready to Start Earning?</h2>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">
+                Ready to Start Earning?
+              </h2>
 
               <div className="max-w-3xl mx-auto">
                 <div className="flex items-center justify-center flex-wrap gap-x-8 gap-y-3 text-sm">
-                  <div className="flex items-center space-x-2 bg-slate-800/30 rounded-full px-4 py-2 hover:bg-slate-800/50 transition-colors duration-200">
-                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-                    <span className="text-slate-200 font-medium">USDC Vault</span>
+                  <div className="flex items-center space-x-2 rounded-full px-4 py-2 bg-secondary text-secondary-foreground border border-secondary">
+                    <div className="w-3 h-3 bg-[var(--tag-success-text)] rounded-full " />
+                    <span className="font-medium">USDC Vault</span>
                   </div>
-                  <div className="flex items-center space-x-2 bg-slate-800/30 rounded-full px-4 py-2 hover:bg-slate-800/50 transition-colors duration-200">
-                    <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse" />
-                    <span className="text-slate-200 font-medium">WETH Vault</span>
+                  <div className="flex items-center space-x-2 rounded-full px-4 py-2 bg-secondary text-secondary-foreground border border-secondary">
+                    <div className="w-3 h-3 bg-[var(--tag-info-text)] rounded-full " />
+                    <span className="font-medium">WETH Vault</span>
                   </div>
-                  <div className="flex items-center space-x-2 bg-slate-800/30 rounded-full px-4 py-2 hover:bg-slate-800/50 transition-colors duration-200">
-                    <div className="w-3 h-3 bg-orange-400 rounded-full animate-pulse" />
-                    <span className="text-slate-200 font-medium">cbBTC Vault</span>
+                  <div className="flex items-center space-x-2 rounded-full px-4 py-2 bg-secondary text-secondary-foreground border border-secondary">
+                    <div className="w-3 h-3 bg-[var(--tag-warning-text)] rounded-full " />
+                    <span className="font-medium">cbBTC Vault</span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-center mt-4">
-                  <div className="inline-flex items-center space-x-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full px-4 py-2">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                    <span className="text-sm text-cyan-300 font-medium">
-                      Available on Base Network
-                    </span>
+                  <div className="inline-flex items-center space-x-2 rounded-full px-4 py-2 bg-[var(--tag-info-bg)] text-[var(--tag-info-text)] border border-[color-mix(in_srgb,var(--tag-info-text)_30%,transparent)]">
+                    <div className="w-2 h-2 bg-[var(--tag-info-text)] rounded-full" />
+                    <span className="text-sm font-medium">Available on Base Network</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-slate-800/60 via-slate-800/40 to-slate-700/40 rounded-xl p-6 max-w-2xl mx-auto border border-slate-700/50 shadow-lg backdrop-blur-sm">
-                <p className="text-slate-200 leading-relaxed">
+              <div className="rounded-xl p-6 max-w-2xl mx-auto border border-border bg-accent">
+                <p className="text-secondary-foreground leading-relaxed">
                   Access optimal risk-adjusted yield from lending to high quality collateral
                   markets.
                 </p>
@@ -89,12 +89,7 @@ function VaultsPage() {
                 </a>
               </Button>
 
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-blue-400/50 text-blue-300 hover:bg-blue-500/10 hover:border-blue-400 hover:text-blue-200"
-                asChild
-              >
+              <Button variant="outline" size="lg" className="hover:border-brand-purple" asChild>
                 <a
                   href="https://app.morpho.org/base/dashboard"
                   target="_blank"
