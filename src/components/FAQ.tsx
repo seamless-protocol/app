@@ -33,14 +33,9 @@ export function FAQ({ title = 'Frequently Asked Questions', items, className = '
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card
-        className={cn(
-          'border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] text-[var(--text-primary)]',
-          className,
-        )}
-      >
+      <Card className={cn('border border-border bg-card text-foreground', className)}>
         <CardHeader>
-          <CardTitle className="text-[var(--text-primary)]">{title}</CardTitle>
+          <CardTitle className="text-foreground">{title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {items.map((faq) => (
@@ -52,21 +47,21 @@ export function FAQ({ title = 'Frequently Asked Questions', items, className = '
               <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full justify-between rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4 text-left text-[var(--text-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)]"
+                  className="w-full justify-between rounded-lg border border-border bg-card p-4 text-left text-foreground transition-colors hover:bg-accent"
                 >
-                  <span className="pr-2 break-words text-left font-medium text-[var(--text-primary)]">
+                  <span className="pr-2 break-words text-left font-medium text-foreground">
                     {faq.question}
                   </span>
                   {openFAQs.includes(faq.id) ? (
-                    <ChevronUp className="h-4 w-4 text-[var(--text-muted)]" />
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <ChevronDown className="h-4 w-4 text-[var(--text-muted)]" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   )}
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
-                <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4">
-                  <p className="leading-relaxed text-[var(--text-secondary)]">{faq.answer}</p>
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <p className="leading-relaxed text-secondary-foreground">{faq.answer}</p>
                 </div>
               </CollapsibleContent>
             </Collapsible>

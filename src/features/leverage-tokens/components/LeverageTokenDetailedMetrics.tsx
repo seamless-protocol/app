@@ -51,31 +51,26 @@ export function LeverageTokenDetailedMetrics({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card
-        className={cn(
-          'border border-[var(--divider-line)] text-[var(--text-primary)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]',
-          className,
-        )}
-      >
+      <Card className={cn('border border-border text-foreground bg-card', className)}>
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer transition-colors rounded-t-lg px-6 py-6 hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)]">
+            <CardHeader className="cursor-pointer transition-colors rounded-t-lg px-6 py-6 hover:bg-accent">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <div className="space-y-2">
-                  <CardTitle className="text-[var(--text-primary)]">{title}</CardTitle>
-                  <p className="text-sm text-[var(--text-muted)]">{description}</p>
+                  <CardTitle className="text-foreground">{title}</CardTitle>
+                  <p className="text-sm text-muted-foreground">{description}</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge
                     variant="outline"
-                    className="text-xs border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-elevated) 40%,transparent)] text-[var(--text-secondary)]"
+                    className="text-xs border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-elevated) 40%,transparent)] text-secondary-foreground"
                   >
                     {isOpen ? 'Hide Details' : 'Show Details'}
                   </Badge>
                   {isOpen ? (
-                    <ChevronUp className="w-5 h-5 text-[var(--text-muted)]" />
+                    <ChevronUp className="w-5 h-5 text-muted-foreground" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-[var(--text-muted)]" />
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
                   )}
                 </div>
               </div>
@@ -89,7 +84,7 @@ export function LeverageTokenDetailedMetrics({
                   {['a', 'b', 'c', 'd', 'e', 'f'].map((key) => (
                     <div
                       key={`metric-skel-${key}`}
-                      className="p-4 rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 90%,transparent)]"
+                      className="p-4 rounded-lg border border-border bg-card"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <Skeleton className="h-3 w-28" />
@@ -110,7 +105,7 @@ export function LeverageTokenDetailedMetrics({
                   <div key={category} className="space-y-4">
                     {/* Category Header */}
                     <div className="flex items-center space-x-2">
-                      <h3 className="font-medium text-sm uppercase tracking-wide text-[var(--text-primary)]">
+                      <h3 className="font-medium text-sm uppercase tracking-wide text-foreground">
                         {category}
                       </h3>
                       <div className="flex-1 h-px bg-[var(--divider-line)]" />
@@ -123,40 +118,32 @@ export function LeverageTokenDetailedMetrics({
                           key={`${category}-${metric.label}-${index}`}
                           className={cn(
                             'p-4 rounded-lg border transition-colors bg-[color-mix(in_srgb,var(--surface-card) 90%,transparent)] border-[var(--divider-line)]',
-                            metric.highlight &&
-                              'bg-[color-mix(in_srgb,var(--surface-elevated) 70%,transparent)] border-[color-mix(in_srgb,var(--divider-line) 80%,transparent)]',
+                            metric.highlight && 'bg-accent border-border',
                           )}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-1">
-                              <span className="text-sm text-[var(--text-secondary)]">
+                              <span className="text-sm text-secondary-foreground">
                                 {metric.label}
                               </span>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button
                                     type="button"
-                                    className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                                    className="text-muted-foreground hover:text-secondary-foreground transition-colors"
                                   >
                                     <Info className="h-3 w-3" />
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent className="p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)] border border-[var(--divider-line)]">
+                                <TooltipContent className="p-0 text-sm bg-card border border-border">
                                   <div className="p-3 max-w-xs">
-                                    <p className="text-sm text-[var(--text-primary)]">
-                                      {metric.tooltip}
-                                    </p>
+                                    <p className="text-sm text-foreground">{metric.tooltip}</p>
                                   </div>
                                 </TooltipContent>
                               </Tooltip>
                             </div>
                           </div>
-                          <p
-                            className={cn(
-                              'text-lg font-semibold text-[var(--text-primary)]',
-                              metric.color,
-                            )}
-                          >
+                          <p className={cn('text-lg font-semibold text-foreground', metric.color)}>
                             {metric.value}
                           </p>
                         </div>
@@ -166,7 +153,7 @@ export function LeverageTokenDetailedMetrics({
                 ))
               ) : (
                 <div className="flex items-center justify-center py-8">
-                  <div className="text-[var(--text-secondary)]">No detailed metrics available</div>
+                  <div className="text-secondary-foreground">No detailed metrics available</div>
                 </div>
               )}
             </CardContent>

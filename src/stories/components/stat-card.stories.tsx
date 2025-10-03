@@ -58,8 +58,8 @@ export const WithIcon: Story = {
     title: 'Revenue',
     stat: '$53,240',
     icon: <DollarSign />,
-    iconBgClass: 'bg-green-500/20',
-    iconTextClass: 'text-green-400',
+    iconBgClass: 'bg-accent',
+    iconTextClass: 'text-brand-purple',
   },
   parameters: {
     docs: {
@@ -76,7 +76,7 @@ export const WithCaption: Story = {
   args: {
     title: 'Active Users',
     stat: '8,432',
-    caption: <span className="text-green-400">+12% from last month</span>,
+    caption: <span className="text-[var(--state-success-text)]">+12% from last month</span>,
   },
   parameters: {
     docs: {
@@ -94,8 +94,8 @@ export const Complete: Story = {
     stat: '8',
     caption: 'Available now',
     icon: <TrendingUp />,
-    iconBgClass: 'bg-blue-500/20',
-    iconTextClass: 'text-blue-400',
+    iconBgClass: 'bg-accent',
+    iconTextClass: 'text-brand-purple',
   },
   parameters: {
     docs: {
@@ -113,7 +113,7 @@ export const ComplexStats: Story = {
     stat: (
       <div className="flex items-baseline gap-1">
         <span>$53.9M</span>
-        <span className="text-sm text-green-500">+5.2%</span>
+        <span className="text-sm text-[var(--state-success-text)]">+5.2%</span>
       </div>
     ),
     caption: 'Locked value',

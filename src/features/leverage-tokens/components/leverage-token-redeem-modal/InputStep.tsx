@@ -457,12 +457,7 @@ export function InputStep({
 
       {error && <Alert type="error" title="Error" description={error} />}
 
-      <Button
-        onClick={onApprove}
-        disabled={!canProceed}
-        variant="gradient"
-        className="h-12 w-full font-medium"
-      >
+      <Button onClick={onApprove} disabled={!canProceed} variant="gradient" size="lg" className="w-full font-medium">
         {!isConnected
           ? 'Connect Wallet'
           : !canProceed && parseFloat(amount || '0') === 0

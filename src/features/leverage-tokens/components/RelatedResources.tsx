@@ -105,12 +105,12 @@ export function RelatedResources({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium text-[var(--text-primary)] transition-colors group-hover:text-[var(--resource-color)]">
+              <h4 className="font-medium text-foreground transition-colors group-hover:text-[var(--resource-color)]">
                 {item.title}
               </h4>
-              <ExternalLink className="h-4 w-4 text-[var(--text-muted)] transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--resource-color)]" />
+              <ExternalLink className="h-4 w-4 text-muted-foreground transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--resource-color)]" />
             </div>
-            <p className="mb-3 text-sm leading-relaxed text-[var(--text-secondary)] transition-colors group-hover:text-[var(--text-primary)]">
+            <p className="mb-3 text-sm leading-relaxed text-secondary-foreground transition-colors group-hover:text-foreground">
               {item.description}
             </p>
             <div className="flex items-center justify-between">
@@ -130,7 +130,7 @@ export function RelatedResources({
   const renderCategory = (category: ResourceCategory) => (
     <div key={category.title} className="space-y-4">
       <div className="flex items-center space-x-2">
-        <h3 className="text-sm font-medium uppercase tracking-wide text-[var(--text-primary)]">
+        <h3 className="text-sm font-medium uppercase tracking-wide text-foreground">
           {category.title}
         </h3>
         <div className="flex-1 h-px bg-[var(--divider-line)]" />
@@ -158,31 +158,31 @@ export function RelatedResources({
     >
       <Card
         className={cn(
-          'flex flex-col gap-6 rounded-xl border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] text-[var(--text-primary)]',
+          'flex flex-col gap-6 rounded-xl border border-border bg-card text-foreground',
           className,
         )}
       >
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
-            <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 cursor-pointer rounded-t-lg px-6 py-6 transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)]">
+            <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 cursor-pointer rounded-t-lg px-6 py-6 transition-colors hover:bg-accent">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <div className="space-y-2">
-                  <h4 className="leading-none text-[var(--text-primary)]">Related Resources</h4>
-                  <p className="text-sm text-[var(--text-secondary)]">
+                  <h4 className="leading-none text-foreground">Related Resources</h4>
+                  <p className="text-sm text-secondary-foreground">
                     Explore external platforms and tools related to this strategy
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge
                     variant="outline"
-                    className="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--text-secondary)] transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                    className="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-card px-2 py-0.5 text-xs font-medium text-secondary-foreground transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                   >
                     {isOpen ? 'Hide Resources' : 'Show Resources'}
                   </Badge>
                   {isOpen ? (
-                    <ChevronUp className="h-5 w-5 text-[var(--text-muted)]" />
+                    <ChevronUp className="h-5 w-5 text-muted-foreground" />
                   ) : (
-                    <ChevronDown className="h-5 w-5 text-[var(--text-muted)]" />
+                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
                   )}
                 </div>
               </div>

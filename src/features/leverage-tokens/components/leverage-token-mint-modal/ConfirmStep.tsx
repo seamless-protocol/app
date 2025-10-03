@@ -121,8 +121,8 @@ export function ConfirmStep({
         </div>
       </Card>
 
-      <Button onClick={onConfirm} variant="gradient" className="h-12 w-full font-medium">
-        <Zap className="mr-2 h-4 w-4" />
+      <Button onClick={onConfirm} variant="gradient" size="lg" className="w-full font-medium relative">
+        <Zap className="h-4 w-4 absolute left-3 pointer-events-none" aria-hidden="true" />
         Confirm Mint
       </Button>
     </div>

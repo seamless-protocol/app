@@ -80,7 +80,7 @@ export function SuccessStep({
         </div>
       </Card>
 
-      <Button onClick={onClose} variant="gradient" className="h-12 w-full font-medium">
+      <Button onClick={onClose} variant="gradient" size="lg" className="w-full font-medium">
         Done
       </Button>
     </div>
