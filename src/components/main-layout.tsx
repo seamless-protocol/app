@@ -177,7 +177,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col bg-[var(--bg-hero)] text-[var(--text-primary)]">
         {/* Top Bar with Actions */}
-        <div className="border-b border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 95%,transparent)] backdrop-blur-sm shrink-0">
+        <div className="border-b border-border bg-card backdrop-blur-sm shrink-0">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-[19.2px]">
             <div className="flex items-center justify-between">
               {/* Page Header with Mobile Menu */}

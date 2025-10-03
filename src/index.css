@@ -3,16 +3,24 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* RainbowKit Modal Background Override */
-[data-rk] {
-  --rk-colors-modalBackground: #1e293b !important;
-  --rk-colors-modalText: #ffffff !important;
-  --rk-colors-modalTextSecondary: #ffffff !important;
-  --rk-colors-accentColor: #c026d3 !important;
-  --rk-colors-generalBorder: #2f2f35 !important;
-  --rk-colors-profileAction: #c026d3 !important;
+/* RainbowKit Modal Overrides (theme-aware) */
+html:not(.dark) [data-rk] {
+  --rk-colors-modalBackground: var(--surface-card) !important;
+  --rk-colors-modalText: var(--text-primary) !important;
+  --rk-colors-modalTextSecondary: var(--text-secondary) !important;
+  --rk-colors-accentColor: var(--brand-secondary) !important;
+  --rk-colors-generalBorder: var(--divider-line) !important;
+  --rk-colors-profileAction: var(--brand-secondary) !important;
 }
 
+html.dark [data-rk] {
+  --rk-colors-modalBackground: var(--surface-card) !important;
+  --rk-colors-modalText: var(--text-primary) !important;
+  --rk-colors-modalTextSecondary: var(--text-secondary) !important;
+  --rk-colors-accentColor: var(--brand-secondary) !important;
+  --rk-colors-generalBorder: var(--divider-line) !important;
+  --rk-colors-profileAction: var(--brand-secondary) !important;
+}
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -509,6 +517,17 @@
 }
 
 @layer utilities {
+  /* Brand border and hover utilities */
+  .border-brand-purple {
+    border-color: var(--brand-purple);
+  }
+  .hover\:border-brand-purple:hover {
+    border-color: var(--brand-purple);
+  }
+  .group:hover .group-hover\:text-brand-purple {
+    color: var(--brand-purple);
+  }
+
   .bg-cta-gradient {
     background-color: var(--cta-fallback-bg);
     background-image: var(--cta-gradient);

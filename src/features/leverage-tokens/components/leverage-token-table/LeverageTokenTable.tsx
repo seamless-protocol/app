@@ -307,7 +307,7 @@ export function LeverageTokenTable({
         <div className="overflow-x-auto w-full max-w-full">
           <Table>
             <TableHeader>
-              <TableRow className="border-[var(--divider-line)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]">
+              <TableRow className="border-[var(--divider-line)] hover:bg-accent">
                 <TableHead className="py-4 px-6 min-w-[200px] text-[var(--text-secondary)] font-medium">
                   <button
                     type="button"
@@ -377,7 +377,7 @@ export function LeverageTokenTable({
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="cursor-pointer border-[var(--divider-line)] transition-colors hover:bg-[color-mix(in_srgb,var(--brand-secondary) 22%,var(--surface-card) 78%)]"
+                      className="cursor-pointer border-[var(--divider-line)] transition-colors hover:bg-accent"
                       onClick={() => onTokenClick?.(token)}
                     >
                       <TableCell className="py-4 px-6">

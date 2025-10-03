@@ -39,7 +39,7 @@ export function FeaturedLeverageToken({
       className={className}
     >
       <Card
-        className="w-full min-w-0 cursor-pointer transform transition-all duration-300 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] hover:border-[var(--nav-border-active)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)] hover:scale-[1.01] hover:shadow-[0_16px_40px_-18px_var(--nav-border-active)]"
+        className="w-full min-w-0 cursor-pointer transform transition-all duration-300 border border-border bg-card hover:border-border hover:bg-accent "
         onClick={handleClick}
       >
         <CardContent className="p-3 sm:p-4">
