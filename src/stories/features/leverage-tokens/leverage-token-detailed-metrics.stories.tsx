@@ -61,7 +61,7 @@ const sampleMetrics = {
       label: 'Pre-liquidation Leverage',
       value: '16.00x',
       color: 'text-white',
-      tooltip: 'Leverage threshold before liquidation is triggered.',
+      tooltip: 'Leverage threshold that triggers pre-liquidation protection',
     },
     {
       label: 'Rebalance Reward',

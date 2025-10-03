@@ -376,7 +376,7 @@ function transformDetailedMetricsData(
         label: 'Pre-liquidation Leverage',
         value: preLiquidationLeverage,
         color: 'text-white',
-        tooltip: 'Leverage threshold before liquidation is triggered.',
+        tooltip: 'Leverage threshold that triggers pre-liquidation protection',
       },
       {
         label: 'Rebalance Reward',
