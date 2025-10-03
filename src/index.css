@@ -382,11 +382,20 @@ html.dark [data-rk] {
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
+  /* Ensure the app uses a single, inner scroll area */
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
     background-color: var(--bg-hero);
     color: var(--text-primary);
     font-family: inherit;
+    /* Prevent outer page scrollbar; main layout handles scrolling */
+    overflow: hidden;
   }
 
   /* Ensure all elements inherit dark theme and Satoshi font */

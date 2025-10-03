@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { PageContainer } from '@/components/PageContainer'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useActiveProposals } from '@/features/governance/hooks/useActiveProposals'
@@ -18,7 +19,7 @@ function GovernancePage() {
     ) || []
 
   return (
-    <div className="container mx-auto p-6">
+    <PageContainer padded={false} className="py-6">
       <div className="mb-8">
         <h1 className="text-4xl font-bold">Governance</h1>
         <p className="text-muted-foreground mt-2">Participate in Seamless Protocol governance</p>
@@ -102,6 +103,6 @@ function GovernancePage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   )
 }

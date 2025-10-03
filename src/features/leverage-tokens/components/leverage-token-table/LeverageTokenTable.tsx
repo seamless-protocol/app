@@ -208,7 +208,7 @@ export function LeverageTokenTable({
   }
 
   return (
-    <div className={cn('max-w-7xl mx-auto space-y-6', className)}>
+    <div className={cn('w-full space-y-6', className)}>
       {/* Filters Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

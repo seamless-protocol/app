@@ -19,6 +19,7 @@ import { formatCurrency } from '@/lib/utils/formatting'
 import { ConnectButtonTest } from './ConnectButtonTest'
 import { LiFiWidget } from './LiFiWidget'
 import { ModeToggle } from './mode-toggle'
+import { PageContainer } from './PageContainer'
 import { Skeleton } from './ui/skeleton'
 import { Toaster } from './ui/sonner'
 import { type NavigationItem, VerticalNavbar } from './VerticalNavbar'
@@ -180,7 +181,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   }
 
   return (
-    <div className="h-screen flex">
+    <div className="h-screen flex overflow-hidden">
       {/* Vertical Navbar - Desktop Only */}
       <div className="hidden lg:block w-84 flex-shrink-0">
         <VerticalNavbar
@@ -196,7 +197,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="flex-1 flex flex-col bg-[var(--bg-hero)] text-[var(--text-primary)]">
         {/* Top Bar with Actions */}
         <div className="border-b border-border bg-card backdrop-blur-sm shrink-0">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-[19.2px]">
+          <PageContainer className="py-3 sm:py-[19.2px]">
             <div className="flex items-center justify-between">
               {/* Page Header with Mobile Menu */}
               <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
@@ -230,12 +231,13 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <ModeToggle />
               </div>
             </div>
-          </div>
+          </PageContainer>
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-6">
-          <div className="max-w-7xl mx-auto">{children}</div>
+        <main className="flex-1 overflow-auto">
+          {/* Use a shared container so all routes align with the top nav */}
+          <PageContainer className="py-6">{children}</PageContainer>
         </main>
       </div>
 

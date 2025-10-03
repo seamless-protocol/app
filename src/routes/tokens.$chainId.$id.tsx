@@ -7,6 +7,7 @@ import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { FAQ } from '@/components/FAQ'
+import { PageContainer } from '@/components/PageContainer'
 import { StatCardList } from '@/components/StatCardList'
 import { AssetDisplay } from '@/components/ui/asset-display'
 import { Badge } from '@/components/ui/badge'
@@ -241,7 +242,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     ]
 
     return (
-      <div className="max-w-7xl mx-auto">
+      <PageContainer padded={false}>
         {/* Breadcrumb Navigation */}
         <BreadcrumbNavigation
           items={[
@@ -625,7 +626,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           leverageTokenAddress={tokenAddress as Address}
           {...(userAddress && { userAddress })}
         />
-      </div>
+      </PageContainer>
     )
   },
 })

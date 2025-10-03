@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Award, ExternalLink } from 'lucide-react'
 import { useEffect } from 'react'
+import { PageContainer } from '@/components/PageContainer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useGA } from '@/lib/config/ga4.config'
@@ -21,7 +22,7 @@ function VaultsPage() {
   }, [analytics])
 
   return (
-    <div className="max-w-7xl mx-auto py-2 xs:py-3 sm:py-4 lg:py-8">
+    <PageContainer padded={false} className="py-2 xs:py-3 sm:py-4 lg:py-8">
       <div className="space-y-8 max-w-4xl mx-auto">
         {/* Hero */}
         <div className="text-center space-y-6">
@@ -102,6 +103,6 @@ function VaultsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   )
 }
