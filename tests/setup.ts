@@ -15,8 +15,15 @@ vi.mock('wagmi', () => ({
   useChainId: vi.fn(),
   useConfig: vi.fn(() => ({})),
   useReadContracts: vi.fn(),
+  usePublicClient: vi.fn(),
   createConfig: vi.fn(),
   http: vi.fn(),
+}))
+
+// Note: useCollateralToDebtQuote is not mocked to allow unit tests to run the actual hook
+
+vi.mock('@/features/leverage-tokens/hooks/useRedeemWithRouter', () => ({
+  useRedeemWithRouter: vi.fn(),
 }))
 
 // Mock wagmi chains
@@ -63,6 +70,8 @@ vi.mock('@/lib/config/wagmi.config', () => ({
 vi.mock('@/lib/contracts/generated', () => ({
   leverageTokenAbi: [],
   leverageRouterAbi: [],
+  readLeverageManagerPreviewRedeem: vi.fn(),
+  readLeverageManagerV2PreviewRedeem: vi.fn(),
 }))
 
 // Mock contract addresses (keep base constants aligned with source module)
@@ -81,7 +90,7 @@ vi.mock('@/lib/contracts/addresses', () => {
       governorShort: '0x8768c789C6df8AF1a92d96dE823b4F80010Db294',
       timelockLong: '0xA96448469520666EDC351eff7676af2247b16718',
       governorLong: '0x04faA2826DbB38a7A4E9a5E3dB26b9E389E761B6',
-      multicall: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd',
+      multicallExecutor: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd',
       escrowSeam: '0x998e44232BEF4F8B033e5A5175BDC97F2B10d5e5',
       rewardsController: '0x2C6dC2CE7747E726A590082ADB3d7d08F52ADB93',
       vaults: {
@@ -156,6 +165,161 @@ vi.mock('@/features/leverage-tokens/utils/queryKeys', () => ({
     supply: (addr: string) => ['leverage-tokens', 'tokens', addr, 'supply'],
     detailedMetrics: (addr: string) => ['leverage-tokens', 'tokens', addr, 'detailed-metrics'],
     apy: (addr: string) => ['leverage-tokens', 'tokens', addr, 'apy'],
+    simulation: {
+      mint: (addr: string, amount: bigint) => [
+        'leverage-tokens',
+        'tokens',
+        addr,
+        'simulate',
+        'mint',
+        amount.toString(),
+      ],
+      mintOnChain: (chainId: number, addr: string, amount: bigint) => [
+        'leverage-tokens',
+        'chain',
+        chainId,
+        'token',
+        addr,
+        'simulate',
+        'mint',
+        amount.toString(),
+      ],
+      mintKey: (params: { chainId: number | undefined; addr: string; amount: bigint }) =>
+        typeof params.chainId === 'number'
+          ? [
+              'leverage-tokens',
+              'chain',
+              params.chainId,
+              'token',
+              params.addr,
+              'simulate',
+              'mint',
+              params.amount.toString(),
+            ]
+          : [
+              'leverage-tokens',
+              'tokens',
+              params.addr,
+              'simulate',
+              'mint',
+              params.amount.toString(),
+            ],
+      redeem: (addr: string, amount: bigint) => [
+        'leverage-tokens',
+        'tokens',
+        addr,
+        'simulate',
+        'redeem',
+        amount.toString(),
+      ],
+      redeemOnChain: (chainId: number, addr: string, amount: bigint) => [
+        'leverage-tokens',
+        'chain',
+        chainId,
+        'token',
+        addr,
+        'simulate',
+        'redeem',
+        amount.toString(),
+      ],
+      redeemKey: (params: { chainId: number | undefined; addr: string; amount: bigint }) =>
+        typeof params.chainId === 'number'
+          ? [
+              'leverage-tokens',
+              'chain',
+              params.chainId,
+              'token',
+              params.addr,
+              'simulate',
+              'redeem',
+              params.amount.toString(),
+            ]
+          : [
+              'leverage-tokens',
+              'tokens',
+              params.addr,
+              'simulate',
+              'redeem',
+              params.amount.toString(),
+            ],
+      redeemPlan: (
+        addr: string,
+        amount: bigint,
+        slippageBps: number,
+        managerAddress?: string,
+        swapKey?: string,
+        outputAsset?: string,
+      ) => [
+        'leverage-tokens',
+        'tokens',
+        addr,
+        'simulate',
+        'redeem-plan',
+        amount.toString(),
+        `slippage:${slippageBps}`,
+        managerAddress ? `manager:${managerAddress}` : 'manager:default',
+        swapKey ? `swap:${swapKey}` : 'swap:default',
+        outputAsset ? `output:${outputAsset}` : 'output:default',
+      ],
+      redeemPlanOnChain: (
+        chainId: number,
+        addr: string,
+        amount: bigint,
+        slippageBps: number,
+        managerAddress?: string,
+        swapKey?: string,
+        outputAsset?: string,
+      ) => [
+        'leverage-tokens',
+        'chain',
+        chainId,
+        'token',
+        addr,
+        'simulate',
+        'redeem-plan',
+        amount.toString(),
+        `slippage:${slippageBps}`,
+        managerAddress ? `manager:${managerAddress}` : 'manager:default',
+        swapKey ? `swap:${swapKey}` : 'swap:default',
+        outputAsset ? `output:${outputAsset}` : 'output:default',
+      ],
+      redeemPlanKey: (params: {
+        chainId: number | undefined
+        addr: string
+        amount: bigint
+        slippageBps: number
+        managerAddress?: string
+        swapKey?: string
+        outputAsset?: string
+      }) =>
+        typeof params.chainId === 'number'
+          ? [
+              'leverage-tokens',
+              'chain',
+              params.chainId,
+              'token',
+              params.addr,
+              'simulate',
+              'redeem-plan',
+              params.amount.toString(),
+              `slippage:${params.slippageBps}`,
+              params.managerAddress ? `manager:${params.managerAddress}` : 'manager:default',
+              params.swapKey ? `swap:${params.swapKey}` : 'swap:default',
+              params.outputAsset ? `output:${params.outputAsset}` : 'output:default',
+            ]
+          : [
+              'leverage-tokens',
+              'tokens',
+              params.addr,
+              'simulate',
+              'redeem-plan',
+              params.amount.toString(),
+              `slippage:${params.slippageBps}`,
+              params.managerAddress ? `manager:${params.managerAddress}` : 'manager:default',
+              params.swapKey ? `swap:${params.swapKey}` : 'swap:default',
+              params.outputAsset ? `output:${params.outputAsset}` : 'output:default',
+            ],
+    },
     external: {
       borrowApy: (addr: string) => ['leverage-tokens', 'external', 'borrow-apy', addr],
       rewardsApr: (addr: string) => ['leverage-tokens', 'external', 'rewards-apr', addr],
@@ -215,6 +379,51 @@ vi.mock('@/features/leverage-tokens/utils/apy-calculations/rewards-providers', (
 vi.mock('@/lib/graphql/fetchers/leverage-tokens', () => ({
   fetchLeverageTokenPriceComparison: vi.fn(),
   fetchUserLeverageTokenPosition: vi.fn(),
+}))
+
+// Mock domain functions
+vi.mock('@/domain/mint', () => ({
+  orchestrateMint: vi.fn(),
+}))
+
+vi.mock('@/domain/mint/utils/createDebtToCollateralQuote', () => ({
+  createDebtToCollateralQuote: vi.fn(),
+}))
+
+vi.mock('@/domain/mint/utils/detectVersion', () => ({
+  detectRouterVersion: vi.fn(),
+}))
+
+vi.mock('@/domain/redeem/utils/createCollateralToDebtQuote', () => ({
+  createCollateralToDebtQuote: vi.fn(),
+}))
+
+vi.mock('@/domain/redeem/utils/detectVersion', () => ({
+  detectRedeemRouterVersion: vi.fn(),
+}))
+
+vi.mock('@/domain/redeem/planner/plan.v2', () => ({
+  planRedeemV2: vi.fn(),
+}))
+
+// Mock leverage token config
+vi.mock('@/features/leverage-tokens/leverageTokens.config', () => ({
+  getLeverageTokenConfig: vi.fn(),
+  leverageTokenConfigs: {
+    'weeth-weth-17x': {
+      address: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A',
+      symbol: 'weETH-WETH-17x',
+      name: 'weETH-WETH 17x Leverage Token',
+      decimals: 18,
+      collateral: '0x4200000000000000000000000000000000000006', // WETH
+      debt: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A', // weETH
+      leverage: 17,
+      isTestOnly: false,
+    },
+  },
+  LeverageTokenKey: {
+    WEETH_WETH_17X: 'weeth-weth-17x',
+  },
 }))
 
 // Mock window.ethereum

@@ -1,13 +1,17 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
-import { useAccount, useConfig } from 'wagmi'
+import { useAccount, useConfig, usePublicClient } from 'wagmi'
+import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('mint-modal')
 
+import { createManagerPortV2 } from '@/domain/mint/ports'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
-import { getContractAddresses } from '../../../../lib/contracts/addresses'
+import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
+import { useReadLeverageManagerV2GetManagementFee } from '../../../../lib/contracts/generated'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
@@ -18,12 +22,14 @@ import {
   MIN_MINT_AMOUNT_DISPLAY,
   TOKEN_AMOUNT_DISPLAY_DECIMALS,
 } from '../../constants'
+import { useDebtToCollateralQuote } from '../../hooks/mint/useDebtToCollateralQuote'
 import { useMintExecution } from '../../hooks/mint/useMintExecution'
 import { useMintForm } from '../../hooks/mint/useMintForm'
-import { useMintPreview } from '../../hooks/mint/useMintPreview'
+import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
+import { invalidateAfterReceipt } from '../../utils/invalidateAfterReceipt'
 import { ApproveStep } from './ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
 import { ErrorStep } from './ErrorStep'
@@ -50,12 +56,12 @@ interface LeverageTokenMintModalProps {
 
 // Hoisted to avoid re-creating on every render
 const MINT_STEPS: Array<StepConfig> = [
-  { id: 'input', label: 'Input', progress: 25 },
-  { id: 'approve', label: 'Approve', progress: 50 },
-  { id: 'confirm', label: 'Confirm', progress: 75 },
-  { id: 'pending', label: 'Processing', progress: 90 },
+  { id: 'input', label: 'Input', progress: 17 },
+  { id: 'approve', label: 'Approve', progress: 33 },
+  { id: 'confirm', label: 'Confirm', progress: 50 },
+  { id: 'pending', label: 'Processing', progress: 67 },
   { id: 'success', label: 'Success', progress: 100 },
-  { id: 'error', label: 'Error', progress: 50 },
+  { id: 'error', label: 'Error', progress: 100 },
 ]
 
 export function LeverageTokenMintModal({
@@ -65,6 +71,9 @@ export function LeverageTokenMintModal({
   apy,
   userAddress: propUserAddress,
 }: LeverageTokenMintModalProps) {
+  const { trackLeverageTokenMinted, trackTransactionError } = useTransactionGA()
+  const analytics = useGA()
+
   // Get leverage token configuration by address
   const leverageTokenConfig = getLeverageTokenConfig(leverageTokenAddress)
 
@@ -76,15 +85,42 @@ export function LeverageTokenMintModal({
   // Get user account information
   const { address: hookUserAddress, isConnected, chainId } = useAccount()
   const wagmiConfig = useConfig()
+  const publicClient = usePublicClient({ chainId: leverageTokenConfig.chainId })
+  const queryClient = useQueryClient()
   const userAddress = propUserAddress || hookUserAddress
 
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
-  const leverageRouterAddress = contractAddresses.leverageRouter
+  const leverageRouterAddress =
+    contractAddresses.leverageRouterV2 ?? contractAddresses.leverageRouter
+  const leverageManagerAddress = contractAddresses.leverageManagerV2
+
+  // Fetch management fee for display (independent from core config)
+  const { data: managementFee, isLoading: isManagementFeeLoading } =
+    useReadLeverageManagerV2GetManagementFee({
+      args: [leverageTokenAddress],
+      chainId: leverageTokenConfig.chainId as SupportedChainId,
+      query: {
+        enabled: Boolean(leverageTokenAddress && leverageManagerAddress),
+        staleTime: 60_000, // Cache for 1 minute - fee rarely changes
+      },
+    })
 
   // Get real wallet balance for collateral asset
-  const { balance: collateralBalance, isLoading: isCollateralBalanceLoading } = useTokenBalance({
+  const {
+    balance: collateralBalance,
+    isLoading: isCollateralBalanceLoading,
+    refetch: refetchCollateralBalance,
+  } = useTokenBalance({
     tokenAddress: leverageTokenConfig.collateralAsset.address,
+    userAddress: userAddress as `0x${string}`,
+    chainId: leverageTokenConfig.chainId,
+    enabled: Boolean(userAddress && isConnected),
+  })
+
+  // Track user's leverage token balance for immediate holdings refresh after mint
+  const { refetch: refetchLeverageTokenBalance } = useTokenBalance({
+    tokenAddress: leverageTokenAddress,
     userAddress: userAddress as `0x${string}`,
     chainId: leverageTokenConfig.chainId,
     enabled: Boolean(userAddress && isConnected),
@@ -138,11 +174,46 @@ export function LeverageTokenMintModal({
     minAmountFormatted: MIN_MINT_AMOUNT_DISPLAY,
   })
 
-  const preview = useMintPreview({
+  // Removed legacy manager/router preview in favor of route-aware plan preview
+
+  // Optional: route-aware plan preview (uses the actual swap configuration)
+  const quoteDebtToCollateral = useDebtToCollateralQuote({
+    chainId: leverageTokenConfig.chainId,
+    ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
+    ...(leverageTokenConfig.swaps?.debtToCollateral
+      ? { swap: leverageTokenConfig.swaps.debtToCollateral }
+      : {}),
+    slippageBps,
+    requiresQuote: Boolean(leverageTokenConfig.swaps?.debtToCollateral),
+    ...(contractAddresses.multicallExecutor
+      ? { fromAddress: contractAddresses.multicallExecutor }
+      : {}),
+  })
+
+  // Prefer router-aware preview path to align with tests/integration
+  const managerPort = useMemo(() => {
+    if (!leverageManagerAddress && !leverageRouterAddress) return undefined
+    try {
+      return createManagerPortV2({
+        config: wagmiConfig,
+        ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
+        ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
+      })
+    } catch (_) {
+      return undefined
+    }
+  }, [leverageManagerAddress, leverageRouterAddress, wagmiConfig])
+
+  const planPreview = useMintPlanPreview({
     config: wagmiConfig,
     token: leverageTokenAddress,
+    inputAsset: leverageTokenConfig.collateralAsset.address,
     equityInCollateralAsset: form.amountRaw,
+    slippageBps,
     chainId: leverageTokenConfig.chainId,
+    ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
+    ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
+    ...(managerPort ? { managerPort } : {}),
   })
 
   const {
@@ -174,7 +245,10 @@ export function LeverageTokenMintModal({
     form.setAmount('')
     setError('')
     setTransactionHash('')
-  }, [toInput, form.setAmount])
+
+    // Track funnel step: mint modal opened
+    analytics.funnelStep('mint_leverage_token', 'modal_opened', 1)
+  }, [toInput, form.setAmount, analytics])
 
   useEffect(() => {
     if (isOpen) resetModal()
@@ -211,15 +285,14 @@ export function LeverageTokenMintModal({
     }
   }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
 
-  const expectedTokens = useMemo(
-    () =>
-      formatTokenAmountFromBase(
-        preview.data?.shares,
-        leverageTokenConfig.decimals,
-        TOKEN_AMOUNT_DISPLAY_DECIMALS,
-      ),
-    [preview.data?.shares, leverageTokenConfig.decimals],
-  )
+  const expectedTokens = useMemo(() => {
+    const shares = planPreview.plan?.expectedShares
+    return formatTokenAmountFromBase(
+      shares,
+      leverageTokenConfig.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [planPreview.plan?.expectedShares, leverageTokenConfig.decimals])
 
   // Available tokens for minting (only collateral asset for now)
   const availableTokens: Array<Token> = [
@@ -247,11 +320,14 @@ export function LeverageTokenMintModal({
 
   // Validate mint
   const canProceed = () => {
+    const requiresQuote = Boolean(leverageTokenConfig.swaps?.debtToCollateral)
+    const quoteReady = !requiresQuote || quoteDebtToCollateral.status === 'ready'
     return (
       form.isAmountValid &&
       form.hasBalance &&
       form.minAmountOk &&
-      !preview.isLoading &&
+      !planPreview.isLoading &&
+      quoteReady &&
       parseFloat(expectedTokens) > 0 &&
       isConnected &&
       !isAllowanceLoading
@@ -269,25 +345,61 @@ export function LeverageTokenMintModal({
     toApprove()
     try {
       approveAction()
-    } catch (_error) {
-      setError('Approval failed. Please try again.')
+    } catch (error) {
+      // Pass the raw error to ErrorStep - it will handle the formatting
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      setError(errorMessage || 'Approval failed. Please try again.')
       toError()
     }
   }
 
   // Handle mint confirmation
   const handleConfirm = async () => {
+    if (!publicClient) return
     if (!userAddress || !isConnected || !form.amountRaw) return
+
+    // Track funnel step: mint transaction initiated
+    analytics.funnelStep('mint_leverage_token', 'transaction_initiated', 2)
+
     toPending()
     try {
       const hash = await exec.mint(form.amountRaw)
       setTransactionHash(hash)
+
+      // Track successful mint transaction
+      const tokenSymbol = leverageTokenConfig.symbol
+      const amount = form.amount
+      const usdValue = parseFloat(form.amount) * (selectedToken.price || 0)
+      trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
+
+      // Track funnel step: mint transaction completed
+      analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
+
       toast.success('Leverage tokens minted successfully!', {
         description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} tokens`,
       })
+      // Invalidate protocol state and refresh wallet balances after 1 confirmation
+      try {
+        await invalidateAfterReceipt(publicClient, queryClient, {
+          hash,
+          token: leverageTokenAddress,
+          chainId: leverageTokenConfig.chainId,
+          owner: userAddress,
+          includeUser: true,
+        })
+        // Proactively refresh balances used by the UI
+        refetchCollateralBalance?.()
+        refetchLeverageTokenBalance?.()
+      } catch (_) {
+        // Best-effort invalidation; non-fatal for UX
+      }
       toSuccess()
     } catch (e: unknown) {
       const error = e as Error
+
+      // Track mint transaction error
+      trackTransactionError('mint_failed', 'leverage_token', error.message)
+
       logger.error('Mint failed', {
         error,
         userAddress,
@@ -298,6 +410,7 @@ export function LeverageTokenMintModal({
         feature: 'mint',
       })
 
+      // Pass the raw error to ErrorStep - it will handle the formatting
       setError(error?.message || 'Mint failed. Please try again.')
       toError()
     }
@@ -333,7 +446,13 @@ export function LeverageTokenMintModal({
             onSlippageChange={setSlippage}
             isCollateralBalanceLoading={isCollateralBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
-            isCalculating={preview.isLoading}
+            isCalculating={
+              typeof form.amountRaw === 'bigint' &&
+              form.amountRaw > 0n &&
+              (planPreview.isLoading ||
+                (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
+                  quoteDebtToCollateral.status !== 'ready'))
+            }
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedTokens={expectedTokens}
@@ -341,9 +460,11 @@ export function LeverageTokenMintModal({
             needsApproval={needsApproval()}
             isConnected={isConnected}
             onApprove={handleApprove}
-            error={error || undefined}
+            error={error || planPreview.error?.message || undefined}
             leverageTokenConfig={leverageTokenConfig}
             apy={apy ?? undefined}
+            managementFee={managementFee}
+            isManagementFeeLoading={isManagementFeeLoading}
           />
         )
 
@@ -445,7 +566,7 @@ function useApprovalFlow(params: {
     ...(spender ? { spender } : {}),
     ...(amountFormatted ? { amount: amountFormatted } : {}),
     decimals,
-    chainId,
+    targetChainId: chainId,
     enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
   })
 

@@ -157,3 +157,24 @@ Both modes share the same tests and helpers. Tenderly is preferred when configur
 - `--block-time 0`: Instant mining
 - `--no-rate-limit`: No compute throttling
 - Snapshot/revert: Fast state management
+
+### Focused Run: Mainnet wstETH/WETH 2x (Tenderly static + LiFi)
+
+When you only need to validate the production wstETH/WETH 2x leverage token redeem path on a static Tenderly VNet, run this single spec:
+
+```bash
+# Required env (CI/dev)
+export TENDERLY_ACCOUNT=your_account
+export TENDERLY_PROJECT=your_project
+export TENDERLY_ACCESS_KEY=your_access_key
+# LiFi key recommended to avoid 429s during mint
+export VITE_LIFI_API_KEY=your_lifi_api_key
+export VITE_LIFI_INTEGRATOR=seamless-protocol
+
+# Run focused integration test (static Tenderly VNet, mainnet)
+bun run test:integration:wsteth
+```
+
+Notes:
+- Test mints via LiFi and redeems via deterministic on-chain path (Uniswap V2 seeded locally).
+- Keeps other integration tests untouched and skipped in CI.

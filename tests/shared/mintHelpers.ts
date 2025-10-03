@@ -10,8 +10,11 @@ import {
   createUniswapV3QuoteAdapter,
   type UniswapV3QuoteOptions,
 } from '@/domain/shared/adapters/uniswapV3'
-import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
-import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
+import {
+  readLeverageManagerV2GetLeverageTokenCollateralAsset,
+  readLeverageManagerV2GetLeverageTokenDebtAsset,
+  readLeverageTokenBalanceOf,
+} from '@/lib/contracts/generated'
 import { ADDR, CHAIN_ID, mode, RPC } from './env'
 import { readErc20Decimals } from './erc20'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
@@ -21,6 +24,21 @@ export type MintSetupParams = {
   publicClient: PublicClient
   config: Parameters<typeof readLeverageTokenBalanceOf>[0]
   slippageBps?: number
+  chainIdOverride?: number
+  // Optional: override addresses to ensure we mint the same token
+  // that the calling scenario is planning to redeem.
+  addresses?: {
+    token: Address
+    manager: Address
+    router: Address
+    uniswapV3?: {
+      pool: Address
+      fee: number
+      quoter?: Address
+      router?: Address
+      tickSpacing?: number
+    }
+  }
 }
 
 export type MintOutcome = {
@@ -42,6 +60,8 @@ export async function executeSharedMint({
   publicClient,
   config,
   slippageBps = 50,
+  chainIdOverride,
+  addresses,
 }: MintSetupParams): Promise<MintOutcome> {
   const resolvedSlippageBps = Number(process.env['TEST_SLIPPAGE_BPS'] ?? slippageBps ?? 50)
   if (mode !== 'tenderly') {
@@ -59,17 +79,20 @@ export async function executeSharedMint({
   }
   process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
 
-  const token: Address = ADDR.leverageToken
-  const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
-  const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
+  const token: Address = (addresses?.token ?? ADDR.leverageToken) as Address
+  const manager: Address = (addresses?.manager ?? ADDR.managerV2 ?? ADDR.manager) as Address
+  const router: Address = (addresses?.router ?? ADDR.routerV2 ?? ADDR.router) as Address
 
   console.info('[SHARED MINT] Using public RPC', { url: RPC.primary })
-  const tokenConfig = getLeverageTokenConfig(token)
-  const chainId = tokenConfig?.chainId ?? CHAIN_ID
+  const chainId = chainIdOverride ?? CHAIN_ID
   console.info('[SHARED MINT] Chain ID', { chainId })
 
-  const collateralAsset = ADDR.weeth
-  const debtAsset = ADDR.weth
+  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
+    args: [token],
+  })
+  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
+    args: [token],
+  })
   console.info('[SHARED MINT] Token assets', { collateralAsset, debtAsset })
 
   const decimals = await readErc20Decimals(config, collateralAsset)
@@ -85,7 +108,7 @@ export async function executeSharedMint({
 
   const quoteAdapterPreference = (process.env['TEST_QUOTE_ADAPTER'] ?? '').toLowerCase()
   const useLiFi = process.env['TEST_USE_LIFI'] === '1'
-  const uniswapV3Config = ADDR.uniswapV3
+  const uniswapV3Config = addresses?.uniswapV3 ?? ADDR.uniswapV3
   const canUseV3 = Boolean(
     uniswapV3Config?.quoter &&
       uniswapV3Config?.router &&
@@ -121,6 +144,7 @@ export async function executeSharedMint({
     quoteDebtToCollateral,
     routerAddressV2: router,
     managerAddressV2: manager,
+    chainId,
   })
   if (res.routerVersion !== 'v2') {
     throw new Error(`Unexpected router version: ${res.routerVersion}`)

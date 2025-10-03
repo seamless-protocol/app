@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Info } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
@@ -27,8 +27,9 @@ import { useLeverageTokenUserPosition } from '@/features/leverage-tokens/hooks/u
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
 import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
+import { useGA } from '@/lib/config/ga4.config'
+import { useExplorer } from '@/lib/hooks/useExplorer'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
-import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { CHAIN_IDS } from '@/lib/utils/chain-logos'
 import { formatAPY, formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
@@ -37,6 +38,16 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
     const { chainId: routeChainId, id: tokenAddress } = useParams({ strict: false })
     const { isConnected, address: userAddress } = useAccount()
     const navigate = useNavigate()
+    const explorer = useExplorer()
+    const analytics = useGA()
+
+    // Track page view when component mounts
+    useEffect(() => {
+      analytics.trackPageView('Leverage Token Detail', `/tokens/${routeChainId}/${tokenAddress}`)
+
+      // Track feature discovery for leverage token details
+      analytics.featureDiscovered('leverage_token_details', 'navigation')
+    }, [analytics, routeChainId, tokenAddress])
     const [selectedTimeframe, setSelectedTimeframe] = useState<'1W' | '1M' | '3M' | '6M' | '1Y'>(
       '3M',
     )
@@ -275,23 +286,14 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                             {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol}
                             )
                             <br />
-                            <span className="text-sm text-[var(--text-secondary)]">
-                              Click to view on{' '}
-                              {
-                                getTokenExplorerInfo(
-                                  tokenConfig.chainId,
-                                  tokenConfig.collateralAsset.address,
-                                ).name
-                              }
+                            <span className="text-slate-400 text-sm">
+                              Click to view on {explorer.name}
                             </span>
                           </p>
                         }
                         onClick={() =>
                           window.open(
-                            getTokenExplorerInfo(
-                              tokenConfig.chainId,
-                              tokenConfig.collateralAsset.address,
-                            ).url,
+                            explorer.tokenUrl(tokenConfig.collateralAsset.address),
                             '_blank',
                           )
                         }
@@ -309,23 +311,13 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                           <p className="font-medium">
                             {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
                             <br />
-                            <span className="text-sm text-[var(--text-secondary)]">
-                              Click to view on{' '}
-                              {
-                                getTokenExplorerInfo(
-                                  tokenConfig.chainId,
-                                  tokenConfig.debtAsset.address,
-                                ).name
-                              }
+                            <span className="text-slate-400 text-sm">
+                              Click to view on {explorer.name}
                             </span>
                           </p>
                         }
                         onClick={() =>
-                          window.open(
-                            getTokenExplorerInfo(tokenConfig.chainId, tokenConfig.debtAsset.address)
-                              .url,
-                            '_blank',
-                          )
+                          window.open(explorer.tokenUrl(tokenConfig.debtAsset.address), '_blank')
                         }
                       />
                     </div>
@@ -381,23 +373,14 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                         <p className="font-medium">
                           {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol})
                           <br />
-                          <span className="text-sm text-[var(--text-secondary)]">
-                            Click to view on{' '}
-                            {
-                              getTokenExplorerInfo(
-                                tokenConfig.chainId,
-                                tokenConfig.collateralAsset.address,
-                              ).name
-                            }
+                          <span className="text-slate-400 text-sm">
+                            Click to view on {explorer.name}
                           </span>
                         </p>
                       }
                       onClick={() =>
                         window.open(
-                          getTokenExplorerInfo(
-                            tokenConfig.chainId,
-                            tokenConfig.collateralAsset.address,
-                          ).url,
+                          explorer.tokenUrl(tokenConfig.collateralAsset.address),
                           '_blank',
                         )
                       }
@@ -415,23 +398,13 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                         <p className="font-medium">
                           {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
                           <br />
-                          <span className="text-sm text-[var(--text-secondary)]">
-                            Click to view on{' '}
-                            {
-                              getTokenExplorerInfo(
-                                tokenConfig.chainId,
-                                tokenConfig.debtAsset.address,
-                              ).name
-                            }
+                          <span className="text-slate-400 text-sm">
+                            Click to view on {explorer.name}
                           </span>
                         </p>
                       }
                       onClick={() =>
-                        window.open(
-                          getTokenExplorerInfo(tokenConfig.chainId, tokenConfig.debtAsset.address)
-                            .url,
-                          '_blank',
-                        )
+                        window.open(explorer.tokenUrl(tokenConfig.debtAsset.address), '_blank')
                       }
                     />
                   </div>

@@ -2,6 +2,9 @@ import type { Address } from 'viem'
 import { decodeFunctionData, erc20Abi } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 
+// Unmock the function we want to test
+vi.unmock('@/domain/redeem/planner/plan.v2')
+
 vi.mock('@/lib/contracts/generated', () => ({
   readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(
     async () => '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC' as Address,
@@ -43,6 +46,7 @@ describe('planRedeemV2 collateral padding', () => {
       slippageBps: 50,
       quoteCollateralToDebt: quoteWithFloor as any,
       managerAddress: '0x2222222222222222222222222222222222222222' as Address,
+      chainId: 1,
     })
 
     expect(plan.expectedTotalCollateral).toBe(100n)
@@ -73,6 +77,7 @@ describe('planRedeemV2 collateral padding', () => {
       quoteCollateralToDebt: quoteWithFloor as any,
       managerAddress: '0x2222222222222222222222222222222222222222' as Address,
       outputAsset: '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
+      chainId: 1,
     })
 
     expect(plan.payoutAsset.toLowerCase()).toBe('0xdddddddddddddddddddddddddddddddddddddddd')

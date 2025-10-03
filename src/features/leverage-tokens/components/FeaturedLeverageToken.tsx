@@ -147,14 +147,8 @@ export function FeaturedLeverageTokens({
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-[var(--text-primary)] flex items-center space-x-2">
           <Zap className="h-5 w-5 text-[var(--state-warning-text)]" />
-          <span>Featured High-Reward Tokens</span>
+          <span>Featured</span>
         </h2>
-        <Badge
-          variant="outline"
-          className="border-[color-mix(in_srgb,var(--tag-warning-text)_25%,transparent)] bg-[var(--tag-warning-bg)] text-[var(--tag-warning-text)]"
-        >
-          Top Rewards
-        </Badge>
       </div>
 
       {/* Cards Grid */}

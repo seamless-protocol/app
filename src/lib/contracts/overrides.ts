@@ -40,10 +40,32 @@ function getTenderlyOverrides(): string | undefined {
     logger.info('Using Tenderly VNet addresses')
     // Return Tenderly VNet contract address overrides
     return JSON.stringify({
+      '1': {
+        // Align VNet to canonical mainnet addresses
+        leverageTokenFactory: '0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82',
+        leverageTokenImpl: '0xfE9101349354E278970489F935a54905DE2E1856',
+        leverageManagerV2: '0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351',
+        leverageRouterV2: '0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA',
+        // Periphery
+        morphoLendingAdapterFactory: '0xce05FbEd9260810Bdded179ADfdaf737BE7ded71',
+        morphoLendingAdapterImpl: '0x00c66934EBCa0F2A845812bC368B230F6da11A5C',
+        veloraAdapter: '0xc4E5812976279cBcec943A6a148C95eAAC7Db6BA',
+        pricingAdapter: '0x44CCEBEA0dAc17105e91a59E182f65f8D176c88f',
+        rebalanceAdapter: '0x0a4490233Fd6Ea02873af11c744d286DC3d6C127',
+        lendingAdapter: '0xB22cd280b29e581e34423E86F65fd259F456D335',
+        multicallExecutor: '0x16D02Ebd89988cAd1Ce945807b963aB7A9Fd22E1',
+        tokens: {
+          usdc: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+          weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+          weeth: '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee',
+        },
+      },
       '8453': {
-        leverageManager: '0x575572D9cF8692d5a8e8EE5312445D0A6856c55f',
-        leverageRouter: '0x71E826cC335DaBac3dAF4703B2119983e1Bc843B',
-        multicall: '0x8db50770F8346e7D98886410490E9101718869EB',
+        leverageManager: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C',
+        leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C',
+        leverageRouter: '0xfd46483b299197c616671B7dF295cA5186c805c2',
+        leverageRouterV2: '0xfd46483b299197c616671B7dF295cA5186c805c2',
+        multicallExecutor: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd',
       },
     })
   }

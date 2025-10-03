@@ -5,6 +5,7 @@ import { formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 import type { OrchestrateRedeemResult } from '@/domain/redeem'
 import { RouterVersion } from '@/domain/redeem/planner/types'
+import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
@@ -19,6 +20,7 @@ import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
 import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
+import { useLeverageTokenConfig } from '../../hooks/useLeverageTokenConfig'
 import { useLeverageTokenEarnings } from '../../hooks/useLeverageTokenEarnings'
 import { useLeverageTokenUserMetrics } from '../../hooks/useLeverageTokenUserMetrics'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
@@ -50,12 +52,12 @@ interface LeverageTokenRedeemModalProps {
 
 // Hoisted to avoid re-creating on every render
 const REDEEM_STEPS: Array<StepConfig> = [
-  { id: 'input', label: 'Input', progress: 25 },
-  { id: 'approve', label: 'Approve', progress: 50 },
-  { id: 'confirm', label: 'Confirm', progress: 75 },
-  { id: 'pending', label: 'Processing', progress: 90 },
+  { id: 'input', label: 'Input', progress: 17 },
+  { id: 'approve', label: 'Approve', progress: 33 },
+  { id: 'confirm', label: 'Confirm', progress: 50 },
+  { id: 'pending', label: 'Processing', progress: 67 },
   { id: 'success', label: 'Success', progress: 100 },
-  { id: 'error', label: 'Error', progress: 50 },
+  { id: 'error', label: 'Error', progress: 100 },
 ]
 
 export function LeverageTokenRedeemModal({
@@ -64,6 +66,8 @@ export function LeverageTokenRedeemModal({
   leverageTokenAddress,
   userAddress: propUserAddress,
 }: LeverageTokenRedeemModalProps) {
+  const { trackLeverageTokenRedeemed, trackTransactionError } = useTransactionGA()
+  const analytics = useGA()
   const queryClient = useQueryClient()
 
   // Get leverage token configuration by address
@@ -85,6 +89,12 @@ export function LeverageTokenRedeemModal({
     contractAddresses.leverageRouterV2 ?? contractAddresses.leverageRouter
   const leverageManagerAddress =
     contractAddresses.leverageManagerV2 ?? contractAddresses.leverageManager
+
+  // Fetch contract config for redemption fee
+  const { config: contractConfig, isLoading: isContractConfigLoading } = useLeverageTokenConfig(
+    leverageTokenAddress,
+    leverageTokenConfig.chainId,
+  )
 
   // Get real wallet balance for leverage tokens
   const {
@@ -180,7 +190,7 @@ export function LeverageTokenRedeemModal({
 
   // Format balances for display
   const leverageTokenBalanceFormatted = leverageTokenBalance
-    ? formatUnits(leverageTokenBalance, leverageTokenConfig.collateralAsset.decimals) // Assuming same decimals
+    ? formatUnits(leverageTokenBalance, leverageTokenConfig.decimals)
     : '0'
 
   const {
@@ -213,7 +223,7 @@ export function LeverageTokenRedeemModal({
 
   // Form state and logic
   const form = useRedeemForm({
-    leverageTokenConfig,
+    leverageTokenDecimals: leverageTokenConfig.decimals,
     leverageTokenBalanceFormatted,
   })
 
@@ -231,6 +241,7 @@ export function LeverageTokenRedeemModal({
     ...(userAddress ? { account: userAddress } : {}),
     slippageBps,
     chainId: leverageTokenConfig.chainId as SupportedChainId,
+
     ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
     ...(leverageTokenConfig.swaps?.collateralToDebt
@@ -376,7 +387,10 @@ export function LeverageTokenRedeemModal({
     setSelectedOutputId('collateral')
     setTransactionHash('')
     setError('')
-  }, [toInput, form.setAmount])
+
+    // Track funnel step: redeem modal opened
+    analytics.funnelStep('redeem_leverage_token', 'modal_opened', 1)
+  }, [toInput, form.setAmount, analytics])
 
   useEffect(() => {
     if (isOpen) resetModal()
@@ -476,9 +490,21 @@ export function LeverageTokenRedeemModal({
     }
 
     try {
+      // Track funnel step: redeem transaction initiated
+      analytics.funnelStep('redeem_leverage_token', 'transaction_initiated', 2)
+
       toPending()
       const result = await exec.redeem(form.amountRaw)
       setTransactionHash(result.hash)
+
+      // Track successful redeem transaction
+      const tokenSymbol = leverageTokenConfig.symbol
+      const amount = form.amount
+      const usdValue = parseFloat(form.amount) * (selectedOutputAsset.price || 0)
+      trackLeverageTokenRedeemed(tokenSymbol, amount, usdValue)
+
+      // Track funnel step: redeem transaction completed
+      analytics.funnelStep('redeem_leverage_token', 'transaction_completed', 3)
 
       if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
         logRedeemDiagnostics({
@@ -519,7 +545,12 @@ export function LeverageTokenRedeemModal({
 
       toSuccess()
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Redemption failed. Please try again.')
+      // Track redeem transaction error
+      const errorMessage =
+        error instanceof Error ? error.message : 'Redemption failed. Please try again.'
+      trackTransactionError('redeem_failed', 'leverage_token', errorMessage)
+
+      setError(errorMessage)
       toError()
     }
   }
@@ -570,6 +601,8 @@ export function LeverageTokenRedeemModal({
             onApprove={handleApprove}
             error={error || redeemBlockingError}
             leverageTokenConfig={leverageTokenConfig}
+            redemptionFee={contractConfig?.redeemTokenFee}
+            isRedemptionFeeLoading={isContractConfigLoading}
             disabledAssets={disabledOutputAssets}
           />
         )
@@ -596,6 +629,8 @@ export function LeverageTokenRedeemModal({
               leverageRatio: leverageTokenConfig.leverageRatio,
               chainId: leverageTokenConfig.chainId,
             }}
+            redemptionFee={contractConfig?.redeemTokenFee}
+            isRedemptionFeeLoading={isContractConfigLoading}
             onConfirm={handleConfirm}
           />
         )
@@ -723,7 +758,7 @@ function useApprovalFlow(params: {
     ...(spender ? { spender } : {}),
     ...(amountFormatted ? { amount: amountFormatted } : {}),
     decimals,
-    chainId,
+    targetChainId: chainId,
     enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
   })
 

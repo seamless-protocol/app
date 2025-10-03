@@ -2,6 +2,7 @@ import { CheckCircle, ExternalLink } from 'lucide-react'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
+import { useExplorer } from '../../../../lib/hooks/useExplorer'
 
 interface Token {
   symbol: string
@@ -26,6 +27,8 @@ export function SuccessStep({
   transactionHash,
   onClose,
 }: SuccessStepProps) {
+  const explorer = useExplorer()
+  const txUrl = explorer.txUrl(transactionHash)
   return (
     <div className="space-y-6 text-center">
       <div className="flex flex-col items-center">
@@ -58,11 +61,11 @@ export function SuccessStep({
             <span className="text-[var(--text-secondary)]">Transaction</span>
             <button
               type="button"
-              onClick={() => window.open(`https://etherscan.io/tx/${transactionHash}`, '_blank')}
-              className="flex items-center text-[var(--brand-secondary)] underline-offset-2 transition-colors hover:text-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)] hover:underline"
+              onClick={() => window.open(txUrl, '_blank')}
+              className="text-purple-400 hover:underline flex items-center"
             >
-              View on Etherscan
-              <ExternalLink className="ml-1 h-3 w-3" />
+              View on {explorer.name}
+              <ExternalLink className="h-3 w-3 ml-1" />
             </button>
           </div>
         </div>

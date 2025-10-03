@@ -16,6 +16,7 @@ export const ltKeys = {
   user: (addr: Address, owner: Address) => [...ltKeys.token(addr), 'user', owner] as const,
   supply: (addr: Address) => [...ltKeys.token(addr), 'supply'] as const,
   price: (addr: Address) => [...ltKeys.token(addr), 'price'] as const,
+  collateral: (addr: Address) => [...ltKeys.token(addr), 'collateral'] as const,
   // Live state and TVL keys
   state: (addr: Address) => [...ltKeys.token(addr), 'state'] as const,
   tvl: (addr: Address) => [...ltKeys.token(addr), 'tvl'] as const,

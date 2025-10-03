@@ -56,6 +56,7 @@ describe('planMintV2', () => {
       equityInInputAsset,
       slippageBps: 50,
       quoteDebtToCollateral,
+      chainId: 8453,
     })
 
     expect(plan.inputAsset).toBe(inputAsset)

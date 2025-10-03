@@ -2,8 +2,7 @@ import { Copy, ExternalLink, LogOut, Moon, Palette, Settings, Sun, Wallet } from
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useDisconnect } from 'wagmi'
-import { getAddressExplorerUrl } from '../lib/utils/block-explorer'
-import { useTheme } from './theme-provider'
+import { useExplorer } from '@/lib/hooks/useExplorer'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
@@ -36,31 +35,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
     theme === 'system' ? getSystemTheme : () => theme,
   )
   const { disconnect } = useDisconnect()
-
-  useEffect(() => {
-    if (theme === 'system') {
-      if (typeof window === 'undefined') return
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-      const handleChange = () => setResolvedTheme(mediaQuery.matches ? 'dark' : 'light')
-
-      handleChange()
-      mediaQuery.addEventListener('change', handleChange)
-      return () => mediaQuery.removeEventListener('change', handleChange)
-    }
-
-    setResolvedTheme(theme)
-    return undefined
-  }, [theme])
-
-  const isDarkMode = resolvedTheme === 'dark'
-  const appearanceTitle =
-    theme === 'system' ? 'System Theme' : isDarkMode ? 'Dark Mode' : 'Light Mode'
-  const appearanceDescription =
-    theme === 'system'
-      ? `System preference currently ${resolvedTheme === 'dark' ? 'dark' : 'light'}`
-      : isDarkMode
-        ? 'Dark theme is enabled'
-        : 'Light theme is enabled'
+  const explorer = useExplorer()
 
   const copyAddress = async () => {
     if (!account?.address) return
@@ -76,9 +51,9 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
   }
 
   const viewOnExplorer = () => {
-    if (!account?.address || !chain?.id) return
-    const explorerUrl = getAddressExplorerUrl(chain.id, account.address)
-    window.open(explorerUrl, '_blank', 'noopener,noreferrer')
+    if (!account?.address) return
+    const url = explorer.addressUrl(account.address)
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const handleDisconnect = () => {
@@ -96,7 +71,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
             <div className="w-8 h-8 bg-[var(--cta-gradient)] rounded-lg flex items-center justify-center">
               <Settings className="h-5 w-5 text-[var(--cta-text)]" />
             </div>
-            <span>{account ? 'Account Settings' : 'Settings'}</span>
+            <span>Settings</span>
           </DialogTitle>
           <DialogDescription className="text-sm text-[var(--text-muted)] mb-3">
             {account
@@ -131,9 +106,15 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between bg-[color-mix(in_srgb,var(--surface-card) 75%,transparent)] rounded-lg p-3 border border-[var(--divider-line)]/80">
-                    <div className="flex items-center space-x-2">
-                      <code className="text-sm text-[var(--text-secondary)] font-mono">
+                  <div className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3 border border-slate-600">
+                    <div className="flex flex-col">
+                      {/* Prefer ENS name when available, fallback to address */}
+                      <span className="text-sm text-white">
+                        {account.displayName && !account.displayName.startsWith('0x')
+                          ? account.displayName
+                          : `${account.address.slice(0, 6)}...${account.address.slice(-4)}`}
+                      </span>
+                      <code className="text-xs text-slate-400 font-mono">
                         {account.address.slice(0, 6)}...{account.address.slice(-4)}
                       </code>
                     </div>
@@ -151,8 +132,8 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                         variant="ghost"
                         size="sm"
                         onClick={viewOnExplorer}
-                        className="h-8 w-8 p-0 text-[var(--nav-text)] hover:text-[var(--text-primary)] hover:bg-[var(--nav-surface-hover)]"
-                        aria-label="View on Etherscan"
+                        className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+                        aria-label={`View on ${explorer.name}`}
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>

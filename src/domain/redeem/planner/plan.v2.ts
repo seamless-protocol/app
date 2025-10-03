@@ -7,14 +7,14 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
-import { BASE_WETH, ETH_SENTINEL } from '@/lib/contracts/addresses'
+import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
 import { calculateMinCollateralForSender } from '../utils/slippage'
-import type { QuoteFn } from './types'
+import type { Quote, QuoteFn } from './types'
 
 // Local structural types (avoid brittle codegen coupling)
 type TokenArg = Address
@@ -75,20 +75,30 @@ export async function planRedeemV2(params: {
   managerAddress?: Address
   /** Optional explicit output asset for user payout (defaults to collateral). */
   outputAsset?: Address
+  /** Chain ID to execute the transaction on */
+  chainId: number
 }): Promise<RedeemPlanV2> {
-  const { config, token, sharesToRedeem, slippageBps, quoteCollateralToDebt, managerAddress } =
-    params
+  const {
+    config,
+    token,
+    sharesToRedeem,
+    slippageBps,
+    quoteCollateralToDebt,
+    managerAddress,
+    chainId,
+  } = params
 
   const { collateralAsset, debtAsset } = await getManagerAssets({
     config,
     token,
+    chainId,
     ...(managerAddress ? { managerAddress } : {}),
   })
 
   // Initial preview to understand the redemption
   const initialPreview = await readLeverageManagerV2PreviewRedeem(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token, sharesToRedeem],
+    chainId: chainId as SupportedChainId,
   })
 
   const totalCollateralAvailable = initialPreview.collateral
@@ -122,7 +132,7 @@ export async function planRedeemV2(params: {
   const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeCollateralPath ? ETH_SENTINEL : collateralAsset
 
-  const collateralNeededForDebt = await calculateCollateralNeededForDebt({
+  const sizing = await calculateCollateralNeededForDebt({
     debtAsset,
     debtToRepay,
     quoteCollateralToDebt,
@@ -130,19 +140,18 @@ export async function planRedeemV2(params: {
     inTokenForQuote,
   })
 
-  // Ensure we have enough collateral to repay the debt
-  if (collateralNeededForDebt > totalCollateralAvailable) {
+  const requiredForDebt = sizing.required
+  if (requiredForDebt > totalCollateralAvailable) {
     throw new Error('Insufficient collateral to repay debt')
   }
 
-  // Pad the swap input slightly so rounding/flooring during execution does not leave us
-  // a few wei short when repaying debt (e.g. Uniswap V2 floors amountsOut). Single wei
-  // padding keeps amountOutMin effectively unchanged but gives Morpho pulls a cushion.
-  const padding =
-    collateralNeededForDebt > 0n && totalCollateralAvailable > collateralNeededForDebt ? 1n : 0n
-  const paddedCollateralForDebt = collateralNeededForDebt + padding
+  const padding = sizing.exactOut
+    ? 0n
+    : requiredForDebt > 0n && totalCollateralAvailable > requiredForDebt
+      ? 1n
+      : 0n
+  const paddedCollateralForDebt = requiredForDebt + padding
   const remainingCollateral = totalCollateralAvailable - paddedCollateralForDebt
-  // Build the collateral->debt swap calls
   const { calls: swapCalls } = await buildCollateralToDebtSwapCalls({
     collateralAsset,
     debtAsset,
@@ -150,6 +159,7 @@ export async function planRedeemV2(params: {
     quoteCollateralToDebt,
     inTokenForQuote,
     useNativeCollateralPath,
+    ...(sizing.preQuote ? { preQuote: sizing.preQuote } : {}),
   })
 
   const collateralAddr = getAddress(collateralAsset)
@@ -211,15 +221,16 @@ async function getManagerAssets(args: {
   config: Config
   token: TokenArg
   managerAddress?: Address
+  chainId: number
 }) {
-  const { config, token, managerAddress } = args
+  const { config, token, chainId } = args
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
+    chainId: chainId as SupportedChainId,
   })
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    ...(managerAddress ? { address: managerAddress } : {}),
     args: [token],
+    chainId: chainId as SupportedChainId,
   })
   return { collateralAsset, debtAsset }
 }
@@ -230,13 +241,30 @@ async function calculateCollateralNeededForDebt(args: {
   quoteCollateralToDebt: QuoteFn
   maxCollateralAvailable: bigint
   inTokenForQuote: Address
-}): Promise<bigint> {
+}): Promise<{ required: bigint; preQuote?: Quote; exactOut?: boolean }> {
   const { debtAsset, debtToRepay, quoteCollateralToDebt, maxCollateralAvailable, inTokenForQuote } =
     args
 
-  if (debtToRepay <= 0n) return 0n
+  if (debtToRepay <= 0n) return { required: 0n }
   if (maxCollateralAvailable <= 0n) {
     throw new Error('No collateral available to repay debt')
+  }
+
+  // Try a single exact-out quote first; fall back to iterative exact-in sizing if unavailable.
+  try {
+    const qo = await quoteCollateralToDebt({
+      inToken: inTokenForQuote,
+      outToken: debtAsset,
+      amountIn: 0n,
+      amountOut: debtToRepay,
+      intent: 'exactOut',
+    })
+    if (typeof qo.maxIn === 'bigint' && qo.maxIn > 0n) {
+      const required = qo.maxIn > maxCollateralAvailable ? maxCollateralAvailable : qo.maxIn
+      return { required, preQuote: qo, exactOut: true }
+    }
+  } catch {
+    // ignore and fallback to iterative sizing below
   }
 
   const upperBound = maxCollateralAvailable
@@ -246,7 +274,11 @@ async function calculateCollateralNeededForDebt(args: {
   }
 
   let previous: bigint | undefined
-  for (let i = 0; i < 12; i++) {
+  let lastRequired: bigint | undefined
+  // Reduce iteration cap and tolerate tiny oscillations to speed up sizing.
+  const MAX_ITERATIONS = 4
+  const CONVERGENCE_BPS = 1n // stop when change <= 1 bp
+  for (let i = 0; i < MAX_ITERATIONS; i++) {
     if (attempt <= 0n) {
       attempt = 1n
     }
@@ -266,18 +298,32 @@ async function calculateCollateralNeededForDebt(args: {
     }
 
     const required = mulDivCeil(debtToRepay, attempt, quote.out)
+    lastRequired = required
     if (required > upperBound) {
       throw new Error('Insufficient collateral to repay debt')
     }
 
-    if (required === attempt || (typeof previous !== 'undefined' && required === previous)) {
-      return applyRequiredBuffer({ required, maxCollateralAvailable: upperBound })
+    // Stop if converged or oscillating between two adjacent values,
+    // or if relative delta is within 1 bp (buffer applied below).
+    const converged = required === attempt
+    const oscillating = typeof previous !== 'undefined' && required === previous
+    const relDeltaBps =
+      required === 0n
+        ? 0n
+        : ((required > attempt ? required - attempt : attempt - required) * 10_000n) / required
+    if (converged || oscillating || relDeltaBps <= CONVERGENCE_BPS) {
+      return { required: applyRequiredBuffer({ required, maxCollateralAvailable: upperBound }) }
     }
 
     previous = attempt
     attempt = required
   }
 
+  if (typeof lastRequired === 'bigint') {
+    return {
+      required: applyRequiredBuffer({ required: lastRequired, maxCollateralAvailable: upperBound }),
+    }
+  }
   throw new Error('Collateral sizing did not converge within iteration limit')
 }
 
@@ -306,6 +352,7 @@ async function buildCollateralToDebtSwapCalls(args: {
   quoteCollateralToDebt: QuoteFn
   inTokenForQuote: Address
   useNativeCollateralPath: boolean
+  preQuote?: Quote
 }): Promise<{ calls: V2Calls; expectedDebtOut: bigint }> {
   const {
     collateralAsset,
@@ -320,11 +367,13 @@ async function buildCollateralToDebtSwapCalls(args: {
     return { calls: [], expectedDebtOut: 0n }
   }
 
-  const quote = await quoteCollateralToDebt({
-    inToken: inTokenForQuote,
-    outToken: debtAsset,
-    amountIn: collateralAmount,
-  })
+  const quote =
+    args.preQuote ??
+    (await quoteCollateralToDebt({
+      inToken: inTokenForQuote,
+      outToken: debtAsset,
+      amountIn: collateralAmount,
+    }))
 
   const calls: V2Calls = []
 

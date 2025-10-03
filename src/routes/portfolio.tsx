@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { DollarSign, Target, TrendingUp } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Address } from 'viem'
 import { useAccount } from 'wagmi'
 import { ConnectionStatusCard } from '@/components/ConnectionStatusCard'
@@ -12,6 +12,7 @@ import { LeverageTokenRedeemModal } from '@/features/leverage-tokens/components/
 import type { Position } from '@/features/portfolio/components/active-positions'
 import { ActivePositions } from '@/features/portfolio/components/active-positions'
 import { AvailableRewards } from '@/features/portfolio/components/available-rewards'
+import { MorphoVaultsInfoCard } from '@/features/portfolio/components/morpho-vaults-info-card'
 import { PortfolioPerformanceChart } from '@/features/portfolio/components/portfolio-performance-chart'
 import { SEAMStaking } from '@/features/portfolio/components/seam-staking'
 import {
@@ -21,6 +22,8 @@ import {
 import { usePortfolioRewards } from '@/features/portfolio/hooks/usePortfolioRewards'
 import { usePortfolioStaking } from '@/features/portfolio/hooks/usePortfolioStaking'
 import { features } from '@/lib/config/features'
+import { useGA } from '@/lib/config/ga4.config'
+import { formatNumber } from '@/lib/utils/formatting'
 
 export const Route = createFileRoute('/portfolio')({
   component: PortfolioPage,
@@ -29,6 +32,12 @@ export const Route = createFileRoute('/portfolio')({
 function PortfolioPage() {
   const { isConnected, address: userAddress } = useAccount()
   const navigate = useNavigate()
+  const analytics = useGA()
+
+  // Track page view when component mounts
+  useEffect(() => {
+    analytics.trackPageView('Portfolio', '/portfolio')
+  }, [analytics])
 
   // Modal state
   const [isMintModalOpen, setIsMintModalOpen] = useState(false)
@@ -43,10 +52,10 @@ function PortfolioPage() {
     positionsAPYLoading,
   } = usePortfolioWithTotalValue()
   const performanceData = usePortfolioPerformance()
-  const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
+  const { isLoading: rewardsLoading } = usePortfolioRewards()
 
   // TODO: Use rewardsData when rewards feature is implemented
-  console.log('Rewards data:', { rewardsData, rewardsLoading })
+  // console.log('Rewards data:', { rewardsData, rewardsLoading })
 
   const { data: stakingData, isLoading: stakingLoading } = usePortfolioStaking()
 
@@ -268,13 +277,8 @@ function PortfolioPage() {
               title: 'Total Portfolio Value',
               stat: portfolioLoading ? (
                 <Skeleton className="h-6 w-24" />
-              ) : summary.totalValue < 0.01 ? (
-                '< $0.01'
               ) : (
-                `$${summary.totalValue.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 6,
-                })}`
+                `$${formatNumber(summary.totalValue, { decimals: 2, thousandDecimals: 2, millionDecimals: 2 })}`
               ),
               caption: portfolioLoading ? (
                 <Skeleton className="h-4 w-16" />
@@ -406,6 +410,14 @@ function PortfolioPage() {
         </motion.div>
       )}
 
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.35 }}
+      >
+        <MorphoVaultsInfoCard />
+      </motion.div>
+
       {/* Active Positions */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -430,6 +442,7 @@ function PortfolioPage() {
           }}
           leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
           {...(userAddress && { userAddress })}
+          {...(selectedPosition.apy && { apy: parseFloat(selectedPosition.apy) })}
         />
       )}
 

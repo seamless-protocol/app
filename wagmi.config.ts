@@ -1,14 +1,14 @@
-import { defineConfig } from "@wagmi/cli";
-import { react, actions } from "@wagmi/cli/plugins";
-import { base } from "viem/chains";
-import { leverageManagerAbi } from "./src/lib/contracts/abis/leverageManager";
-import { leverageManagerV2Abi } from "./src/lib/contracts/abis/leverageManagerV2";
-import { leverageRouterAbi } from "./src/lib/contracts/abis/leverageRouter";
-import { leverageTokenAbi } from "./src/lib/contracts/abis/leverageToken";
-import { leverageRouterV2Abi } from "./src/lib/contracts/abis/leverageRouterV2";
-import { leverageTokenFactoryAbi } from "./src/lib/contracts/abis/leverageTokenFactory";
-import { seamTokenAbi } from "./src/lib/contracts/abis/seamToken";
-import { contractAddresses } from "./src/lib/contracts/addresses";
+import { defineConfig } from '@wagmi/cli'
+import { actions, react } from '@wagmi/cli/plugins'
+import { base, mainnet } from 'viem/chains'
+import { leverageManagerAbi } from './src/lib/contracts/abis/leverageManager'
+import { leverageManagerV2Abi } from './src/lib/contracts/abis/leverageManagerV2'
+import { leverageRouterAbi } from './src/lib/contracts/abis/leverageRouter'
+import { leverageTokenAbi } from './src/lib/contracts/abis/leverageToken'
+import { leverageRouterV2Abi } from './src/lib/contracts/abis/leverageRouterV2'
+import { leverageTokenFactoryAbi } from './src/lib/contracts/abis/leverageTokenFactory'
+import { seamTokenAbi } from './src/lib/contracts/abis/seamToken'
+import { contractAddresses } from './src/lib/contracts/addresses'
 
 export default defineConfig({
   out: "src/lib/contracts/generated.ts",
@@ -20,46 +20,96 @@ export default defineConfig({
     {
       name: "LeverageTokenFactory",
       abi: leverageTokenFactoryAbi,
-      address: contractAddresses[base.id]?.leverageTokenFactory
-        ? { [base.id]: contractAddresses[base.id]?.leverageTokenFactory! }
-        : undefined,
+      address:
+        contractAddresses[base.id]?.leverageTokenFactory ||
+        contractAddresses[mainnet.id]?.leverageTokenFactory
+          ? {
+              ...(contractAddresses[base.id]?.leverageTokenFactory
+                ? { [base.id]: contractAddresses[base.id]!.leverageTokenFactory! }
+                : {}),
+              ...(contractAddresses[mainnet.id]?.leverageTokenFactory
+                ? { [mainnet.id]: contractAddresses[mainnet.id]!.leverageTokenFactory! }
+                : {}),
+            }
+          : undefined,
     },
     {
       name: "LeverageRouter",
       abi: leverageRouterAbi,
-      address: contractAddresses[base.id]?.leverageRouter
-        ? { [base.id]: contractAddresses[base.id]?.leverageRouter! }
-        : undefined,
+      address:
+        contractAddresses[base.id]?.leverageRouter || contractAddresses[mainnet.id]?.leverageRouter
+          ? {
+              ...(contractAddresses[base.id]?.leverageRouter
+                ? { [base.id]: contractAddresses[base.id]!.leverageRouter! }
+                : {}),
+              ...(contractAddresses[mainnet.id]?.leverageRouter
+                ? { [mainnet.id]: contractAddresses[mainnet.id]!.leverageRouter! }
+                : {}),
+            }
+          : undefined,
     },
     {
       name: "LeverageRouterV2",
       abi: leverageRouterV2Abi,
-      // Distinct address when deployed; omit mapping if unknown
-      address: contractAddresses[base.id]?.leverageRouterV2
-        ? { [base.id]: contractAddresses[base.id]?.leverageRouterV2! }
-        : undefined,
+      address:
+        contractAddresses[base.id]?.leverageRouterV2 ||
+        contractAddresses[mainnet.id]?.leverageRouterV2
+          ? {
+              ...(contractAddresses[base.id]?.leverageRouterV2
+                ? { [base.id]: contractAddresses[base.id]!.leverageRouterV2! }
+                : {}),
+              ...(contractAddresses[mainnet.id]?.leverageRouterV2
+                ? { [mainnet.id]: contractAddresses[mainnet.id]!.leverageRouterV2! }
+                : {}),
+            }
+          : undefined,
     },
     {
       name: "LeverageManager",
       abi: leverageManagerAbi,
-      address: contractAddresses[base.id]?.leverageManager
-        ? { [base.id]: contractAddresses[base.id]?.leverageManager! }
-        : undefined,
+      address:
+        contractAddresses[base.id]?.leverageManager ||
+        contractAddresses[mainnet.id]?.leverageManager
+          ? {
+              ...(contractAddresses[base.id]?.leverageManager
+                ? { [base.id]: contractAddresses[base.id]!.leverageManager! }
+                : {}),
+              ...(contractAddresses[mainnet.id]?.leverageManager
+                ? { [mainnet.id]: contractAddresses[mainnet.id]!.leverageManager! }
+                : {}),
+            }
+          : undefined,
     },
     {
       name: "LeverageManagerV2",
       abi: leverageManagerV2Abi,
-      // Distinct address when deployed; omit mapping if unknown
-      address: contractAddresses[base.id]?.leverageManagerV2
-        ? { [base.id]: contractAddresses[base.id]?.leverageManagerV2! }
-        : undefined,
+      address:
+        contractAddresses[base.id]?.leverageManagerV2 ||
+        contractAddresses[mainnet.id]?.leverageManagerV2
+          ? {
+              ...(contractAddresses[base.id]?.leverageManagerV2
+                ? { [base.id]: contractAddresses[base.id]!.leverageManagerV2! }
+                : {}),
+              ...(contractAddresses[mainnet.id]?.leverageManagerV2
+                ? { [mainnet.id]: contractAddresses[mainnet.id]!.leverageManagerV2! }
+                : {}),
+            }
+          : undefined,
     },
     {
       name: "SeamToken",
       abi: seamTokenAbi,
-      address: contractAddresses[base.id]?.seamlessToken
-        ? { [base.id]: contractAddresses[base.id]?.seamlessToken! }
-        : undefined,
+      address:
+        contractAddresses[base.id]?.seamlessToken || contractAddresses[mainnet.id]?.seamlessToken
+          ? {
+              ...(contractAddresses[base.id]?.seamlessToken
+                ? { [base.id]: contractAddresses[base.id]!.seamlessToken! }
+                : {}),
+              ...(contractAddresses[mainnet.id]?.seamlessToken
+                ? { [mainnet.id]: contractAddresses[mainnet.id]!.seamlessToken! }
+                : {}),
+            }
+          : undefined,
     },
   ],
   plugins: [

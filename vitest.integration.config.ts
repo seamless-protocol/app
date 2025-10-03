@@ -9,6 +9,9 @@ export default defineConfig({
     environment: 'jsdom',
     // No global setup that mocks modules — integration uses real modules
     globals: true,
+    // Tenderly static VNets cannot handle concurrent snapshots across workers.
+    // Force Vitest to run integration files sequentially so mint/redeem suites don't collide.
+    fileParallelism: false,
     include: [
       'tests/integration/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
@@ -27,4 +30,3 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
 })
-

@@ -2,21 +2,15 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { config } from 'dotenv'
 import { type Address, getAddress, type Hex } from 'viem'
-import { anvil, base, type Chain } from 'viem/chains'
+import { anvil } from 'viem/chains'
 import { z } from 'zod'
 import {
   getUniswapV3ChainConfig,
   getUniswapV3PoolConfig,
   type UniswapV3PoolKey,
 } from '../../src/lib/config/uniswapV3.js'
+import { BASE_WETH, getContractAddresses } from '../../src/lib/contracts/addresses.js'
 import {
-  BASE_WETH,
-  contractAddresses,
-  getContractAddresses,
-} from '../../src/lib/contracts/addresses.js'
-import {
-  BASE_TENDERLY_VNET_ADMIN_RPC,
-  BASE_TENDERLY_VNET_PRIMARY_RPC,
   DEFAULT_PROD_LEVERAGE_TOKEN_KEY,
   DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY,
   getDefaultLeverageTokenDefinition,
@@ -26,8 +20,8 @@ import {
   type LeverageTokenKey,
   type LeverageTokenSource,
   listLeverageTokens,
-  TENDERLY_VNET_CONTRACT_OVERRIDES,
 } from '../fixtures/addresses'
+import { resolveBackend } from './backend'
 
 // Load environment variables for tests (integration/e2e)
 // Priority (first one that provides a key wins):
@@ -87,124 +81,35 @@ const EnvSchema = z.object({
 
 export const Env = EnvSchema.parse(process.env)
 
-function isLocalRpc(url: string | undefined): boolean {
-  if (!url) return false
-  try {
-    const parsed = new URL(url)
-    return parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost'
-  } catch {
-    return /^(https?:\/\/)?(127\.0\.0\.1|localhost)/i.test(url)
+const backend = await resolveBackend()
+const scenario = backend.scenario
+
+export const BACKEND = backend
+export const SCENARIO = scenario
+
+export const mode: Mode = backend.executionKind
+export const RPC = { primary: backend.rpcUrl, admin: backend.adminRpcUrl }
+
+process.env['TEST_CHAIN'] = backend.chainKey
+process.env['TEST_MODE'] = backend.mode
+process.env['TEST_SCENARIO'] = scenario.key
+process.env['E2E_TOKEN_SOURCE'] = scenario.leverageTokenSource
+process.env['TEST_RPC_URL'] ||= backend.rpcUrl
+process.env['VITE_TEST_RPC_URL'] ||= backend.rpcUrl
+process.env['VITE_BASE_RPC_URL'] ||= backend.rpcUrl
+
+if (backend.executionKind === 'tenderly') {
+  process.env['TENDERLY_VNET_PRIMARY_RPC'] ||= backend.rpcUrl
+  process.env['TENDERLY_VNET_ADMIN_RPC'] ||= backend.adminRpcUrl
+  process.env['TENDERLY_ADMIN_RPC_URL'] ||= backend.adminRpcUrl
+  if (backend.contractOverrides) {
+    process.env['VITE_CONTRACT_ADDRESS_OVERRIDES'] ||= JSON.stringify(backend.contractOverrides)
   }
 }
 
-const fallbackTenderlyRpc =
-  (process.env['TENDERLY_RPC_URL'] as string | undefined) ||
-  (process.env['TENDERLY_VNET_PRIMARY_RPC'] as string | undefined) ||
-  BASE_TENDERLY_VNET_PRIMARY_RPC
-
-const rpcCandidate = Env.TEST_RPC_URL || Env.RPC_URL || Env.VITE_BASE_RPC_URL || fallbackTenderlyRpc
-
-export const mode: Mode = rpcCandidate && !isLocalRpc(rpcCandidate) ? 'tenderly' : 'anvil'
-
-const primaryRpc: string = (() => {
-  if (mode === 'tenderly') {
-    if (rpcCandidate && !isLocalRpc(rpcCandidate)) return rpcCandidate
-    return fallbackTenderlyRpc
-  }
-
-  if (rpcCandidate && isLocalRpc(rpcCandidate)) {
-    return rpcCandidate
-  }
-
-  return Env.ANVIL_RPC_URL
-})()
-
-const adminRpcCandidate =
-  (process.env['TENDERLY_ADMIN_RPC_URL'] as string | undefined) ||
-  (process.env['TENDERLY_VNET_ADMIN_RPC'] as string | undefined) ||
-  (mode === 'tenderly' ? BASE_TENDERLY_VNET_ADMIN_RPC : undefined)
-
-const adminRpc = adminRpcCandidate ?? primaryRpc
-
-if (!process.env['VITE_TEST_RPC_URL']) {
-  process.env['VITE_TEST_RPC_URL'] = primaryRpc
-}
-
-if (!process.env['TEST_RPC_URL']) {
-  process.env['TEST_RPC_URL'] = primaryRpc
-}
-
-if (mode === 'tenderly') {
-  process.env['TENDERLY_VNET_PRIMARY_RPC'] ||= primaryRpc
-  process.env['TENDERLY_VNET_ADMIN_RPC'] ||= adminRpc
-  process.env['TENDERLY_ADMIN_RPC_URL'] ||= adminRpc
-  process.env['VITE_BASE_RPC_URL'] ||= primaryRpc
-  process.env['VITE_CONTRACT_ADDRESS_OVERRIDES'] ||= JSON.stringify(
-    TENDERLY_VNET_CONTRACT_OVERRIDES,
-  )
-}
-
-export const RPC = { primary: primaryRpc, admin: adminRpc }
-
-function buildTenderlyHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const token = process.env['TENDERLY_TOKEN']
-  const accessKey = process.env['TENDERLY_ACCESS_KEY']
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  } else if (accessKey) {
-    headers['X-Access-Key'] = accessKey
-  }
-  return headers
-}
-
-async function detectChainId(rpcUrl: string): Promise<number> {
-  try {
-    const res = await fetch(rpcUrl, {
-      method: 'POST',
-      headers: buildTenderlyHeaders(),
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_chainId', params: [] }),
-    })
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status} ${res.statusText}`)
-    }
-    const json = (await res.json()) as { result?: string }
-    if (!json?.result || typeof json.result !== 'string') {
-      throw new Error('Missing chain id in RPC response')
-    }
-    return Number(BigInt(json.result))
-  } catch (error) {
-    const details = error instanceof Error ? error.message : String(error)
-    throw new Error(`Failed to detect chain id from RPC ${rpcUrl}: ${details}`)
-  }
-}
-
-const detectedChainId = await detectChainId(primaryRpc)
-const chainIdsWithConfig = new Set<number>(Object.keys(contractAddresses).map(Number))
-
-const canonicalChainId = (() => {
-  if (chainIdsWithConfig.has(detectedChainId)) return detectedChainId
-  if (detectedChainId === anvil.id && chainIdsWithConfig.has(base.id)) return base.id
-  throw new Error(`No contract mapping configured for chain ${detectedChainId}`)
-})()
-
-const withRpc = (chain: Chain, id: number) => ({
-  ...chain,
-  id,
-  rpcUrls: {
-    ...chain.rpcUrls,
-    default: { http: [primaryRpc] },
-    public: { http: [primaryRpc] },
-  },
-})
-
-const resolvedChain: Chain = (() => {
-  if (detectedChainId === base.id) return withRpc(base, detectedChainId)
-  if (detectedChainId === anvil.id) return withRpc({ ...base }, anvil.id)
-  if (chainIdsWithConfig.has(detectedChainId)) return withRpc({ ...base }, detectedChainId)
-  // canonicalChainId guard above will already throw for unsupported networks
-  return withRpc(base, canonicalChainId)
-})()
+const detectedChainId = backend.chainId
+const canonicalChainId = backend.canonicalChainId
+const resolvedChain = backend.chain
 
 export const CHAIN_ID = detectedChainId
 export const CANONICAL_CHAIN_ID = canonicalChainId
@@ -219,32 +124,82 @@ function optionalAddress(value: Address | undefined): Address | undefined {
   return value ? getAddress(value) : undefined
 }
 
-const leverageTokenSource: LeverageTokenSource = (() => {
-  const raw = (process.env['E2E_TOKEN_SOURCE'] || 'tenderly').toLowerCase()
-  return raw === 'prod' ? 'prod' : 'tenderly'
-})()
+const scenarioTokenKeys = [...new Set(scenario.leverageTokenKeys)]
 
-const leverageTokenKey: LeverageTokenKey = (() => {
+function normalizeTokenSource(
+  raw: string | undefined,
+  fallback: LeverageTokenSource,
+): LeverageTokenSource {
+  if (!raw) return fallback
+  const normalized = raw.toLowerCase()
+  return normalized === 'prod' ? 'prod' : 'tenderly'
+}
+
+const leverageTokenSource: LeverageTokenSource = normalizeTokenSource(
+  process.env['E2E_TOKEN_SOURCE'],
+  scenario.leverageTokenSource,
+)
+
+const scenarioKeySet = new Set<LeverageTokenKey>(
+  (scenarioTokenKeys.length > 0
+    ? scenarioTokenKeys
+    : listLeverageTokens(scenario.leverageTokenSource).map(
+        (token) => token.key,
+      )) as Array<LeverageTokenKey>,
+)
+
+const availableForSource = new Set<LeverageTokenKey>(
+  listLeverageTokens(leverageTokenSource).map((token) => token.key) as Array<LeverageTokenKey>,
+)
+
+for (const key of Array.from(scenarioKeySet)) {
+  if (!availableForSource.has(key)) {
+    scenarioKeySet.delete(key)
+  }
+}
+
+function assertTokenAvailable(
+  source: LeverageTokenSource,
+  key: LeverageTokenKey,
+): LeverageTokenDefinition {
+  if (!availableForSource.has(key)) {
+    throw new Error(
+      `Leverage token '${key}' not available for source '${source}'. Update scenario '${scenario.key}'.`,
+    )
+  }
+  return getLeverageTokenDefinition(source, key)
+}
+
+const selectedTokenKey = (() => {
   const raw = process.env['E2E_LEVERAGE_TOKEN_KEY']
   if (!raw) {
-    return leverageTokenSource === 'tenderly'
-      ? DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY
-      : DEFAULT_PROD_LEVERAGE_TOKEN_KEY
+    const fallbackKey =
+      scenario.defaultLeverageTokenKey ??
+      (leverageTokenSource === 'tenderly'
+        ? DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY
+        : DEFAULT_PROD_LEVERAGE_TOKEN_KEY)
+    return fallbackKey
   }
   const normalized = raw.toLowerCase()
   if (!isLeverageTokenKey(normalized)) {
     throw new Error(`Unsupported leverage token key '${raw}'`)
   }
-  const available = listLeverageTokens(leverageTokenSource)
-  if (!available.some((token) => token.key === normalized)) {
-    throw new Error(
-      `Leverage token '${normalized}' not available for source '${leverageTokenSource}'`,
-    )
-  }
   return normalized
 })()
 
-const leverageTokenDefinition = getLeverageTokenDefinition(leverageTokenSource, leverageTokenKey)
+if (!availableForSource.has(selectedTokenKey)) {
+  throw new Error(
+    `Leverage token '${selectedTokenKey}' not configured for source '${leverageTokenSource}'.`,
+  )
+}
+
+const leverageTokenKey: LeverageTokenKey = selectedTokenKey
+
+if (!scenarioKeySet.has(leverageTokenKey)) {
+  scenarioKeySet.add(leverageTokenKey)
+}
+
+const leverageTokenDefinition = assertTokenAvailable(leverageTokenSource, leverageTokenKey)
 const leverageTokenAddress = getAddress(leverageTokenDefinition.address)
 const leverageTokenLabel = leverageTokenDefinition.label
 
@@ -255,7 +210,7 @@ process.env['E2E_LEVERAGE_TOKEN_LABEL'] = leverageTokenLabel
 process.env['E2E_CHAIN_ID'] ||= String(canonicalChainId)
 
 type LeverageTokenAddresses = {
-  factory: Address
+  factory?: Address
   manager: Address
   managerV1?: Address
   managerV2?: Address
@@ -310,11 +265,6 @@ function buildAddressContext(
   const primaryRouter = routerOverride ?? routerV2 ?? routerV1
 
   const result: LeverageTokenAddresses = {
-    factory: ensureAddress(
-      'leverageTokenFactory',
-      definition.chainId,
-      contracts.leverageTokenFactory as Address | undefined,
-    ),
     manager: ensureAddress(
       'leverageManager',
       definition.chainId,
@@ -343,17 +293,19 @@ function buildAddressContext(
     ),
   }
 
+  const factoryAddress = optionalAddress(contracts.leverageTokenFactory as Address | undefined)
   const managerV1Address = optionalAddress(resolvedManagerV1)
   const managerV2Address = optionalAddress(resolvedManagerV2)
   const routerV1Address = optionalAddress(resolvedRouterV1)
   const routerV2Address = optionalAddress(resolvedRouterV2)
   const executorAddress = optionalAddress(
-    executorOverride ?? (contracts.multicall as Address | undefined),
+    executorOverride ?? (contracts.multicallExecutor as Address | undefined),
   )
   const veloraAddress = optionalAddress(veloraOverride)
   const rebalanceAddress = optionalAddress(rebalanceOverride)
   const lendingAddress = optionalAddress(lendingOverride)
 
+  if (factoryAddress) result.factory = factoryAddress
   if (managerV1Address) result.managerV1 = managerV1Address
   if (managerV2Address) result.managerV2 = managerV2Address
   if (routerV1Address) result.routerV1 = routerV1Address
@@ -393,7 +345,9 @@ function buildAddressContext(
   return result
 }
 
-const AVAILABLE_LEVERAGE_TOKENS = listLeverageTokens(leverageTokenSource)
+const AVAILABLE_LEVERAGE_TOKENS = Array.from(scenarioKeySet).map((key) =>
+  assertTokenAvailable(leverageTokenSource, key),
+)
 
 export function getAddressesForToken(
   key: LeverageTokenKey,

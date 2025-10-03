@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion'
 import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
-import { type ComponentType, type CSSProperties, useState } from 'react'
+import type { ComponentType, CSSProperties } from 'react'
+import { useState } from 'react'
+import type { Address } from 'viem'
+import { useAccount } from 'wagmi'
 import { cn } from '@/lib/utils/cn'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent, CardHeader } from '../../../components/ui/card'
@@ -16,6 +19,7 @@ interface ResourceItem {
   description: string
   url: string
   icon: ComponentType<{ className?: string }>
+  getUrl?: (ctx: { address?: Address }) => string
   badge: {
     text: string
     color:
@@ -50,6 +54,7 @@ export function RelatedResources({
   className,
 }: RelatedResourcesProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const { address } = useAccount()
 
   const resourceColorTokens: Record<ResourceItem['badge']['color'], string> = {
     amber: 'var(--state-warning-text)',
@@ -81,10 +86,11 @@ export function RelatedResources({
 
   const renderResourceItem = (item: ResourceItem) => {
     const Icon = item.icon
+    const href = item.getUrl ? (address ? item.getUrl({ address }) : item.getUrl({})) : item.url
     return (
       <a
         key={item.id}
-        href={item.url}
+        href={href}
         target="_blank"
         rel="noopener noreferrer"
         style={buildResourceStyles(item.badge.color)}

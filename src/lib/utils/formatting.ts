@@ -96,7 +96,7 @@ export function getRiskLevelColor(riskLevel: string): string {
 }
 
 /**
- * Format a large number with appropriate suffixes
+ * Format a large number with appropriate suffixes and smart decimal handling
  * @param value - The number to format
  * @param options - Formatting options
  */
@@ -120,7 +120,25 @@ export function formatNumber(
   if (value >= 1000) {
     return `${(value / 1000).toFixed(thousandDecimals)}K`
   }
-  return value.toFixed(decimals)
+
+  // Smart decimal handling for small amounts
+  if (value > 0) {
+    // For any non-zero value, avoid showing 0.00
+    const formatted = value.toFixed(decimals)
+    if (formatted === '0.00' && value > 0) {
+      // If the value is positive but rounds to 0.00, show the actual value with more precision
+      // Find the minimum number of decimals needed to show a non-zero value
+      let precision = decimals
+      while (precision < 8 && value.toFixed(precision) === '0.00') {
+        precision++
+      }
+      return value.toFixed(precision)
+    }
+    return formatted
+  } else {
+    // For zero or negative values, show as is
+    return value.toFixed(decimals)
+  }
 }
 
 /**

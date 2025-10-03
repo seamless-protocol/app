@@ -10,7 +10,11 @@ import { Input } from '../../../../components/ui/input'
 import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import { formatAPY } from '../../../../lib/utils/formatting'
-import { AMOUNT_PERCENTAGE_PRESETS, SLIPPAGE_PRESETS_PERCENT_DISPLAY } from '../../constants'
+import {
+  AMOUNT_PERCENTAGE_PRESETS,
+  MIN_MINT_AMOUNT_DISPLAY,
+  SLIPPAGE_PRESETS_PERCENT_DISPLAY,
+} from '../../constants'
 
 interface Token {
   symbol: string
@@ -56,6 +60,8 @@ interface InputStepProps {
   error?: string | undefined
   leverageTokenConfig: LeverageTokenConfig
   apy?: number | undefined
+  managementFee?: bigint | undefined
+  isManagementFeeLoading?: boolean | undefined
 }
 
 export function InputStep({
@@ -82,6 +88,8 @@ export function InputStep({
   error,
   leverageTokenConfig,
   apy,
+  managementFee,
+  isManagementFeeLoading,
 }: InputStepProps) {
   const mintAmountId = useId()
 
@@ -230,9 +238,9 @@ export function InputStep({
           <div className="mb-2 flex items-center justify-between">
             <div className="text-sm text-[var(--text-secondary)]">You will receive</div>
             {isCalculating && (
-              <div className="flex items-center text-xs text-[var(--text-secondary)]">
-                <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
-                <Skeleton className="h-3 w-20" />
+              <div className="flex items-center text-xs text-slate-400">
+                <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                Calculating...
               </div>
             )}
           </div>
@@ -287,8 +295,16 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Management Fee</span>
-            <span className="text-[var(--text-primary)]">2.0%</span>
+            <span className="text-slate-400">Management Fee</span>
+            <span className="text-white">
+              {isManagementFeeLoading ? (
+                <Skeleton className="inline-block h-4 w-12" />
+              ) : typeof managementFee === 'bigint' ? (
+                `${Number(managementFee) / 100}%`
+              ) : (
+                'N/A'
+              )}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Slippage Tolerance</span>
@@ -312,10 +328,12 @@ export function InputStep({
               )}
             </span>
           </div>
-          <Separator className="my-2 bg-[var(--divider-line)]" />
-          <div className="flex justify-between font-medium">
-            <span className="text-[var(--text-primary)]">You will receive</span>
-            <span className="text-[var(--text-primary)]">{expectedTokens} tokens</span>
+          <Separator className="my-2 bg-slate-700" />
+          <div className="flex justify-between font-medium items-center">
+            <span className="text-white">You will receive</span>
+            <span className="text-white">
+              {isCalculating ? 'Calculating...' : `${expectedTokens} tokens`}
+            </span>
           </div>
         </div>
       </Card>
@@ -334,8 +352,8 @@ export function InputStep({
             ? 'Enter an amount'
             : !canProceed && parseFloat(amount || '0') > parseFloat(selectedToken.balance)
               ? 'Insufficient balance'
-              : !canProceed && parseFloat(amount || '0') < 0.01
-                ? 'Minimum mint: 0.01'
+              : !canProceed && parseFloat(amount || '0') < parseFloat(MIN_MINT_AMOUNT_DISPLAY)
+                ? `Minimum mint: ${MIN_MINT_AMOUNT_DISPLAY}`
                 : isCalculating
                   ? 'Calculating...'
                   : isAllowanceLoading
