@@ -1,5 +1,5 @@
 import { Copy, ExternalLink, LogOut, Moon, Palette, Settings, Sun, Wallet } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { toast } from 'sonner'
 import { useDisconnect } from 'wagmi'
 import { useTheme } from '@/components/theme-provider'
@@ -28,6 +28,9 @@ interface CustomAccountModalProps {
 
 export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAccountModalProps) {
   const { theme, setTheme } = useTheme()
+  const reactId = useId()
+  const titleId = `appearance-title-${reactId}`
+  const descriptionId = `appearance-description-${reactId}`
   const getSystemTheme = () =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'dark'
@@ -184,7 +187,21 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
             </div>
             <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-accent border-border">
               <div className="[&:last-child]:pb-6 p-4">
-                <div className="flex items-center justify-between">
+                <div
+                  className="flex items-center justify-between cursor-pointer select-none"
+                  role="switch"
+                  aria-checked={isDarkMode}
+                  aria-labelledby={titleId}
+                  aria-describedby={descriptionId}
+                  tabIndex={0}
+                  onClick={() => setTheme(isDarkMode ? 'light' : 'dark')}
+                  onKeyDown={(event) => {
+                    if (event.key === ' ' || event.key === 'Enter') {
+                      event.preventDefault()
+                      setTheme(isDarkMode ? 'light' : 'dark')
+                    }
+                  }}
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
                       {isDarkMode ? (
@@ -194,14 +211,23 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{appearanceTitle}</p>
-                      <p className="text-sm text-muted-foreground">{appearanceDescription}</p>
+                      <p id={titleId} className="font-medium text-foreground">
+                        {appearanceTitle}
+                      </p>
+                      <p id={descriptionId} className="text-sm text-muted-foreground">
+                        {appearanceDescription}
+                      </p>
                     </div>
                   </div>
                   <Switch
                     checked={isDarkMode}
                     onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
                     className="cursor-pointer"
+                    // Prevent bubbling so clicks on the switch don't double-toggle via the row
+                    onClick={(event) => event.stopPropagation()}
+                    // Hide from assistive tech since the row acts as the switch control
+                    aria-hidden="true"
+                    tabIndex={-1}
                   />
                 </div>
               </div>
