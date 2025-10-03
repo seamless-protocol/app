@@ -69,12 +69,12 @@ export function getEnvironment(): string {
  * Check if running in development mode
  */
 export function isDevelopment(): boolean {
-  return import.meta.env.DEV
+  return import.meta.env.MODE === 'development'
 }
 
 /**
  * Check if running in production mode
  */
 export function isProduction(): boolean {
-  return import.meta.env.PROD
+  return import.meta.env.MODE === 'production'
 }

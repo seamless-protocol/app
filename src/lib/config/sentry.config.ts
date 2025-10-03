@@ -8,6 +8,8 @@ export function initSentry() {
   const dsn = import.meta.env['VITE_SENTRY_DSN']
   const environment = import.meta.env.MODE
 
+  console.log('[Sentry] Environment:', environment)
+
   if (!dsn) {
     console.log('[Sentry] No DSN provided, skipping initialization')
     return

@@ -51,7 +51,7 @@ try {
     environment: import.meta.env.MODE,
   })
   // In development, show the error in the UI
-  if (import.meta.env.DEV) {
+  if (import.meta.env.MODE === 'development') {
     const errorDiv = document.createElement('div')
     errorDiv.style.cssText = `
       position: fixed;
