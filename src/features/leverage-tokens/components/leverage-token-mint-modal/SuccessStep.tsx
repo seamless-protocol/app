@@ -35,34 +35,31 @@ export function SuccessStep({
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--state-success-text) 20%,transparent)]">
           <CheckCircle className="h-8 w-8 text-[var(--state-success-text)]" />
         </div>
-        <h3 className="mb-2 text-lg font-medium text-[var(--text-primary)]">Mint Successful!</h3>
-        <p className="mx-auto max-w-sm text-[var(--text-secondary)]">
+        <h3 className="mb-2 text-lg font-medium text-foreground">Mint Successful!</h3>
+        <p className="mx-auto max-w-sm text-secondary-foreground">
           Your {amount} {selectedToken.symbol} has been successfully minted into {expectedTokens}{' '}
           leverage tokens.
         </p>
       </div>
 
-      <Card
-        variant="gradient"
-        className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
-      >
+      <Card variant="gradient" className="border border-border bg-card p-4">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Minted</span>
-            <span className="text-[var(--text-primary)]">
+            <span className="text-secondary-foreground">Minted</span>
+            <span className="text-foreground">
               {amount} {selectedToken.symbol}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Received</span>
-            <span className="text-[var(--text-primary)]">{expectedTokens} tokens</span>
+            <span className="text-secondary-foreground">Received</span>
+            <span className="text-foreground">{expectedTokens} tokens</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[var(--text-secondary)]">Transaction</span>
+            <span className="text-secondary-foreground">Transaction</span>
             <button
               type="button"
               onClick={() => window.open(txUrl, '_blank')}
-              className="text-purple-400 hover:underline flex items-center"
+              className="text-brand-purple hover:underline flex items-center"
             >
               View on {explorer.name}
               <ExternalLink className="h-3 w-3 ml-1" />

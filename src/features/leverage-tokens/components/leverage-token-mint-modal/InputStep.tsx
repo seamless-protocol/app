@@ -97,10 +97,10 @@ export function InputStep({
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <label htmlFor={mintAmountId} className="text-sm font-medium text-[var(--text-primary)]">
+          <label htmlFor={mintAmountId} className="text-sm font-medium text-foreground">
             Mint Amount
           </label>
-          <div className="text-xs text-[var(--text-secondary)]">
+          <div className="text-xs text-secondary-foreground">
             Balance:{' '}
             {isCollateralBalanceLoading ? (
               <Skeleton className="inline-block h-3 w-16" />
@@ -110,10 +110,7 @@ export function InputStep({
           </div>
         </div>
 
-        <Card
-          variant="gradient"
-          className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
-        >
+        <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
           <div className="mb-3 flex items-end justify-between">
             <div className="flex-1">
               <div className="flex">
@@ -123,7 +120,7 @@ export function InputStep({
                   placeholder="0"
                   value={amount}
                   onChange={(e) => onAmountChange(e.target.value)}
-                  className="h-auto px-3 text-lg font-medium text-[var(--text-primary)] focus:ring-0 focus:ring-offset-0"
+                  className="h-auto px-3 text-lg font-medium text-foreground focus:ring-0 focus:ring-offset-0"
                 />
                 <div className="ml-4 flex items-center space-x-2">
                   <FilterDropdown
@@ -142,7 +139,7 @@ export function InputStep({
                   />
                 </div>
               </div>
-              <div className="mt-1 text-xs text-[var(--text-secondary)]">
+              <div className="mt-1 text-xs text-secondary-foreground">
                 {isUsdPriceLoading ? (
                   <Skeleton className="h-4 w-20" />
                 ) : (
@@ -163,7 +160,7 @@ export function InputStep({
                   variant="outline"
                   size="sm"
                   onClick={() => onPercentageClick(percentage)}
-                  className="h-7 border border-[var(--divider-line)] px-2 text-xs text-[var(--text-secondary)] transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]"
+                  className="h-7 border border-border px-2 text-xs text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   {percentage === 100 ? 'MAX' : `${percentage}%`}
                 </Button>
@@ -174,7 +171,7 @@ export function InputStep({
               variant="ghost"
               size="sm"
               onClick={onToggleAdvanced}
-              className="text-[var(--brand-secondary)] transition-colors hover:text-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]"
+              className="text-brand-purple transition-colors hover:opacity-90"
             >
               <Settings className="mr-1 h-4 w-4 text-[inherit]" />
               Advanced
@@ -183,14 +180,9 @@ export function InputStep({
         </Card>
 
         {showAdvanced && (
-          <Card
-            variant="gradient"
-            className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
-          >
+          <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-medium text-[var(--text-primary)]">
-                Slippage Tolerance
-              </div>
+              <div className="text-xs font-medium text-foreground">Slippage Tolerance</div>
               <div className="flex items-center space-x-2">
                 {SLIPPAGE_PRESETS_PERCENT_DISPLAY.map((value) => (
                   <Button
@@ -201,8 +193,8 @@ export function InputStep({
                     className={cn(
                       'h-8 px-3 text-xs transition-colors',
                       slippage === value
-                        ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]'
-                        : 'border border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]',
+                        ? 'border border-brand-purple bg-brand-purple text-primary-foreground hover:opacity-90'
+                        : 'border border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-foreground',
                     )}
                   >
                     {value}%
@@ -213,10 +205,10 @@ export function InputStep({
                     type="text"
                     value={slippage}
                     onChange={(e) => onSlippageChange(e.target.value)}
-                    className="h-8 w-16 border border-[var(--divider-line)] bg-[var(--input-background)] text-center text-xs text-[var(--text-primary)]"
+                    className="h-8 w-16 border border-border bg-input text-center text-xs text-foreground"
                     placeholder="0.5"
                   />
-                  <Percent className="h-3 w-3 text-[var(--text-muted)]" />
+                  <Percent className="h-3 w-3 text-muted-foreground" />
                 </div>
               </div>
             </div>
@@ -226,17 +218,14 @@ export function InputStep({
 
       <div className="space-y-3">
         <div className="flex justify-center">
-          <div className="rounded-full border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 90%,transparent)] p-2">
-            <ArrowDownUp className="h-4 w-4 text-[var(--text-muted)]" />
+          <div className="rounded-full border border-border bg-card p-2">
+            <ArrowDownUp className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
 
-        <Card
-          variant="gradient"
-          className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
-        >
+        <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
           <div className="mb-2 flex items-center justify-between">
-            <div className="text-sm text-[var(--text-secondary)]">You will receive</div>
+            <div className="text-sm text-secondary-foreground">You will receive</div>
             {isCalculating && (
               <div className="flex items-center text-xs text-slate-400">
                 <RefreshCw className="h-3 w-3 animate-spin mr-1" />
@@ -247,27 +236,27 @@ export function InputStep({
 
           <div className="flex items-end justify-between">
             <div className="flex-1">
-              <div className="text-xl font-medium text-[var(--text-primary)]">
+              <div className="text-xl font-medium text-foreground">
                 {isCalculating ? <Skeleton className="h-6 w-20" /> : expectedTokens}
               </div>
-              <div className="mt-1 text-sm text-[var(--text-secondary)]">Leverage Tokens</div>
+              <div className="mt-1 text-sm text-secondary-foreground">Leverage Tokens</div>
             </div>
 
             <div className="ml-4 flex items-center space-x-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand-secondary) 20%,transparent)]">
-                <TrendingUp className="h-3 w-3 text-[var(--brand-secondary)]" />
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent">
+                <TrendingUp className="h-3 w-3 text-brand-purple" />
               </div>
-              <span className="text-sm font-medium text-[var(--text-primary)]">
+              <span className="text-sm font-medium text-foreground">
                 {leverageTokenConfig.symbol}
               </span>
             </div>
           </div>
 
           {parseFloat(expectedTokens) > 0 && (
-            <div className="mt-3 border-t border-[var(--divider-line)] pt-3">
+            <div className="mt-3 border-t border-border pt-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--text-secondary)]">Target Leverage</span>
-                <div className="flex items-center text-[var(--brand-secondary)]">
+                <span className="text-secondary-foreground">Target Leverage</span>
+                <div className="flex items-center text-brand-purple">
                   <span className="font-semibold">{leverageTokenConfig.leverageRatio}x</span>
                 </div>
               </div>
@@ -280,23 +269,23 @@ export function InputStep({
         variant="gradient"
         className="gap-2 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
       >
-        <h4 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Transaction Summary</h4>
+        <h4 className="mb-3 text-sm font-medium text-foreground">Transaction Summary</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Mint Amount</span>
-            <span className="text-[var(--text-primary)]">
+            <span className="text-secondary-foreground">Mint Amount</span>
+            <span className="text-foreground">
               {amount || '0'} {selectedToken.symbol}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Current APY</span>
+            <span className="text-secondary-foreground">Current APY</span>
             <span className="text-[var(--state-success-text)]">
               {apy ? formatAPY(apy, 2) : '0%'}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Management Fee</span>
-            <span className="text-white">
+            <span className="text-foreground">
               {isManagementFeeLoading ? (
                 <Skeleton className="inline-block h-4 w-12" />
               ) : typeof managementFee === 'bigint' ? (
@@ -307,11 +296,11 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Slippage Tolerance</span>
-            <span className="text-[var(--text-primary)]">{slippage}%</span>
+            <span className="text-secondary-foreground">Slippage Tolerance</span>
+            <span className="text-foreground">{slippage}%</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Approval Status</span>
+            <span className="text-secondary-foreground">Approval Status</span>
             <span
               className={cn(
                 needsApproval
@@ -328,10 +317,10 @@ export function InputStep({
               )}
             </span>
           </div>
-          <Separator className="my-2 bg-slate-700" />
+          <Separator className="my-2 bg-border" />
           <div className="flex justify-between font-medium items-center">
-            <span className="text-white">You will receive</span>
-            <span className="text-white">
+            <span className="text-foreground">You will receive</span>
+            <span className="text-foreground">
               {isCalculating ? 'Calculating...' : `${expectedTokens} tokens`}
             </span>
           </div>
@@ -340,7 +329,13 @@ export function InputStep({
 
       {error && <Alert type="error" title="Error" description={error} />}
 
-      <Button onClick={onApprove} disabled={!canProceed} variant="gradient" size="lg" className="w-full font-medium">
+      <Button
+        onClick={onApprove}
+        disabled={!canProceed}
+        variant="gradient"
+        size="lg"
+        className="w-full font-medium"
+      >
         {!isConnected
           ? 'Connect Wallet'
           : !canProceed && parseFloat(amount || '0') === 0

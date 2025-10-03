@@ -161,7 +161,7 @@ export function LeverageTokenHoldingsCard({
                       variant="gradient"
                       className="w-full"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus className="w-4 h-4" />
                       Mint
                     </Button>
                   </div>
@@ -173,7 +173,7 @@ export function LeverageTokenHoldingsCard({
                       disabled={!userPosition.hasPosition}
                       className="w-full border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]"
                     >
-                      <Minus className="w-4 h-4 mr-2" />
+                      <Minus className="w-4 h-4" />
                       Redeem
                     </Button>
                   </div>
@@ -182,13 +182,13 @@ export function LeverageTokenHoldingsCard({
                 <>
                   {renderConnectButton(
                     <div className="w-full flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-cta-gradient hover:bg-cta-hover-gradient active:bg-cta-active-gradient">
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus className="w-4 h-4" />
                       Mint
                     </div>,
                   )}
                   {renderConnectButton(
                     <div className="w-full border border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-transparent">
-                      <Minus className="w-4 h-4 mr-2" />
+                      <Minus className="w-4 h-4" />
                       Redeem
                     </div>,
                   )}
