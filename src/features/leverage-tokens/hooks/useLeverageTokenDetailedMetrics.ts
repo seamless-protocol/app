@@ -329,7 +329,6 @@ function transformDetailedMetricsData(
         value: currentLeverage,
         highlight: true,
         color: 'text-white',
-        tooltip: 'The current leverage ratio for this token.',
       },
       {
         label: 'Min - Max Leverage',
