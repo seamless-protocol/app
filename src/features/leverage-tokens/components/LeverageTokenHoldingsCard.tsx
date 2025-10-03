@@ -78,14 +78,11 @@ export function LeverageTokenHoldingsCard({
       transition={{ duration: 0.4 }}
     >
       <Card
-        className={cn(
-          'border border-[var(--divider-line)] text-[var(--text-primary)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]',
-          className,
-        )}
+        className={cn('border border-border text-foreground bg-card', className)}
         data-testid="leverage-token-holdings-card"
       >
         <CardHeader>
-          <CardTitle className="text-lg text-[var(--text-primary)]">Current Holdings</CardTitle>
+          <CardTitle className="text-lg text-foreground">Current Holdings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-6">
@@ -99,11 +96,11 @@ export function LeverageTokenHoldingsCard({
                       <AssetDisplay asset={debtAsset} size="md" variant="logo-only" />
                     </div>
                   ) : (
-                    <div className="w-8 h-8 rounded-full border-2 border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 85%,transparent)] flex items-center justify-center overflow-hidden">
-                      <Zap className="w-4 h-4 text-[var(--brand-secondary)]" />
+                    <div className="w-8 h-8 rounded-full border-2 border-border bg-card flex items-center justify-center overflow-hidden">
+                      <Zap className="w-4 h-4 text-brand-purple" />
                     </div>
                   )}
-                  <div className="text-xl font-medium text-[var(--text-primary)]">
+                  <div className="text-xl font-medium text-foreground">
                     {isLoading ? (
                       <Skeleton className="h-6 w-32" />
                     ) : (
@@ -112,23 +109,23 @@ export function LeverageTokenHoldingsCard({
                   </div>
                 </div>
 
-                <div className="text-[var(--text-secondary)]">
+                <div className="text-secondary-foreground">
                   {isLoading ? <Skeleton className="h-4 w-24" /> : userPosition.balanceUSD}
                 </div>
 
                 {userPosition.allTimePercentage && (
-                  <div className="text-[var(--text-primary)]">
+                  <div className="text-foreground">
                     <span className="font-medium">{userPosition.balanceUSD}</span>
-                    <span className="text-[var(--text-secondary)] ml-2">
+                    <span className="text-secondary-foreground ml-2">
                       ({userPosition.allTimePercentage})
                     </span>
-                    <span className="text-[var(--text-muted)] ml-2">All time</span>
+                    <span className="text-muted-foreground ml-2">All time</span>
                   </div>
                 )}
               </div>
             ) : (
               /* Wallet Not Connected - Holdings Preview */
-              <div className="rounded-lg p-4 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 90%,transparent)]">
+              <div className="rounded-lg p-4 border border-border bg-card">
                 {renderConnectButton(
                   <div className="flex items-center space-x-3">
                     {collateralAsset && debtAsset ? (
@@ -137,15 +134,13 @@ export function LeverageTokenHoldingsCard({
                         <AssetDisplay asset={debtAsset} size="md" variant="logo-only" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[color-mix(in_srgb,var(--surface-card) 80%,transparent)]">
-                        <Zap className="w-5 h-5 text-[var(--brand-secondary)]" />
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-accent">
+                        <Zap className="w-5 h-5 text-brand-purple" />
                       </div>
                     )}
                     <div>
-                      <h3 className="font-medium text-[var(--text-primary)] text-left">
-                        Connect Your Wallet
-                      </h3>
-                      <p className="text-sm text-[var(--text-secondary)]">
+                      <h3 className="font-medium text-foreground text-left">Connect Your Wallet</h3>
+                      <p className="text-sm text-secondary-foreground">
                         View holdings and start minting
                       </p>
                     </div>
@@ -176,7 +171,7 @@ export function LeverageTokenHoldingsCard({
                       onClick={handleRedeemClick}
                       variant="outline"
                       disabled={!userPosition.hasPosition}
-                      className="w-full border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]"
+                      className="w-full border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]"
                     >
                       <Minus className="w-4 h-4 mr-2" />
                       Redeem
@@ -192,7 +187,7 @@ export function LeverageTokenHoldingsCard({
                     </div>,
                   )}
                   {renderConnectButton(
-                    <div className="w-full border border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-transparent">
+                    <div className="w-full border border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-transparent">
                       <Minus className="w-4 h-4 mr-2" />
                       Redeem
                     </div>,

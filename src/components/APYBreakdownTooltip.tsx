@@ -43,8 +43,8 @@ export function APYBreakdownTooltip({
 
   if (finalIsLoading) {
     return (
-      <div className="min-w-[240px] space-y-3 rounded-lg border border-[var(--divider-line)] bg-[var(--surface-card)] p-4">
-        <div className="text-sm font-semibold text-[var(--text-primary)]">APY Breakdown</div>
+      <div className="min-w-[240px] space-y-3 rounded-lg border border-border bg-card p-4">
+        <div className="text-sm font-semibold text-foreground">APY Breakdown</div>
         <div className="space-y-2">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-28" />
@@ -56,8 +56,8 @@ export function APYBreakdownTooltip({
 
   if (finalIsError || !finalApyData) {
     return (
-      <div className="min-w-[240px] space-y-2 rounded-lg border border-[var(--divider-line)] bg-[var(--surface-card)] p-4">
-        <div className="text-sm font-semibold text-[var(--text-primary)]">APY Breakdown</div>
+      <div className="min-w-[240px] space-y-2 rounded-lg border border-border bg-card p-4">
+        <div className="text-sm font-semibold text-foreground">APY Breakdown</div>
         <div className="text-sm text-[var(--state-error-text)]">Error loading yield data</div>
       </div>
     )
@@ -67,10 +67,7 @@ export function APYBreakdownTooltip({
     <APYBreakdown
       data={finalApyData}
       compact={compact}
-      className={cn(
-        'min-w-[240px] rounded-lg border border-[var(--divider-line)] bg-[var(--surface-card)]',
-        className,
-      )}
+      className={cn('min-w-[240px] rounded-lg border border-border bg-card', className)}
     />
   )
 }

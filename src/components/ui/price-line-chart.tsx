@@ -102,21 +102,21 @@ export function PriceLineChart({
         return {
           dataKey: dataKey || 'tvl',
           yAxisLabel: yAxisLabel || 'TVL ($)',
-          strokeColor: strokeColor || '#10B981',
+          strokeColor: strokeColor || 'var(--chart-4)',
           yAxisFormatter: (value: number) => `$${value.toFixed(0)}M`,
         }
       case 'comparison':
         return {
           dataKey: dataKey || 'weethPrice',
           yAxisLabel: yAxisLabel || 'Price ($)',
-          strokeColor: strokeColor || '#A16CFE',
+          strokeColor: strokeColor || 'var(--chart-1)',
           yAxisFormatter: formatYAxis,
         }
       default:
         return {
           dataKey: dataKey || 'price',
           yAxisLabel: yAxisLabel || 'Price ($)',
-          strokeColor: strokeColor || '#A16CFE',
+          strokeColor: strokeColor || 'var(--chart-1)',
           yAxisFormatter: formatYAxis,
         }
     }
@@ -133,12 +133,12 @@ export function PriceLineChart({
     >
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 space-y-3 sm:space-y-0">
         <div>
-          <CardTitle className="text-lg text-[var(--text-primary)]">{title}</CardTitle>
-          <p className="text-sm text-[var(--text-muted)] mt-1">{subtitle}</p>
+          <CardTitle className="text-lg text-foreground">{title}</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
         </div>
 
         {/* Timeframe Selector */}
-        <div className="flex items-center space-x-1 rounded-lg p-1 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 90%,transparent)]">
+        <div className="flex items-center space-x-1 rounded-lg p-1 border border-border bg-card">
           {timeframes.map((timeframe) => (
             <button
               type="button"
@@ -147,7 +147,7 @@ export function PriceLineChart({
               className={`px-2 py-1 text-xs rounded transition-colors ${
                 selectedTimeframe === timeframe
                   ? 'bg-[var(--brand-secondary)] text-[var(--primary-foreground)] shadow-sm'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]'
+                  : 'text-[var(--text-secondary)] hover:text-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]'
               }`}
             >
               {timeframe}
@@ -168,8 +168,8 @@ export function PriceLineChart({
                     onClick={() => onLineVisibilityChange?.(line.key)}
                     className={`flex items-center space-x-2 px-3 py-1 rounded-md border transition-all ${
                       visibleLines[line.key]
-                        ? 'border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]'
-                        : 'border-[var(--divider-line)]/60 bg-[color-mix(in_srgb,var(--surface-card) 85%,transparent)] opacity-60'
+                        ? 'border-border bg-accent'
+                        : 'border-border/60 bg-card opacity-60'
                     }`}
                   >
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: line.color }} />
@@ -183,7 +183,7 @@ export function PriceLineChart({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} style={{ cursor: 'default' }}>
               <CartesianGrid
-                stroke="#64748B"
+                stroke="var(--divider-line)"
                 strokeDasharray="3 3"
                 strokeOpacity={0.55}
                 vertical
@@ -193,7 +193,7 @@ export function PriceLineChart({
                 dataKey="date"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: '#64748B', fontSize: 12, dy: 8 }}
+                tick={{ fill: 'var(--text-muted)', fontSize: 12, dy: 8 }}
                 tickFormatter={formatChartDate}
               />
               <YAxis
@@ -202,13 +202,13 @@ export function PriceLineChart({
                   : { dataKey: chartConfig.dataKey })}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: '#64748B', fontSize: 12 }}
+                tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
                 tickFormatter={chartConfig.yAxisFormatter}
                 label={{
                   value: chartConfig.yAxisLabel,
                   angle: -90,
                   position: 'insideLeft',
-                  style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' },
+                  style: { textAnchor: 'middle', fill: 'var(--text-muted)', fontSize: '12px' },
                 }}
               />
               <RechartsTooltip
