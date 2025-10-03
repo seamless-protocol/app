@@ -162,7 +162,7 @@ export function InputStep({
       ? (hasEarnedDebt ? earnedDebtValue : (earnings.earnedUsd as number)) >= 0
         ? 'text-[var(--state-success-text)]'
         : 'text-[var(--state-error-text)]'
-      : 'text-[var(--text-muted)]'
+      : 'text-muted-foreground'
 
   const earnedUsd = hasEarnedUsd ? formatUsdValue(earnings.earnedUsd as number) : undefined
   const showEarnedUsdSecondary = hasEarnedDebt && earnedUsd
@@ -172,15 +172,12 @@ export function InputStep({
 
   return (
     <div className="space-y-6">
-      <Card
-        variant="gradient"
-        className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
-      >
-        <h4 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Your Position</h4>
+      <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
+        <h4 className="mb-3 text-sm font-medium text-foreground">Your Position</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="block text-[var(--text-secondary)]">Leverage Tokens</span>
-            <span className="font-medium text-[var(--text-primary)]">
+            <span className="block text-secondary-foreground">Leverage Tokens</span>
+            <span className="font-medium text-foreground">
               {isLeverageTokenBalanceLoading ? (
                 <Skeleton className="inline-block h-4 w-16" />
               ) : (
@@ -189,8 +186,8 @@ export function InputStep({
             </span>
           </div>
           <div>
-            <span className="block text-[var(--text-secondary)]">Current Value</span>
-            <span className="font-medium text-[var(--text-primary)]">
+            <span className="block text-secondary-foreground">Current Value</span>
+            <span className="font-medium text-foreground">
               {isUsdPriceLoading ? (
                 <Skeleton className="inline-block h-4 w-20" />
               ) : (
@@ -202,33 +199,33 @@ export function InputStep({
             </span>
           </div>
           <div>
-            <span className="block text-[var(--text-secondary)]">Total Earned</span>
+            <span className="block text-secondary-foreground">Total Earned</span>
             {isUserMetricsLoading ? (
               <Skeleton className="inline-block h-4 w-20" />
             ) : earnedDisplay ? (
               <div className="flex items-center gap-2">
                 <span className={cn('font-medium', totalEarnedClass)}>{earnedDisplay}</span>
                 {showEarnedUsdSecondary ? (
-                  <span className="text-xs text-[var(--text-secondary)]">({earnedUsd})</span>
+                  <span className="text-xs text-secondary-foreground">({earnedUsd})</span>
                 ) : null}
               </div>
             ) : (
-              <span className="font-medium text-[var(--text-muted)]">$N/A</span>
+              <span className="font-medium text-muted-foreground">$N/A</span>
             )}
           </div>
           <div>
-            <span className="block text-[var(--text-secondary)]">Originally Minted</span>
+            <span className="block text-secondary-foreground">Originally Minted</span>
             {isUserMetricsLoading ? (
               <Skeleton className="inline-block h-4 w-20" />
             ) : mintedPrimary ? (
               <div className="flex items-center gap-2">
-                <span className="font-medium text-[var(--text-primary)]">{mintedPrimary}</span>
+                <span className="font-medium text-foreground">{mintedPrimary}</span>
                 {mintedUsd ? (
-                  <span className="text-xs text-[var(--text-secondary)]">({mintedUsd})</span>
+                  <span className="text-xs text-secondary-foreground">({mintedUsd})</span>
                 ) : null}
               </div>
             ) : (
-              <span className="font-medium text-[var(--text-muted)]">$N/A</span>
+              <span className="font-medium text-muted-foreground">$N/A</span>
             )}
           </div>
         </div>
@@ -236,13 +233,10 @@ export function InputStep({
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <label
-            htmlFor={redeemAmountId}
-            className="text-sm font-medium text-[var(--text-primary)]"
-          >
+          <label htmlFor={redeemAmountId} className="text-sm font-medium text-foreground">
             Redemption Amount (Tokens)
           </label>
-          <div className="text-xs text-[var(--text-secondary)]">
+          <div className="text-xs text-secondary-foreground">
             Available:{' '}
             {isLeverageTokenBalanceLoading ? (
               <Skeleton className="inline-block h-3 w-16" />
@@ -252,10 +246,7 @@ export function InputStep({
           </div>
         </div>
 
-        <Card
-          variant="gradient"
-          className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
-        >
+        <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex-1">
               <Input
@@ -264,9 +255,9 @@ export function InputStep({
                 placeholder="0"
                 value={amount}
                 onChange={(e) => onAmountChange(e.target.value)}
-                className="h-auto border-0 bg-transparent px-3 text-2xl font-medium text-[var(--text-primary)] focus:ring-0 focus:ring-offset-0"
+                className="h-auto border-0 bg-transparent px-3 text-2xl font-medium text-foreground focus:ring-0 focus:ring-offset-0"
               />
-              <div className="mt-1 text-xs text-[var(--text-secondary)]">
+              <div className="mt-1 text-xs text-secondary-foreground">
                 {isUsdPriceLoading ? (
                   <Skeleton className="h-4 w-20" />
                 ) : (
@@ -279,10 +270,10 @@ export function InputStep({
             </div>
 
             <div className="ml-4 flex items-center space-x-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand-secondary) 20%,transparent)]">
-                <TrendingDown className="h-3 w-3 text-[var(--brand-secondary)]" />
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent">
+                <TrendingDown className="h-3 w-3 text-brand-purple" />
               </div>
-              <span className="text-sm font-medium text-[var(--text-primary)]">Tokens</span>
+              <span className="text-sm font-medium text-foreground">Tokens</span>
             </div>
           </div>
 
@@ -294,7 +285,7 @@ export function InputStep({
                   variant="outline"
                   size="sm"
                   onClick={() => onPercentageClick(percentage)}
-                  className="h-7 border border-[var(--divider-line)] px-2 text-xs text-[var(--text-secondary)] transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]"
+                  className="h-7 border border-border px-2 text-xs text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   {percentage === 100 ? 'MAX' : `${percentage}%`}
                 </Button>
@@ -305,7 +296,7 @@ export function InputStep({
               variant="ghost"
               size="sm"
               onClick={onToggleAdvanced}
-              className="text-[var(--brand-secondary)] transition-colors hover:text-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]"
+              className="text-brand-purple transition-colors hover:text-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]"
             >
               <Settings className="mr-1 h-4 w-4 text-[inherit]" />
               Advanced
@@ -314,14 +305,9 @@ export function InputStep({
         </Card>
 
         {showAdvanced && (
-          <Card
-            variant="gradient"
-            className="gap-0 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
-          >
+          <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-medium text-[var(--text-primary)]">
-                Slippage Tolerance
-              </div>
+              <div className="text-xs font-medium text-foreground">Slippage Tolerance</div>
               <div className="flex items-center space-x-2">
                 {SLIPPAGE_PRESETS_PERCENT_DISPLAY.map((value) => (
                   <Button
@@ -333,7 +319,7 @@ export function InputStep({
                       'h-8 px-3 text-xs transition-colors',
                       slippage === value
                         ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]'
-                        : 'border border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]',
+                        : 'border border-border text-secondary-foreground hover:bg-accent hover:text-foreground',
                     )}
                   >
                     {value}%
@@ -344,10 +330,10 @@ export function InputStep({
                     type="text"
                     value={slippage}
                     onChange={(e) => onSlippageChange(e.target.value)}
-                    className="h-8 w-16 border border-[var(--divider-line)] bg-[var(--input-background)] text-center text-xs text-[var(--text-primary)]"
+                    className="h-8 w-16 border border-border bg-[var(--input-background)] text-center text-xs text-foreground"
                     placeholder="0.5"
                   />
-                  <Percent className="h-3 w-3 text-[var(--text-muted)]" />
+                  <Percent className="h-3 w-3 text-muted-foreground" />
                 </div>
               </div>
             </div>
@@ -356,7 +342,7 @@ export function InputStep({
       </div>
 
       <div className="space-y-4">
-        <div className="text-sm font-medium text-[var(--text-primary)]">Redeem to</div>
+        <div className="text-sm font-medium text-foreground">Redeem to</div>
         <div className="flex space-x-3">
           {availableAssets.map((asset) => (
             <Button
@@ -368,7 +354,7 @@ export function InputStep({
                 'flex-1 transition-colors',
                 selectedAssetId === asset.id
                   ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]'
-                  : 'border border-[var(--divider-line)] text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-[var(--text-primary)]',
+                  : 'border border-border text-secondary-foreground hover:bg-accent hover:text-foreground',
                 disabledAssets.includes(asset.id) && 'cursor-not-allowed opacity-50',
               )}
             >
@@ -378,21 +364,18 @@ export function InputStep({
         </div>
       </div>
 
-      <Card
-        variant="gradient"
-        className="gap-2 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
-      >
-        <h4 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Transaction Summary</h4>
+      <Card variant="gradient" className="gap-2 border border-border bg-card p-4">
+        <h4 className="mb-3 text-sm font-medium text-foreground">Transaction Summary</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Redeem Amount</span>
-            <span className="text-[var(--text-primary)]">
+            <span className="text-secondary-foreground">Redeem Amount</span>
+            <span className="text-foreground">
               {amount || '0'} {selectedToken.symbol}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Redemption Fee</span>
-            <span className="text-white">
+            <span className="text-secondary-foreground">Redemption Fee</span>
+            <span className="text-foreground">
               {isRedemptionFeeLoading ? (
                 <Skeleton className="inline-block h-4 w-12" />
               ) : typeof redemptionFee === 'bigint' ? (
@@ -403,11 +386,11 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Slippage Tolerance</span>
-            <span className="text-[var(--text-primary)]">{slippage}%</span>
+            <span className="text-secondary-foreground">Slippage Tolerance</span>
+            <span className="text-foreground">{slippage}%</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Approval Status</span>
+            <span className="text-secondary-foreground">Approval Status</span>
             <span
               className={cn(
                 needsApproval
@@ -425,8 +408,8 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between font-medium">
-            <span className="text-[var(--text-primary)]">You will receive</span>
-            <span className="text-[var(--text-primary)]">
+            <span className="text-foreground">You will receive</span>
+            <span className="text-foreground">
               {isCalculating ? (
                 <Skeleton className="inline-block h-4 w-24" />
               ) : (
@@ -437,11 +420,11 @@ export function InputStep({
         </div>
       </Card>
 
-      <div className="rounded-lg border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-3">
-        <div className="flex items-center text-sm text-[var(--text-secondary)]">
+      <div className="rounded-lg border border-border bg-card p-3">
+        <div className="flex items-center text-sm text-secondary-foreground">
           <TrendingDown className="mr-2 h-4 w-4 text-[var(--state-warning-text)]" />
           <div>
-            <p className="font-medium text-white">Redemption Fee</p>
+            <p className="font-medium text-foreground">Redemption Fee</p>
             <p className="text-xs mt-1">
               {isRedemptionFeeLoading ? (
                 <Skeleton className="inline-block h-3 w-48" />
@@ -457,7 +440,13 @@ export function InputStep({
 
       {error && <Alert type="error" title="Error" description={error} />}
 
-      <Button onClick={onApprove} disabled={!canProceed} variant="gradient" size="lg" className="w-full font-medium">
+      <Button
+        onClick={onApprove}
+        disabled={!canProceed}
+        variant="gradient"
+        size="lg"
+        className="w-full font-medium"
+      >
         {!isConnected
           ? 'Connect Wallet'
           : !canProceed && parseFloat(amount || '0') === 0
