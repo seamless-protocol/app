@@ -24,7 +24,7 @@ function StatCard({
     <div
       data-slot="card"
       className={cn(
-        'flex flex-col gap-6 rounded-xl border border-border bg-card text-foreground transition-all duration-300 hover:bg-accent',
+        'flex flex-col gap-6 rounded-xl border border-border bg-card text-foreground transition-all duration-300',
         className,
       )}
     >
