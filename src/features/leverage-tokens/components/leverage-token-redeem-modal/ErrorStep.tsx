@@ -8,8 +8,16 @@ interface ErrorStepProps {
 }
 
 export function ErrorStep({ error, onRetry, onClose }: ErrorStepProps) {
-  const { icon, title, message, showRetry, severity } = getErrorDisplay(error || '', 'Redemption Failed')
-  const bgClass = severity === 'warning' ? 'bg-[var(--tag-warning-bg)]' : severity === 'info' ? 'bg-[var(--tag-info-bg)]' : 'bg-[var(--tag-error-bg)]'
+  const { icon, title, message, showRetry, severity } = getErrorDisplay(
+    error || '',
+    'Redemption Failed',
+  )
+  const bgClass =
+    severity === 'warning'
+      ? 'bg-[var(--tag-warning-bg)]'
+      : severity === 'info'
+        ? 'bg-[var(--tag-info-bg)]'
+        : 'bg-[var(--tag-error-bg)]'
 
   return (
     <div className="space-y-6 text-center">

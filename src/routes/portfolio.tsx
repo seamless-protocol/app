@@ -90,7 +90,7 @@ function PortfolioPage() {
   // Show loading state only for main portfolio data
   if (portfolioLoading) {
     return (
-      <main className="space-y-6" aria-busy>
+      <div className="space-y-6" aria-busy>
         {/* Portfolio Summary Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Total Portfolio Value Card */}
@@ -206,7 +206,7 @@ function PortfolioPage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     )
   }
 
@@ -266,7 +266,7 @@ function PortfolioPage() {
   }
 
   return (
-    <motion.main
+    <motion.div
       className="space-y-8"
       aria-labelledby={headingId}
       initial={{ opacity: 0, y: 20 }}
@@ -498,6 +498,6 @@ function PortfolioPage() {
           {...(userAddress && { userAddress })}
         />
       )}
-    </motion.main>
+    </motion.div>
   )
 }

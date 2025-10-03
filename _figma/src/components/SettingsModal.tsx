@@ -140,7 +140,7 @@ export function SettingsModal({
                           variant="ghost"
                           size="sm"
                           onClick={() => window.open(`https://etherscan.io/address/${walletAddress}`, '_blank')}
-                          className="text-slate-400 hover:text-white hover:bg-slate-700 h-8 w-8 p-0"
+                          className="text-slate-400 hover:text-white hover:bg-slate-700 h-8 w-8 p-0 hover:cursor-pointer"
                           aria-label="View on Etherscan"
                         >
                           <ExternalLink className="h-4 w-4" />

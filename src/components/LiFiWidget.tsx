@@ -112,7 +112,7 @@ export function LiFiWidget() {
         <button
           type="button"
           onClick={handleSwapClick}
-          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 has-[>svg]:px-2.5 text-muted-foreground hover:text-foreground transition-colors px-3 h-9 sm:h-10 border border-border hover:border-violet-500 bg-card hover:bg-accent"
+          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 has-[>svg]:px-2.5 text-muted-foreground hover:text-foreground transition-colors px-3 h-9 sm:h-10 border border-border hover:border-brand-purple bg-card hover:bg-accent"
           aria-label="Open swap and bridge interface (Alt+S)"
           title="Swap & Bridge"
         >
@@ -135,7 +135,7 @@ export function LiFiWidget() {
         <button
           type="button"
           onClick={handleSwapClick}
-          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 has-[>svg]:px-2.5 text-muted-foreground hover:text-foreground transition-colors px-3 h-9 sm:h-10 border border-border hover:border-violet-500 bg-card hover:bg-accent"
+          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 has-[>svg]:px-2.5 text-muted-foreground hover:text-foreground transition-colors px-3 h-9 sm:h-10 border border-border hover:border-brand-purple bg-card hover:bg-accent"
           aria-label="Open swap and bridge interface (Alt+S)"
           title="Swap & Bridge"
         >
