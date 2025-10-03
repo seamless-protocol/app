@@ -42,18 +42,16 @@ const sampleMetrics = {
       tooltip: 'Fee charged when redeeming leverage tokens.',
     },
   ],
-  'Auction Parameters': [
+  'Dutch Auction Parameters': [
     {
       label: 'Dutch Auction Duration',
       value: '4 hours',
       color: 'text-white',
-      tooltip: 'Duration of the Dutch auction for token redemptions.',
     },
     {
       label: 'Initial Price Multiplier',
       value: '1.050x',
       color: 'text-white',
-      tooltip: 'Initial price multiplier for the auction.',
     },
   ],
   'Pre-liquidation': [
