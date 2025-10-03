@@ -371,7 +371,7 @@ function transformDetailedMetricsData(
         tooltip: 'Minimum price multiplier for the auction.',
       },
     ],
-    'Risk Management': [
+    'Pre-liquidation': [
       {
         label: 'Pre-liquidation Leverage',
         value: preLiquidationLeverage,
