@@ -144,9 +144,9 @@ export function PriceLineChart({
               type="button"
               key={timeframe}
               onClick={() => onTimeframeChange(timeframe)}
-              className={`px-2 py-1 text-xs rounded transition-colors ${
+              className={`px-2 py-1 text-xs rounded transition-colors cursor-pointer ${
                 selectedTimeframe === timeframe
-                  ? 'bg-[var(--brand-secondary)] text-[var(--primary-foreground)] shadow-sm'
+                  ? 'bg-brand-purple text-primary-foreground shadow-sm'
                   : 'text-[var(--text-secondary)] hover:text-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]'
               }`}
             >
