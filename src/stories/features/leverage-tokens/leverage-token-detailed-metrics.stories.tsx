@@ -56,7 +56,7 @@ const sampleMetrics = {
       tooltip: 'Initial price multiplier for the auction.',
     },
   ],
-  'Risk Management': [
+  'Pre-liquidation': [
     {
       label: 'Pre-liquidation Leverage',
       value: '16.00x',
