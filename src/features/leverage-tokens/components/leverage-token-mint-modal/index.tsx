@@ -536,7 +536,7 @@ export function LeverageTokenMintModal({
       description={
         currentStep === 'success'
           ? 'Your leverage tokens have been successfully minted and are now earning yield.'
-          : 'Mint leverage tokens to gain amplified exposure to the underlying asset pair.'
+          : ''
       }
       currentStep={currentStep}
       steps={steps}
