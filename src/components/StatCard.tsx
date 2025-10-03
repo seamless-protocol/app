@@ -16,24 +16,24 @@ function StatCard({
   stat,
   caption,
   icon,
-  iconBgClass = 'bg-[color-mix(in_srgb,var(--brand-secondary)_20%,transparent)]',
-  iconTextClass = 'text-[var(--brand-secondary)]',
+  iconBgClass = 'bg-accent',
+  iconTextClass = 'text-brand-purple',
   className,
 }: StatCardProps) {
   return (
     <div
       data-slot="card"
       className={cn(
-        'flex flex-col gap-6 rounded-xl border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] text-[var(--text-primary)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--surface-elevated) 45%,transparent)]',
+        'flex flex-col gap-6 rounded-xl border border-border bg-card text-foreground transition-all duration-300 hover:bg-accent',
         className,
       )}
     >
       <div data-slot="card-content" className="[&:last-child]:pb-6 p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm text-[var(--text-secondary)]">{title}</div>
-            <div className="text-xl font-bold sm:text-2xl text-[var(--text-primary)]">{stat}</div>
-            {caption && <div className="mt-1 text-xs text-[var(--text-muted)]">{caption}</div>}
+            <div className="text-sm text-secondary-foreground">{title}</div>
+            <div className="text-xl font-bold sm:text-2xl text-foreground">{stat}</div>
+            {caption && <div className="mt-1 text-xs text-muted-foreground">{caption}</div>}
           </div>
           {icon && (
             <div

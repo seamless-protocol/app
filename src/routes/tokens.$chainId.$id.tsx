@@ -139,8 +139,8 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       return (
         <div className="min-h-screen w-full flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Token Not Found</h1>
-            <p className="text-[var(--text-secondary)]">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Token Not Found</h1>
+            <p className="text-secondary-foreground">
               The requested leverage token could not be found.
             </p>
           </div>
@@ -286,7 +286,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                             {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol}
                             )
                             <br />
-                            <span className="text-slate-400 text-sm">
+                            <span className="text-secondary-foreground text-sm">
                               Click to view on {explorer.name}
                             </span>
                           </p>
@@ -311,7 +311,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                           <p className="font-medium">
                             {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
                             <br />
-                            <span className="text-slate-400 text-sm">
+                            <span className="text-secondary-foreground text-sm">
                               Click to view on {explorer.name}
                             </span>
                           </p>
@@ -322,14 +322,14 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                       />
                     </div>
                   </div>
-                  <h1 className="text-xl font-bold text-[var(--text-primary)] leading-tight flex-1 min-w-0">
+                  <h1 className="text-xl font-bold text-foreground leading-tight flex-1 min-w-0">
                     <span className="block truncate">{tokenConfig.name}</span>
                   </h1>
                 </div>
 
                 {/* APY Badge - Mobile */}
                 <div className="flex items-center space-x-1">
-                  <Badge className="text-sm border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]">
+                  <Badge variant="success" className="text-sm">
                     {apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
@@ -340,12 +340,12 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)]"
+                        className="text-[var(--text-muted)] transition-colors hover:text-secondary-foreground"
                       >
                         <Info className="h-3 w-3" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
+                    <TooltipContent className="p-0 text-sm border border-border bg-card">
                       <APYBreakdownTooltip
                         token={tokenConfig}
                         {...(apyData && { apyData })}
@@ -373,7 +373,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                         <p className="font-medium">
                           {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol})
                           <br />
-                          <span className="text-slate-400 text-sm">
+                          <span className="text-secondary-foreground text-sm">
                             Click to view on {explorer.name}
                           </span>
                         </p>
@@ -398,7 +398,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                         <p className="font-medium">
                           {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
                           <br />
-                          <span className="text-slate-400 text-sm">
+                          <span className="text-secondary-foreground text-sm">
                             Click to view on {explorer.name}
                           </span>
                         </p>
@@ -409,7 +409,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     />
                   </div>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                   {tokenConfig.name}
                 </h1>
                 <div className="flex items-center space-x-1">
@@ -424,7 +424,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                        className="text-[var(--text-muted)] hover:text-secondary-foreground transition-colors"
                       >
                         <Info className="h-3 w-3" />
                       </button>
@@ -443,7 +443,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
               </div>
 
               {/* Description */}
-              <p className="text-[var(--text-secondary)] leading-relaxed text-sm sm:text-base">
+              <p className="text-secondary-foreground leading-relaxed text-sm sm:text-base">
                 {tokenConfig.description}
               </p>
             </motion.div>
@@ -487,7 +487,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
               transition={{ duration: 0.4, delay: 0.3 }}
             >
               {isPriceDataLoading ? (
-                <div className="rounded-lg p-8 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
+                <div className="rounded-lg p-8 border border-border bg-card">
                   <div className="space-y-4">
                     <Skeleton className="h-6 w-32" />
                     <Skeleton className="h-64 w-full" />
@@ -500,13 +500,13 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                   </div>
                 </div>
               ) : priceDataError ? (
-                <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
+                <div className="rounded-lg p-8 text-center border border-border bg-card">
                   <p className="mb-2 text-[var(--state-error-text)]">Failed to load price data</p>
-                  <p className="text-sm text-[var(--text-secondary)]">{priceDataError.message}</p>
+                  <p className="text-sm text-secondary-foreground">{priceDataError.message}</p>
                 </div>
               ) : !priceHistoryData || priceHistoryData.length === 0 ? (
-                <div className="rounded-lg p-8 text-center border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]">
-                  <p className="text-[var(--text-secondary)]">No price data available</p>
+                <div className="rounded-lg p-8 text-center border border-border bg-card">
+                  <p className="text-secondary-foreground">No price data available</p>
                 </div>
               ) : (
                 <PriceLineChart
@@ -538,7 +538,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                   title="Price History"
                   subtitle={`Compare leverage token performance vs ${tokenConfig.collateralAsset.symbol}`}
                   height={320}
-                  className="border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 94%,transparent)]"
+                  className="border border-border bg-card"
                 />
               )}
             </motion.div>
