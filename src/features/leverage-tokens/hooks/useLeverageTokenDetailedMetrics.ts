@@ -343,7 +343,7 @@ function transformDetailedMetricsData(
         label: 'Mint Token Fee',
         value: mintTokenFee,
         highlight: true,
-        color: 'text-green-400',
+        color: 'text-white',
         tooltip: 'Fee charged when minting new leverage tokens.',
       },
       {
