@@ -56,12 +56,12 @@ interface LeverageTokenMintModalProps {
 
 // Hoisted to avoid re-creating on every render
 const MINT_STEPS: Array<StepConfig> = [
-  { id: 'input', label: 'Input', progress: 25 },
-  { id: 'approve', label: 'Approve', progress: 50 },
-  { id: 'confirm', label: 'Confirm', progress: 75 },
-  { id: 'pending', label: 'Processing', progress: 90 },
+  { id: 'input', label: 'Input', progress: 17 },
+  { id: 'approve', label: 'Approve', progress: 33 },
+  { id: 'confirm', label: 'Confirm', progress: 50 },
+  { id: 'pending', label: 'Processing', progress: 67 },
   { id: 'success', label: 'Success', progress: 100 },
-  { id: 'error', label: 'Error', progress: 50 },
+  { id: 'error', label: 'Error', progress: 100 },
 ]
 
 export function LeverageTokenMintModal({
@@ -345,8 +345,10 @@ export function LeverageTokenMintModal({
     toApprove()
     try {
       approveAction()
-    } catch (_error) {
-      setError('Approval failed. Please try again.')
+    } catch (error) {
+      // Pass the raw error to ErrorStep - it will handle the formatting
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      setError(errorMessage || 'Approval failed. Please try again.')
       toError()
     }
   }
@@ -408,6 +410,7 @@ export function LeverageTokenMintModal({
         feature: 'mint',
       })
 
+      // Pass the raw error to ErrorStep - it will handle the formatting
       setError(error?.message || 'Mint failed. Please try again.')
       toError()
     }
