@@ -14,10 +14,13 @@ const alertVariants = cva(
           'text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90',
       },
       type: {
-        info: 'bg-blue-500/10 border-blue-500/30 text-blue-200 [&>svg]:text-blue-400',
-        success: 'bg-green-500/10 border-green-500/30 text-green-200 [&>svg]:text-green-400',
-        warning: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-200 [&>svg]:text-yellow-400',
-        error: 'bg-red-500/10 border-red-500/30 text-red-200 [&>svg]:text-red-400',
+        info: 'bg-[var(--tag-info-bg)] border-[color-mix(in_srgb,var(--tag-info-text)_30%,transparent)] text-[var(--tag-info-text)] [&>svg]:text-current',
+        success:
+          'bg-[var(--tag-success-bg)] border-[color-mix(in_srgb,var(--tag-success-text)_30%,transparent)] text-[var(--tag-success-text)] [&>svg]:text-current',
+        warning:
+          'bg-[var(--tag-warning-bg)] border-[color-mix(in_srgb,var(--tag-warning-text)_30%,transparent)] text-[var(--tag-warning-text)] [&>svg]:text-current',
+        error:
+          'bg-[var(--tag-error-bg)] border-[color-mix(in_srgb,var(--tag-error-text)_30%,transparent)] text-[var(--tag-error-text)] [&>svg]:text-current',
       },
     },
     defaultVariants: {
