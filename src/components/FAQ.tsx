@@ -47,7 +47,7 @@ export function FAQ({ title = 'Frequently Asked Questions', items, className = '
               <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full justify-between rounded-lg border border-border bg-card p-4 text-left text-foreground transition-colors hover:bg-accent"
+                  className="w-full justify-between rounded-lg border border-border bg-accent p-4 text-left text-foreground transition-colors hover:bg-accent"
                 >
                   <span className="pr-2 break-words text-left font-medium text-foreground">
                     {faq.question}
@@ -60,7 +60,7 @@ export function FAQ({ title = 'Frequently Asked Questions', items, className = '
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
-                <div className="rounded-lg border border-border bg-card p-4">
+                <div className="rounded-lg border border-border bg-accent p-4">
                   <p className="leading-relaxed text-secondary-foreground">{faq.answer}</p>
                 </div>
               </CollapsibleContent>

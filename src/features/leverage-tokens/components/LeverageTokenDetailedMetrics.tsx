@@ -117,7 +117,7 @@ export function LeverageTokenDetailedMetrics({
                         <div
                           key={`${category}-${metric.label}-${index}`}
                           className={cn(
-                            'p-4 rounded-lg border transition-colors bg-[color-mix(in_srgb,var(--surface-card) 90%,transparent)] border-[var(--divider-line)]',
+                            'p-4 rounded-lg border transition-colors bg-accent border-border',
                             metric.highlight && 'bg-accent border-border',
                           )}
                         >
