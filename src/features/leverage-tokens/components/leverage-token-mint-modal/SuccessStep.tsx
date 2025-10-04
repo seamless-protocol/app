@@ -1,5 +1,4 @@
 import { CheckCircle, ExternalLink } from 'lucide-react'
-import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
 import { useExplorer } from '../../../../lib/hooks/useExplorer'
@@ -67,12 +66,6 @@ export function SuccessStep({
           </div>
         </div>
       </Card>
-
-      <Alert
-        type="success"
-        title="Leverage position active!"
-        description="Your leverage tokens are now earning yield with leverage."
-      />
 
       <Button onClick={onClose} variant="gradient" size="lg" className="w-full font-medium">
         Done
