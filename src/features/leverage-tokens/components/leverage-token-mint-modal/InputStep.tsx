@@ -1,7 +1,6 @@
 import { ArrowDown, Percent, RefreshCw, Settings, TrendingUp } from 'lucide-react'
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { cn } from '@/lib/utils/cn'
-
 import { Alert } from '../../../../components/ui/alert'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
 import { Button } from '../../../../components/ui/button'
