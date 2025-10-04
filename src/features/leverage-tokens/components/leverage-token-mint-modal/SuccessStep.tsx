@@ -35,7 +35,7 @@ export function SuccessStep({
         <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
           <CheckCircle className="h-8 w-8 text-green-400" />
         </div>
-        <h3 className="text-lg font-medium text-white mb-2">Mint Successful!</h3>
+        <h3 className="text-lg font-medium text-white mb-2">Mint Success!</h3>
         <p className="text-slate-400 text-center max-w-sm">
           Your {amount} {selectedToken.symbol} has been successfully minted into {expectedTokens}{' '}
           leverage tokens.

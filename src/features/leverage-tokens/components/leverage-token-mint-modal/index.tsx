@@ -532,10 +532,10 @@ export function LeverageTokenMintModal({
     <MultiStepModal
       isOpen={isOpen}
       onClose={handleClose}
-      title={currentStep === 'success' ? 'Mint Complete' : 'Mint Leverage Token'}
+      title={currentStep === 'success' ? 'Mint Success' : 'Mint Leverage Token'}
       description={
         currentStep === 'success'
-          ? 'Your leverage tokens have been successfully minted and are now earning yield.'
+          ? 'Your leverage tokens have been successfully.'
           : ''
       }
       currentStep={currentStep}
