@@ -533,11 +533,7 @@ export function LeverageTokenMintModal({
       isOpen={isOpen}
       onClose={handleClose}
       title={currentStep === 'success' ? 'Mint Success' : 'Mint Leverage Token'}
-      description={
-        currentStep === 'success'
-          ? 'Your leverage tokens have been successfully.'
-          : ''
-      }
+      description={currentStep === 'success' ? 'Your leverage tokens have been successfully.' : ''}
       currentStep={currentStep}
       steps={steps}
       className="max-w-lg bg-slate-900 border-slate-700"
