@@ -4,13 +4,13 @@
  */
 export const portfolioKeys = {
   all: ['portfolio'] as const,
-  data: () => [...portfolioKeys.all, 'data'] as const,
+  data: (address?: string) => [...portfolioKeys.all, 'data', address] as const,
   performance: (timeframe: string, address?: string) =>
     [...portfolioKeys.all, 'performance', timeframe, address] as const,
   rewards: (address?: string) => [...portfolioKeys.all, 'rewards', address] as const,
-  staking: () => [...portfolioKeys.all, 'staking'] as const,
-  positions: () => [...portfolioKeys.all, 'positions'] as const,
-  summary: () => [...portfolioKeys.all, 'summary'] as const,
+  staking: (address?: string) => [...portfolioKeys.all, 'staking', address] as const,
+  positions: (address?: string) => [...portfolioKeys.all, 'positions', address] as const,
+  summary: (address?: string) => [...portfolioKeys.all, 'summary', address] as const,
   positionsAPY: (tokens: Array<{ id?: string; address?: string; leverageTokenAddress?: string }>) =>
     [
       'apy',
