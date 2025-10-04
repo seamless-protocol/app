@@ -342,13 +342,15 @@ function transformDetailedMetricsData(
         value: mintTokenFee,
         highlight: true,
         color: 'text-white',
-        tooltip: 'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users minting.',
+        tooltip:
+          'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users minting.',
       },
       {
         label: 'Redeem Token Fee',
         value: redeemTokenFee,
         color: 'text-white',
-        tooltip: 'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users redeeming.',
+        tooltip:
+          'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users redeeming.',
       },
     ],
     'Dutch Auction Parameters': [

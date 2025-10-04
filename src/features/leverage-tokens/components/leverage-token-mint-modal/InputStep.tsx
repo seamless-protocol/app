@@ -1,4 +1,4 @@
-import { ArrowDownUp, Percent, RefreshCw, Settings, TrendingUp } from 'lucide-react'
+import { ArrowDown, Percent, RefreshCw, Settings, TrendingUp } from 'lucide-react'
 import { useEffect, useId, useRef } from 'react'
 import { Alert } from '../../../../components/ui/alert'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
@@ -250,7 +250,7 @@ export function InputStep({
       <div className="space-y-3">
         <div className="flex justify-center">
           <div className="p-2 bg-slate-800/50 rounded-full border border-slate-700">
-            <ArrowDownUp className="h-4 w-4 text-slate-400" />
+            <ArrowDown className="h-4 w-4 text-slate-400" />
           </div>
         </div>
 
