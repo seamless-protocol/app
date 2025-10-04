@@ -175,16 +175,6 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
             </div>
           </div>
         </div>
-
-        {/* Done Button */}
-        <div className="pt-6">
-          <Button
-            onClick={onClose}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
-          >
-            Done
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   )
