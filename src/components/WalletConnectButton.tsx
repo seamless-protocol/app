@@ -108,9 +108,9 @@ export function WalletConnectButton() {
                   <button
                     type="button"
                     onClick={() => setCustomAccountModalOpen(true)}
-                    className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 h-9 sm:h-10 cursor-pointer bg-card border border-border text-secondary-foreground hover:text-foreground hover:bg-accent hover:border-brand-purple"
+                    className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-0 p-0 h-9 w-9 sm:h-10 sm:w-auto sm:px-3 cursor-pointer bg-card border border-border text-secondary-foreground hover:text-foreground hover:bg-accent hover:border-brand-purple"
                   >
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center sm:space-x-2">
                       <Wallet
                         className="lucide lucide-wallet h-4 w-4 text-green-500"
                         aria-hidden="true"
