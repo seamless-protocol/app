@@ -802,3 +802,19 @@ html.dark [data-rk] {
   font-size: 14px !important;
   font-weight: 500 !important;
 }
+
+/* Skeleton shimmer utilities */
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton--shimmer {
+  background-image: var(--skeleton-shimmer);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton--shimmer { animation: none !important; }
+}
