@@ -428,7 +428,7 @@ function PortfolioPage() {
                 />
                 {rewardsLoading && (
                   <div className="absolute inset-0 bg-[var(--overlay-backdrop)] backdrop-blur-sm flex items-center justify-center rounded-xl">
-                    <div className="h-5 w-24 bg-slate-700/50 rounded animate-pulse" />
+                    <Skeleton className="h-5 w-24 rounded" />
                   </div>
                 )}
               </div>
