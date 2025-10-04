@@ -237,9 +237,6 @@ export function usePortfolioDataFetcher() {
               tokenConfig?.name || `${collateralAsset.symbol} / ${debtAsset.symbol} Leverage Token`,
             type: 'leverage-token' as const,
             token: collateralAsset.symbol as 'USDC' | 'WETH' | 'weETH', // Use collateral asset as primary token
-            riskLevel: (tokenConfig?.leverageRatio && tokenConfig.leverageRatio > 10
-              ? 'high'
-              : 'medium') as 'low' | 'medium' | 'high',
             currentValue: {
               amount: '0.00', // Will be calculated later
               symbol: 'USD',

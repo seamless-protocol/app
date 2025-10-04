@@ -32,7 +32,6 @@ const samplePositions: Array<Position> = [
     name: 'Seamless USDC Vault',
     type: 'vault',
     token: 'USDC',
-    riskLevel: 'low',
     currentValue: {
       amount: '25,618.45',
       symbol: 'USDC',
@@ -50,7 +49,6 @@ const samplePositions: Array<Position> = [
     name: 'Seamless WETH Vault',
     type: 'vault',
     token: 'WETH',
-    riskLevel: 'medium',
     currentValue: {
       amount: '8.72',
       symbol: 'WETH',
@@ -68,7 +66,6 @@ const samplePositions: Array<Position> = [
     name: 'weETH / WETH 17x Leverage Token',
     type: 'leverage-token',
     token: 'weETH',
-    riskLevel: 'high',
     currentValue: {
       amount: '6.12',
       symbol: 'weETH',
