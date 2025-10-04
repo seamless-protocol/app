@@ -15,7 +15,6 @@ export interface Position {
   name: string
   type: 'vault' | 'leverage-token'
   token: 'USDC' | 'WETH' | 'weETH'
-  riskLevel: 'low' | 'medium' | 'high'
   currentValue: {
     amount: string
     symbol: string
@@ -47,30 +46,6 @@ interface ActivePositionsProps {
   onPositionClick?: (position: Position) => void
   className?: string
   apyLoading?: boolean
-}
-
-const getRiskLevelColor = (riskLevel: string) => {
-  switch (riskLevel) {
-    case 'low':
-      return 'text-green-400 bg-green-400/10 border-green-400/20'
-    case 'medium':
-      return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20'
-    case 'high':
-      return 'text-red-400 bg-red-400/10 border-red-400/20'
-    default:
-      return 'text-slate-400 border-slate-600'
-  }
-}
-
-const getTypeLabel = (type: string) => {
-  switch (type) {
-    case 'vault':
-      return 'Vaults'
-    case 'leverage-token':
-      return 'Leverage Tokens'
-    default:
-      return 'Unknown'
-  }
 }
 
 // Component to handle APY display for each position
@@ -240,16 +215,6 @@ export function ActivePositions({
                               {position.name}
                             </h3>
                             <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100 lg:hidden" />
-                          </div>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge className={getRiskLevelColor(position.riskLevel)}>
-                              {position.riskLevel.charAt(0).toUpperCase() +
-                                position.riskLevel.slice(1)}{' '}
-                              Risk
-                            </Badge>
-                            <Badge className="text-slate-400 border-slate-600">
-                              {getTypeLabel(position.type)}
-                            </Badge>
                           </div>
                         </div>
                       </div>

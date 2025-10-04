@@ -17,7 +17,7 @@ export interface StakingData {
  */
 export function usePortfolioStaking() {
   const { address } = useAccount()
-  
+
   return useQuery({
     queryKey: portfolioKeys.staking(address),
     queryFn: async (): Promise<StakingData> => {
