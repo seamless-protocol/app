@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useAccount } from 'wagmi'
 import { mockStakingData } from '../data/mock'
 import { portfolioKeys } from '../utils/queryKeys'
 
@@ -15,8 +16,10 @@ export interface StakingData {
  * Currently returns mock data, but can easily be replaced with real API calls
  */
 export function usePortfolioStaking() {
+  const { address } = useAccount()
+  
   return useQuery({
-    queryKey: portfolioKeys.staking(),
+    queryKey: portfolioKeys.staking(address),
     queryFn: async (): Promise<StakingData> => {
       return mockStakingData
     },
