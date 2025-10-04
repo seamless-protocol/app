@@ -1,4 +1,4 @@
-import { ArrowDownUp, TrendingUp, Zap } from 'lucide-react'
+import { ArrowDown, TrendingUp, Zap } from 'lucide-react'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
@@ -66,7 +66,7 @@ export function ConfirmStep({
           </div>
 
           <div className="flex justify-center py-2">
-            <ArrowDownUp className="h-4 w-4 text-slate-400" />
+            <ArrowDown className="h-4 w-4 text-slate-400" />
           </div>
 
           <div className="flex items-center justify-between">
