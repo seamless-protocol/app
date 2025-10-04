@@ -307,7 +307,7 @@ export function ActivePositions({
                           <Button
                             size="sm"
                             variant="gradient"
-                            className="w-full lg:w-auto flex-1 lg:flex-none"
+                            className="w-full lg:w-auto lg:min-w-[112px] flex-1 lg:flex-none"
                             onClick={(e) => {
                               e.stopPropagation()
                               onAction(primaryAction, position)
@@ -319,7 +319,7 @@ export function ActivePositions({
                           <Button
                             size="sm"
                             variant="outline"
-                            className="w-full lg:w-auto flex-1 lg:flex-none text-secondary-foreground"
+                            className="w-full lg:w-auto lg:min-w-[112px] flex-1 lg:flex-none text-secondary-foreground"
                             onClick={(e) => {
                               e.stopPropagation()
                               onAction(secondaryAction, position)

@@ -805,8 +805,12 @@ html.dark [data-rk] {
 
 /* Skeleton shimmer utilities */
 @keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .skeleton--shimmer {
@@ -816,5 +820,7 @@ html.dark [data-rk] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skeleton--shimmer { animation: none !important; }
+  .skeleton--shimmer {
+    animation: none !important;
+  }
 }

@@ -77,7 +77,7 @@ export function WalletConnectButton() {
                     <button
                       type="button"
                       onClick={openChainModal}
-                      className="flex items-center space-x-2 px-3 py-2 rounded-lg border transition-all cursor-pointer bg-card border-border text-secondary-foreground hover:bg-accent hover:text-foreground hover:border-brand-purple"
+                      className="flex items-center space-x-2 px-3 h-9 sm:h-10 rounded-lg border transition-all cursor-pointer bg-card border-border text-secondary-foreground hover:bg-accent hover:text-foreground hover:border-brand-purple"
                       aria-label="Switch network"
                     >
                       {chain.hasIcon && (

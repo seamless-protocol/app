@@ -16,11 +16,11 @@ const buttonVariants = cva(baseClasses, {
     variant: {
       default: 'bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50',
       gradient:
-        'border-none bg-cta-gradient transition-all duration-200 hover:bg-cta-hover-gradient hover:shadow-lg hover:shadow-violet-500/25 hover:-translate-y-0.5 active:bg-cta-active-gradient active:translate-y-0 disabled:bg-cta-gradient disabled:text-[var(--cta-text)] disabled:opacity-50 disabled:hover:bg-cta-gradient disabled:hover:shadow-none disabled:hover:translate-y-0 disabled:active:bg-cta-gradient disabled:active:translate-y-0',
+        'border border-transparent bg-cta-gradient transition-all duration-200 hover:bg-cta-hover-gradient hover:shadow-lg hover:shadow-violet-500/25 hover:-translate-y-0.5 active:bg-cta-active-gradient active:translate-y-0 disabled:bg-cta-gradient disabled:text-[var(--cta-text)] disabled:opacity-50 disabled:hover:bg-cta-gradient disabled:hover:shadow-none disabled:hover:translate-y-0 disabled:active:bg-cta-gradient disabled:active:translate-y-0',
       destructive:
         'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 disabled:opacity-50',
       outline:
-        'border bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 disabled:opacity-50',
+        'border border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50',
       secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50',
       ghost:
         'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 disabled:opacity-50',
