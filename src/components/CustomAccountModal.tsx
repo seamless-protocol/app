@@ -239,13 +239,6 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
             </div>
           </div>
         </div>
-
-        {/* Done Button */}
-        <div className="pt-6">
-          <Button onClick={onClose} className="w-full" variant="gradient" size="lg">
-            Done
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   )
