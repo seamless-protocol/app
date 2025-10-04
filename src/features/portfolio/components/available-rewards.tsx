@@ -68,7 +68,7 @@ export function AvailableRewards({
           </div>
 
           {/* Claim Button */}
-          <Button onClick={onClaim} variant="gradient" className="w-full mt-2">
+          <Button onClick={onClaim} variant="gradient" size="lg" className="w-full mt-2">
             <Zap className="h-4 w-4 mr-2" />
             Claim All Rewards
           </Button>

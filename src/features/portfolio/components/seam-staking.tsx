@@ -57,11 +57,11 @@ export function SEAMStaking({
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <Button onClick={onStake} variant="gradient">
+            <Button onClick={onStake} variant="gradient" size="lg">
               <Plus className="h-4 w-4 mr-1" />
               Stake
             </Button>
-            <Button onClick={onManage} variant="outline">
+            <Button onClick={onManage} variant="outline" size="lg">
               <ExternalLink className="h-4 w-4 mr-1" />
               Manage
             </Button>

@@ -34,12 +34,13 @@ export function ErrorStep({ error, onRetry, onClose }: ErrorStepProps) {
           <Button
             onClick={onRetry}
             variant="outline"
+            size="lg"
             className="flex-1 border-border text-foreground hover:bg-accent"
           >
             Try Again
           </Button>
         )}
-        <Button onClick={onClose} variant="gradient" className={showRetry ? 'flex-1' : 'w-full'}>
+        <Button onClick={onClose} variant="gradient" size="lg" className={showRetry ? 'flex-1' : 'w-full'}>
           {showRetry ? 'Close' : 'OK'}
         </Button>
       </div>

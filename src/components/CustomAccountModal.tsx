@@ -170,7 +170,12 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                       </Button>
                     </div>
                   </div>
-                  <Button onClick={handleDisconnect} variant="destructive" className="w-full mt-3">
+                  <Button
+                    onClick={handleDisconnect}
+                    variant="outline"
+                    size="lg"
+                    className="w-full mt-3 border-destructive hover:border-destructive focus-visible:border-destructive"
+                  >
                     <LogOut className="h-4 w-4 mr-2" />
                     Disconnect Wallet
                   </Button>
@@ -237,7 +242,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
 
         {/* Done Button */}
         <div className="pt-6">
-          <Button onClick={onClose} className="w-full" variant="gradient">
+          <Button onClick={onClose} className="w-full" variant="gradient" size="lg">
             Done
           </Button>
         </div>

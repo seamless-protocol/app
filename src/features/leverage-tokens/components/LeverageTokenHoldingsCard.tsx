@@ -159,7 +159,6 @@ export function LeverageTokenHoldingsCard({
                       type="button"
                       onClick={handleMintClick}
                       variant="gradient"
-                      size="lg"
                       className="w-full lg:min-w-[112px]"
                     >
                       <Plus className="w-4 h-4" />
@@ -171,7 +170,6 @@ export function LeverageTokenHoldingsCard({
                       type="button"
                       onClick={handleRedeemClick}
                       variant="outline"
-                      size="lg"
                       disabled={!userPosition.hasPosition}
                       className="w-full lg:min-w-[112px] border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]"
                     >
