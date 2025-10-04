@@ -15,7 +15,6 @@ export interface Position {
   name: string
   type: 'vault' | 'leverage-token'
   token: 'USDC' | 'WETH' | 'weETH'
-  riskLevel: 'low' | 'medium' | 'high'
   currentValue: {
     amount: string
     symbol: string
@@ -47,30 +46,6 @@ interface ActivePositionsProps {
   onPositionClick?: (position: Position) => void
   className?: string
   apyLoading?: boolean
-}
-
-const getRiskBadgeVariant = (riskLevel: string) => {
-  switch (riskLevel) {
-    case 'low':
-      return 'success' as const
-    case 'medium':
-      return 'warning' as const
-    case 'high':
-      return 'error' as const
-    default:
-      return 'secondary' as const
-  }
-}
-
-const getTypeLabel = (type: string) => {
-  switch (type) {
-    case 'vault':
-      return 'Vaults'
-    case 'leverage-token':
-      return 'Leverage Tokens'
-    default:
-      return 'Unknown'
-  }
 }
 
 // Component to handle APY display for each position
@@ -240,19 +215,6 @@ export function ActivePositions({
                               {position.name}
                             </h3>
                             <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-colors opacity-0 group-hover:text-brand-purple group-hover:opacity-100 lg:hidden" />
-                          </div>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant={getRiskBadgeVariant(position.riskLevel)}>
-                              {position.riskLevel.charAt(0).toUpperCase() +
-                                position.riskLevel.slice(1)}{' '}
-                              Risk
-                            </Badge>
-                            <Badge
-                              variant="outline"
-                              className="border-border bg-accent text-secondary-foreground"
-                            >
-                              {getTypeLabel(position.type)}
-                            </Badge>
                           </div>
                         </div>
                       </div>
