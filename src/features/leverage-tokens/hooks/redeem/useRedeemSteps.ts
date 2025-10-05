@@ -1,14 +1,14 @@
 import { useCallback, useState } from 'react'
 
-export type RedeemStep = 'input' | 'approve' | 'confirm' | 'pending' | 'success' | 'error'
+export type RedeemStep = 'userInput' | 'approve' | 'confirm' | 'pending' | 'success' | 'error'
 
-export function useRedeemSteps(initial: RedeemStep = 'input') {
+export function useRedeemSteps(initial: RedeemStep = 'userInput') {
   const [step, setStep] = useState<RedeemStep>(initial)
 
   return {
     step,
     setStep,
-    toInput: useCallback(() => setStep('input'), []),
+    toInput: useCallback(() => setStep('userInput'), []),
     toApprove: useCallback(() => setStep('approve'), []),
     toConfirm: useCallback(() => setStep('confirm'), []),
     toPending: useCallback(() => setStep('pending'), []),

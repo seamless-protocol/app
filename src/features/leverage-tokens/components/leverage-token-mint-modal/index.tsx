@@ -56,7 +56,7 @@ interface LeverageTokenMintModalProps {
 
 // Hoisted to avoid re-creating on every render
 const MINT_STEPS: Array<StepConfig> = [
-  { id: 'input', label: 'Input', progress: 17 },
+  { id: 'userInput', label: 'User Input', progress: 17 },
   { id: 'approve', label: 'Approve', progress: 33 },
   { id: 'confirm', label: 'Confirm', progress: 50 },
   { id: 'pending', label: 'Processing', progress: 67 },
@@ -150,7 +150,7 @@ export function LeverageTokenMintModal({
     toPending,
     toSuccess,
     toError,
-  } = useMintSteps('input')
+  } = useMintSteps('userInput')
 
   // Step configuration (static)
   const steps = MINT_STEPS
@@ -437,7 +437,7 @@ export function LeverageTokenMintModal({
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
-      case 'input':
+      case 'userInput':
         return (
           <InputStep
             selectedToken={selectedTokenView}
