@@ -25,7 +25,7 @@ interface ConfirmStepProps {
   expectedAmount: string
   selectedAsset: string
   leverageTokenConfig: LeverageTokenConfig
-  redemptionFee?: bigint | undefined
+  redemptionFee?: string | undefined
   isRedemptionFeeLoading?: boolean | undefined
   onConfirm: () => void
 }
@@ -102,10 +102,10 @@ export function ConfirmStep({
             <span className="text-white">
               {isRedemptionFeeLoading ? (
                 <Skeleton className="inline-block h-4 w-12" />
-              ) : typeof redemptionFee === 'bigint' ? (
-                `${Number(redemptionFee) / 100}%`
+              ) : redemptionFee ? (
+                redemptionFee
               ) : (
-                <Skeleton className="inline-block h-4 w-12" />
+                'N/A'
               )}
             </span>
           </div>

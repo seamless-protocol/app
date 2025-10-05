@@ -624,7 +624,6 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
           onClose={() => setIsMintModalOpen(false)}
           leverageTokenAddress={tokenAddress as Address}
           {...(userAddress && { userAddress })}
-          {...(apyData?.totalAPY && { apy: apyData.totalAPY })}
         />
 
         {/* Redeem Modal */}
