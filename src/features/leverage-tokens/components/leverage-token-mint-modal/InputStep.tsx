@@ -8,7 +8,6 @@ import { FilterDropdown } from '../../../../components/ui/filter-dropdown'
 import { Input } from '../../../../components/ui/input'
 import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
-import { formatAPY } from '../../../../lib/utils/formatting'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
   MIN_MINT_AMOUNT_DISPLAY,
@@ -73,9 +72,10 @@ interface InputStepProps {
 
   // Config
   leverageTokenConfig: LeverageTokenConfig
-  apy?: number | undefined
-  managementFee?: bigint | undefined
+  managementFee?: string | undefined
   isManagementFeeLoading?: boolean | undefined
+  mintTokenFee?: string | undefined
+  isMintTokenFeeLoading?: boolean | undefined
 
   // Warning
   isBelowMinimum?: boolean | undefined
@@ -104,9 +104,10 @@ export function InputStep({
   onApprove,
   error,
   leverageTokenConfig,
-  apy,
   managementFee,
   isManagementFeeLoading,
+  mintTokenFee,
+  isMintTokenFeeLoading,
   isBelowMinimum,
 }: InputStepProps) {
   const mintAmountId = useId()
@@ -300,22 +301,24 @@ export function InputStep({
         <h4 className="text-sm font-medium text-white mb-3">Transaction Summary</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-400">Mint Amount</span>
+            <span className="text-slate-400">Mint Token Fee</span>
             <span className="text-white">
-              {amount || '0'} {selectedToken.symbol}
+              {isMintTokenFeeLoading ? (
+                <Skeleton className="inline-block h-4 w-12" />
+              ) : mintTokenFee ? (
+                mintTokenFee
+              ) : (
+                'N/A'
+              )}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Current APY</span>
-            <span className="text-green-400">{apy ? formatAPY(apy, 2) : '0%'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">Management Fee</span>
+            <span className="text-slate-400">Mint Treasury Fee</span>
             <span className="text-white">
               {isManagementFeeLoading ? (
                 <Skeleton className="inline-block h-4 w-12" />
-              ) : typeof managementFee === 'bigint' ? (
-                `${Number(managementFee) / 100}%`
+              ) : managementFee ? (
+                managementFee
               ) : (
                 'N/A'
               )}
@@ -342,9 +345,22 @@ export function InputStep({
           <Separator className="my-2 bg-slate-700" />
           <div className="flex justify-between font-medium items-center">
             <span className="text-white">You will receive</span>
-            <span className="text-white">
-              {isCalculating ? 'Calculating...' : `${expectedTokens} tokens`}
-            </span>
+            <div className="text-right">
+              <div className="text-white">
+                {isCalculating
+                  ? 'Calculating...'
+                  : `${expectedTokens} ${leverageTokenConfig.symbol}`}
+              </div>
+              {!isCalculating && amount && parseFloat(amount) > 0 && selectedToken.price && (
+                <div className="text-xs text-slate-400">
+                  ≈ $
+                  {(parseFloat(amount) * selectedToken.price).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Card>
