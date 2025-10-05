@@ -56,7 +56,7 @@ interface LeverageTokenRedeemModalProps {
 
 // Hoisted to avoid re-creating on every render
 const REDEEM_STEPS: Array<StepConfig> = [
-  { id: 'input', label: 'Input', progress: 17 },
+  { id: 'userInput', label: 'User Input', progress: 17 },
   { id: 'approve', label: 'Approve', progress: 33 },
   { id: 'confirm', label: 'Confirm', progress: 50 },
   { id: 'pending', label: 'Processing', progress: 67 },
@@ -205,7 +205,7 @@ export function LeverageTokenRedeemModal({
     toPending,
     toSuccess,
     toError,
-  } = useRedeemSteps('input')
+  } = useRedeemSteps('userInput')
 
   // Step configuration (static)
   const steps = REDEEM_STEPS
@@ -580,7 +580,7 @@ export function LeverageTokenRedeemModal({
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
-      case 'input':
+      case 'userInput':
         return (
           <InputStep
             selectedToken={selectedTokenView}

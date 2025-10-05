@@ -43,6 +43,11 @@ export function MultiStepModal({
     return steps.length
   }
 
+  const getCurrentStepLabel = () => {
+    const step = steps.find((s) => s.id === currentStep)
+    return step?.label || currentStep
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={className}>
@@ -57,7 +62,7 @@ export function MultiStepModal({
             <span>
               Step {getStepNumber()} of {getTotalSteps()}
             </span>
-            <span className="capitalize">{currentStep}</span>
+            <span>{getCurrentStepLabel()}</span>
           </div>
         </div>
 
