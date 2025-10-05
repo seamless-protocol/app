@@ -33,7 +33,7 @@ import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 import { CHAIN_IDS } from '@/lib/utils/chain-logos'
 import { formatAPY, formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
-export const Route = createFileRoute('/tokens/$chainId/$id')({
+export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
   component: () => {
     const { chainId: routeChainId, id: tokenAddress } = useParams({ strict: false })
     const { isConnected, address: userAddress } = useAccount()
@@ -43,7 +43,10 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
 
     // Track page view when component mounts
     useEffect(() => {
-      analytics.trackPageView('Leverage Token Detail', `/tokens/${routeChainId}/${tokenAddress}`)
+      analytics.trackPageView(
+        'Leverage Token Detail',
+        `/leverage-tokens/${routeChainId}/${tokenAddress}`,
+      )
 
       // Track feature discovery for leverage token details
       analytics.featureDiscovered('leverage_token_details', 'navigation')
@@ -244,14 +247,14 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           items={[
             {
               label: 'Leverage Tokens',
-              onClick: () => navigate({ to: '/tokens' }),
+              onClick: () => navigate({ to: '/leverage-tokens' }),
             },
             {
               label: tokenConfig.name,
               isActive: true,
             },
           ]}
-          onBack={() => navigate({ to: '/tokens' })}
+          onBack={() => navigate({ to: '/leverage-tokens' })}
         />
 
         {/* Two-Column Grid Layout */}
