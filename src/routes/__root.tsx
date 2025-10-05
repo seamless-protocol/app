@@ -15,7 +15,7 @@ export const Route = createRootRoute({
     <div className="p-2">
       <h3>404 - Page Not Found</h3>
       <p>The page you are looking for does not exist.</p>
-      <Link to="/tokens" className="text-blue-500 underline">
+      <Link to="/leverage-tokens" className="text-blue-500 underline">
         Go to Leverage Tokens
       </Link>
     </div>

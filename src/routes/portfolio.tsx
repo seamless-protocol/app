@@ -256,7 +256,7 @@ function PortfolioPage() {
         const chainId = tokenConfig.chainId.toString()
 
         navigate({
-          to: '/tokens/$chainId/$id',
+          to: '/leverage-tokens/$chainId/$id',
           params: {
             chainId,
             id: leverageTokenAddress,
