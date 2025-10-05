@@ -7,6 +7,7 @@ interface SuccessStepProps {
   amount: string
   expectedAmount: string
   selectedAsset: string
+  leverageTokenSymbol: string
   transactionHash: string
   onClose: () => void
 }
@@ -15,6 +16,7 @@ export function SuccessStep({
   amount,
   expectedAmount,
   selectedAsset,
+  leverageTokenSymbol,
   transactionHash,
   onClose,
 }: SuccessStepProps) {
@@ -28,7 +30,7 @@ export function SuccessStep({
         </div>
         <h3 className="text-lg font-medium text-white mb-2">Redemption Completed!</h3>
         <p className="text-slate-400 text-center max-w-sm">
-          Your {amount} leverage tokens have been successfully redeemed for {expectedAmount}{' '}
+          Your {amount} {leverageTokenSymbol} have been successfully redeemed for {expectedAmount}{' '}
           {selectedAsset}.
         </p>
       </div>
@@ -37,7 +39,9 @@ export function SuccessStep({
         <div className="text-sm space-y-2">
           <div className="flex justify-between">
             <span className="text-slate-400">Redeemed</span>
-            <span className="text-white">{amount} tokens</span>
+            <span className="text-white">
+              {amount} {leverageTokenSymbol}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Received</span>

@@ -539,7 +539,7 @@ export function LeverageTokenRedeemModal({
           : expectedAmount
 
       toast.success('Redemption successful!', {
-        description: `${form.amount} tokens redeemed for ${toastAmount} ${selectedOutputAsset.symbol}`,
+        description: `${form.amount} ${leverageTokenConfig.symbol} redeemed for ${toastAmount} ${selectedOutputAsset.symbol}`,
       })
 
       refetchLeverageTokenBalance?.()
@@ -655,6 +655,7 @@ export function LeverageTokenRedeemModal({
             amount={form.amount}
             expectedAmount={expectedAmount}
             selectedAsset={selectedOutputAsset.symbol}
+            leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash}
             onClose={handleClose}
           />

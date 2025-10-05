@@ -372,7 +372,7 @@ export function LeverageTokenMintModal({
       analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
 
       toast.success('Leverage tokens minted successfully!', {
-        description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} tokens`,
+        description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} ${leverageTokenConfig.symbol}`,
       })
       // Invalidate protocol state and refresh wallet balances after 1 confirmation
       try {
@@ -506,6 +506,7 @@ export function LeverageTokenMintModal({
             selectedToken={selectedTokenView}
             amount={form.amount}
             expectedTokens={expectedTokens}
+            leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash}
             onClose={handleClose}
           />

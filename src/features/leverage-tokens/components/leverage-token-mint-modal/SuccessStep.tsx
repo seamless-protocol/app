@@ -15,6 +15,7 @@ interface SuccessStepProps {
   selectedToken: Token
   amount: string
   expectedTokens: string
+  leverageTokenSymbol: string
   transactionHash: string
   onClose: () => void
 }
@@ -23,6 +24,7 @@ export function SuccessStep({
   selectedToken,
   amount,
   expectedTokens,
+  leverageTokenSymbol,
   transactionHash,
   onClose,
 }: SuccessStepProps) {
@@ -37,7 +39,7 @@ export function SuccessStep({
         <h3 className="text-lg font-medium text-white mb-2">Mint Success!</h3>
         <p className="text-slate-400 text-center max-w-sm">
           Your {amount} {selectedToken.symbol} has been successfully minted into {expectedTokens}{' '}
-          leverage tokens.
+          {leverageTokenSymbol}.
         </p>
       </div>
 
@@ -51,7 +53,9 @@ export function SuccessStep({
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Received</span>
-            <span className="text-white">{expectedTokens} tokens</span>
+            <span className="text-white">
+              {expectedTokens} {leverageTokenSymbol}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Transaction</span>
