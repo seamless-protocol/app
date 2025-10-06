@@ -78,7 +78,6 @@ function PortfolioPage() {
   const performanceHeadingId = useId()
   const rewardsHeadingId = useId()
   const vaultsHeadingId = useId()
-  const positionsHeadingId = useId()
 
   // Show connection status card if wallet is not connected
   if (!isConnected) {
