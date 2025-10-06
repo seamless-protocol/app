@@ -2,7 +2,7 @@ import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 import { describe, expect, it } from 'vitest'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
-import { leverageManagerAbi } from '@/lib/contracts'
+import { leverageManagerV2Abi } from '@/lib/contracts'
 import { withFork } from '../../../shared/withFork'
 
 // Temporarily skip these TVL integration tests while Tenderly VNet brings up the
@@ -19,7 +19,7 @@ describe.skip('Protocol TVL (Anvil Base fork / viem)', () => {
         configs.map(async (cfg) => {
           const state = (await publicClient.readContract({
             address: manager,
-            abi: leverageManagerAbi,
+            abi: leverageManagerV2Abi,
             functionName: 'getLeverageTokenState',
             args: [cfg.address],
           })) as {
@@ -54,13 +54,13 @@ describe.skip('Protocol TVL (Anvil Base fork / viem)', () => {
           const [collateralAsset, debtAsset] = (await Promise.all([
             publicClient.readContract({
               address: manager,
-              abi: leverageManagerAbi,
+              abi: leverageManagerV2Abi,
               functionName: 'getLeverageTokenCollateralAsset',
               args: [cfg.address],
             }),
             publicClient.readContract({
               address: manager,
-              abi: leverageManagerAbi,
+              abi: leverageManagerV2Abi,
               functionName: 'getLeverageTokenDebtAsset',
               args: [cfg.address],
             }),

@@ -53,7 +53,6 @@ describe('orchestrateMint', () => {
       routerAddressV2: '0xrouter' as Address,
       managerAddressV2: '0xmanager' as Address,
     })
-    expect(res.routerVersion).toBe('v2')
     expect(res.hash).toBe('0xhash_v2')
     expect(planMintV2).toHaveBeenCalledWith(expect.objectContaining({ quoteDebtToCollateral }))
   })

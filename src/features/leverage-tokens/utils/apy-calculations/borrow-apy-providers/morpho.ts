@@ -5,7 +5,7 @@ import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('morpho-borrow-apy')
 
-import { lendingAdapterAbi, leverageManagerAbi } from '@/lib/contracts'
+import { lendingAdapterAbi, leverageManagerV2Abi } from '@/lib/contracts'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
 import { fetchMorphoMarketBorrowRate } from '@/lib/graphql/fetchers/morpho'
 import type { BaseBorrowApyData, BorrowApyFetcher } from './types'
@@ -30,7 +30,7 @@ async function fetchMorphoMarketId(
 
     const managerResult = await readContract(config, {
       address: managerAddress,
-      abi: leverageManagerAbi,
+      abi: leverageManagerV2Abi,
       functionName: 'getLeverageTokenConfig',
       args: [tokenAddress],
       chainId: chainId as SupportedChainId,

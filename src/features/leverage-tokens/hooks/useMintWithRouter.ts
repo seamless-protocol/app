@@ -1,13 +1,11 @@
 /**
  * React Query hook wrapping the domain-level orchestrateMint.
  *
- * Return type is discriminated by `routerVersion`:
- * - v1: { routerVersion: 'v1', hash, preview }
- * - v2: { routerVersion: 'v2', hash, plan }
+ * Returns { hash, plan } with transaction hash and execution plan.
  *
  * Optional params:
  * - `slippageBps`, `maxSwapCostInCollateralAsset` tune mint behavior
- * - V2 requires `quoteDebtToCollateral` and optionally `quoteInputToCollateral` if input != collateral
+ * - Requires `quoteDebtToCollateral` and optionally `quoteInputToCollateral` if input != collateral
  */
 import { useMutation } from '@tanstack/react-query'
 import type { Address } from 'viem'

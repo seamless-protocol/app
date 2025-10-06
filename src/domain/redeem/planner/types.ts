@@ -31,7 +31,5 @@ export type RedeemPlan = {
   maxSwapCost?: bigint
 }
 
-// Re-export RouterVersion from mint since they're the same
-export { RouterVersion } from '../../mint/planner/types'
 // Re-export shared quote types
 export type { Quote, QuoteFn } from '../../shared/adapters/types'

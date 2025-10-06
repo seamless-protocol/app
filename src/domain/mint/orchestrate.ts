@@ -1,5 +1,5 @@
 /**
- * Orchestrator for leverage token minting using router V2.
+ * Orchestrator for leverage token minting.
  *
  * Responsibilities:
  * - Plan V2 flow (optional input->collateral conversion + debt swap) and execute
@@ -21,15 +21,14 @@ type AccountArg = Address
 type EquityInInputAssetArg = bigint
 type MaxSwapCostArg = bigint
 
-// Result type for orchestrated mints (V2 only, but keeps routerVersion for compatibility)
+// Result type for orchestrated mints
 export type OrchestrateMintResult = {
-  routerVersion: 'v2'
   hash: Hash
   plan: ReturnType<typeof planMintV2> extends Promise<infer P> ? P : never
 }
 
 /**
- * Orchestrates a leverage-token mint using router V2.
+ * Orchestrates a leverage-token mint.
  *
  * Behavior
  * - Plans the mint (optionally converting input->collateral, and swapping debt->collateral), then executes.
@@ -50,7 +49,7 @@ export type OrchestrateMintResult = {
  * @param params.quoteInputToCollateral Optional. Quotes amount of collateral received for a given input asset amount when input != collateral.
  *
  * Returns
- * - `{ routerVersion: 'v2', hash, plan }` with transaction hash and execution plan.
+ * - `{ hash, plan }` with transaction hash and execution plan.
  *
  * Throws
  * - If `quoteDebtToCollateral` is not provided.
@@ -84,7 +83,7 @@ export async function orchestrateMint(params: {
     quoteInputToCollateral,
   } = params
 
-  if (!quoteDebtToCollateral) throw new Error('quoteDebtToCollateral is required for router v2')
+  if (!quoteDebtToCollateral) throw new Error('quoteDebtToCollateral is required')
 
   const env =
     (typeof import.meta !== 'undefined' &&
@@ -142,9 +141,7 @@ export async function orchestrateMint(params: {
       routerAddressV2 ||
       (contractAddresses[params.chainId]?.leverageRouterV2 as Address | undefined) ||
       (() => {
-        throw new Error(
-          `LeverageRouterV2 address required for router v2 flow on chain ${params.chainId}`,
-        )
+        throw new Error(`LeverageRouterV2 address required on chain ${params.chainId}`)
       })(),
     multicallExecutor:
       (getContractAddresses(params.chainId).multicallExecutor as Address | undefined) ||
@@ -157,14 +154,12 @@ export async function orchestrateMint(params: {
         ? (process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] as Address | undefined)
         : undefined) ||
       ((): Address => {
-        throw new Error(
-          `Multicall executor address required for router v2 flow on chain ${params.chainId}`,
-        )
+        throw new Error(`Multicall executor address required on chain ${params.chainId}`)
       })(),
     ...(typeof maxSwapCostInCollateralAsset !== 'undefined'
       ? { maxSwapCostInCollateralAsset }
       : {}),
     chainId: params.chainId,
   })
-  return { routerVersion: 'v2' as const, plan, ...tx }
+  return { plan, ...tx }
 }

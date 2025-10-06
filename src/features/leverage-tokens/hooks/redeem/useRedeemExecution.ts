@@ -42,7 +42,6 @@ export function useRedeemExecution({
 
   // V2 always requires a quote
   const requiresQuote = true
-  const routerVersion = 'v2' as const
 
   const {
     quote,
@@ -137,7 +136,6 @@ export function useRedeemExecution({
     quoteStatus,
     quoteError,
     quote,
-    routerVersion,
   }
 }
 

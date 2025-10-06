@@ -1,5 +1,5 @@
 /**
- * Orchestrator for leverage token redemption using router V2.
+ * Orchestrator for leverage token redemption.
  *
  * Responsibilities:
  * - Plan V2 flow (collateral->debt swap for debt repayment) and execute
@@ -19,15 +19,14 @@ type TokenArg = Address
 type AccountArg = Address
 type SharesToRedeemArg = bigint
 
-// Result type for orchestrated redeems (V2 only, but keeps routerVersion for compatibility)
+// Result type for orchestrated redeems
 export type OrchestrateRedeemResult = {
-  routerVersion: 'v2'
   hash: Hash
   plan: ReturnType<typeof planRedeemV2> extends Promise<infer P> ? P : never
 }
 
 /**
- * Orchestrates a leverage-token redeem using router V2.
+ * Orchestrates a leverage-token redeem.
  *
  * Behavior
  * - Plans the redeem (swapping collateral->debt for debt repayment), then executes.
@@ -76,7 +75,7 @@ export async function orchestrateRedeem(params: {
     chainId,
   } = params
 
-  if (!quoteCollateralToDebt) throw new Error('quoteCollateralToDebt is required for router v2')
+  if (!quoteCollateralToDebt) throw new Error('quoteCollateralToDebt is required')
 
   const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
   const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
@@ -119,18 +118,16 @@ export async function orchestrateRedeem(params: {
         ? (process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] as Address | undefined)
         : undefined) ||
       ((): Address => {
-        throw new Error(
-          `Multicall executor address required for router v2 flow on chain ${chainId}`,
-        )
+        throw new Error(`Multicall executor address required on chain ${chainId}`)
       })(),
     swapCalls: plan.calls,
     routerAddress:
       routerAddressV2 ||
       (contractAddresses[chainId]?.leverageRouterV2 as Address | undefined) ||
       (() => {
-        throw new Error(`LeverageRouterV2 address required for router v2 flow on chain ${chainId}`)
+        throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
       })(),
     chainId,
   })
-  return { routerVersion: 'v2' as const, plan, ...tx }
+  return { plan, ...tx }
 }

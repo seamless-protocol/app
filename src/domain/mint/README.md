@@ -5,9 +5,6 @@ Overview
 - Current scope: A v2 planner and v2 executor. Approvals handled in UI/hooks.
 - Key files: `planner/plan.v2.ts`, `exec/execute.v2.ts`, `ports/*`, `orchestrate.ts`, `adapters/lifi.ts`, `utils/allowance.ts`.
 
-Version Selection
-- V2 only. Version detection has been removed.
-
 Folder Structure
 - `planner/`: Planning and math
   - `plan.v2.ts`: Build v2 plan
@@ -48,7 +45,7 @@ Quotes
 - Note: We currently don’t enforce a `deadline` field on quotes; add if required by policy.
 
 Orchestrator
-- `orchestrate.ts` plans and executes v2. Returns `{ routerVersion: 'v2', hash, plan }`.
+- `orchestrate.ts` plans and executes mint. Returns `{ hash, plan }`.
 
 Testing
 - Unit: planner math/guards, ports, orchestrator, allowance helper.

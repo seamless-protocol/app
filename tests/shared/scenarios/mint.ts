@@ -337,10 +337,6 @@ function resolveDebtSwapConfig({
 }
 
 export function assertMintResult({ orchestration, mintedShares }: MintExecutionResult): void {
-  if (orchestration.routerVersion !== 'v2') {
-    throw new Error(`Expected router version 'v2', received '${orchestration.routerVersion}'.`)
-  }
-
   if (!/^0x[0-9a-fA-F]{64}$/.test(orchestration.hash)) {
     throw new Error(`Invalid transaction hash returned from mint: ${orchestration.hash}`)
   }

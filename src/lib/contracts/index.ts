@@ -10,9 +10,7 @@
 export * from './abis/lendingAdapter'
 
 // Re-export ABIs and wagmi codegen for a stable import surface
-export * from './abis/leverageManager'
 export * from './abis/leverageManagerV2'
-export * from './abis/leverageRouter'
 export * from './abis/leverageRouterV2'
 export * from './abis/leverageToken'
 export * from './abis/leverageTokenFactory'

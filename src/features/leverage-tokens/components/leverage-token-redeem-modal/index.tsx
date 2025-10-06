@@ -88,10 +88,8 @@ export function LeverageTokenRedeemModal({
 
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
-  const leverageRouterAddress =
-    contractAddresses.leverageRouterV2 ?? contractAddresses.leverageRouter
-  const leverageManagerAddress =
-    contractAddresses.leverageManagerV2 ?? contractAddresses.leverageManager
+  const leverageRouterAddress = contractAddresses.leverageRouterV2
+  const leverageManagerAddress = contractAddresses.leverageManagerV2
 
   // Fetch leverage token fees
   const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(leverageTokenAddress)

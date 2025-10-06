@@ -243,35 +243,31 @@ function buildAddressContext(
     throw new Error(`No contract addresses found for chain ${definition.chainId}`)
   }
 
-  const managerV1 = contracts.leverageManager as Address | undefined
   const managerV2 = contracts.leverageManagerV2 as Address | undefined
-  const routerV1 = contracts.leverageRouter as Address | undefined
   const routerV2 = contracts.leverageRouterV2 as Address | undefined
   const tokenMap = contracts.tokens ?? {}
 
-  const managerOverride = definition.leverageManager
-  const routerOverride = definition.leverageRouter
+  const managerOverride = definition.leverageManagerV2
+  const routerOverride = definition.leverageRouterV2
   const executorOverride = definition.multicallExecutor
   const veloraOverride = definition.veloraAdapter
   const rebalanceOverride = definition.rebalanceAdapter
   const lendingOverride = definition.lendingAdapter
 
-  const resolvedManagerV2 = managerOverride ?? managerV2 ?? managerV1
-  const resolvedManagerV1 = managerV1 ?? managerOverride
-  const resolvedRouterV2 = routerOverride ?? routerV2 ?? routerV1
-  const resolvedRouterV1 = routerV1 ?? routerOverride
+  const resolvedManagerV2 = managerOverride ?? managerV2
+  const resolvedRouterV2 = routerOverride ?? routerV2
 
-  const primaryManager = managerOverride ?? managerV2 ?? managerV1
-  const primaryRouter = routerOverride ?? routerV2 ?? routerV1
+  const primaryManager = managerOverride ?? managerV2
+  const primaryRouter = routerOverride ?? routerV2
 
   const result: LeverageTokenAddresses = {
     manager: ensureAddress(
-      'leverageManager',
+      'leverageManagerV2',
       definition.chainId,
       primaryManager as Address | undefined,
     ),
     router: ensureAddress(
-      'leverageRouter',
+      'leverageRouterV2',
       definition.chainId,
       primaryRouter as Address | undefined,
     ),
@@ -294,9 +290,7 @@ function buildAddressContext(
   }
 
   const factoryAddress = optionalAddress(contracts.leverageTokenFactory as Address | undefined)
-  const managerV1Address = optionalAddress(resolvedManagerV1)
   const managerV2Address = optionalAddress(resolvedManagerV2)
-  const routerV1Address = optionalAddress(resolvedRouterV1)
   const routerV2Address = optionalAddress(resolvedRouterV2)
   const executorAddress = optionalAddress(
     executorOverride ?? (contracts.multicallExecutor as Address | undefined),
@@ -306,9 +300,7 @@ function buildAddressContext(
   const lendingAddress = optionalAddress(lendingOverride)
 
   if (factoryAddress) result.factory = factoryAddress
-  if (managerV1Address) result.managerV1 = managerV1Address
   if (managerV2Address) result.managerV2 = managerV2Address
-  if (routerV1Address) result.routerV1 = routerV1Address
   if (routerV2Address) result.routerV2 = routerV2Address
   if (executorAddress) result.executor = executorAddress
   if (veloraAddress) result.veloraAdapter = veloraAddress

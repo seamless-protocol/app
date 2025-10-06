@@ -65,7 +65,7 @@ Notes:
   - simulate → write path uses generated actions; returns hash.
 - orchestrateMint
   - V2 requires `quoteDebtToCollateral` or throws.
-  - Returns `{ routerVersion: 'v2', hash, plan }`.
+  - Returns `{ hash, plan }`.
 
 Mocking policy: Unit tests mock `@/lib/contracts/generated` and do not use network.
 
