@@ -72,7 +72,6 @@ export async function executeSharedMint({
     throw new Error('TEST_RPC_URL missing or invalid for tenderly mode')
   }
 
-  process.env['VITE_ROUTER_VERSION'] = 'v2'
   const executor = ADDR.executor
   if (!executor) {
     throw new Error('Multicall executor address missing; update contract map for V2 harness')
