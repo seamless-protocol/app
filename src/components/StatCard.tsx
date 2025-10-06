@@ -16,24 +16,24 @@ function StatCard({
   stat,
   caption,
   icon,
-  iconBgClass = 'bg-purple-500/20',
-  iconTextClass = 'text-purple-400',
+  iconBgClass = 'bg-accent',
+  iconTextClass = 'text-brand-purple',
   className,
 }: StatCardProps) {
   return (
     <div
       data-slot="card"
       className={cn(
-        'text-card-foreground flex flex-col gap-6 rounded-xl border bg-slate-900/80 border-slate-700 hover:bg-slate-900/90 transition-all duration-300',
+        'flex flex-col gap-6 rounded-xl border border-border bg-card text-foreground transition-all duration-300',
         className,
       )}
     >
       <div data-slot="card-content" className="[&:last-child]:pb-6 p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm text-slate-400">{title}</div>
-            <div className="text-xl sm:text-2xl font-bold text-white">{stat}</div>
-            {caption && <div className="text-xs text-slate-400 mt-1">{caption}</div>}
+            <div className="text-sm text-secondary-foreground">{title}</div>
+            <div className="text-xl font-bold sm:text-2xl text-foreground">{stat}</div>
+            {caption && <div className="mt-1 text-xs text-muted-foreground">{caption}</div>}
           </div>
           {icon && (
             <div

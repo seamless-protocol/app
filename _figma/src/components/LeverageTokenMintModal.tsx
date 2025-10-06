@@ -616,7 +616,7 @@ export function LeverageTokenMintModal({ isOpen, onClose, strategyId }: Leverage
                   <span className="text-slate-400">Transaction</span>
                   <button
                     onClick={() => window.open(`https://etherscan.io/tx/${transactionHash}`, '_blank')}
-                    className="text-purple-400 hover:underline flex items-center"
+                    className="text-purple-400 hover:underline flex items-center hover:cursor-pointer"
                   >
                     View on Etherscan
                     <ExternalLink className="h-3 w-3 ml-1" />

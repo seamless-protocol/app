@@ -39,7 +39,7 @@ export function FeaturedLeverageToken({
       className={className}
     >
       <Card
-        className="bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-slate-700 hover:border-purple-500/50 transition-all duration-300 cursor-pointer transform hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10 w-full min-w-0"
+        className="w-full min-w-0 cursor-pointer transform transition-all duration-300 border border-border bg-card hover:border-border hover:bg-accent "
         onClick={handleClick}
       >
         <CardContent className="p-3 sm:p-4">
@@ -50,10 +50,12 @@ export function FeaturedLeverageToken({
                 <AssetDisplay asset={token.collateralAsset} size="sm" variant="logo-only" />
                 <AssetDisplay asset={token.debtAsset} size="sm" variant="logo-only" />
               </div>
-              <h3 className="font-medium text-white text-sm truncate min-w-0">{token.name}</h3>
+              <h3 className="font-medium text-sm truncate min-w-0 text-[var(--text-primary)]">
+                {token.name}
+              </h3>
             </div>
             {token.rank && (
-              <Badge className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 border-yellow-500/30 text-xs flex-shrink-0">
+              <Badge className="text-xs flex-shrink-0 border-[color-mix(in_srgb,var(--tag-warning-text)_25%,transparent)] bg-[var(--tag-warning-bg)] text-[var(--tag-warning-text)]">
                 #{token.rank}
               </Badge>
             )}
@@ -63,25 +65,27 @@ export function FeaturedLeverageToken({
           <div className="space-y-2">
             {/* APY Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">APY</span>
+              <span className="text-sm text-[var(--text-secondary)]">APY</span>
               {isApyError ? (
-                <span className="text-slate-500 font-medium">N/A</span>
+                <span className="text-[var(--text-muted)] font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
                 <Skeleton className="h-4 w-16" />
               ) : (
-                <span className="text-green-400 font-medium">{formatAPY(apyData.totalAPY, 2)}</span>
+                <span className="text-[var(--state-success-text)] font-medium">
+                  {formatAPY(apyData.totalAPY, 2)}
+                </span>
               )}
             </div>
 
             {/* Reward APR Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">Reward APR</span>
+              <span className="text-sm text-[var(--text-secondary)]">Reward APR</span>
               {isApyError ? (
-                <span className="text-slate-500 font-medium">N/A</span>
+                <span className="text-[var(--text-muted)] font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
                 <Skeleton className="h-4 w-16" />
               ) : (
-                <span className="text-cyan-400 font-medium">
+                <span className="text-[var(--accent-1)] font-medium">
                   {formatPercentage(apyData.rewardsAPR, { decimals: 2 })}
                 </span>
               )}
@@ -89,22 +93,24 @@ export function FeaturedLeverageToken({
 
             {/* Points Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">Points</span>
+              <span className="text-sm text-[var(--text-secondary)]">Points</span>
               {isApyError ? (
-                <span className="text-slate-500 font-medium">N/A</span>
+                <span className="text-[var(--text-muted)] font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
                 <Skeleton className="h-4 w-16" />
               ) : (
-                <span className="text-yellow-400 font-medium">
+                <span className="font-medium text-[var(--state-warning-text)]">
                   {`${apyData.points.toLocaleString()} x`}
                 </span>
               )}
             </div>
 
             {/* Leverage Row with Divider */}
-            <div className="flex justify-between items-center pt-2 border-t border-slate-700">
-              <span className="text-slate-400 text-sm">Leverage</span>
-              <span className="text-purple-400 font-medium">{token.leverageRatio}x</span>
+            <div className="flex justify-between items-center pt-2 border-t border-[var(--divider-line)]">
+              <span className="text-sm text-[var(--text-secondary)]">Leverage</span>
+              <span className="font-medium text-[var(--brand-secondary)]">
+                {token.leverageRatio}x
+              </span>
             </div>
           </div>
         </CardContent>
@@ -117,7 +123,7 @@ interface FeaturedLeverageTokensProps {
   tokens: Array<LeverageToken>
   onTokenClick?: (token: LeverageToken) => void
   className?: string
-  apyDataMap?: Map<string, APYBreakdownData> | undefined // APY data map for all tokens
+  apyDataMap?: Map<string, APYBreakdownData> | undefined
   isApyLoading?: boolean
   isApyError?: boolean
 }
@@ -139,8 +145,8 @@ export function FeaturedLeverageTokens({
     >
       {/* Section Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-white flex items-center space-x-2">
-          <Zap className="h-5 w-5 text-yellow-400" />
+        <h2 className="text-xl font-semibold text-[var(--text-primary)] flex items-center space-x-2">
+          <Zap className="h-5 w-5 text-[var(--state-warning-text)]" />
           <span>Featured</span>
         </h2>
       </div>
@@ -156,7 +162,10 @@ export function FeaturedLeverageTokens({
             }}
             apyData={apyDataMap?.get(token.address)}
             isApyLoading={isApyLoading ?? false}
-            isApyError={isApyError || (!isApyLoading && !apyDataMap?.has(token.address))}
+            isApyError={
+              isApyError ||
+              (!isApyLoading && apyDataMap !== undefined && !apyDataMap.has(token.address))
+            }
             {...(onTokenClick && { onClick: onTokenClick })}
           />
         ))}

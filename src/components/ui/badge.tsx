@@ -14,9 +14,18 @@ const badgeVariants = cva(
         secondary:
           'border-secondary bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
         destructive:
-          'border-destructive bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
+          'border-destructive bg-destructive text-foreground [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline:
           'border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
+        success:
+          'border-[color-mix(in_srgb,var(--tag-success-text)_30%,transparent)] bg-[var(--tag-success-bg)] text-[var(--tag-success-text)]',
+        warning:
+          'border-[color-mix(in_srgb,var(--tag-warning-text)_30%,transparent)] bg-[var(--tag-warning-bg)] text-[var(--tag-warning-text)]',
+        error:
+          'border-[color-mix(in_srgb,var(--tag-error-text)_30%,transparent)] bg-[var(--tag-error-bg)] text-[var(--tag-error-text)]',
+        info: 'border-[color-mix(in_srgb,var(--tag-info-text)_30%,transparent)] bg-[var(--tag-info-bg)] text-[var(--tag-info-text)]',
+        brand:
+          'border-[color-mix(in_srgb,var(--tag-brand-text)_30%,transparent)] bg-[var(--tag-brand-bg)] text-[var(--tag-brand-text)]',
       },
     },
     defaultVariants: {

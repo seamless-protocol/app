@@ -21,10 +21,10 @@ export function MorphoVaultsInfoCard({ className }: MorphoVaultsInfoCardProps) {
 
           <div className="flex-1 space-y-4">
             <div>
-              <h3 className="text-lg font-semibold text-white mb-2">
+              <h3 className="text-lg font-semibold text-card-foreground mb-2">
                 Where can I view/manage my Seamless Vaults?
               </h3>
-              <p className="text-slate-300 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 Your Seamless Vault (powered by Morpho) positions are now managed directly in the
                 Morpho App. This includes depositing, withdrawing, and claiming any rewards earned
                 from the Seamless Vaults on Morpho.
@@ -36,7 +36,12 @@ export function MorphoVaultsInfoCard({ className }: MorphoVaultsInfoCardProps) {
                 asChild
                 className="bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-2"
               >
-                <a href="https://app.morpho.org/base/dashboard" target="_blank" rel="noreferrer">
+                <a
+                  href="https://app.morpho.org/base/dashboard"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label="Open Morpho App (opens in a new tab)"
+                >
                   <ExternalLink className="h-4 w-4" />
                   Open Morpho App
                 </a>

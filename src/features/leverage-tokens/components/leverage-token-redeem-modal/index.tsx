@@ -681,7 +681,7 @@ export function LeverageTokenRedeemModal({
       }
       currentStep={currentStep}
       steps={steps}
-      className="max-w-lg bg-slate-900 border-slate-700"
+      className="max-w-lg border border-[var(--divider-line)] bg-[var(--surface-card)]"
     >
       {renderStepContent()}
     </MultiStepModal>

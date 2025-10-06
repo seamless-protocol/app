@@ -49,7 +49,7 @@ export function WalletConnectButton() {
                   <button
                     type="button"
                     onClick={openConnectModal}
-                    className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-primary/90 rounded-md gap-1.5 has-[>svg]:px-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0 h-9 px-3 sm:h-10 sm:px-4 cursor-pointer"
+                    className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 rounded-md gap-1.5 has-[>svg]:px-2.5 h-9 px-3 sm:h-10 sm:px-4 cursor-pointer bg-cta-gradient hover:bg-cta-hover-gradient active:bg-cta-active-gradient text-[var(--cta-text)] border-0"
                   >
                     <Wallet className="lucide lucide-wallet h-4 w-4 sm:mr-2" aria-hidden="true" />
                     <span className="hidden sm:inline">Connect Wallet</span>
@@ -77,7 +77,7 @@ export function WalletConnectButton() {
                     <button
                       type="button"
                       onClick={openChainModal}
-                      className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700 hover:bg-slate-700/50 hover:border-slate-600 transition-all cursor-pointer"
+                      className="flex items-center space-x-2 px-3 h-9 sm:h-10 rounded-lg border transition-all cursor-pointer bg-card border-border text-secondary-foreground hover:bg-accent hover:text-foreground hover:border-brand-purple"
                       aria-label="Switch network"
                     >
                       {chain.hasIcon && (
@@ -98,7 +98,9 @@ export function WalletConnectButton() {
                           </div>
                         </div>
                       )}
-                      <span className="text-xs text-slate-300">{chain.name}</span>
+                      <span className="text-xs text-secondary-foreground group-hover:text-foreground">
+                        {chain.name}
+                      </span>
                     </button>
                   </div>
 
@@ -106,14 +108,14 @@ export function WalletConnectButton() {
                   <button
                     type="button"
                     onClick={() => setCustomAccountModalOpen(true)}
-                    className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border text-foreground hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 h-9 sm:h-10 bg-slate-800 hover:bg-slate-700 border-slate-600 cursor-pointer"
+                    className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-0 p-0 h-9 w-9 sm:h-10 sm:w-auto sm:px-3 cursor-pointer bg-card border border-border text-secondary-foreground hover:text-foreground hover:bg-accent hover:border-brand-purple"
                   >
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center sm:space-x-2">
                       <Wallet
                         className="lucide lucide-wallet h-4 w-4 text-green-500"
                         aria-hidden="true"
                       />
-                      <span className="items-center justify-center rounded-md border px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden border-transparent text-xs bg-slate-700 text-white hidden sm:inline-flex">
+                      <span className="items-center justify-center rounded-md border px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden text-xs hidden sm:inline-flex border-border bg-accent text-foreground">
                         {account.displayName}
                       </span>
                     </div>

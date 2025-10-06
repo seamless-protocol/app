@@ -14,7 +14,7 @@ import type { LeverageToken } from './LeverageTokenTable'
 interface LeverageTokenMobileCardProps {
   token: LeverageToken
   onTokenClick?: (token: LeverageToken) => void
-  apyDataMap?: Map<string, APYBreakdownData> | undefined
+  apyData?: APYBreakdownData | undefined
   isApyLoading?: boolean | undefined
   isApyError?: boolean | undefined
 }
@@ -22,7 +22,7 @@ interface LeverageTokenMobileCardProps {
 export function LeverageTokenMobileCard({
   token,
   onTokenClick,
-  apyDataMap,
+  apyData,
   isApyLoading,
   isApyError,
 }: LeverageTokenMobileCardProps) {
@@ -37,7 +37,7 @@ export function LeverageTokenMobileCard({
       transition={{ duration: 0.3 }}
     >
       <Card
-        className="bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-slate-700 hover:border-purple-500/50 transition-all duration-300 cursor-pointer transform hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10 w-full"
+        className="w-full cursor-pointer transform transition-all duration-300 border border-border bg-card hover:border-border hover:bg-accent"
         onClick={handleClick}
       >
         <CardContent className="p-4">
@@ -48,106 +48,91 @@ export function LeverageTokenMobileCard({
               <AssetDisplay asset={token.debtAsset} size="sm" variant="logo-only" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-white text-sm truncate">{token.name}</h3>
+              <h3 className="text-sm font-medium text-[var(--text-primary)] truncate">
+                {token.name}
+              </h3>
             </div>
           </div>
 
           {/* Divider */}
-          <div className="border-t border-slate-700 mb-4"></div>
+          <div className="mb-4 border-t border-[var(--divider-line)]"></div>
 
           {/* Stats Grid */}
           <div className="space-y-3">
             {/* TVL Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">TVL</span>
+              <span className="text-sm text-[var(--text-secondary)]">TVL</span>
               {typeof token.tvlUsd === 'number' && Number.isFinite(token.tvlUsd) ? (
-                <span className="text-slate-300 font-medium text-sm">
+                <span className="text-sm font-medium text-[var(--text-secondary)]">
                   {formatCurrency(token.tvlUsd)}
                 </span>
               ) : (
-                <span className="text-slate-500 text-sm">—</span>
+                <span className="text-sm text-[var(--text-muted)]">—</span>
               )}
             </div>
 
             {/* APY Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">APY</span>
+              <span className="text-sm text-[var(--text-secondary)]">APY</span>
               <div className="flex items-center space-x-1">
-                {(() => {
-                  const tokenApyData = apyDataMap?.get(token.address)
-                  const tokenApyError =
-                    isApyError || (!isApyLoading && !apyDataMap?.has(token.address))
-
-                  if (tokenApyError) {
-                    return <span className="text-slate-500 text-xs">N/A</span>
-                  } else if (isApyLoading || !tokenApyData) {
-                    return <Skeleton className="h-4 w-16" />
-                  } else {
-                    return (
-                      <span className="text-green-400 font-medium text-sm">
-                        {formatAPY(tokenApyData.totalAPY, 2)}
-                      </span>
-                    )
-                  }
-                })()}
-                {(() => {
-                  const tokenApyData = apyDataMap?.get(token.address)
-                  const tokenApyError =
-                    isApyError || (!isApyLoading && !apyDataMap?.has(token.address))
-
-                  if (!tokenApyError && tokenApyData) {
-                    return (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            className="text-slate-400 hover:text-slate-300 active:text-slate-300 transition-colors touch-manipulation !min-w-0 !min-h-0"
-                          >
-                            <Info className="h-3 w-3" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          className="p-0 bg-slate-800 border-slate-700 text-sm z-50"
-                          side="top"
-                          align="end"
-                          sideOffset={8}
-                        >
-                          <APYBreakdownTooltip
-                            token={token}
-                            compact
-                            apyData={tokenApyData}
-                            isLoading={isApyLoading ?? false}
-                            isError={tokenApyError}
-                          />
-                        </TooltipContent>
-                      </Tooltip>
-                    )
-                  }
-                  return null
-                })()}
+                {isApyError ? (
+                  <span className="text-sm font-medium text-[var(--text-muted)]">N/A</span>
+                ) : isApyLoading || !apyData ? (
+                  <Skeleton variant="pulse" className="h-4 w-16" />
+                ) : (
+                  <span className="text-sm font-medium text-[var(--state-success-text)]">
+                    {formatAPY(apyData.totalAPY, 2)}
+                  </span>
+                )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-[var(--text-muted)] transition-colors touch-manipulation !min-w-0 !min-h-0 hover:text-[var(--text-secondary)] active:text-[var(--text-secondary)]"
+                    >
+                      <Info className="h-3 w-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    className="z-50 p-0 text-sm border border-border bg-card"
+                    side="top"
+                    align="end"
+                    sideOffset={8}
+                  >
+                    <APYBreakdownTooltip
+                      token={token}
+                      compact
+                      {...(apyData && { apyData })}
+                      isLoading={isApyLoading ?? false}
+                      isError={isApyError ?? false}
+                    />
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
 
             {/* Leverage Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">Leverage</span>
+              <span className="text-sm text-[var(--text-secondary)]">Leverage</span>
               <LeverageBadge leverage={token.leverageRatio} size="sm" />
             </div>
 
             {/* Network Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">Network</span>
-              <div className="inline-flex items-center space-x-1 bg-slate-800/60 px-2 py-1 rounded-full border border-slate-600/50">
+              <span className="text-sm text-[var(--text-secondary)]">Network</span>
+              <div className="inline-flex items-center space-x-1 rounded-full border border-border px-2 py-1 bg-accent">
                 <div className="w-3 h-3 rounded-full overflow-hidden flex items-center justify-center">
                   <token.chainLogo className="w-3 h-3" />
                 </div>
-                <span className="text-xs text-slate-300 font-medium">{token.chainName}</span>
+                <span className="text-xs font-medium text-[var(--text-secondary)]">
+                  {token.chainName}
+                </span>
               </div>
             </div>
 
             {/* Supply Cap Row */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400 text-sm">Supply Cap</span>
+              <span className="text-sm text-[var(--text-secondary)]">Supply Cap</span>
               <SupplyCap
                 currentSupply={token.currentSupply ?? 0}
                 supplyCap={token.supplyCap ?? 0}

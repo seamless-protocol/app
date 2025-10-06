@@ -118,7 +118,7 @@ export const AllStates: Story = {
           </Button>
         </div>
 
-        <div className="text-sm text-slate-400 max-w-md">
+        <div className="text-sm text-secondary-foreground max-w-md">
           <p>This story allows you to test all the different states of the redeem modal:</p>
           <ul className="mt-2 space-y-1 list-disc list-inside">
             <li>Input step with token amount selection</li>
@@ -228,8 +228,8 @@ export const WithPositionOverview: Story = {
 
     return (
       <div className="space-y-4">
-        <div className="text-sm text-slate-400 max-w-md">
-          <p className="font-medium text-white mb-2">Position Overview</p>
+        <div className="text-sm text-secondary-foreground max-w-md">
+          <p className="font-medium text-foreground mb-2">Position Overview</p>
           <p>This story shows the redeem modal with a position overview including:</p>
           <ul className="mt-2 space-y-1 list-disc list-inside">
             <li>Current leverage token balance</li>

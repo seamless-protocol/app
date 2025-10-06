@@ -45,7 +45,7 @@ export const Route = createFileRoute('/leverage-tokens/')({
 
     return (
       <div className="min-h-screen w-full overflow-hidden">
-        <div className="w-full max-w-7xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-4 lg:px-8">
+        <div className="w-full space-y-6 sm:space-y-8">
           {/* Featured Leverage Tokens Section */}
           {features.featuredTokensSection && (
             <div className="overflow-hidden w-full p-1">

@@ -42,6 +42,7 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
     isLoading: isManagerLoading,
     isError: isManagerError,
     error: managerError,
+    refetch: refetchManager,
   } = useReadContracts({
     contracts: [
       {
@@ -103,6 +104,7 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
     isLoading: isAdapterLoading,
     isError: isAdapterError,
     error: adapterError,
+    refetch: refetchAdapter,
   } = useReadContracts({
     contracts: [
       {
@@ -160,6 +162,7 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
     isLoading: isLendingLoading,
     isError: isLendingError,
     error: lendingError,
+    refetch: refetchLending,
   } = useReadContracts({
     contracts: [
       {
@@ -216,9 +219,24 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
     isLoading,
     isError,
     error,
-    refetch: () => {
-      // Note: useReadContracts doesn't expose refetch, but we can trigger re-render by changing dependencies
-      window.location.reload()
+    refetch: async () => {
+      await Promise.all([
+        (async () => {
+          try {
+            await refetchManager?.()
+          } catch {}
+        })(),
+        (async () => {
+          try {
+            await refetchAdapter?.()
+          } catch {}
+        })(),
+        (async () => {
+          try {
+            await refetchLending?.()
+          } catch {}
+        })(),
+      ])
     },
   }
 }
@@ -385,12 +403,12 @@ function transformDetailedMetricsData(
         label: 'Current Leverage',
         value: currentLeverage,
         highlight: true,
-        color: 'text-white',
+        color: 'text-foreground',
       },
       {
         label: 'Min - Max Leverage',
         value: `${minLeverage} - ${maxLeverage}`,
-        color: 'text-white',
+        color: 'text-foreground',
       },
     ],
     Fees: [
@@ -398,33 +416,33 @@ function transformDetailedMetricsData(
         label: 'Mint Token Fee',
         value: mintTokenFee,
         highlight: true,
-        color: 'text-white',
+        color: 'text-foreground',
         tooltip:
           'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users minting.',
       },
       {
         label: 'Redeem Token Fee',
         value: redeemTokenFee,
-        color: 'text-white',
+        color: 'text-foreground',
         tooltip:
           'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users redeeming.',
       },
       {
         label: 'Mint Treasury Fee',
         value: mintTreasuryFee,
-        color: 'text-white',
+        color: 'text-foreground',
         tooltip: 'Mint Treasury Fee is the fee that is charged to the minting user.',
       },
       {
         label: 'Redeem Treasury Fee',
         value: redeemTreasuryFee,
-        color: 'text-white',
+        color: 'text-foreground',
         tooltip: 'Redeem Treasury Fee is the fee that is charged to the redeeming user.',
       },
       {
         label: 'Management Treasury Fee',
         value: managementTreasuryFee,
-        color: 'text-white',
+        color: 'text-foreground',
         tooltip: 'Management Treasury Fee is the fee that is charged to the management user.',
       },
     ],
@@ -432,30 +450,30 @@ function transformDetailedMetricsData(
       {
         label: 'Dutch Auction Duration',
         value: dutchAuctionDuration,
-        color: 'text-white',
+        color: 'text-foreground',
       },
       {
         label: 'Initial Price Multiplier',
         value: initialPriceMultiplier,
-        color: 'text-white',
+        color: 'text-foreground',
       },
       {
         label: 'Min Price Multiplier',
         value: minPriceMultiplier,
-        color: 'text-white',
+        color: 'text-foreground',
       },
     ],
     'Pre-liquidation': [
       {
         label: 'Pre-liquidation Leverage',
         value: preLiquidationLeverage,
-        color: 'text-white',
+        color: 'text-foreground',
         tooltip: 'Leverage threshold that triggers pre-liquidation protection',
       },
       {
         label: 'Rebalance Reward',
         value: rebalanceReward,
-        color: 'text-white',
+        color: 'text-foreground',
         tooltip: 'Reward percentage for successful rebalancing.',
       },
     ],

@@ -1,11 +1,14 @@
 import { AlertTriangle, WifiOff, XCircle } from 'lucide-react'
 import { classifyError, type LeverageTokenError } from './errors'
 
+export type ErrorSeverity = 'info' | 'warning' | 'error'
+
 export interface ErrorDisplayConfig {
   icon: React.ReactNode
   title: string
   message: string
   showRetry: boolean
+  severity: ErrorSeverity
 }
 
 /**
@@ -27,51 +30,57 @@ export function getErrorDisplay(
   switch (classifiedError.type) {
     case 'USER_REJECTED':
       return {
-        icon: <XCircle className="h-8 w-8 text-amber-400" />,
+        icon: <XCircle className="h-8 w-8 text-[var(--state-warning-text)]" />,
         title: 'Transaction Cancelled',
         message: 'You cancelled the transaction in your wallet. No changes were made.',
         showRetry: true,
+        severity: 'warning',
       }
 
     case 'CHAIN_MISMATCH':
       return {
-        icon: <WifiOff className="h-8 w-8 text-blue-400" />,
+        icon: <WifiOff className="h-8 w-8 text-[var(--state-info-text)]" />,
         title: 'Wrong Network',
         message: 'Please switch to the correct network in your wallet and try again.',
         showRetry: true,
+        severity: 'warning',
       }
 
     case 'INSUFFICIENT_BALANCE':
       return {
-        icon: <AlertTriangle className="h-8 w-8 text-red-400" />,
+        icon: <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />,
         title: 'Insufficient Balance',
         message: "You don't have enough tokens to complete this transaction.",
         showRetry: false,
+        severity: 'error',
       }
 
     case 'STALE_ORACLE':
       return {
-        icon: <AlertTriangle className="h-8 w-8 text-yellow-400" />,
+        icon: <AlertTriangle className="h-8 w-8 text-[var(--state-warning-text)]" />,
         title: 'Price Data Outdated',
         message: 'The price data is temporarily outdated. Please try again in a few moments.',
         showRetry: true,
+        severity: 'warning',
       }
 
     case 'REBALANCING_IN_PROGRESS':
       return {
-        icon: <AlertTriangle className="h-8 w-8 text-yellow-400" />,
+        icon: <AlertTriangle className="h-8 w-8 text-[var(--state-warning-text)]" />,
         title: 'Rebalancing in Progress',
         message: 'The protocol is currently rebalancing. Please wait a few minutes and try again.',
         showRetry: true,
+        severity: 'warning',
       }
 
     case 'INSUFFICIENT_LIQUIDITY':
       return {
-        icon: <AlertTriangle className="h-8 w-8 text-red-400" />,
+        icon: <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />,
         title: 'Insufficient Liquidity',
         message:
           "There isn't enough liquidity to complete this transaction. Please try a smaller amount.",
         showRetry: true,
+        severity: 'warning',
       }
 
     default:
@@ -82,10 +91,11 @@ export function getErrorDisplay(
         error?.includes('4001')
       ) {
         return {
-          icon: <XCircle className="h-8 w-8 text-amber-400" />,
+          icon: <XCircle className="h-8 w-8 text-[var(--state-warning-text)]" />,
           title: 'Transaction Cancelled',
           message: 'You cancelled the transaction in your wallet. No changes were made.',
           showRetry: true,
+          severity: 'warning',
         }
       }
 
@@ -96,18 +106,20 @@ export function getErrorDisplay(
         error?.includes('MetaMask Tx Signature')
       ) {
         return {
-          icon: <XCircle className="h-8 w-8 text-amber-400" />,
+          icon: <XCircle className="h-8 w-8 text-[var(--state-warning-text)]" />,
           title: 'Transaction Cancelled',
           message: 'You cancelled the transaction in your wallet. No changes were made.',
           showRetry: true,
+          severity: 'warning',
         }
       }
 
       return {
-        icon: <AlertTriangle className="h-8 w-8 text-red-400" />,
+        icon: <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />,
         title: defaultTitle,
         message: error || 'Something went wrong with your transaction. Please try again.',
         showRetry: true,
+        severity: 'warning',
       }
   }
 }

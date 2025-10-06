@@ -90,10 +90,10 @@ export function PortfolioPerformanceChart({
   const hasData = data && data.length > 0
 
   return (
-    <Card className={`bg-slate-900/80 border-slate-700 ${className}`}>
+    <Card className={`bg-card border-border ${className}`}>
       <CardHeader className="pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-          <CardTitle className="text-white">{title}</CardTitle>
+          <CardTitle className="text-foreground">{title}</CardTitle>
           <div className="flex space-x-1">
             {timeframes.map((timeframe) => (
               <Button
@@ -124,27 +124,31 @@ export function PortfolioPerformanceChart({
                   dataKey="date"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#64748B', fontSize: 12, dy: 8 }}
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 12, dy: 8 }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#64748B', fontSize: 12 }}
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                   tickFormatter={formatCurrency}
                   label={{
                     value: yAxisLabel,
                     angle: -90,
                     position: 'insideLeft',
                     offset: -1,
-                    style: { textAnchor: 'middle', fill: '#64748B', fontSize: '12px' },
+                    style: {
+                      textAnchor: 'middle',
+                      fill: 'var(--text-secondary)',
+                      fontSize: '12px',
+                    },
                   }}
                 />
                 <RechartsTooltip
                   contentStyle={{
-                    backgroundColor: '#1E293B',
-                    border: '1px solid #334155',
+                    backgroundColor: 'var(--surface-card)',
+                    border: '1px solid var(--divider-line)',
                     borderRadius: '8px',
-                    color: '#F8FAFC',
+                    color: 'var(--text-primary)',
                   }}
                   formatter={formatTooltipValue}
                 />
@@ -162,11 +166,13 @@ export function PortfolioPerformanceChart({
             </ResponsiveContainer>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-                <TrendingUp className="h-8 w-8 text-slate-500" />
+              <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center mb-4">
+                <TrendingUp className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium text-slate-300 mb-2">No Data Available</h3>
-              <p className="text-sm text-slate-500 max-w-sm">
+              <h3 className="text-lg font-medium text-secondary-foreground mb-2">
+                No Data Available
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-sm">
                 Portfolio performance data will appear here once you have active positions with
                 historical data.
               </p>

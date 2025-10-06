@@ -132,7 +132,7 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
                 variant="ghost"
                 size="sm"
                 onClick={onBack}
-                className="text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-2 py-2 h-9 w-fit"
+                className="text-slate-400 hover:text-foreground hover:bg-slate-800 transition-colors px-2 py-2 h-9 w-fit"
                 aria-label="Go back to previous page"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -155,14 +155,14 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
                 >
                   <BreadcrumbItem>
                     {item.isActive ? (
-                      <BreadcrumbPage className="text-white font-medium text-sm truncate max-w-[200px]">
+                      <BreadcrumbPage className="text-foreground font-medium text-sm truncate max-w-[200px]">
                         {item.label}
                       </BreadcrumbPage>
                     ) : (
                       <button
                         type="button"
                         onClick={item.onClick}
-                        className="text-slate-400 hover:text-purple-400 transition-colors font-medium bg-transparent border-none p-0 cursor-pointer text-sm"
+                        className="text-secondary-foreground hover:text-purple-400 transition-colors font-medium bg-transparent border-none p-0 cursor-pointer text-sm"
                         onKeyDown={(e) => {
                           if ((e.key === 'Enter' || e.key === ' ') && item.onClick) {
                             e.preventDefault()
@@ -177,7 +177,7 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
 
                   {index < items.length - 1 && (
                     <BreadcrumbSeparator>
-                      <ChevronRight className="h-3 w-3 text-slate-600" />
+                      <ChevronRight className="h-3 w-3 text-secondary-foreground" />
                     </BreadcrumbSeparator>
                   )}
                 </motion.div>
@@ -200,7 +200,7 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
                 variant="ghost"
                 size="sm"
                 onClick={onBack}
-                className="text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-2 py-2 h-9"
+                className="text-secondary-foreground hover:text-foreground hover:bg-slate-800 transition-colors px-2 py-2 h-9"
                 aria-label="Go back to previous page"
               >
                 <ArrowLeft className="h-4 w-4" />

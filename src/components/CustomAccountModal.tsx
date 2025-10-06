@@ -1,7 +1,8 @@
 import { Copy, ExternalLink, LogOut, Moon, Palette, Settings, Sun, Wallet } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { toast } from 'sonner'
 import { useDisconnect } from 'wagmi'
+import { useTheme } from '@/components/theme-provider'
 import { useExplorer } from '@/lib/hooks/useExplorer'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
@@ -26,9 +27,45 @@ interface CustomAccountModalProps {
 }
 
 export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAccountModalProps) {
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const { theme, setTheme } = useTheme()
+  const reactId = useId()
+  const titleId = `appearance-title-${reactId}`
+  const descriptionId = `appearance-description-${reactId}`
+  const getSystemTheme = () =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light'
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
+    theme === 'system' ? getSystemTheme : () => theme,
+  )
   const { disconnect } = useDisconnect()
   const explorer = useExplorer()
+
+  // Keep resolvedTheme in sync with current theme and system preference
+  useEffect(() => {
+    if (theme === 'system') {
+      if (typeof window === 'undefined') return
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const handleChange = () => setResolvedTheme(mediaQuery.matches ? 'dark' : 'light')
+
+      handleChange()
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
+
+    setResolvedTheme(theme)
+    return undefined
+  }, [theme])
+
+  const isDarkMode = resolvedTheme === 'dark'
+  const appearanceTitle =
+    theme === 'system' ? 'System Theme' : isDarkMode ? 'Dark Mode' : 'Light Mode'
+  const appearanceDescription =
+    theme === 'system'
+      ? `System preference currently ${resolvedTheme === 'dark' ? 'dark' : 'light'}`
+      : isDarkMode
+        ? 'Dark theme is enabled'
+        : 'Light theme is enabled'
 
   const copyAddress = async () => {
     if (!account?.address) return
@@ -58,15 +95,15 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-slate-900/95 border-slate-700 max-w-md backdrop-blur-sm">
+      <DialogContent className="backdrop-blur-sm bg-card border border-border text-foreground">
         <DialogHeader className="flex flex-col gap-2 text-center sm:text-left">
-          <DialogTitle className="text-lg leading-none font-semibold flex items-center space-x-3 text-white">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-              <Settings className="h-5 w-5 text-white" />
+          <DialogTitle className="text-lg leading-none font-semibold flex items-center space-x-3 text-foreground">
+            <div className="w-8 h-8 bg-[var(--cta-gradient)] rounded-lg flex items-center justify-center">
+              <Settings className="h-5 w-5 text-[var(--cta-text)]" />
             </div>
             <span>Settings</span>
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-400 mb-3">
+          <DialogDescription className="text-sm text-muted-foreground mb-3">
             {account
               ? 'Manage your wallet connection and app preferences'
               : 'Manage your app preferences'}
@@ -78,34 +115,37 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
           {account && chain && (
             <div className="space-y-3 mt-3">
               <div className="flex items-center space-x-2">
-                <Wallet className="h-4 w-4 text-purple-400" />
-                <h3 className="font-medium text-white">Wallet</h3>
+                <Wallet className="h-4 w-4 text-brand-purple" />
+                <h3 className="font-medium text-foreground">Wallet</h3>
               </div>
-              <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-slate-800/50 border-slate-700">
+              <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-accent border-border">
                 <div className="[&:last-child]:pb-6 p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-2">
                       <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full flex items-center justify-center">
-                        <Wallet className="h-4 w-4 text-white" />
+                        <Wallet className="h-4 w-4 text-foreground" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-white">Connected Wallet</p>
-                        <Badge className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden [a&]:hover:bg-secondary/90 text-xs bg-green-500/20 text-green-400 border-green-500/30">
-                          <div className="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
+                        <p className="text-sm font-medium text-foreground">Connected Wallet</p>
+                        <Badge
+                          variant="success"
+                          className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden text-xs"
+                        >
+                          <div className="w-2 h-2 bg-[var(--tag-success-text)] rounded-full mr-1"></div>
                           Connected
                         </Badge>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3 border border-slate-600">
+                  <div className="flex items-center justify-between bg-accent rounded-lg p-3 border border-border">
                     <div className="flex flex-col">
                       {/* Prefer ENS name when available, fallback to address */}
-                      <span className="text-sm text-white">
+                      <span className="text-sm text-foreground">
                         {account.displayName && !account.displayName.startsWith('0x')
                           ? account.displayName
                           : `${account.address.slice(0, 6)}...${account.address.slice(-4)}`}
                       </span>
-                      <code className="text-xs text-slate-400 font-mono">
+                      <code className="text-xs text-secondary-foreground font-mono">
                         {account.address.slice(0, 6)}...{account.address.slice(-4)}
                       </code>
                     </div>
@@ -114,7 +154,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                         variant="ghost"
                         size="sm"
                         onClick={copyAddress}
-                        className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+                        className="h-8 w-8 p-0 text-secondary-foreground hover:text-foreground hover:bg-accent"
                         aria-label="Copy wallet address"
                       >
                         <Copy className="h-4 w-4" />
@@ -123,7 +163,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                         variant="ghost"
                         size="sm"
                         onClick={viewOnExplorer}
-                        className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+                        className="h-8 w-8 p-0 text-secondary-foreground hover:text-foreground hover:bg-accent"
                         aria-label={`View on ${explorer.name}`}
                       >
                         <ExternalLink className="h-4 w-4" />
@@ -133,7 +173,8 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                   <Button
                     onClick={handleDisconnect}
                     variant="outline"
-                    className="w-full mt-3 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+                    size="lg"
+                    className="w-full mt-3 border-destructive hover:border-destructive focus-visible:border-destructive"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Disconnect Wallet
@@ -146,30 +187,53 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
           {/* Appearance Settings - Always show */}
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
-              <Palette className="h-4 w-4 text-purple-400" />
-              <h3 className="font-medium text-white">Appearance</h3>
+              <Palette className="h-4 w-4 text-brand-purple" />
+              <h3 className="font-medium text-foreground">Appearance</h3>
             </div>
-            <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-slate-800/50 border-slate-700">
+            <div className="text-card-foreground flex flex-col gap-6 rounded-xl border bg-accent border-border">
               <div className="[&:last-child]:pb-6 p-4">
-                <div className="flex items-center justify-between">
+                <div
+                  className="flex items-center justify-between cursor-pointer select-none"
+                  role="switch"
+                  aria-checked={isDarkMode}
+                  aria-labelledby={titleId}
+                  aria-describedby={descriptionId}
+                  tabIndex={0}
+                  onClick={() => setTheme(isDarkMode ? 'light' : 'dark')}
+                  onKeyDown={(event) => {
+                    if (event.key === ' ' || event.key === 'Enter') {
+                      event.preventDefault()
+                      setTheme(isDarkMode ? 'light' : 'dark')
+                    }
+                  }}
+                >
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-slate-600 to-slate-800 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
                       {isDarkMode ? (
-                        <Moon className="h-5 w-5 text-slate-300" />
+                        <Moon className="h-5 w-5 text-secondary-foreground" />
                       ) : (
-                        <Sun className="h-5 w-5 text-yellow-400" />
+                        <Sun className="h-5 w-5 text-[var(--state-warning-text)]" />
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-white">
-                        {isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                      <p id={titleId} className="font-medium text-foreground">
+                        {appearanceTitle}
                       </p>
-                      <p className="text-sm text-slate-400">
-                        {isDarkMode ? 'Dark theme is enabled' : 'Light theme is enabled'}
+                      <p id={descriptionId} className="text-sm text-muted-foreground">
+                        {appearanceDescription}
                       </p>
                     </div>
                   </div>
-                  <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
+                  <Switch
+                    checked={isDarkMode}
+                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                    className="cursor-pointer"
+                    // Prevent bubbling so clicks on the switch don't double-toggle via the row
+                    onClick={(event) => event.stopPropagation()}
+                    // Hide from assistive tech since the row acts as the switch control
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
                 </div>
               </div>
             </div>

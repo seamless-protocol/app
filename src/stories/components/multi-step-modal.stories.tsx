@@ -103,8 +103,8 @@ export const Interactive: Story = {
           return (
             <div className="space-y-4">
               <div>
-                <div className="text-sm font-medium text-white mb-2 block">Enter Amount</div>
-                <Input placeholder="0.00" className="bg-slate-800 border-slate-700 text-white" />
+                <div className="text-sm font-medium text-foreground mb-2 block">Enter Amount</div>
+                <Input placeholder="0.00" />
               </div>
               <div className="flex space-x-2">
                 <Button onClick={nextStep} className="flex-1">
@@ -119,24 +119,20 @@ export const Interactive: Story = {
           return (
             <div className="space-y-4">
               <Card variant="gradient" className="p-4">
-                <h4 className="text-sm font-medium text-white mb-3">Transaction Summary</h4>
+                <h4 className="text-sm font-medium text-foreground mb-3">Transaction Summary</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Amount</span>
-                    <span className="text-white">1.5 ETH</span>
+                    <span className="text-secondary-foreground">Amount</span>
+                    <span className="text-foreground">1.5 ETH</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Fee</span>
-                    <span className="text-white">0.001 ETH</span>
+                    <span className="text-secondary-foreground">Fee</span>
+                    <span className="text-foreground">0.001 ETH</span>
                   </div>
                 </div>
               </Card>
               <div className="flex space-x-2">
-                <Button
-                  onClick={prevStep}
-                  variant="outline"
-                  className="flex-1 border-slate-600 text-slate-300"
-                >
+                <Button onClick={prevStep} variant="outline" className="flex-1">
                   Back
                 </Button>
                 <Button onClick={nextStep} className="flex-1">
@@ -150,11 +146,11 @@ export const Interactive: Story = {
           return (
             <div className="space-y-6 text-center">
               <div className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center mb-4">
-                  <Loader2 className="h-8 w-8 text-purple-400 animate-spin" />
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-[color-mix(in_srgb,var(--brand-purple)_18%,transparent)] text-brand-purple">
+                  <Loader2 className="h-8 w-8 animate-spin text-[inherit]" />
                 </div>
-                <h3 className="text-lg font-medium text-white mb-2">Processing Transaction</h3>
-                <p className="text-slate-400 text-center max-w-sm">
+                <h3 className="text-lg font-medium text-foreground mb-2">Processing Transaction</h3>
+                <p className="text-secondary-foreground text-center max-w-sm">
                   Please wait while we process your transaction. This may take a few moments.
                 </p>
               </div>
@@ -168,20 +164,16 @@ export const Interactive: Story = {
           return (
             <div className="space-y-6 text-center">
               <div className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle className="h-8 w-8 text-green-400" />
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-[var(--tag-success-bg)] text-[var(--tag-success-text)]">
+                  <CheckCircle className="h-8 w-8 text-[inherit]" />
                 </div>
-                <h3 className="text-lg font-medium text-white mb-2">Transaction Complete!</h3>
-                <p className="text-slate-400 text-center max-w-sm">
+                <h3 className="text-lg font-medium text-foreground mb-2">Transaction Complete!</h3>
+                <p className="text-secondary-foreground text-center max-w-sm">
                   Your transaction has been successfully processed.
                 </p>
               </div>
               <div className="flex space-x-2">
-                <Button
-                  onClick={resetSteps}
-                  variant="outline"
-                  className="flex-1 border-slate-600 text-slate-300"
-                >
+                <Button onClick={resetSteps} variant="outline" className="flex-1">
                   Start Over
                 </Button>
                 <Button onClick={() => setIsOpen(false)} className="flex-1">
@@ -195,20 +187,16 @@ export const Interactive: Story = {
           return (
             <div className="space-y-6 text-center">
               <div className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
-                  <AlertTriangle className="h-8 w-8 text-red-400" />
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-[var(--tag-error-bg)] text-[var(--tag-error-text)]">
+                  <AlertTriangle className="h-8 w-8 text-[inherit]" />
                 </div>
-                <h3 className="text-lg font-medium text-white mb-2">Transaction Failed</h3>
-                <p className="text-slate-400 text-center max-w-sm">
+                <h3 className="text-lg font-medium text-foreground mb-2">Transaction Failed</h3>
+                <p className="text-secondary-foreground text-center max-w-sm">
                   Something went wrong. Please try again.
                 </p>
               </div>
               <div className="flex space-x-2">
-                <Button
-                  onClick={resetSteps}
-                  variant="outline"
-                  className="flex-1 border-slate-600 text-slate-300"
-                >
+                <Button onClick={resetSteps} variant="outline" className="flex-1">
                   Try Again
                 </Button>
                 <Button onClick={() => setIsOpen(false)} className="flex-1">
@@ -225,7 +213,7 @@ export const Interactive: Story = {
 
     return (
       <div className="space-y-4">
-        <Button onClick={() => setIsOpen(true)} className="border-2 border-slate-600">
+        <Button onClick={() => setIsOpen(true)} variant="outline">
           Open Multi-Step Modal
         </Button>
         <MultiStepModal
@@ -254,8 +242,8 @@ export const InputStep: Story = {
     <MultiStepModal {...args}>
       <div className="space-y-4">
         <div>
-          <div className="text-sm font-medium text-white mb-2 block">Enter Amount</div>
-          <Input placeholder="0.00" className="bg-slate-800 border-slate-700 text-white" />
+          <div className="text-sm font-medium text-foreground mb-2 block">Enter Amount</div>
+          <Input placeholder="0.00" />
         </div>
         <Button className="w-full">
           Continue
@@ -278,24 +266,24 @@ export const ConfirmStep: Story = {
     <MultiStepModal {...args}>
       <div className="space-y-4">
         <Card variant="gradient" className="p-4">
-          <h4 className="text-sm font-medium text-white mb-3">Transaction Summary</h4>
+          <h4 className="text-sm font-medium text-foreground mb-3">Transaction Summary</h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-400">Amount</span>
-              <span className="text-white">1.5 ETH</span>
+              <span className="text-secondary-foreground">Amount</span>
+              <span className="text-foreground">1.5 ETH</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Fee</span>
-              <span className="text-white">0.001 ETH</span>
+              <span className="text-secondary-foreground">Fee</span>
+              <span className="text-foreground">0.001 ETH</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Total</span>
-              <span className="text-white font-medium">1.501 ETH</span>
+              <span className="text-secondary-foreground">Total</span>
+              <span className="text-foreground font-medium">1.501 ETH</span>
             </div>
           </div>
         </Card>
         <div className="flex space-x-2">
-          <Button variant="outline" className="flex-1 border-slate-600 text-slate-300">
+          <Button variant="outline" className="flex-1">
             Back
           </Button>
           <Button className="flex-1">Confirm</Button>
@@ -317,11 +305,11 @@ export const PendingStep: Story = {
     <MultiStepModal {...args}>
       <div className="space-y-6 text-center">
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center mb-4">
-            <Loader2 className="h-8 w-8 text-purple-400 animate-spin" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-[color-mix(in_srgb,var(--brand-purple)_18%,transparent)] text-brand-purple">
+            <Loader2 className="h-8 w-8 animate-spin text-[inherit]" />
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">Processing Transaction</h3>
-          <p className="text-slate-400 text-center max-w-sm">
+          <h3 className="text-lg font-medium text-foreground mb-2">Processing Transaction</h3>
+          <p className="text-secondary-foreground text-center max-w-sm">
             Please wait while we process your transaction. This may take a few moments.
           </p>
         </div>
@@ -342,11 +330,11 @@ export const SuccessStep: Story = {
     <MultiStepModal {...args}>
       <div className="space-y-6 text-center">
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle className="h-8 w-8 text-green-400" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-[var(--tag-success-bg)] text-[var(--tag-success-text)]">
+            <CheckCircle className="h-8 w-8 text-[inherit]" />
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">Transaction Complete!</h3>
-          <p className="text-slate-400 text-center max-w-sm">
+          <h3 className="text-lg font-medium text-foreground mb-2">Transaction Complete!</h3>
+          <p className="text-secondary-foreground text-center max-w-sm">
             Your leverage tokens have been successfully minted and are now earning yield.
           </p>
         </div>
@@ -368,16 +356,17 @@ export const ErrorStep: Story = {
     <MultiStepModal {...args}>
       <div className="space-y-6 text-center">
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
-            <AlertTriangle className="h-8 w-8 text-red-400" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-[var(--tag-error-bg)] text-[var(--tag-error-text)]">
+            <AlertTriangle className="h-8 w-8 text-[inherit]" />
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">Transaction Failed</h3>
-          <p className="text-slate-400 text-center max-w-sm">
+
+          <h3 className="text-lg font-medium text-foreground mb-2">Transaction Failed</h3>
+          <p className="text-secondary-foreground text-center max-w-sm">
             Something went wrong. Please try again or contact support if the problem persists.
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" className="flex-1 border-slate-600 text-slate-300">
+          <Button variant="outline" className="flex-1">
             Try Again
           </Button>
           <Button className="flex-1">Close</Button>
@@ -400,8 +389,10 @@ export const RedeemSteps: Story = {
     <MultiStepModal {...args}>
       <div className="space-y-4">
         <div>
-          <div className="text-sm font-medium text-white mb-2 block">Enter Amount to Redeem</div>
-          <Input placeholder="0.00" className="bg-slate-800 border-slate-700 text-white" />
+          <div className="text-sm font-medium text-foreground mb-2 block">
+            Enter Amount to Redeem
+          </div>
+          <Input placeholder="0.00" />
         </div>
         <Button className="w-full">
           Continue
@@ -424,13 +415,13 @@ export const SimpleSteps: Story = {
     <MultiStepModal {...args}>
       <div className="space-y-4">
         <Card variant="gradient" className="p-4">
-          <h4 className="text-sm font-medium text-white mb-3">Step 2 Content</h4>
-          <p className="text-slate-400 text-sm">
+          <h4 className="text-sm font-medium text-foreground mb-3">Step 2 Content</h4>
+          <p className="text-secondary-foreground text-sm">
             This is the content for step 2 of a simple 3-step process.
           </p>
         </Card>
         <div className="flex space-x-2">
-          <Button variant="outline" className="flex-1 border-slate-600 text-slate-300">
+          <Button variant="outline" className="flex-1">
             Previous
           </Button>
           <Button className="flex-1">Next</Button>

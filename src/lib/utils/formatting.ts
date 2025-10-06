@@ -85,13 +85,13 @@ export function formatPoints(points: number): string {
 export function getRiskLevelColor(riskLevel: string): string {
   switch (riskLevel.toLowerCase()) {
     case 'low':
-      return 'bg-green-500/20 text-green-400 border-green-500/30'
+      return 'bg-[var(--tag-success-bg)] text-[var(--tag-success-text)] border-[color-mix(in_srgb,var(--tag-success-text)_30%,transparent)]'
     case 'medium':
-      return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+      return 'bg-[var(--tag-warning-bg)] text-[var(--tag-warning-text)] border-[color-mix(in_srgb,var(--tag-warning-text)_30%,transparent)]'
     case 'high':
-      return 'bg-red-500/20 text-red-400 border-red-500/30'
+      return 'bg-[var(--tag-error-bg)] text-[var(--tag-error-text)] border-[color-mix(in_srgb,var(--tag-error-text)_30%,transparent)]'
     default:
-      return 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+      return 'bg-[var(--tag-neutral-bg)] text-[var(--tag-neutral-text)] border-[color-mix(in_srgb,var(--tag-neutral-text)_20%,transparent)]'
   }
 }
 
