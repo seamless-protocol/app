@@ -3,7 +3,6 @@ import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
 import type { QuoteFn } from '@/domain/redeem/planner/types'
-import { RouterVersion } from '@/domain/redeem/planner/types'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 
 interface UseRedeemPlanPreviewParams {
@@ -12,7 +11,6 @@ interface UseRedeemPlanPreviewParams {
   sharesToRedeem: bigint | undefined
   slippageBps: number
   chainId: number
-  routerVersion: RouterVersion
   quote?: QuoteFn
   managerAddress?: Address
   swapKey?: string
@@ -25,17 +23,13 @@ export function useRedeemPlanPreview({
   sharesToRedeem,
   slippageBps,
   chainId,
-  routerVersion,
   quote,
   managerAddress,
   swapKey,
   outputAsset,
 }: UseRedeemPlanPreviewParams) {
   const enabled =
-    routerVersion === RouterVersion.V2 &&
-    typeof sharesToRedeem === 'bigint' &&
-    sharesToRedeem > 0n &&
-    typeof quote === 'function'
+    typeof sharesToRedeem === 'bigint' && sharesToRedeem > 0n && typeof quote === 'function'
 
   const keyParams = {
     chainId,
