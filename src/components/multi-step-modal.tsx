@@ -27,7 +27,7 @@ export function MultiStepModal({
   currentStep,
   steps,
   children,
-  className = 'max-w-md bg-slate-900 border-slate-700',
+  className = 'max-w-md border border-border bg-card text-foreground',
 }: MultiStepModalProps) {
   const getStepProgress = () => {
     const step = steps.find((s) => s.id === currentStep)
@@ -52,13 +52,13 @@ export function MultiStepModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={className}>
         <DialogHeader>
-          <DialogTitle className="text-white">{title}</DialogTitle>
-          <DialogDescription className="text-slate-400">{description}</DialogDescription>
+          <DialogTitle className="text-foreground">{title}</DialogTitle>
+          <DialogDescription className="text-secondary-foreground">{description}</DialogDescription>
         </DialogHeader>
 
         <div className="mt-4">
-          <Progress value={getStepProgress()} className="h-1 bg-slate-800" />
-          <div className="flex justify-between text-xs text-slate-400 mt-2">
+          <Progress value={getStepProgress()} className="h-1" />
+          <div className="flex justify-between text-xs text-muted-foreground mt-2">
             <span>
               Step {getStepNumber()} of {getTotalSteps()}
             </span>

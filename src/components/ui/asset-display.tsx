@@ -81,7 +81,7 @@ function renderAssetLogo(asset: Asset) {
   return (
     <div
       className={cn(
-        'w-full h-full rounded-full flex items-center justify-center text-white font-medium text-xs',
+        'w-full h-full rounded-full flex items-center justify-center text-foreground font-medium text-xs',
         bgColor,
       )}
     >

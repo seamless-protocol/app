@@ -107,12 +107,12 @@ export function ActivePositions({
   const activeCount = positions.length
 
   return (
-    <Card className={cn('bg-slate-900/80 border-slate-700', className)}>
+    <Card className={cn('border border-border bg-card text-foreground', className)}>
       <CardContent className="p-6">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Active Positions</h3>
-            <Badge className="bg-slate-800 text-slate-300 border-transparent">
+            <h3 className="text-lg font-semibold text-foreground">Active Positions</h3>
+            <Badge variant="outline">
               {activeCount} Active Position{activeCount !== 1 ? 's' : ''}
             </Badge>
           </div>
@@ -120,11 +120,13 @@ export function ActivePositions({
           <div className="space-y-4">
             {positions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-                  <TrendingUp className="h-8 w-8 text-slate-500" />
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <TrendingUp className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-medium text-slate-300 mb-2">No Active Positions</h3>
-                <p className="text-sm text-slate-500 max-w-sm">
+                <h3 className="text-lg font-medium text-secondary-foreground mb-2">
+                  No Active Positions
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
                   Mint leverage tokens to see your active positions and start earning rewards.
                 </p>
               </div>
@@ -159,7 +161,7 @@ export function ActivePositions({
                           className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
                             isLeverageToken && position.collateralAsset && position.debtAsset
                               ? ''
-                              : 'bg-slate-700/50 border border-slate-600 p-1'
+                              : 'bg-card border border-border p-1'
                           }`}
                         >
                           {isLeverageToken && position.collateralAsset && position.debtAsset ? (
@@ -224,16 +226,16 @@ export function ActivePositions({
                         {/* First row: Current Value and Unrealized Gain */}
                         <div className="grid grid-cols-2 gap-4 lg:contents">
                           <div className="text-left">
-                            <p className="text-xs text-[var(--text-secondary)]">Current Value</p>
-                            <p className="font-medium text-[var(--text-primary)]">
+                            <p className="text-xs text-secondary-foreground">Current Value</p>
+                            <p className="font-medium text-foreground">
                               {position.currentValue.amount} {position.currentValue.symbol}
                             </p>
-                            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                            <p className="mt-0.5 text-xs text-muted-foreground">
                               {position.currentValue.usdValue}
                             </p>
                           </div>
                           <div className="text-left">
-                            <p className="text-xs text-[var(--text-secondary)]">Unrealized Gain</p>
+                            <p className="text-xs text-secondary-foreground">Unrealized Gain</p>
                             <p
                               className={cn(
                                 'font-medium',

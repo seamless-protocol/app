@@ -123,7 +123,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-2">
                       <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full flex items-center justify-center">
-                        <Wallet className="h-4 w-4 text-white" />
+                        <Wallet className="h-4 w-4 text-foreground" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-foreground">Connected Wallet</p>

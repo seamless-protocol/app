@@ -229,7 +229,7 @@ export const WithPositionOverview: Story = {
     return (
       <div className="space-y-4">
         <div className="text-sm text-secondary-foreground max-w-md">
-          <p className="font-medium text-white mb-2">Position Overview</p>
+          <p className="font-medium text-foreground mb-2">Position Overview</p>
           <p>This story shows the redeem modal with a position overview including:</p>
           <ul className="mt-2 space-y-1 list-disc list-inside">
             <li>Current leverage token balance</li>

@@ -41,6 +41,6 @@ export const Default: Story = {
 export const CustomStyling: Story = {
   args: {
     placeholder: 'Custom styled input',
-    className: 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-400',
+    className: 'bg-input border-border text-foreground placeholder:text-muted-foreground',
   },
 }
