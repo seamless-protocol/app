@@ -27,27 +27,19 @@ export function ConnectionStatusCard() {
         // If connected, show account info instead of the connection card
         if (connected) {
           return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-white mb-4">Wallet Connected!</h1>
-                <p className="text-slate-400 mb-6">
+                <h1 className="text-2xl font-bold text-foreground mb-4">Wallet Connected!</h1>
+                <p className="text-secondary-foreground mb-6">
                   Connected to {chain.name} with account {account.displayName}
                 </p>
                 <div className="flex gap-3 justify-center">
-                  <button
-                    onClick={openChainModal}
-                    className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md transition-colors"
-                    type="button"
-                  >
+                  <Button onClick={openChainModal} variant="outline" type="button">
                     Switch Network
-                  </button>
-                  <button
-                    onClick={openAccountModal}
-                    className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md transition-colors"
-                    type="button"
-                  >
+                  </Button>
+                  <Button onClick={openAccountModal} variant="outline" type="button">
                     Account Details
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -63,15 +55,15 @@ export function ConnectionStatusCard() {
               transition={{ duration: 0.5 }}
               className="w-full max-w-2xl"
             >
-              <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+              <Card className="border border-border bg-card text-foreground">
                 <CardContent className="p-8 text-center">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6"
+                    className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 bg-gradient-violet"
                   >
-                    <Wallet className="h-8 w-8 text-white" />
+                    <Wallet className="h-8 w-8 text-primary-foreground" />
                   </motion.div>
 
                   <motion.div
@@ -79,8 +71,10 @@ export function ConnectionStatusCard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
                   >
-                    <h2 className="text-xl font-semibold text-white mb-3">Connect Your Wallet</h2>
-                    <p className="text-slate-400 mb-6 max-w-md mx-auto">
+                    <h2 className="text-xl font-semibold text-foreground mb-3">
+                      Connect Your Wallet
+                    </h2>
+                    <p className="text-secondary-foreground mb-6 max-w-md mx-auto">
                       Connect your wallet to access Seamless Protocol's advanced DeFi strategies,
                       track your portfolio, and start earning optimized yields.
                     </p>
@@ -93,24 +87,24 @@ export function ConnectionStatusCard() {
                     className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8"
                   >
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                        <Shield className="h-5 w-5 text-blue-400" />
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[color-mix(in_srgb,var(--brand-purple)_18%,transparent)] text-brand-purple">
+                        <Shield className="h-5 w-5" />
                       </div>
-                      <p className="text-sm text-slate-300">Secure & Private</p>
+                      <p className="text-sm text-secondary-foreground">Secure & Private</p>
                     </div>
 
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <Zap className="h-5 w-5 text-green-400" />
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[color-mix(in_srgb,var(--brand-purple)_18%,transparent)] text-brand-purple">
+                        <Zap className="h-5 w-5" />
                       </div>
-                      <p className="text-sm text-slate-300">Instant Access</p>
+                      <p className="text-sm text-secondary-foreground">Instant Access</p>
                     </div>
 
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <TrendingUp className="h-5 w-5 text-purple-400" />
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[color-mix(in_srgb,var(--brand-purple)_18%,transparent)] text-brand-purple">
+                        <TrendingUp className="h-5 w-5" />
                       </div>
-                      <p className="text-sm text-slate-300">Optimize Yields</p>
+                      <p className="text-sm text-secondary-foreground">Optimize Yields</p>
                     </div>
                   </motion.div>
 
@@ -123,7 +117,7 @@ export function ConnectionStatusCard() {
                       onClick={openConnectModal}
                       variant="gradient"
                       size="lg"
-                      className="px-8 py-3 text-base"
+                      className="px-8 text-base"
                     >
                       <Wallet className="h-5 w-5 mr-2" />
                       Connect Wallet
