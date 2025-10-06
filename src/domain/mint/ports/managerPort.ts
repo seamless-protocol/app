@@ -2,8 +2,6 @@ import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
-  // V1 manager read
-  readLeverageManagerPreviewMint,
   // V2 manager reads
   readLeverageManagerV2PreviewDeposit,
   readLeverageManagerV2PreviewMint,
@@ -72,43 +70,6 @@ export function createManagerPortV2(params: {
       const managerPreview = await readLeverageManagerV2PreviewDeposit(config, {
         args: [token, totalCollateral],
         chainId: chainId as SupportedChainId,
-      })
-      return {
-        previewDebt: managerPreview.debt,
-        previewShares: managerPreview.shares,
-      }
-    },
-  }
-}
-
-/**
- * ManagerPort for V1 deployments (Base mainnet today).
- * - idealPreview uses manager.previewMint(userCollateral)
- * - finalPreview approximates with previewMint(totalCollateral)
- */
-export function createManagerPortV1(params: {
-  config: Config
-  managerAddress?: Address
-}): ManagerPort {
-  const { config, managerAddress } = params
-
-  return {
-    async idealPreview({ token, userCollateral }) {
-      const managerPreview = await readLeverageManagerPreviewMint(config, {
-        ...(managerAddress ? { address: managerAddress } : {}),
-        args: [token, userCollateral],
-      })
-      return {
-        targetCollateral: managerPreview.collateral,
-        idealDebt: managerPreview.debt,
-        idealShares: managerPreview.shares,
-      }
-    },
-
-    async finalPreview({ token, totalCollateral }) {
-      const managerPreview = await readLeverageManagerPreviewMint(config, {
-        ...(managerAddress ? { address: managerAddress } : {}),
-        args: [token, totalCollateral],
       })
       return {
         previewDebt: managerPreview.debt,

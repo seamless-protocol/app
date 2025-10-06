@@ -390,10 +390,6 @@ vi.mock('@/domain/mint/utils/createDebtToCollateralQuote', () => ({
   createDebtToCollateralQuote: vi.fn(),
 }))
 
-vi.mock('@/domain/mint/utils/detectVersion', () => ({
-  detectRouterVersion: vi.fn(),
-}))
-
 vi.mock('@/domain/redeem/utils/createCollateralToDebtQuote', () => ({
   createCollateralToDebtQuote: vi.fn(),
 }))

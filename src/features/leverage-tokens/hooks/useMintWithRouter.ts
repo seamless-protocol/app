@@ -29,7 +29,7 @@ export interface UseMintWithRouterParams {
   equityInInputAsset: EquityInInputAssetArg
   slippageBps?: number
   maxSwapCostInCollateralAsset?: MaxSwapCostArg
-  quoteDebtToCollateral?: QuoteFn
+  quoteDebtToCollateral: QuoteFn
   quoteInputToCollateral?: QuoteFn
   chainId: number
 }
@@ -61,7 +61,7 @@ export function useMintWithRouter() {
         ...(typeof maxSwapCostInCollateralAsset !== 'undefined'
           ? { maxSwapCostInCollateralAsset }
           : {}),
-        ...(typeof quoteDebtToCollateral !== 'undefined' ? { quoteDebtToCollateral } : {}),
+        quoteDebtToCollateral,
         ...(typeof quoteInputToCollateral !== 'undefined' ? { quoteInputToCollateral } : {}),
         chainId,
       }),
