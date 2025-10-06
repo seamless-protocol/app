@@ -7,7 +7,7 @@ describe('useMintSteps', () => {
   it('should initialize with default step', () => {
     const { result } = hookTestUtils.renderHookWithQuery(() => useMintSteps())
 
-    expect(result.current.step).toBe('input')
+    expect(result.current.step).toBe('userInput')
   })
 
   it('should initialize with custom initial step', () => {
@@ -24,7 +24,7 @@ describe('useMintSteps', () => {
     act(() => {
       result.current.toInput()
     })
-    expect(result.current.step).toBe('input')
+    expect(result.current.step).toBe('userInput')
   })
 
   it('should navigate to approve step', () => {

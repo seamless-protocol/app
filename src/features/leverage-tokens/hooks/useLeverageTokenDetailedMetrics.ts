@@ -58,6 +58,27 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
         args: tokenAddress ? [tokenAddress] : undefined,
         chainId: chainId as SupportedChainId,
       },
+      {
+        address: managerAddress,
+        abi: leverageManagerV2Abi,
+        functionName: 'getTreasuryActionFee',
+        args: [0], // Mint
+        chainId: chainId as SupportedChainId,
+      },
+      {
+        address: managerAddress,
+        abi: leverageManagerV2Abi,
+        functionName: 'getTreasuryActionFee',
+        args: [1], // Redeem
+        chainId: chainId as SupportedChainId,
+      },
+      {
+        address: managerAddress,
+        abi: leverageManagerV2Abi,
+        functionName: 'getManagementFee',
+        args: tokenAddress ? [tokenAddress] : undefined,
+        chainId: chainId as SupportedChainId,
+      },
     ],
     query: {
       enabled: !!tokenAddress && !!managerAddress && !!chainId,
@@ -68,6 +89,9 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   // Extract adapter addresses from typed manager config result
   const managerConfigRes = managerData?.[0] as ReadResult<ManagerConfig> | undefined
   const managerStateRes = managerData?.[1] as ReadResult<ManagerState> | undefined
+  const mintTreasuryFeeRes = managerData?.[2] as ReadResult<bigint> | undefined
+  const redeemTreasuryFeeRes = managerData?.[3] as ReadResult<bigint> | undefined
+  const managementFeeRes = managerData?.[4] as ReadResult<bigint> | undefined
   const rebalanceAdapterAddress =
     managerConfigRes?.status === 'success' ? managerConfigRes.result.rebalanceAdapter : undefined
   const lendingAdapterAddress =
@@ -167,9 +191,21 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   type LendData = readonly [ReadResult<bigint>]
 
   const transformedData: LeverageTokenMetrics | undefined =
-    managerConfigRes && managerStateRes && adapterData && lendingData
+    managerConfigRes &&
+    managerStateRes &&
+    mintTreasuryFeeRes &&
+    redeemTreasuryFeeRes &&
+    managementFeeRes &&
+    adapterData &&
+    lendingData
       ? transformDetailedMetricsData(
-          [managerConfigRes, managerStateRes],
+          [
+            managerConfigRes,
+            managerStateRes,
+            mintTreasuryFeeRes,
+            redeemTreasuryFeeRes,
+            managementFeeRes,
+          ],
           adapterData as AdapterData,
           lendingData as LendData,
         )
@@ -204,6 +240,9 @@ function transformDetailedMetricsData(
       equity: bigint
       collateralRatio: bigint
     }>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
   ],
   adapterData: readonly [
     ReadResult<bigint>,
@@ -219,6 +258,9 @@ function transformDetailedMetricsData(
   // Extract data from manager calls
   const configResult = managerData[0]
   const stateResult = managerData[1]
+  const mintTreasuryFeeResult = managerData[2]
+  const redeemTreasuryFeeResult = managerData[3]
+  const managementFeeResult = managerData[4]
 
   // Extract data from adapter calls
   const minCollateralRatioResult = adapterData[0]
@@ -288,6 +330,21 @@ function transformDetailedMetricsData(
       ? formatFee4Decimals(configResult.result.redeemTokenFee)
       : 'N/A'
 
+  const mintTreasuryFee =
+    mintTreasuryFeeResult?.status === 'success'
+      ? formatFee4Decimals(mintTreasuryFeeResult.result)
+      : 'N/A'
+
+  const redeemTreasuryFee =
+    redeemTreasuryFeeResult?.status === 'success'
+      ? formatFee4Decimals(redeemTreasuryFeeResult.result)
+      : 'N/A'
+
+  const managementTreasuryFee =
+    managementFeeResult?.status === 'success'
+      ? formatFee4Decimals(managementFeeResult.result)
+      : 'N/A'
+
   const dutchAuctionDuration =
     auctionDurationResult?.status === 'success'
       ? formatDuration(auctionDurationResult.result as bigint)
@@ -351,6 +408,24 @@ function transformDetailedMetricsData(
         color: 'text-white',
         tooltip:
           'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users redeeming.',
+      },
+      {
+        label: 'Mint Treasury Fee',
+        value: mintTreasuryFee,
+        color: 'text-white',
+        tooltip: 'Mint Treasury Fee is the fee that is charged to the minting user.',
+      },
+      {
+        label: 'Redeem Treasury Fee',
+        value: redeemTreasuryFee,
+        color: 'text-white',
+        tooltip: 'Redeem Treasury Fee is the fee that is charged to the redeeming user.',
+      },
+      {
+        label: 'Management Treasury Fee',
+        value: managementTreasuryFee,
+        color: 'text-white',
+        tooltip: 'Management Treasury Fee is the fee that is charged to the management user.',
       },
     ],
     'Dutch Auction Parameters': [

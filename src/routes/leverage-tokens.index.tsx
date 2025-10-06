@@ -12,14 +12,14 @@ import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
 import { features } from '@/lib/config/features'
 import { useGA } from '@/lib/config/ga4.config'
 
-export const Route = createFileRoute('/tokens/')({
+export const Route = createFileRoute('/leverage-tokens/')({
   component: () => {
     const navigate = useNavigate()
     const analytics = useGA()
 
     // Track page view when component mounts
     useEffect(() => {
-      analytics.trackPageView('Leverage Tokens', '/tokens')
+      analytics.trackPageView('Leverage Tokens', '/leverage-tokens')
     }, [analytics])
 
     // Fetch live leverage token table data
@@ -38,7 +38,7 @@ export const Route = createFileRoute('/tokens/')({
     const handleTokenClick = (token: LeverageToken) => {
       // Navigate to the specific token's page using the new chain ID-based route
       navigate({
-        to: '/tokens/$chainId/$id',
+        to: '/leverage-tokens/$chainId/$id',
         params: { chainId: token.chainId.toString(), id: token.address },
       })
     }

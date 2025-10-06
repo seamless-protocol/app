@@ -107,7 +107,7 @@ const communitySection = {
 
 // Route mapping
 const routeMapping: Record<string, string> = {
-  explore: '/tokens',
+  explore: '/leverage-tokens',
   portfolio: '/portfolio',
   analytics: '/analytics',
   staking: '/staking',

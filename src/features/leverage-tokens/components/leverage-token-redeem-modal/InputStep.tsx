@@ -53,7 +53,7 @@ interface InputStepProps {
   selectedToken: Token
   availableAssets: Array<Asset>
   amount: string
-  redemptionFee?: bigint | undefined
+  redemptionFee?: string | undefined
   onAmountChange: (value: string) => void
   onPercentageClick: (percentage: number) => void
   selectedAssetId: OutputAssetId
@@ -72,6 +72,7 @@ interface InputStepProps {
   // Calculations
   expectedAmount: string
   selectedAssetSymbol: string
+  selectedAssetPrice?: number
   earnings: EarningsDisplay
   debtSymbol: string
   collateralSymbol: string
@@ -83,6 +84,8 @@ interface InputStepProps {
   onApprove: () => void
   error?: string | undefined
   leverageTokenConfig: LeverageTokenConfig
+  redeemTokenFee?: string | undefined
+  isRedeemTokenFeeLoading?: boolean | undefined
 
   // Warning
   isBelowMinimum?: boolean | undefined
@@ -107,6 +110,7 @@ export function InputStep({
   isApproving,
   expectedAmount,
   selectedAssetSymbol,
+  selectedAssetPrice,
   earnings,
   debtSymbol,
   collateralSymbol,
@@ -120,6 +124,8 @@ export function InputStep({
   leverageTokenConfig,
   redemptionFee,
   isRedemptionFeeLoading,
+  redeemTokenFee,
+  isRedeemTokenFeeLoading,
   isBelowMinimum,
 }: InputStepProps) {
   const redeemAmountId = useId()
@@ -245,7 +251,7 @@ export function InputStep({
             {isLeverageTokenBalanceLoading ? (
               <Skeleton className="inline-block h-3 w-16" />
             ) : (
-              `${selectedToken.balance} tokens`
+              `${selectedToken.balance} ${selectedToken.symbol}`
             )}
           </div>
         </div>
@@ -372,20 +378,26 @@ export function InputStep({
         <h4 className="mb-3 text-sm font-medium text-foreground">Transaction Summary</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Redeem Amount</span>
+            <span className="text-secondary-foreground">Redeem Token Fee</span>
             <span className="text-foreground">
-              {amount || '0'} {selectedToken.symbol}
+              {isRedeemTokenFeeLoading ? (
+                <Skeleton className="inline-block h-4 w-12" />
+              ) : redeemTokenFee ? (
+                redeemTokenFee
+              ) : (
+                'N/A'
+              )}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Redemption Fee</span>
+            <span className="text-secondary-foreground">Redeem Treasury Fee</span>
             <span className="text-foreground">
               {isRedemptionFeeLoading ? (
                 <Skeleton className="inline-block h-4 w-12" />
-              ) : typeof redemptionFee === 'bigint' ? (
-                `${Number(redemptionFee) / 100}%`
+              ) : redemptionFee ? (
+                redemptionFee
               ) : (
-                <Skeleton className="inline-block h-4 w-12" />
+                'N/A'
               )}
             </span>
           </div>
@@ -413,13 +425,27 @@ export function InputStep({
           </div>
           <div className="flex justify-between font-medium">
             <span className="text-foreground">You will receive</span>
-            <span className="text-foreground">
-              {isCalculating ? (
-                <Skeleton className="inline-block h-4 w-24" />
-              ) : (
-                `${expectedAmount} ${selectedAssetSymbol}`
-              )}
-            </span>
+            <div className="text-right">
+              <div className="text-foreground">
+                {isCalculating ? (
+                  <Skeleton className="inline-block h-4 w-24" />
+                ) : (
+                  `${expectedAmount} ${selectedAssetSymbol}`
+                )}
+              </div>
+              {!isCalculating &&
+                expectedAmount &&
+                parseFloat(expectedAmount) > 0 &&
+                selectedAssetPrice && (
+                  <div className="text-xs text-secondary-foreground">
+                    ≈ $
+                    {(parseFloat(expectedAmount) * selectedAssetPrice).toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                )}
+            </div>
           </div>
         </div>
       </Card>
@@ -432,8 +458,8 @@ export function InputStep({
             <p className="text-xs mt-1">
               {isRedemptionFeeLoading ? (
                 <Skeleton className="inline-block h-3 w-48" />
-              ) : typeof redemptionFee === 'bigint' ? (
-                `A ${Number(redemptionFee) / 100}% redemption fee applies to cover rebalancing costs.`
+              ) : redemptionFee ? (
+                `A ${redemptionFee} redemption fee applies to cover rebalancing costs.`
               ) : (
                 'A redemption fee applies to cover rebalancing costs.'
               )}
@@ -466,7 +492,7 @@ export function InputStep({
           : !canProceed && parseFloat(amount || '0') === 0
             ? 'Enter an amount'
             : !canProceed && parseFloat(amount || '0') > parseFloat(selectedToken.balance)
-              ? 'Insufficient tokens'
+              ? `Insufficient ${selectedToken.symbol}`
               : isCalculating
                 ? 'Calculating...'
                 : isAllowanceLoading

@@ -24,8 +24,8 @@ import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
 import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
-import { useLeverageTokenConfig } from '../../hooks/useLeverageTokenConfig'
 import { useLeverageTokenEarnings } from '../../hooks/useLeverageTokenEarnings'
+import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenUserMetrics } from '../../hooks/useLeverageTokenUserMetrics'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
@@ -56,7 +56,7 @@ interface LeverageTokenRedeemModalProps {
 
 // Hoisted to avoid re-creating on every render
 const REDEEM_STEPS: Array<StepConfig> = [
-  { id: 'input', label: 'Input', progress: 17 },
+  { id: 'userInput', label: 'User Input', progress: 17 },
   { id: 'approve', label: 'Approve', progress: 33 },
   { id: 'confirm', label: 'Confirm', progress: 50 },
   { id: 'pending', label: 'Processing', progress: 67 },
@@ -94,11 +94,8 @@ export function LeverageTokenRedeemModal({
   const leverageManagerAddress =
     contractAddresses.leverageManagerV2 ?? contractAddresses.leverageManager
 
-  // Fetch contract config for redemption fee
-  const { config: contractConfig, isLoading: isContractConfigLoading } = useLeverageTokenConfig(
-    leverageTokenAddress,
-    leverageTokenConfig.chainId,
-  )
+  // Fetch leverage token fees
+  const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(leverageTokenAddress)
 
   // Get real wallet balance for leverage tokens
   const {
@@ -205,7 +202,7 @@ export function LeverageTokenRedeemModal({
     toPending,
     toSuccess,
     toError,
-  } = useRedeemSteps('input')
+  } = useRedeemSteps('userInput')
 
   // Step configuration (static)
   const steps = REDEEM_STEPS
@@ -542,7 +539,7 @@ export function LeverageTokenRedeemModal({
           : expectedAmount
 
       toast.success('Redemption successful!', {
-        description: `${form.amount} tokens redeemed for ${toastAmount} ${selectedOutputAsset.symbol}`,
+        description: `${form.amount} ${leverageTokenConfig.symbol} redeemed for ${toastAmount} ${selectedOutputAsset.symbol}`,
       })
 
       refetchLeverageTokenBalance?.()
@@ -580,7 +577,7 @@ export function LeverageTokenRedeemModal({
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
-      case 'input':
+      case 'userInput':
         return (
           <InputStep
             selectedToken={selectedTokenView}
@@ -601,6 +598,7 @@ export function LeverageTokenRedeemModal({
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedAmount={expectedAmount}
+            selectedAssetPrice={selectedOutputAsset.price}
             earnings={earnings}
             debtSymbol={leverageTokenConfig.debtAsset.symbol}
             collateralSymbol={leverageTokenConfig.collateralAsset.symbol}
@@ -611,8 +609,10 @@ export function LeverageTokenRedeemModal({
             onApprove={handleApprove}
             error={error || redeemBlockingError}
             leverageTokenConfig={leverageTokenConfig}
-            redemptionFee={contractConfig?.redeemTokenFee}
-            isRedemptionFeeLoading={isContractConfigLoading}
+            redemptionFee={fees?.redeemTreasuryFee}
+            isRedemptionFeeLoading={isFeesLoading}
+            redeemTokenFee={fees?.redeemTokenFee}
+            isRedeemTokenFeeLoading={isFeesLoading}
             disabledAssets={disabledOutputAssets}
             isBelowMinimum={isBelowMinimum()}
           />
@@ -640,8 +640,8 @@ export function LeverageTokenRedeemModal({
               leverageRatio: leverageTokenConfig.leverageRatio,
               chainId: leverageTokenConfig.chainId,
             }}
-            redemptionFee={contractConfig?.redeemTokenFee}
-            isRedemptionFeeLoading={isContractConfigLoading}
+            redemptionFee={fees?.redeemTreasuryFee}
+            isRedemptionFeeLoading={isFeesLoading}
             onConfirm={handleConfirm}
           />
         )
@@ -655,6 +655,7 @@ export function LeverageTokenRedeemModal({
             amount={form.amount}
             expectedAmount={expectedAmount}
             selectedAsset={selectedOutputAsset.symbol}
+            leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash}
             onClose={handleClose}
           />

@@ -7,6 +7,7 @@ interface SuccessStepProps {
   amount: string
   expectedAmount: string
   selectedAsset: string
+  leverageTokenSymbol: string
   transactionHash: string
   onClose: () => void
 }
@@ -15,6 +16,7 @@ export function SuccessStep({
   amount,
   expectedAmount,
   selectedAsset,
+  leverageTokenSymbol,
   transactionHash,
   onClose,
 }: SuccessStepProps) {
@@ -26,9 +28,9 @@ export function SuccessStep({
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--state-success-text) 20%,transparent)]">
           <CheckCircle className="h-8 w-8 text-[var(--state-success-text)]" />
         </div>
-        <h3 className="mb-2 text-lg font-medium text-foreground">Redemption Completed!</h3>
-        <p className="mx-auto max-w-sm text-secondary-foreground">
-          Your {amount} leverage tokens have been successfully redeemed for {expectedAmount}{' '}
+        <h3 className="text-lg font-medium text-foreground mb-2">Redemption Completed!</h3>
+        <p className="text-secondary-foreground text-center max-w-sm">
+          Your {amount} {leverageTokenSymbol} have been successfully redeemed for {expectedAmount}{' '}
           {selectedAsset}.
         </p>
       </div>
@@ -37,7 +39,9 @@ export function SuccessStep({
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Redeemed</span>
-            <span className="text-foreground">{amount} tokens</span>
+            <span className="text-foreground">
+              {amount} {leverageTokenSymbol}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Received</span>

@@ -265,7 +265,7 @@ function PortfolioPage() {
         const chainId = tokenConfig.chainId.toString()
 
         navigate({
-          to: '/tokens/$chainId/$id',
+          to: '/leverage-tokens/$chainId/$id',
           params: {
             chainId,
             id: leverageTokenAddress,
@@ -466,22 +466,19 @@ function PortfolioPage() {
         </motion.section>
 
         {/* Active Positions */}
-        <motion.section
-          aria-labelledby={positionsHeadingId}
+        {/* Active Positions */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.4 }}
         >
-          <h2 id={positionsHeadingId} className="sr-only">
-            Active Positions
-          </h2>
           <ActivePositions
             positions={positions}
             onAction={handlePositionAction}
             onPositionClick={handlePositionClick}
             apyLoading={positionsAPYLoading}
           />
-        </motion.section>
+        </motion.div>
 
         {/* Mint Modal */}
         {selectedPosition && (
@@ -493,7 +490,6 @@ function PortfolioPage() {
             }}
             leverageTokenAddress={selectedPosition.leverageTokenAddress as Address}
             {...(userAddress && { userAddress })}
-            {...(selectedPosition.apy && { apy: parseFloat(selectedPosition.apy) })}
           />
         )}
 
