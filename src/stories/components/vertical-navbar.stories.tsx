@@ -45,7 +45,6 @@ const navigationItems = [
     title: 'Staking',
     icon: Coins,
     description: 'Stake SEAM tokens',
-    badge: 'New',
     externalUrl: 'https://legacy.seamlessprotocol.com/#/?tab=Staking',
   },
   {
@@ -156,9 +155,9 @@ function NavbarWrapper({ currentPage }: { currentPage: string }) {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col bg-slate-950">
+      <div className="flex-1 flex flex-col bg-background">
         {/* Header with Mobile Menu */}
-        <div className="border-b border-slate-700 bg-slate-900 backdrop-blur-sm shrink-0">
+        <div className="border-b border-border bg-card backdrop-blur-sm shrink-0">
           <div className="px-3 sm:px-4 py-3 sm:py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
@@ -175,10 +174,10 @@ function NavbarWrapper({ currentPage }: { currentPage: string }) {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-base sm:text-lg font-semibold text-white truncate">
+                  <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">
                     {content.title}
                   </h1>
-                  <p className="text-xs sm:text-sm text-slate-400 hidden sm:block truncate">
+                  <p className="text-xs sm:text-sm text-secondary-foreground hidden sm:block truncate">
                     {content.subtitle}
                   </p>
                 </div>
@@ -191,12 +190,12 @@ function NavbarWrapper({ currentPage }: { currentPage: string }) {
         <div className="flex-1 overflow-auto p-3 sm:p-4 lg:p-8">
           <div className="max-w-7xl mx-auto">
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-white mb-2">{content.title}</h1>
-              <p className="text-lg text-purple-400">{content.subtitle}</p>
+              <h1 className="text-2xl font-bold text-foreground mb-2">{content.title}</h1>
+              <p className="text-lg text-brand-purple">{content.subtitle}</p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-700 rounded-lg p-6">
-              <p className="text-slate-300 leading-relaxed">{content.content}</p>
+            <div className="bg-card border border-border rounded-lg p-6">
+              <p className="text-foreground leading-relaxed">{content.content}</p>
             </div>
           </div>
         </div>

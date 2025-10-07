@@ -1,15 +1,31 @@
 import { LiFiWidget as LiFiWidgetComponent, type WidgetConfig } from '@lifi/widget'
 import { motion } from 'framer-motion'
 import { ArrowUpDown } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { useAccount, useConnectorClient } from 'wagmi'
+import { useTheme } from '@/components/theme-provider'
 
 export function LiFiWidget() {
   const { isConnected, address } = useAccount()
   const { data: client } = useConnectorClient()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { theme } = useTheme()
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
+
+  useEffect(() => {
+    if (theme === 'system') {
+      if (typeof window === 'undefined') return
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const handleChange = () => setResolvedTheme(mediaQuery.matches ? 'dark' : 'light')
+      handleChange()
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
+    setResolvedTheme(theme)
+    return undefined
+  }, [theme])
 
   // Handle click when wallet is not connected
   const handleSwapClick = () => {
@@ -28,32 +44,52 @@ export function LiFiWidget() {
       integrator: 'seamless-protocol',
       variant: 'wide',
       subvariant: 'split',
+      // Keep LiFi in sync with app mode; do not let it drive mode
+      appearance: resolvedTheme,
       theme: {
         colorSchemes: {
+          light: {
+            palette: {
+              primary: {
+                main: '#2A65C3',
+              },
+              secondary: {
+                main: '#7C3AED',
+              },
+              background: {
+                default: '#FAFAFB',
+                paper: '#FFFFFF',
+              },
+              text: {
+                primary: '#111827',
+                secondary: '#4B5563',
+              },
+              common: {
+                black: '#0B0D12',
+              },
+              grey: {
+                200: '#E5E7EB',
+                300: '#CBD5F5',
+                700: '#4B5563',
+                800: '#1D2432',
+              },
+            },
+          },
           dark: {
             palette: {
               primary: {
-                main: '#c924a6',
+                main: '#506BDF',
               },
               secondary: {
-                main: '#9721cf',
+                main: '#7C3AED',
               },
               background: {
-                default: '#0e1629',
-                paper: '#161f34',
+                default: '#0B0D12',
+                paper: '#151A26',
               },
               text: {
-                primary: '#ffffff',
-                secondary: '#fffafa',
-              },
-              common: {
-                black: '#dc7979',
-              },
-              grey: {
-                200: '#eeeeee',
-                300: '#334155',
-                700: '#616161',
-                800: '#424242',
+                primary: '#F5F7FA',
+                secondary: '#C7CFD9',
               },
             },
           },
@@ -78,7 +114,7 @@ export function LiFiWidget() {
       // Hide some UI elements to keep it clean
       hiddenUI: ['appearance', 'language'],
     }),
-    [],
+    [resolvedTheme],
   )
 
   // Show a clickable button when wallet is not connected
@@ -93,7 +129,7 @@ export function LiFiWidget() {
         <button
           type="button"
           onClick={handleSwapClick}
-          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-accent/50 rounded-md gap-1.5 has-[>svg]:px-2.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-3 h-9 sm:h-10 border border-slate-700 hover:border-purple-500/50"
+          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 has-[>svg]:px-2.5 text-muted-foreground hover:text-foreground transition-colors px-3 h-9 sm:h-10 border border-border hover:border-brand-purple bg-card hover:bg-accent"
           aria-label="Open swap and bridge interface (Alt+S)"
           title="Swap & Bridge"
         >
@@ -116,7 +152,7 @@ export function LiFiWidget() {
         <button
           type="button"
           onClick={handleSwapClick}
-          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-accent/50 rounded-md gap-1.5 has-[>svg]:px-2.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors px-3 h-9 sm:h-10 border border-slate-700 hover:border-purple-500/50"
+          className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 has-[>svg]:px-2.5 text-muted-foreground hover:text-foreground transition-colors px-3 h-9 sm:h-10 border border-border hover:border-brand-purple bg-card hover:bg-accent"
           aria-label="Open swap and bridge interface (Alt+S)"
           title="Swap & Bridge"
         >
@@ -131,7 +167,7 @@ export function LiFiWidget() {
           <div
             data-state="open"
             data-slot="dialog-overlay"
-            className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-[var(--overlay-backdrop)] flex items-center justify-center p-4"
             style={{ pointerEvents: 'auto' }}
             data-aria-hidden="true"
             aria-hidden="true"
@@ -147,7 +183,7 @@ export function LiFiWidget() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="cursor-pointer absolute -top-4 -right-4 w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-50 flex items-center justify-center text-xl font-light shadow-lg"
+                className="cursor-pointer absolute -top-4 -right-4 z-[2000] flex h-10 w-10 items-center justify-center rounded-full border border-[var(--divider-line)] bg-[var(--surface-card)] text-[var(--text-secondary)] shadow-lg transition-colors"
                 aria-label="Close swap widget"
               >
                 ×

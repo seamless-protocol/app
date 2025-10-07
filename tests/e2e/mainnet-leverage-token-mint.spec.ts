@@ -117,7 +117,7 @@ test.describe('Mainnet leverage token mint flow', () => {
 
     // Pending + success states
     await expect(page.getByRole('heading', { name: 'Processing Mint' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Mint Successful!' })).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'Mint Success!' })).toBeVisible({
       timeout: 60_000,
     })
 

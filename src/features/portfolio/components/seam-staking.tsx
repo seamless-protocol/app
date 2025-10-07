@@ -22,13 +22,13 @@ export function SEAMStaking({
 }: SEAMStakingProps) {
   return (
     <Card
-      className={`bg-slate-900/80 border-slate-700 hover:bg-slate-900/90 transition-all duration-300 ${className}`}
+      className={`bg-card border-border hover:bg-accent transition-all duration-300 ${className}`}
     >
       <CardHeader className="pb-4">
-        <CardTitle className="text-white flex items-center">
-          <Lock className="h-5 w-5 mr-2 text-purple-400" />
+        <CardTitle className="text-foreground flex items-center">
+          <Lock className="h-5 w-5 mr-2 text-brand-purple" />
           SEAM Staking
-          <Badge className="ml-2 bg-purple-500/20 text-purple-300 border-purple-500/30">
+          <Badge variant="brand" className="ml-2">
             {apy} APY
           </Badge>
         </CardTitle>
@@ -37,33 +37,31 @@ export function SEAMStaking({
         <div className="space-y-4">
           {/* Staked Amount */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-slate-400">Staked Amount</span>
-            <span className="text-white font-semibold">{stakedAmount} SEAM</span>
+            <span className="text-secondary-foreground">Staked Amount</span>
+            <span className="text-foreground font-semibold">{stakedAmount} SEAM</span>
           </div>
 
           {/* Earned Rewards */}
           <div className="flex justify-between items-center py-2">
-            <span className="text-slate-400">Earned Rewards</span>
-            <span className="text-green-400 font-semibold">+{earnedRewards} SEAM</span>
+            <span className="text-secondary-foreground">Earned Rewards</span>
+            <span className="text-[var(--state-success-text)] font-semibold">
+              +{earnedRewards} SEAM
+            </span>
           </div>
 
           {/* APY with border */}
-          <div className="flex justify-between items-center py-2 pb-4 border-b border-slate-700">
-            <span className="text-slate-400">APY</span>
-            <span className="text-purple-400 font-semibold">{apy}%</span>
+          <div className="flex justify-between items-center py-2 pb-4 border-b border-border">
+            <span className="text-secondary-foreground">APY</span>
+            <span className="text-brand-purple font-semibold">{apy}%</span>
           </div>
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <Button onClick={onStake} className="bg-green-600 hover:bg-green-500 text-white">
+            <Button onClick={onStake} variant="gradient" size="lg">
               <Plus className="h-4 w-4 mr-1" />
               Stake
             </Button>
-            <Button
-              onClick={onManage}
-              variant="outline"
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
-            >
+            <Button onClick={onManage} variant="outline" size="lg">
               <ExternalLink className="h-4 w-4 mr-1" />
               Manage
             </Button>

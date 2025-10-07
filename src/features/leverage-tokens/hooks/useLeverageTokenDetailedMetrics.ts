@@ -42,6 +42,7 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
     isLoading: isManagerLoading,
     isError: isManagerError,
     error: managerError,
+    refetch: refetchManager,
   } = useReadContracts({
     contracts: [
       {
@@ -58,6 +59,27 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
         args: tokenAddress ? [tokenAddress] : undefined,
         chainId: chainId as SupportedChainId,
       },
+      {
+        address: managerAddress,
+        abi: leverageManagerV2Abi,
+        functionName: 'getTreasuryActionFee',
+        args: [0], // Mint
+        chainId: chainId as SupportedChainId,
+      },
+      {
+        address: managerAddress,
+        abi: leverageManagerV2Abi,
+        functionName: 'getTreasuryActionFee',
+        args: [1], // Redeem
+        chainId: chainId as SupportedChainId,
+      },
+      {
+        address: managerAddress,
+        abi: leverageManagerV2Abi,
+        functionName: 'getManagementFee',
+        args: tokenAddress ? [tokenAddress] : undefined,
+        chainId: chainId as SupportedChainId,
+      },
     ],
     query: {
       enabled: !!tokenAddress && !!managerAddress && !!chainId,
@@ -68,6 +90,9 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   // Extract adapter addresses from typed manager config result
   const managerConfigRes = managerData?.[0] as ReadResult<ManagerConfig> | undefined
   const managerStateRes = managerData?.[1] as ReadResult<ManagerState> | undefined
+  const mintTreasuryFeeRes = managerData?.[2] as ReadResult<bigint> | undefined
+  const redeemTreasuryFeeRes = managerData?.[3] as ReadResult<bigint> | undefined
+  const managementFeeRes = managerData?.[4] as ReadResult<bigint> | undefined
   const rebalanceAdapterAddress =
     managerConfigRes?.status === 'success' ? managerConfigRes.result.rebalanceAdapter : undefined
   const lendingAdapterAddress =
@@ -79,6 +104,7 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
     isLoading: isAdapterLoading,
     isError: isAdapterError,
     error: adapterError,
+    refetch: refetchAdapter,
   } = useReadContracts({
     contracts: [
       {
@@ -136,6 +162,7 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
     isLoading: isLendingLoading,
     isError: isLendingError,
     error: lendingError,
+    refetch: refetchLending,
   } = useReadContracts({
     contracts: [
       {
@@ -167,9 +194,21 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
   type LendData = readonly [ReadResult<bigint>]
 
   const transformedData: LeverageTokenMetrics | undefined =
-    managerConfigRes && managerStateRes && adapterData && lendingData
+    managerConfigRes &&
+    managerStateRes &&
+    mintTreasuryFeeRes &&
+    redeemTreasuryFeeRes &&
+    managementFeeRes &&
+    adapterData &&
+    lendingData
       ? transformDetailedMetricsData(
-          [managerConfigRes, managerStateRes],
+          [
+            managerConfigRes,
+            managerStateRes,
+            mintTreasuryFeeRes,
+            redeemTreasuryFeeRes,
+            managementFeeRes,
+          ],
           adapterData as AdapterData,
           lendingData as LendData,
         )
@@ -180,9 +219,24 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
     isLoading,
     isError,
     error,
-    refetch: () => {
-      // Note: useReadContracts doesn't expose refetch, but we can trigger re-render by changing dependencies
-      window.location.reload()
+    refetch: async () => {
+      await Promise.all([
+        (async () => {
+          try {
+            await refetchManager?.()
+          } catch {}
+        })(),
+        (async () => {
+          try {
+            await refetchAdapter?.()
+          } catch {}
+        })(),
+        (async () => {
+          try {
+            await refetchLending?.()
+          } catch {}
+        })(),
+      ])
     },
   }
 }
@@ -204,6 +258,9 @@ function transformDetailedMetricsData(
       equity: bigint
       collateralRatio: bigint
     }>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
+    ReadResult<bigint>,
   ],
   adapterData: readonly [
     ReadResult<bigint>,
@@ -219,6 +276,9 @@ function transformDetailedMetricsData(
   // Extract data from manager calls
   const configResult = managerData[0]
   const stateResult = managerData[1]
+  const mintTreasuryFeeResult = managerData[2]
+  const redeemTreasuryFeeResult = managerData[3]
+  const managementFeeResult = managerData[4]
 
   // Extract data from adapter calls
   const minCollateralRatioResult = adapterData[0]
@@ -288,6 +348,21 @@ function transformDetailedMetricsData(
       ? formatFee4Decimals(configResult.result.redeemTokenFee)
       : 'N/A'
 
+  const mintTreasuryFee =
+    mintTreasuryFeeResult?.status === 'success'
+      ? formatFee4Decimals(mintTreasuryFeeResult.result)
+      : 'N/A'
+
+  const redeemTreasuryFee =
+    redeemTreasuryFeeResult?.status === 'success'
+      ? formatFee4Decimals(redeemTreasuryFeeResult.result)
+      : 'N/A'
+
+  const managementTreasuryFee =
+    managementFeeResult?.status === 'success'
+      ? formatFee4Decimals(managementFeeResult.result)
+      : 'N/A'
+
   const dutchAuctionDuration =
     auctionDurationResult?.status === 'success'
       ? formatDuration(auctionDurationResult.result as bigint)
@@ -323,19 +398,17 @@ function transformDetailedMetricsData(
       : 'N/A'
 
   return {
-    'Leverage Settings': [
+    Leverage: [
       {
         label: 'Current Leverage',
         value: currentLeverage,
         highlight: true,
-        color: 'text-white',
-        tooltip: 'The current leverage ratio for this token.',
+        color: 'text-foreground',
       },
       {
         label: 'Min - Max Leverage',
         value: `${minLeverage} - ${maxLeverage}`,
-        color: 'text-white',
-        tooltip: 'The minimum and maximum leverage range allowed.',
+        color: 'text-foreground',
       },
     ],
     Fees: [
@@ -343,47 +416,64 @@ function transformDetailedMetricsData(
         label: 'Mint Token Fee',
         value: mintTokenFee,
         highlight: true,
-        color: 'text-green-400',
-        tooltip: 'Fee charged when minting new leverage tokens.',
+        color: 'text-foreground',
+        tooltip:
+          'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users minting.',
       },
       {
         label: 'Redeem Token Fee',
         value: redeemTokenFee,
-        color: 'text-white',
-        tooltip: 'Fee charged when redeeming leverage tokens.',
+        color: 'text-foreground',
+        tooltip:
+          'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users redeeming.',
+      },
+      {
+        label: 'Mint Treasury Fee',
+        value: mintTreasuryFee,
+        color: 'text-foreground',
+        tooltip: 'Mint Treasury Fee is the fee that is charged to the minting user.',
+      },
+      {
+        label: 'Redeem Treasury Fee',
+        value: redeemTreasuryFee,
+        color: 'text-foreground',
+        tooltip: 'Redeem Treasury Fee is the fee that is charged to the redeeming user.',
+      },
+      {
+        label: 'Management Treasury Fee',
+        value: managementTreasuryFee,
+        color: 'text-foreground',
+        tooltip: 'Management Treasury Fee is the fee that is charged to the management user.',
       },
     ],
-    'Auction Parameters': [
+    'Dutch Auction Parameters': [
       {
         label: 'Dutch Auction Duration',
         value: dutchAuctionDuration,
-        color: 'text-white',
-        tooltip: 'Duration of the Dutch auction for token redemptions.',
+        color: 'text-foreground',
       },
       {
         label: 'Initial Price Multiplier',
         value: initialPriceMultiplier,
-        color: 'text-white',
-        tooltip: 'Initial price multiplier for the auction.',
+        color: 'text-foreground',
       },
       {
         label: 'Min Price Multiplier',
         value: minPriceMultiplier,
-        color: 'text-white',
-        tooltip: 'Minimum price multiplier for the auction.',
+        color: 'text-foreground',
       },
     ],
-    'Risk Management': [
+    'Pre-liquidation': [
       {
         label: 'Pre-liquidation Leverage',
         value: preLiquidationLeverage,
-        color: 'text-white',
-        tooltip: 'Leverage threshold before liquidation is triggered.',
+        color: 'text-foreground',
+        tooltip: 'Leverage threshold that triggers pre-liquidation protection',
       },
       {
         label: 'Rebalance Reward',
         value: rebalanceReward,
-        color: 'text-white',
+        color: 'text-foreground',
         tooltip: 'Reward percentage for successful rebalancing.',
       },
     ],

@@ -50,17 +50,13 @@ export const Default: Story = {
 
 export const WithGradient: Story = {
   render: () => (
-    <Card className="w-[350px] border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+    <Card className="w-[350px]" variant="gradient">
       <CardHeader>
-        <CardTitle className="text-white">Gradient Card</CardTitle>
-        <CardDescription className="text-slate-400">
-          A card with gradient styling to match the design system.
-        </CardDescription>
+        <CardTitle>Gradient Card</CardTitle>
+        <CardDescription>A card with gradient styling to match the design system.</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-slate-300">
-          This card uses the dark theme styling with slate colors and backdrop blur.
-        </p>
+        <p>This card uses the dark theme styling with slate colors and backdrop blur.</p>
       </CardContent>
       <CardFooter>
         <Button variant="gradient" className="w-full">

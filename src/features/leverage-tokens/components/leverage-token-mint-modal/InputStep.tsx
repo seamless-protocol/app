@@ -1,5 +1,6 @@
-import { ArrowDownUp, Percent, RefreshCw, Settings, TrendingUp } from 'lucide-react'
-import { useEffect, useId, useRef } from 'react'
+import { ArrowDown, Percent, RefreshCw, Settings, TrendingUp } from 'lucide-react'
+import { useId } from 'react'
+import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
 import { Button } from '../../../../components/ui/button'
@@ -8,7 +9,6 @@ import { FilterDropdown } from '../../../../components/ui/filter-dropdown'
 import { Input } from '../../../../components/ui/input'
 import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
-import { formatAPY } from '../../../../lib/utils/formatting'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
   MIN_MINT_AMOUNT_DISPLAY,
@@ -36,46 +36,35 @@ interface LeverageTokenConfig {
 }
 
 interface InputStepProps {
-  // Token data
   selectedToken: Token
   availableTokens: Array<Token>
   amount: string
   onAmountChange: (value: string) => void
   onTokenChange: (token: Token) => void
   onPercentageClick: (percentage: number) => void
-
-  // UI state
   showAdvanced: boolean
   onToggleAdvanced: () => void
   slippage: string
   onSlippageChange: (value: string) => void
-
-  // Loading states
   isCollateralBalanceLoading: boolean
   isUsdPriceLoading: boolean
   isCalculating: boolean
   isAllowanceLoading: boolean
   isApproving: boolean
-
-  // Calculations
   expectedTokens: string
-
-  // Validation
   canProceed: boolean
   needsApproval: boolean
   isConnected: boolean
-
-  // Actions
   onApprove: () => void
-
-  // Error
   error?: string | undefined
-
-  // Config
   leverageTokenConfig: LeverageTokenConfig
-  apy?: number | undefined
-  managementFee?: bigint | undefined
+  managementFee?: string | undefined
   isManagementFeeLoading?: boolean | undefined
+  mintTokenFee?: string | undefined
+  isMintTokenFeeLoading?: boolean | undefined
+
+  // Warning
+  isBelowMinimum?: boolean | undefined
 }
 
 export function InputStep({
@@ -101,30 +90,22 @@ export function InputStep({
   onApprove,
   error,
   leverageTokenConfig,
-  apy,
   managementFee,
   isManagementFeeLoading,
+  mintTokenFee,
+  isMintTokenFeeLoading,
+  isBelowMinimum,
 }: InputStepProps) {
   const mintAmountId = useId()
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  // Auto-focus and select the input when the component mounts
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus()
-      inputRef.current.select()
-    }
-  }, [])
 
   return (
     <div className="space-y-6">
-      {/* Token Selection and Amount Input */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <label htmlFor={mintAmountId} className="text-sm font-medium text-white">
+          <label htmlFor={mintAmountId} className="text-sm font-medium text-foreground">
             Mint Amount
           </label>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-secondary-foreground">
             Balance:{' '}
             {isCollateralBalanceLoading ? (
               <Skeleton className="inline-block h-3 w-16" />
@@ -134,20 +115,19 @@ export function InputStep({
           </div>
         </div>
 
-        <Card variant="gradient" className="p-4 gap-0">
-          <div className="flex items-end justify-between mb-3">
+        <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
+          <div className="mb-3 flex items-end justify-between">
             <div className="flex-1">
               <div className="flex">
                 <Input
-                  ref={inputRef}
                   id={mintAmountId}
                   type="text"
                   placeholder="0"
                   value={amount}
                   onChange={(e) => onAmountChange(e.target.value)}
-                  className="border-slate-700 text-lg px-3 h-auto focus:ring-0 focus:ring-offset-0 font-medium text-white"
+                  className="h-auto px-3 text-lg font-medium text-foreground focus:ring-0 focus:ring-offset-0"
                 />
-                <div className="flex items-center space-x-2 ml-4">
+                <div className="ml-4 flex items-center space-x-2">
                   <FilterDropdown
                     label=""
                     value={selectedToken.symbol}
@@ -164,7 +144,7 @@ export function InputStep({
                   />
                 </div>
               </div>
-              <div className="text-xs text-slate-400 mt-1">
+              <div className="mt-1 text-xs text-secondary-foreground">
                 {isUsdPriceLoading ? (
                   <Skeleton className="h-4 w-20" />
                 ) : (
@@ -177,7 +157,6 @@ export function InputStep({
             </div>
           </div>
 
-          {/* Percentage shortcuts */}
           <div className="flex items-center justify-between">
             <div className="flex space-x-2">
               {AMOUNT_PERCENTAGE_PRESETS.map((percentage) => (
@@ -186,7 +165,7 @@ export function InputStep({
                   variant="outline"
                   size="sm"
                   onClick={() => onPercentageClick(percentage)}
-                  className="h-7 px-2 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                  className="h-7 border border-border px-2 text-xs text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   {percentage === 100 ? 'MAX' : `${percentage}%`}
                 </Button>
@@ -197,19 +176,18 @@ export function InputStep({
               variant="ghost"
               size="sm"
               onClick={onToggleAdvanced}
-              className="text-slate-400 hover:text-white"
+              className="text-brand-purple transition-colors hover:opacity-90"
             >
-              <Settings className="h-4 w-4 mr-1" />
+              <Settings className="mr-1 h-4 w-4 text-[inherit]" />
               Advanced
             </Button>
           </div>
         </Card>
 
-        {/* Advanced Settings */}
         {showAdvanced && (
-          <Card variant="gradient" className="p-4 gap-0">
+          <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-medium text-white">Slippage Tolerance</div>
+              <div className="text-xs font-medium text-foreground">Slippage Tolerance</div>
               <div className="flex items-center space-x-2">
                 {SLIPPAGE_PRESETS_PERCENT_DISPLAY.map((value) => (
                   <Button
@@ -217,11 +195,12 @@ export function InputStep({
                     variant={slippage === value ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => onSlippageChange(value)}
-                    className={`h-8 px-3 text-xs ${
+                    className={cn(
+                      'h-8 px-3 text-xs transition-colors',
                       slippage === value
-                        ? 'bg-purple-600 text-white hover:bg-purple-500'
-                        : 'border-slate-600 text-slate-300 hover:bg-slate-700'
-                    }`}
+                        ? 'border border-brand-purple bg-brand-purple text-primary-foreground hover:opacity-90'
+                        : 'border border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-foreground',
+                    )}
                   >
                     {value}%
                   </Button>
@@ -231,10 +210,10 @@ export function InputStep({
                     type="text"
                     value={slippage}
                     onChange={(e) => onSlippageChange(e.target.value)}
-                    className="w-16 h-8 text-xs text-center bg-slate-900 border-slate-600 text-white"
+                    className="h-8 w-16 border border-border bg-input text-center text-xs text-foreground"
                     placeholder="0.5"
                   />
-                  <Percent className="h-3 w-3 text-slate-400" />
+                  <Percent className="h-3 w-3 text-muted-foreground" />
                 </div>
               </div>
             </div>
@@ -242,17 +221,16 @@ export function InputStep({
         )}
       </div>
 
-      {/* Expected Output */}
       <div className="space-y-3">
         <div className="flex justify-center">
-          <div className="p-2 bg-slate-800/50 rounded-full border border-slate-700">
-            <ArrowDownUp className="h-4 w-4 text-slate-400" />
+          <div className="p-2 rounded-full border border-border bg-card">
+            <ArrowDown className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
 
-        <Card variant="gradient" className="p-4 gap-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-slate-400">You will receive</div>
+        <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-sm text-secondary-foreground">You will receive</div>
             {isCalculating && (
               <div className="flex items-center text-xs text-slate-400">
                 <RefreshCw className="h-3 w-3 animate-spin mr-1" />
@@ -263,26 +241,27 @@ export function InputStep({
 
           <div className="flex items-end justify-between">
             <div className="flex-1">
-              <div className="text-xl font-medium text-white">
+              <div className="text-xl font-medium text-foreground">
                 {isCalculating ? <Skeleton className="h-6 w-20" /> : expectedTokens}
               </div>
-              <div className="text-sm text-slate-400 mt-1">Leverage Tokens</div>
+              <div className="mt-1 text-sm text-secondary-foreground">Leverage Tokens</div>
             </div>
 
-            <div className="flex items-center space-x-2 ml-4">
-              <div className="w-6 h-6 bg-purple-600/20 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-3 w-3 text-purple-400" />
+            <div className="ml-4 flex items-center space-x-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent">
+                <TrendingUp className="h-3 w-3 text-brand-purple" />
               </div>
-              <span className="text-sm font-medium text-white">{leverageTokenConfig.symbol}</span>
+              <span className="text-sm font-medium text-foreground">
+                {leverageTokenConfig.symbol}
+              </span>
             </div>
           </div>
 
-          {/* Leverage Info */}
           {parseFloat(expectedTokens) > 0 && (
-            <div className="mt-3 pt-3 border-t border-slate-700">
+            <div className="mt-3 border-t border-border pt-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Target Leverage</span>
-                <div className="flex items-center text-purple-400">
+                <span className="text-secondary-foreground">Target Leverage</span>
+                <div className="flex items-center text-brand-purple">
                   <span className="font-semibold">{leverageTokenConfig.leverageRatio}x</span>
                 </div>
               </div>
@@ -291,42 +270,50 @@ export function InputStep({
         </Card>
       </div>
 
-      {/* Transaction Summary */}
-      <Card variant="gradient" className="p-4 gap-2">
-        <h4 className="text-sm font-medium text-white mb-3">Transaction Summary</h4>
+      <Card
+        variant="gradient"
+        className="gap-2 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+      >
+        <h4 className="mb-3 text-sm font-medium text-foreground">Transaction Summary</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-400">Mint Amount</span>
-            <span className="text-white">
-              {amount || '0'} {selectedToken.symbol}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">Current APY</span>
-            <span className="text-green-400">{apy ? formatAPY(apy, 2) : '0%'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">Management Fee</span>
-            <span className="text-white">
-              {isManagementFeeLoading ? (
+            <span className="text-secondary-foreground">Mint Token Fee</span>
+            <span className="text-foreground">
+              {isMintTokenFeeLoading ? (
                 <Skeleton className="inline-block h-4 w-12" />
-              ) : typeof managementFee === 'bigint' ? (
-                `${Number(managementFee) / 100}%`
+              ) : mintTokenFee ? (
+                mintTokenFee
               ) : (
                 'N/A'
               )}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Slippage Tolerance</span>
-            <span className="text-white">{slippage}%</span>
+            <span className="text-secondary-foreground">Mint Treasury Fee</span>
+            <span className="text-foreground">
+              {isManagementFeeLoading ? (
+                <Skeleton className="inline-block h-4 w-12" />
+              ) : managementFee ? (
+                managementFee
+              ) : (
+                'N/A'
+              )}
+            </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Approval Status</span>
-            <span className={needsApproval ? 'text-yellow-400' : 'text-green-400'}>
-              {!amount || parseFloat(amount || '0') === 0 ? (
-                <span className="text-slate-400">N/A</span>
-              ) : isAllowanceLoading ? (
+            <span className="text-secondary-foreground">Slippage Tolerance</span>
+            <span className="text-foreground">{slippage}%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-secondary-foreground">Approval Status</span>
+            <span
+              className={cn(
+                needsApproval
+                  ? 'text-[var(--state-warning-text)]'
+                  : 'text-[var(--state-success-text)]',
+              )}
+            >
+              {isAllowanceLoading ? (
                 <Skeleton className="inline-block h-3 w-16" />
               ) : needsApproval ? (
                 'Approval Required'
@@ -335,25 +322,47 @@ export function InputStep({
               )}
             </span>
           </div>
-          <Separator className="my-2 bg-slate-700" />
+          <Separator className="my-2 bg-border" />
           <div className="flex justify-between font-medium items-center">
-            <span className="text-white">You will receive</span>
-            <span className="text-white">
-              {isCalculating ? 'Calculating...' : `${expectedTokens} tokens`}
-            </span>
+            <span className="text-foreground">You will receive</span>
+            <div className="text-right">
+              <div className="text-foreground">
+                {isCalculating
+                  ? 'Calculating...'
+                  : `${expectedTokens} ${leverageTokenConfig.symbol}`}
+              </div>
+              {!isCalculating && amount && parseFloat(amount) > 0 && selectedToken.price && (
+                <div className="text-xs text-secondary-foreground">
+                  ≈ $
+                  {(parseFloat(amount) * selectedToken.price).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Card>
 
-      {/* Error Display */}
       {error && <Alert type="error" title="Error" description={error} />}
+
+      {/* Warning Display */}
+      {isBelowMinimum && (
+        <Alert
+          type="warning"
+          title="Low Amount Warning"
+          description={`The amount you're minting is below the recommended minimum of ${MIN_MINT_AMOUNT_DISPLAY}. Gas costs may exceed the transaction value.`}
+        />
+      )}
 
       {/* Action Button */}
       <Button
         onClick={onApprove}
         disabled={!canProceed}
         variant="gradient"
-        className="w-full h-12 font-medium"
+        size="lg"
+        className="w-full font-medium"
       >
         {!isConnected
           ? 'Connect Wallet'
@@ -361,17 +370,15 @@ export function InputStep({
             ? 'Enter an amount'
             : !canProceed && parseFloat(amount || '0') > parseFloat(selectedToken.balance)
               ? 'Insufficient balance'
-              : !canProceed && parseFloat(amount || '0') < parseFloat(MIN_MINT_AMOUNT_DISPLAY)
-                ? `Minimum mint: ${MIN_MINT_AMOUNT_DISPLAY}`
-                : isCalculating
-                  ? 'Calculating...'
-                  : isAllowanceLoading
-                    ? 'Checking allowance...'
-                    : isApproving
-                      ? 'Approving...'
-                      : needsApproval
-                        ? `Approve ${selectedToken.symbol}`
-                        : `Mint ${leverageTokenConfig.symbol}`}
+              : isCalculating
+                ? 'Calculating...'
+                : isAllowanceLoading
+                  ? 'Checking allowance...'
+                  : isApproving
+                    ? 'Approving...'
+                    : needsApproval
+                      ? `Approve ${selectedToken.symbol}`
+                      : `Mint ${leverageTokenConfig.symbol}`}
       </Button>
     </div>
   )

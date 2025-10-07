@@ -81,7 +81,7 @@ function renderAssetLogo(asset: Asset) {
   return (
     <div
       className={cn(
-        'w-full h-full rounded-full flex items-center justify-center text-white font-medium text-xs',
+        'w-full h-full rounded-full flex items-center justify-center text-foreground font-medium text-xs',
         bgColor,
       )}
     >
@@ -119,7 +119,7 @@ export function AssetDisplay({
         <button
           type="button"
           className={cn(
-            'rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center cursor-pointer hover:border-slate-600 transition-colors min-h-5 asset-display-button',
+            'asset-display-button flex min-h-5 items-center justify-center rounded-full border-2 border-[var(--divider-line)] bg-[var(--surface-card)] transition-colors hover:border-[color-mix(in_srgb,var(--brand-primary) 60%,var(--divider-line) 40%)]',
             sizeConfig.container,
             className,
           )}
@@ -134,7 +134,7 @@ export function AssetDisplay({
         return (
           <Tooltip>
             <TooltipTrigger asChild>{logoContent}</TooltipTrigger>
-            <TooltipContent className="bg-black border-slate-600 text-white shadow-lg shadow-black/25">
+            <TooltipContent className="border border-[var(--divider-line)] bg-[var(--surface-card)] text-[var(--text-primary)] shadow-lg shadow-black/20">
               {tooltipContent}
             </TooltipContent>
           </Tooltip>
@@ -149,14 +149,16 @@ export function AssetDisplay({
       <div className={cn('flex items-center space-x-2', className)}>
         <div
           className={cn(
-            'rounded-full border border-slate-600 bg-slate-800 flex items-center justify-center',
+            'flex items-center justify-center rounded-full border border-[var(--divider-line)] bg-[var(--surface-card)]',
             sizeConfig.container,
           )}
         >
           {renderAssetLogo(asset)}
         </div>
-        <span className={cn('text-slate-300 font-medium', sizeConfig.text)}>{asset.symbol}</span>
-        {showLink && <ExternalLink className={cn('text-slate-400', sizeConfig.icon)} />}
+        <span className={cn('font-medium text-[var(--text-secondary)]', sizeConfig.text)}>
+          {asset.symbol}
+        </span>
+        {showLink && <ExternalLink className={cn('text-[var(--text-muted)]', sizeConfig.icon)} />}
       </div>
     )
 
@@ -167,13 +169,13 @@ export function AssetDisplay({
             <Button
               variant="ghost"
               size="sm"
-              className="h-auto p-1 hover:bg-slate-700 transition-colors"
+              className="h-auto p-1 transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]"
               onClick={onClick}
             >
               {content}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent className="border border-[var(--divider-line)] bg-[var(--surface-card)] text-[var(--text-primary)] shadow-lg shadow-black/10">
             <p>
               View {asset.name || asset.symbol} on {explorer.name}
             </p>
@@ -197,7 +199,7 @@ export function AssetDisplay({
                 <div
                   key={asset.symbol}
                   className={cn(
-                    'rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center',
+                    'flex items-center justify-center rounded-full border-2 border-[var(--divider-line)] bg-[var(--surface-card)]',
                     sizeConfig.container,
                   )}
                   style={{ zIndex: assets.length - index }}
@@ -209,7 +211,7 @@ export function AssetDisplay({
           )}
 
           <div className="flex items-center space-x-2 min-w-0 flex-1">
-            <h4 className={cn('font-medium text-white truncate', sizeConfig.text)}>
+            <h4 className={cn('font-medium text-[var(--text-primary)] truncate', sizeConfig.text)}>
               {name || assets.map((a) => a.symbol).join(' / ')}
             </h4>
             {showBadge && isPopular && (
@@ -234,7 +236,7 @@ export function AssetDisplay({
           <TooltipTrigger asChild>
             <div className="cursor-help">{content}</div>
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent className="border border-[var(--divider-line)] bg-[var(--surface-card)] text-[var(--text-primary)] shadow-lg shadow-black/10">
             <p>{tooltipContent}</p>
           </TooltipContent>
         </Tooltip>

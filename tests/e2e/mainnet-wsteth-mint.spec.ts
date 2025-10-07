@@ -78,7 +78,7 @@ test.describe('Mainnet wstETH/WETH 2x mint (JIT + LiFi)', () => {
 
     await page.getByRole('button', { name: 'Confirm Mint' }).click()
     await expect(page.getByRole('heading', { name: 'Processing Mint' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Mint Successful!' })).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'Mint Success!' })).toBeVisible({
       timeout: 60_000,
     })
 

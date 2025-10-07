@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { useState } from 'react'
+import { cn } from '@/lib/utils/cn'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
 import {
@@ -16,7 +17,7 @@ export interface MetricItem {
   value: string
   highlight?: boolean
   color?: string
-  tooltip: string
+  tooltip?: string
 }
 
 export interface LeverageTokenMetrics {
@@ -50,26 +51,26 @@ export function LeverageTokenDetailedMetrics({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card className={`bg-slate-900/80 border-slate-700 ${className}`}>
+      <Card className={cn('border border-border text-foreground bg-card', className)}>
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-slate-800/30 transition-colors rounded-t-lg px-6 py-6">
+            <CardHeader className="cursor-pointer transition-colors rounded-t-lg px-6 py-6 hover:bg-accent">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <div className="space-y-2">
-                  <CardTitle className="text-white">{title}</CardTitle>
-                  <p className="text-slate-400 text-sm">{description}</p>
+                  <CardTitle className="text-foreground">{title}</CardTitle>
+                  <p className="text-sm text-muted-foreground">{description}</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge
                     variant="outline"
-                    className="bg-slate-800/50 text-slate-400 border-slate-600 text-xs"
+                    className="text-xs border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-elevated) 40%,transparent)] text-secondary-foreground"
                   >
                     {isOpen ? 'Hide Details' : 'Show Details'}
                   </Badge>
                   {isOpen ? (
-                    <ChevronUp className="w-5 h-5 text-slate-400" />
+                    <ChevronUp className="w-5 h-5 text-muted-foreground" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
                   )}
                 </div>
               </div>
@@ -83,7 +84,7 @@ export function LeverageTokenDetailedMetrics({
                   {['a', 'b', 'c', 'd', 'e', 'f'].map((key) => (
                     <div
                       key={`metric-skel-${key}`}
-                      className="p-4 rounded-lg border bg-slate-800/50 border-slate-700"
+                      className="p-4 rounded-lg border border-border bg-card"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <Skeleton className="h-3 w-28" />
@@ -95,17 +96,19 @@ export function LeverageTokenDetailedMetrics({
                 </div>
               ) : isError ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="text-red-400">Failed to load detailed metrics</div>
+                  <div className="text-[var(--state-error-text)]">
+                    Failed to load detailed metrics
+                  </div>
                 </div>
               ) : metrics ? (
                 Object.entries(metrics).map(([category, categoryMetrics]) => (
                   <div key={category} className="space-y-4">
                     {/* Category Header */}
                     <div className="flex items-center space-x-2">
-                      <h3 className="text-white font-medium text-sm uppercase tracking-wide">
+                      <h3 className="font-medium text-sm uppercase tracking-wide text-foreground">
                         {category}
                       </h3>
-                      <div className="flex-1 h-px bg-slate-700" />
+                      <div className="flex-1 h-px bg-[var(--divider-line)]" />
                     </div>
 
                     {/* Metrics Grid */}
@@ -113,33 +116,36 @@ export function LeverageTokenDetailedMetrics({
                       {categoryMetrics.map((metric, index) => (
                         <div
                           key={`${category}-${metric.label}-${index}`}
-                          className={`p-4 rounded-lg border transition-colors ${
-                            metric.highlight
-                              ? 'bg-slate-800/70 border-slate-600'
-                              : 'bg-slate-800/50 border-slate-700'
-                          }`}
+                          className={cn(
+                            'p-4 rounded-lg border transition-colors bg-accent border-border',
+                            metric.highlight && 'bg-accent border-border',
+                          )}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-1">
-                              <span className="text-slate-400 text-sm">{metric.label}</span>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    className="text-slate-400 hover:text-slate-300 transition-colors"
-                                  >
-                                    <Info className="h-3 w-3" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                                  <div className="p-3 max-w-xs">
-                                    <p className="text-white text-sm">{metric.tooltip}</p>
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
+                              <span className="text-sm text-secondary-foreground">
+                                {metric.label}
+                              </span>
+                              {metric.tooltip && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="text-muted-foreground hover:text-secondary-foreground transition-colors"
+                                    >
+                                      <Info className="h-3 w-3" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="p-0 text-sm bg-card border border-border">
+                                    <div className="p-3 max-w-xs">
+                                      <p className="text-foreground text-sm">{metric.tooltip}</p>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
                             </div>
                           </div>
-                          <p className={`text-lg font-semibold ${metric.color || 'text-white'}`}>
+                          <p className={cn('text-lg font-semibold text-foreground', metric.color)}>
                             {metric.value}
                           </p>
                         </div>
@@ -149,7 +155,7 @@ export function LeverageTokenDetailedMetrics({
                 ))
               ) : (
                 <div className="flex items-center justify-center py-8">
-                  <div className="text-slate-400">No detailed metrics available</div>
+                  <div className="text-secondary-foreground">No detailed metrics available</div>
                 </div>
               )}
             </CardContent>

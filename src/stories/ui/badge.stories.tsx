@@ -11,7 +11,17 @@ const meta = {
   argTypes: {
     variant: {
       control: { type: 'select' },
-      options: ['default', 'secondary', 'destructive', 'outline'],
+      options: [
+        'default',
+        'secondary',
+        'destructive',
+        'outline',
+        'success',
+        'warning',
+        'error',
+        'info',
+        'brand',
+      ],
     },
   },
 } satisfies Meta<typeof Badge>
@@ -22,7 +32,7 @@ type Story = StoryObj<typeof meta>
 // Simple mock icon component
 const MockIcon = ({ className }: { size?: number; className?: string }) => (
   <div
-    className={`w-full h-full bg-slate-600 rounded-full flex items-center justify-center text-white text-xs font-medium ${className || ''}`}
+    className={`w-full h-full rounded-full border border-border bg-accent flex items-center justify-center text-xs font-medium text-foreground ${className || ''}`}
   >
     T
   </div>
@@ -46,7 +56,42 @@ export const TextWithLogo: Story = {
 export const CustomBadge: Story = {
   args: {
     children: 'New',
-    variant: 'secondary',
-    className: 'text-xs bg-purple-500/20 text-purple-400 border-purple-500/30 px-1.5 py-0.5',
+    variant: 'brand',
+    className: 'text-xs px-1.5 py-0.5',
+  },
+}
+
+export const Success: Story = {
+  args: {
+    children: 'Connected',
+    variant: 'success',
+  },
+}
+
+export const Warning: Story = {
+  args: {
+    children: 'Warning',
+    variant: 'warning',
+  },
+}
+
+export const ErrorVariant: Story = {
+  args: {
+    children: 'Error',
+    variant: 'error',
+  },
+}
+
+export const Info: Story = {
+  args: {
+    children: 'Info',
+    variant: 'info',
+  },
+}
+
+export const Brand: Story = {
+  args: {
+    children: 'SEAM',
+    variant: 'brand',
   },
 }

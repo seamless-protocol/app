@@ -7,7 +7,7 @@ describe('useRedeemSteps', () => {
   it('should initialize with default step', () => {
     const { result } = hookTestUtils.renderHookWithQuery(() => useRedeemSteps())
 
-    expect(result.current.step).toBe('input')
+    expect(result.current.step).toBe('userInput')
   })
 
   it('should initialize with custom initial step', () => {
@@ -24,7 +24,7 @@ describe('useRedeemSteps', () => {
     act(() => {
       result.current.toInput()
     })
-    expect(result.current.step).toBe('input')
+    expect(result.current.step).toBe('userInput')
   })
 
   it('should navigate to approve step', () => {
@@ -102,7 +102,7 @@ describe('useRedeemSteps', () => {
     const { result } = hookTestUtils.renderHookWithQuery(() => useRedeemSteps())
 
     // Start at input
-    expect(result.current.step).toBe('input')
+    expect(result.current.step).toBe('userInput')
 
     // Move through the flow
     act(() => {
@@ -130,7 +130,7 @@ describe('useRedeemSteps', () => {
     const { result } = hookTestUtils.renderHookWithQuery(() => useRedeemSteps())
 
     // Start at input
-    expect(result.current.step).toBe('input')
+    expect(result.current.step).toBe('userInput')
 
     // Move to error from any step
     act(() => {
@@ -142,7 +142,7 @@ describe('useRedeemSteps', () => {
     act(() => {
       result.current.toInput()
     })
-    expect(result.current.step).toBe('input')
+    expect(result.current.step).toBe('userInput')
   })
 
   it('should maintain step state across re-renders', () => {

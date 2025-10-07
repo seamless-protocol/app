@@ -7,6 +7,7 @@ import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { FAQ } from '@/components/FAQ'
+import { PageContainer } from '@/components/PageContainer'
 import { StatCardList } from '@/components/StatCardList'
 import { AssetDisplay } from '@/components/ui/asset-display'
 import { Badge } from '@/components/ui/badge'
@@ -33,7 +34,7 @@ import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 import { CHAIN_IDS } from '@/lib/utils/chain-logos'
 import { formatAPY, formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
-export const Route = createFileRoute('/tokens/$chainId/$id')({
+export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
   component: () => {
     const { chainId: routeChainId, id: tokenAddress } = useParams({ strict: false })
     const { isConnected, address: userAddress } = useAccount()
@@ -43,7 +44,10 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
 
     // Track page view when component mounts
     useEffect(() => {
-      analytics.trackPageView('Leverage Token Detail', `/tokens/${routeChainId}/${tokenAddress}`)
+      analytics.trackPageView(
+        'Leverage Token Detail',
+        `/leverage-tokens/${routeChainId}/${tokenAddress}`,
+      )
 
       // Track feature discovery for leverage token details
       analytics.featureDiscovered('leverage_token_details', 'navigation')
@@ -139,8 +143,10 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       return (
         <div className="min-h-screen w-full flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-white mb-2">Token Not Found</h1>
-            <p className="text-slate-400">The requested leverage token could not be found.</p>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Token Not Found</h1>
+            <p className="text-secondary-foreground">
+              The requested leverage token could not be found.
+            </p>
           </div>
         </div>
       )
@@ -234,25 +240,24 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
       {
         title: 'Target Leverage',
         stat: `${tokenConfig.leverageRatio}x`,
-        caption: `Max leverage ratio`,
       },
     ]
 
     return (
-      <div className="max-w-7xl mx-auto">
+      <PageContainer padded={false}>
         {/* Breadcrumb Navigation */}
         <BreadcrumbNavigation
           items={[
             {
               label: 'Leverage Tokens',
-              onClick: () => navigate({ to: '/tokens' }),
+              onClick: () => navigate({ to: '/leverage-tokens' }),
             },
             {
               label: tokenConfig.name,
               isActive: true,
             },
           ]}
-          onBack={() => navigate({ to: '/tokens' })}
+          onBack={() => navigate({ to: '/leverage-tokens' })}
         />
 
         {/* Two-Column Grid Layout */}
@@ -284,7 +289,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                             {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol}
                             )
                             <br />
-                            <span className="text-slate-400 text-sm">
+                            <span className="text-secondary-foreground text-sm">
                               Click to view on {explorer.name}
                             </span>
                           </p>
@@ -309,7 +314,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                           <p className="font-medium">
                             {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
                             <br />
-                            <span className="text-slate-400 text-sm">
+                            <span className="text-secondary-foreground text-sm">
                               Click to view on {explorer.name}
                             </span>
                           </p>
@@ -320,45 +325,39 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                       />
                     </div>
                   </div>
-                  <h1 className="text-xl font-bold text-white leading-tight flex-1 min-w-0">
+                  <h1 className="text-xl font-bold text-foreground leading-tight flex-1 min-w-0">
                     <span className="block truncate">{tokenConfig.name}</span>
                   </h1>
                 </div>
 
                 {/* APY Badge - Mobile */}
                 <div className="flex items-center space-x-1">
-                  <Badge className="bg-green-500/10 text-green-400 border-green-400/20 text-sm">
-                    {isApyError ? (
-                      <span className="text-slate-500">N/A</span>
-                    ) : isApyLoading ? (
-                      <Skeleton className="h-4 w-20" />
-                    ) : apyData?.totalAPY ? (
+                  <Badge variant="success" className="text-sm">
+                    {apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
                       <Skeleton className="h-4 w-20" />
                     )}
                   </Badge>
-                  {!isApyError && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          className="text-slate-400 hover:text-slate-300 transition-colors"
-                        >
-                          <Info className="h-3 w-3" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                        <APYBreakdownTooltip
-                          token={tokenConfig}
-                          {...(apyData && { apyData })}
-                          isLoading={isApyLoading ?? false}
-                          isError={isApyError ?? false}
-                          compact
-                        />
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-[var(--text-muted)] transition-colors hover:text-secondary-foreground"
+                      >
+                        <Info className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="p-0 text-sm border border-border bg-card">
+                      <APYBreakdownTooltip
+                        token={tokenConfig}
+                        {...(apyData && { apyData })}
+                        isLoading={isApyLoading ?? false}
+                        isError={isApyError ?? false}
+                        compact
+                      />
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -377,7 +376,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                         <p className="font-medium">
                           {tokenConfig.collateralAsset.name} ({tokenConfig.collateralAsset.symbol})
                           <br />
-                          <span className="text-slate-400 text-sm">
+                          <span className="text-secondary-foreground text-sm">
                             Click to view on {explorer.name}
                           </span>
                         </p>
@@ -402,7 +401,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                         <p className="font-medium">
                           {tokenConfig.debtAsset.name} ({tokenConfig.debtAsset.symbol})
                           <br />
-                          <span className="text-slate-400 text-sm">
+                          <span className="text-secondary-foreground text-sm">
                             Click to view on {explorer.name}
                           </span>
                         </p>
@@ -413,45 +412,41 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     />
                   </div>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white">{tokenConfig.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                  {tokenConfig.name}
+                </h1>
                 <div className="flex items-center space-x-1">
-                  <Badge className="bg-green-500/10 text-green-400 border-green-400/20">
-                    {isApyError ? (
-                      <span className="text-slate-500">N/A</span>
-                    ) : isApyLoading ? (
-                      <Skeleton className="h-4 w-20" />
-                    ) : apyData?.totalAPY ? (
+                  <Badge className="border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]">
+                    {apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
                       <Skeleton className="h-4 w-20" />
                     )}
                   </Badge>
-                  {!isApyError && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          className="text-slate-400 hover:text-slate-300 transition-colors"
-                        >
-                          <Info className="h-3 w-3" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="p-0 bg-slate-800 border-slate-700 text-sm">
-                        <APYBreakdownTooltip
-                          token={tokenConfig}
-                          {...(apyData && { apyData })}
-                          isLoading={isApyLoading ?? false}
-                          isError={isApyError ?? false}
-                          compact
-                        />
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-[var(--text-muted)] hover:text-secondary-foreground transition-colors"
+                      >
+                        <Info className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]">
+                      <APYBreakdownTooltip
+                        token={tokenConfig}
+                        {...(apyData && { apyData })}
+                        isLoading={isApyLoading ?? false}
+                        isError={isApyError ?? false}
+                        compact
+                      />
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
 
               {/* Description */}
-              <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
+              <p className="text-secondary-foreground leading-relaxed text-sm sm:text-base">
                 {tokenConfig.description}
               </p>
             </motion.div>
@@ -495,7 +490,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
               transition={{ duration: 0.4, delay: 0.3 }}
             >
               {isPriceDataLoading ? (
-                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8">
+                <div className="rounded-lg p-8 border border-border bg-card">
                   <div className="space-y-4">
                     <Skeleton className="h-6 w-32" />
                     <Skeleton className="h-64 w-full" />
@@ -508,13 +503,13 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                   </div>
                 </div>
               ) : priceDataError ? (
-                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8 text-center">
-                  <p className="text-red-400 mb-2">Failed to load price data</p>
-                  <p className="text-slate-400 text-sm">{priceDataError.message}</p>
+                <div className="rounded-lg p-8 text-center border border-border bg-card">
+                  <p className="mb-2 text-[var(--state-error-text)]">Failed to load price data</p>
+                  <p className="text-sm text-secondary-foreground">{priceDataError.message}</p>
                 </div>
               ) : !priceHistoryData || priceHistoryData.length === 0 ? (
-                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-8 text-center">
-                  <p className="text-slate-400">No price data available</p>
+                <div className="rounded-lg p-8 text-center border border-border bg-card">
+                  <p className="text-secondary-foreground">No price data available</p>
                 </div>
               ) : (
                 <PriceLineChart
@@ -530,13 +525,13 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                       key: 'weethPrice',
                       name: `${tokenConfig.collateralAsset.symbol} Price`,
                       dataKey: 'weethPrice',
-                      color: '#10B981',
+                      color: 'var(--chart-2)',
                     },
                     {
                       key: 'leverageTokenPrice',
                       name: 'Leverage Token Price',
                       dataKey: 'leverageTokenPrice',
-                      color: '#8B5CF6',
+                      color: 'var(--chart-1)',
                     },
                   ]}
                   visibleLines={{
@@ -544,9 +539,8 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
                     leverageTokenPrice: true,
                   }}
                   title="Price History"
-                  subtitle={`Compare leverage token performance vs ${tokenConfig.collateralAsset.symbol}`}
                   height={320}
-                  className="bg-slate-900/80 border border-slate-700"
+                  className="border border-border bg-card"
                 />
               )}
             </motion.div>
@@ -623,7 +617,6 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           onClose={() => setIsMintModalOpen(false)}
           leverageTokenAddress={tokenAddress as Address}
           {...(userAddress && { userAddress })}
-          {...(apyData?.totalAPY && { apy: apyData.totalAPY })}
         />
 
         {/* Redeem Modal */}
@@ -633,7 +626,7 @@ export const Route = createFileRoute('/tokens/$chainId/$id')({
           leverageTokenAddress={tokenAddress as Address}
           {...(userAddress && { userAddress })}
         />
-      </div>
+      </PageContainer>
     )
   },
 })

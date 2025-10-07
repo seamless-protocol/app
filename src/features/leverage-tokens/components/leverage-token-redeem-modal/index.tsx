@@ -14,15 +14,19 @@ import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
-import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
+import {
+  DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+  MIN_REDEEM_AMOUNT_DISPLAY,
+  TOKEN_AMOUNT_DISPLAY_DECIMALS,
+} from '../../constants'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
 import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
 import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
-import { useLeverageTokenConfig } from '../../hooks/useLeverageTokenConfig'
 import { useLeverageTokenEarnings } from '../../hooks/useLeverageTokenEarnings'
+import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenUserMetrics } from '../../hooks/useLeverageTokenUserMetrics'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
@@ -53,7 +57,7 @@ interface LeverageTokenRedeemModalProps {
 
 // Hoisted to avoid re-creating on every render
 const REDEEM_STEPS: Array<StepConfig> = [
-  { id: 'input', label: 'Input', progress: 17 },
+  { id: 'userInput', label: 'User Input', progress: 17 },
   { id: 'approve', label: 'Approve', progress: 33 },
   { id: 'confirm', label: 'Confirm', progress: 50 },
   { id: 'pending', label: 'Processing', progress: 67 },
@@ -91,11 +95,8 @@ export function LeverageTokenRedeemModal({
   const leverageManagerAddress =
     contractAddresses.leverageManagerV2 ?? contractAddresses.leverageManager
 
-  // Fetch contract config for redemption fee
-  const { config: contractConfig, isLoading: isContractConfigLoading } = useLeverageTokenConfig(
-    leverageTokenAddress,
-    leverageTokenConfig.chainId,
-  )
+  // Fetch leverage token fees
+  const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(leverageTokenAddress)
 
   // Get real wallet balance for leverage tokens
   const {
@@ -202,7 +203,7 @@ export function LeverageTokenRedeemModal({
     toPending,
     toSuccess,
     toError,
-  } = useRedeemSteps('input')
+  } = useRedeemSteps('userInput')
 
   // Step configuration (static)
   const steps = REDEEM_STEPS
@@ -431,13 +432,19 @@ export function LeverageTokenRedeemModal({
     return (
       form.isAmountValid &&
       form.hasBalance &&
-      form.minAmountOk &&
       !isCalculating &&
       typeof expectedPayoutRaw === 'bigint' &&
       isConnected &&
       !isAllowanceLoading &&
       exec.canSubmit
     )
+  }
+
+  // Check if amount is below minimum for warning
+  const isBelowMinimum = () => {
+    const amount = parseFloat(form.amount || '0')
+    const minAmount = parseFloat(MIN_REDEEM_AMOUNT_DISPLAY)
+    return amount > 0 && amount < minAmount
   }
 
   // Handle amount input changes (with error clearing)
@@ -533,7 +540,7 @@ export function LeverageTokenRedeemModal({
           : expectedAmount
 
       toast.success('Redemption successful!', {
-        description: `${form.amount} tokens redeemed for ${toastAmount} ${selectedOutputAsset.symbol}`,
+        description: `${form.amount} ${leverageTokenConfig.symbol} redeemed for ${toastAmount} ${selectedOutputAsset.symbol}`,
       })
 
       refetchLeverageTokenBalance?.()
@@ -592,7 +599,7 @@ export function LeverageTokenRedeemModal({
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
-      case 'input':
+      case 'userInput':
         return (
           <InputStep
             selectedToken={selectedTokenView}
@@ -613,6 +620,7 @@ export function LeverageTokenRedeemModal({
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedAmount={expectedAmount}
+            selectedAssetPrice={selectedOutputAsset.price}
             earnings={earnings}
             debtSymbol={leverageTokenConfig.debtAsset.symbol}
             collateralSymbol={leverageTokenConfig.collateralAsset.symbol}
@@ -623,9 +631,12 @@ export function LeverageTokenRedeemModal({
             onApprove={handleApprove}
             error={error || redeemBlockingError}
             leverageTokenConfig={leverageTokenConfig}
-            redemptionFee={contractConfig?.redeemTokenFee}
-            isRedemptionFeeLoading={isContractConfigLoading}
+            redemptionFee={fees?.redeemTreasuryFee}
+            isRedemptionFeeLoading={isFeesLoading}
+            redeemTokenFee={fees?.redeemTokenFee}
+            isRedeemTokenFeeLoading={isFeesLoading}
             disabledAssets={disabledOutputAssets}
+            isBelowMinimum={isBelowMinimum()}
           />
         )
 
@@ -651,8 +662,8 @@ export function LeverageTokenRedeemModal({
               leverageRatio: leverageTokenConfig.leverageRatio,
               chainId: leverageTokenConfig.chainId,
             }}
-            redemptionFee={contractConfig?.redeemTokenFee}
-            isRedemptionFeeLoading={isContractConfigLoading}
+            redemptionFee={fees?.redeemTreasuryFee}
+            isRedemptionFeeLoading={isFeesLoading}
             onConfirm={handleConfirm}
           />
         )
@@ -666,6 +677,7 @@ export function LeverageTokenRedeemModal({
             amount={form.amount}
             expectedAmount={expectedAmount}
             selectedAsset={selectedOutputAsset.symbol}
+            leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash}
             onClose={handleClose}
           />
@@ -691,7 +703,7 @@ export function LeverageTokenRedeemModal({
       }
       currentStep={currentStep}
       steps={steps}
-      className="max-w-lg bg-slate-900 border-slate-700"
+      className="max-w-lg border border-[var(--divider-line)] bg-[var(--surface-card)]"
     >
       {renderStepContent()}
     </MultiStepModal>

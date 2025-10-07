@@ -14,19 +14,17 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const sampleMetrics = {
-  'Leverage Settings': [
+  Leverage: [
     {
       label: 'Current Leverage',
       value: '12.34x',
       highlight: true,
-      color: 'text-white',
-      tooltip: 'The current leverage ratio for this token.',
+      color: 'text-foreground',
     },
     {
       label: 'Min - Max Leverage',
       value: '8.00x - 20.00x',
-      color: 'text-white',
-      tooltip: 'The minimum and maximum leverage range allowed.',
+      color: 'text-foreground',
     },
   ],
   Fees: [
@@ -34,41 +32,39 @@ const sampleMetrics = {
       label: 'Mint Token Fee',
       value: '0.25%',
       highlight: true,
-      color: 'text-green-400',
+      color: 'text-[var(--state-success-text)]',
       tooltip: 'Fee charged when minting new leverage tokens.',
     },
     {
       label: 'Redeem Token Fee',
       value: '0.10%',
-      color: 'text-white',
+      color: 'text-foreground',
       tooltip: 'Fee charged when redeeming leverage tokens.',
     },
   ],
-  'Auction Parameters': [
+  'Dutch Auction Parameters': [
     {
       label: 'Dutch Auction Duration',
       value: '4 hours',
-      color: 'text-white',
-      tooltip: 'Duration of the Dutch auction for token redemptions.',
+      color: 'text-foreground',
     },
     {
       label: 'Initial Price Multiplier',
       value: '1.050x',
-      color: 'text-white',
-      tooltip: 'Initial price multiplier for the auction.',
+      color: 'text-foreground',
     },
   ],
-  'Risk Management': [
+  'Pre-liquidation': [
     {
       label: 'Pre-liquidation Leverage',
       value: '16.00x',
-      color: 'text-white',
-      tooltip: 'Leverage threshold before liquidation is triggered.',
+      color: 'text-foreground',
+      tooltip: 'Leverage threshold that triggers pre-liquidation protection',
     },
     {
       label: 'Rebalance Reward',
       value: '0.35%',
-      color: 'text-white',
+      color: 'text-foreground',
       tooltip: 'Reward percentage for successful rebalancing.',
     },
   ],

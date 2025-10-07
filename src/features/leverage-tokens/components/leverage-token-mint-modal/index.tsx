@@ -7,8 +7,7 @@ import { createManagerPortV2 } from '@/domain/mint/ports'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
-import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
-import { useReadLeverageManagerV2GetManagementFee } from '../../../../lib/contracts/generated'
+import { getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
@@ -25,6 +24,7 @@ import { useMintForm } from '../../hooks/mint/useMintForm'
 import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useSlippage } from '../../hooks/mint/useSlippage'
+import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateAfterReceipt } from '../../utils/invalidateAfterReceipt'
 import { ApproveStep } from './ApproveStep'
@@ -47,13 +47,12 @@ interface LeverageTokenMintModalProps {
   isOpen: boolean
   onClose: () => void
   leverageTokenAddress: `0x${string}` // Token address to look up config
-  apy?: number // Optional APY prop - if not provided, will default to 0
   userAddress?: `0x${string}` // Optional user address - if not provided, will use useAccount
 }
 
 // Hoisted to avoid re-creating on every render
 const MINT_STEPS: Array<StepConfig> = [
-  { id: 'input', label: 'Input', progress: 17 },
+  { id: 'userInput', label: 'User Input', progress: 17 },
   { id: 'approve', label: 'Approve', progress: 33 },
   { id: 'confirm', label: 'Confirm', progress: 50 },
   { id: 'pending', label: 'Processing', progress: 67 },
@@ -65,7 +64,6 @@ export function LeverageTokenMintModal({
   isOpen,
   onClose,
   leverageTokenAddress,
-  apy,
   userAddress: propUserAddress,
 }: LeverageTokenMintModalProps) {
   const { trackLeverageTokenMinted, trackTransactionError } = useTransactionGA()
@@ -92,16 +90,8 @@ export function LeverageTokenMintModal({
     contractAddresses.leverageRouterV2 ?? contractAddresses.leverageRouter
   const leverageManagerAddress = contractAddresses.leverageManagerV2
 
-  // Fetch management fee for display (independent from core config)
-  const { data: managementFee, isLoading: isManagementFeeLoading } =
-    useReadLeverageManagerV2GetManagementFee({
-      args: [leverageTokenAddress],
-      chainId: leverageTokenConfig.chainId as SupportedChainId,
-      query: {
-        enabled: Boolean(leverageTokenAddress && leverageManagerAddress),
-        staleTime: 60_000, // Cache for 1 minute - fee rarely changes
-      },
-    })
+  // Fetch leverage token fees
+  const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(leverageTokenAddress)
 
   // Get real wallet balance for collateral asset
   const {
@@ -147,7 +137,7 @@ export function LeverageTokenMintModal({
     toPending,
     toSuccess,
     toError,
-  } = useMintSteps('input')
+  } = useMintSteps('userInput')
 
   // Step configuration (static)
   const steps = MINT_STEPS
@@ -322,13 +312,19 @@ export function LeverageTokenMintModal({
     return (
       form.isAmountValid &&
       form.hasBalance &&
-      form.minAmountOk &&
       !planPreview.isLoading &&
       quoteReady &&
       parseFloat(expectedTokens) > 0 &&
       isConnected &&
       !isAllowanceLoading
     )
+  }
+
+  // Check if amount is below minimum for warning
+  const isBelowMinimum = () => {
+    const amount = parseFloat(form.amount || '0')
+    const minAmount = parseFloat(MIN_MINT_AMOUNT_DISPLAY)
+    return amount > 0 && amount < minAmount
   }
 
   // Handle approval step
@@ -373,7 +369,7 @@ export function LeverageTokenMintModal({
       analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
 
       toast.success('Leverage tokens minted successfully!', {
-        description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} tokens`,
+        description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} ${leverageTokenConfig.symbol}`,
       })
       // Invalidate protocol state and refresh wallet balances after 1 confirmation
       try {
@@ -439,7 +435,7 @@ export function LeverageTokenMintModal({
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
-      case 'input':
+      case 'userInput':
         return (
           <InputStep
             selectedToken={selectedTokenView}
@@ -470,9 +466,11 @@ export function LeverageTokenMintModal({
             onApprove={handleApprove}
             error={error || planPreview.error?.message || undefined}
             leverageTokenConfig={leverageTokenConfig}
-            apy={apy ?? undefined}
-            managementFee={managementFee}
-            isManagementFeeLoading={isManagementFeeLoading}
+            managementFee={fees?.managementTreasuryFee}
+            isManagementFeeLoading={isFeesLoading}
+            mintTokenFee={fees?.mintTokenFee}
+            isMintTokenFeeLoading={isFeesLoading}
+            isBelowMinimum={isBelowMinimum()}
           />
         )
 
@@ -516,6 +514,7 @@ export function LeverageTokenMintModal({
             selectedToken={selectedTokenView}
             amount={form.amount}
             expectedTokens={expectedTokens}
+            leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash}
             onClose={handleClose}
           />
@@ -533,15 +532,11 @@ export function LeverageTokenMintModal({
     <MultiStepModal
       isOpen={isOpen}
       onClose={handleClose}
-      title={currentStep === 'success' ? 'Mint Complete' : 'Mint Leverage Token'}
-      description={
-        currentStep === 'success'
-          ? 'Your leverage tokens have been successfully minted and are now earning yield.'
-          : 'Mint leverage tokens to gain amplified exposure to the underlying asset pair.'
-      }
+      title={currentStep === 'success' ? 'Mint Success' : 'Mint Leverage Token'}
+      description={currentStep === 'success' ? 'Your leverage tokens have been successfully.' : ''}
       currentStep={currentStep}
       steps={steps}
-      className="max-w-lg bg-slate-900 border-slate-700"
+      className="max-w-lg border border-[var(--divider-line)] bg-[var(--surface-card)]"
     >
       {renderStepContent()}
     </MultiStepModal>

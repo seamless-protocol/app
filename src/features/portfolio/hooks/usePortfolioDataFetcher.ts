@@ -163,7 +163,7 @@ export function usePortfolioDataFetcher() {
   // address = '0x0ec9a61bd923cbaf519b1baef839617f012344e2'
 
   return useQuery({
-    queryKey: portfolioKeys.data(),
+    queryKey: portfolioKeys.data(address),
     queryFn: async (): Promise<{
       portfolioData: PortfolioData
       rawUserPositions: Array<UserPosition> // Store raw subgraph positions for performance calculations
@@ -237,9 +237,6 @@ export function usePortfolioDataFetcher() {
               tokenConfig?.name || `${collateralAsset.symbol} / ${debtAsset.symbol} Leverage Token`,
             type: 'leverage-token' as const,
             token: collateralAsset.symbol as 'USDC' | 'WETH' | 'weETH', // Use collateral asset as primary token
-            riskLevel: (tokenConfig?.leverageRatio && tokenConfig.leverageRatio > 10
-              ? 'high'
-              : 'medium') as 'low' | 'medium' | 'high',
             currentValue: {
               amount: '0.00', // Will be calculated later
               symbol: 'USD',
@@ -486,12 +483,13 @@ export function usePortfolioWithTotalValue() {
  */
 export function usePortfolioPerformance() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30D')
+  const { address } = useAccount()
   const { rawUserPositions, leverageTokenStates, usdPrices, isLoading, isError, error } =
     usePortfolioWithTotalValue()
 
   // Generate performance data from the cached portfolio data
   const performanceData = useQuery({
-    queryKey: [...portfolioKeys.performance(selectedTimeframe), usdPrices],
+    queryKey: [...portfolioKeys.performance(selectedTimeframe, address), usdPrices],
     queryFn: async (): Promise<Array<PortfolioDataPoint>> => {
       if (!rawUserPositions.length || !leverageTokenStates.size) {
         return []

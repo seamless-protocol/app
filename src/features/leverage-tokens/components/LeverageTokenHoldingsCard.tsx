@@ -6,6 +6,7 @@ import { AssetDisplay } from '@/components/ui/asset-display'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils/cn'
 
 interface UserPosition {
   hasPosition: boolean
@@ -55,9 +56,16 @@ export function LeverageTokenHoldingsCard({
     return (
       <ConnectButton.Custom>
         {({ openConnectModal }) => (
-          <div onClick={openConnectModal} className="cursor-pointer w-full">
+          <button
+            type="button"
+            onClick={() => {
+              // Always use RainbowKit's openConnectModal for wallet connection
+              openConnectModal()
+            }}
+            className="cursor-pointer bg-transparent border-none p-0 w-full"
+          >
             {children}
-          </div>
+          </button>
         )}
       </ConnectButton.Custom>
     )
@@ -70,11 +78,11 @@ export function LeverageTokenHoldingsCard({
       transition={{ duration: 0.4 }}
     >
       <Card
-        className={`bg-slate-900/80 border-slate-700 ${className}`}
+        className={cn('border border-border text-foreground bg-card', className)}
         data-testid="leverage-token-holdings-card"
       >
         <CardHeader>
-          <CardTitle className="text-lg text-white">Current Holdings</CardTitle>
+          <CardTitle className="text-lg text-foreground">Current Holdings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-6">
@@ -88,11 +96,11 @@ export function LeverageTokenHoldingsCard({
                       <AssetDisplay asset={debtAsset} size="md" variant="logo-only" />
                     </div>
                   ) : (
-                    <div className="w-8 h-8 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden">
-                      <Zap className="w-4 h-4 text-purple-400" />
+                    <div className="w-8 h-8 rounded-full border-2 border-border bg-card flex items-center justify-center overflow-hidden">
+                      <Zap className="w-4 h-4 text-brand-purple" />
                     </div>
                   )}
-                  <div className="text-xl font-medium text-white">
+                  <div className="text-xl font-medium text-foreground">
                     {isLoading ? (
                       <Skeleton className="h-6 w-32" />
                     ) : (
@@ -101,21 +109,23 @@ export function LeverageTokenHoldingsCard({
                   </div>
                 </div>
 
-                <div className="text-slate-400">
+                <div className="text-secondary-foreground">
                   {isLoading ? <Skeleton className="h-4 w-24" /> : userPosition.balanceUSD}
                 </div>
 
                 {userPosition.allTimePercentage && (
-                  <div className="text-white">
+                  <div className="text-foreground">
                     <span className="font-medium">{userPosition.balanceUSD}</span>
-                    <span className="text-slate-400 ml-2">({userPosition.allTimePercentage})</span>
-                    <span className="text-slate-500 ml-2">All time</span>
+                    <span className="text-secondary-foreground ml-2">
+                      ({userPosition.allTimePercentage})
+                    </span>
+                    <span className="text-muted-foreground ml-2">All time</span>
                   </div>
                 )}
               </div>
             ) : (
               /* Wallet Not Connected - Holdings Preview */
-              <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+              <div className="rounded-lg p-4 border border-border bg-card">
                 {renderConnectButton(
                   <div className="flex items-center space-x-3">
                     {collateralAsset && debtAsset ? (
@@ -124,13 +134,15 @@ export function LeverageTokenHoldingsCard({
                         <AssetDisplay asset={debtAsset} size="md" variant="logo-only" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
-                        <Zap className="w-5 h-5 text-purple-400" />
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-accent">
+                        <Zap className="w-5 h-5 text-brand-purple" />
                       </div>
                     )}
                     <div>
-                      <h3 className="font-medium text-white text-left">Connect Your Wallet</h3>
-                      <p className="text-sm text-slate-400">View holdings and start minting</p>
+                      <h3 className="font-medium text-foreground text-left">Connect Your Wallet</h3>
+                      <p className="text-sm text-secondary-foreground">
+                        View holdings and start minting
+                      </p>
                     </div>
                   </div>,
                 )}
@@ -146,9 +158,10 @@ export function LeverageTokenHoldingsCard({
                       data-test-id="mint-button"
                       type="button"
                       onClick={handleMintClick}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white w-full"
+                      variant="gradient"
+                      className="w-full lg:min-w-[112px]"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus className="w-4 h-4" />
                       Mint
                     </Button>
                   </div>
@@ -158,9 +171,9 @@ export function LeverageTokenHoldingsCard({
                       onClick={handleRedeemClick}
                       variant="outline"
                       disabled={!userPosition.hasPosition}
-                      className="border-slate-600 text-slate-300 hover:bg-slate-800 w-full"
+                      className="w-full lg:min-w-[112px] border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)]"
                     >
-                      <Minus className="w-4 h-4 mr-2" />
+                      <Minus className="w-4 h-4" />
                       Redeem
                     </Button>
                   </div>
@@ -168,14 +181,14 @@ export function LeverageTokenHoldingsCard({
               ) : (
                 <>
                   {renderConnectButton(
-                    <div className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2">
-                      <Plus className="w-4 h-4 mr-2" />
+                    <div className="w-full lg:min-w-[112px] flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 border border-transparent bg-cta-gradient hover:bg-cta-hover-gradient active:bg-cta-active-gradient">
+                      <Plus className="w-4 h-4" />
                       Mint
                     </div>,
                   )}
                   {renderConnectButton(
-                    <div className="w-full border border-slate-600 text-slate-300 hover:bg-slate-800 flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-transparent">
-                      <Minus className="w-4 h-4 mr-2" />
+                    <div className="w-full lg:min-w-[112px] border border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-transparent">
+                      <Minus className="w-4 h-4" />
                       Redeem
                     </div>,
                   )}

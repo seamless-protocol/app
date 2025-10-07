@@ -81,7 +81,6 @@ export const Default: Story = {
     leverageTokenAddress:
       leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address ||
       '0x3f5b831fc2c82685d66cea65346128348116f064',
-    apy: 18.67, // Example with APY
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
   render: (args) => {
@@ -106,7 +105,6 @@ export const AllStates: Story = {
     leverageTokenAddress:
       leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address ||
       '0x3f5b831fc2c82685d66cea65346128348116f064',
-    apy: 18.67,
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
   render: (args) => {
@@ -120,7 +118,7 @@ export const AllStates: Story = {
           </Button>
         </div>
 
-        <div className="text-sm text-slate-400 max-w-md">
+        <div className="text-sm text-secondary-foreground max-w-md">
           <p>This story allows you to test all the different states of the modal:</p>
           <ul className="mt-2 space-y-1 list-disc list-inside">
             <li>Input step with amount selection</li>
@@ -146,7 +144,6 @@ export const DifferentStrategies: Story = {
     leverageTokenAddress:
       leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]?.address ||
       '0x3f5b831fc2c82685d66cea65346128348116f064',
-    apy: 18.67,
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
   render: (args) => {

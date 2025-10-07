@@ -26,14 +26,14 @@ type Story = StoryObj<typeof meta>
 
 export const InCard: Story = {
   render: () => (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 w-64">
-      <div className="text-sm text-white mb-2">Section 1</div>
-      <div className="text-xs text-slate-400 mb-4">Some content here</div>
+    <div className="bg-card border border-border rounded-lg p-4 w-64 text-foreground">
+      <div className="text-sm mb-2">Section 1</div>
+      <div className="text-xs text-secondary-foreground mb-4">Some content here</div>
 
-      <Separator className="my-4 bg-slate-700" />
+      <Separator className="my-4" />
 
-      <div className="text-sm text-white mb-2">Section 2</div>
-      <div className="text-xs text-slate-400">More content here</div>
+      <div className="text-sm mb-2">Section 2</div>
+      <div className="text-xs text-secondary-foreground">More content here</div>
     </div>
   ),
 }
@@ -41,11 +41,11 @@ export const InCard: Story = {
 export const VerticalInFlex: Story = {
   render: () => (
     <div className="flex items-center space-x-4">
-      <div className="text-sm text-slate-400">Item 1</div>
+      <div className="text-sm text-secondary-foreground">Item 1</div>
       <Separator orientation="vertical" className="h-6" />
-      <div className="text-sm text-slate-400">Item 2</div>
+      <div className="text-sm text-secondary-foreground">Item 2</div>
       <Separator orientation="vertical" className="h-6" />
-      <div className="text-sm text-slate-400">Item 3</div>
+      <div className="text-sm text-secondary-foreground">Item 3</div>
     </div>
   ),
 }

@@ -1,4 +1,4 @@
-import { ArrowDownUp, TrendingDown, Zap } from 'lucide-react'
+import { ArrowDown, TrendingDown, Zap } from 'lucide-react'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
 import { Skeleton } from '../../../../components/ui/skeleton'
@@ -25,7 +25,7 @@ interface ConfirmStepProps {
   expectedAmount: string
   selectedAsset: string
   leverageTokenConfig: LeverageTokenConfig
-  redemptionFee?: bigint | undefined
+  redemptionFee?: string | undefined
   isRedemptionFeeLoading?: boolean | undefined
   onConfirm: () => void
 }
@@ -54,76 +54,84 @@ export function ConfirmStep({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-lg font-medium text-white mb-2">Confirm Redemption</h3>
-        <p className="text-slate-400">Review your redemption details and confirm the transaction</p>
+        <h3 className="mb-2 text-lg font-medium text-foreground">Confirm Redemption</h3>
+        <p className="text-secondary-foreground">
+          Review your redemption details and confirm the transaction
+        </p>
       </div>
 
-      <Card variant="gradient" className="p-4 gap-0">
+      <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-slate-400 text-sm">Redeeming</span>
+            <span className="text-sm text-secondary-foreground">Redeeming</span>
             <div className="flex items-center">
-              <span className="text-white font-medium mr-2">
+              <span className="mr-2 font-medium text-foreground">
                 {amount} {selectedToken.symbol}
               </span>
-              <TrendingDown className="h-4 w-4 text-purple-400" />
+              <TrendingDown className="h-4 w-4 text-brand-purple" />
             </div>
           </div>
 
           <div className="flex justify-center py-2">
-            <ArrowDownUp className="h-4 w-4 text-slate-400" />
+            <ArrowDown className="h-4 w-4 text-muted-foreground" />
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-slate-400 text-sm">Receiving</span>
+            <span className="text-sm text-secondary-foreground">Receiving</span>
             <div className="flex items-center">
-              <span className="text-white font-medium mr-2">
+              <span className="mr-2 font-medium text-foreground">
                 {expectedAmount} {selectedAsset}
               </span>
-              <TrendingDown className="h-4 w-4 text-green-400" />
+              <TrendingDown className="h-4 w-4 text-[var(--state-success-text)]" />
             </div>
           </div>
         </div>
       </Card>
 
-      <Card variant="gradient" className="p-4">
-        <h4 className="text-sm font-medium text-white mb-3">Final Summary</h4>
+      <Card variant="gradient" className="border border-border bg-card p-4">
+        <h4 className="mb-3 text-sm font-medium text-foreground">Final Summary</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-400">Leverage Token</span>
-            <span className="text-white">{leverageTokenConfig.name}</span>
+            <span className="text-secondary-foreground">Leverage Token</span>
+            <span className="text-foreground">{leverageTokenConfig.name}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Redeem Asset</span>
-            <span className="text-white">{selectedAsset}</span>
+            <span className="text-secondary-foreground">Redeem Asset</span>
+            <span className="text-foreground">{selectedAsset}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Redemption Fee</span>
-            <span className="text-white">
+            <span className="text-secondary-foreground">Redemption Fee</span>
+            <span className="text-foreground">
               {isRedemptionFeeLoading ? (
                 <Skeleton className="inline-block h-4 w-12" />
-              ) : typeof redemptionFee === 'bigint' ? (
-                `${Number(redemptionFee) / 100}%`
+              ) : redemptionFee ? (
+                redemptionFee
               ) : (
-                <Skeleton className="inline-block h-4 w-12" />
+                'N/A'
               )}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Estimated Gas</span>
+            <span className="text-secondary-foreground">Estimated Gas</span>
             {isGasLoading ? (
               <Skeleton className="h-4 w-16" />
             ) : isGasError ? (
-              <span className="text-red-400">Unable to estimate</span>
+              <span className="text-[var(--state-error-text)]">Unable to estimate</span>
             ) : (
-              <span className="text-white">{estimatedCostUsd}</span>
+              <span className="text-foreground">{estimatedCostUsd}</span>
             )}
           </div>
         </div>
       </Card>
 
-      <Button onClick={onConfirm} variant="gradient" className="w-full h-12 font-medium">
-        <Zap className="h-4 w-4 mr-2" />
+      <Button
+        onClick={onConfirm}
+        variant="gradient"
+        size="lg"
+        align="centered"
+        className="w-full font-medium"
+      >
+        <Zap className="h-4 w-4" aria-hidden="true" />
         Confirm Redemption
       </Button>
     </div>
