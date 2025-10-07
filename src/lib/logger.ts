@@ -18,7 +18,12 @@ export interface LogContext {
 }
 
 class BaseLogger {
-  private isDev = resolveIsDev()
+  // Treat any non-production mode or Vitest environment as local console logging
+  private isLocal = (() => {
+    const isProd = import.meta.env.MODE === 'production'
+    const isVitest = typeof import.meta !== 'undefined' && Boolean((import.meta as any).vitest)
+    return !isProd || isVitest
+  })()
 
   constructor(
     private namespace: string,
@@ -38,7 +43,7 @@ class BaseLogger {
   error(message: string, context?: LogContext) {
     const merged = { ...(this.defaults || {}), ...(context || {}) }
 
-    if (this.isDev) {
+    if (this.isLocal) {
       // Always log to console in development
       // Include namespace for easy filtering
       console.error(`[${this.namespace}] ${message}`, merged)
@@ -56,11 +61,13 @@ class BaseLogger {
     if (merged['feature'] !== undefined) tags['feature'] = String(merged['feature'])
     if (merged['transactionHash'] !== undefined)
       tags['transactionHash'] = String(merged['transactionHash'])
-    if (merged['userAddress'] !== undefined) tags['userAddress'] = String(merged['userAddress'])
+    // Do not add userAddress as a tag to avoid PII in Sentry
 
+    // Remove userAddress from extra context sent to Sentry (privacy)
+    const { userAddress: _omitUserAddress, ...sanitizedExtra } = merged
     const sentryContext = {
       tags,
-      extra: merged,
+      extra: sanitizedExtra,
     }
 
     Sentry.captureException(merged.error || new Error(message), sentryContext)
@@ -70,7 +77,7 @@ class BaseLogger {
    * Log a warning (console-only in dev)
    */
   warn(message: string, context?: LogContext) {
-    if (!this.isDev) return
+    if (!this.isLocal) return
     const merged = { ...(this.defaults || {}), ...(context || {}) }
     console.warn(`[${this.namespace}] ${message}`, merged)
   }
@@ -79,7 +86,7 @@ class BaseLogger {
    * Log info (console-only in dev)
    */
   info(message: string, context?: LogContext) {
-    if (!this.isDev) return
+    if (!this.isLocal) return
     const merged = { ...(this.defaults || {}), ...(context || {}) }
     console.log(`[${this.namespace}] ${message}`, merged)
   }
@@ -93,13 +100,3 @@ export function createLogger(namespace: string, defaults?: LogContext) {
 }
 
 export type Logger = ReturnType<typeof createLogger>
-
-function resolveIsDev(): boolean {
-  const viteEnv =
-    typeof import.meta !== 'undefined'
-      ? (import.meta as { env?: { DEV?: boolean } }).env
-      : undefined
-  if (viteEnv && typeof viteEnv.DEV === 'boolean') return viteEnv.DEV
-  const nodeEnv = typeof process !== 'undefined' ? process.env['NODE_ENV'] : undefined
-  return nodeEnv !== 'production'
-}

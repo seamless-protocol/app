@@ -1,7 +1,6 @@
-import { createLogger } from '@/lib/logger'
+import { captureApiError } from '@/lib/observability/sentry'
+import { elapsedMsSince, getNowMs } from '@/lib/utils/time'
 import type { AprFetcher, BaseAprData } from './types'
-
-const logger = createLogger('etherfi-apr')
 
 /**
  * EtherFi-specific APR data interface
@@ -25,15 +24,34 @@ export class EtherFiAprProvider implements AprFetcher {
   protocolName = 'Ether.fi'
 
   async fetchApr(): Promise<BaseAprData> {
+    const url = 'https://misc-cache.seamlessprotocol.com/etherfi-protocol-detail'
+    const provider = 'etherfi'
+    const method = 'GET'
+    const start = getNowMs()
     try {
-      const response = await fetch(
-        'https://misc-cache.seamlessprotocol.com/etherfi-protocol-detail',
-      )
+      const response = await fetch(url)
 
       if (!response.ok) {
-        throw new Error(
+        const durationMs = elapsedMsSince(start)
+        const error = new Error(
           `Failed to fetch EtherFi data (status ${response.status}): ${response.statusText}`,
         )
+        let responseSnippet: string | undefined
+        try {
+          const text = await response.text()
+          responseSnippet = text.slice(0, 500)
+        } catch {}
+        captureApiError({
+          provider,
+          method,
+          url,
+          status: response.status,
+          durationMs,
+          feature: 'apr',
+          ...(responseSnippet ? { responseSnippet } : {}),
+          error,
+        })
+        throw error
       }
 
       const raw = await response.json()
@@ -59,7 +77,16 @@ export class EtherFiAprProvider implements AprFetcher {
 
       return result
     } catch (error) {
-      logger.error('Error fetching EtherFi APR', { error })
+      const durationMs = elapsedMsSince(start)
+      captureApiError({
+        provider,
+        method,
+        url,
+        status: 0,
+        durationMs,
+        feature: 'apr',
+        error,
+      })
       throw new Error(
         `Failed to fetch EtherFi APR data: ${error instanceof Error ? error.message : 'Unknown error'}`,
       )

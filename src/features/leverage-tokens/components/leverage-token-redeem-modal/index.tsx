@@ -5,6 +5,7 @@ import { formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 import type { OrchestrateRedeemResult } from '@/domain/redeem'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
+import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
@@ -82,7 +83,7 @@ export function LeverageTokenRedeemModal({
   }
 
   // Get user account information
-  const { address: hookUserAddress, isConnected } = useAccount()
+  const { address: hookUserAddress, isConnected, chainId: connectedChainId } = useAccount()
   const wagmiConfig = useConfig()
   const userAddress = (propUserAddress || hookUserAddress) as `0x${string}` | undefined
 
@@ -518,6 +519,27 @@ export function LeverageTokenRedeemModal({
       const errorMessage =
         error instanceof Error ? error.message : 'Redemption failed. Please try again.'
       trackTransactionError('redeem_failed', 'leverage_token', errorMessage)
+
+      const provider = (() => {
+        const swap = leverageTokenConfig.swaps?.collateralToDebt
+        if (!swap) return undefined
+        if (swap.type === 'lifi') return 'lifi'
+        if (swap.type === 'uniswapV2' || swap.type === 'uniswapV3') return 'uniswap'
+        return undefined
+      })()
+
+      captureTxError({
+        flow: 'redeem',
+        chainId: leverageTokenConfig.chainId,
+        ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
+        token: leverageTokenAddress,
+        outputAsset: selectedOutputAsset.address,
+        slippageBps,
+        amountIn: form.amount,
+        expectedOut: expectedAmount,
+        ...(provider ? { provider } : {}),
+        error,
+      })
 
       setError(errorMessage)
       toError()

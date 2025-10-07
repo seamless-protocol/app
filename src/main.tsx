@@ -25,6 +25,7 @@ import { router } from './router'
 declare global {
   interface Window {
     __APP_READY__?: boolean
+    sentrySmoke?: (kind?: string) => void
   }
 }
 
@@ -51,7 +52,7 @@ try {
     environment: import.meta.env.MODE,
   })
   // In development, show the error in the UI
-  if (import.meta.env.DEV) {
+  if (import.meta.env.MODE === 'development') {
     const errorDiv = document.createElement('div')
     errorDiv.style.cssText = `
       position: fixed;
@@ -74,6 +75,8 @@ try {
 // Initialize Sentry and GA4 before app renders
 initSentry()
 initGA4()
+
+// No test-only smoke hooks in production bundles
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {

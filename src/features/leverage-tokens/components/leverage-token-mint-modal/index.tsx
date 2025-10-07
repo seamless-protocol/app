@@ -3,12 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig, usePublicClient } from 'wagmi'
-import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
-import { createLogger } from '@/lib/logger'
-
-const logger = createLogger('mint-modal')
-
 import { createManagerPortV2 } from '@/domain/mint/ports'
+import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
+import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
@@ -81,7 +78,7 @@ export function LeverageTokenMintModal({
   }
 
   // Get user account information
-  const { address: hookUserAddress, isConnected, chainId } = useAccount()
+  const { address: hookUserAddress, isConnected, chainId: connectedChainId } = useAccount()
   const wagmiConfig = useConfig()
   const publicClient = usePublicClient({ chainId: leverageTokenConfig.chainId })
   const queryClient = useQueryClient()
@@ -395,14 +392,25 @@ export function LeverageTokenMintModal({
       // Track mint transaction error
       trackTransactionError('mint_failed', 'leverage_token', error.message)
 
-      logger.error('Mint failed', {
+      const provider = (() => {
+        const swap = leverageTokenConfig.swaps?.debtToCollateral
+        if (!swap) return undefined
+        if (swap.type === 'lifi') return 'lifi'
+        if (swap.type === 'uniswapV2' || swap.type === 'uniswapV3') return 'uniswap'
+        return undefined
+      })()
+
+      captureTxError({
+        flow: 'mint',
+        chainId: leverageTokenConfig.chainId,
+        ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
+        token: leverageTokenAddress,
+        inputAsset: leverageTokenConfig.collateralAsset.address,
+        slippageBps,
+        amountIn: form.amount,
+        expectedOut: String(expectedTokens),
+        ...(provider ? { provider } : {}),
         error,
-        userAddress,
-        leverageTokenAddress,
-        amount: form.amount,
-        amountRaw: form.amountRaw?.toString(),
-        chainId: chainId || 0,
-        feature: 'mint',
       })
 
       // Pass the raw error to ErrorStep - it will handle the formatting

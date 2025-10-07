@@ -1,5 +1,7 @@
 import type { Address } from 'viem'
 import { createLogger } from '@/lib/logger'
+import { captureApiError } from '@/lib/observability/sentry'
+import { elapsedMsSince, getNowMs } from '@/lib/utils/time'
 import type { BaseRewardsAprData, RewardsAprFetcher } from './types'
 
 const logger = createLogger('merkl-rewards')
@@ -89,6 +91,7 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
     tokenAddress: Address,
     chainId?: number,
   ): Promise<Array<MerklOpportunity>> {
+    const start = getNowMs()
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
@@ -109,19 +112,63 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(`No Merkl opportunities found for token: ${tokenAddress}`)
-        }
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const durationMs = elapsedMsSince(start)
+        const error =
+          response.status === 404
+            ? new Error(`No Merkl opportunities found for token: ${tokenAddress}`)
+            : new Error(`HTTP error! status: ${response.status}`)
+        let responseSnippet: string | undefined
+        try {
+          const text = await response.text()
+          responseSnippet = text.slice(0, 500)
+        } catch {}
+        captureApiError({
+          provider: 'merkl',
+          method: 'GET',
+          url,
+          status: response.status,
+          durationMs,
+          feature: 'apr',
+          ...(typeof chainId === 'number' ? { chainId } : {}),
+          token: tokenAddress,
+          ...(responseSnippet ? { responseSnippet } : {}),
+          error,
+        })
+        throw error
       }
 
       const data = await response.json()
       return Array.isArray(data) ? data : data.opportunities || []
     } catch (error) {
+      const durationMs = elapsedMsSince(start)
       if (error instanceof Error && error.name === 'AbortError') {
-        logger.error('Request timeout while fetching opportunities', { tokenAddress })
+        captureApiError({
+          provider: 'merkl',
+          method: 'GET',
+          url: chainId
+            ? `https://api.merkl.xyz/v4/opportunities?identifier=${tokenAddress}&chainId=${chainId}`
+            : `https://api.merkl.xyz/v4/opportunities?identifier=${tokenAddress}`,
+          status: 0,
+          durationMs,
+          feature: 'apr',
+          ...(typeof chainId === 'number' ? { chainId } : {}),
+          token: tokenAddress,
+          error,
+        })
       } else {
-        logger.error('Error fetching opportunities', { error, tokenAddress })
+        captureApiError({
+          provider: 'merkl',
+          method: 'GET',
+          url: chainId
+            ? `https://api.merkl.xyz/v4/opportunities?identifier=${tokenAddress}&chainId=${chainId}`
+            : `https://api.merkl.xyz/v4/opportunities?identifier=${tokenAddress}`,
+          status: 0,
+          durationMs,
+          feature: 'apr',
+          ...(typeof chainId === 'number' ? { chainId } : {}),
+          token: tokenAddress,
+          error,
+        })
       }
       throw error
     }

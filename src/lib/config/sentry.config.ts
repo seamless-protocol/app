@@ -6,6 +6,9 @@ import * as Sentry from '@sentry/react'
  */
 export function initSentry() {
   const dsn = import.meta.env['VITE_SENTRY_DSN']
+  const environment = import.meta.env.MODE
+
+  console.log('[Sentry] Environment:', environment)
 
   if (!dsn) {
     console.log('[Sentry] No DSN provided, skipping initialization')
@@ -15,43 +18,149 @@ export function initSentry() {
   try {
     Sentry.init({
       dsn,
-      environment: import.meta.env['VITE_SENTRY_ENVIRONMENT'] || import.meta.env.MODE,
-      integrations: [
-        Sentry.browserTracingIntegration(),
-        Sentry.replayIntegration({
-          maskAllText: false,
-          blockAllMedia: false,
-        }),
-      ],
+      environment: import.meta.env.MODE,
+      integrations: [Sentry.browserTracingIntegration()],
       // Performance Monitoring
-      tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
-      // Session Replay
-      replaysSessionSampleRate: 0.1, // 10% of sessions
-      replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
-      // Release tracking
-      release: import.meta.env['VITE_SENTRY_RELEASE'],
+      tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
+      // Session Replay disabled
+      replaysSessionSampleRate: 0, // disabled
+      replaysOnErrorSampleRate: 0, // disabled
       // Enhanced error filtering and context
+
       beforeSend(event) {
         // Log in development but don't send
-        if (import.meta.env.MODE === 'development') {
+        if (environment === 'development') {
           console.log('[Sentry] Event captured (dev mode, not sent):', event)
           return null
         }
 
         // Filter out known non-critical errors
         if (event.exception) {
-          const error = event.exception.values?.[0]
-          if (error?.value?.includes('User rejected') || error?.value?.includes('User denied')) {
+          const err = event.exception.values?.[0]
+          if (err?.value?.includes('User rejected') || err?.value?.includes('User denied')) {
             return null // Don't send user rejection errors
+          }
+          const type = err?.type || ''
+          const val = err?.value || ''
+          // Optionally drop request AbortError timeouts as noise
+          if (type === 'AbortError' || (typeof val === 'string' && val.includes('AbortError'))) {
+            return null
           }
         }
 
-        // Add additional context
-        event.tags = {
-          ...event.tags,
-          environment: import.meta.env['VITE_SENTRY_ENVIRONMENT'] || import.meta.env.MODE,
-          version: import.meta.env['VITE_SENTRY_RELEASE'] || 'unknown',
+        // Add additional context + normalize tags
+        const tags: Record<string, unknown> = {
+          ...(event.tags || {}),
+          environment: import.meta.env.MODE,
         }
+
+        const extra = (event.extra || {}) as Record<string, unknown>
+
+        // Privacy: remove raw wallet addresses from payload
+        if (event.tags && 'userAddress' in (event.tags as Record<string, unknown>)) {
+          delete (event.tags as Record<string, unknown>)['userAddress']
+        }
+        if ('userAddress' in extra) {
+          delete extra['userAddress']
+        }
+
+        // Derive endpointPath from URL if present and not already set
+        const url =
+          (extra['url'] as string | undefined) || (extra['requestUrl'] as string | undefined)
+        let endpointPath =
+          (tags['endpointPath'] as string | undefined) ||
+          (extra['endpointPath'] as string | undefined)
+        if (!endpointPath && typeof url === 'string') {
+          try {
+            endpointPath = new URL(url).pathname
+          } catch {}
+        }
+
+        // Promote selected extra fields to tags (stringify scalars)
+        const promote = (key: string, value: unknown) => {
+          if (value === undefined || value === null) return
+          const v = typeof value === 'bigint' ? value.toString() : String(value)
+          ;(tags as Record<string, string>)[key] = v
+        }
+
+        const candidateKeys = [
+          'provider',
+          'method',
+          'status',
+          'feature',
+          'flow',
+          'chainId',
+          'connectedChainId',
+          'token',
+          'inputAsset',
+          'outputAsset',
+          'slippageBps',
+          'durationMs',
+          'attempt',
+          'route',
+          'quoteOrder',
+          'swapKey',
+          'errorName',
+        ] as const
+
+        for (const k of candidateKeys) {
+          if (k in extra) promote(k, (extra as Record<string, unknown>)[k])
+          else if (event.tags && k in (event.tags as Record<string, unknown>))
+            promote(k, (event.tags as Record<string, unknown>)[k])
+        }
+
+        if (endpointPath) promote('endpointPath', endpointPath)
+
+        // Compute a deterministic fingerprint to stabilize grouping
+        const t = tags as Record<string, string>
+        const hasApiShape = Boolean(t['provider'] && t['method'] && t['endpointPath'])
+        const isTxFlow = t['flow'] === 'mint' || t['flow'] === 'redeem'
+
+        if (!event.fingerprint) {
+          if (hasApiShape) {
+            const status = t['status'] ?? '0'
+            event.fingerprint = [
+              'api',
+              String(t['provider']),
+              String(t['method']),
+              String(t['endpointPath']),
+              status,
+            ]
+          } else if (isTxFlow && t['chainId'] && t['token']) {
+            const decoded =
+              (extra['decodedName'] as string | undefined) ||
+              (t['errorName'] as string | undefined) ||
+              (event.exception?.values?.[0]?.type as string | undefined) ||
+              'revert'
+            event.fingerprint = [
+              'tx',
+              String(t['flow']),
+              String(t['chainId']),
+              String(t['token']),
+              decoded,
+            ]
+          }
+        }
+
+        // Make issue titles consistent and scannable
+        const first = event.exception?.values?.[0]
+        if (hasApiShape) {
+          const status = t['status'] ?? 'unknown'
+          const title = `ExternalAPIError: ${String(t['provider'])} ${String(t['method'])} ${String(t['endpointPath'])} ${String(status)}`
+          if (first) first.value = title
+          else event.message = title
+        } else if (isTxFlow) {
+          const decoded =
+            (extra['decodedName'] as string | undefined) ||
+            (t['errorName'] as string | undefined) ||
+            (event.exception?.values?.[0]?.type as string | undefined) ||
+            'revert'
+          const title = `OnChainError: ${String(t['flow'])} ${decoded}`
+          if (first) first.value = title
+          else event.message = title
+        }
+
+        event.tags = tags as Record<string, string>
 
         return event
       },
