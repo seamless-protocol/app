@@ -3,27 +3,42 @@ import { useId } from 'react'
 
 export function SeamlessLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
   const logoId = useId()
-  const pathId = useId()
+  const gradientId = useId()
 
   return (
     <svg
       className={className}
+      width="32"
+      height="32"
+      viewBox="0 0 32 32"
       fill="none"
-      preserveAspectRatio="xMidYMid meet"
-      viewBox="0 0 24 24"
       role="img"
       aria-labelledby={logoId}
       {...props}
     >
       <title id={logoId}>Seamless Protocol Logo</title>
-      <g id={logoId}>
-        <circle cx="12" cy="12" r="12" fill="var(--logo-bg)" />
-        <path
-          d="M12.6445 13.9438C13.094 14.0237 13.4354 14.4158 13.4355 14.8882C13.4355 15.4184 13.0058 15.8481 12.4756 15.8481C11.9631 15.8481 11.5459 15.4466 11.5186 14.9409H7.52441V14.8423C7.52361 14.8765 7.52151 14.9114 7.52148 14.9458C7.52148 17.5559 9.81396 19.6723 12.6416 19.6724C15.4693 19.6724 17.7617 17.556 17.7617 14.9458C17.7612 12.3369 15.4706 10.2226 12.6445 10.2212V13.9438ZM11.3584 4.32764C8.5307 4.32764 6.23828 6.44403 6.23828 9.0542C6.23862 11.6641 8.53091 13.7798 11.3584 13.7798L11.3594 13.7788V10.064C10.9071 9.98639 10.5626 9.59405 10.5625 9.11963C10.5625 8.58947 10.9923 8.15969 11.5225 8.15967C12.0323 8.15967 12.4482 8.55715 12.4795 9.05908H16.4785C16.4785 9.0575 16.4785 9.05578 16.4785 9.0542C16.4785 6.44406 14.186 4.3277 11.3584 4.32764Z"
-          fill="var(--logo-icon)"
-          id={pathId}
-        ></path>
-      </g>
+      <defs>
+        <radialGradient
+          id={gradientId}
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(5.6 1.06513e-06) rotate(71.7371) scale(42.1217)"
+        >
+          <stop stopColor="#FFBFFF" />
+          <stop offset="1" stopColor="#4F68F7" />
+        </radialGradient>
+      </defs>
+      {/* Background circle with gradient fill */}
+      <circle cx="16" cy="16" r="16" fill={`url(#${gradientId})`} />
+      {/* "S" shape with solid white fill */}
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M15.0909 10.1811C14.1872 10.1811 13.4545 10.9137 13.4545 11.8175C13.4545 12.7212 14.1872 13.4538 15.0909 13.4538V18.9084C11.1747 18.9084 8 15.7337 8 11.8175C8 7.90127 11.1747 4.72656 15.0909 4.72656C19.0071 4.72656 22.1818 7.90127 22.1818 11.8175H16.7273C16.7273 10.9137 15.9946 10.1811 15.0909 10.1811ZM18.5455 20.545C18.5455 21.4488 17.8128 22.1814 16.9091 22.1814C16.0054 22.1814 15.2727 21.4488 15.2727 20.545H9.81818C9.81818 24.4612 12.9929 27.6359 16.9091 27.6359C20.8253 27.6359 24 24.4612 24 20.545C24 16.6288 20.8253 13.4541 16.9091 13.4541V18.9087C17.8128 18.9087 18.5455 19.6413 18.5455 20.545Z"
+        fill="white"
+      />
     </svg>
   )
 }
