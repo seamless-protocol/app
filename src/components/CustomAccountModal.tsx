@@ -145,9 +145,12 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
                           ? account.displayName
                           : `${account.address.slice(0, 6)}...${account.address.slice(-4)}`}
                       </span>
-                      <code className="text-xs text-secondary-foreground font-mono">
-                        {account.address.slice(0, 6)}...{account.address.slice(-4)}
-                      </code>
+                      {/* Only show address if displayName is an ENS name (not an address) */}
+                      {account.displayName && !account.displayName.startsWith('0x') && (
+                        <code className="text-xs text-secondary-foreground font-mono">
+                          {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                        </code>
+                      )}
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
