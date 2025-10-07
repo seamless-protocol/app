@@ -99,7 +99,7 @@ export function CustomAccountModal({ account, chain, isOpen, onClose }: CustomAc
         <DialogHeader className="flex flex-col gap-2 text-center sm:text-left">
           <DialogTitle className="text-lg leading-none font-semibold flex items-center space-x-3 text-foreground">
             <div className="w-8 h-8 bg-[var(--cta-gradient)] rounded-lg flex items-center justify-center">
-              <Settings className="h-5 w-5 text-[var(--cta-text)]" />
+              <Settings className="h-5 w-5 text-foreground" />
             </div>
             <span>Settings</span>
           </DialogTitle>
