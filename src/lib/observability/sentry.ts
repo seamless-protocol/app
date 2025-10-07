@@ -96,6 +96,7 @@ export function captureApiError(params: {
 export function captureTxError(params: {
   flow: 'mint' | 'redeem'
   chainId: number
+  connectedChainId?: number
   token: string
   inputAsset?: string
   outputAsset?: string
@@ -111,6 +112,7 @@ export function captureTxError(params: {
   const {
     flow,
     chainId,
+    connectedChainId,
     token,
     inputAsset,
     outputAsset,
@@ -134,6 +136,7 @@ export function captureTxError(params: {
     data: {
       flow,
       chainId,
+      connectedChainId,
       token,
       inputAsset,
       outputAsset,
@@ -151,6 +154,7 @@ export function captureTxError(params: {
     error,
     flow,
     chainId,
+    ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
     token,
     ...(inputAsset ? { inputAsset } : {}),
     ...(outputAsset ? { outputAsset } : {}),

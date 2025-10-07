@@ -84,6 +84,7 @@ export function initSentry() {
           'feature',
           'flow',
           'chainId',
+          'connectedChainId',
           'token',
           'inputAsset',
           'outputAsset',

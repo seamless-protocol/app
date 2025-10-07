@@ -80,7 +80,7 @@ export function LeverageTokenRedeemModal({
   }
 
   // Get user account information
-  const { address: hookUserAddress, isConnected } = useAccount()
+  const { address: hookUserAddress, isConnected, chainId: connectedChainId } = useAccount()
   const wagmiConfig = useConfig()
   const userAddress = (propUserAddress || hookUserAddress) as `0x${string}` | undefined
 
@@ -562,6 +562,7 @@ export function LeverageTokenRedeemModal({
       captureTxError({
         flow: 'redeem',
         chainId: leverageTokenConfig.chainId,
+        ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
         token: leverageTokenAddress,
         outputAsset: selectedOutputAsset.address,
         slippageBps,
