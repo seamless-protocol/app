@@ -80,7 +80,7 @@ export function LeverageTokenMintModal({
   }
 
   // Get user account information
-  const { address: hookUserAddress, isConnected, chainId } = useAccount()
+  const { address: hookUserAddress, isConnected } = useAccount()
   const wagmiConfig = useConfig()
   const publicClient = usePublicClient({ chainId: leverageTokenConfig.chainId })
   const queryClient = useQueryClient()
@@ -407,7 +407,7 @@ export function LeverageTokenMintModal({
 
       captureTxError({
         flow: 'mint',
-        chainId: chainId ?? leverageTokenConfig.chainId,
+        chainId: leverageTokenConfig.chainId,
         token: leverageTokenAddress,
         inputAsset: leverageTokenConfig.collateralAsset.address,
         slippageBps,
