@@ -87,21 +87,21 @@ export function ConnectionStatusCard() {
                     className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8"
                   >
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[color-mix(in_srgb,var(--brand-purple)_18%,transparent)] text-brand-purple">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-500/20 text-blue-400">
                         <Shield className="h-5 w-5" />
                       </div>
                       <p className="text-sm text-secondary-foreground">Secure & Private</p>
                     </div>
 
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[color-mix(in_srgb,var(--brand-purple)_18%,transparent)] text-brand-purple">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-green-500/20 text-green-400">
                         <Zap className="h-5 w-5" />
                       </div>
                       <p className="text-sm text-secondary-foreground">Instant Access</p>
                     </div>
 
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[color-mix(in_srgb,var(--brand-purple)_18%,transparent)] text-brand-purple">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-500/20 text-purple-400">
                         <TrendingUp className="h-5 w-5" />
                       </div>
                       <p className="text-sm text-secondary-foreground">Optimize Yields</p>
