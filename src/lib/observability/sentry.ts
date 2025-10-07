@@ -102,7 +102,7 @@ export function captureTxError(params: {
   slippageBps?: number
   amountIn?: string
   expectedOut?: string
-  quoteProvider?: string
+  provider?: string
   txHash?: string
   error?: unknown
   decodedName?: string
@@ -117,7 +117,7 @@ export function captureTxError(params: {
     slippageBps,
     amountIn,
     expectedOut,
-    quoteProvider,
+    provider,
     txHash,
     error,
     decodedName,
@@ -140,7 +140,7 @@ export function captureTxError(params: {
       slippageBps,
       amountIn,
       expectedOut,
-      quoteProvider,
+      provider,
       txHash,
       status,
       decodedName,
@@ -157,7 +157,7 @@ export function captureTxError(params: {
     ...(typeof slippageBps === 'number' ? { slippageBps } : {}),
     ...(amountIn ? { amountIn } : {}),
     ...(expectedOut ? { expectedOut } : {}),
-    ...(quoteProvider ? { quoteProvider } : {}),
+    ...(provider ? { provider } : {}),
     ...(txHash ? { txHash } : {}),
     ...(decodedName ? { decodedName } : {}),
     ...(routeTag ? { route: routeTag } : {}),

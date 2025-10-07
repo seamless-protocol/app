@@ -551,7 +551,7 @@ export function LeverageTokenRedeemModal({
         error instanceof Error ? error.message : 'Redemption failed. Please try again.'
       trackTransactionError('redeem_failed', 'leverage_token', errorMessage)
 
-      const qProvider = (() => {
+      const provider = (() => {
         const swap = leverageTokenConfig.swaps?.collateralToDebt
         if (!swap) return undefined
         if (swap.type === 'lifi') return 'lifi'
@@ -567,7 +567,7 @@ export function LeverageTokenRedeemModal({
         slippageBps,
         amountIn: form.amount,
         expectedOut: expectedAmount,
-        ...(qProvider ? { quoteProvider: qProvider } : {}),
+        ...(provider ? { provider } : {}),
         error,
       })
 

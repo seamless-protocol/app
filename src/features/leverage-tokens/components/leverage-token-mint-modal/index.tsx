@@ -397,7 +397,7 @@ export function LeverageTokenMintModal({
       // Track mint transaction error
       trackTransactionError('mint_failed', 'leverage_token', error.message)
 
-      const qProvider = (() => {
+      const provider = (() => {
         const swap = leverageTokenConfig.swaps?.debtToCollateral
         if (!swap) return undefined
         if (swap.type === 'lifi') return 'lifi'
@@ -407,13 +407,13 @@ export function LeverageTokenMintModal({
 
       captureTxError({
         flow: 'mint',
-        chainId: (chainId as number) || leverageTokenConfig.chainId,
+        chainId: chainId ?? leverageTokenConfig.chainId,
         token: leverageTokenAddress,
         inputAsset: leverageTokenConfig.collateralAsset.address,
         slippageBps,
         amountIn: form.amount,
         expectedOut: String(expectedTokens),
-        ...(qProvider ? { quoteProvider: qProvider } : {}),
+        ...(provider ? { provider } : {}),
         error,
       })
 
