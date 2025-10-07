@@ -64,15 +64,15 @@ export function SuccessStep({
       </Card>
 
       <Card variant="gradient" className="border border-border bg-card p-4">
-        <div className="flex items-start text-sm text-secondary-foreground">
-          <TrendingDown className="mr-2 mt-0.5 h-4 w-4 text-brand-purple" />
-          <div>
-            <p className="font-medium text-foreground">Redemption complete</p>
-            <p className="mt-1 text-xs">
-              Your {selectedAsset} has been transferred to your wallet. Track your remaining
-              positions in your Portfolio.
-            </p>
-          </div>
+        <div className="text-sm text-secondary-foreground">
+          <p className="font-medium text-foreground flex items-center justify-center">
+            <TrendingDown className="mr-1.5 h-4 w-4 text-brand-purple" />
+            Redemption complete
+          </p>
+          <p className="mt-1 text-xs">
+            Your {selectedAsset} has been transferred to your wallet. Track your remaining positions
+            in your Portfolio.
+          </p>
         </div>
       </Card>
 

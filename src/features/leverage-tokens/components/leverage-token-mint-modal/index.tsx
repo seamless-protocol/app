@@ -89,8 +89,7 @@ export function LeverageTokenMintModal({
 
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
-  const leverageRouterAddress =
-    contractAddresses.leverageRouterV2 ?? contractAddresses.leverageRouter
+  const leverageRouterAddress = contractAddresses.leverageRouterV2
   const leverageManagerAddress = contractAddresses.leverageManagerV2
 
   // Fetch leverage token fees

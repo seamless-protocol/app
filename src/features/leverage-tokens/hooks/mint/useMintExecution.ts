@@ -2,10 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import type { Address, PublicClient } from 'viem'
 import { useChainId, useConfig, usePublicClient, useSwitchChain } from 'wagmi'
 import { orchestrateMint } from '@/domain/mint'
-import { RouterVersion } from '@/domain/mint/planner/types'
 import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
-import { detectRouterVersion } from '@/domain/mint/utils/detectVersion'
-import type { QuoteFn } from '@/domain/shared/adapters/types'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 
@@ -68,31 +65,28 @@ export function useMintExecution(params: {
       setStatus('submitting')
       setError(undefined)
       try {
-        const version = detectRouterVersion()
-        let quoteDebtToCollateral: QuoteFn | undefined
+        if (!tokenConfig.swaps?.debtToCollateral) {
+          throw new Error('Router v2 mint requires a debtToCollateral swap configuration')
+        }
+        if (!routerAddressV2) {
+          throw new Error('Router v2 address is required for mint orchestration')
+        }
+        if (!chainPublicClient) {
+          throw new Error('Public client unavailable for leverage token chain')
+        }
 
-        if (version === RouterVersion.V2) {
-          if (!tokenConfig.swaps?.debtToCollateral) {
-            throw new Error('Router v2 mint requires a debtToCollateral swap configuration')
-          }
-          if (!routerAddressV2) {
-            throw new Error('Router v2 address is required for mint orchestration')
-          }
-          if (!chainPublicClient) {
-            throw new Error('Public client unavailable for leverage token chain')
-          }
+        const { quote } = createDebtToCollateralQuote({
+          chainId,
+          routerAddress: routerAddressV2,
+          swap: tokenConfig.swaps.debtToCollateral,
+          slippageBps,
+          getPublicClient: (cid: number): PublicClient | undefined =>
+            cid === chainId ? chainPublicClient : undefined,
+          ...(multicallExecutorAddress ? { fromAddress: multicallExecutorAddress } : {}),
+        })
 
-          const { quote } = createDebtToCollateralQuote({
-            chainId,
-            routerAddress: routerAddressV2,
-            swap: tokenConfig.swaps.debtToCollateral,
-            slippageBps,
-            getPublicClient: (cid: number): PublicClient | undefined =>
-              cid === chainId ? chainPublicClient : undefined,
-            ...(multicallExecutorAddress ? { fromAddress: multicallExecutorAddress } : {}),
-          })
-
-          quoteDebtToCollateral = quote
+        if (!quote) {
+          throw new Error('Quote is required for V2 mint')
         }
 
         if (activeChainId !== chainId) {
@@ -106,7 +100,7 @@ export function useMintExecution(params: {
           inputAsset,
           equityInInputAsset,
           slippageBps,
-          ...(quoteDebtToCollateral ? { quoteDebtToCollateral } : {}),
+          quoteDebtToCollateral: quote,
           ...(routerAddressV2 ? { routerAddressV2 } : {}),
           ...(managerAddressV2 ? { managerAddressV2 } : {}),
           chainId,

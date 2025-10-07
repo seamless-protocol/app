@@ -2,9 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import type { Address } from 'viem'
 import { useChainId, usePublicClient, useSwitchChain } from 'wagmi'
 import type { OrchestrateRedeemResult } from '@/domain/redeem'
-import { RouterVersion } from '@/domain/redeem/planner/types'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
-import { detectRedeemRouterVersion } from '@/domain/redeem/utils/detectVersion'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { useRedeemWithRouter } from '../useRedeemWithRouter'
 import { type QuoteStatus, useCollateralToDebtQuote } from './useCollateralToDebtQuote'
@@ -42,8 +40,8 @@ export function useRedeemExecution({
 
   const redeemWithRouter = useRedeemWithRouter()
 
-  const routerVersion = detectRedeemRouterVersion()
-  const requiresQuote = routerVersion === RouterVersion.V2
+  // V2 always requires a quote
+  const requiresQuote = true
 
   const {
     quote,
@@ -77,13 +75,17 @@ export function useRedeemExecution({
           await switchChainAsync({ chainId })
         }
 
+        if (!quote) {
+          throw new Error('Quote is required for V2 redeem')
+        }
+
         const result = await redeemWithRouter.mutateAsync({
           token,
           account,
           sharesToRedeem,
           slippageBps,
           chainId,
-          ...(quote ? { quoteCollateralToDebt: quote } : {}),
+          quoteCollateralToDebt: quote,
           ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
           ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
           ...(typeof outputAsset !== 'undefined' ? { outputAsset } : {}),
@@ -115,7 +117,6 @@ export function useRedeemExecution({
       quoteError?.message,
       quoteStatus,
       redeemWithRouter,
-      requiresQuote,
       routerAddress,
       slippageBps,
       outputAsset,
@@ -135,7 +136,6 @@ export function useRedeemExecution({
     quoteStatus,
     quoteError,
     quote,
-    routerVersion,
   }
 }
 

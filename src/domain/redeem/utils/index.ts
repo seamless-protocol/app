@@ -12,9 +12,6 @@ export {
   createCollateralToDebtQuote,
 } from './createCollateralToDebtQuote'
 
-// Version detection
-export { detectRedeemRouterVersion } from './detectVersion'
-
 // Slippage calculations
 export {
   calculateActualSlippage,

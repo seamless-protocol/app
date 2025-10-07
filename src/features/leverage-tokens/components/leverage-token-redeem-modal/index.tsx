@@ -4,7 +4,6 @@ import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 import type { OrchestrateRedeemResult } from '@/domain/redeem'
-import { RouterVersion } from '@/domain/redeem/planner/types'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
@@ -89,10 +88,8 @@ export function LeverageTokenRedeemModal({
 
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
-  const leverageRouterAddress =
-    contractAddresses.leverageRouterV2 ?? contractAddresses.leverageRouter
-  const leverageManagerAddress =
-    contractAddresses.leverageManagerV2 ?? contractAddresses.leverageManager
+  const leverageRouterAddress = contractAddresses.leverageRouterV2
+  const leverageManagerAddress = contractAddresses.leverageManagerV2
 
   // Fetch leverage token fees
   const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(leverageTokenAddress)
@@ -251,14 +248,6 @@ export function LeverageTokenRedeemModal({
     outputAsset: selectedOutputAsset.address,
   })
 
-  const disabledOutputAssets = useMemo(() => {
-    const disabled: Array<OutputAssetId> = []
-    if (exec.routerVersion !== RouterVersion.V2) {
-      disabled.push('debt')
-    }
-    return disabled
-  }, [exec.routerVersion])
-
   const collateralSwapConfig = leverageTokenConfig.swaps?.collateralToDebt
 
   const swapConfigKey = useMemo(() => {
@@ -281,7 +270,6 @@ export function LeverageTokenRedeemModal({
     sharesToRedeem: form.amountRaw,
     slippageBps,
     chainId: leverageTokenConfig.chainId,
-    routerVersion: exec.routerVersion,
     ...(exec.quote ? { quote: exec.quote } : {}),
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
     ...(swapConfigKey ? { swapKey: swapConfigKey } : {}),
@@ -311,24 +299,14 @@ export function LeverageTokenRedeemModal({
   }, [exec.quoteError?.message, exec.quoteStatus])
 
   const planError = useMemo(() => {
-    if (exec.routerVersion !== RouterVersion.V2) return undefined
     return planPreview.error?.message
-  }, [exec.routerVersion, planPreview.error?.message])
+  }, [planPreview.error?.message])
 
   const redeemBlockingError = quoteBlockingError || planError
 
   const expectedPayoutRaw = useMemo(() => {
-    if (exec.routerVersion === RouterVersion.V2) {
-      return planPreview.plan?.payoutAmount
-    }
-    return selectedOutputId === 'debt' ? preview.data?.debt : preview.data?.collateral
-  }, [
-    exec.routerVersion,
-    planPreview.plan?.payoutAmount,
-    preview.data?.collateral,
-    preview.data?.debt,
-    selectedOutputId,
-  ])
+    return planPreview.plan?.payoutAmount
+  }, [planPreview.plan?.payoutAmount])
 
   const expectedAmount = useMemo(() => {
     if (typeof expectedPayoutRaw !== 'bigint') return '0'
@@ -397,12 +375,6 @@ export function LeverageTokenRedeemModal({
     if (isOpen) resetModal()
   }, [isOpen, resetModal])
 
-  useEffect(() => {
-    if (exec.routerVersion !== RouterVersion.V2 && selectedOutputId === 'debt') {
-      setSelectedOutputId('collateral')
-    }
-  }, [exec.routerVersion, selectedOutputId])
-
   // Handle approval side-effects in one place
   useEffect(() => {
     if (currentStep !== 'approve') return
@@ -422,8 +394,7 @@ export function LeverageTokenRedeemModal({
   // Check if approval is needed
   const needsApproval = () => Boolean(needsApprovalFlag)
 
-  const isPlanCalculating =
-    exec.routerVersion === RouterVersion.V2 && Boolean(form.amountRaw) && planPreview.isLoading
+  const isPlanCalculating = Boolean(form.amountRaw) && planPreview.isLoading
 
   const isCalculating = preview.isLoading || isPlanCalculating
 
@@ -457,16 +428,10 @@ export function LeverageTokenRedeemModal({
     form.onPercent(percentage, selectedTokenView.balance)
   }
 
-  const handleOutputAssetChange = useCallback(
-    (asset: OutputAssetId) => {
-      if (asset === 'debt' && exec.routerVersion !== RouterVersion.V2) {
-        return
-      }
-      setSelectedOutputId(asset)
-      setError('')
-    },
-    [exec.routerVersion],
-  )
+  const handleOutputAssetChange = useCallback((asset: OutputAssetId) => {
+    setSelectedOutputId(asset)
+    setError('')
+  }, [])
 
   // Handle approval step
   const handleApprove = async () => {
@@ -526,17 +491,14 @@ export function LeverageTokenRedeemModal({
         })
       }
 
-      const toastAmount =
-        result.routerVersion === 'v2'
-          ? formatTokenAmountFromBase(
-              result.plan.payoutAmount,
-              result.plan.payoutAsset.toLowerCase() ===
-                leverageTokenConfig.debtAsset.address.toLowerCase()
-                ? leverageTokenConfig.debtAsset.decimals
-                : leverageTokenConfig.collateralAsset.decimals,
-              TOKEN_AMOUNT_DISPLAY_DECIMALS,
-            )
-          : expectedAmount
+      const toastAmount = formatTokenAmountFromBase(
+        result.plan.payoutAmount,
+        result.plan.payoutAsset.toLowerCase() ===
+          leverageTokenConfig.debtAsset.address.toLowerCase()
+          ? leverageTokenConfig.debtAsset.decimals
+          : leverageTokenConfig.collateralAsset.decimals,
+        TOKEN_AMOUNT_DISPLAY_DECIMALS,
+      )
 
       toast.success('Redemption successful!', {
         description: `${form.amount} ${leverageTokenConfig.symbol} redeemed for ${toastAmount} ${selectedOutputAsset.symbol}`,
@@ -613,7 +575,6 @@ export function LeverageTokenRedeemModal({
             isRedemptionFeeLoading={isFeesLoading}
             redeemTokenFee={fees?.redeemTokenFee}
             isRedeemTokenFeeLoading={isFeesLoading}
-            disabledAssets={disabledOutputAssets}
             isBelowMinimum={isBelowMinimum()}
           />
         )
@@ -702,7 +663,8 @@ function logRedeemDiagnostics(params: {
   const formatValue = (value: bigint | undefined, decimals: number) =>
     typeof value === 'bigint' ? formatUnits(value, decimals) : 'n/a'
 
-  if (result.routerVersion === 'v2') {
+  // V2 diagnostics
+  {
     const gross = formatValue(
       previewCollateral ?? result.plan.expectedTotalCollateral,
       collateralDecimals,
@@ -733,15 +695,7 @@ function logRedeemDiagnostics(params: {
       debtPayout,
     })
     console.groupEnd()
-    return
   }
-
-  console.groupCollapsed('[redeem][v1] diagnostics')
-  console.table({
-    previewCollateral: formatValue(previewCollateral, collateralDecimals),
-    previewDebt: formatValue(previewDebt, debtDecimals),
-  })
-  console.groupEnd()
 }
 
 // Local hook: wraps token allowance + approval flow

@@ -1,5 +1,5 @@
 /**
- * Executes a Leverage Token mint via the V2 router using `mintWithCalls`, powered by Wagmi actions.
+ * Executes a Leverage Token mint using `mintWithCalls`, powered by Wagmi actions.
  *
  * Invariants/behavior:
  * - Sends a single transaction with planned calls (debt->collateral swap only; no input conversion in initial scope).

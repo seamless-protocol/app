@@ -1,9 +1,7 @@
 import { defineConfig } from '@wagmi/cli'
 import { actions, react } from '@wagmi/cli/plugins'
 import { base, mainnet } from 'viem/chains'
-import { leverageManagerAbi } from './src/lib/contracts/abis/leverageManager'
 import { leverageManagerV2Abi } from './src/lib/contracts/abis/leverageManagerV2'
-import { leverageRouterAbi } from './src/lib/contracts/abis/leverageRouter'
 import { leverageTokenAbi } from './src/lib/contracts/abis/leverageToken'
 import { leverageRouterV2Abi } from './src/lib/contracts/abis/leverageRouterV2'
 import { leverageTokenFactoryAbi } from './src/lib/contracts/abis/leverageTokenFactory'
@@ -34,21 +32,6 @@ export default defineConfig({
           : undefined,
     },
     {
-      name: "LeverageRouter",
-      abi: leverageRouterAbi,
-      address:
-        contractAddresses[base.id]?.leverageRouter || contractAddresses[mainnet.id]?.leverageRouter
-          ? {
-              ...(contractAddresses[base.id]?.leverageRouter
-                ? { [base.id]: contractAddresses[base.id]!.leverageRouter! }
-                : {}),
-              ...(contractAddresses[mainnet.id]?.leverageRouter
-                ? { [mainnet.id]: contractAddresses[mainnet.id]!.leverageRouter! }
-                : {}),
-            }
-          : undefined,
-    },
-    {
       name: "LeverageRouterV2",
       abi: leverageRouterV2Abi,
       address:
@@ -60,22 +43,6 @@ export default defineConfig({
                 : {}),
               ...(contractAddresses[mainnet.id]?.leverageRouterV2
                 ? { [mainnet.id]: contractAddresses[mainnet.id]!.leverageRouterV2! }
-                : {}),
-            }
-          : undefined,
-    },
-    {
-      name: "LeverageManager",
-      abi: leverageManagerAbi,
-      address:
-        contractAddresses[base.id]?.leverageManager ||
-        contractAddresses[mainnet.id]?.leverageManager
-          ? {
-              ...(contractAddresses[base.id]?.leverageManager
-                ? { [base.id]: contractAddresses[base.id]!.leverageManager! }
-                : {}),
-              ...(contractAddresses[mainnet.id]?.leverageManager
-                ? { [mainnet.id]: contractAddresses[mainnet.id]!.leverageManager! }
                 : {}),
             }
           : undefined,

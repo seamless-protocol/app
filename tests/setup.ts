@@ -79,8 +79,6 @@ vi.mock('@/lib/contracts/addresses', () => {
   const contractAddresses: Record<number, ContractAddresses> = {
     [base.id]: {
       leverageTokenFactory: '0xE0b2e40EDeb53B96C923381509a25a615c1Abe57',
-      leverageManager: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8',
-      leverageRouter: '0xDbA92fC3dc10a17b96b6E807a908155C389A887C',
       leverageTokenImpl: '0x057A2a1CC13A9Af430976af912A27A05DE537673',
       leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C',
       leverageRouterV2: '0xfd46483b299197c616671b7df295ca5186c805c2',
@@ -110,7 +108,7 @@ vi.mock('@/lib/contracts/addresses', () => {
     (chainId: number): ContractAddresses => contractAddresses[chainId] ?? {},
   )
   const getLeverageManagerAddress = vi.fn(
-    (chainId: number) => getContractAddresses(chainId)?.leverageManager,
+    (chainId: number) => getContractAddresses(chainId)?.leverageManagerV2,
   )
 
   const getGovernanceAddresses = vi.fn((chainId: number) => {
@@ -390,16 +388,8 @@ vi.mock('@/domain/mint/utils/createDebtToCollateralQuote', () => ({
   createDebtToCollateralQuote: vi.fn(),
 }))
 
-vi.mock('@/domain/mint/utils/detectVersion', () => ({
-  detectRouterVersion: vi.fn(),
-}))
-
 vi.mock('@/domain/redeem/utils/createCollateralToDebtQuote', () => ({
   createCollateralToDebtQuote: vi.fn(),
-}))
-
-vi.mock('@/domain/redeem/utils/detectVersion', () => ({
-  detectRedeemRouterVersion: vi.fn(),
 }))
 
 vi.mock('@/domain/redeem/planner/plan.v2', () => ({
@@ -410,7 +400,7 @@ vi.mock('@/domain/redeem/planner/plan.v2', () => ({
 vi.mock('@/features/leverage-tokens/leverageTokens.config', () => ({
   getLeverageTokenConfig: vi.fn(),
   leverageTokenConfigs: {
-    'weeth-weth-17x': {
+    'weeth-weth-17x-tenderly': {
       address: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A',
       symbol: 'weETH-WETH-17x',
       name: 'weETH-WETH 17x Leverage Token',
@@ -420,9 +410,20 @@ vi.mock('@/features/leverage-tokens/leverageTokens.config', () => ({
       leverage: 17,
       isTestOnly: false,
     },
+    'wsteth-weth-2x-mainnet': {
+      address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3',
+      symbol: 'WSTETH-WETH-2x',
+      name: 'wstETH / WETH 2x Leverage Token',
+      decimals: 18,
+      collateral: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0', // wstETH
+      debt: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // WETH
+      leverage: 2,
+      isTestOnly: false,
+    },
   },
   LeverageTokenKey: {
-    WEETH_WETH_17X: 'weeth-weth-17x',
+    WEETH_WETH_17X_TENDERLY: 'weeth-weth-17x-tenderly',
+    WSTETH_WETH_2X_MAINNET: 'wsteth-weth-2x-mainnet',
   },
 }))
 

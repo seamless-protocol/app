@@ -61,9 +61,7 @@ function getTenderlyOverrides(): string | undefined {
         },
       },
       '8453': {
-        leverageManager: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C',
         leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C',
-        leverageRouter: '0xfd46483b299197c616671B7dF295cA5186c805c2',
         leverageRouterV2: '0xfd46483b299197c616671B7dF295cA5186c805c2',
         multicallExecutor: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd',
       },

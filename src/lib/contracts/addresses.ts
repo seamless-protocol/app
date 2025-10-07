@@ -26,8 +26,6 @@ export type SupportedChainId = typeof mainnet.id | typeof base.id
 export interface ContractAddresses {
   // Core Protocol Contracts
   leverageTokenFactory?: Address
-  leverageManager?: Address
-  leverageRouter?: Address
   leverageTokenImpl?: Address
   // V2 surfaces (distinct addresses when deployed)
   leverageManagerV2?: Address
@@ -78,8 +76,6 @@ export interface ContractAddresses {
 const baseContracts: ContractAddresses = {
   // Core Protocol
   leverageTokenFactory: '0xE0b2e40EDeb53B96C923381509a25a615c1Abe57' as Address,
-  leverageManager: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8' as Address,
-  leverageRouter: '0xDbA92fC3dc10a17b96b6E807a908155C389A887C' as Address,
   leverageTokenImpl: '0x057A2a1CC13A9Af430976af912A27A05DE537673' as Address,
   leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C' as Address,
   leverageRouterV2: '0xfd46483b299197c616671b7df295ca5186c805c2' as Address,
@@ -146,18 +142,6 @@ export const contractAddresses: Record<number, ContractAddresses> = {
   // Ethereum mainnet (Tenderly fork alignment)
   [mainnet.id]: mainnetContracts,
 }
-
-export const seamlessContracts = {
-  [base.id]: {
-    vaults: baseContracts.vaults,
-    leverageTokenImpl: baseContracts.leverageTokenImpl,
-    leverageManager: baseContracts.leverageManager,
-    leverageRouter: baseContracts.leverageRouter,
-    escrowSeam: baseContracts.escrowSeam,
-    rewardsController: baseContracts.rewardsController,
-  },
-  [mainnet.id]: {},
-} as const
 
 type ContractAddressOverride = Partial<ContractAddresses>
 

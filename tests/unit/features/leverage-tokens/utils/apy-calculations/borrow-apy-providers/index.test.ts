@@ -38,7 +38,7 @@ describe('Borrow APY Providers', () => {
 
   describe('fetchBorrowApyForToken', () => {
     it('should route to Morpho provider for supported token on Base', async () => {
-      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
+      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]
         ?.address as Address
       const mockBorrowApyData = { borrowAPY: 0.0387 }
 
@@ -62,7 +62,7 @@ describe('Borrow APY Providers', () => {
     })
 
     it('should handle case-insensitive token address matching', async () => {
-      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
+      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]
         ?.address as Address
       const upperCaseTokenAddress = supportedTokenAddress.toUpperCase() as Address
       const mockBorrowApyData = { borrowAPY: 0.0387 }
@@ -108,7 +108,7 @@ describe('Borrow APY Providers', () => {
     })
 
     it('should work for Ethereum chain ID', async () => {
-      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
+      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]
         ?.address as Address
       const ethereumChainId = 1 // Ethereum
       const mockBorrowApyData = { borrowAPY: 0.0387 }
@@ -136,7 +136,7 @@ describe('Borrow APY Providers', () => {
     })
 
     it('should propagate provider errors', async () => {
-      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
+      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]
         ?.address as Address
       const providerError = new Error('Provider fetch failed')
 
@@ -156,7 +156,7 @@ describe('Borrow APY Providers', () => {
 
   describe('fetchBorrowApyForToken', () => {
     it('should be a wrapper around fetchBorrowApyForToken', async () => {
-      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
+      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]
         ?.address as Address
       const mockBorrowApyData = { borrowAPY: 0.0387 }
 
@@ -179,7 +179,7 @@ describe('Borrow APY Providers', () => {
     })
 
     it('should pass through all parameters correctly', async () => {
-      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
+      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]
         ?.address as Address
       const mockBorrowApyData = { borrowAPY: 0.025 }
 
@@ -203,7 +203,7 @@ describe('Borrow APY Providers', () => {
 
   describe('provider selection logic', () => {
     it('should create new provider instance for each call', async () => {
-      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
+      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]
         ?.address as Address
       const mockBorrowApyData = { borrowAPY: 0.0387 }
 
@@ -224,7 +224,7 @@ describe('Borrow APY Providers', () => {
     })
 
     it('should log provider selection', async () => {
-      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WEETH_WETH_17X]
+      const supportedTokenAddress = leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]
         ?.address as Address
       const mockBorrowApyData = { borrowAPY: 0.0387 }
 

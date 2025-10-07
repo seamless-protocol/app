@@ -25,7 +25,7 @@ type V2Calls = Array<RouterV2Call>
 const WETH_WITHDRAW_ABI = parseAbi(['function withdraw(uint256 wad)'])
 
 /**
- * Structured plan for executing a single-transaction redeem via the V2 router.
+ * Structured plan for executing a single-transaction redeem.
  *
  * Fields prefixed with "expected" are derived from LeverageManager.previewRedeem and
  * are used to size swaps and to provide UI expectations. "minCollateralForSender" is a

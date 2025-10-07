@@ -29,7 +29,7 @@ type V2Call = RouterV2Call
 const WETH_WITHDRAW_ABI = parseAbi(['function withdraw(uint256 wad)'])
 
 /**
- * Structured plan for executing a single-transaction mint via the V2 router.
+ * Structured plan for executing a single-transaction mint.
  *
  * Fields prefixed with "expected" are derived from LeverageManager.previewMint and
  * are used to size swaps and to provide UI expectations. "minShares" is a

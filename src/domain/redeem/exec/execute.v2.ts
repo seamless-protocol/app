@@ -1,5 +1,5 @@
 /**
- * Executes a Leverage Token redeem via the V2 router using `redeem`, powered by Wagmi actions.
+ * Executes a Leverage Token redeem using `redeem`, powered by Wagmi actions.
  *
  * Invariants/behavior:
  * - Sends a single transaction to redeem leverage tokens for collateral

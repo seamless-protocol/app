@@ -101,26 +101,58 @@ Here's the complete configuration for `WSTETH_WETH_2X_MAINNET` as a reference:
       allowBridges: 'none',
     },
   },
-  
   relatedResources: {
     underlyingPlatforms: [
       {
-        id: 'lido',
-        title: 'Lido',
-        description: 'Liquid staking protocol for Ethereum',
-        url: 'https://lido.fi',
+        id: 'morpho-lending',
+        title: 'Morpho Lending Market',
+        description: 'View the underlying lending market powering this leverage token',
+        url: 'https://app.morpho.org/base/market/0xfd0895ba253889c243bf59bc4b96fd1e06d68631241383947b04d1c293a0cfea',
+        icon: Building2,
+        badge: {
+          text: 'Primary Market',
+          color: 'amber' as const,
+        },
+        highlight: true,
+      },
+      {
+        id: 'etherfi-protocol',
+        title: 'Ether.fi Protocol',
+        description: 'Learn more about the weETH liquid staking token',
+        url: 'https://ether.fi/',
         icon: Globe,
-        badge: { text: 'Staking', color: 'blue' },
+        badge: {
+          text: 'Protocol Info',
+          color: 'blue' as const,
+        },
       },
     ],
     additionalRewards: [
       {
-        id: 'steth-rewards',
-        title: 'stETH Staking Rewards',
-        description: 'Earn staking rewards on your stETH collateral',
-        url: 'https://lido.fi/ethereum',
+        id: 'etherfi-points',
+        title: 'Ether.fi Points',
+        description: 'Track your points and rewards from weETH staking activity',
+        url: 'https://www.ether.fi/app/portfolio',
+        icon: Coins,
+        badge: {
+          text: 'Rewards Program',
+          color: 'emerald' as const,
+        },
+        highlight: true,
+      },
+      {
+        id: 'merkl-rewards',
+        title: 'Merkl Rewards',
+        description: 'Additional DeFi rewards and incentive tracking',
+        // Default goes to dashboard; if connected, deep-link to user page
+        url: 'https://app.merkl.xyz/users/',
+        getUrl: ({ address }) =>
+          address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
         icon: TrendingUp,
-        badge: { text: 'Rewards', color: 'green' },
+        badge: {
+          text: 'Incentives',
+          color: 'purple' as const,
+        },
       },
     ],
   },

@@ -65,7 +65,7 @@ export function SuccessStep({
               className="text-brand-purple hover:underline flex items-center"
             >
               View on {explorer.name}
-              <ExternalLink className="h-3 w-3 ml-1" />
+              <ExternalLink className="h-3 w-3 ml-0.5" />
             </button>
           </div>
         </div>

@@ -295,10 +295,8 @@ async function performRedeem(
 }
 
 async function withRedeemEnv<T>(run: () => Promise<T>): Promise<T> {
-  const prevRouterVersion = process.env['VITE_ROUTER_VERSION']
   const prevExecutor = process.env['VITE_MULTICALL_EXECUTOR_ADDRESS']
 
-  process.env['VITE_ROUTER_VERSION'] = 'v2'
   const executor = ADDR.executor
   if (!executor) {
     throw new Error('Multicall executor address missing; update contract map for V2 harness')
@@ -308,9 +306,6 @@ async function withRedeemEnv<T>(run: () => Promise<T>): Promise<T> {
   try {
     return await run()
   } finally {
-    if (prevRouterVersion) process.env['VITE_ROUTER_VERSION'] = prevRouterVersion
-    else delete process.env['VITE_ROUTER_VERSION']
-
     if (prevExecutor) process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = prevExecutor
     else delete process.env['VITE_MULTICALL_EXECUTOR_ADDRESS']
   }
