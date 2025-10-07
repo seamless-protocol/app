@@ -31,8 +31,8 @@ const navigationItems = [
     id: 'explore',
     title: 'Leverage Tokens',
     icon: Search,
-    description: 'Discover leverage token opportunities',
-    subtitle: 'Discover leverage token opportunities tailored to your goals',
+    description: 'Explore leverage token strategies',
+    subtitle: 'Explore Leverage Tokens that fit your yield and risk profile',
   },
   features.portfolio && {
     id: 'portfolio',
