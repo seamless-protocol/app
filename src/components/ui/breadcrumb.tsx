@@ -119,7 +119,7 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
     return (
       <Wrapper ref={ref} className={cn('mb-4 sm:mb-6', className)} {...wrapperProps}>
         {/* Mobile: Stacked layout */}
-        <div className="flex flex-col space-y-2 sm:hidden">
+        <div className="flex space-y-2 sm:hidden">
           {/* Back Button */}
           {showBackButton && onBack && (
             <motion.div
@@ -132,7 +132,7 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
                 variant="ghost"
                 size="sm"
                 onClick={onBack}
-                className="text-slate-400 hover:text-foreground hover:bg-slate-800 transition-colors px-2 py-2 h-9 w-fit"
+                className="text-secondary-foreground hover:text-foreground hover:bg-accent transition-colors px-2 py-2 h-9 w-fit"
                 aria-label="Go back to previous page"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -141,8 +141,8 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
           )}
 
           {/* Breadcrumb Navigation - Mobile */}
-          <Breadcrumb className="w-full">
-            <BreadcrumbList className="flex-wrap">
+          <Breadcrumb className="w-full overflow-x-auto">
+            <BreadcrumbList className="flex-nowrap whitespace-nowrap">
               {items.map((item, index) => (
                 <motion.div
                   key={item.label}
@@ -162,7 +162,7 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
                       <button
                         type="button"
                         onClick={item.onClick}
-                        className="text-secondary-foreground hover:text-purple-400 transition-colors font-medium bg-transparent border-none p-0 cursor-pointer text-sm"
+                        className="text-secondary-foreground hover:text-foreground transition-colors font-medium bg-transparent border-none p-0 cursor-pointer text-sm truncate max-w-[200px]"
                         onKeyDown={(e) => {
                           if ((e.key === 'Enter' || e.key === ' ') && item.onClick) {
                             e.preventDefault()
@@ -200,7 +200,7 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
                 variant="ghost"
                 size="sm"
                 onClick={onBack}
-                className="text-secondary-foreground hover:text-foreground hover:bg-slate-800 transition-colors px-2 py-2 h-9"
+                className="text-secondary-foreground hover:text-foreground hover:bg-accent transition-colors px-2 py-2 h-9"
                 aria-label="Go back to previous page"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -223,14 +223,14 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
                 >
                   <BreadcrumbItem>
                     {item.isActive ? (
-                      <BreadcrumbPage className="text-white font-medium">
+                      <BreadcrumbPage className="text-foreground font-medium">
                         {item.label}
                       </BreadcrumbPage>
                     ) : (
                       <button
                         type="button"
                         onClick={item.onClick}
-                        className="text-slate-400 hover:text-purple-400 transition-colors font-medium bg-transparent border-none p-0 cursor-pointer"
+                        className="text-secondary-foreground hover:text-foreground transition-colors font-medium bg-transparent border-none p-0 cursor-pointer"
                         onKeyDown={(e) => {
                           if ((e.key === 'Enter' || e.key === ' ') && item.onClick) {
                             e.preventDefault()
@@ -245,7 +245,7 @@ const BreadcrumbNavigation = React.forwardRef<HTMLDivElement, BreadcrumbNavigati
 
                   {index < items.length - 1 && (
                     <BreadcrumbSeparator>
-                      <ChevronRight className="h-4 w-4 text-slate-600" />
+                      <ChevronRight className="h-4 w-4 text-secondary-foreground" />
                     </BreadcrumbSeparator>
                   )}
                 </motion.div>

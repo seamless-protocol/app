@@ -253,7 +253,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
               onClick: () => navigate({ to: '/leverage-tokens' }),
             },
             {
-              label: tokenConfig.name,
+              label: tokenConfig.symbol,
               isActive: true,
             },
           ]}
