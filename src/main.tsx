@@ -26,6 +26,7 @@ import { router } from './router'
 declare global {
   interface Window {
     __APP_READY__?: boolean
+    sentrySmoke?: (kind?: string) => void
   }
 }
 
@@ -87,6 +88,18 @@ if (import.meta.env['VITE_SENTRY_SMOKE']) {
       console.warn('[Sentry] Smoke trigger failed', e)
     }
   }, 500)
+}
+
+// Expose a manual smoke trigger for console-driven testing
+if (typeof window !== 'undefined') {
+  window.sentrySmoke = (kind?: string) => {
+    try {
+      runSentrySmoke(kind || 'all')
+      console.log('[Sentry] Manual smoke events triggered', kind || 'all')
+    } catch (e) {
+      console.warn('[Sentry] Manual smoke trigger failed', e)
+    }
+  }
 }
 
 const rootElement = document.getElementById('root')
