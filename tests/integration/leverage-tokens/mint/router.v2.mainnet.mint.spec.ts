@@ -13,7 +13,7 @@ if (mode !== 'tenderly') {
 
 const mintSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
-mintSuite('Leverage Router V2 Mint (Tenderly VNet, Mainnet wstETH/WETH 2x)', () => {
+mintSuite('Leverage Router V2 Mint (Tenderly VNet, Mainnet wstETH/ETH 2x)', () => {
   const SLIPPAGE_BPS = 50
 
   it('mints shares successfully via LiFi debt->collateral swap', async () => {

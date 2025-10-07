@@ -79,7 +79,7 @@ export const Default: Story = {
     isOpen: false,
     onClose: () => {},
     leverageTokenAddress:
-      leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]?.address ||
+      leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_2X_MAINNET]?.address ||
       '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3',
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
@@ -103,7 +103,7 @@ export const AllStates: Story = {
     isOpen: false,
     onClose: () => {},
     leverageTokenAddress:
-      leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]?.address ||
+      leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_2X_MAINNET]?.address ||
       '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3',
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
@@ -143,16 +143,16 @@ export const DifferentStrategies: Story = {
     isOpen: false,
     onClose: () => {},
     leverageTokenAddress:
-      leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]?.address ||
+      leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_2X_MAINNET]?.address ||
       '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3',
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },
   render: (args) => {
     const [isOpen, setIsOpen] = useState(false)
-    const [strategyId, setStrategyId] = useState(LeverageTokenKey.WSTETH_WETH_2X_MAINNET)
+    const [strategyId, setStrategyId] = useState(LeverageTokenKey.WSTETH_ETH_2X_MAINNET)
 
     const strategies = [
-      { id: LeverageTokenKey.WSTETH_WETH_2X_MAINNET, name: 'wstETH/WETH 2x' },
+      { id: LeverageTokenKey.WSTETH_ETH_2X_MAINNET, name: 'wstETH/ETH 2x' },
       // Add more strategies here as they become available
       // { id: 'eth-usdc-10x', name: 'ETH/USDC 10x' },
       // { id: 'btc-eth-5x', name: 'BTC/ETH 5x' },
@@ -195,7 +195,7 @@ export const WithoutAPY: Story = {
     isOpen: false,
     onClose: () => {},
     leverageTokenAddress:
-      leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]?.address ||
+      leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_2X_MAINNET]?.address ||
       '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3',
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
     // No APY prop - will default to 0%
@@ -219,7 +219,7 @@ export const WithPositionOverview: Story = {
     isOpen: false,
     onClose: () => {},
     leverageTokenAddress:
-      leverageTokenConfigs[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]?.address ||
+      leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_2X_MAINNET]?.address ||
       '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3',
     userAddress: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497', // Anvil test account #0 with funded balance
   },

@@ -158,9 +158,9 @@ Both modes share the same tests and helpers. Tenderly is preferred when configur
 - `--no-rate-limit`: No compute throttling
 - Snapshot/revert: Fast state management
 
-### Focused Run: Mainnet wstETH/WETH 2x (Tenderly static + LiFi)
+### Focused Run: Mainnet wstETH/ETH 2x (Tenderly static + LiFi)
 
-When you only need to validate the production wstETH/WETH 2x leverage token redeem path on a static Tenderly VNet, run this single spec:
+When you only need to validate the production wstETH/ETH 2x leverage token redeem path on a static Tenderly VNet, run this single spec:
 
 ```bash
 # Required env (CI/dev)

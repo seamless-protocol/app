@@ -9,7 +9,7 @@ const BASE_UNISWAP_V2_ROUTER = '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' as A
 export enum LeverageTokenKey {
   WEETH_WETH_17X_TENDERLY = 'weeth-weth-17x-tenderly',
   CBBTC_USDC_2X_TENDERLY = 'cbbtc-usdc-2x-tenderly',
-  WSTETH_WETH_2X_MAINNET = 'wsteth-weth-2x-mainnet',
+  WSTETH_ETH_2X_MAINNET = 'wsteth-eth-2x-mainnet',
   // Add more token keys here as they are added
   // ANOTHER_TOKEN = 'another-token',
 }
@@ -86,12 +86,12 @@ export interface LeverageTokenConfig {
 
 // Leverage token configurations
 export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
-  [LeverageTokenKey.WSTETH_WETH_2X_MAINNET]: {
+  [LeverageTokenKey.WSTETH_ETH_2X_MAINNET]: {
     address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
-    name: 'wstETH / WETH 2x Leverage Token',
-    symbol: 'WSTETH-WETH-2x',
+    name: 'wstETH / ETH 2x Leverage Token',
+    symbol: 'WSTETH-ETH-2x',
     description:
-      'wstETH / WETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Wrapped Ether',
+      'wstETH / ETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Wrapped Ether',
     decimals: 18,
     leverageRatio: 2,
     chainId: 1,

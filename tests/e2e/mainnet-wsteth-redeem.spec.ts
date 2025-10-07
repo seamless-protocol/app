@@ -12,7 +12,7 @@ import {
 import { wagmiConfig } from '../shared/wagmi'
 
 const MAINNET_CHAIN_ID = mainnet.id
-const TOKEN_KEY = 'wsteth-weth-2x'
+const TOKEN_KEY = 'wsteth-eth-2x'
 const leverageTokenDefinition = getLeverageTokenDefinition('tenderly', TOKEN_KEY)
 const leverageTokenAddress = getLeverageTokenAddress('tenderly', TOKEN_KEY)
 const SLIPPAGE_BPS = 50
@@ -25,7 +25,7 @@ const redeemContext: RedeemPlanningContext = {
 
 test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== MAINNET_CHAIN_ID, 'Mainnet-only E2E suite')
 
-test.describe('Mainnet wstETH/WETH 2x redeem (JIT + LiFi)', () => {
+test.describe('Mainnet wstETH/ETH 2x redeem (JIT + LiFi)', () => {
   let baseSnapshot: Hash
   let sharesToRedeem: bigint
   let collateralAsset: `0x${string}`

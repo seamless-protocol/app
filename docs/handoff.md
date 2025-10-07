@@ -1,7 +1,7 @@
 Title: Frontend Handoff — LiFi + New Mainnet wstETH/WETH Token Tests
 
 Scope
-- Summarizes recent changes to enable E2E + integration testing for the new mainnet wstETH/WETH 2x leverage token, LiFi API usage, and CI setup.
+- Summarizes recent changes to enable E2E + integration testing for the new mainnet wstETH/ETH 2x leverage token, LiFi API usage, and CI setup.
 - Intended for engineers taking over day-to-day development and CI operations.
 
 Key Outcomes
