@@ -18,7 +18,12 @@ export interface LogContext {
 }
 
 class BaseLogger {
-  private isDev = import.meta.env.MODE === 'development'
+  // Treat any non-production mode or Vitest environment as local console logging
+  private isLocal = (() => {
+    const isProd = import.meta.env.MODE === 'production'
+    const isVitest = typeof import.meta !== 'undefined' && Boolean((import.meta as any).vitest)
+    return !isProd || isVitest
+  })()
 
   constructor(
     private namespace: string,
@@ -38,7 +43,7 @@ class BaseLogger {
   error(message: string, context?: LogContext) {
     const merged = { ...(this.defaults || {}), ...(context || {}) }
 
-    if (this.isDev) {
+    if (this.isLocal) {
       // Always log to console in development
       // Include namespace for easy filtering
       console.error(`[${this.namespace}] ${message}`, merged)
@@ -72,7 +77,7 @@ class BaseLogger {
    * Log a warning (console-only in dev)
    */
   warn(message: string, context?: LogContext) {
-    if (!this.isDev) return
+    if (!this.isLocal) return
     const merged = { ...(this.defaults || {}), ...(context || {}) }
     console.warn(`[${this.namespace}] ${message}`, merged)
   }
@@ -81,7 +86,7 @@ class BaseLogger {
    * Log info (console-only in dev)
    */
   info(message: string, context?: LogContext) {
-    if (!this.isDev) return
+    if (!this.isLocal) return
     const merged = { ...(this.defaults || {}), ...(context || {}) }
     console.log(`[${this.namespace}] ${message}`, merged)
   }
