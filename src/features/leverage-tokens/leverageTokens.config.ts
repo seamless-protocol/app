@@ -105,8 +105,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       decimals: 18,
     },
     debtAsset: {
-      symbol: 'WETH',
-      name: 'Wrapped Ether',
+      symbol: 'ETH',
+      name: 'Ether',
       address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
       decimals: 18,
     },

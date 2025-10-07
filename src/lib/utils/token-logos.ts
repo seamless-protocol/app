@@ -15,6 +15,7 @@ export function getTokenLogo(asset: string) {
     case 'cbBTC':
       return CBBTCLogo
     case 'WETH':
+    case 'ETH':
       return WETHLogo
     case 'weETH':
       return weETHLogo
