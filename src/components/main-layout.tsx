@@ -6,7 +6,6 @@ import {
   Github,
   LayoutDashboard,
   Search,
-  Twitter,
   Vault,
   Vote,
 } from 'lucide-react'
@@ -17,6 +16,7 @@ import { useGA } from '@/lib/config/ga4.config'
 import { formatCurrency } from '@/lib/utils/formatting'
 import { ConnectButtonTest } from './ConnectButtonTest'
 import { DiscordIcon } from './icons/brands/discord-icon'
+import { XLogo } from './icons/brands/x-logo'
 import { LiFiWidget } from './LiFiWidget'
 import { ModeToggle } from './mode-toggle'
 import { PageContainer } from './PageContainer'
@@ -91,9 +91,9 @@ const communitySection = {
       url: 'https://discord.gg/seamlessprotocol',
     },
     {
-      id: 'X',
+      id: 'x',
       name: 'X',
-      icon: Twitter,
+      icon: XLogo,
       url: 'https://x.com/SeamlessFi',
     },
     {
