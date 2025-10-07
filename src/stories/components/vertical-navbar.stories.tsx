@@ -20,7 +20,7 @@ const navigationItems = [
     id: 'explore',
     title: 'Leverage Tokens',
     icon: Search,
-    description: 'Discover leverage token opportunities',
+    description: 'Explore leverage token strategies',
   },
   {
     id: 'vaults',
