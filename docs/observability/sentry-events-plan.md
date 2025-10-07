@@ -68,11 +68,12 @@ Sentry UI (no‑code actions)
 - Dashboard: issues by tag[provider], tag[status].
 - Spend control: keep Replay paused (disabled in code).
 
-Test Plan (local)
+ Test Plan (local)
 1) bun dev -- --mode production with VITE_SENTRY_DSN set.
-2) Force API fail → expect ExternalAPIError with tags, correct grouping.
-3) Trigger mint/redeem fail (e.g., low slippage) → expect OnChainError with decoded name when available.
-4) TheGraph failures (HTTP/GQL/network) → expect ExternalAPIError provider=thegraph with route tag.
+2) Quick smoke (no UI interaction): set VITE_SENTRY_SMOKE=all to emit api/tx/subgraph errors immediately after init; tx smoke is emitted via helper and a direct capture to ensure visibility.
+3) Force API fail → expect ExternalAPIError with tags, correct grouping.
+4) Trigger mint/redeem fail (e.g., low slippage) → expect OnChainError with decoded name when available.
+5) TheGraph failures (HTTP/GQL/network) → expect ExternalAPIError provider=thegraph with route tag.
 
 Future Enhancements
 - Optional: filter AbortError/timeout noise in beforeSend if volume is high.

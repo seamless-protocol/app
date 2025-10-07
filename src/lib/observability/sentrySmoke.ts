@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react'
 import { captureApiError, captureTxError } from '@/lib/observability/sentry'
 
 function dummyHex(length: number): string {
@@ -54,6 +55,28 @@ export function runSentrySmoke(kind: SmokeKind | string = 'all') {
       provider: 'uniswap',
       error: err,
       decodedName: 'SlippageTooHigh',
+    })
+
+    // Also capture directly to ensure a visible tx event in Sentry
+    Sentry.captureException(err, {
+      tags: {
+        flow: 'mint',
+        chainId: String(8453),
+        token: dummyHex(42),
+        provider: 'uniswap',
+        status: 'tx-reverted',
+      },
+      extra: {
+        flow: 'mint',
+        chainId: 8453,
+        token: dummyHex(42),
+        inputAsset: dummyHex(42),
+        slippageBps: 100,
+        amountIn: '1.0',
+        expectedOut: '0.99',
+        provider: 'uniswap',
+        decodedName: 'SlippageTooHigh',
+      },
     })
   }
 }
