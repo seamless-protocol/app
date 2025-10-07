@@ -6,6 +6,7 @@ import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent } from '../../../components/ui/card'
 import { Skeleton } from '../../../components/ui/skeleton'
+import { LeverageBadge } from './LeverageBadge'
 import type { LeverageToken } from './leverage-token-table'
 
 export type { LeverageToken }
@@ -108,9 +109,7 @@ export function FeaturedLeverageToken({
             {/* Leverage Row with Divider */}
             <div className="flex justify-between items-center pt-2 border-t border-[var(--divider-line)]">
               <span className="text-sm text-[var(--text-secondary)]">Leverage</span>
-              <span className="font-medium text-[var(--brand-secondary)]">
-                {token.leverageRatio}x
-              </span>
+              <LeverageBadge leverage={token.leverageRatio} size="sm" />
             </div>
           </div>
         </CardContent>
