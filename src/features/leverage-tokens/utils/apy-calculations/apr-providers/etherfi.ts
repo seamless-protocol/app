@@ -36,6 +36,11 @@ export class EtherFiAprProvider implements AprFetcher {
         const error = new Error(
           `Failed to fetch EtherFi data (status ${response.status}): ${response.statusText}`,
         )
+        let responseSnippet: string | undefined
+        try {
+          const text = await response.text()
+          responseSnippet = text.slice(0, 500)
+        } catch {}
         captureApiError({
           provider,
           method,
@@ -43,6 +48,7 @@ export class EtherFiAprProvider implements AprFetcher {
           status: response.status,
           durationMs,
           feature: 'apr',
+          ...(responseSnippet ? { responseSnippet } : {}),
           error,
         })
         throw error

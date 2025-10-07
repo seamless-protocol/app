@@ -40,6 +40,12 @@ export function initSentry() {
           if (err?.value?.includes('User rejected') || err?.value?.includes('User denied')) {
             return null // Don't send user rejection errors
           }
+          const type = err?.type || ''
+          const val = err?.value || ''
+          // Optionally drop request AbortError timeouts as noise
+          if (type === 'AbortError' || (typeof val === 'string' && val.includes('AbortError'))) {
+            return null
+          }
         }
 
         // Add additional context + normalize tags
@@ -92,7 +98,6 @@ export function initSentry() {
           'durationMs',
           'attempt',
           'route',
-          'quoteProvider',
           'quoteOrder',
           'swapKey',
           'errorName',

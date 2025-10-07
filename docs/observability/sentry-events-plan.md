@@ -48,9 +48,9 @@ Event Contract (fields we standardize)
   - provider, method, endpointPath, status
   - feature (e.g., 'leverage-tokens'), chainId, token
   - durationMs, attempt, route (current hash path)
-- Tx‑specific
+- Tx-specific
   - flow=mint|redeem, inputAsset, outputAsset, slippageBps, amountIn, expectedOut
-  - quoteProvider=lifi|uniswap, quoteOrder, swapKey (short)
+  - provider=lifi|uniswap, quoteOrder, swapKey (short)
 - Extra (non‑indexed)
   - url, responseSnippet, requestId
   - decodedError (ERC‑6093 signature/name/message), rawError if needed

@@ -56,11 +56,13 @@ class BaseLogger {
     if (merged['feature'] !== undefined) tags['feature'] = String(merged['feature'])
     if (merged['transactionHash'] !== undefined)
       tags['transactionHash'] = String(merged['transactionHash'])
-    if (merged['userAddress'] !== undefined) tags['userAddress'] = String(merged['userAddress'])
+    // Do not add userAddress as a tag to avoid PII in Sentry
 
+    // Remove userAddress from extra context sent to Sentry (privacy)
+    const { userAddress: _omitUserAddress, ...sanitizedExtra } = merged
     const sentryContext = {
       tags,
-      extra: merged,
+      extra: sanitizedExtra,
     }
 
     Sentry.captureException(merged.error || new Error(message), sentryContext)

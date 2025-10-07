@@ -117,6 +117,11 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
           response.status === 404
             ? new Error(`No Merkl opportunities found for token: ${tokenAddress}`)
             : new Error(`HTTP error! status: ${response.status}`)
+        let responseSnippet: string | undefined
+        try {
+          const text = await response.text()
+          responseSnippet = text.slice(0, 500)
+        } catch {}
         captureApiError({
           provider: 'merkl',
           method: 'GET',
@@ -126,6 +131,7 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
           feature: 'apr',
           ...(typeof chainId === 'number' ? { chainId } : {}),
           token: tokenAddress,
+          ...(responseSnippet ? { responseSnippet } : {}),
           error,
         })
         throw error

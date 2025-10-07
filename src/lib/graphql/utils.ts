@@ -77,6 +77,11 @@ export async function graphqlRequest<T>(chainId: number, request: GraphQLRequest
     if (!response.ok) {
       const error = new Error(`HTTP error! status: ${response.status}`)
       const requestId = response.headers?.get?.('x-request-id') ?? undefined
+      let responseSnippet: string | undefined
+      try {
+        const text = await response.text()
+        responseSnippet = text.slice(0, 500)
+      } catch {}
       captureApiError({
         provider: 'thegraph',
         method: 'POST',
@@ -86,6 +91,7 @@ export async function graphqlRequest<T>(chainId: number, request: GraphQLRequest
         feature: 'subgraph',
         chainId,
         ...(requestId ? { requestId } : {}),
+        ...(responseSnippet ? { responseSnippet } : {}),
         error,
       })
       throw error
