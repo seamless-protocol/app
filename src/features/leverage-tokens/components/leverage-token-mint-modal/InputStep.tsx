@@ -7,7 +7,7 @@ import {
   Settings,
   TrendingUp,
 } from 'lucide-react'
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
@@ -104,7 +104,19 @@ export function InputStep({
   isMintTokenFeeLoading,
   isBelowMinimum,
 }: InputStepProps) {
+  const slippageInputRef = useRef<HTMLInputElement>(null)
   const mintAmountId = useId()
+
+  // Auto-select and focus slippage input when advanced is shown
+  useEffect(() => {
+    if (showAdvanced && slippageInputRef.current) {
+      // Small delay to ensure the input is rendered
+      setTimeout(() => {
+        slippageInputRef.current?.focus()
+        slippageInputRef.current?.select()
+      }, 100)
+    }
+  }, [showAdvanced])
 
   return (
     <div className="space-y-6">
@@ -216,6 +228,7 @@ export function InputStep({
                 <div className="flex items-center space-x-1">
                   <div className="relative">
                     <Input
+                      ref={slippageInputRef}
                       type="text"
                       value={slippage}
                       onChange={(e) => onSlippageChange(e.target.value)}

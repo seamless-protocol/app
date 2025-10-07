@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, Percent, Settings, TrendingDown } from 'lucide-react'
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
@@ -128,7 +128,19 @@ export function InputStep({
   isRedeemTokenFeeLoading,
   isBelowMinimum,
 }: InputStepProps) {
+  const slippageInputRef = useRef<HTMLInputElement>(null)
   const redeemAmountId = useId()
+
+  // Auto-select and focus slippage input when advanced is shown
+  useEffect(() => {
+    if (showAdvanced && slippageInputRef.current) {
+      // Small delay to ensure the input is rendered
+      setTimeout(() => {
+        slippageInputRef.current?.focus()
+        slippageInputRef.current?.select()
+      }, 100)
+    }
+  }, [showAdvanced])
 
   const formatAssetValue = (value: number, symbol: string) =>
     `${value.toLocaleString('en-US', {
@@ -338,6 +350,7 @@ export function InputStep({
                 <div className="flex items-center space-x-1">
                   <div className="relative">
                     <Input
+                      ref={slippageInputRef}
                       type="text"
                       value={slippage}
                       onChange={(e) => onSlippageChange(e.target.value)}
