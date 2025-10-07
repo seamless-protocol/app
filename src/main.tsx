@@ -20,6 +20,7 @@ import { queryClient } from './lib/config/query.config'
 import { initSentry } from './lib/config/sentry.config'
 import { config as prodConfig } from './lib/config/wagmi.config'
 import { testConfig } from './lib/config/wagmi.config.test'
+import { runSentrySmoke } from './lib/observability/sentrySmoke'
 import { router } from './router'
 
 declare global {
@@ -74,6 +75,19 @@ try {
 // Initialize Sentry and GA4 before app renders
 initSentry()
 initGA4()
+
+// Optional: quick Sentry smoke triggers when VITE_SENTRY_SMOKE is set
+if (import.meta.env['VITE_SENTRY_SMOKE']) {
+  // Delay slightly to ensure Sentry is initialized
+  setTimeout(() => {
+    try {
+      runSentrySmoke(import.meta.env['VITE_SENTRY_SMOKE'] as string)
+      console.log('[Sentry] Smoke events triggered')
+    } catch (e) {
+      console.warn('[Sentry] Smoke trigger failed', e)
+    }
+  }, 500)
+}
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {
