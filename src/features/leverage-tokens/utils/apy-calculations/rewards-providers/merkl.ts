@@ -1,6 +1,7 @@
 import type { Address } from 'viem'
 import { createLogger } from '@/lib/logger'
 import { captureApiError } from '@/lib/observability/sentry'
+import { elapsedMsSince, getNowMs } from '@/lib/utils/time'
 import type { BaseRewardsAprData, RewardsAprFetcher } from './types'
 
 const logger = createLogger('merkl-rewards')
@@ -90,8 +91,7 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
     tokenAddress: Address,
     chainId?: number,
   ): Promise<Array<MerklOpportunity>> {
-    const start =
-      typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+    const start = getNowMs()
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
@@ -112,10 +112,7 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        const durationMs = Math.round(
-          (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) -
-            start,
-        )
+        const durationMs = elapsedMsSince(start)
         const error =
           response.status === 404
             ? new Error(`No Merkl opportunities found for token: ${tokenAddress}`)
@@ -137,10 +134,7 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
       const data = await response.json()
       return Array.isArray(data) ? data : data.opportunities || []
     } catch (error) {
-      const durationMs = Math.round(
-        (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) -
-          start,
-      )
+      const durationMs = elapsedMsSince(start)
       if (error instanceof Error && error.name === 'AbortError') {
         captureApiError({
           provider: 'merkl',

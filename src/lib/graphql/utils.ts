@@ -1,5 +1,6 @@
 import { getEnvVar } from '@/lib/env'
 import { captureApiError } from '@/lib/observability/sentry'
+import { elapsedMsSince, getNowMs } from '@/lib/utils/time'
 
 export interface GraphQLResponse<T = unknown> {
   data?: T
@@ -60,8 +61,7 @@ export async function graphqlRequest<T>(chainId: number, request: GraphQLRequest
 
   const endpoint = getSubgraphEndpoint(chainId)
 
-  const start =
-    typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+  const start = getNowMs()
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -72,10 +72,7 @@ export async function graphqlRequest<T>(chainId: number, request: GraphQLRequest
       body: JSON.stringify(request),
     })
 
-    const durationMs = Math.round(
-      (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) -
-        start,
-    )
+    const durationMs = elapsedMsSince(start)
 
     if (!response.ok) {
       const error = new Error(`HTTP error! status: ${response.status}`)
@@ -117,10 +114,7 @@ export async function graphqlRequest<T>(chainId: number, request: GraphQLRequest
 
     return result.data
   } catch (error) {
-    const durationMs = Math.round(
-      (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) -
-        start,
-    )
+    const durationMs = elapsedMsSince(start)
     captureApiError({
       provider: 'thegraph',
       method: 'POST',

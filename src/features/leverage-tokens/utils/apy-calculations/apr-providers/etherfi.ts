@@ -1,4 +1,5 @@
 import { captureApiError } from '@/lib/observability/sentry'
+import { elapsedMsSince, getNowMs } from '@/lib/utils/time'
 import type { AprFetcher, BaseAprData } from './types'
 
 /**
@@ -26,16 +27,12 @@ export class EtherFiAprProvider implements AprFetcher {
     const url = 'https://misc-cache.seamlessprotocol.com/etherfi-protocol-detail'
     const provider = 'etherfi'
     const method = 'GET'
-    const start =
-      typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+    const start = getNowMs()
     try {
       const response = await fetch(url)
 
       if (!response.ok) {
-        const durationMs = Math.round(
-          (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) -
-            start,
-        )
+        const durationMs = elapsedMsSince(start)
         const error = new Error(
           `Failed to fetch EtherFi data (status ${response.status}): ${response.statusText}`,
         )
@@ -74,10 +71,7 @@ export class EtherFiAprProvider implements AprFetcher {
 
       return result
     } catch (error) {
-      const durationMs = Math.round(
-        (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) -
-          start,
-      )
+      const durationMs = elapsedMsSince(start)
       captureApiError({
         provider,
         method,
