@@ -587,6 +587,10 @@ html.dark [data-rk] {
   .lifi-widget [class*="MuiTypography-root"] {
     color: var(--text-secondary) !important;
   }
+
+  .lifi-widget [class*="MuiTabs-root"] {
+    border: 1px solid var(--lifi-palette-divider) !important;
+  }
 }
 
 /**
