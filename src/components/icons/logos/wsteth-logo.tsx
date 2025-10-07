@@ -1,6 +1,8 @@
 import type { SVGProps } from 'react'
+import { useId } from 'react'
 
 export function wstETHLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
+  const maskId = useId()
   return (
     <svg
       className={className}
@@ -11,21 +13,56 @@ export function wstETHLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
       {...props}
     >
       <defs>
-        <mask id="mask0_446_22" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="0" y="0" width="450" height="450">
-          <rect width="450" height="450" fill="black"/>
-          <circle cx="225" cy="225" r="225" fill="white"/>
+        <mask
+          id={maskId}
+          style={{ maskType: 'alpha' }}
+          maskUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width="450"
+          height="450"
+        >
+          <rect width="450" height="450" fill="black" />
+          <circle cx="225" cy="225" r="225" fill="white" />
         </mask>
       </defs>
-      <g mask="url(#mask0_446_22)">
-        <circle cx="225" cy="225" r="225" fill="#00A3FF"/>
-        <path d="M119.988 206.834L117.122 211.231C84.7961 260.819 92.0161 325.763 134.48 367.37C159.461 391.847 192.202 404.087 224.944 404.091C224.944 404.091 224.944 404.091 119.988 206.834Z" fill="white"/>
-        <path opacity="0.6" d="M224.935 266.785L119.979 206.834C224.935 404.091 224.935 404.091 224.935 404.091C224.935 361.13 224.935 311.902 224.935 266.785Z" fill="white"/>
-        <path opacity="0.6" d="M330.012 206.834L332.878 211.231C365.204 260.819 357.984 325.763 315.52 367.37C290.539 391.847 257.798 404.087 225.056 404.091C225.056 404.091 225.056 404.091 330.012 206.834Z" fill="white"/>
-        <path opacity="0.2" d="M225.044 266.785L330 206.834C225.045 404.091 225.044 404.091 225.044 404.091C225.044 361.13 225.044 311.902 225.044 266.785Z" fill="white"/>
-        <path opacity="0.2" d="M225.062 132.834V236.233L315.47 184.567L225.062 132.834Z" fill="white"/>
-        <path opacity="0.6" d="M225.077 132.834L134.604 184.566L225.077 236.233V132.834Z" fill="white"/>
-        <path d="M225.077 45.875L134.604 184.599L225.077 132.722V45.875Z" fill="white"/>
-        <path opacity="0.6" d="M225.062 132.707L315.539 184.586L225.062 45.793V132.707Z" fill="white"/>
+      <g mask={`url(#${maskId})`}>
+        <circle cx="225" cy="225" r="225" fill="#00A3FF" />
+        <path
+          d="M119.988 206.834L117.122 211.231C84.7961 260.819 92.0161 325.763 134.48 367.37C159.461 391.847 192.202 404.087 224.944 404.091C224.944 404.091 224.944 404.091 119.988 206.834Z"
+          fill="white"
+        />
+        <path
+          opacity="0.6"
+          d="M224.935 266.785L119.979 206.834C224.935 404.091 224.935 404.091 224.935 404.091C224.935 361.13 224.935 311.902 224.935 266.785Z"
+          fill="white"
+        />
+        <path
+          opacity="0.6"
+          d="M330.012 206.834L332.878 211.231C365.204 260.819 357.984 325.763 315.52 367.37C290.539 391.847 257.798 404.087 225.056 404.091C225.056 404.091 225.056 404.091 330.012 206.834Z"
+          fill="white"
+        />
+        <path
+          opacity="0.2"
+          d="M225.044 266.785L330 206.834C225.045 404.091 225.044 404.091 225.044 404.091C225.044 361.13 225.044 311.902 225.044 266.785Z"
+          fill="white"
+        />
+        <path
+          opacity="0.2"
+          d="M225.062 132.834V236.233L315.47 184.567L225.062 132.834Z"
+          fill="white"
+        />
+        <path
+          opacity="0.6"
+          d="M225.077 132.834L134.604 184.566L225.077 236.233V132.834Z"
+          fill="white"
+        />
+        <path d="M225.077 45.875L134.604 184.599L225.077 132.722V45.875Z" fill="white" />
+        <path
+          opacity="0.6"
+          d="M225.062 132.707L315.539 184.586L225.062 45.793V132.707Z"
+          fill="white"
+        />
       </g>
     </svg>
   )
