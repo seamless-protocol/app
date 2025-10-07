@@ -1,8 +1,6 @@
 import { captureApiError } from '@/lib/observability/sentry'
 import type { AprFetcher, BaseAprData } from './types'
 
-// Observability handled via captureApiError helper
-
 /**
  * EtherFi-specific APR data interface
  */
