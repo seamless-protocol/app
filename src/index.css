@@ -714,6 +714,12 @@ html.dark [data-rk] {
     min-width: 44px;
   }
 
+  button[role="switch"],
+  [role="switch"] {
+    min-height: auto;
+    min-width: auto;
+  }
+
   /* Override for asset display buttons to maintain intended size */
   .asset-display-button {
     min-height: unset !important;
