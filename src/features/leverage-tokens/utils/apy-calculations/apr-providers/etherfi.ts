@@ -1,7 +1,7 @@
-import { createLogger } from '@/lib/logger'
+import { captureApiError } from '@/lib/observability/sentry'
 import type { AprFetcher, BaseAprData } from './types'
 
-const logger = createLogger('etherfi-apr')
+// Observability handled via captureApiError helper
 
 /**
  * EtherFi-specific APR data interface
@@ -25,15 +25,32 @@ export class EtherFiAprProvider implements AprFetcher {
   protocolName = 'Ether.fi'
 
   async fetchApr(): Promise<BaseAprData> {
+    const url = 'https://misc-cache.seamlessprotocol.com/etherfi-protocol-detail'
+    const provider = 'etherfi'
+    const method = 'GET'
+    const start =
+      typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
     try {
-      const response = await fetch(
-        'https://misc-cache.seamlessprotocol.com/etherfi-protocol-detail',
-      )
+      const response = await fetch(url)
 
       if (!response.ok) {
-        throw new Error(
+        const durationMs = Math.round(
+          (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) -
+            start,
+        )
+        const error = new Error(
           `Failed to fetch EtherFi data (status ${response.status}): ${response.statusText}`,
         )
+        captureApiError({
+          provider,
+          method,
+          url,
+          status: response.status,
+          durationMs,
+          feature: 'apr',
+          error,
+        })
+        throw error
       }
 
       const raw = await response.json()
@@ -59,7 +76,19 @@ export class EtherFiAprProvider implements AprFetcher {
 
       return result
     } catch (error) {
-      logger.error('Error fetching EtherFi APR', { error })
+      const durationMs = Math.round(
+        (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) -
+          start,
+      )
+      captureApiError({
+        provider,
+        method,
+        url,
+        status: 0,
+        durationMs,
+        feature: 'apr',
+        error,
+      })
       throw new Error(
         `Failed to fetch EtherFi APR data: ${error instanceof Error ? error.message : 'Unknown error'}`,
       )

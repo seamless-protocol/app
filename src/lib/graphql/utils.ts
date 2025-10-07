@@ -1,4 +1,5 @@
 import { getEnvVar } from '@/lib/env'
+import { captureApiError } from '@/lib/observability/sentry'
 
 export interface GraphQLResponse<T = unknown> {
   data?: T
@@ -59,26 +60,77 @@ export async function graphqlRequest<T>(chainId: number, request: GraphQLRequest
 
   const endpoint = getSubgraphEndpoint(chainId)
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(request),
-  })
+  const start =
+    typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(request),
+    })
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`)
-  }
-
-  const result = await response.json()
-
-  if (result.errors && result.errors.length > 0) {
-    throw new Error(
-      `GraphQL errors: ${result.errors.map((e: { message: string }) => e.message).join(', ')}`,
+    const durationMs = Math.round(
+      (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) -
+        start,
     )
-  }
 
-  return result.data
+    if (!response.ok) {
+      const error = new Error(`HTTP error! status: ${response.status}`)
+      const requestId = response.headers?.get?.('x-request-id') ?? undefined
+      captureApiError({
+        provider: 'thegraph',
+        method: 'POST',
+        url: endpoint,
+        status: response.status,
+        durationMs,
+        feature: 'subgraph',
+        chainId,
+        ...(requestId ? { requestId } : {}),
+        error,
+      })
+      throw error
+    }
+
+    const result = await response.json()
+
+    if (result.errors && result.errors.length > 0) {
+      const snippet = JSON.stringify(result.errors?.[0])
+      const error = new Error(
+        `GraphQL errors: ${result.errors.map((e: { message: string }) => e.message).join(', ')}`,
+      )
+      captureApiError({
+        provider: 'thegraph',
+        method: 'POST',
+        url: endpoint,
+        status: 200,
+        durationMs,
+        feature: 'subgraph',
+        chainId,
+        responseSnippet: snippet,
+        error,
+      })
+      throw error
+    }
+
+    return result.data
+  } catch (error) {
+    const durationMs = Math.round(
+      (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) -
+        start,
+    )
+    captureApiError({
+      provider: 'thegraph',
+      method: 'POST',
+      url: endpoint,
+      status: 0,
+      durationMs,
+      feature: 'subgraph',
+      chainId,
+      error,
+    })
+    throw error
+  }
 }
