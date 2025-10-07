@@ -569,13 +569,6 @@ html.dark [data-rk] {
     color: var(--text-primary);
   }
 
-  .lifi-widget [class*="MuiPaper-root"] {
-    background-color: var(--surface-card) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid var(--divider-line);
-    border-radius: 16px;
-  }
-
   .lifi-widget [class*="MuiToggleButton-root"] {
     border-radius: 999px !important;
     border-color: var(--divider-line) !important;
