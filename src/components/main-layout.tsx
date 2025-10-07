@@ -5,7 +5,6 @@ import {
   Coins,
   Github,
   LayoutDashboard,
-  MessageCircle,
   Search,
   Twitter,
   Vault,
@@ -19,6 +18,7 @@ import { formatCurrency } from '@/lib/utils/formatting'
 import { ConnectButtonTest } from './ConnectButtonTest'
 import { LiFiWidget } from './LiFiWidget'
 import { ModeToggle } from './mode-toggle'
+import { DiscordIcon } from './icons/brands/discord-icon'
 import { PageContainer } from './PageContainer'
 import { Skeleton } from './ui/skeleton'
 import { Toaster } from './ui/sonner'
@@ -87,7 +87,7 @@ const communitySection = {
     {
       id: 'discord',
       name: 'Discord',
-      icon: MessageCircle,
+      icon: DiscordIcon,
       url: 'https://discord.gg/seamlessprotocol',
     },
     {
