@@ -20,7 +20,6 @@ import { queryClient } from './lib/config/query.config'
 import { initSentry } from './lib/config/sentry.config'
 import { config as prodConfig } from './lib/config/wagmi.config'
 import { testConfig } from './lib/config/wagmi.config.test'
-import { runSentrySmoke } from './lib/observability/sentrySmoke'
 import { router } from './router'
 
 declare global {
@@ -77,30 +76,7 @@ try {
 initSentry()
 initGA4()
 
-// Optional: quick Sentry smoke triggers when VITE_SENTRY_SMOKE is set
-if (import.meta.env['VITE_SENTRY_SMOKE']) {
-  // Delay slightly to ensure Sentry is initialized
-  setTimeout(() => {
-    try {
-      runSentrySmoke(import.meta.env['VITE_SENTRY_SMOKE'] as string)
-      console.log('[Sentry] Smoke events triggered')
-    } catch (e) {
-      console.warn('[Sentry] Smoke trigger failed', e)
-    }
-  }, 500)
-}
-
-// Expose a manual smoke trigger for console-driven testing
-if (typeof window !== 'undefined') {
-  window.sentrySmoke = (kind?: string) => {
-    try {
-      runSentrySmoke(kind || 'all')
-      console.log('[Sentry] Manual smoke events triggered', kind || 'all')
-    } catch (e) {
-      console.warn('[Sentry] Manual smoke trigger failed', e)
-    }
-  }
-}
+// No test-only smoke hooks in production bundles
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {
