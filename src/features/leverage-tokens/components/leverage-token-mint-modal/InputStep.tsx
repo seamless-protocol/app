@@ -1,4 +1,4 @@
-import { ArrowDown, Percent, RefreshCw, Settings, TrendingUp } from 'lucide-react'
+import { ArrowDown, ChevronDown, ChevronUp, Percent, RefreshCw, Settings, TrendingUp } from 'lucide-react'
 import { useId } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
@@ -206,13 +206,39 @@ export function InputStep({
                   </Button>
                 ))}
                 <div className="flex items-center space-x-1">
-                  <Input
-                    type="text"
-                    value={slippage}
-                    onChange={(e) => onSlippageChange(e.target.value)}
-                    className="h-8 w-16 border border-border bg-input text-center text-xs text-foreground"
-                    placeholder="0.5"
-                  />
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      value={slippage}
+                      onChange={(e) => onSlippageChange(e.target.value)}
+                      className="h-8 w-16 border border-border bg-input text-center text-xs text-foreground pr-6"
+                      placeholder="0.5"
+                    />
+                    <div className="absolute right-1 top-0 flex h-full flex-col items-center justify-center space-y-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentValue = parseFloat(slippage) || 0
+                          const newValue = Math.min(currentValue + 0.1, 50).toFixed(1)
+                          onSlippageChange(newValue)
+                        }}
+                        className="flex h-4 w-4 items-center justify-center hover:bg-muted rounded-sm transition-colors"
+                      >
+                        <ChevronUp className="h-2 w-2 text-muted-foreground hover:text-foreground" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentValue = parseFloat(slippage) || 0
+                          const newValue = Math.max(currentValue - 0.1, 0.1).toFixed(1)
+                          onSlippageChange(newValue)
+                        }}
+                        className="flex h-4 w-4 items-center justify-center hover:bg-muted rounded-sm transition-colors"
+                      >
+                        <ChevronDown className="h-2 w-2 text-muted-foreground hover:text-foreground" />
+                      </button>
+                    </div>
+                  </div>
                   <Percent className="h-3 w-3 text-muted-foreground" />
                 </div>
               </div>
