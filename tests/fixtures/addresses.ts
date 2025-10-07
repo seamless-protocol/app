@@ -60,7 +60,7 @@ export const MAINNET_TENDERLY_VNET_ADMIN_RPC =
   'https://virtual.mainnet.us-west.rpc.tenderly.co/da333276-fa7b-4f3b-a6b9-319102e4ec5d' as const
 
 export type LeverageTokenSource = 'tenderly' | 'prod'
-export type LeverageTokenKey = 'weeth-weth-17x' | 'cbbtc-usdc-2x' | 'wsteth-weth-2x'
+export type LeverageTokenKey = 'weeth-weth-17x' | 'cbbtc-usdc-2x' | 'wsteth-eth-2x'
 
 export interface LeverageTokenDefinition {
   key: LeverageTokenKey
@@ -148,10 +148,10 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
       },
     },
   },
-  'wsteth-weth-2x': {
-    key: 'wsteth-weth-2x',
+  'wsteth-eth-2x': {
+    key: 'wsteth-eth-2x',
     address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
-    label: 'wstETH / WETH 2x Leverage Token (Tenderly)',
+    label: 'wstETH / ETH 2x Leverage Token (Tenderly)',
     chainId: mainnet.id,
     collateralSymbol: 'wstETH',
     debtSymbol: 'WETH',
@@ -182,10 +182,10 @@ const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = 
     collateralSymbol: 'cbBTC',
     debtSymbol: 'USDC',
   },
-  'wsteth-weth-2x': {
-    key: 'wsteth-weth-2x',
+  'wsteth-eth-2x': {
+    key: 'wsteth-eth-2x',
     address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
-    label: 'wstETH / WETH 2x Leverage Token',
+    label: 'wstETH / ETH 2x Leverage Token',
     chainId: mainnet.id,
     collateralSymbol: 'wstETH',
     debtSymbol: 'WETH',
@@ -233,7 +233,7 @@ export const WEETH_WETH_17X_TENDERLY_TOKEN_ADDRESS =
   TENDERLY_LEVERAGE_TOKENS['weeth-weth-17x'].address
 
 export function isLeverageTokenKey(value: unknown): value is LeverageTokenKey {
-  return value === 'weeth-weth-17x' || value === 'cbbtc-usdc-2x' || value === 'wsteth-weth-2x'
+  return value === 'weeth-weth-17x' || value === 'cbbtc-usdc-2x' || value === 'wsteth-eth-2x'
 }
 
 export function getLeverageTokenAddress(

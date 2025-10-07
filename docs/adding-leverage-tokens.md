@@ -14,7 +14,7 @@ First, add a new key to the `LeverageTokenKey` enum:
 
 ```typescript
 export enum LeverageTokenKey {
-  WSTETH_WETH_2X_MAINNET = 'wsteth-weth-2x-mainnet',
+  WSTETH_ETH_2X_MAINNET = 'wsteth-eth-2x-mainnet',
   // Add your new token key here
   YOUR_NEW_TOKEN = 'your-new-token-key',
 }
@@ -58,15 +58,15 @@ Add your token configuration to the `leverageTokenConfigs` object using the exam
 
 ## Configuration Example
 
-Here's the complete configuration for `WSTETH_WETH_2X_MAINNET` as a reference:
+Here's the complete configuration for `WSTETH_ETH_2X_MAINNET` as a reference:
 
 ```typescript
-[LeverageTokenKey.WSTETH_WETH_2X_MAINNET]: {
+[LeverageTokenKey.WSTETH_ETH_2X_MAINNET]: {
   // === MANDATORY FIELDS ===
   address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
-  name: 'wstETH / WETH 2x Leverage Token',
-  symbol: 'WSTETH-WETH-2x',
-  description: 'wstETH / WETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Wrapped Ether',
+  name: 'wstETH / ETH 2x Leverage Token',
+  symbol: 'WSTETH-ETH-2x',
+  description: 'wstETH / ETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Wrapped Ether',
   decimals: 18,
   leverageRatio: 2,
   chainId: 1,

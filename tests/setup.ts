@@ -410,10 +410,10 @@ vi.mock('@/features/leverage-tokens/leverageTokens.config', () => ({
       leverage: 17,
       isTestOnly: false,
     },
-    'wsteth-weth-2x-mainnet': {
+    'wsteth-eth-2x-mainnet': {
       address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3',
-      symbol: 'WSTETH-WETH-2x',
-      name: 'wstETH / WETH 2x Leverage Token',
+      symbol: 'WSTETH-ETH-2x',
+      name: 'wstETH / ETH 2x Leverage Token',
       decimals: 18,
       collateral: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0', // wstETH
       debt: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // WETH
@@ -423,7 +423,7 @@ vi.mock('@/features/leverage-tokens/leverageTokens.config', () => ({
   },
   LeverageTokenKey: {
     WEETH_WETH_17X_TENDERLY: 'weeth-weth-17x-tenderly',
-    WSTETH_WETH_2X_MAINNET: 'wsteth-weth-2x-mainnet',
+    WSTETH_ETH_2X_MAINNET: 'wsteth-eth-2x-mainnet',
   },
 }))
 
