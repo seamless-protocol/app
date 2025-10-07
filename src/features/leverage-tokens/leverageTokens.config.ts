@@ -91,7 +91,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     name: 'wstETH / ETH 2x Leverage Token',
     symbol: 'WSTETH-ETH-2x',
     description:
-      'wstETH / ETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Wrapped Ether',
+      'wstETH / ETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Ether',
     decimals: 18,
     leverageRatio: 2,
     chainId: 1,
