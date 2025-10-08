@@ -27,9 +27,14 @@ function VaultsPage() {
         {/* Hero */}
         <div className="text-center space-y-6">
           <div className="space-y-4">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-              Seamless Vaults (Powered by Morpho)
-            </h1>
+            <div className="space-y-2">
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+                Seamless Vaults
+              </h1>
+              <p className="text-lg sm:text-xl font-normal text-muted-foreground">
+                (Powered by Morpho)
+              </p>
+            </div>
             <p className="text-lg text-secondary-foreground max-w-2xl mx-auto">
               Access institutional-grade yield strategies through Seamless Protocol's partnership
               with Morpho. Earn competitive returns with battle-tested security.
