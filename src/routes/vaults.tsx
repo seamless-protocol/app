@@ -28,9 +28,7 @@ function VaultsPage() {
         <div className="text-center space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-                Seamless Vaults
-              </h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Seamless Vaults</h1>
               <p className="text-lg sm:text-xl font-normal text-muted-foreground">
                 (Powered by Morpho)
               </p>
