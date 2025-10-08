@@ -75,10 +75,17 @@ export interface ContractAddresses {
  */
 const baseContracts: ContractAddresses = {
   // Core Protocol
-  leverageTokenFactory: '0xE0b2e40EDeb53B96C923381509a25a615c1Abe57' as Address,
-  leverageTokenImpl: '0x057A2a1CC13A9Af430976af912A27A05DE537673' as Address,
-  leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C' as Address,
-  leverageRouterV2: '0xfd46483b299197c616671b7df295ca5186c805c2' as Address,
+  leverageTokenFactory: '0xE0b2e40EDeb53B96C923381509a25a615c1Abe57' as Address, // factory proxy
+  leverageTokenImpl: '0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82' as Address, // implementation
+  leverageManagerV2: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8' as Address, // manager proxy
+  leverageRouterV2: '0x00c66934EBCa0F2A845812bC368B230F6da11A5C' as Address, // router
+
+  // Adapters + Periphery
+  morphoLendingAdapterFactory: '0xDd33419F0c01879a23051edbcdA997A0f9E68e61' as Address,
+  morphoLendingAdapterImpl: '0x585cc1c8AF5C8aD79C64ac66D264590A3Ff65C51' as Address,
+  rebalanceAdapter: '0xD923b2522E1f369e207d151cFE6A1BCd8EC24912' as Address,
+  veloraAdapter: '0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351' as Address,
+  pricingAdapter: '0xce05FbEd9260810Bdded179ADfdaf737BE7ded71' as Address,
 
   // Tokens
   seamlessToken: '0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85' as Address,
@@ -97,7 +104,7 @@ const baseContracts: ContractAddresses = {
   governorLong: '0x04faA2826DbB38a7A4E9a5E3dB26b9E389E761B6' as Address,
 
   // Helpers
-  multicallExecutor: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd' as Address,
+  multicallExecutor: '0x9D04f65b58cED1fddef50AEc8b0b3d64fE64220E' as Address,
 
   // Ecosystem
   escrowSeam: '0x998e44232BEF4F8B033e5A5175BDC97F2B10d5e5' as Address,

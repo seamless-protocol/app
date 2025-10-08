@@ -17,8 +17,12 @@ import { readErc20Decimals } from '../erc20'
 import { approveIfNeeded, seedUniswapV2PairLiquidity, topUpErc20, topUpNative } from '../funding'
 import { type WithForkCtx, withFork } from '../withFork'
 
-const DEFAULT_SLIPPAGE_BPS = 50
-const DEFAULT_EQUITY_HUMAN = '10'
+const DEFAULT_SLIPPAGE_BPS = (() => {
+  const raw = process.env['TEST_SLIPPAGE_BPS']
+  const n = raw ? Number(raw) : NaN
+  return Number.isFinite(n) && n > 0 ? n : 50
+})()
+const DEFAULT_EQUITY_HUMAN = process.env['TEST_EQUITY_HUMAN'] || '10'
 
 export type MintTestParams = {
   tokenDefinition: LeverageTokenDefinition

@@ -2336,7 +2336,7 @@ export const leverageManagerV2Abi = [
  */
 export const leverageManagerV2Address = {
   1: '0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351',
-  8453: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C',
+  8453: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8',
 } as const
 
 /**
@@ -2823,7 +2823,7 @@ export const leverageRouterV2Abi = [
  */
 export const leverageRouterV2Address = {
   1: '0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA',
-  8453: '0xfd46483b299197c616671B7dF295cA5186c805c2',
+  8453: '0x00c66934EBCa0F2A845812bC368B230F6da11A5C',
 } as const
 
 /**
