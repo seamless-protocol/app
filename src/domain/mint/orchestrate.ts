@@ -107,8 +107,12 @@ export async function orchestrateMint(params: {
 
   const managerPort = createManagerPortV2({
     config,
-    ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
-    ...(routerAddressV2 ? { routerAddress: routerAddressV2 } : {}),
+    routerAddress: (routerAddressV2 ||
+      (contractAddresses[params.chainId]?.leverageRouterV2 as Address | undefined) ||
+      envRouterV2 ||
+      (() => {
+        throw new Error(`LeverageRouterV2 address required on chain ${params.chainId}`)
+      })()) as Address,
   })
 
   const plan = await planMintV2({

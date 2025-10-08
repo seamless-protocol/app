@@ -12,8 +12,6 @@ import {
   // V2 reads (explicit address may be provided when using VNets/custom deployments)
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
-  readLeverageManagerV2ConvertToShares,
-  readLeverageManagerV2ConvertCollateralToDebt,
 } from '@/lib/contracts/generated'
 import type { ManagerPort } from '../ports'
 import { applySlippageFloor, mulDivFloor } from './math'
@@ -105,30 +103,12 @@ export async function planMintV2(params: {
   const userCollateralOut = equityInInputAsset
 
   // Ideal preview based on user's collateral only
-  const ideal = managerPort
-    ? await managerPort.idealPreview({
-        token,
-        userCollateral: userCollateralOut,
-        chainId,
-      })
-    : await (async () => {
-        // Fallback: approximate ideal using manager converters
-        const idealShares = await readLeverageManagerV2ConvertToShares(config, {
-          args: [token, userCollateralOut],
-          chainId: chainId as SupportedChainId,
-        })
-        const idealDebt = await readLeverageManagerV2ConvertCollateralToDebt(config, {
-          args: [token, userCollateralOut, 0],
-          chainId: chainId as SupportedChainId,
-        })
-        // Target collateral is user's collateral + collateral from swapping 'idealDebt'
-        // At planning stage we approximate neededOut via 'idealDebt' and refine below.
-        return {
-          targetCollateral: userCollateralOut, // refined by quote below
-          idealDebt,
-          idealShares,
-        }
-      })()
+  if (!managerPort) throw new Error('Router preview unavailable: managerPort missing')
+  const ideal = await managerPort.idealPreview({
+    token,
+    userCollateral: userCollateralOut,
+    chainId,
+  })
   const neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
@@ -144,20 +124,7 @@ export async function planMintV2(params: {
   })
 
   const totalCollateral = userCollateralOut + debtQuote.out
-  let final = managerPort
-    ? await managerPort.finalPreview({ token, userCollateral: userCollateralOut, chainId })
-    : await (async () => {
-        // Fallback to router-style expectation is not available; approximate via manager converters
-        const shares = await readLeverageManagerV2ConvertToShares(config, {
-          args: [token, userCollateralOut],
-          chainId: chainId as SupportedChainId,
-        })
-        const debt = await readLeverageManagerV2ConvertCollateralToDebt(config, {
-          args: [token, userCollateralOut, 0],
-          chainId: chainId as SupportedChainId,
-        })
-        return { previewDebt: debt, previewShares: shares }
-      })()
+  let final = await managerPort.finalPreview({ token, userCollateral: userCollateralOut, chainId })
   if (final.previewDebt < debtIn) {
     // Adjust down to the manager's previewed need and re-quote once
     const adjustedDebtIn = final.previewDebt
@@ -173,19 +140,7 @@ export async function planMintV2(params: {
       const clampedDebtQuote = reclamped.debtQuote
 
       const revisedTotalCollateral = userCollateralOut + clampedDebtQuote.out
-      final = managerPort
-        ? await managerPort.finalPreview({ token, userCollateral: userCollateralOut, chainId })
-        : await (async () => {
-            const shares = await readLeverageManagerV2ConvertToShares(config, {
-              args: [token, userCollateralOut],
-              chainId: chainId as SupportedChainId,
-            })
-            const debt = await readLeverageManagerV2ConvertCollateralToDebt(config, {
-              args: [token, userCollateralOut, 0],
-              chainId: chainId as SupportedChainId,
-            })
-            return { previewDebt: debt, previewShares: shares }
-          })()
+      final = await managerPort.finalPreview({ token, userCollateral: userCollateralOut, chainId })
       if (final.previewDebt < clampedDebtIn) {
         throw new Error('Reprice: manager preview debt < planned flash loan')
       }

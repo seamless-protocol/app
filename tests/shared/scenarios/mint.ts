@@ -74,11 +74,7 @@ export async function planMintTest({
     ensureLiquidity: false,
   })
 
-  const managerPort = createManagerPortV2({
-    config: ctx.config,
-    managerAddress: setup.manager,
-    routerAddress: setup.router,
-  })
+  const managerPort = createManagerPortV2({ config: ctx.config, routerAddress: setup.router })
 
   const plan = await planMintV2({
     config: ctx.config,

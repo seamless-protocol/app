@@ -1,9 +1,6 @@
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
-import { readLeverageManagerV2PreviewMint } from '@/lib/contracts/generated'
-import { readLeverageManagerV2ConvertToShares } from '@/lib/contracts/generated'
-import { readLeverageManagerV2ConvertCollateralToDebt } from '@/lib/contracts/generated'
 import { readLeverageRouterV2PreviewDeposit } from '@/lib/contracts/generated'
 
 export interface ManagerPort {
@@ -34,57 +31,29 @@ export interface ManagerPort {
  * - idealPreview prefers router.previewDeposit
  * - finalPreview uses manager.previewDeposit
  */
-export function createManagerPortV2(params: {
-  config: Config
-  managerAddress?: Address
-  routerAddress?: Address
-}): ManagerPort {
-  const { config, managerAddress: _managerAddress, routerAddress } = params
+export function createManagerPortV2(params: { config: Config; routerAddress: Address }): ManagerPort {
+  const { config, routerAddress } = params
+  if (!routerAddress) throw new Error('Router address is required for V2 previews')
 
   return {
     async idealPreview({ token, userCollateral, chainId }) {
-      if (routerAddress) {
-        const routerPreview = await readLeverageRouterV2PreviewDeposit(config, {
-          args: [token, userCollateral],
-          chainId: chainId as SupportedChainId,
-        })
-        return {
-          targetCollateral: routerPreview.collateral,
-          idealDebt: routerPreview.debt,
-          idealShares: routerPreview.shares,
-        }
-      }
-      const managerPreview = await readLeverageManagerV2PreviewMint(config, {
+      const routerPreview = await readLeverageRouterV2PreviewDeposit(config, {
         args: [token, userCollateral],
         chainId: chainId as SupportedChainId,
       })
       return {
-        targetCollateral: managerPreview.collateral,
-        idealDebt: managerPreview.debt,
-        idealShares: managerPreview.shares,
+        targetCollateral: routerPreview.collateral,
+        idealDebt: routerPreview.debt,
+        idealShares: routerPreview.shares,
       }
     },
 
     async finalPreview({ token, userCollateral, chainId }) {
-      if (routerAddress) {
-        const routerPreview = await readLeverageRouterV2PreviewDeposit(config, {
-          args: [token, userCollateral],
-          chainId: chainId as SupportedChainId,
-        })
-        return { previewDebt: routerPreview.debt, previewShares: routerPreview.shares }
-      }
-      // Fallback: approximate using manager converters (equity-only semantics)
-      const [previewShares, previewDebt] = await Promise.all([
-        readLeverageManagerV2ConvertToShares(config, {
-          args: [token, userCollateral],
-          chainId: chainId as SupportedChainId,
-        }),
-        readLeverageManagerV2ConvertCollateralToDebt(config, {
-          args: [token, userCollateral, 0],
-          chainId: chainId as SupportedChainId,
-        }),
-      ])
-      return { previewDebt, previewShares }
+      const routerPreview = await readLeverageRouterV2PreviewDeposit(config, {
+        args: [token, userCollateral],
+        chainId: chainId as SupportedChainId,
+      })
+      return { previewDebt: routerPreview.debt, previewShares: routerPreview.shares }
     },
   }
 }

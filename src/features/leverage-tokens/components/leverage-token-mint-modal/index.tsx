@@ -178,17 +178,13 @@ export function LeverageTokenMintModal({
 
   // Prefer router-aware preview path to align with tests/integration
   const managerPort = useMemo(() => {
-    if (!leverageManagerAddress && !leverageRouterAddress) return undefined
+    if (!leverageRouterAddress) return undefined
     try {
-      return createManagerPortV2({
-        config: wagmiConfig,
-        ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
-        ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
-      })
+      return createManagerPortV2({ config: wagmiConfig, routerAddress: leverageRouterAddress })
     } catch (_) {
       return undefined
     }
-  }, [leverageManagerAddress, leverageRouterAddress, wagmiConfig])
+  }, [leverageRouterAddress, wagmiConfig])
 
   const planPreview = useMintPlanPreview({
     config: wagmiConfig,
