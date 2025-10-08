@@ -5,10 +5,33 @@ import { planMintV2 } from '@/domain/mint/planner/plan.v2'
 const BASE_WETH = '0x4200000000000000000000000000000000000006' as Address
 const COLLATERAL = '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address
 
+let previewCall = 0
 vi.mock('@/lib/contracts/generated', async () => {
   return {
     readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(async () => COLLATERAL),
     readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(async () => BASE_WETH),
+    readLeverageRouterV2PreviewDeposit: vi.fn(async (_config: any, params: { args: [Address, bigint] }) => {
+      const userCollateral = params.args[1]
+      previewCall += 1
+      if (previewCall === 1) {
+        // Ideal preview: requires +60 out of swaps, sizes idealDebt 150
+        return {
+          collateral: userCollateral + 60n,
+          debt: 150n,
+          shares: userCollateral + 60n,
+          tokenFee: 0n,
+          treasuryFee: 0n,
+        }
+      }
+      // Final preview returns lower previewed debt (120) to trigger clamp path
+      return {
+        collateral: userCollateral + 60n,
+        debt: 120n,
+        shares: userCollateral + 60n,
+        tokenFee: 0n,
+        treasuryFee: 0n,
+      }
+    }),
   }
 })
 
@@ -17,20 +40,7 @@ describe('planMintV2 final clamp + re-quote', () => {
     const inputAsset = COLLATERAL
     const equityInInputAsset = 100n
 
-    const managerPort = {
-      async idealPreview({ userCollateral }: { token: Address; userCollateral: bigint }) {
-        // require +60 collateral from debt, initial idealDebt sized at 150
-        return {
-          targetCollateral: userCollateral + 60n,
-          idealDebt: 150n,
-          idealShares: userCollateral + 60n,
-        }
-      },
-      async finalPreview({ totalCollateral }: { token: Address; totalCollateral: bigint }) {
-        // manager wants to repay less debt than sized flash loan (e.g., 120)
-        return { previewDebt: 120n, previewShares: totalCollateral }
-      },
-    }
+    // Router previews are mocked above; no ManagerPort now
 
     const quotedForAmountIn: bigint[] = []
     const quoteDebtToCollateral = vi.fn(async (req: any) => {
@@ -59,7 +69,6 @@ describe('planMintV2 final clamp + re-quote', () => {
       equityInInputAsset,
       slippageBps: 50,
       quoteDebtToCollateral,
-      managerPort: managerPort as any,
       chainId: 8453,
     })
 

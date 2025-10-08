@@ -34,7 +34,7 @@ Executors
 - v2: `exec/execute.v2.ts` simulates then writes `deposit(token, collateralFromSender, flashLoanAmount, minShares, calls)`.
 
 Ports
-- Manager (v2): `createManagerPortV2` prefers `router.previewDeposit` for ideal and `manager.previewDeposit` for final.
+- V2 previews use `router.previewDeposit(token, userCollateral)` exclusively (equity-only semantics).
 - Router (v2): `createRouterPortV2` previews and invokes `deposit` with encoded calls.
 
 Allowances

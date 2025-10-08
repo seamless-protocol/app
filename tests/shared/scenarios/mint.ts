@@ -1,7 +1,6 @@
 import { type Address, getAddress, type PublicClient, parseUnits, erc20Abi } from 'viem'
 import { orchestrateMint } from '@/domain/mint'
 import { planMintV2 } from '@/domain/mint/planner/plan.v2'
-import { createManagerPortV2 } from '@/domain/mint/ports'
 import {
   createDebtToCollateralQuote,
   type DebtToCollateralSwapConfig,
@@ -74,8 +73,6 @@ export async function planMintTest({
     ensureLiquidity: false,
   })
 
-  const managerPort = createManagerPortV2({ config: ctx.config, routerAddress: setup.router })
-
   const plan = await planMintV2({
     config: ctx.config,
     token: setup.token,
@@ -83,7 +80,6 @@ export async function planMintTest({
     equityInInputAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    managerPort,
     managerAddress: setup.manager,
     chainId: tokenDefinition.chainId,
   })

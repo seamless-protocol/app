@@ -12,8 +12,8 @@ import {
   // V2 reads (explicit address may be provided when using VNets/custom deployments)
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
+  readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
-import type { ManagerPort } from '../ports'
 import { applySlippageFloor, mulDivFloor } from './math'
 import type { Quote, QuoteFn } from './types'
 
@@ -69,8 +69,6 @@ export async function planMintV2(params: {
   equityInInputAsset: EquityInInputAssetArg
   slippageBps: number
   quoteDebtToCollateral: QuoteFn
-  /** ManagerPort used for ideal/final previews (v2 router or v1-style manager fallback) */
-  managerPort?: ManagerPort
   /** Optional explicit LeverageManagerV2 address (for VNet/custom) */
   managerAddress?: Address
   /** Chain ID to execute the transaction on */
@@ -83,7 +81,6 @@ export async function planMintV2(params: {
     equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral,
-    managerPort,
     managerAddress,
     chainId,
   } = params
@@ -103,12 +100,15 @@ export async function planMintV2(params: {
   const userCollateralOut = equityInInputAsset
 
   // Ideal preview based on user's collateral only
-  if (!managerPort) throw new Error('Router preview unavailable: managerPort missing')
-  const ideal = await managerPort.idealPreview({
-    token,
-    userCollateral: userCollateralOut,
-    chainId,
+  const idealPreview = await readLeverageRouterV2PreviewDeposit(config, {
+    args: [token, userCollateralOut],
+    chainId: chainId as SupportedChainId,
   })
+  const ideal = {
+    targetCollateral: idealPreview.collateral,
+    idealDebt: idealPreview.debt,
+    idealShares: idealPreview.shares,
+  }
   const neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
@@ -124,7 +124,11 @@ export async function planMintV2(params: {
   })
 
   const totalCollateral = userCollateralOut + debtQuote.out
-  let final = await managerPort.finalPreview({ token, userCollateral: userCollateralOut, chainId })
+  const finalPreview = await readLeverageRouterV2PreviewDeposit(config, {
+    args: [token, userCollateralOut],
+    chainId: chainId as SupportedChainId,
+  })
+  let final = { previewDebt: finalPreview.debt, previewShares: finalPreview.shares }
   if (final.previewDebt < debtIn) {
     // Adjust down to the manager's previewed need and re-quote once
     const adjustedDebtIn = final.previewDebt
@@ -140,7 +144,11 @@ export async function planMintV2(params: {
       const clampedDebtQuote = reclamped.debtQuote
 
       const revisedTotalCollateral = userCollateralOut + clampedDebtQuote.out
-      final = await managerPort.finalPreview({ token, userCollateral: userCollateralOut, chainId })
+      const fp = await readLeverageRouterV2PreviewDeposit(config, {
+        args: [token, userCollateralOut],
+        chainId: chainId as SupportedChainId,
+      })
+      final = { previewDebt: fp.debt, previewShares: fp.shares }
       if (final.previewDebt < clampedDebtIn) {
         throw new Error('Reprice: manager preview debt < planned flash loan')
       }

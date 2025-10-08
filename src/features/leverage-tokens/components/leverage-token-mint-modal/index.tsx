@@ -5,7 +5,6 @@ import { formatUnits } from 'viem'
 import { readLeverageManagerV2ConvertToAssets } from '@/lib/contracts/generated'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { useAccount, useConfig, usePublicClient, useSwitchChain } from 'wagmi'
-import { createManagerPortV2 } from '@/domain/mint/ports'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
@@ -177,14 +176,6 @@ export function LeverageTokenMintModal({
   })
 
   // Prefer router-aware preview path to align with tests/integration
-  const managerPort = useMemo(() => {
-    if (!leverageRouterAddress) return undefined
-    try {
-      return createManagerPortV2({ config: wagmiConfig, routerAddress: leverageRouterAddress })
-    } catch (_) {
-      return undefined
-    }
-  }, [leverageRouterAddress, wagmiConfig])
 
   const planPreview = useMintPlanPreview({
     config: wagmiConfig,
@@ -195,7 +186,6 @@ export function LeverageTokenMintModal({
     chainId: leverageTokenConfig.chainId,
     ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
-    ...(managerPort ? { managerPort } : {}),
   })
 
   // Estimate USD value of expected shares using manager's convertToAssets(1e18)

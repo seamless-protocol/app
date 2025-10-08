@@ -10,14 +10,13 @@ vi.mock('@/lib/contracts/generated', async () => {
     readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(
       async () => '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
     ),
-    readLeverageManagerV2PreviewDeposit: vi.fn(async (_config: any, { args }: any) => {
+    readLeverageRouterV2PreviewDeposit: vi.fn(async (_config: any, { args }: any) => {
       const equity = args[1] as bigint
-      // For a given equity, manager needs +10% collateral and plans an initial debt of 5_000
+      // For a given equity, router preview reports +10% collateral need and initial debt of 5_000
       // Shares equal equity for simplicity
       return {
         collateral: (equity * 11n) / 10n,
         debt: 5_000n,
-        equity,
         shares: equity,
         tokenFee: 0n,
         treasuryFee: 0n,

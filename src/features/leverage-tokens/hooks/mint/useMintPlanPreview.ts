@@ -4,7 +4,6 @@ import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import { planMintV2 } from '@/domain/mint/planner/plan.v2'
 import type { QuoteFn } from '@/domain/mint/planner/types'
-import type { ManagerPort } from '@/domain/mint/ports'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 
 interface UseMintPlanPreviewParams {
@@ -17,7 +16,6 @@ interface UseMintPlanPreviewParams {
   quote?: QuoteFn
   managerAddress?: Address
   debounceMs?: number
-  managerPort?: ManagerPort
 }
 
 export function useMintPlanPreview({
@@ -30,7 +28,6 @@ export function useMintPlanPreview({
   quote,
   managerAddress,
   debounceMs = 350,
-  managerPort,
 }: UseMintPlanPreviewParams) {
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
   const enabled = typeof debounced === 'bigint' && debounced > 0n && typeof quote === 'function'
@@ -62,8 +59,7 @@ export function useMintPlanPreview({
         slippageBps,
         quoteDebtToCollateral: quote,
         chainId,
-        ...(managerAddress ? { managerAddress } : {}),
-        ...(managerPort ? { managerPort } : {}),
+    ...(managerAddress ? { managerAddress } : {}),
       })
     },
   })
