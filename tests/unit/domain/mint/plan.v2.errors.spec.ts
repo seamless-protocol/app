@@ -10,7 +10,7 @@ vi.mock('@/lib/contracts/generated', async () => {
     readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(
       async () => '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
     ),
-    readLeverageManagerV2PreviewMint: vi.fn(async (_config: any, { args }: any) => {
+    readLeverageManagerV2PreviewDeposit: vi.fn(async (_config: any, { args }: any) => {
       const equity = args[1] as bigint
       // Make targetCollateral equal to userCollateral so neededFromDebtSwap == 0
       return {
@@ -63,4 +63,3 @@ describe('planMintV2 error branches', () => {
     ).rejects.toThrowError(/no debt swap needed/i)
   })
 })
-

@@ -10,7 +10,7 @@ vi.mock('@/lib/contracts/generated', async () => {
     readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(
       async () => '0x2222222222222222222222222222222222222222' as Address,
     ),
-    readLeverageManagerV2PreviewMint: vi.fn(async (_config: any, { args }: any) => {
+    readLeverageManagerV2PreviewDeposit: vi.fn(async (_config: any, { args }: any) => {
       const equity = args[1] as bigint
       // needs +50 collateral from debt, and shares ~= total collateral
       return {
@@ -69,4 +69,3 @@ describe('planMintV2 fallback exact-in sizing and non-native path', () => {
     expect(plan.calls[1]?.value).toBe(0n)
   })
 })
-

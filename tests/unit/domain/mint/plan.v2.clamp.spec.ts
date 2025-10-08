@@ -20,7 +20,11 @@ describe('planMintV2 final clamp + re-quote', () => {
     const managerPort = {
       async idealPreview({ userCollateral }: { token: Address; userCollateral: bigint }) {
         // require +60 collateral from debt, initial idealDebt sized at 150
-        return { targetCollateral: userCollateral + 60n, idealDebt: 150n, idealShares: userCollateral + 60n }
+        return {
+          targetCollateral: userCollateral + 60n,
+          idealDebt: 150n,
+          idealShares: userCollateral + 60n,
+        }
       },
       async finalPreview({ totalCollateral }: { token: Address; totalCollateral: bigint }) {
         // manager wants to repay less debt than sized flash loan (e.g., 120)
@@ -28,7 +32,7 @@ describe('planMintV2 final clamp + re-quote', () => {
       },
     }
 
-    let quotedForAmountIn: bigint[] = []
+    const quotedForAmountIn: bigint[] = []
     const quoteDebtToCollateral = vi.fn(async (req: any) => {
       if (req.intent === 'exactOut') {
         return {
@@ -67,4 +71,3 @@ describe('planMintV2 final clamp + re-quote', () => {
     expect(plan.calls[1]?.value).toBe(120n)
   })
 })
-

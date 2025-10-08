@@ -11,7 +11,7 @@ vi.mock('@/lib/contracts/generated', async () => {
     ),
     readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(async () => BASE_WETH),
     // Fallback path (no managerPort): ideal and final previews
-    readLeverageManagerV2PreviewMint: vi.fn(async (_config: any, { args }: any) => {
+    readLeverageManagerV2PreviewDeposit: vi.fn(async (_config: any, { args }: any) => {
       const equity = args[1] as bigint
       // require +60 collateral from debt, and mint shares ~= total collateral
       return {

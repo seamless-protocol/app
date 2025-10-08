@@ -12,7 +12,7 @@ import {
   // V2 reads (explicit address may be provided when using VNets/custom deployments)
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
-  readLeverageManagerV2PreviewMint,
+  readLeverageManagerV2PreviewDeposit,
 } from '@/lib/contracts/generated'
 import type { ManagerPort } from '../ports'
 import { applySlippageFloor, mulDivFloor } from './math'
@@ -111,7 +111,7 @@ export async function planMintV2(params: {
         chainId,
       })
     : await (async () => {
-        const r = await readLeverageManagerV2PreviewMint(config, {
+        const r = await readLeverageManagerV2PreviewDeposit(config, {
           args: [token, userCollateralOut],
           chainId: chainId as SupportedChainId,
         })
@@ -139,7 +139,7 @@ export async function planMintV2(params: {
   let final = managerPort
     ? await managerPort.finalPreview({ token, totalCollateral, chainId })
     : await (async () => {
-        const r = await readLeverageManagerV2PreviewMint(config, {
+        const r = await readLeverageManagerV2PreviewDeposit(config, {
           args: [token, totalCollateral],
           chainId: chainId as SupportedChainId,
         })
@@ -155,9 +155,11 @@ export async function planMintV2(params: {
         outToken: collateralAsset,
         quote: quoteDebtToCollateral,
       })
-      const debtIn = reclamped.debtIn
-      const debtQuote = reclamped.debtQuote
-      const revisedTotalCollateral = userCollateralOut + debtQuote.out
+
+      const clampedDebtIn = reclamped.debtIn
+      const clampedDebtQuote = reclamped.debtQuote
+
+      const revisedTotalCollateral = userCollateralOut + clampedDebtQuote.out
       final = managerPort
         ? await managerPort.finalPreview({
             token,
@@ -165,23 +167,23 @@ export async function planMintV2(params: {
             chainId,
           })
         : await (async () => {
-            const r = await readLeverageManagerV2PreviewMint(config, {
+            const r = await readLeverageManagerV2PreviewDeposit(config, {
               args: [token, revisedTotalCollateral],
               chainId: chainId as SupportedChainId,
             })
             return { previewDebt: r.debt, previewShares: r.shares }
           })()
-      if (final.previewDebt < debtIn) {
+      if (final.previewDebt < clampedDebtIn) {
         throw new Error('Reprice: manager preview debt < planned flash loan')
       }
       // Recompute minShares/excess based on updated values
       const minShares = applySlippageFloor(final.previewShares, slippageBps)
-      const excessDebt = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
+      const excessDebt = final.previewDebt > clampedDebtIn ? final.previewDebt - clampedDebtIn : 0n
       calls.push(
         ...buildDebtSwapCalls({
           debtAsset,
-          debtQuote,
-          debtIn,
+          debtQuote: clampedDebtQuote,
+          debtIn: clampedDebtIn,
           useNative: useNativeDebtPath,
         }),
       )
@@ -245,15 +247,20 @@ export async function sizeDebtToCollateralSwap(args: {
   let debtIn = idealDebt
 
   // Try exact-out fast path
-  let debtQuote = await quote({
-    inToken,
-    outToken,
-    amountIn: debtIn,
-    amountOut: neededOut,
-    intent: 'exactOut',
-  })
-  if (debtQuote.out >= neededOut && typeof debtQuote.maxIn === 'bigint') {
-    return { debtIn: debtQuote.maxIn, debtQuote }
+  let debtQuote: Quote
+  try {
+    debtQuote = await quote({
+      inToken,
+      outToken,
+      amountIn: debtIn,
+      amountOut: neededOut,
+      intent: 'exactOut',
+    })
+    if (debtQuote.out >= neededOut && typeof debtQuote.maxIn === 'bigint') {
+      return { debtIn: debtQuote.maxIn, debtQuote }
+    }
+  } catch {
+    // Ignore and fall back to exact-in refinement below
   }
 
   // Fallback: refine exact-in against non-linear quotes
