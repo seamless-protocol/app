@@ -354,7 +354,7 @@ export function LeverageTokenTable({
                     className="ml-auto flex items-center space-x-2 transition-colors cursor-pointer hover:text-[var(--text-primary)]"
                     onClick={() => handleSort('available')}
                   >
-                    <span>Supply Cap</span>
+                    <span>Supply Cap Available</span>
                     {getSortIcon('available')}
                   </button>
                 </TableHead>
