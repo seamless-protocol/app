@@ -75,18 +75,6 @@ const chevronVariants = {
   active: { x: 0, opacity: 1, transition: { duration: 0.2 } },
 }
 
-// Mobile menu animation variants
-const mobileMenuVariants = {
-  closed: {
-    x: '-100%',
-    transition: { duration: 0.3 },
-  },
-  open: {
-    x: 0,
-    transition: { duration: 0.4 },
-  },
-}
-
 // Navigation Item Component
 function NavigationItem({
   item,
@@ -223,6 +211,7 @@ function NavbarContent({
   communitySection,
   platformTVL,
   className,
+  isMobile = false,
 }: {
   currentPage: string
   onPageChange: (pageId: string, options?: { externalUrl?: string }) => void
@@ -230,10 +219,16 @@ function NavbarContent({
   communitySection: CommunitySection
   platformTVL: React.ReactNode
   className?: string
+  isMobile?: boolean
 }) {
   return (
     <motion.nav
-      className={cn('w-full border-r flex flex-col h-full', 'bg-card border-border', className)}
+      className={cn(
+        'w-full flex flex-col',
+        isMobile ? 'h-full border-0' : 'h-full border-r',
+        'bg-card border-border',
+        className,
+      )}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
@@ -274,7 +269,7 @@ function NavbarContent({
       </motion.div>
 
       {/* Navigation Items */}
-      <div className="flex-1 overflow-y-auto py-4 sm:py-6 px-3 sm:px-4">
+      <div className={cn('flex-1 overflow-y-auto py-4 sm:py-6 px-3 sm:px-4', isMobile && 'flex-1')}>
         <div className="space-y-2">
           {navigationItems.map((item) => (
             <NavigationItem
@@ -288,7 +283,12 @@ function NavbarContent({
       </div>
 
       {/* Footer Section */}
-      <div className="px-3 sm:px-4 py-3 border-t border-[var(--nav-border)]">
+      <div
+        className={cn(
+          'px-3 sm:px-4 py-3 border-t border-[var(--nav-border)]',
+          isMobile && 'mt-auto',
+        )}
+      >
         {/* Desktop Layout */}
         <div className="hidden sm:flex items-center justify-between">
           <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -388,7 +388,7 @@ export function VerticalNavbar({
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetContent
             side="left"
-            className="w-[280px] xs:w-[300px] sm:w-80 p-0 border bg-card border-border"
+            className="w-[280px] xs:w-[300px] sm:w-80 p-0 border bg-card border-border flex flex-col h-full"
             aria-describedby={mobileNavDescriptionId}
           >
             <SheetTitle className="sr-only">Mobile Navigation Menu</SheetTitle>
@@ -397,19 +397,16 @@ export function VerticalNavbar({
               Leverage Tokens, Analytics, Staking, and Governance.
             </SheetDescription>
 
-            <motion.div
-              variants={mobileMenuVariants}
-              initial="closed"
-              animate={isMobileMenuOpen ? 'open' : 'closed'}
-            >
+            <div className="flex-1 flex flex-col">
               <NavbarContent
                 currentPage={currentPage}
                 onPageChange={handlePageChange}
                 navigationItems={navigationItems}
                 communitySection={communitySection}
                 platformTVL={platformTVL}
+                isMobile={true}
               />
-            </motion.div>
+            </div>
           </SheetContent>
         </Sheet>
       </>

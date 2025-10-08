@@ -51,11 +51,11 @@ export function LeverageTokenDetailedMetrics({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card className={cn('border border-border text-foreground bg-card', className)}>
+      <Card className={cn('border border-rounded text-foreground bg-card', className)}>
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer transition-colors rounded-t-lg px-6 py-6 hover:bg-accent">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+            <CardHeader className="cursor-pointer transition-colors rounded-t-lg px-6 py-6 relative overflow-hidden hover:before:absolute hover:before:inset-0 hover:before:bg-accent hover:before:rounded-t-lg hover:before:opacity-50 hover:before:content-['']">
+              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <div className="space-y-2">
                   <CardTitle className="text-foreground">{title}</CardTitle>
                   <p className="text-sm text-muted-foreground">{description}</p>

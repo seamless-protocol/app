@@ -52,12 +52,12 @@ interface LeverageTokenMintModalProps {
 
 // Hoisted to avoid re-creating on every render
 const MINT_STEPS: Array<StepConfig> = [
-  { id: 'userInput', label: 'User Input', progress: 17 },
-  { id: 'approve', label: 'Approve', progress: 33 },
-  { id: 'confirm', label: 'Confirm', progress: 50 },
-  { id: 'pending', label: 'Processing', progress: 67 },
-  { id: 'success', label: 'Success', progress: 100 },
-  { id: 'error', label: 'Error', progress: 100 },
+  { id: 'userInput', label: 'User Input', progress: 33, isUserAction: true },
+  { id: 'approve', label: 'Approve', progress: 67, isUserAction: true },
+  { id: 'confirm', label: 'Confirm', progress: 100, isUserAction: true },
+  { id: 'pending', label: 'Processing', progress: 100, isUserAction: false },
+  { id: 'success', label: 'Success', progress: 100, isUserAction: false },
+  { id: 'error', label: 'Error', progress: 100, isUserAction: false },
 ]
 
 export function LeverageTokenMintModal({
@@ -137,9 +137,6 @@ export function LeverageTokenMintModal({
     toSuccess,
     toError,
   } = useMintSteps('userInput')
-
-  // Step configuration (static)
-  const steps = MINT_STEPS
 
   const [selectedToken, setSelectedToken] = useState<Token>({
     symbol: leverageTokenConfig.collateralAsset.symbol,
@@ -224,6 +221,30 @@ export function LeverageTokenMintModal({
     inputAsset: leverageTokenConfig.collateralAsset.address,
     slippageBps,
   })
+
+  // Step configuration (static once modal is opened)
+  const steps = useMemo(() => {
+    const hasAmount = parseFloat(form.amount || '0') > 0
+
+    // If no amount entered yet, always show 3 steps
+    if (!hasAmount) {
+      return MINT_STEPS
+    }
+
+    // If amount is entered and approval is already done, show 2 steps
+    if (!needsApprovalFlag) {
+      return [
+        { id: 'userInput', label: 'User Input', progress: 50, isUserAction: true },
+        { id: 'confirm', label: 'Confirm', progress: 100, isUserAction: true },
+        { id: 'pending', label: 'Processing', progress: 100, isUserAction: false },
+        { id: 'success', label: 'Success', progress: 100, isUserAction: false },
+        { id: 'error', label: 'Error', progress: 100, isUserAction: false },
+      ]
+    }
+
+    // If amount is entered and approval is needed, show 3 steps
+    return MINT_STEPS
+  }, [form.amount, needsApprovalFlag]) // Include needsApprovalFlag dependency for proper step calculation
 
   // Reset state when modal opens
   const resetModal = useCallback(() => {

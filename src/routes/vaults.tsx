@@ -23,13 +23,16 @@ function VaultsPage() {
 
   return (
     <PageContainer padded={false} className="py-2 xs:py-3 sm:py-4 lg:py-8">
-      <div className="space-y-8 max-w-4xl mx-auto">
+      <div className="space-y-8 max-w-4xl mx-auto pb-8">
         {/* Hero */}
         <div className="text-center space-y-6">
           <div className="space-y-4">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-              Seamless Vaults (Powered by Morpho)
-            </h1>
+            <div className="space-y-2">
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Seamless Vaults</h1>
+              <p className="text-lg sm:text-xl font-normal text-muted-foreground">
+                (Powered by Morpho)
+              </p>
+            </div>
             <p className="text-lg text-secondary-foreground max-w-2xl mx-auto">
               Access institutional-grade yield strategies through Seamless Protocol's partnership
               with Morpho. Earn competitive returns with battle-tested security.
@@ -79,7 +82,7 @@ function VaultsPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
               <Button variant="gradient" size="lg" asChild>
                 <a
                   href="https://app.morpho.org/base/earn?curatorAddressesFilter=0x639d2dD24304aC2e6A691d8c1cFf4a2665925fee"

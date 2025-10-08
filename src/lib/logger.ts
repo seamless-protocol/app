@@ -20,11 +20,9 @@ export interface LogContext {
 class BaseLogger {
   // Treat any non-production mode or Vitest environment as local console logging
   private isLocal = (() => {
-    // Be resilient when running in non-Vite contexts (e.g., wagmi CLI, Node scripts)
-    const maybeEnv = (typeof import.meta !== 'undefined' && (import.meta as any)?.env) || undefined
-    const mode = maybeEnv?.MODE
-    const isProd = mode === 'production'
-    const isVitest = typeof import.meta !== 'undefined' && Boolean((import.meta as any).vitest)
+    const isProd = import.meta.env.MODE === 'production'
+    const isVitest =
+      typeof import.meta !== 'undefined' && Boolean((import.meta as { vitest?: unknown }).vitest)
     return !isProd || isVitest
   })()
 

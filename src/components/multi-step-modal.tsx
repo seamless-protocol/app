@@ -6,6 +6,7 @@ export interface StepConfig {
   id: string
   label: string
   progress: number
+  isUserAction?: boolean // If true, this step counts toward step numbering
 }
 
 export interface MultiStepModalProps {
@@ -35,12 +36,15 @@ export function MultiStepModal({
   }
 
   const getStepNumber = () => {
-    const stepIndex = steps.findIndex((s) => s.id === currentStep)
-    return stepIndex + 1
+    // Only count steps that are user actions
+    const userActionSteps = steps.filter((s) => s.isUserAction !== false)
+    const currentStepIndex = userActionSteps.findIndex((s) => s.id === currentStep)
+    return currentStepIndex + 1
   }
 
   const getTotalSteps = () => {
-    return steps.length
+    // Only count steps that are user actions
+    return steps.filter((s) => s.isUserAction !== false).length
   }
 
   const getCurrentStepLabel = () => {
@@ -59,8 +63,20 @@ export function MultiStepModal({
         <div className="mt-4">
           <Progress value={getStepProgress()} className="h-1" />
           <div className="flex justify-between text-xs text-muted-foreground mt-2">
-            <span>
-              Step {getStepNumber()} of {getTotalSteps()}
+            <span
+              className={(() => {
+                const currentStepConfig = steps.find((s) => s.id === currentStep)
+                const isUserAction = currentStepConfig?.isUserAction !== false
+                return isUserAction ? '' : 'invisible'
+              })()}
+            >
+              {(() => {
+                const currentStepConfig = steps.find((s) => s.id === currentStep)
+                const isUserAction = currentStepConfig?.isUserAction !== false
+                return isUserAction
+                  ? `Step ${getStepNumber()} of ${getTotalSteps()}`
+                  : getCurrentStepLabel()
+              })()}
             </span>
             <span>{getCurrentStepLabel()}</span>
           </div>

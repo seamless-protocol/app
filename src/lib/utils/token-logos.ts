@@ -32,7 +32,9 @@ export function getTokenLogoComponent(asset: string) {
   const LogoComponent = getTokenLogo(asset)
 
   if (LogoComponent) {
-    return React.createElement(LogoComponent)
+    return React.createElement(LogoComponent, {
+      className: 'w-full h-full',
+    })
   }
 
   return React.createElement(
