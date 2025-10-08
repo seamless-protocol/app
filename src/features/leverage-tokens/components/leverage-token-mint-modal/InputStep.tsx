@@ -355,13 +355,17 @@ export function InputStep({
             <span className="text-secondary-foreground">Approval Status</span>
             <span
               className={cn(
-                needsApproval
-                  ? 'text-[var(--state-warning-text)]'
-                  : 'text-[var(--state-success-text)]',
+                parseFloat(amount || '0') === 0
+                  ? 'text-secondary-foreground'
+                  : needsApproval
+                    ? 'text-[var(--state-warning-text)]'
+                    : 'text-[var(--state-success-text)]',
               )}
             >
               {isAllowanceLoading ? (
                 <Skeleton className="inline-block h-3 w-16" />
+              ) : parseFloat(amount || '0') === 0 ? (
+                'N/A'
               ) : needsApproval ? (
                 'Approval Required'
               ) : (

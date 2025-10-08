@@ -63,15 +63,17 @@ export function MultiStepModal({
         <div className="mt-4">
           <Progress value={getStepProgress()} className="h-1" />
           <div className="flex justify-between text-xs text-muted-foreground mt-2">
-            <span className={(() => {
-              const currentStepConfig = steps.find((s) => s.id === currentStep)
-              const isUserAction = currentStepConfig?.isUserAction !== false
-              return isUserAction ? '' : 'invisible'
-            })()}>
+            <span
+              className={(() => {
+                const currentStepConfig = steps.find((s) => s.id === currentStep)
+                const isUserAction = currentStepConfig?.isUserAction !== false
+                return isUserAction ? '' : 'invisible'
+              })()}
+            >
               {(() => {
                 const currentStepConfig = steps.find((s) => s.id === currentStep)
                 const isUserAction = currentStepConfig?.isUserAction !== false
-                return isUserAction 
+                return isUserAction
                   ? `Step ${getStepNumber()} of ${getTotalSteps()}`
                   : getCurrentStepLabel()
               })()}

@@ -21,7 +21,8 @@ class BaseLogger {
   // Treat any non-production mode or Vitest environment as local console logging
   private isLocal = (() => {
     const isProd = import.meta.env.MODE === 'production'
-    const isVitest = typeof import.meta !== 'undefined' && Boolean((import.meta as any).vitest)
+    const isVitest =
+      typeof import.meta !== 'undefined' && Boolean((import.meta as { vitest?: unknown }).vitest)
     return !isProd || isVitest
   })()
 
