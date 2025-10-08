@@ -60,7 +60,7 @@ const navigationItems = [
     id: 'governance',
     title: 'Governance',
     icon: Vote,
-    description: 'Participate in decisions',
+    description: 'Vote and shape proposals',
     subtitle: 'Participate in protocol governance and voting',
     externalUrl: 'https://legacy.seamlessprotocol.com/#/governance',
   },
