@@ -95,7 +95,7 @@ export function FeaturedLeverageToken({
                 <Skeleton className="h-4 w-16" />
               ) : (
                 <span className="font-medium text-[var(--state-warning-text)]">
-                  {`${apyData.points.toLocaleString()} x`}
+                  {`${apyData.points.toLocaleString('en-US')} x`}
                 </span>
               )}
             </div>

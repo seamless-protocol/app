@@ -84,7 +84,7 @@ async function run() {
         ['Pin ID', result.id],
         ['Files Uploaded', files.length.toString()],
         ['Upload Size', formatBytes(result.size || 0)],
-        ['Upload Date', new Date(result.created_at).toLocaleString()],
+        ['Upload Date', new Date(result.created_at).toLocaleString('en-US')],
         ['Repository', process.env.GITHUB_REPOSITORY || 'N/A'],
         ['Commit', process.env.GITHUB_SHA ? process.env.GITHUB_SHA.substring(0, 8) : 'N/A']
       ])

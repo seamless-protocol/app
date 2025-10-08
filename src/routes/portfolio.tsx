@@ -321,7 +321,7 @@ function PortfolioPage() {
                     ) : (
                       <TrendingUp className="h-3 w-3 mr-1 rotate-180" />
                     )}
-                    ${Math.abs(summary.changeAmount).toLocaleString()} (
+                    ${Math.abs(summary.changeAmount).toLocaleString('en-US')} (
                     {summary.changePercent.toFixed(2)}%)
                   </div>
                 ),

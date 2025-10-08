@@ -72,7 +72,7 @@ export function PortfolioPerformanceChart({
   const defaultTooltipFormatter = (value: number | string, _name?: string): [string, string] => {
     const numValue = Number(value)
     if (numValue >= 1) {
-      return [`$${numValue.toLocaleString()}`, 'Portfolio Value']
+      return [`$${numValue.toLocaleString('en-US')}`, 'Portfolio Value']
     } else if (numValue >= 0.01) {
       return [`$${numValue.toFixed(2)}`, 'Portfolio Value']
     } else if (numValue >= 0.001) {
