@@ -1,8 +1,10 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
-import { useAccount, useConfig, usePublicClient } from 'wagmi'
+import { readLeverageManagerV2ConvertToAssets } from '@/lib/contracts/generated'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
+import { useAccount, useConfig, usePublicClient, useSwitchChain } from 'wagmi'
 import { createManagerPortV2 } from '@/domain/mint/ports'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { captureTxError } from '@/lib/observability/sentry'
@@ -79,6 +81,7 @@ export function LeverageTokenMintModal({
 
   // Get user account information
   const { address: hookUserAddress, isConnected, chainId: connectedChainId } = useAccount()
+  const { switchChainAsync } = useSwitchChain()
   const wagmiConfig = useConfig()
   const publicClient = usePublicClient({ chainId: leverageTokenConfig.chainId })
   const queryClient = useQueryClient()
@@ -198,6 +201,36 @@ export function LeverageTokenMintModal({
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
     ...(managerPort ? { managerPort } : {}),
   })
+
+  // Estimate USD value of expected shares using manager's convertToAssets(1e18)
+  const sharePriceQuery = useQuery({
+    queryKey: ['lt-share-price', leverageTokenAddress, leverageTokenConfig.chainId],
+    enabled: Boolean(leverageTokenAddress && collateralUsdPrice),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const one = 10n ** 18n
+      return readLeverageManagerV2ConvertToAssets(wagmiConfig, {
+        args: [leverageTokenAddress, one],
+        chainId: leverageTokenConfig.chainId as SupportedChainId,
+      })
+    },
+  })
+
+  const expectedUsdOut: number | undefined = useMemo(() => {
+    const sharesRaw = planPreview.plan?.expectedShares
+    const assetsPerShare = sharePriceQuery.data
+    if (!sharesRaw || !assetsPerShare || !collateralUsdPrice) return undefined
+    try {
+      const assetsOut = (sharesRaw * assetsPerShare) / (10n ** 18n)
+      const collateralOut = Number(
+        formatUnits(assetsOut, leverageTokenConfig.collateralAsset.decimals),
+      )
+      return Number.isFinite(collateralOut) ? collateralOut * collateralUsdPrice : undefined
+    } catch {
+      return undefined
+    }
+  }, [planPreview.plan?.expectedShares, sharePriceQuery.data, collateralUsdPrice, leverageTokenConfig.collateralAsset.decimals])
 
   const {
     isAllowanceLoading,
@@ -374,6 +407,24 @@ export function LeverageTokenMintModal({
     // Track funnel step: mint transaction initiated
     analytics.funnelStep('mint_leverage_token', 'transaction_initiated', 2)
 
+    // Provide user feedback if we need to switch chains
+    if (typeof connectedChainId === 'number' && connectedChainId !== leverageTokenConfig.chainId) {
+      try {
+        toast.message('Switching network…', {
+          description: `Switching to ${leverageTokenConfig.chainName}`,
+        })
+        await switchChainAsync({ chainId: leverageTokenConfig.chainId })
+      } catch (switchErr) {
+        const msg =
+          switchErr instanceof Error
+            ? switchErr.message
+            : 'Please switch to the correct network in your wallet and try again.'
+        setError(msg)
+        toError()
+        return
+      }
+    }
+
     toPending()
     try {
       const hash = await exec.mint(form.amountRaw)
@@ -480,6 +531,7 @@ export function LeverageTokenMintModal({
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedTokens={expectedTokens}
+            expectedUsdOut={expectedUsdOut}
             canProceed={canProceed()}
             needsApproval={needsApproval()}
             isConnected={isConnected}

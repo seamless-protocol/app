@@ -164,6 +164,7 @@ type RedeemExecutionResult = {
   swap: RedeemScenario['swap']
   collateralAsset: Address
   debtAsset: Address
+  equityInInputAsset: bigint
 }
 
 type RedeemTestParams = {
@@ -291,6 +292,7 @@ async function performRedeem(
     swap,
     collateralAsset,
     debtAsset,
+    equityInInputAsset: scenario.equityInInputAsset,
   }
 }
 
@@ -385,6 +387,8 @@ function assertRedeemExecution(
   } else {
     expect(collateralDelta >= plan.minCollateralForSender).toBe(true)
     expect(withinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
+    // Additional round-trip sanity: collateral received ≈ initial equity
+    expect(withinTolerance(collateralDelta, result.equityInInputAsset)).toBe(true)
   }
 
   // sanity: plan payout asset aligns with selected output

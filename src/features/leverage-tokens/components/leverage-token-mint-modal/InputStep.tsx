@@ -73,6 +73,9 @@ interface InputStepProps {
 
   // Warning
   isBelowMinimum?: boolean | undefined
+
+  // Estimated USD value of expected shares (optional)
+  expectedUsdOut?: number | undefined
 }
 
 export function InputStep({
@@ -103,6 +106,7 @@ export function InputStep({
   mintTokenFee,
   isMintTokenFeeLoading,
   isBelowMinimum,
+  expectedUsdOut,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const mintAmountId = useId()
@@ -382,10 +386,10 @@ export function InputStep({
                   ? 'Calculating...'
                   : `${expectedTokens} ${leverageTokenConfig.symbol}`}
               </div>
-              {!isCalculating && amount && parseFloat(amount) > 0 && selectedToken.price && (
+              {!isCalculating && typeof expectedUsdOut === 'number' && Number.isFinite(expectedUsdOut) && (
                 <div className="text-xs text-secondary-foreground">
                   ≈ $
-                  {(parseFloat(amount) * selectedToken.price).toLocaleString('en-US', {
+                  {expectedUsdOut.toLocaleString('en-US', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}

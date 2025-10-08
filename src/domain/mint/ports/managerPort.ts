@@ -1,13 +1,10 @@
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
-import {
-  // V2 manager reads
-  readLeverageManagerV2PreviewDeposit,
-  readLeverageManagerV2PreviewMint,
-  // V2 router read (for ideal preview when available)
-  readLeverageRouterV2PreviewDeposit,
-} from '@/lib/contracts/generated'
+import { readLeverageManagerV2PreviewMint } from '@/lib/contracts/generated'
+import { readLeverageManagerV2ConvertToShares } from '@/lib/contracts/generated'
+import { readLeverageManagerV2ConvertCollateralToDebt } from '@/lib/contracts/generated'
+import { readLeverageRouterV2PreviewDeposit } from '@/lib/contracts/generated'
 
 export interface ManagerPort {
   /**
@@ -22,9 +19,11 @@ export interface ManagerPort {
 
   /**
    * Final preview using total collateral (user + swap out).
-   * Returns previewDebt, previewShares.
+   * For Router V2 flows, minted shares and debt are determined solely by the
+   * user's equity contribution; the router computes the flash loan & swap.
+   * Returns previewDebt, previewShares for the provided user collateral.
    */
-  finalPreview(args: { token: Address; totalCollateral: bigint; chainId: number }): Promise<{
+  finalPreview(args: { token: Address; userCollateral: bigint; chainId: number }): Promise<{
     previewDebt: bigint
     previewShares: bigint
   }>
@@ -66,15 +65,26 @@ export function createManagerPortV2(params: {
       }
     },
 
-    async finalPreview({ token, totalCollateral, chainId }) {
-      const managerPreview = await readLeverageManagerV2PreviewDeposit(config, {
-        args: [token, totalCollateral],
-        chainId: chainId as SupportedChainId,
-      })
-      return {
-        previewDebt: managerPreview.debt,
-        previewShares: managerPreview.shares,
+    async finalPreview({ token, userCollateral, chainId }) {
+      if (routerAddress) {
+        const routerPreview = await readLeverageRouterV2PreviewDeposit(config, {
+          args: [token, userCollateral],
+          chainId: chainId as SupportedChainId,
+        })
+        return { previewDebt: routerPreview.debt, previewShares: routerPreview.shares }
       }
+      // Fallback: approximate using manager converters (equity-only semantics)
+      const [previewShares, previewDebt] = await Promise.all([
+        readLeverageManagerV2ConvertToShares(config, {
+          args: [token, userCollateral],
+          chainId: chainId as SupportedChainId,
+        }),
+        readLeverageManagerV2ConvertCollateralToDebt(config, {
+          args: [token, userCollateral, 0],
+          chainId: chainId as SupportedChainId,
+        }),
+      ])
+      return { previewDebt, previewShares }
     },
   }
 }

@@ -89,8 +89,20 @@ export function useMintExecution(params: {
           throw new Error('Quote is required for V2 mint')
         }
 
+        // Ensure wallet is on the correct chain before proceeding
         if (activeChainId !== chainId) {
-          await switchChainAsync({ chainId })
+          try {
+            await switchChainAsync({ chainId })
+          } catch (_switchErr) {
+            const err = new Error(
+              `Wrong network: expected ${chainId}, got ${activeChainId}. Please switch in your wallet.`,
+            ) as Error & { expectedChainId?: number; actualChainId?: number; code?: number }
+            err.expectedChainId = chainId
+            err.actualChainId = activeChainId
+            // Map to common wallet error code used by our classifier
+            err.code = 4902
+            throw err
+          }
         }
 
         const { hash } = await orchestrateMint({

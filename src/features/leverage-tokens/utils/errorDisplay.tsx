@@ -99,18 +99,19 @@ export function getErrorDisplay(
         }
       }
 
-      // Check for technical error messages that should be simplified
+      // Common on-chain revert surfaces from viem or RPC
       if (
-        error?.includes('Request Arguments') ||
-        error?.includes('Contract Call') ||
-        error?.includes('MetaMask Tx Signature')
+        error?.includes('ContractFunctionExecutionError') ||
+        error?.includes('execution reverted') ||
+        error?.includes('simulateContract')
       ) {
         return {
-          icon: <XCircle className="h-8 w-8 text-[var(--state-warning-text)]" />,
-          title: 'Transaction Cancelled',
-          message: 'You cancelled the transaction in your wallet. No changes were made.',
+          icon: <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />,
+          title: 'Transaction Reverted',
+          message:
+            'On-chain execution reverted. Try a smaller amount, increase slippage slightly, or retry shortly.',
           showRetry: true,
-          severity: 'warning',
+          severity: 'error',
         }
       }
 

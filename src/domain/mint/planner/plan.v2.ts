@@ -12,7 +12,8 @@ import {
   // V2 reads (explicit address may be provided when using VNets/custom deployments)
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
-  readLeverageManagerV2PreviewDeposit,
+  readLeverageManagerV2ConvertToShares,
+  readLeverageManagerV2ConvertCollateralToDebt,
 } from '@/lib/contracts/generated'
 import type { ManagerPort } from '../ports'
 import { applySlippageFloor, mulDivFloor } from './math'
@@ -111,14 +112,21 @@ export async function planMintV2(params: {
         chainId,
       })
     : await (async () => {
-        const r = await readLeverageManagerV2PreviewDeposit(config, {
+        // Fallback: approximate ideal using manager converters
+        const idealShares = await readLeverageManagerV2ConvertToShares(config, {
           args: [token, userCollateralOut],
           chainId: chainId as SupportedChainId,
         })
+        const idealDebt = await readLeverageManagerV2ConvertCollateralToDebt(config, {
+          args: [token, userCollateralOut, 0],
+          chainId: chainId as SupportedChainId,
+        })
+        // Target collateral is user's collateral + collateral from swapping 'idealDebt'
+        // At planning stage we approximate neededOut via 'idealDebt' and refine below.
         return {
-          targetCollateral: r.collateral,
-          idealDebt: r.debt,
-          idealShares: r.shares,
+          targetCollateral: userCollateralOut, // refined by quote below
+          idealDebt,
+          idealShares,
         }
       })()
   const neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
@@ -137,13 +145,18 @@ export async function planMintV2(params: {
 
   const totalCollateral = userCollateralOut + debtQuote.out
   let final = managerPort
-    ? await managerPort.finalPreview({ token, totalCollateral, chainId })
+    ? await managerPort.finalPreview({ token, userCollateral: userCollateralOut, chainId })
     : await (async () => {
-        const r = await readLeverageManagerV2PreviewDeposit(config, {
-          args: [token, totalCollateral],
+        // Fallback to router-style expectation is not available; approximate via manager converters
+        const shares = await readLeverageManagerV2ConvertToShares(config, {
+          args: [token, userCollateralOut],
           chainId: chainId as SupportedChainId,
         })
-        return { previewDebt: r.debt, previewShares: r.shares }
+        const debt = await readLeverageManagerV2ConvertCollateralToDebt(config, {
+          args: [token, userCollateralOut, 0],
+          chainId: chainId as SupportedChainId,
+        })
+        return { previewDebt: debt, previewShares: shares }
       })()
   if (final.previewDebt < debtIn) {
     // Adjust down to the manager's previewed need and re-quote once
@@ -161,17 +174,17 @@ export async function planMintV2(params: {
 
       const revisedTotalCollateral = userCollateralOut + clampedDebtQuote.out
       final = managerPort
-        ? await managerPort.finalPreview({
-            token,
-            totalCollateral: revisedTotalCollateral,
-            chainId,
-          })
+        ? await managerPort.finalPreview({ token, userCollateral: userCollateralOut, chainId })
         : await (async () => {
-            const r = await readLeverageManagerV2PreviewDeposit(config, {
-              args: [token, revisedTotalCollateral],
+            const shares = await readLeverageManagerV2ConvertToShares(config, {
+              args: [token, userCollateralOut],
               chainId: chainId as SupportedChainId,
             })
-            return { previewDebt: r.debt, previewShares: r.shares }
+            const debt = await readLeverageManagerV2ConvertCollateralToDebt(config, {
+              args: [token, userCollateralOut, 0],
+              chainId: chainId as SupportedChainId,
+            })
+            return { previewDebt: debt, previewShares: shares }
           })()
       if (final.previewDebt < clampedDebtIn) {
         throw new Error('Reprice: manager preview debt < planned flash loan')

@@ -45,7 +45,7 @@ describe('ManagerPort V2', () => {
       config: DUMMY_CONFIG,
       managerAddress: '0xmanager' as Address,
     })
-    const res = await port.finalPreview({ token: TOKEN, totalCollateral: 1994n, chainId: 1 })
+    const res = await port.finalPreview({ token: TOKEN, userCollateral: 1994n, chainId: 1 })
     expect(res).toEqual({ previewDebt: 999n, previewShares: 55n })
   })
 })
