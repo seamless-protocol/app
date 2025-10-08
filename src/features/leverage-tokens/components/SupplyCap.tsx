@@ -24,7 +24,7 @@ export function SupplyCap({ currentSupply, supplyCap, className }: SupplyCapProp
             isNearCapacity ? 'text-[var(--state-error-text)]' : 'text-foreground',
           )}
         >
-          {available.toLocaleString()}
+          {available.toLocaleString('en-US')}
         </span>
         {isNearCapacity && (
           <Tooltip>
@@ -43,7 +43,7 @@ export function SupplyCap({ currentSupply, supplyCap, className }: SupplyCapProp
           </Tooltip>
         )}
       </div>
-      <span className="text-xs text-muted-foreground">of {supplyCap.toLocaleString()}</span>
+      <span className="text-xs text-muted-foreground">of {supplyCap.toLocaleString('en-US')}</span>
     </div>
   )
 }
