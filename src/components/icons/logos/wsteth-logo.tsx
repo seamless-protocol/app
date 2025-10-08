@@ -2,68 +2,35 @@ import type { SVGProps } from 'react'
 import { useId } from 'react'
 
 export function wstETHLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
-  const maskId = useId()
+  const logoId = useId()
+
   return (
     <svg
       className={className}
-      viewBox="0 0 450 450"
+      viewBox="0 0 32 32"
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="wstETH Logo"
+      aria-labelledby={logoId}
       {...props}
     >
-      <defs>
-        <mask
-          id={maskId}
-          style={{ maskType: 'alpha' }}
-          maskUnits="userSpaceOnUse"
-          x="0"
-          y="0"
-          width="450"
-          height="450"
-        >
-          <rect width="450" height="450" fill="black" />
-          <circle cx="225" cy="225" r="225" fill="white" />
-        </mask>
-      </defs>
-      <g mask={`url(#${maskId})`}>
-        <circle cx="225" cy="225" r="225" fill="#00A3FF" />
-        <path
-          d="M119.988 206.834L117.122 211.231C84.7961 260.819 92.0161 325.763 134.48 367.37C159.461 391.847 192.202 404.087 224.944 404.091C224.944 404.091 224.944 404.091 119.988 206.834Z"
-          fill="white"
-        />
-        <path
-          opacity="0.6"
-          d="M224.935 266.785L119.979 206.834C224.935 404.091 224.935 404.091 224.935 404.091C224.935 361.13 224.935 311.902 224.935 266.785Z"
-          fill="white"
-        />
-        <path
-          opacity="0.6"
-          d="M330.012 206.834L332.878 211.231C365.204 260.819 357.984 325.763 315.52 367.37C290.539 391.847 257.798 404.087 225.056 404.091C225.056 404.091 225.056 404.091 330.012 206.834Z"
-          fill="white"
-        />
-        <path
-          opacity="0.2"
-          d="M225.044 266.785L330 206.834C225.045 404.091 225.044 404.091 225.044 404.091C225.044 361.13 225.044 311.902 225.044 266.785Z"
-          fill="white"
-        />
-        <path
-          opacity="0.2"
-          d="M225.062 132.834V236.233L315.47 184.567L225.062 132.834Z"
-          fill="white"
-        />
-        <path
-          opacity="0.6"
-          d="M225.077 132.834L134.604 184.566L225.077 236.233V132.834Z"
-          fill="white"
-        />
-        <path d="M225.077 45.875L134.604 184.599L225.077 132.722V45.875Z" fill="white" />
-        <path
-          opacity="0.6"
-          d="M225.062 132.707L315.539 184.586L225.062 45.793V132.707Z"
-          fill="white"
-        />
-      </g>
+      <title id={logoId}>wstETH Logo</title>
+      <rect width="32" height="32" rx="16" fill="#00A3FF" />
+      <path
+        opacity="0.6"
+        d="m22.563 14.863 0.179 0.275c2.02 3.099 1.569 7.158-1.085 9.758-1.561 1.53-3.608 2.295-5.655 2.296l6.561-12.329Z"
+        fill="#fff"
+      />
+      <path opacity="0.2" d="M16.003 18.61 22.563 14.863 16.003 27.192V18.61Z" fill="#fff" />
+      <path
+        d="m9.437 14.863-0.179 0.275c-2.02 3.099-1.569 7.158 1.085 9.758 1.561 1.53 3.608 2.295 5.655 2.296L9.437 14.863Z"
+        fill="#fff"
+      />
+      <path opacity="0.6" d="m15.995 18.61-6.561-3.747 6.561 12.329V18.61Z" fill="#fff" />
+      <path opacity="0.2" d="M16.005 10.24v6.463l5.65-3.229-5.65-3.234Z" fill="#fff" />
+      <path opacity="0.6" d="m16.003 10.24-5.655 3.233 5.655 3.23v-6.463Z" fill="#fff" />
+      <path d="m16.003 4.805-5.655 8.67 5.655-3.243V4.805Z" fill="#fff" />
+      <path opacity="0.6" d="m16.005 10.232 5.655 3.243-5.655-8.67v5.427Z" fill="#fff" />
     </svg>
   )
 }
