@@ -93,7 +93,7 @@ try {
   root.render(
     <StrictMode>
       <ErrorBoundary>
-        <ThemeProvider defaultTheme="system">
+        <ThemeProvider defaultTheme="dark">
           <WagmiProvider config={features.testMode ? testConfig : prodConfig}>
             <QueryClientProvider client={queryClient}>
               <RainbowThemeWrapper>
