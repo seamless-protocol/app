@@ -52,12 +52,12 @@ interface LeverageTokenMintModalProps {
 
 // Hoisted to avoid re-creating on every render
 const MINT_STEPS: Array<StepConfig> = [
-  { id: 'userInput', label: 'User Input', progress: 17 },
-  { id: 'approve', label: 'Approve', progress: 33 },
-  { id: 'confirm', label: 'Confirm', progress: 50 },
-  { id: 'pending', label: 'Processing', progress: 67 },
-  { id: 'success', label: 'Success', progress: 100 },
-  { id: 'error', label: 'Error', progress: 100 },
+  { id: 'userInput', label: 'User Input', progress: 33, isUserAction: true },
+  { id: 'approve', label: 'Approve', progress: 67, isUserAction: true },
+  { id: 'confirm', label: 'Confirm', progress: 100, isUserAction: true },
+  { id: 'pending', label: 'Processing', progress: 100, isUserAction: false },
+  { id: 'success', label: 'Success', progress: 100, isUserAction: false },
+  { id: 'error', label: 'Error', progress: 100, isUserAction: false },
 ]
 
 export function LeverageTokenMintModal({
