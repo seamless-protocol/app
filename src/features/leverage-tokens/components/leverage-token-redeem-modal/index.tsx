@@ -202,9 +202,6 @@ export function LeverageTokenRedeemModal({
     toError,
   } = useRedeemSteps('userInput')
 
-  // Step configuration (static)
-  const steps = REDEEM_STEPS
-
   const [selectedToken] = useState<Token>({
     symbol: leverageTokenConfig.symbol,
     name: leverageTokenConfig.name,
@@ -338,6 +335,30 @@ export function LeverageTokenRedeemModal({
     decimals: leverageTokenConfig.decimals,
     chainId: leverageTokenConfig.chainId,
   })
+
+  // Step configuration (static once modal is opened)
+  const steps = useMemo(() => {
+    const hasAmount = parseFloat(form.amount || '0') > 0
+
+    // If no amount entered yet, always show 3 steps
+    if (!hasAmount) {
+      return REDEEM_STEPS
+    }
+
+    // If amount is entered and approval is already done, show 2 steps
+    if (!needsApprovalFlag) {
+      return [
+        { id: 'userInput', label: 'User Input', progress: 50, isUserAction: true },
+        { id: 'confirm', label: 'Confirm', progress: 100, isUserAction: true },
+        { id: 'pending', label: 'Processing', progress: 100, isUserAction: false },
+        { id: 'success', label: 'Success', progress: 100, isUserAction: false },
+        { id: 'error', label: 'Error', progress: 100, isUserAction: false },
+      ]
+    }
+
+    // If amount is entered and approval is needed, show 3 steps
+    return REDEEM_STEPS
+  }, [form.amount, needsApprovalFlag]) // Include needsApprovalFlag dependency for proper step calculation
 
   // View model for selected token: inject live balance/price data
   const selectedTokenView = useMemo(() => {
