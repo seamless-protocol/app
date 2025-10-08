@@ -12,6 +12,7 @@ import './index.css'
 const logger = createLogger('main')
 
 import { ErrorBoundary } from './components/error-boundary'
+import { LiFiSync } from './components/lifi-sync'
 import { RainbowThemeWrapper } from './components/rainbow-theme-wrapper'
 import { ThemeProvider } from './components/theme-provider'
 import { features } from './lib/config/features'
@@ -90,16 +91,20 @@ console.log('[app] Booting Seamless front-end', {
 
 try {
   const root = createRoot(rootElement)
+
+  const config = features.testMode ? testConfig : prodConfig
   root.render(
     <StrictMode>
       <ErrorBoundary>
         <ThemeProvider defaultTheme="dark">
-          <WagmiProvider config={features.testMode ? testConfig : prodConfig}>
+          <WagmiProvider config={config}>
             <QueryClientProvider client={queryClient}>
-              <RainbowThemeWrapper>
-                <RouterProvider router={router} />
-                <ReactQueryDevtools initialIsOpen={false} />
-              </RainbowThemeWrapper>
+              <LiFiSync config={config}>
+                <RainbowThemeWrapper>
+                  <RouterProvider router={router} />
+                  <ReactQueryDevtools initialIsOpen={false} />
+                </RainbowThemeWrapper>
+              </LiFiSync>
             </QueryClientProvider>
           </WagmiProvider>
         </ThemeProvider>
