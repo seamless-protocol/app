@@ -1,6 +1,7 @@
 import type { Address } from 'viem'
 import { getAddress } from 'viem'
 import { base } from 'viem/chains'
+import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
 import type { QuoteFn } from './types'
 
@@ -149,10 +150,14 @@ function buildQuoteUrl(
   // - exact-in:  /v1/quote (fromAmount in query)
   // - exact-out: /v1/quote/toAmount (toAmount in query)
   const url = new URL(params.intent === 'exactOut' ? '/v1/quote/toAmount' : '/v1/quote', baseUrl)
+  const normalizeToken = (token: Address) =>
+    token.toLowerCase() === ETH_SENTINEL.toLowerCase()
+      ? '0x0000000000000000000000000000000000000000'
+      : getAddress(token)
   url.searchParams.set('fromChain', String(params.chainId))
   url.searchParams.set('toChain', String(params.chainId))
-  url.searchParams.set('fromToken', getAddress(params.inToken))
-  url.searchParams.set('toToken', getAddress(params.outToken))
+  url.searchParams.set('fromToken', normalizeToken(params.inToken))
+  url.searchParams.set('toToken', normalizeToken(params.outToken))
   // Per LiFi docs, exact-out quotes must provide `toAmount`.
   // Exact-in quotes provide `fromAmount`.
   if (params.intent === 'exactOut') {
