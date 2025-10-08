@@ -61,6 +61,7 @@ export function createDebtToCollateralQuote({
       router: swap.router,
       recipient: routerAddress,
       wrappedNative,
+      slippageBps,
     })
 
     return { quote, adapterType: 'uniswapV2' }

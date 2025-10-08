@@ -176,7 +176,7 @@ export async function planMintV2(params: {
       }
       // Recompute minShares/excess based on updated values
       const minShares = applySlippageFloor(final.previewShares, slippageBps)
-      const excessDebt: bigint = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
+      const excessDebt = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
       calls.push(
         ...buildDebtSwapCalls({
           debtAsset,
@@ -203,7 +203,7 @@ export async function planMintV2(params: {
   }
 
   const minShares = applySlippageFloor(final.previewShares, slippageBps)
-  const excessDebt: bigint = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
+  const excessDebt = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
 
   calls.push(
     ...buildDebtSwapCalls({
