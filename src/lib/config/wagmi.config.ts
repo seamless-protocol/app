@@ -80,7 +80,7 @@ export const config = getDefaultConfig({
   projectId: walletConnectProjectId || 'YOUR_PROJECT_ID',
   chains: [base, mainnet],
   transports: {
-    ...(useTenderlyVNet ? { [base.id]: fallback(baseCandidates.map((u) => http(u))) } : {}),
+    [base.id]: fallback(baseCandidates.map((u) => http(u))),
     [mainnet.id]: fallback(mainnetCandidates.map((u) => http(u))),
   },
   ssr: false, // Critical for IPFS deployment - we're a pure client-side app
