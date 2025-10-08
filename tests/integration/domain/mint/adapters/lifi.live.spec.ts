@@ -62,9 +62,11 @@ describeOrSkip('LiFi adapter live smoke', () => {
     })
 
     it(`returns maxIn and minOut >= requested (exact-out) (${target.label})`, async () => {
+      // Use a higher slippage for exact-out to reduce quote misses on LiFi
       const quote = createLifiQuoteAdapter({
         chainId: target.chainId,
         router: target.router,
+        slippageBps: 150, // 1.50%
       })
 
       // Use a small target on Base and a larger one on Mainnet to avoid min-size issues
