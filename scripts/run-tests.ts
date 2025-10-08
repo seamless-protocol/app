@@ -3,11 +3,22 @@ import { spawn } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import process from 'node:process'
+// Load env from project .env files so TENDERLY_* are available to this runner
+import { config as dotenvConfig } from 'dotenv'
 import { z } from 'zod'
 import { getContractAddresses } from '../src/lib/contracts/addresses'
 import { resolveBackend } from '../tests/shared/backend'
 // Import the Tenderly VNet helper (explicit .ts for Bun execution)
 import { createVNet, deleteVNet } from './tenderly-vnet.ts'
+
+// Load .env.local then .env without overriding existing process env
+try {
+  const cwd = process.cwd()
+  dotenvConfig({ path: resolve(cwd, '.env.local'), override: false })
+  dotenvConfig({ path: resolve(cwd, '.env'), override: false })
+} catch {
+  // best-effort only
+}
 
 type TestType = 'e2e' | 'integration'
 
@@ -251,6 +262,63 @@ async function runForChainOption(
       : ([chainOption] as Array<ChainSlug>)
 
   for (const slug of slugs) {
+    // Force Tenderly JIT for mainnet; keep Base on static VNet by default
+    if (slug === 'mainnet') {
+      const tenderlyConfig = getTenderlyConfig()
+      if (!tenderlyConfig) {
+        console.warn(
+          '[run-tests] Missing Tenderly credentials; cannot create JIT VNet for mainnet. Falling back to static endpoints.',
+        )
+      } else {
+        console.log(`\n=== ⏳ Creating Tenderly JIT VNet (mainnet) ===`)
+        const { id, rpcUrl } = await createVNet({ ...tenderlyConfig, chainId: '1' })
+        console.log(`✅ Fork created: ${id}`)
+        console.log(`🔗 RPC: ${rpcUrl}`)
+        try {
+          const label = `Run (${slug}, tenderly-jit)`
+          const envSeed: Record<string, string> = {
+            ...process.env,
+            TEST_CHAIN: 'mainnet',
+            TEST_MODE: 'tenderly-jit',
+            TEST_SCENARIO: 'leverage-mint',
+            TEST_RPC_URL: rpcUrl,
+            VITE_TEST_RPC_URL: rpcUrl,
+            VITE_BASE_RPC_URL: rpcUrl,
+            TENDERLY_ADMIN_RPC_URL: rpcUrl,
+            E2E_TOKEN_SOURCE: process.env['E2E_TOKEN_SOURCE'] ?? 'tenderly',
+            ...(process.env['E2E_LEVERAGE_TOKEN_KEY']
+              ? { E2E_LEVERAGE_TOKEN_KEY: process.env['E2E_LEVERAGE_TOKEN_KEY'] as string }
+              : {}),
+          }
+          // Provide a sensible default for multicall executor if not present
+          const canonicalAddresses = getContractAddresses(1)
+          const executorAddress = canonicalAddresses.multicallExecutor as string | undefined
+          if (executorAddress && !envSeed['VITE_MULTICALL_EXECUTOR_ADDRESS']) {
+            envSeed['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executorAddress
+          }
+
+          const env = withTestDefaults(testType, envSeed, 'tenderly')
+          console.log(`=== 🚀 Running ${testType} tests [${label}] ===`)
+          const { cmd, args } = getTestCommand(testType, passThroughArgs)
+          await runCommand(cmd, args, env)
+          console.log(`=== ✅ ${label} ===`)
+          continue
+        } catch (error) {
+          console.error(`=== ❌ Run (mainnet, tenderly-jit) failed ===`)
+          throw error
+        } finally {
+          console.log('🧹 Deleting Tenderly fork...')
+          try {
+            await deleteVNet({ ...tenderlyConfig, id })
+            console.log('✅ Fork deleted')
+          } catch (e) {
+            console.warn('⚠️ Failed to delete Tenderly fork', e)
+          }
+        }
+      }
+    }
+
+    // Default path (Base static VNet or static fallback for mainnet when no credentials)
     const backend = await resolveBackend({
       chain: slug,
       mode: 'tenderly-static',

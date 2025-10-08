@@ -7,11 +7,17 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
-import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
-  // V2 reads (explicit address may be provided when using VNets/custom deployments)
+  BASE_WETH,
+  ETH_SENTINEL,
+  getContractAddresses,
+  type SupportedChainId,
+} from '@/lib/contracts/addresses'
+import {
+  // V2 reads
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
+  readLeverageManagerV2PreviewDeposit,
   readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
 import { applySlippageFloor, mulDivFloor } from './math'
@@ -113,7 +119,10 @@ export async function planMintV2(params: {
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
   // Size the debt leg and quote swap parameters (prefer exact-out when available)
-  const useNativeDebtPath = getAddress(debtAsset) === getAddress(BASE_WETH)
+  // Prefer native-path (unwrap WETH->ETH) when the debt asset is the chain's WETH.
+  // Important: do not rely on Base's WETH constant for other chains.
+  const chainWeth = (getContractAddresses(chainId).tokens?.weth as Address | undefined) ?? BASE_WETH
+  const useNativeDebtPath = getAddress(debtAsset) === getAddress(chainWeth)
   const inTokenForQuote = useNativeDebtPath ? ETH_SENTINEL : debtAsset
   const { debtIn, debtQuote } = await sizeDebtToCollateralSwap({
     idealDebt: ideal.idealDebt,
@@ -123,74 +132,45 @@ export async function planMintV2(params: {
     quote: quoteDebtToCollateral,
   })
 
+  // Compute total collateral to be added (user + swap out). The manager's deposit logic
+  // reasons about total collateral to size the final debt.
   const totalCollateral = userCollateralOut + debtQuote.out
-  const finalPreview = await readLeverageRouterV2PreviewDeposit(config, {
-    args: [token, userCollateralOut],
+
+  // Final preview should use the manager with total collateral to size required debt.
+  const managerPreview = await readLeverageManagerV2PreviewDeposit(config, {
+    args: [token, totalCollateral],
     chainId: chainId as SupportedChainId,
   })
-  let final = { previewDebt: finalPreview.debt, previewShares: finalPreview.shares }
-  if (final.previewDebt < debtIn) {
-    // Adjust down to the manager's previewed need and re-quote once
-    const adjustedDebtIn = final.previewDebt
-    if (adjustedDebtIn > 0n && adjustedDebtIn < debtIn) {
-      const reclamped = await requoteForAdjustedDebt({
-        adjustedDebtIn,
-        inToken: inTokenForQuote,
-        outToken: collateralAsset,
-        quote: quoteDebtToCollateral,
-      })
+  const requiredDebt = managerPreview.debt
+  const finalShares = managerPreview.shares
 
-      const clampedDebtIn = reclamped.debtIn
-      const clampedDebtQuote = reclamped.debtQuote
-
-      const revisedTotalCollateral = userCollateralOut + clampedDebtQuote.out
-      const fp = await readLeverageRouterV2PreviewDeposit(config, {
-        args: [token, userCollateralOut],
-        chainId: chainId as SupportedChainId,
-      })
-      final = { previewDebt: fp.debt, previewShares: fp.shares }
-      if (final.previewDebt < clampedDebtIn) {
-        throw new Error('Reprice: manager preview debt < planned flash loan')
-      }
-      // Recompute minShares/excess based on updated values
-      const minShares = applySlippageFloor(final.previewShares, slippageBps)
-      const excessDebt = final.previewDebt > clampedDebtIn ? final.previewDebt - clampedDebtIn : 0n
-      calls.push(
-        ...buildDebtSwapCalls({
-          debtAsset,
-          debtQuote: clampedDebtQuote,
-          debtIn: clampedDebtIn,
-          useNative: useNativeDebtPath,
-        }),
-      )
-      return {
-        inputAsset,
-        equityInInputAsset,
-        collateralAsset,
-        debtAsset,
-        minShares,
-        expectedShares: final.previewShares,
-        expectedDebt: final.previewDebt,
-        expectedTotalCollateral: revisedTotalCollateral,
-        expectedExcessDebt: excessDebt,
-        calls,
-      }
-    } else {
-      throw new Error('Reprice: manager preview debt < planned flash loan')
-    }
+  // Ensure flash loan (debtIn) does not exceed requiredDebt; clamp and re-quote if needed.
+  let effectiveDebtIn = debtIn
+  let effectiveQuote = debtQuote
+  if (effectiveDebtIn > requiredDebt) {
+    const adjustedDebtIn = requiredDebt
+    const reclamped = await requoteForAdjustedDebt({
+      adjustedDebtIn,
+      inToken: inTokenForQuote,
+      outToken: collateralAsset,
+      quote: quoteDebtToCollateral,
+    })
+    effectiveDebtIn = reclamped.debtIn
+    effectiveQuote = reclamped.debtQuote
   }
 
-  const minShares = applySlippageFloor(final.previewShares, slippageBps)
-  const excessDebt = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
-
+  // Build calls based on the amount actually used for the swap
   calls.push(
     ...buildDebtSwapCalls({
       debtAsset,
-      debtQuote,
-      debtIn,
+      debtQuote: effectiveQuote,
+      debtIn: effectiveDebtIn,
       useNative: useNativeDebtPath,
     }),
   )
+
+  const minShares = applySlippageFloor(finalShares, slippageBps)
+  const excessDebt = requiredDebt > effectiveDebtIn ? requiredDebt - effectiveDebtIn : 0n
 
   return {
     inputAsset,
@@ -198,9 +178,9 @@ export async function planMintV2(params: {
     collateralAsset,
     debtAsset,
     minShares,
-    expectedShares: final.previewShares,
-    expectedDebt: final.previewDebt,
-    expectedTotalCollateral: totalCollateral,
+    expectedShares: finalShares,
+    expectedDebt: effectiveDebtIn,
+    expectedTotalCollateral: userCollateralOut + effectiveQuote.out,
     expectedExcessDebt: excessDebt,
     calls,
   }

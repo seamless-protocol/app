@@ -10,28 +10,30 @@ vi.mock('@/lib/contracts/generated', async () => {
   return {
     readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(async () => COLLATERAL),
     readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(async () => BASE_WETH),
-    readLeverageRouterV2PreviewDeposit: vi.fn(async (_config: any, params: { args: [Address, bigint] }) => {
-      const userCollateral = params.args[1]
-      previewCall += 1
-      if (previewCall === 1) {
-        // Ideal preview: requires +60 out of swaps, sizes idealDebt 150
+    readLeverageRouterV2PreviewDeposit: vi.fn(
+      async (_config: any, params: { args: [Address, bigint] }) => {
+        const userCollateral = params.args[1]
+        previewCall += 1
+        if (previewCall === 1) {
+          // Ideal preview: requires +60 out of swaps, sizes idealDebt 150
+          return {
+            collateral: userCollateral + 60n,
+            debt: 150n,
+            shares: userCollateral + 60n,
+            tokenFee: 0n,
+            treasuryFee: 0n,
+          }
+        }
+        // Final preview returns lower previewed debt (120) to trigger clamp path
         return {
           collateral: userCollateral + 60n,
-          debt: 150n,
+          debt: 120n,
           shares: userCollateral + 60n,
           tokenFee: 0n,
           treasuryFee: 0n,
         }
-      }
-      // Final preview returns lower previewed debt (120) to trigger clamp path
-      return {
-        collateral: userCollateral + 60n,
-        debt: 120n,
-        shares: userCollateral + 60n,
-        tokenFee: 0n,
-        treasuryFee: 0n,
-      }
-    }),
+      },
+    ),
   }
 })
 
@@ -42,7 +44,7 @@ describe('planMintV2 final clamp + re-quote', () => {
 
     // Router previews are mocked above; no ManagerPort now
 
-    const quotedForAmountIn: bigint[] = []
+    const quotedForAmountIn: Array<bigint> = []
     const quoteDebtToCollateral = vi.fn(async (req: any) => {
       if (req.intent === 'exactOut') {
         return {

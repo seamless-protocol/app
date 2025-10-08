@@ -2,10 +2,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
-import { readLeverageManagerV2ConvertToAssets } from '@/lib/contracts/generated'
-import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { useAccount, useConfig, usePublicClient, useSwitchChain } from 'wagmi'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
+import { readLeverageManagerV2ConvertToAssets } from '@/lib/contracts/generated'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses } from '../../../../lib/contracts/addresses'
@@ -208,7 +208,7 @@ export function LeverageTokenMintModal({
     const assetsPerShare = sharePriceQuery.data
     if (!sharesRaw || !assetsPerShare || !collateralUsdPrice) return undefined
     try {
-      const assetsOut = (sharesRaw * assetsPerShare) / (10n ** 18n)
+      const assetsOut = (sharesRaw * assetsPerShare) / 10n ** 18n
       const collateralOut = Number(
         formatUnits(assetsOut, leverageTokenConfig.collateralAsset.decimals),
       )
@@ -216,7 +216,12 @@ export function LeverageTokenMintModal({
     } catch {
       return undefined
     }
-  }, [planPreview.plan?.expectedShares, sharePriceQuery.data, collateralUsdPrice, leverageTokenConfig.collateralAsset.decimals])
+  }, [
+    planPreview.plan?.expectedShares,
+    sharePriceQuery.data,
+    collateralUsdPrice,
+    leverageTokenConfig.collateralAsset.decimals,
+  ])
 
   const {
     isAllowanceLoading,

@@ -386,15 +386,17 @@ export function InputStep({
                   ? 'Calculating...'
                   : `${expectedTokens} ${leverageTokenConfig.symbol}`}
               </div>
-              {!isCalculating && typeof expectedUsdOut === 'number' && Number.isFinite(expectedUsdOut) && (
-                <div className="text-xs text-secondary-foreground">
-                  ≈ $
-                  {expectedUsdOut.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </div>
-              )}
+              {!isCalculating &&
+                typeof expectedUsdOut === 'number' &&
+                Number.isFinite(expectedUsdOut) && (
+                  <div className="text-xs text-secondary-foreground">
+                    ≈ $
+                    {expectedUsdOut.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                )}
             </div>
           </div>
         </div>

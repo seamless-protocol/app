@@ -100,7 +100,6 @@ export async function orchestrateMint(params: {
     (chainAddresses.leverageRouterV2 as Address | undefined) ||
     envRouterV2
 
-
   const plan = await planMintV2({
     config,
     token,

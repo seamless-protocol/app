@@ -59,7 +59,7 @@ export function useMintPlanPreview({
         slippageBps,
         quoteDebtToCollateral: quote,
         chainId,
-    ...(managerAddress ? { managerAddress } : {}),
+        ...(managerAddress ? { managerAddress } : {}),
       })
     },
   })
