@@ -130,25 +130,39 @@ export async function planMintV2(params: {
   const useNativeDebtPath = getAddress(debtAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeDebtPath ? ETH_SENTINEL : debtAsset
 
-  // Iteratively refine debtIn so that quoted out >= neededFromDebtSwap
-  // This guards against slippage and non-linear router pricing
+  // Prefer exact-out when supported (e.g., LiFi) to hit target collateral directly.
+  let usedExactOut = false
   let debtQuote = await quoteDebtToCollateral({
     inToken: inTokenForQuote,
     outToken: collateralAsset,
     amountIn: debtIn,
+    amountOut: neededFromDebtSwap,
+    intent: 'exactOut',
   })
-  if (debtQuote.out < neededFromDebtSwap) {
-    const maxIterations = 6
-    for (let i = 0; i < maxIterations; i++) {
-      const adjusted = mulDivFloor(debtIn, debtQuote.out, neededFromDebtSwap)
-      if (adjusted >= debtIn || adjusted === 0n) break
-      debtIn = adjusted
-      debtQuote = await quoteDebtToCollateral({
-        inToken: inTokenForQuote,
-        outToken: collateralAsset,
-        amountIn: debtIn,
-      })
-      if (debtQuote.out >= neededFromDebtSwap) break
+  if (debtQuote.out >= neededFromDebtSwap && typeof debtQuote.maxIn === 'bigint') {
+    usedExactOut = true
+    debtIn = debtQuote.maxIn
+  } else {
+    // Iteratively refine exact-in amount until quoted out >= neededFromDebtSwap
+    // This guards against slippage and non-linear router pricing
+    debtQuote = await quoteDebtToCollateral({
+      inToken: inTokenForQuote,
+      outToken: collateralAsset,
+      amountIn: debtIn,
+    })
+    if (debtQuote.out < neededFromDebtSwap) {
+      const maxIterations = 6
+      for (let i = 0; i < maxIterations; i++) {
+        const adjusted = mulDivFloor(debtIn, debtQuote.out, neededFromDebtSwap)
+        if (adjusted >= debtIn || adjusted === 0n) break
+        debtIn = adjusted
+        debtQuote = await quoteDebtToCollateral({
+          inToken: inTokenForQuote,
+          outToken: collateralAsset,
+          amountIn: debtIn,
+        })
+        if (debtQuote.out >= neededFromDebtSwap) break
+      }
     }
   }
 
@@ -167,6 +181,7 @@ export async function planMintV2(params: {
     const adjustedDebtIn = final.previewDebt
     if (adjustedDebtIn > 0n && adjustedDebtIn < debtIn) {
       debtIn = adjustedDebtIn
+      // If we used exact-out, switch to exact-in for the adjusted amount.
       debtQuote = await quoteDebtToCollateral({
         inToken: inTokenForQuote,
         outToken: collateralAsset,
