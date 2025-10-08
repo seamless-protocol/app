@@ -129,22 +129,31 @@ export async function planMintV2(params: {
   // Prefer native path for Base WETH: withdraw -> aggregator with msg.value
   const useNativeDebtPath = getAddress(debtAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeDebtPath ? ETH_SENTINEL : debtAsset
+
+  // Iteratively refine debtIn so that quoted out >= neededFromDebtSwap
+  // This guards against slippage and non-linear router pricing
   let debtQuote = await quoteDebtToCollateral({
     inToken: inTokenForQuote,
     outToken: collateralAsset,
     amountIn: debtIn,
   })
   if (debtQuote.out < neededFromDebtSwap) {
-    debtIn = mulDivFloor(ideal.idealDebt, debtQuote.out, neededFromDebtSwap)
-    debtQuote = await quoteDebtToCollateral({
-      inToken: inTokenForQuote,
-      outToken: collateralAsset,
-      amountIn: debtIn,
-    })
+    const maxIterations = 6
+    for (let i = 0; i < maxIterations; i++) {
+      const adjusted = mulDivFloor(debtIn, debtQuote.out, neededFromDebtSwap)
+      if (adjusted >= debtIn || adjusted === 0n) break
+      debtIn = adjusted
+      debtQuote = await quoteDebtToCollateral({
+        inToken: inTokenForQuote,
+        outToken: collateralAsset,
+        amountIn: debtIn,
+      })
+      if (debtQuote.out >= neededFromDebtSwap) break
+    }
   }
 
   const totalCollateral = userCollateralOut + debtQuote.out
-  const final = managerPort
+  let final = managerPort
     ? await managerPort.finalPreview({ token, totalCollateral, chainId })
     : await (async () => {
         const r = await readLeverageManagerV2PreviewMint(config, {
@@ -153,8 +162,37 @@ export async function planMintV2(params: {
         })
         return { previewDebt: r.debt, previewShares: r.shares }
       })()
-  if (final.previewDebt < debtIn)
-    throw new Error('Reprice: manager preview debt < planned flash loan')
+  if (final.previewDebt < debtIn) {
+    // Adjust down to the manager's previewed need and re-quote once
+    const adjustedDebtIn = final.previewDebt
+    if (adjustedDebtIn > 0n && adjustedDebtIn < debtIn) {
+      debtIn = adjustedDebtIn
+      debtQuote = await quoteDebtToCollateral({
+        inToken: inTokenForQuote,
+        outToken: collateralAsset,
+        amountIn: debtIn,
+      })
+      const revisedTotalCollateral = userCollateralOut + debtQuote.out
+      final = managerPort
+        ? await managerPort.finalPreview({
+            token,
+            totalCollateral: revisedTotalCollateral,
+            chainId,
+          })
+        : await (async () => {
+            const r = await readLeverageManagerV2PreviewMint(config, {
+              args: [token, revisedTotalCollateral],
+              chainId: chainId as SupportedChainId,
+            })
+            return { previewDebt: r.debt, previewShares: r.shares }
+          })()
+      if (final.previewDebt < debtIn) {
+        throw new Error('Reprice: manager preview debt < planned flash loan')
+      }
+    } else {
+      throw new Error('Reprice: manager preview debt < planned flash loan')
+    }
+  }
 
   const minShares = applySlippageFloor(final.previewShares, slippageBps)
   const excessDebt: bigint = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
