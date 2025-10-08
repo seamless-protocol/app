@@ -3,7 +3,6 @@ import { Zap } from 'lucide-react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { formatAPY, formatPercentage } from '@/lib/utils/formatting'
 import { AssetDisplay } from '../../../components/ui/asset-display'
-import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent } from '../../../components/ui/card'
 import { Skeleton } from '../../../components/ui/skeleton'
 import { LeverageBadge } from './LeverageBadge'
@@ -44,8 +43,8 @@ export function FeaturedLeverageToken({
         onClick={handleClick}
       >
         <CardContent className="p-3 sm:p-4">
-          {/* Header with Asset Display and Rank Badge */}
-          <div className="flex items-center justify-between mb-3 min-w-0">
+          {/* Header with Asset Display */}
+          <div className="flex items-center mb-3 min-w-0">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <div className="flex -space-x-1 flex-shrink-0">
                 <AssetDisplay asset={token.collateralAsset} size="sm" variant="logo-only" />
@@ -55,11 +54,6 @@ export function FeaturedLeverageToken({
                 {token.name}
               </h3>
             </div>
-            {token.rank && (
-              <Badge className="text-xs flex-shrink-0 border-[color-mix(in_srgb,var(--tag-warning-text)_25%,transparent)] bg-[var(--tag-warning-bg)] text-[var(--tag-warning-text)]">
-                #{token.rank}
-              </Badge>
-            )}
           </div>
 
           {/* Stats Grid */}
