@@ -124,47 +124,16 @@ export async function planMintV2(params: {
   const neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
-  // Size debt leg and quote
-  let debtIn = ideal.idealDebt
-  // Prefer native path for Base WETH: withdraw -> aggregator with msg.value
+  // Size the debt leg and quote swap parameters (prefer exact-out when available)
   const useNativeDebtPath = getAddress(debtAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeDebtPath ? ETH_SENTINEL : debtAsset
-
-  // Prefer exact-out when supported (e.g., LiFi) to hit target collateral directly.
-  let usedExactOut = false
-  let debtQuote = await quoteDebtToCollateral({
+  const { debtIn, debtQuote } = await sizeDebtToCollateralSwap({
+    idealDebt: ideal.idealDebt,
+    neededOut: neededFromDebtSwap,
     inToken: inTokenForQuote,
     outToken: collateralAsset,
-    amountIn: debtIn,
-    amountOut: neededFromDebtSwap,
-    intent: 'exactOut',
+    quote: quoteDebtToCollateral,
   })
-  if (debtQuote.out >= neededFromDebtSwap && typeof debtQuote.maxIn === 'bigint') {
-    usedExactOut = true
-    debtIn = debtQuote.maxIn
-  } else {
-    // Iteratively refine exact-in amount until quoted out >= neededFromDebtSwap
-    // This guards against slippage and non-linear router pricing
-    debtQuote = await quoteDebtToCollateral({
-      inToken: inTokenForQuote,
-      outToken: collateralAsset,
-      amountIn: debtIn,
-    })
-    if (debtQuote.out < neededFromDebtSwap) {
-      const maxIterations = 6
-      for (let i = 0; i < maxIterations; i++) {
-        const adjusted = mulDivFloor(debtIn, debtQuote.out, neededFromDebtSwap)
-        if (adjusted >= debtIn || adjusted === 0n) break
-        debtIn = adjusted
-        debtQuote = await quoteDebtToCollateral({
-          inToken: inTokenForQuote,
-          outToken: collateralAsset,
-          amountIn: debtIn,
-        })
-        if (debtQuote.out >= neededFromDebtSwap) break
-      }
-    }
-  }
 
   const totalCollateral = userCollateralOut + debtQuote.out
   let final = managerPort
@@ -180,13 +149,14 @@ export async function planMintV2(params: {
     // Adjust down to the manager's previewed need and re-quote once
     const adjustedDebtIn = final.previewDebt
     if (adjustedDebtIn > 0n && adjustedDebtIn < debtIn) {
-      debtIn = adjustedDebtIn
-      // If we used exact-out, switch to exact-in for the adjusted amount.
-      debtQuote = await quoteDebtToCollateral({
+      const reclamped = await requoteForAdjustedDebt({
+        adjustedDebtIn,
         inToken: inTokenForQuote,
         outToken: collateralAsset,
-        amountIn: debtIn,
+        quote: quoteDebtToCollateral,
       })
+      const debtIn = reclamped.debtIn
+      const debtQuote = reclamped.debtQuote
       const revisedTotalCollateral = userCollateralOut + debtQuote.out
       final = managerPort
         ? await managerPort.finalPreview({
@@ -203,6 +173,29 @@ export async function planMintV2(params: {
           })()
       if (final.previewDebt < debtIn) {
         throw new Error('Reprice: manager preview debt < planned flash loan')
+      }
+      // Recompute minShares/excess based on updated values
+      const minShares = applySlippageFloor(final.previewShares, slippageBps)
+      const excessDebt: bigint = final.previewDebt > debtIn ? final.previewDebt - debtIn : 0n
+      calls.push(
+        ...buildDebtSwapCalls({
+          debtAsset,
+          debtQuote,
+          debtIn,
+          useNative: useNativeDebtPath,
+        }),
+      )
+      return {
+        inputAsset,
+        equityInInputAsset,
+        collateralAsset,
+        debtAsset,
+        minShares,
+        expectedShares: final.previewShares,
+        expectedDebt: final.previewDebt,
+        expectedTotalCollateral: revisedTotalCollateral,
+        expectedExcessDebt: excessDebt,
+        calls,
       }
     } else {
       throw new Error('Reprice: manager preview debt < planned flash loan')
@@ -236,6 +229,63 @@ export async function planMintV2(params: {
 }
 
 // Helpers — defined below the main function for clarity
+
+/**
+ * Size the debt flash loan and quote the debt->collateral swap.
+ * Prefers exact-out (when adapter supports it) and falls back to exact-in refinement.
+ */
+export async function sizeDebtToCollateralSwap(args: {
+  idealDebt: bigint
+  neededOut: bigint
+  inToken: Address
+  outToken: Address
+  quote: QuoteFn
+}): Promise<{ debtIn: bigint; debtQuote: Quote }> {
+  const { idealDebt, neededOut, inToken, outToken, quote } = args
+  let debtIn = idealDebt
+
+  // Try exact-out fast path
+  let debtQuote = await quote({
+    inToken,
+    outToken,
+    amountIn: debtIn,
+    amountOut: neededOut,
+    intent: 'exactOut',
+  })
+  if (debtQuote.out >= neededOut && typeof debtQuote.maxIn === 'bigint') {
+    return { debtIn: debtQuote.maxIn, debtQuote }
+  }
+
+  // Fallback: refine exact-in against non-linear quotes
+  debtQuote = await quote({ inToken, outToken, amountIn: debtIn })
+  if (debtQuote.out >= neededOut) return { debtIn, debtQuote }
+
+  const MAX_REFINES = 6
+  for (let i = 0; i < MAX_REFINES; i++) {
+    const adjusted = mulDivFloor(debtIn, debtQuote.out, neededOut)
+    if (adjusted >= debtIn || adjusted === 0n) break
+    debtIn = adjusted
+    debtQuote = await quote({ inToken, outToken, amountIn: debtIn })
+    if (debtQuote.out >= neededOut) break
+  }
+  return { debtIn, debtQuote }
+}
+
+/**
+ * Re-quote for a reduced flash loan amount when the manager preview debt is lower
+ * than the planned flash loan.
+ */
+export async function requoteForAdjustedDebt(args: {
+  adjustedDebtIn: bigint
+  inToken: Address
+  outToken: Address
+  quote: QuoteFn
+}): Promise<{ debtIn: bigint; debtQuote: Quote }> {
+  const { adjustedDebtIn, inToken, outToken, quote } = args
+  const debtIn = adjustedDebtIn
+  const debtQuote = await quote({ inToken, outToken, amountIn: debtIn })
+  return { debtIn, debtQuote }
+}
 
 async function getManagerAssets(args: {
   config: Config
