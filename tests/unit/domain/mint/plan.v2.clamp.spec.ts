@@ -10,6 +10,19 @@ vi.mock('@/lib/contracts/generated', async () => {
   return {
     readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(async () => COLLATERAL),
     readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(async () => BASE_WETH),
+    readLeverageManagerV2PreviewDeposit: vi.fn(
+      async (_config: any, params: { args: [Address, bigint] }) => {
+        const userPlusSwap = params.args[1]
+        // Final preview returns lower previewed debt (120) to trigger clamp path
+        return {
+          collateral: userPlusSwap,
+          debt: 120n,
+          shares: userPlusSwap,
+          tokenFee: 0n,
+          treasuryFee: 0n,
+        }
+      },
+    ),
     readLeverageRouterV2PreviewDeposit: vi.fn(
       async (_config: any, params: { args: [Address, bigint] }) => {
         const userCollateral = params.args[1]

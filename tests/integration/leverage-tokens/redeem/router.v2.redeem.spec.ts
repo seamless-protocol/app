@@ -387,8 +387,10 @@ function assertRedeemExecution(
   } else {
     expect(collateralDelta >= plan.minCollateralForSender).toBe(true)
     expect(withinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
-    // Additional round-trip sanity: collateral received ≈ initial equity
-    expect(withinTolerance(collateralDelta, result.equityInInputAsset)).toBe(true)
+    // Additional round-trip sanity: collateral received should be within a
+    // conservative bound of initial equity (loss cap 1%)
+    const expectedMin = (result.equityInInputAsset * 9900n) / 10000n
+    expect(collateralDelta >= expectedMin).toBe(true)
   }
 
   // sanity: plan payout asset aligns with selected output

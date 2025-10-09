@@ -202,36 +202,57 @@ export async function sizeDebtToCollateralSwap(args: {
   const { idealDebt, neededOut, inToken, outToken, quote } = args
   let debtIn = idealDebt
 
-  // Try exact-out fast path
-  let debtQuote: Quote
+  // First try exact-out quoting if the adapter supports it (preferred path for precision)
   try {
-    debtQuote = await quote({
+    const exactOut = await quote({
       inToken,
       outToken,
-      amountIn: debtIn,
+      amountIn: 0n,
       amountOut: neededOut,
       intent: 'exactOut',
     })
-    if (debtQuote.out >= neededOut && typeof debtQuote.maxIn === 'bigint') {
-      return { debtIn: debtQuote.maxIn, debtQuote }
+    if (exactOut.maxIn !== undefined && exactOut.out >= neededOut) {
+      return { debtIn: exactOut.maxIn, debtQuote: exactOut }
     }
   } catch {
-    // Ignore and fall back to exact-in refinement below
+    // Ignore and fall back to exact-in refinement
   }
 
-  // Fallback: refine exact-in against non-linear quotes
-  debtQuote = await quote({ inToken, outToken, amountIn: debtIn })
-  if (debtQuote.out >= neededOut) return { debtIn, debtQuote }
+  // Fall back to exact-in refinement starting from manager-sized idealDebt
+  let debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
 
-  const MAX_REFINES = 6
-  for (let i = 0; i < MAX_REFINES; i++) {
-    const adjusted = mulDivFloor(debtIn, debtQuote.out, neededOut)
-    if (adjusted >= debtIn || adjusted === 0n) break
-    debtIn = adjusted
-    debtQuote = await quote({ inToken, outToken, amountIn: debtIn })
-    if (debtQuote.out >= neededOut) break
+  // Case 1: We already meet or exceed the required out; try to tighten input down.
+  if (debtQuote.out >= neededOut) {
+    const MAX_REFINES = 6
+    for (let i = 0; i < MAX_REFINES; i++) {
+      const adjustedDown = mulDivFloor(debtIn, neededOut, debtQuote.out)
+      if (adjustedDown >= debtIn || adjustedDown === 0n) break
+      const q = await quote({ inToken, outToken, amountIn: adjustedDown, intent: 'exactIn' })
+      if (q.out >= neededOut) {
+        debtIn = adjustedDown
+        debtQuote = q
+      } else {
+        // We pushed too far down; keep last good quote
+        break
+      }
+    }
+    return { debtIn, debtQuote }
   }
-  return { debtIn, debtQuote }
+
+  // Case 2: Out is below target; scale input up to reach neededOut.
+  {
+    const MAX_REFINES = 6
+    for (let i = 0; i < MAX_REFINES; i++) {
+      // Scale proportionally: debtIn *= neededOut / out
+      let adjustedUp = mulDivFloor(debtIn, neededOut, debtQuote.out || 1n)
+      if (adjustedUp <= debtIn) adjustedUp = debtIn + 1n
+      const q = await quote({ inToken, outToken, amountIn: adjustedUp, intent: 'exactIn' })
+      debtIn = adjustedUp
+      debtQuote = q
+      if (q.out >= neededOut) break
+    }
+    return { debtIn, debtQuote }
+  }
 }
 
 /**

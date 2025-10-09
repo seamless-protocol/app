@@ -27,7 +27,7 @@ export function useMintPlanPreview({
   chainId,
   quote,
   managerAddress,
-  debounceMs = 350,
+  debounceMs = 500,
 }: UseMintPlanPreviewParams) {
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
   const enabled = typeof debounced === 'bigint' && debounced > 0n && typeof quote === 'function'

@@ -24,6 +24,13 @@ const routerPreview = vi.fn(async ({ args }: { args: [Address, bigint] }) => {
 vi.mock('@/lib/contracts/generated', () => ({
   readLeverageManagerV2GetLeverageTokenCollateralAsset: () => COLLATERAL,
   readLeverageManagerV2GetLeverageTokenDebtAsset: () => DEBT,
+  readLeverageManagerV2PreviewDeposit: (_config: any, { args }: { args: [Address, bigint] }) => ({
+    collateral: args[1],
+    debt: 9_999_999_999n,
+    shares: args[1],
+    tokenFee: 0n,
+    treasuryFee: 0n,
+  }),
   readLeverageRouterV2PreviewDeposit: (_config: any, params: any) => routerPreview(params),
 }))
 
