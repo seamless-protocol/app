@@ -35,28 +35,18 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
-describe('planMintV2 (exact-out fast path)', () => {
-  it('uses exact-out (LiFi-like) to size debt and emits native path calls (withdraw + payable swap)', async () => {
+describe('planMintV2 (native path, exact-in)', () => {
+  it('uses exact-in quote and emits native path calls (withdraw + payable swap)', async () => {
     const inputAsset = '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address
     const equityInInputAsset = 100n
     // neededFromDebtSwap will be 60 (from mock preview)
 
     const quoteDebtToCollateral = vi.fn(async (req: any) => {
-      // exact-out path returns out == requested (minOut) and maxIn sized to 120
-      if (req.intent === 'exactOut') {
-        return {
-          out: req.amountOut as bigint,
-          minOut: req.amountOut as bigint,
-          maxIn: 120n,
-          approvalTarget: '0x9999999999999999999999999999999999999999' as Address,
-          calldata: '0xdeadbeef' as `0x${string}`,
-        }
-      }
-      // fallback (should not be used when exact-out succeeds)
+      // exact-in path: return out as 50% of amountIn; clamp will bring debt to 120
       return {
-        out: 0n,
+        out: (req.amountIn as bigint) / 2n,
         approvalTarget: '0x9999999999999999999999999999999999999999' as Address,
-        calldata: '0x' as `0x${string}`,
+        calldata: '0xdeadbeef' as `0x${string}`,
       }
     })
 

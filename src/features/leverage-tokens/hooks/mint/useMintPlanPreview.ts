@@ -14,7 +14,6 @@ interface UseMintPlanPreviewParams {
   slippageBps: number
   chainId: number
   quote?: QuoteFn
-  managerAddress?: Address
   debounceMs?: number
 }
 
@@ -26,7 +25,6 @@ export function useMintPlanPreview({
   slippageBps,
   chainId,
   quote,
-  managerAddress,
   debounceMs = 500,
 }: UseMintPlanPreviewParams) {
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
@@ -37,7 +35,6 @@ export function useMintPlanPreview({
     addr: token,
     amount: debounced ?? 0n,
     slippageBps,
-    ...(managerAddress ? { managerAddress } : {}),
   }
 
   const query = useQuery({
@@ -59,7 +56,6 @@ export function useMintPlanPreview({
         slippageBps,
         quoteDebtToCollateral: quote,
         chainId,
-        ...(managerAddress ? { managerAddress } : {}),
       })
     },
   })

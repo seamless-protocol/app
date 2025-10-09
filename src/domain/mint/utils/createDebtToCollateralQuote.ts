@@ -31,12 +31,22 @@ export function createDebtToCollateralQuote({
   getPublicClient,
   fromAddress,
 }: CreateDebtToCollateralQuoteParams): CreateDebtToCollateralQuoteResult {
+  // Default fromAddress to the chain's MulticallExecutor when not provided
+  const defaultFrom = (() => {
+    try {
+      const c = getContractAddresses(chainId)
+      return c.multicallExecutor as Address | undefined
+    } catch {
+      return undefined
+    }
+  })()
+  const effectiveFrom = (fromAddress ?? defaultFrom) as Address | undefined
   if (swap.type === 'lifi') {
     const quote = createLifiQuoteAdapter({
       chainId,
       router: routerAddress,
       slippageBps,
-      ...(fromAddress ? { fromAddress } : {}),
+      ...(effectiveFrom ? { fromAddress: effectiveFrom } : {}),
       ...(swap.allowBridges ? { allowBridges: swap.allowBridges } : {}),
       ...(swap.order ? { order: swap.order } : {}),
     })

@@ -89,7 +89,7 @@ export function LeverageTokenMintModal({
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
   const leverageRouterAddress = contractAddresses.leverageRouterV2
-  const leverageManagerAddress = contractAddresses.leverageManagerV2
+  // manager address not needed for mint plan preview anymore
 
   // Fetch leverage token fees
   const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(leverageTokenAddress)
@@ -185,7 +185,6 @@ export function LeverageTokenMintModal({
     slippageBps,
     chainId: leverageTokenConfig.chainId,
     ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
-    ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
   })
 
   // Estimate USD value of expected shares using manager's convertToAssets(1e18)

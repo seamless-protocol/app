@@ -80,7 +80,6 @@ export async function planMintTest({
     equityInInputAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    managerAddress: setup.manager,
     chainId: tokenDefinition.chainId,
   })
 
