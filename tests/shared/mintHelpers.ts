@@ -217,8 +217,8 @@ async function resolveDebtToCollateralQuote(params: {
       return createLifiQuoteAdapter({
         chainId,
         router,
-        // Align LiFi's expected sender with the actual caller (router)
-        fromAddress: router,
+        // Align LiFi's expected sender with the actual caller (MulticallExecutor)
+        fromAddress: executor,
         allowBridges: 'none',
         slippageBps: resolvedSlippageBps,
       })
