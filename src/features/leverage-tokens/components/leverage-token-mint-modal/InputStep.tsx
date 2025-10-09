@@ -73,6 +73,7 @@ interface InputStepProps {
 
   // Warning
   isBelowMinimum?: boolean | undefined
+  supplyCapExceeded?: boolean | undefined
 }
 
 export function InputStep({
@@ -103,6 +104,7 @@ export function InputStep({
   mintTokenFee,
   isMintTokenFeeLoading,
   isBelowMinimum,
+  supplyCapExceeded,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const mintAmountId = useId()
@@ -397,6 +399,15 @@ export function InputStep({
       </Card>
 
       {error && <Alert type="error" title="Error" description={error} />}
+
+      {/* Supply Cap Error */}
+      {supplyCapExceeded && (
+        <Alert
+          type="error"
+          title="Supply Cap Exceeded"
+          description="The mint amount exceeds the current Leverage Token recommended mint cap."
+        />
+      )}
 
       {/* Warning Display */}
       {isBelowMinimum && (
