@@ -91,40 +91,28 @@ export async function planMintV2(params: {
     chainId,
   } = params
 
+  // 1) Resolve manager assets and enforce collateral-only input in initial scope
   const { collateralAsset, debtAsset } = await getManagerAssets({
     config,
     token,
     chainId,
     ...(managerAddress ? { managerAddress } : {}),
   })
-
-  // Enforce collateral-only input in initial scope
-  const calls: V2Calls = []
   if (getAddress(inputAsset) !== getAddress(collateralAsset)) {
     throw new Error('Router v2 initial scope requires collateral-only input')
   }
   const userCollateralOut = equityInInputAsset
 
-  // Ideal preview based on user's collateral only
-  const idealPreview = await readLeverageRouterV2PreviewDeposit(config, {
-    args: [token, userCollateralOut],
-    chainId: chainId as SupportedChainId,
-  })
-  const ideal = {
-    targetCollateral: idealPreview.collateral,
-    idealDebt: idealPreview.debt,
-    idealShares: idealPreview.shares,
-  }
+  // 2) Preview ideal targets using only user collateral (router semantics)
+  const ideal = await previewIdeal({ config, token, userCollateralOut, chainId })
   const neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
-  // Size the debt leg and quote swap parameters (prefer exact-out when available)
-  // Prefer native-path (unwrap WETH->ETH) when the debt asset is the chain's WETH.
-  // Important: do not rely on Base's WETH constant for other chains.
-  const chainWeth = (getContractAddresses(chainId).tokens?.weth as Address | undefined) ?? BASE_WETH
+  // 3) Quote debt->collateral for the missing collateral (exact-in refinement)
+  const chainWeth = getContractAddresses(chainId).tokens?.weth ?? BASE_WETH
   const useNativeDebtPath = getAddress(debtAsset) === getAddress(chainWeth)
   const inTokenForQuote = useNativeDebtPath ? ETH_SENTINEL : debtAsset
-  const { debtIn, debtQuote } = await sizeDebtToCollateralSwap({
+  const { debtIn, debtQuote } = await quoteDebtForMissingCollateral({
     idealDebt: ideal.idealDebt,
     neededOut: neededFromDebtSwap,
     inToken: inTokenForQuote,
@@ -132,45 +120,32 @@ export async function planMintV2(params: {
     quote: quoteDebtToCollateral,
   })
 
-  // Compute total collateral to be added (user + swap out). The manager's deposit logic
-  // reasons about total collateral to size the final debt.
+  // 4) Final preview with total collateral to derive requiredDebt and shares
   const totalCollateral = userCollateralOut + debtQuote.out
+  const final = await previewFinal({ config, token, totalCollateral, chainId })
 
-  // Final preview should use the manager with total collateral to size required debt.
-  const managerPreview = await readLeverageManagerV2PreviewDeposit(config, {
-    args: [token, totalCollateral],
-    chainId: chainId as SupportedChainId,
+  // 5) Clamp to requiredDebt and re-quote if we sized above it
+  const { effectiveDebtIn, effectiveQuote } = await clampAndRequote({
+    requiredDebt: final.requiredDebt,
+    debtIn,
+    inToken: inTokenForQuote,
+    collateralAsset,
+    quote: quoteDebtToCollateral,
   })
-  const requiredDebt = managerPreview.debt
-  const finalShares = managerPreview.shares
-
-  // Ensure flash loan (debtIn) does not exceed requiredDebt; clamp and re-quote if needed.
-  let effectiveDebtIn = debtIn
-  let effectiveQuote = debtQuote
-  if (effectiveDebtIn > requiredDebt) {
-    const adjustedDebtIn = requiredDebt
-    const reclamped = await requoteForAdjustedDebt({
-      adjustedDebtIn,
-      inToken: inTokenForQuote,
-      outToken: collateralAsset,
-      quote: quoteDebtToCollateral,
-    })
-    effectiveDebtIn = reclamped.debtIn
-    effectiveQuote = reclamped.debtQuote
-  }
 
   // Build calls based on the amount actually used for the swap
-  calls.push(
+  const calls: V2Calls = [
     ...buildDebtSwapCalls({
       debtAsset,
       debtQuote: effectiveQuote,
       debtIn: effectiveDebtIn,
       useNative: useNativeDebtPath,
     }),
-  )
+  ]
 
-  const minShares = applySlippageFloor(finalShares, slippageBps)
-  const excessDebt = requiredDebt > effectiveDebtIn ? requiredDebt - effectiveDebtIn : 0n
+  const minShares = applySlippageFloor(final.shares, slippageBps)
+  const excessDebt =
+    final.requiredDebt > effectiveDebtIn ? final.requiredDebt - effectiveDebtIn : 0n
 
   return {
     inputAsset,
@@ -178,7 +153,7 @@ export async function planMintV2(params: {
     collateralAsset,
     debtAsset,
     minShares,
-    expectedShares: finalShares,
+    expectedShares: final.shares,
     expectedDebt: effectiveDebtIn,
     expectedTotalCollateral: userCollateralOut + effectiveQuote.out,
     expectedExcessDebt: excessDebt,
@@ -190,9 +165,12 @@ export async function planMintV2(params: {
 
 /**
  * Size the debt flash loan and quote the debt->collateral swap.
- * Prefers exact-out (when adapter supports it) and falls back to exact-in refinement.
+ *
+ * Default: exact-in (fast) — start from manager-sized idealDebt and refine.
+ * If the adapter supports exact-out and we ever need a fallback, add it explicitly
+ * in the caller, but keep default path as exact-in for responsiveness.
  */
-export async function sizeDebtToCollateralSwap(args: {
+export async function quoteDebtForMissingCollateral(args: {
   idealDebt: bigint
   neededOut: bigint
   inToken: Address
@@ -202,23 +180,7 @@ export async function sizeDebtToCollateralSwap(args: {
   const { idealDebt, neededOut, inToken, outToken, quote } = args
   let debtIn = idealDebt
 
-  // First try exact-out quoting if the adapter supports it (preferred path for precision)
-  try {
-    const exactOut = await quote({
-      inToken,
-      outToken,
-      amountIn: 0n,
-      amountOut: neededOut,
-      intent: 'exactOut',
-    })
-    if (exactOut.maxIn !== undefined && exactOut.out >= neededOut) {
-      return { debtIn: exactOut.maxIn, debtQuote: exactOut }
-    }
-  } catch {
-    // Ignore and fall back to exact-in refinement
-  }
-
-  // Fall back to exact-in refinement starting from manager-sized idealDebt
+  // Exact-in refinement starting from manager-sized idealDebt
   let debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
 
   // Case 1: We already meet or exceed the required out; try to tighten input down.
@@ -256,19 +218,73 @@ export async function sizeDebtToCollateralSwap(args: {
 }
 
 /**
- * Re-quote for a reduced flash loan amount when the manager preview debt is lower
- * than the planned flash loan.
+ * Clamp to manager.requiredDebt and re-quote swap calldata for the clamped input when needed.
  */
-export async function requoteForAdjustedDebt(args: {
-  adjustedDebtIn: bigint
+async function clampAndRequote(args: {
+  requiredDebt: bigint
+  debtIn: bigint
   inToken: Address
-  outToken: Address
+  collateralAsset: Address
   quote: QuoteFn
-}): Promise<{ debtIn: bigint; debtQuote: Quote }> {
-  const { adjustedDebtIn, inToken, outToken, quote } = args
-  const debtIn = adjustedDebtIn
-  const debtQuote = await quote({ inToken, outToken, amountIn: debtIn })
-  return { debtIn, debtQuote }
+}): Promise<{ effectiveDebtIn: bigint; effectiveQuote: Quote }> {
+  const { requiredDebt, debtIn, inToken, collateralAsset, quote } = args
+  if (debtIn <= requiredDebt)
+    return {
+      effectiveDebtIn: debtIn,
+      effectiveQuote: await quote({
+        inToken,
+        outToken: collateralAsset,
+        amountIn: debtIn,
+        intent: 'exactIn',
+      }),
+    }
+
+  const adjustedDebtIn = requiredDebt
+  const reclamped = await quote({
+    inToken,
+    outToken: collateralAsset,
+    amountIn: adjustedDebtIn,
+    intent: 'exactIn',
+  })
+  return { effectiveDebtIn: adjustedDebtIn, effectiveQuote: reclamped }
+}
+
+/**
+ * Router-only preview used to determine the ideal target collateral and ideal debt for user equity.
+ */
+async function previewIdeal(args: {
+  config: Config
+  token: Address
+  userCollateralOut: bigint
+  chainId: number
+}): Promise<{ targetCollateral: bigint; idealDebt: bigint; idealShares: bigint }> {
+  const { config, token, userCollateralOut, chainId } = args
+  const p = await readLeverageRouterV2PreviewDeposit(config, {
+    args: [token, userCollateralOut],
+    chainId: chainId as SupportedChainId,
+  })
+  return {
+    targetCollateral: p.collateral,
+    idealDebt: p.debt,
+    idealShares: p.shares,
+  }
+}
+
+/**
+ * Manager preview with total collateral to derive requiredDebt and final shares.
+ */
+async function previewFinal(args: {
+  config: Config
+  token: Address
+  totalCollateral: bigint
+  chainId: number
+}): Promise<{ requiredDebt: bigint; shares: bigint }> {
+  const { config, token, totalCollateral, chainId } = args
+  const m = await readLeverageManagerV2PreviewDeposit(config, {
+    args: [token, totalCollateral],
+    chainId: chainId as SupportedChainId,
+  })
+  return { requiredDebt: m.debt, shares: m.shares }
 }
 
 async function getManagerAssets(args: {

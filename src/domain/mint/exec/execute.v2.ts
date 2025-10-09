@@ -86,7 +86,9 @@ export async function executeMintV2(params: {
   const hash = await writeLeverageRouterV2Deposit(config, {
     args: request.args,
     account,
-    ...(request.value ? { value: request.value } : {}),
+    // Router.deposit is nonpayable. ETH value for swaps (when needed) is sourced
+    // via WETH.withdraw within swap calls, not via msg.value on the deposit call.
+    // Never forward a non-zero value here to avoid nonpayable reverts.
     chainId: chain,
   })
   return { hash }

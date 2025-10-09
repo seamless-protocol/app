@@ -52,11 +52,6 @@ export function useMintExecution(params: {
     return (addresses.leverageManagerV2 as Address | undefined) ?? envManagerV2
   }, [envManagerV2, addresses.leverageManagerV2])
 
-  const multicallExecutorAddress = useMemo(() => {
-    // Prefer chain-scoped multicallExecutor (respects Tenderly overrides), fallback to env
-    return (addresses.multicallExecutor as Address | undefined) ?? envMulticallExecutor
-  }, [envMulticallExecutor, addresses.multicallExecutor])
-
   const canSubmit = useMemo(() => Boolean(account), [account])
 
   const mint = useCallback(
@@ -82,7 +77,9 @@ export function useMintExecution(params: {
           slippageBps,
           getPublicClient: (cid: number): PublicClient | undefined =>
             cid === chainId ? chainPublicClient : undefined,
-          ...(multicallExecutorAddress ? { fromAddress: multicallExecutorAddress } : {}),
+          // Use the router as fromAddress for aggregator quotes to
+          // align on-chain msg.sender semantics during execution
+          ...(routerAddressV2 ? { fromAddress: routerAddressV2 } : {}),
         })
 
         if (!quote) {
@@ -142,7 +139,6 @@ export function useMintExecution(params: {
       managerAddressV2,
       chainPublicClient,
       activePublicClient,
-      multicallExecutorAddress,
       switchChainAsync,
     ],
   )
