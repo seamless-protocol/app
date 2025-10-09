@@ -122,16 +122,27 @@ export async function planMintV2(params: {
 
   // 4) Final preview with total collateral to derive requiredDebt and shares
   const totalCollateral = userCollateralOut + debtQuote.out
-  const final = await previewFinal({ config, token, totalCollateral, chainId })
+  let final = await previewFinal({ config, token, totalCollateral, chainId })
 
-  // 5) Clamp to requiredDebt and re-quote if we sized above it
-  const { effectiveDebtIn, effectiveQuote } = await clampAndRequote({
-    requiredDebt: final.requiredDebt,
-    debtIn,
-    inToken: inTokenForQuote,
-    collateralAsset,
-    quote: quoteDebtToCollateral,
-  })
+  // 5) Ensure flash loan does not exceed manager previewed debt; if it does, reduce and re-quote.
+  let effectiveDebtIn = debtIn
+  let effectiveQuote = debtQuote
+  if (final.requiredDebt < debtIn) {
+    effectiveDebtIn = final.requiredDebt
+    effectiveQuote = await quoteDebtToCollateral({
+      inToken: inTokenForQuote,
+      outToken: collateralAsset,
+      amountIn: effectiveDebtIn,
+      intent: 'exactIn',
+    })
+    const totalCollateralAfterClamp = userCollateralOut + effectiveQuote.out
+    final = await previewFinal({
+      config,
+      token,
+      totalCollateral: totalCollateralAfterClamp,
+      chainId,
+    })
+  }
 
   // Build calls based on the amount actually used for the swap
   const calls: V2Calls = [
@@ -154,7 +165,7 @@ export async function planMintV2(params: {
     debtAsset,
     minShares,
     expectedShares: final.shares,
-    expectedDebt: effectiveDebtIn,
+    expectedDebt: final.requiredDebt,
     expectedTotalCollateral: userCollateralOut + effectiveQuote.out,
     expectedExcessDebt: excessDebt,
     calls,
@@ -180,74 +191,23 @@ export async function quoteDebtForMissingCollateral(args: {
   const { idealDebt, neededOut, inToken, outToken, quote } = args
   let debtIn = idealDebt
 
-  // Exact-in refinement starting from manager-sized idealDebt
+  // Exact-in quote with manager-sized idealDebt
   let debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
 
-  // Case 1: We already meet or exceed the required out; try to tighten input down.
-  if (debtQuote.out >= neededOut) {
-    const MAX_REFINES = 6
-    for (let i = 0; i < MAX_REFINES; i++) {
-      const adjustedDown = mulDivFloor(debtIn, neededOut, debtQuote.out)
-      if (adjustedDown >= debtIn || adjustedDown === 0n) break
-      const q = await quote({ inToken, outToken, amountIn: adjustedDown, intent: 'exactIn' })
-      if (q.out >= neededOut) {
-        debtIn = adjustedDown
-        debtQuote = q
-      } else {
-        // We pushed too far down; keep last good quote
-        break
-      }
+  // If the quote out is below the target, proportionally reduce the flash loan input once,
+  // then re-quote. This mirrors the integration test behavior (reduce input to match pathing).
+  if (debtQuote.out < neededOut) {
+    const adjusted = mulDivFloor(idealDebt, debtQuote.out, neededOut)
+    if (adjusted > 0n && adjusted < debtIn) {
+      debtIn = adjusted
+      debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
     }
-    return { debtIn, debtQuote }
   }
 
-  // Case 2: Out is below target; scale input up to reach neededOut.
-  {
-    const MAX_REFINES = 6
-    for (let i = 0; i < MAX_REFINES; i++) {
-      // Scale proportionally: debtIn *= neededOut / out
-      let adjustedUp = mulDivFloor(debtIn, neededOut, debtQuote.out || 1n)
-      if (adjustedUp <= debtIn) adjustedUp = debtIn + 1n
-      const q = await quote({ inToken, outToken, amountIn: adjustedUp, intent: 'exactIn' })
-      debtIn = adjustedUp
-      debtQuote = q
-      if (q.out >= neededOut) break
-    }
-    return { debtIn, debtQuote }
-  }
+  return { debtIn, debtQuote }
 }
 
-/**
- * Clamp to manager.requiredDebt and re-quote swap calldata for the clamped input when needed.
- */
-async function clampAndRequote(args: {
-  requiredDebt: bigint
-  debtIn: bigint
-  inToken: Address
-  collateralAsset: Address
-  quote: QuoteFn
-}): Promise<{ effectiveDebtIn: bigint; effectiveQuote: Quote }> {
-  const { requiredDebt, debtIn, inToken, collateralAsset, quote } = args
-  if (debtIn <= requiredDebt)
-    return {
-      effectiveDebtIn: debtIn,
-      effectiveQuote: await quote({
-        inToken,
-        outToken: collateralAsset,
-        amountIn: debtIn,
-        intent: 'exactIn',
-      }),
-    }
-
-  const adjustedDebtIn = requiredDebt
-  const reclamped = await quote({
-    inToken,
-    outToken: collateralAsset,
-    amountIn: adjustedDebtIn,
-    intent: 'exactIn',
-  })
-  return { effectiveDebtIn: adjustedDebtIn, effectiveQuote: reclamped }
-}
+// No clamping helper: deposit returns excess debt to the user when requiredDebt > flash loan.
 
 /**
  * Router-only preview used to determine the ideal target collateral and ideal debt for user equity.

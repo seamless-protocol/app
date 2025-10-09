@@ -38,9 +38,6 @@ export function useMintExecution(params: {
   const addresses = useMemo(() => getContractAddresses(chainId), [chainId])
   const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
   const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
-  const envMulticallExecutor = import.meta.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] as
-    | Address
-    | undefined
 
   const routerAddressV2 = useMemo(() => {
     // Prefer chain-scoped addresses (respects Tenderly overrides), fallback to env
