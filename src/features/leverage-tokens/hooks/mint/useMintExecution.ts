@@ -38,6 +38,10 @@ export function useMintExecution(params: {
   const addresses = useMemo(() => getContractAddresses(chainId), [chainId])
   const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
   const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
+  const multicallExecutorAddress = useMemo(
+    () => (addresses.multicallExecutor as Address | undefined) ?? undefined,
+    [addresses.multicallExecutor],
+  )
 
   const routerAddressV2 = useMemo(() => {
     // Prefer chain-scoped addresses (respects Tenderly overrides), fallback to env
@@ -74,9 +78,8 @@ export function useMintExecution(params: {
           slippageBps,
           getPublicClient: (cid: number): PublicClient | undefined =>
             cid === chainId ? chainPublicClient : undefined,
-          // Use the router as fromAddress for aggregator quotes to
-          // align on-chain msg.sender semantics during execution
-          ...(routerAddressV2 ? { fromAddress: routerAddressV2 } : {}),
+          // Use the multicall executor as fromAddress; it executes swap calls on-chain
+          ...(multicallExecutorAddress ? { fromAddress: multicallExecutorAddress } : {}),
         })
 
         if (!quote) {

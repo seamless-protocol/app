@@ -96,6 +96,8 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       // Allow overriding `fromAddress` to match the executor when needed; otherwise
       // default to the router address.
       fromAddress: (fromAddress ?? router) as Address,
+      // Ensure aggregator sends output to the router so the repay leg has funds
+      toAddress: router as Address,
       slippage,
       ...(integrator ? { integrator } : {}),
       order,
@@ -140,6 +142,7 @@ function buildQuoteUrl(
     intent?: 'exactIn' | 'exactOut'
     router: Address
     fromAddress: Address
+    toAddress: Address
     slippage: string
     integrator?: string
     order: LifiOrder
@@ -158,6 +161,7 @@ function buildQuoteUrl(
   url.searchParams.set('toChain', String(params.chainId))
   url.searchParams.set('fromToken', normalizeToken(params.inToken))
   url.searchParams.set('toToken', normalizeToken(params.outToken))
+  url.searchParams.set('toAddress', getAddress(params.toAddress))
   // Per LiFi docs, exact-out quotes must provide `toAmount`.
   // Exact-in quotes provide `fromAmount`.
   if (params.intent === 'exactOut') {
