@@ -54,7 +54,7 @@ const navigationItems = [
     icon: Coins,
     description: 'Stake SEAM tokens',
     subtitle: 'Stake SEAM tokens to earn protocol rewards',
-    externalUrl: 'https://legacy.seamlessprotocol.com/#/?tab=Staking',
+    externalUrl: 'https://staking.seamlessprotocol.com/#/?tab=Staking',
   },
   features.governance && {
     id: 'governance',
@@ -62,7 +62,7 @@ const navigationItems = [
     icon: Vote,
     description: 'Vote and shape proposals',
     subtitle: 'Participate in protocol governance and voting',
-    externalUrl: 'https://legacy.seamlessprotocol.com/#/governance',
+    externalUrl: 'https://staking.seamlessprotocol.com/#/governance',
   },
   // Place Vaults at the end of the list
   features.morphoVaults && {

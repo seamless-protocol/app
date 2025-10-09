@@ -45,14 +45,14 @@ const navigationItems = [
     title: 'Staking',
     icon: Coins,
     description: 'Stake SEAM tokens',
-    externalUrl: 'https://legacy.seamlessprotocol.com/#/?tab=Staking',
+    externalUrl: 'https://staking.seamlessprotocol.com/#/?tab=Staking',
   },
   {
     id: 'governance',
     title: 'Governance',
     icon: Vote,
     description: 'Participate in decisions',
-    externalUrl: 'https://legacy.seamlessprotocol.com/#/governance',
+    externalUrl: 'https://staking.seamlessprotocol.com/#/governance',
   },
 ]
 
