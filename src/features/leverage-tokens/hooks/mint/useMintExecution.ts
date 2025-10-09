@@ -139,6 +139,7 @@ export function useMintExecution(params: {
       managerAddressV2,
       chainPublicClient,
       activePublicClient,
+      multicallExecutorAddress,
       switchChainAsync,
     ],
   )
