@@ -10,9 +10,9 @@ import {
   Vote,
 } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
-import { useProtocolTVL } from '@/features/leverage-tokens/hooks/useProtocolTVL'
 import { features } from '@/lib/config/features'
 import { useGA } from '@/lib/config/ga4.config'
+import { useDeFiLlamaProtocolTVL } from '@/lib/defillama/useProtocolTVL'
 import { formatCurrency } from '@/lib/utils/formatting'
 import { ConnectButtonTest } from './ConnectButtonTest'
 import { DiscordIcon } from './icons/brands/discord-icon'
@@ -123,7 +123,13 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const analytics = useGA()
-  const { tvlUsd, isLoading: isProtocolTvlLoading, isError: isProtocolTvlError } = useProtocolTVL()
+  const {
+    data: defillamaData,
+    isLoading: isProtocolTvlLoading,
+    isError: isProtocolTvlError,
+  } = useDeFiLlamaProtocolTVL()
+
+  const tvlUsd = defillamaData?.tvl ?? 0
 
   // Track navigation between pages
   useEffect(() => {
