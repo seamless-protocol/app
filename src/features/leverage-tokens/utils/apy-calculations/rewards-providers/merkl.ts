@@ -48,8 +48,6 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
    */
   async fetchRewardsApr(tokenAddress: Address, chainId?: number): Promise<BaseRewardsAprData> {
     try {
-      logger.info('Fetching rewards APR for token', { tokenAddress })
-
       // Query Merkl for opportunities by token address, optionally filtered by chain ID
       const opportunities = await this.fetchOpportunitiesByToken(tokenAddress, chainId)
 
