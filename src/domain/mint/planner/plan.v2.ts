@@ -109,6 +109,14 @@ export async function planMintV2(params: {
     epsilonBps,
   } = params
 
+  // Basic input validation
+  if (slippageBps < 0 || slippageBps > 5_000) {
+    throw new Error('slippageBps out of range (0-5000)')
+  }
+  if (typeof epsilonBps === 'number' && (epsilonBps < 0 || epsilonBps > 100)) {
+    throw new Error('epsilonBps out of range (0-100)')
+  }
+
   // 1) Compute user collateral and parallelize initial reads (assets + ideal preview)
   const userCollateralOut = equityInInputAsset
   const [ideal, assets] = await Promise.all([
@@ -154,28 +162,18 @@ export async function planMintV2(params: {
   debugMintPlan('quote.initial', { debtIn, out: debtQuote.out, minOut: debtQuote.minOut ?? 0n })
   assertDebtSwapQuote(debtQuote, debtAsset, useNativeDebtPath)
 
-  // 4) Final preview with total collateral to derive requiredDebt and shares
+  // 4) Final preview (nice-weather) and worst-case preview (minOut) in parallel
   const totalCollateralInitial = userCollateralOut + debtQuote.out
-  let final = await previewFinal({
-    config,
-    token,
-    totalCollateral: totalCollateralInitial,
-    chainId,
-  })
+  const guaranteedOut = debtQuote.minOut
+  if (guaranteedOut <= 0n) throw new Error('Swap quote minOut must be > 0')
+  let [final, worstCase] = await Promise.all([
+    previewFinal({ config, token, totalCollateral: totalCollateralInitial, chainId }),
+    previewFinal({ config, token, totalCollateral: userCollateralOut + guaranteedOut, chainId }),
+  ])
   debugMintPlan('final.initial', {
     totalCollateral: totalCollateralInitial,
     requiredDebt: final.requiredDebt,
     shares: final.shares,
-  })
-
-  // 5) Single-pass minOut-aware sizing. Use worst-case (minOut) to fail-closed.
-  const guaranteedOut = debtQuote.minOut
-  if (guaranteedOut <= 0n) throw new Error('Swap quote minOut must be > 0')
-  const worstCase = await previewFinal({
-    config,
-    token,
-    totalCollateral: userCollateralOut + guaranteedOut,
-    chainId,
   })
   debugMintPlan('worst.preview', {
     totalCollateral: userCollateralOut + guaranteedOut,
@@ -185,8 +183,8 @@ export async function planMintV2(params: {
 
   const eps = typeof epsilonBps === 'number' ? BigInt(epsilonBps) : EPS_BPS
   // Bias to >= worst-case requirement using a tiny upward epsilon
-  let effectiveDebtIn = (worstCase.requiredDebt * (BPS + eps)) / BPS
-  let effectiveQuote = await quoteDebtToCollateral({
+  const effectiveDebtIn = (worstCase.requiredDebt * (BPS + eps)) / BPS
+  const effectiveQuote = await quoteDebtToCollateral({
     inToken: inTokenForQuote,
     outToken: collateralAsset,
     amountIn: effectiveDebtIn,
@@ -206,7 +204,6 @@ export async function planMintV2(params: {
     requiredDebt: final.requiredDebt,
     shares: final.shares,
   })
-
 
   // Build calls based on the amount actually used for the swap
   const calls: V2Calls = [
@@ -386,7 +383,8 @@ function assertDebtSwapQuote(
     const approval = quote.approvalTarget
     if (!approval) throw new Error('Missing approval target for ERC20 swap')
     const normalizedApproval = getAddress(approval)
-    if (normalizedApproval === zeroAddress) throw new Error('Missing approval target for ERC20 swap')
+    if (normalizedApproval === zeroAddress)
+      throw new Error('Missing approval target for ERC20 swap')
     if (normalizedApproval === getAddress(debtAsset)) {
       throw new Error('Approval target cannot equal input token')
     }
