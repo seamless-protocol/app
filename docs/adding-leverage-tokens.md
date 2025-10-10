@@ -178,20 +178,18 @@ The `apyConfig` section allows you to configure how APY data is calculated and d
 apyConfig: {
   // APR Provider Configuration
   aprProvider?: {
-    type: APR_PROVIDERS.LIDO | APR_PROVIDERS.ETHERFI,
-    id?: string // Optional provider-specific identifier (not needed for current providers)
+    type: APR_PROVIDERS.LIDO | APR_PROVIDERS.ETHERFI | APR_PROVIDERS.DEFI_LLAMA,
+    id?: string // Required only for DeFi Llama (protocol ID)
   },
   
   // Borrow APR Provider Configuration  
   borrowAprProvider?: {
     type: BORROW_APR_PROVIDERS.MORPHO,
-    id?: string // Optional provider-specific identifier
   },
   
   // Rewards Provider Configuration
   rewardsProvider?: {
     type: REWARDS_PROVIDERS.MERKL,
-    id?: string // Optional provider-specific identifier
   },
   
   // Points Multiplier Configuration
@@ -211,9 +209,11 @@ apyConfig: {
 - No `id` field needed - automatically uses weETH
 - Fetches APR data from Ether.fi's API
 
-**Future Providers (e.g., DeFi Llama):**
-- Will require `id` field to specify the token/protocol
-- Used for providers that support multiple tokens or protocols
+**DeFi Llama APR Provider:**
+- Supports multiple protocols (stETH, Aave, etc.)
+- Requires `id` field to specify the protocol (e.g., `'747c1d2a-c668-4682-b9f9-296708a3dd90'` for stETH)
+- Fetches APR data from DeFi Llama's API: `https://yields.llama.fi/chart/{protocolId}`
+- Uses 7-day average for more stable APR values
 
 ### Default Values
 
@@ -273,12 +273,12 @@ apyConfig: {
 }
 ```
 
-**Future DeFi Llama (multiple protocols):**
+**DeFi Llama (multiple protocols):**
 ```typescript
 apyConfig: {
   aprProvider: {
-    type: APR_PROVIDERS.DEFI_LLAMA, // When implemented
-    id: '747c1d2a-c668-4682-b9f9-296708a3dd90', // Specify the protocol
+    type: APR_PROVIDERS.DEFI_LLAMA,
+    id: '747c1d2a-c668-4682-b9f9-296708a3dd90', 
   },
 }
 ```

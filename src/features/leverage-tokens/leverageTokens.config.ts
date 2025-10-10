@@ -70,11 +70,9 @@ export interface LeverageTokenConfig {
     }
     borrowAprProvider?: {
       type: BORROW_APR_PROVIDERS
-      id?: string // Optional provider-specific identifier
     }
     rewardsProvider?: {
       type: REWARDS_PROVIDERS
-      id?: string // Optional provider-specific identifier
     }
     pointsMultiplier?: number // Optional points multiplier (defaults to 0 if not provided)
   }
@@ -161,7 +159,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     supplyCap: 200,
     apyConfig: {
       aprProvider: {
-        type: APR_PROVIDERS.LIDO,
+        type: APR_PROVIDERS.DEFI_LLAMA,
+        id: '747c1d2a-c668-4682-b9f9-296708a3dd90',
       },
     },
     collateralAsset: {
