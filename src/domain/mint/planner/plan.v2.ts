@@ -1,8 +1,10 @@
 /**
  * Planner for V2 single-tx mint.
  *
- * Builds optional user-input->collateral conversion and the debt->collateral swap, then
+ * Builds the debt->collateral swap sized from router/manager previews, then
  * re-previews the manager state with total collateral to ensure repayability.
+ * Note: input-asset->collateral conversions are not handled here; the current
+ * V2 planner assumes `inputAsset === collateralAsset`.
  */
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
@@ -38,10 +40,12 @@ type V2Call = RouterV2Call
 // Base WETH native path support
 const WETH_WITHDRAW_ABI = parseAbi(['function withdraw(uint256 wad)'])
 
+// No additional normalizers; use viem's getAddress where needed
+
 /**
  * Structured plan for executing a single-transaction mint.
  *
- * Fields prefixed with "expected" are derived from LeverageManager.previewMint and
+ * Fields prefixed with "expected" are derived from LeverageManager.previewDeposit and
  * are used to size swaps and to provide UI expectations. "minShares" is a
  * slippage-adjusted floor used for the on-chain mint call.
  */
@@ -75,9 +79,9 @@ export type MintPlanV2 = {
   swapMinOut: bigint
   /**
    * Encoded router calls (approve + swap) to be submitted to V2 `mintWithCalls`.
-   * The sequence always includes the debt->collateral swap plus an ERC-20 approve
-   * when the debt asset is not the wrapped native token; if `inputAsset` differs
-   * from `collateralAsset`, it also includes an input->collateral approval and swap.
+   * The sequence includes the debt->collateral swap plus an ERC-20 approve when
+   * the debt asset is not the wrapped native token. Input->collateral conversions
+   * are out of scope for this planner.
    */
   calls: V2Calls
 }
@@ -105,15 +109,20 @@ export async function planMintV2(params: {
     epsilonBps,
   } = params
 
-  // 1) Resolve manager assets and enforce collateral-only input in initial scope
+  // 1) Resolve manager assets and enforce collateral-only input (current scope)
   const { collateralAsset, debtAsset } = await getManagerAssets({
     config,
     token,
     chainId,
   })
+  const normalizedInputAsset = getAddress(inputAsset)
+  const normalizedCollateralAsset = getAddress(collateralAsset)
+  const normalizedDebtAsset = getAddress(debtAsset)
   debugMintPlan('assets', { inputAsset, collateralAsset, debtAsset })
-  if (getAddress(inputAsset) !== getAddress(collateralAsset)) {
-    throw new Error('Router v2 initial scope requires collateral-only input')
+  if (normalizedInputAsset !== normalizedCollateralAsset) {
+    throw new Error(
+      'Mint currently requires inputAsset to equal collateralAsset (no input conversion)',
+    )
   }
   const userCollateralOut = equityInInputAsset
 
@@ -130,7 +139,8 @@ export async function planMintV2(params: {
 
   // 3) Quote debt->collateral for the missing collateral
   const chainWeth = getContractAddresses(chainId).tokens?.weth ?? BASE_WETH
-  const useNativeDebtPath = getAddress(debtAsset) === getAddress(chainWeth)
+  const normalizedWeth = getAddress(chainWeth)
+  const useNativeDebtPath = normalizedDebtAsset === normalizedWeth
   const inTokenForQuote = useNativeDebtPath ? ETH_SENTINEL : debtAsset
   // Default to exact-in path for robustness across venues
   const r = await quoteDebtForMissingCollateral({
@@ -146,7 +156,12 @@ export async function planMintV2(params: {
 
   // 4) Final preview with total collateral to derive requiredDebt and shares
   const totalCollateralInitial = userCollateralOut + debtQuote.out
-  let final = await previewFinal({ config, token, totalCollateral: totalCollateralInitial, chainId })
+  let final = await previewFinal({
+    config,
+    token,
+    totalCollateral: totalCollateralInitial,
+    chainId,
+  })
   debugMintPlan('final.initial', {
     totalCollateral: totalCollateralInitial,
     requiredDebt: final.requiredDebt,
@@ -246,7 +261,8 @@ export async function planMintV2(params: {
     worstCaseRequiredDebt: worstCase.requiredDebt,
     worstCaseShares: worstCase.shares,
     swapExpectedOut: effectiveQuote.out,
-    swapMinOut: typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : effectiveQuote.out,
+    swapMinOut:
+      typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : effectiveQuote.out,
     calls,
   }
 }
