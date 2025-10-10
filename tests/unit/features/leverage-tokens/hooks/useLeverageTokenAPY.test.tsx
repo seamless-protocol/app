@@ -147,27 +147,27 @@ describe('useLeverageTokenAPY', () => {
       const apyData = result.current.data
       expect(apyData).toBeDefined()
 
-      // Staking Yield = Protocol APR * leverage (convert from percentage to decimal)
-      // 5.2% * 17 = 88.4% = 0.884
-      expect(apyData?.stakingYield).toBeCloseTo(0.884, 3)
+      // Staking Yield = Protocol APR * leverage (APR is in percentage format)
+      // 5.2% * 17 = 88.4%
+      expect(apyData?.stakingYield).toBeCloseTo(88.4, 3)
 
-      // Restaking Yield = Protocol restaking APR * leverage (convert from percentage to decimal)
-      // 2.1% * 17 = 35.7% = 0.357
-      expect(apyData?.restakingYield).toBeCloseTo(0.357, 3)
+      // Restaking Yield = Protocol restaking APR * leverage (APR is in percentage format)
+      // 2.1% * 17 = 35.7%
+      expect(apyData?.restakingYield).toBeCloseTo(35.7, 3)
 
-      // Borrow Rate = negative cost based on leverage
-      // borrowAPY * -1 * (targetLeverage - 1) = 0.0387 * -1 * (17 - 1) = -0.6192
-      expect(apyData?.borrowRate).toBeCloseTo(-0.6192, 4)
+      // Borrow Rate = negative cost based on leverage (convert decimal to percentage)
+      // borrowAPY * -100 * (targetLeverage - 1) = 0.0387 * -100 * (17 - 1) = -61.92
+      expect(apyData?.borrowRate).toBeCloseTo(-61.92, 4)
 
       // Rewards APR = 0.8% = 0.008
       expect(apyData?.rewardsAPR).toBeCloseTo(0.008, 3)
 
-      // Points = targetLeverage * 2 = 17 * 2 = 34
-      expect(apyData?.points).toBe(34)
+      // Points = leverageToken.apyConfig?.pointsMultiplier ?? 0 = 0 (no apyConfig in mock)
+      expect(apyData?.points).toBe(0)
 
       // Total APY = stakingYield + restakingYield + rewardsAPR + borrowRate
-      // 0.884 + 0.357 + 0.008 + (-0.6192) = 0.6298
-      expect(apyData?.totalAPY).toBeCloseTo(0.6298, 4)
+      // 88.4 + 35.7 + 0.008 + (-61.92) = 62.188
+      expect(apyData?.totalAPY).toBeCloseTo(62.188, 4)
     })
 
     it('should handle missing leverage token config gracefully', async () => {
@@ -245,7 +245,7 @@ describe('useLeverageTokenAPY', () => {
       expect(apyData?.restakingYield).toBe(0)
       expect(apyData?.borrowRate).toBe(0)
       expect(apyData?.rewardsAPR).toBe(0)
-      expect(apyData?.points).toBe(34) // Still calculated from leverage
+      expect(apyData?.points).toBe(0) // leverageToken.apyConfig?.pointsMultiplier ?? 0 (no apyConfig in mock)
       expect(apyData?.totalAPY).toBe(0)
     })
   })
@@ -403,20 +403,20 @@ describe('useLeverageTokenAPY', () => {
       const apyData = result.current.data
       expect(apyData).toBeDefined()
 
-      // Staking Yield = 5.2% * 100 = 520% = 5.2
-      expect(apyData?.stakingYield).toBeCloseTo(5.2, 3)
+      // Staking Yield = 5.2% * 100 = 520%
+      expect(apyData?.stakingYield).toBeCloseTo(520, 3)
 
-      // Restaking Yield = 2.1% * 100 = 210% = 2.1
-      expect(apyData?.restakingYield).toBeCloseTo(2.1, 3)
+      // Restaking Yield = 2.1% * 100 = 210%
+      expect(apyData?.restakingYield).toBeCloseTo(210, 3)
 
-      // Borrow Rate = 0.0387 * -1 * (100 - 1) = -3.8313
-      expect(apyData?.borrowRate).toBeCloseTo(-3.8313, 4)
+      // Borrow Rate = 0.0387 * -100 * (100 - 1) = -383.13
+      expect(apyData?.borrowRate).toBeCloseTo(-383.13, 4)
 
-      // Points = 100 * 2 = 200
-      expect(apyData?.points).toBe(200)
+      // Points = leverageToken.apyConfig?.pointsMultiplier ?? 0 = 0 (no apyConfig in mock)
+      expect(apyData?.points).toBe(0)
 
-      // Total APY = 5.2 + 2.1 + 0.008 + (-3.8313) = 3.4767
-      expect(apyData?.totalAPY).toBeCloseTo(3.4767, 4)
+      // Total APY = 520 + 210 + 0.008 + (-383.13) = 346.878
+      expect(apyData?.totalAPY).toBeCloseTo(346.878, 4)
     })
   })
 })

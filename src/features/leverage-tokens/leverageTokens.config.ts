@@ -2,6 +2,9 @@ import type { Address } from 'viem'
 import { BaseLogo, EthereumLogo } from '@/components/icons/logos'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
+import { APR_PROVIDERS } from './utils/apy-calculations/apr-providers'
+import type { BORROW_APR_PROVIDERS } from './utils/apy-calculations/borrow-apy-providers'
+import type { REWARDS_PROVIDERS } from './utils/apy-calculations/rewards-providers'
 
 const BASE_UNISWAP_V2_ROUTER = '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' as Address
 
@@ -58,6 +61,23 @@ export interface LeverageTokenConfig {
   // When true, omit from production UI but keep accessible for testing harnesses
   isTestOnly?: boolean
 
+  // APY configuration
+  apyConfig?: {
+    aprProvider?: {
+      type: APR_PROVIDERS
+      id?: string // Optional provider-specific identifier
+    }
+    borrowAprProvider?: {
+      type: BORROW_APR_PROVIDERS
+      id?: string // Optional provider-specific identifier
+    }
+    rewardsProvider?: {
+      type: REWARDS_PROVIDERS
+      id?: string // Optional provider-specific identifier
+    }
+    pointsMultiplier?: number // Optional points multiplier (defaults to 0 if not provided)
+  }
+
   // Asset configuration
   collateralAsset: {
     symbol: string
@@ -98,6 +118,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainName: 'Ethereum',
     chainLogo: EthereumLogo,
     supplyCap: 200,
+    apyConfig: {
+      aprProvider: {
+        type: APR_PROVIDERS.LIDO,
+      },
+    },
     collateralAsset: {
       symbol: 'wstETH',
       name: 'Wrapped stETH',
@@ -134,6 +159,9 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainLogo: BaseLogo,
     supplyCap: 150,
     isTestOnly: true,
+    apyConfig: {
+      pointsMultiplier: 7,
+    },
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether.fi ETH',
@@ -195,10 +223,15 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   },
 }
 
-// Helper function to get leverage token config by address
-export function getLeverageTokenConfig(address: Address): LeverageTokenConfig | undefined {
+// Helper function to get leverage token config by address and optionally chain ID
+export function getLeverageTokenConfig(
+  address: Address,
+  chainId?: number,
+): LeverageTokenConfig | undefined {
   return getFilteredConfigs().find(
-    (config) => config.address.toLowerCase() === address.toLowerCase(),
+    (config) =>
+      config.address.toLowerCase() === address.toLowerCase() &&
+      (chainId === undefined || config.chainId === chainId),
   )
 }
 

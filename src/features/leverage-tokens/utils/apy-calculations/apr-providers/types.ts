@@ -19,5 +19,5 @@ export interface AprFetcher {
   /** Human-readable name */
   protocolName: string
   /** Fetch APR data for this protocol */
-  fetchApr(): Promise<BaseAprData>
+  fetchApr(collateralSymbol?: string): Promise<BaseAprData>
 }
