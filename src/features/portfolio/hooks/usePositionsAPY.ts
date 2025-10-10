@@ -82,7 +82,11 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
             // Fetch all required data in parallel
             const [leverageRatios, aprData, borrowApyData, rewardsAPRData] = await Promise.all([
               fetchLeverageRatios(tokenAddress, tokenConfig.chainId, config),
-              fetchAprForToken(tokenAddress, tokenConfig.chainId),
+              fetchAprForToken(
+                tokenAddress,
+                tokenConfig.chainId,
+                tokenConfig.collateralAsset.symbol,
+              ),
               fetchBorrowApyForToken(tokenAddress, tokenConfig.chainId, config),
               fetchRewardsAprForToken(tokenAddress, tokenConfig.chainId),
             ])

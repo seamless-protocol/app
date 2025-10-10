@@ -115,21 +115,20 @@ export function useLeverageTokenAPY({
       const borrowAPY = borrowApyData.borrowAPY
       const targetLeverage = leverageRatios.targetLeverage
 
-      // Staking Yield = Protocol APR * leverage (convert from percentage to decimal)
+      // Staking Yield = Protocol APR * leverage (APR is already in percentage format)
       const stakingYield =
-        (aprData.stakingAPR && targetLeverage
-          ? (aprData.stakingAPR / 100) * targetLeverage
-          : undefined) ?? 0
+        (aprData.stakingAPR && targetLeverage ? aprData.stakingAPR * targetLeverage : undefined) ??
+        0
 
-      // Restaking Yield = Protocol restaking APR * leverage (convert from percentage to decimal)
+      // Restaking Yield = Protocol restaking APR * leverage (APR is already in percentage format)
       const restakingYield =
         (aprData.restakingAPR && targetLeverage
-          ? (aprData.restakingAPR / 100) * targetLeverage
+          ? aprData.restakingAPR * targetLeverage
           : undefined) ?? 0
 
-      // Borrow Rate = negative cost based on leverage
+      // Borrow Rate = negative cost based on leverage (convert decimal to percentage)
       const borrowRate =
-        (borrowAPY && targetLeverage ? borrowAPY * -1 * (targetLeverage - 1) : undefined) ?? 0
+        (borrowAPY && targetLeverage ? borrowAPY * -100 * (targetLeverage - 1) : undefined) ?? 0
 
       // Rewards APR from external sources (Fuul, etc.)
       const rewardsAPR = rewardsAPRData?.rewardsAPR ?? 0
