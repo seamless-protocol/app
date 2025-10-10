@@ -78,6 +78,11 @@ export interface LeverageTokenConfig {
     collateralToDebt?: SwapConfig
   }
 
+  // Planner tuning (optional)
+  planner?: {
+    epsilonBps?: number // tiny safety margin used in sizing (default 10 bps)
+  }
+
   // Related resources (optional)
   relatedResources?: {
     underlyingPlatforms: Array<ResourceItem>
@@ -112,15 +117,15 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       decimals: 18,
     },
     swaps: {
+      // Temporarily force Uniswap V2 routing on Base to validate logic
       debtToCollateral: {
         type: 'lifi',
-        allowBridges: 'none',
       },
       collateralToDebt: {
         type: 'lifi',
-        allowBridges: 'none',
       },
     },
+    planner: { epsilonBps: 10 },
   },
   [LeverageTokenKey.WSTETH_ETH_2X_MAINNET]: {
     address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
@@ -156,6 +161,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         allowBridges: 'none',
       },
     },
+    planner: { epsilonBps: 10 },
   },
   [LeverageTokenKey.WEETH_WETH_17X_TENDERLY]: {
     address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,

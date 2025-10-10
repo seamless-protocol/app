@@ -116,7 +116,18 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     const res = await fetch(url.toString(), { method: 'GET', headers })
     if (!res.ok) throw new Error(`LiFi quote failed: ${res.status} ${res.statusText}`)
     const step = (await res.json()) as Step
-    return mapStepToQuote(step)
+    if ((readEnv('VITE_LIFI_DEBUG') ?? readEnv('LIFI_DEBUG')) === '1') {
+      // eslint-disable-next-line no-console
+      console.info('[LiFi] step', {
+        fromAmount: step.estimate?.fromAmount,
+        toAmount: step.estimate?.toAmount,
+        toAmountMin: step.estimate?.toAmountMin,
+        approvalAddress: step.estimate?.approvalAddress ?? step.transactionRequest?.to,
+        hasTxData: Boolean(step.transactionRequest?.data),
+      })
+    }
+    const wantsNativeIn = inToken.toLowerCase() === ETH_SENTINEL.toLowerCase()
+    return mapStepToQuote(step, wantsNativeIn)
   }
 }
 
@@ -180,22 +191,25 @@ function buildQuoteUrl(
   return url
 }
 
-function mapStepToQuote(step: Step) {
+function mapStepToQuote(step: Step, wantsNativeIn: boolean) {
   const tx = step.transactionRequest
   const approvalTarget = step.estimate?.approvalAddress || tx?.to
   if (!approvalTarget) throw new Error('LiFi quote missing approval target')
   const data = tx?.data
   if (!data) throw new Error('LiFi quote missing transaction data')
 
-  const outStr = step.estimate?.toAmountMin || step.estimate?.toAmount
-  const out = outStr ? BigInt(outStr) : 0n
+  const expectedStr = step.estimate?.toAmount
+  const minStr = step.estimate?.toAmountMin
+  const out = expectedStr ? BigInt(expectedStr) : minStr ? BigInt(minStr) : 0n
+  const minOut = minStr ? BigInt(minStr) : out
   const maxIn = step.estimate?.fromAmount ? BigInt(step.estimate.fromAmount) : undefined
 
   return {
     out,
-    minOut: out,
+    minOut,
     ...(typeof maxIn === 'bigint' ? { maxIn } : {}),
     approvalTarget: getAddress(approvalTarget),
     calldata: data,
+    wantsNativeIn,
   }
 }

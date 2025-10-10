@@ -128,6 +128,7 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
       minOut,
       approvalTarget: normalizedRouter,
       calldata,
+      ...(isNativeIn ? { wantsNativeIn: true } : {}),
     }
   }
 }

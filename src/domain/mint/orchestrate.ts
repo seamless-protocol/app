@@ -118,6 +118,7 @@ export async function orchestrateMint(params: {
     plan: {
       inputAsset: plan.inputAsset,
       equityInInputAsset: plan.equityInInputAsset,
+      flashLoanAmount: plan.flashLoanAmount,
       minShares: plan.minShares,
       calls: plan.calls,
       expectedTotalCollateral: plan.expectedTotalCollateral,

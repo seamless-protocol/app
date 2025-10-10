@@ -15,6 +15,7 @@ interface UseMintPlanPreviewParams {
   chainId: number
   quote?: QuoteFn
   debounceMs?: number
+  epsilonBps?: number
 }
 
 export function useMintPlanPreview({
@@ -26,6 +27,7 @@ export function useMintPlanPreview({
   chainId,
   quote,
   debounceMs = 500,
+  epsilonBps,
 }: UseMintPlanPreviewParams) {
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
   const enabled = typeof debounced === 'bigint' && debounced > 0n && typeof quote === 'function'
@@ -35,6 +37,7 @@ export function useMintPlanPreview({
     addr: token,
     amount: debounced ?? 0n,
     slippageBps,
+    ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
   }
 
   const query = useQuery({
@@ -56,6 +59,7 @@ export function useMintPlanPreview({
         slippageBps,
         quoteDebtToCollateral: quote,
         chainId,
+        ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
       })
     },
   })

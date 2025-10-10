@@ -1,11 +1,9 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig, usePublicClient, useSwitchChain } from 'wagmi'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
-import type { SupportedChainId } from '@/lib/contracts/addresses'
-import { readLeverageManagerV2ConvertToAssets } from '@/lib/contracts/generated'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses } from '../../../../lib/contracts/addresses'
@@ -114,16 +112,19 @@ export function LeverageTokenMintModal({
     enabled: Boolean(userAddress && isConnected),
   })
 
-  // Get USD price for collateral asset
+  // Get USD prices for collateral and debt assets
   const { data: usdPriceMap, isLoading: isUsdPriceLoading } = useUsdPrices({
     chainId: leverageTokenConfig.chainId,
-    addresses: [leverageTokenConfig.collateralAsset.address],
-    enabled: Boolean(leverageTokenConfig.collateralAsset.address),
+    addresses: [leverageTokenConfig.collateralAsset.address, leverageTokenConfig.debtAsset.address],
+    enabled: Boolean(
+      leverageTokenConfig.collateralAsset.address && leverageTokenConfig.debtAsset.address,
+    ),
   })
 
-  // Get USD price for the collateral asset
+  // USD prices
   const collateralUsdPrice =
     usdPriceMap?.[leverageTokenConfig.collateralAsset.address.toLowerCase()]
+  const debtUsdPrice = usdPriceMap?.[leverageTokenConfig.debtAsset.address.toLowerCase()]
 
   // Format balance for display
   const collateralBalanceFormatted = collateralBalance
@@ -187,39 +188,135 @@ export function LeverageTokenMintModal({
     ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
   })
 
-  // Estimate USD value of expected shares using manager's convertToAssets(1e18)
-  const sharePriceQuery = useQuery({
-    queryKey: ['lt-share-price', leverageTokenAddress, leverageTokenConfig.chainId],
-    enabled: Boolean(leverageTokenAddress && collateralUsdPrice),
-    staleTime: 60_000,
-    refetchOnWindowFocus: false,
-    queryFn: async () => {
-      const one = 10n ** 18n
-      return readLeverageManagerV2ConvertToAssets(wagmiConfig, {
-        args: [leverageTokenAddress, one],
-        chainId: leverageTokenConfig.chainId as SupportedChainId,
-      })
-    },
-  })
-
+  // Estimate USD value of expected equity using plan outputs directly:
+  // equityUsd ≈ totalCollateralOutUsd - expectedDebtUsd
   const expectedUsdOut: number | undefined = useMemo(() => {
-    const sharesRaw = planPreview.plan?.expectedShares
-    const assetsPerShare = sharePriceQuery.data
-    if (!sharesRaw || !assetsPerShare || !collateralUsdPrice) return undefined
+    const plan = planPreview.plan
+    if (!plan) return undefined
+    if (typeof collateralUsdPrice !== 'number' || typeof debtUsdPrice !== 'number') return undefined
     try {
-      const assetsOut = (sharesRaw * assetsPerShare) / 10n ** 18n
-      const collateralOut = Number(
-        formatUnits(assetsOut, leverageTokenConfig.collateralAsset.decimals),
+      const totalCollateral = Number(
+        formatUnits(plan.expectedTotalCollateral, leverageTokenConfig.collateralAsset.decimals),
       )
-      return Number.isFinite(collateralOut) ? collateralOut * collateralUsdPrice : undefined
+      const totalDebt = Number(
+        formatUnits(plan.expectedDebt, leverageTokenConfig.debtAsset.decimals),
+      )
+      if (!Number.isFinite(totalCollateral) || !Number.isFinite(totalDebt)) return undefined
+      const usd = totalCollateral * collateralUsdPrice - totalDebt * debtUsdPrice
+      return Number.isFinite(usd) ? Math.max(usd, 0) : undefined
     } catch {
       return undefined
     }
   }, [
-    planPreview.plan?.expectedShares,
-    sharePriceQuery.data,
+    planPreview.plan,
     collateralUsdPrice,
+    debtUsdPrice,
     leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.decimals,
+  ])
+
+  const guaranteedUsdOut: number | undefined = useMemo(() => {
+    const plan = planPreview.plan
+    if (!plan) return undefined
+    if (typeof collateralUsdPrice !== 'number' || typeof debtUsdPrice !== 'number') return undefined
+    try {
+      const worstCollateral = Number(
+        formatUnits(
+          // Worst-case: user collateral + minOut swap collateral
+          (plan.equityInInputAsset ?? 0n) + (plan.swapMinOut ?? 0n),
+          leverageTokenConfig.collateralAsset.decimals,
+        ),
+      )
+      const worstDebt = Number(
+        formatUnits(plan.worstCaseRequiredDebt ?? 0n, leverageTokenConfig.debtAsset.decimals),
+      )
+      if (!Number.isFinite(worstCollateral) || !Number.isFinite(worstDebt)) return undefined
+      const usd = worstCollateral * collateralUsdPrice - worstDebt * debtUsdPrice
+      return Number.isFinite(usd) ? Math.max(usd, 0) : undefined
+    } catch {
+      return undefined
+    }
+  }, [
+    planPreview.plan,
+    collateralUsdPrice,
+    debtUsdPrice,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.decimals,
+  ])
+
+  // Build route/safety breakdown (best-effort)
+  const breakdown = useMemo(() => {
+    const plan = planPreview.plan
+    const rows: Array<{ label: string; value: string }> = []
+    if (!plan) return rows
+    try {
+      // Leverage multiple ~ expectedDebt / equityIn
+      if (typeof plan.expectedDebt === 'bigint' && typeof plan.equityInInputAsset === 'bigint') {
+        const eq = Number(
+          formatUnits(plan.equityInInputAsset, leverageTokenConfig.collateralAsset.decimals),
+        )
+        const debt = Number(formatUnits(plan.expectedDebt, leverageTokenConfig.debtAsset.decimals))
+        if (eq > 0 && Number.isFinite(eq) && Number.isFinite(debt)) {
+          rows.push({ label: 'Leverage multiple', value: `×${(debt / eq).toFixed(2)}` })
+        }
+      }
+      // Aggregator slippage (from UI setting)
+      rows.push({ label: 'Aggregator slippage', value: `${slippageBps} bps` })
+      // Planner margin (epsilon)
+      const eps = leverageTokenConfig.planner?.epsilonBps ?? 10
+      rows.push({ label: 'Planner safety', value: `${eps} bps` })
+      // Route provider
+      const provider = leverageTokenConfig.swaps?.debtToCollateral?.type ?? '—'
+      rows.push({ label: 'Route provider', value: String(provider) })
+      // MinOut vs Expected out (route floor)
+      if (typeof plan.swapExpectedOut === 'bigint' && typeof plan.swapMinOut === 'bigint') {
+        const exp = Number(
+          formatUnits(plan.swapExpectedOut, leverageTokenConfig.collateralAsset.decimals),
+        )
+        const min = Number(
+          formatUnits(plan.swapMinOut, leverageTokenConfig.collateralAsset.decimals),
+        )
+        if (exp > 0 && Number.isFinite(exp) && Number.isFinite(min)) {
+          const bps = Math.max(0, Math.round((1 - min / exp) * 10000))
+          rows.push({ label: 'Route minOut gap', value: `${bps} bps` })
+        }
+      }
+      return rows
+    } catch {
+      return rows
+    }
+  }, [
+    planPreview.plan,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.decimals,
+    leverageTokenConfig.planner?.epsilonBps,
+    leverageTokenConfig.swaps?.debtToCollateral,
+    slippageBps,
+  ])
+
+  // Impact warning on stable pairs (LST/WETH) if estimated or guaranteed falls below thresholds
+  const impactWarning: string | undefined = useMemo(() => {
+    if (expectedUsdOut === undefined || guaranteedUsdOut === undefined) return undefined
+    const symbol = leverageTokenConfig.collateralAsset.symbol?.toLowerCase?.()
+    const debtSym = leverageTokenConfig.debtAsset.symbol?.toLowerCase?.()
+    const stable = (symbol === 'weeth' || symbol === 'wsteth') && debtSym === 'weth'
+    if (!stable) return undefined
+    const inputUsd = (parseFloat(form.amount || '0') || 0) * (collateralUsdPrice || 0)
+    if (!(inputUsd > 0)) return undefined
+    const expRatio = typeof expectedUsdOut === 'number' ? expectedUsdOut / inputUsd : 1
+    const floorRatio = typeof guaranteedUsdOut === 'number' ? guaranteedUsdOut / inputUsd : 1
+    if (floorRatio < 0.95)
+      return 'Guaranteed outcome is more than 5% below input value for a stable pair.'
+    if (expRatio < 0.97)
+      return 'Estimated outcome is more than 3% below input value for a stable pair.'
+    return undefined
+  }, [
+    leverageTokenConfig.collateralAsset.symbol,
+    leverageTokenConfig.debtAsset.symbol,
+    form.amount,
+    collateralUsdPrice,
+    expectedUsdOut,
+    guaranteedUsdOut,
   ])
 
   const {
@@ -522,6 +619,9 @@ export function LeverageTokenMintModal({
             isApproving={!!isApprovingPending}
             expectedTokens={expectedTokens}
             expectedUsdOut={expectedUsdOut}
+            guaranteedUsdOut={guaranteedUsdOut}
+            breakdown={breakdown}
+            {...(impactWarning ? { impactWarning } : {})}
             canProceed={canProceed()}
             needsApproval={needsApproval()}
             isConnected={isConnected}

@@ -25,9 +25,8 @@ import type { Quote, QuoteFn } from './types'
 
 // Basis points and convergence controls
 const BPS = 10_000n
-const DEFAULT_MAX_ADJUST_PASSES = 3
-// Keep margin at 0 bps initially to preserve strict unit expectations; can be tuned (50–100 bps)
-const DEFAULT_MARGIN_BPS = 0n
+// Tiny epsilon used for single-pass clamp (bps)
+const EPS_BPS = 10n
 
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
 type TokenArg = Address
@@ -55,6 +54,8 @@ export type MintPlanV2 = {
   collateralAsset: Address
   /** Token's debt asset as reported by the manager. */
   debtAsset: Address
+  /** Amount of debt we plan to flash-borrow and swap (sized once). */
+  flashLoanAmount: bigint
   /** Minimum acceptable shares after applying `slippageBps` against expected shares. */
   minShares: bigint
   /** Shares expected from preview with total collateral (user + swap output). */
@@ -65,6 +66,13 @@ export type MintPlanV2 = {
   expectedTotalCollateral: bigint
   /** Excess debt (if previewed debt exceeds the flash loan amount sized by the quote). */
   expectedExcessDebt: bigint
+  /** Worst-case preview debt if the swap only returns minOut. */
+  worstCaseRequiredDebt: bigint
+  /** Worst-case preview shares if the swap only returns minOut. */
+  worstCaseShares: bigint
+  /** Swap outputs for transparency. */
+  swapExpectedOut: bigint
+  swapMinOut: bigint
   /**
    * Encoded router calls (approve + swap) to be submitted to V2 `mintWithCalls`.
    * The sequence always includes the debt->collateral swap plus an ERC-20 approve
@@ -83,6 +91,8 @@ export async function planMintV2(params: {
   quoteDebtToCollateral: QuoteFn
   /** Chain ID to execute the transaction on */
   chainId: number
+  /** Optional per-pair epsilon (bps) for single-pass clamp */
+  epsilonBps?: number
 }): Promise<MintPlanV2> {
   const {
     config,
@@ -92,6 +102,7 @@ export async function planMintV2(params: {
     slippageBps,
     quoteDebtToCollateral,
     chainId,
+    epsilonBps,
   } = params
 
   // 1) Resolve manager assets and enforce collateral-only input in initial scope
@@ -100,6 +111,7 @@ export async function planMintV2(params: {
     token,
     chainId,
   })
+  debugMintPlan('assets', { inputAsset, collateralAsset, debtAsset })
   if (getAddress(inputAsset) !== getAddress(collateralAsset)) {
     throw new Error('Router v2 initial scope requires collateral-only input')
   }
@@ -113,6 +125,7 @@ export async function planMintV2(params: {
     targetCollateral: ideal.targetCollateral,
   })
   const neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
+  debugMintPlan('need.swap.out', { neededFromDebtSwap })
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
   // 3) Quote debt->collateral for the missing collateral
@@ -132,32 +145,77 @@ export async function planMintV2(params: {
   debugMintPlan('quote.initial', { debtIn, out: debtQuote.out })
 
   // 4) Final preview with total collateral to derive requiredDebt and shares
-  const totalCollateral = userCollateralOut + debtQuote.out
-  let final = await previewFinal({ config, token, totalCollateral, chainId })
+  const totalCollateralInitial = userCollateralOut + debtQuote.out
+  let final = await previewFinal({ config, token, totalCollateral: totalCollateralInitial, chainId })
   debugMintPlan('final.initial', {
-    totalCollateral,
+    totalCollateral: totalCollateralInitial,
     requiredDebt: final.requiredDebt,
     shares: final.shares,
   })
 
-  // 5) Iterative clamp + collateral guard (bounded, monotone, exact-in)
-  const refined = await finalizeDebtQuote({
+  // 5) Single-pass minOut-aware clamp. Size once against worst-case (minOut), add tiny epsilon safety.
+  const guaranteedOut = typeof debtQuote.minOut === 'bigint' ? debtQuote.minOut : debtQuote.out
+  if (guaranteedOut <= 0n) throw new Error('Swap quote missing minOut; cannot size safely')
+  const worstCase = await previewFinal({
     config,
     token,
+    totalCollateral: userCollateralOut + guaranteedOut,
     chainId,
-    userCollateralOut,
-    targetCollateral: ideal.targetCollateral,
-    inTokenForQuote,
-    collateralAsset,
-    quoteDebtToCollateral,
-    initialDebtIn: debtIn,
-    initialQuote: debtQuote,
-    maxPasses: DEFAULT_MAX_ADJUST_PASSES,
-    marginBps: DEFAULT_MARGIN_BPS,
   })
-  const effectiveDebtIn = refined.effectiveDebtIn
-  const effectiveQuote = refined.effectiveQuote
-  final = refined.final
+  debugMintPlan('worst.preview', {
+    totalCollateral: userCollateralOut + guaranteedOut,
+    requiredDebt: worstCase.requiredDebt,
+    shares: worstCase.shares,
+  })
+
+  const eps = typeof epsilonBps === 'number' ? BigInt(epsilonBps) : EPS_BPS
+  let effectiveDebtIn = (worstCase.requiredDebt * (BPS - eps)) / BPS
+  let effectiveQuote = await quoteDebtToCollateral({
+    inToken: inTokenForQuote,
+    outToken: collateralAsset,
+    amountIn: effectiveDebtIn,
+    intent: 'exactIn',
+  })
+  final = await previewFinal({
+    config,
+    token,
+    totalCollateral: userCollateralOut + effectiveQuote.out,
+    chainId,
+  })
+  debugMintPlan('final.singlepass', {
+    flash: effectiveDebtIn,
+    out: effectiveQuote.out,
+    minOut: typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : 0n,
+    requiredDebt: final.requiredDebt,
+    shares: final.shares,
+  })
+
+  // Safety: if we still exceed required by a hair, shave 1 bp and retry once
+  if (effectiveDebtIn > final.requiredDebt) {
+    const shaved = (final.requiredDebt * (BPS - 1n)) / BPS
+    if (shaved < effectiveDebtIn) {
+      effectiveDebtIn = shaved
+      effectiveQuote = await quoteDebtToCollateral({
+        inToken: inTokenForQuote,
+        outToken: collateralAsset,
+        amountIn: effectiveDebtIn,
+        intent: 'exactIn',
+      })
+      final = await previewFinal({
+        config,
+        token,
+        totalCollateral: userCollateralOut + effectiveQuote.out,
+        chainId,
+      })
+      debugMintPlan('final.shave', {
+        flash: effectiveDebtIn,
+        out: effectiveQuote.out,
+        minOut: typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : 0n,
+        requiredDebt: final.requiredDebt,
+        shares: final.shares,
+      })
+    }
+  }
 
   // Build calls based on the amount actually used for the swap
   const calls: V2Calls = [
@@ -165,7 +223,7 @@ export async function planMintV2(params: {
       debtAsset,
       debtQuote: effectiveQuote,
       debtIn: effectiveDebtIn,
-      useNative: useNativeDebtPath,
+      useNative: useNativeDebtPath && Boolean(effectiveQuote.wantsNativeIn),
     }),
   ]
 
@@ -179,11 +237,16 @@ export async function planMintV2(params: {
     equityInInputAsset,
     collateralAsset,
     debtAsset,
+    flashLoanAmount: effectiveDebtIn,
     minShares,
     expectedShares: final.shares,
     expectedDebt: final.requiredDebt,
     expectedTotalCollateral: userCollateralOut + effectiveQuote.out,
     expectedExcessDebt: debtExcess,
+    worstCaseRequiredDebt: worstCase.requiredDebt,
+    worstCaseShares: worstCase.shares,
+    swapExpectedOut: effectiveQuote.out,
+    swapMinOut: typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : effectiveQuote.out,
     calls,
   }
 }
@@ -205,21 +268,19 @@ export async function quoteDebtForMissingCollateral(args: {
   quote: QuoteFn
 }): Promise<{ debtIn: bigint; debtQuote: Quote }> {
   const { idealDebt, neededOut, inToken, outToken, quote } = args
-  let debtIn = idealDebt
-
   // Exact-in quote with manager-sized idealDebt
+  let debtIn = idealDebt
   let debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
 
-  // If the quote out is below the target, proportionally reduce the flash loan input once,
-  // then re-quote. This mirrors the integration test behavior (reduce input to match pathing).
+  // If the quote out is below the target, proportionally reduce once and re-quote.
   if (debtQuote.out < neededOut) {
     const adjusted = mulDivFloor(idealDebt, debtQuote.out, neededOut)
     if (adjusted > 0n && adjusted < debtIn) {
       debtIn = adjusted
       debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
+      debugMintPlan('quote.adjusted', { debtIn, out: debtQuote.out, neededOut })
     }
   }
-
   return { debtIn, debtQuote }
 }
 
@@ -319,8 +380,23 @@ function buildDebtSwapCalls(args: {
 // Internal test-aware debug logger (no-ops outside test runs)
 function debugMintPlan(label: string, data: Record<string, unknown>): void {
   try {
-    // Only log during tests (integration/e2e set TEST_MODE)
-    const shouldLog = typeof process !== 'undefined' && !!process.env && !!process.env['TEST_MODE']
+    const testMode = typeof process !== 'undefined' && !!process.env && !!process.env['TEST_MODE']
+    const viteFlag =
+      typeof import.meta !== 'undefined' &&
+      (import.meta as unknown as { env?: Record<string, unknown> })?.env?.[
+        'VITE_MINT_PLAN_DEBUG'
+      ] === '1'
+    const nodeFlag = typeof process !== 'undefined' && process.env?.['MINT_PLAN_DEBUG'] === '1'
+    const lsFlag = (() => {
+      try {
+        return (
+          typeof window !== 'undefined' && window?.localStorage?.getItem('mint-plan-debug') === '1'
+        )
+      } catch {
+        return false
+      }
+    })()
+    const shouldLog = testMode || viteFlag || nodeFlag || lsFlag
     if (!shouldLog) return
     // eslint-disable-next-line no-console
     console.info('[Mint][Plan][Debug]', label, sanitizeBigints(data))
@@ -338,150 +414,4 @@ function sanitizeBigints(obj: Record<string, unknown>): Record<string, unknown> 
   return out
 }
 
-// Helper: bounded, monotone refinement loop to enforce reprice and collateral guards
-async function finalizeDebtQuote(args: {
-  config: Config
-  token: Address
-  chainId: number
-  userCollateralOut: bigint
-  targetCollateral: bigint
-  inTokenForQuote: Address
-  collateralAsset: Address
-  quoteDebtToCollateral: QuoteFn
-  initialDebtIn: bigint
-  initialQuote: Quote
-  maxPasses: number
-  marginBps: bigint
-}): Promise<{
-  effectiveDebtIn: bigint
-  effectiveQuote: Quote
-  final: { requiredDebt: bigint; shares: bigint }
-}> {
-  const {
-    config,
-    token,
-    chainId,
-    userCollateralOut,
-    targetCollateral,
-    inTokenForQuote,
-    collateralAsset,
-    quoteDebtToCollateral,
-    initialDebtIn,
-    initialQuote,
-    maxPasses,
-    marginBps,
-  } = args
-
-  let effectiveDebtIn = initialDebtIn
-  let effectiveQuote = initialQuote
-  let final = await previewFinal({
-    config,
-    token,
-    totalCollateral: userCollateralOut + effectiveQuote.out,
-    chainId,
-  })
-  let lastRequired = final.requiredDebt
-
-  for (let pass = 0; pass < maxPasses; pass++) {
-    // 1) Reprice guard
-    const maxBorrowWithMargin = lastRequired > 0n ? (lastRequired * (BPS - marginBps)) / BPS : 0n
-    if (effectiveDebtIn > maxBorrowWithMargin) {
-      effectiveDebtIn = maxBorrowWithMargin
-      if (effectiveDebtIn <= 0n) {
-        debugMintPlan('converged', { pass, reason: 'zero-debt-after-clamp' })
-        break
-      }
-      effectiveQuote = await quoteDebtToCollateral({
-        inToken: inTokenForQuote,
-        outToken: collateralAsset,
-        amountIn: effectiveDebtIn,
-        intent: 'exactIn',
-      })
-      const totalCollateralAfterClamp = userCollateralOut + effectiveQuote.out
-      final = await previewFinal({
-        config,
-        token,
-        totalCollateral: totalCollateralAfterClamp,
-        chainId,
-      })
-      lastRequired = final.requiredDebt
-      debugMintPlan('clamp.iter', {
-        pass,
-        effectiveDebtIn,
-        out: effectiveQuote.out,
-        totalCollateralAfterClamp,
-        requiredDebt: final.requiredDebt,
-        shares: final.shares,
-      })
-    }
-
-    // 2) Collateral guard
-    const totalNow = userCollateralOut + effectiveQuote.out
-    if (totalNow >= targetCollateral) {
-      debugMintPlan('converged', { pass, reason: 'collateral-ok & reprice-ok' })
-      break
-    }
-
-    // Downscale planned debt to improve total/target ratio
-    const scaled = mulDivFloor(
-      effectiveDebtIn * (BPS - marginBps),
-      totalNow,
-      (targetCollateral === 0n ? 1n : targetCollateral) * BPS,
-    )
-    const nextDebtIn =
-      scaled > 0n && scaled < effectiveDebtIn
-        ? scaled
-        : effectiveDebtIn > 0n
-          ? effectiveDebtIn - 1n
-          : 0n
-
-    if (nextDebtIn === effectiveDebtIn || nextDebtIn === 0n) {
-      debugMintPlan('converged', { pass, reason: 'no-further-progress' })
-      break
-    }
-
-    effectiveDebtIn = nextDebtIn
-    effectiveQuote = await quoteDebtToCollateral({
-      inToken: inTokenForQuote,
-      outToken: collateralAsset,
-      amountIn: effectiveDebtIn,
-      intent: 'exactIn',
-    })
-    const totalAfterAdjust = userCollateralOut + effectiveQuote.out
-    final = await previewFinal({ config, token, totalCollateral: totalAfterAdjust, chainId })
-    lastRequired = final.requiredDebt
-    debugMintPlan('repay.adjust.iter', {
-      pass,
-      adjustedDebtIn: effectiveDebtIn,
-      out: effectiveQuote.out,
-      totalCollateralAfterAdjust: totalAfterAdjust,
-      requiredDebt: final.requiredDebt,
-      shares: final.shares,
-    })
-  }
-
-  // Final safety: tiny shave if still over requiredDebt
-  if (effectiveDebtIn > final.requiredDebt) {
-    const shaved = (final.requiredDebt * (BPS - 1n)) / BPS
-    if (shaved < effectiveDebtIn) {
-      effectiveDebtIn = shaved
-      effectiveQuote = await quoteDebtToCollateral({
-        inToken: inTokenForQuote,
-        outToken: collateralAsset,
-        amountIn: effectiveDebtIn,
-        intent: 'exactIn',
-      })
-      const totalAfterShave = userCollateralOut + effectiveQuote.out
-      final = await previewFinal({ config, token, totalCollateral: totalAfterShave, chainId })
-      debugMintPlan('final.shave', {
-        effectiveDebtIn,
-        out: effectiveQuote.out,
-        totalAfterShave,
-        requiredDebt: final.requiredDebt,
-        shares: final.shares,
-      })
-    }
-  }
-
-  return { effectiveDebtIn, effectiveQuote, final }
-}
+// Iterative refinement removed in favor of a single minOut-aware pass.

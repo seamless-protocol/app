@@ -35,6 +35,7 @@ export async function executeMintV2(params: {
   plan: {
     inputAsset: Address
     equityInInputAsset: bigint
+    flashLoanAmount?: bigint
     minShares: bigint
     calls: V2Calls
     expectedTotalCollateral: bigint
@@ -69,26 +70,36 @@ export async function executeMintV2(params: {
   const args = [
     token,
     plan.equityInInputAsset,
-    plan.expectedDebt,
+    (plan.flashLoanAmount ?? plan.expectedDebt),
     plan.minShares,
     multicallExecutor,
     plan.calls,
   ] satisfies DepositParams['args']
 
   const chain = chainId as SupportedChainId
-  const { request } = await simulateLeverageRouterV2Deposit(config, {
-    // deposit(token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, swapCalls)
+  /*
+   * NOTE: Simulation commented out intentionally to surface revert reasons
+   * directly in Tenderly when writing the transaction.
+   *
+   * const { request } = await simulateLeverageRouterV2Deposit(config, {
+   *   args,
+   *   account,
+   *   chainId: chain,
+   * })
+   *
+   * const hash = await writeLeverageRouterV2Deposit(config, {
+   *   args: request.args,
+   *   account,
+   *   ...(request.value ? { value: request.value } : {}),
+   *   chainId: chain,
+   * })
+   * return { hash }
+   */
+
+  // Direct write path (no simulate). Useful for Tenderly debugging to see revert details.
+  const hash = await writeLeverageRouterV2Deposit(config, {
     args,
     account,
-    chainId: chain,
-  })
-
-  const hash = await writeLeverageRouterV2Deposit(config, {
-    args: request.args,
-    account,
-    // Forward any value provided by viem's simulate to stay aligned with
-    // generated contract helpers and RouterPortV2 semantics.
-    ...(request.value ? { value: request.value } : {}),
     chainId: chain,
   })
   return { hash }

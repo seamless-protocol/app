@@ -117,7 +117,11 @@ export function useMintExecution(params: {
         setHash(hash)
         setStatus('pending')
         const receiptClient = (chainPublicClient ?? activePublicClient) as PublicClient | undefined
-        await receiptClient?.waitForTransactionReceipt({ hash })
+        if (!receiptClient) throw new Error('Missing public client to read transaction receipt')
+        const receipt = await receiptClient.waitForTransactionReceipt({ hash })
+        if (receipt.status !== 'success') {
+          throw new Error('Transaction reverted')
+        }
         setStatus('success')
         return hash
       } catch (e: unknown) {

@@ -76,10 +76,6 @@ async function prepareRedeemScenario(
 ): Promise<RedeemScenario> {
   const { config } = ctx
 
-  const uniswapRouter =
-    (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
-    ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
-
   const token: Address = ADDR.leverageToken
   const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
   const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
