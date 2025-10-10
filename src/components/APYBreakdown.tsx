@@ -32,43 +32,53 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
 
       {/* Breakdown Items */}
       <div className={cn('space-y-3', itemClass)}>
-        {/* Staking Yield */}
-        <div className="flex justify-between">
-          <span className="text-[var(--text-secondary)]">Staking Yield:</span>
-          <span className="font-medium text-[var(--state-success-text)]">
-            {formatPercentage(data.stakingYield, { decimals: 2, showSign: true })}
-          </span>
-        </div>
+        {/* Staking Yield - only show if not zero */}
+        {data.stakingYield !== 0 && (
+          <div className="flex justify-between">
+            <span className="text-[var(--text-secondary)]">Staking Yield:</span>
+            <span className="font-medium text-[var(--state-success-text)]">
+              {formatPercentage(data.stakingYield, { decimals: 2, showSign: true })}
+            </span>
+          </div>
+        )}
 
-        {/* Restaking Yield */}
-        <div className="flex justify-between">
-          <span className="text-[var(--text-secondary)]">Restaking Yield:</span>
-          <span className="font-medium text-[var(--brand-primary)]">
-            {formatPercentage(data.restakingYield, { decimals: 2, showSign: true })}
-          </span>
-        </div>
+        {/* Restaking Yield - only show if not zero */}
+        {data.restakingYield !== 0 && (
+          <div className="flex justify-between">
+            <span className="text-[var(--text-secondary)]">Restaking Yield:</span>
+            <span className="font-medium text-[var(--brand-primary)]">
+              {formatPercentage(data.restakingYield, { decimals: 2, showSign: true })}
+            </span>
+          </div>
+        )}
 
-        {/* Borrow Rate */}
-        <div className="flex justify-between">
-          <span className="text-[var(--text-secondary)]">Borrow Rate:</span>
-          <span className="font-medium text-[var(--state-error-text)]">
-            {formatPercentage(data.borrowRate, { decimals: 2, showSign: true })}
-          </span>
-        </div>
+        {/* Borrow Rate - only show if not zero */}
+        {data.borrowRate !== 0 && (
+          <div className="flex justify-between">
+            <span className="text-[var(--text-secondary)]">Borrow Rate:</span>
+            <span className="font-medium text-[var(--state-error-text)]">
+              {formatPercentage(data.borrowRate, { decimals: 2, showSign: true })}
+            </span>
+          </div>
+        )}
 
-        {/* Rewards APR */}
-        <div className="flex justify-between">
-          <span className="text-[var(--text-secondary)]">Rewards APR:</span>
-          <span className="font-medium text-[var(--accent-1)]">
-            {formatPercentage(data.rewardsAPR, { decimals: 2, showSign: true })}
-          </span>
-        </div>
+        {/* Rewards APR - only show if not zero */}
+        {data.rewardsAPR !== 0 && (
+          <div className="flex justify-between">
+            <span className="text-[var(--text-secondary)]">Rewards APR:</span>
+            <span className="font-medium text-[var(--accent-1)]">
+              {formatPercentage(data.rewardsAPR, { decimals: 2, showSign: true })}
+            </span>
+          </div>
+        )}
 
-        {/* Points */}
-        <div className="flex justify-between">
-          <span className="text-[var(--text-secondary)]">Points:</span>
-          <span className="font-medium text-yellow-500">{formatPoints(data.points)}</span>
-        </div>
+        {/* Points - only show if not zero */}
+        {data.points !== 0 && (
+          <div className="flex justify-between">
+            <span className="text-[var(--text-secondary)]">Points:</span>
+            <span className="font-medium text-yellow-500">{formatPoints(data.points)}</span>
+          </div>
+        )}
 
         {/* Total APY - Separated */}
         <div className="mt-3 border-t border-[var(--divider-line)] pt-3">
