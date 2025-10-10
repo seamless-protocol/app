@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
@@ -21,13 +20,13 @@ import {
 import { useDebtToCollateralQuote } from '../../hooks/mint/useDebtToCollateralQuote'
 import { useMintForm } from '../../hooks/mint/useMintForm'
 import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
+import { useMintReceipt } from '../../hooks/mint/useMintReceipt'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useMintWrite } from '../../hooks/mint/useMintWrite'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
-import { invalidateAfterReceipt } from '../../utils/invalidateAfterReceipt'
 import { ApproveStep } from './ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
 import { ErrorStep } from './ErrorStep'
@@ -83,7 +82,6 @@ export function LeverageTokenMintModal({
   const { switchChainAsync } = useSwitchChain()
   const wagmiConfig = useConfig()
   const publicClient = usePublicClient({ chainId: leverageTokenConfig.chainId })
-  const queryClient = useQueryClient()
   const userAddress = propUserAddress || hookUserAddress
 
   // Get leverage router address for allowance check
@@ -159,7 +157,7 @@ export function LeverageTokenMintModal({
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showBreakdown, _] = useState(false)
   // Derive expected tokens from preview data (no local state needed)
-  const [transactionHash, setTransactionHash] = useState('')
+  const [transactionHash, setTransactionHash] = useState<`0x${string}` | ''>('')
   const [error, setError] = useState('')
   const [isRefreshingRoute, setIsRefreshingRoute] = useState(false)
 
@@ -466,7 +464,7 @@ export function LeverageTokenMintModal({
     }
   }
 
-  // Handle mint confirmation
+  // Handle mint confirmation (write-only; receipt handled by useWaitForTransactionReceipt)
   const handleConfirm = async () => {
     if (!publicClient) return
     if (!userAddress || !isConnected || !form.amountRaw) return
@@ -552,35 +550,6 @@ export function LeverageTokenMintModal({
         },
       })
       setTransactionHash(hash)
-
-      // Track successful mint transaction
-      const tokenSymbol = leverageTokenConfig.symbol
-      const amount = form.amount
-      const usdValue = parseFloat(form.amount) * (selectedToken.price || 0)
-      trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
-
-      // Track funnel step: mint transaction completed
-      analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
-
-      toast.success('Leverage tokens minted successfully!', {
-        description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} ${leverageTokenConfig.symbol}`,
-      })
-      // Invalidate protocol state and refresh wallet balances after 1 confirmation
-      try {
-        await invalidateAfterReceipt(publicClient, queryClient, {
-          hash,
-          token: leverageTokenAddress,
-          chainId: leverageTokenConfig.chainId,
-          owner: userAddress,
-          includeUser: true,
-        })
-        // Proactively refresh balances used by the UI
-        refetchCollateralBalance?.()
-        refetchLeverageTokenBalance?.()
-      } catch (_) {
-        // Best-effort invalidation; non-fatal for UX
-      }
-      toSuccess()
     } catch (e: unknown) {
       const error = e as Error
 
@@ -613,6 +582,34 @@ export function LeverageTokenMintModal({
       toError()
     }
   }
+
+  // Track receipt and finalize via hook
+  useMintReceipt({
+    ...(transactionHash ? { hash: transactionHash as `0x${string}` } : {}),
+    chainId: leverageTokenConfig.chainId as SupportedChainId,
+    token: leverageTokenAddress,
+    ...(userAddress ? { owner: userAddress as `0x${string}` } : {}),
+    includeUser: true,
+    confirmations: 1,
+    refetchCollateralBalance,
+    refetchLeverageTokenBalance,
+    onSuccess: () => {
+      const tokenSymbol = leverageTokenConfig.symbol
+      const amount = form.amount
+      const usdValue = (parseFloat(form.amount || '0') || 0) * (selectedToken.price || 0)
+      trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
+      analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
+      toast.success('Leverage tokens minted successfully!', {
+        description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} ${leverageTokenConfig.symbol}`,
+      })
+      toSuccess()
+    },
+    onError: (err) => {
+      const errMsg = err?.message || 'Transaction failed or timed out.'
+      setError(errMsg)
+      toError()
+    },
+  })
 
   // Handle retry from error state
   const handleRetry = () => {
