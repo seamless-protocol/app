@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig, usePublicClient, useSwitchChain } from 'wagmi'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { BASE_WETH, ETH_SENTINEL, getContractAddresses } from '../../../../lib/contracts/addresses'
@@ -18,10 +19,10 @@ import {
   TOKEN_AMOUNT_DISPLAY_DECIMALS,
 } from '../../constants'
 import { useDebtToCollateralQuote } from '../../hooks/mint/useDebtToCollateralQuote'
-import { useMintExecution } from '../../hooks/mint/useMintExecution'
 import { useMintForm } from '../../hooks/mint/useMintForm'
 import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
+import { useMintWrite } from '../../hooks/mint/useMintWrite'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
@@ -301,12 +302,23 @@ export function LeverageTokenMintModal({
     chainId: leverageTokenConfig.chainId,
   })
 
-  const exec = useMintExecution({
-    token: leverageTokenAddress,
-    ...(userAddress ? { account: userAddress } : {}),
-    inputAsset: leverageTokenConfig.collateralAsset.address,
-    slippageBps,
-  })
+  const mintWrite = useMintWrite(
+    userAddress && planPreview.plan
+      ? {
+          chainId: leverageTokenConfig.chainId as SupportedChainId,
+          token: leverageTokenAddress,
+          account: userAddress as `0x${string}`,
+          plan: {
+            inputAsset: planPreview.plan.inputAsset,
+            equityInInputAsset: planPreview.plan.equityInInputAsset,
+            minShares: planPreview.plan.minShares,
+            calls: planPreview.plan.calls,
+            expectedTotalCollateral: planPreview.plan.expectedTotalCollateral,
+            expectedDebt: planPreview.plan.expectedDebt,
+          },
+        }
+      : undefined,
+  )
 
   // Step configuration (static once modal is opened)
   const steps = useMemo(() => {
@@ -521,7 +533,22 @@ export function LeverageTokenMintModal({
 
     toPending()
     try {
-      const hash = await exec.mint(form.amountRaw)
+      const p = planPreview.plan
+      if (!p || !userAddress) throw new Error('Missing finalized plan or account')
+      const hash = await mintWrite.mutateAsync({
+        config: wagmiConfig,
+        chainId: leverageTokenConfig.chainId as SupportedChainId,
+        account: userAddress as `0x${string}`,
+        token: leverageTokenAddress,
+        plan: {
+          inputAsset: p.inputAsset,
+          equityInInputAsset: p.equityInInputAsset,
+          minShares: p.minShares,
+          calls: p.calls,
+          expectedTotalCollateral: p.expectedTotalCollateral,
+          expectedDebt: p.expectedDebt,
+        },
+      })
       setTransactionHash(hash)
 
       // Track successful mint transaction
