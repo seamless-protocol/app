@@ -118,7 +118,6 @@ export function InputStep({
   breakdown,
   impactWarning,
   supplyCapExceeded,
-  supplyCapExceeded,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const mintAmountId = useId()
@@ -435,7 +434,10 @@ export function InputStep({
               <summary className="cursor-pointer select-none">Show route & safety details</summary>
               <div className="mt-2 space-y-1">
                 {breakdown.map((row) => (
-                  <div key={`${row.label}:${row.value}`} className="flex items-center justify-between">
+                  <div
+                    key={`${row.label}:${row.value}`}
+                    className="flex items-center justify-between"
+                  >
                     <span>{row.label}</span>
                     <span className="text-foreground">{row.value}</span>
                   </div>
