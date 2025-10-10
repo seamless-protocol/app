@@ -91,6 +91,15 @@ Here's the complete configuration for `WSTETH_ETH_2X_MAINNET` as a reference:
   supplyCap: 150,
   isTestOnly: true, // Optional: Only shows when VITE_INCLUDE_TEST_TOKENS=true
   
+  // APY Configuration (optional)
+  apyConfig: {
+    aprProvider: {
+      type: APR_PROVIDERS.LIDO,
+      id: 'steth',
+    },
+    pointsMultiplier: 2, // Optional: Points multiplier for rewards (defaults to 0 if not provided)
+  },
+  
   swaps: {
     debtToCollateral: {
       type: 'lifi',
@@ -157,6 +166,73 @@ Here's the complete configuration for `WSTETH_ETH_2X_MAINNET` as a reference:
     ],
   },
 },
+```
+
+## APY Configuration
+
+The `apyConfig` section allows you to configure how APY data is calculated and displayed for your leverage token:
+
+### Available Options
+
+```typescript
+apyConfig: {
+  // APR Provider Configuration
+  aprProvider?: {
+    type: APR_PROVIDERS.LIDO | APR_PROVIDERS.ETHERFI,
+    id?: string // Optional provider-specific identifier
+  },
+  
+  // Borrow APR Provider Configuration  
+  borrowAprProvider?: {
+    type: BORROW_APR_PROVIDERS.MORPHO,
+    id?: string // Optional provider-specific identifier
+  },
+  
+  // Rewards Provider Configuration
+  rewardsProvider?: {
+    type: REWARDS_PROVIDERS.MERKL,
+    id?: string // Optional provider-specific identifier
+  },
+  
+  // Points Multiplier Configuration
+  pointsMultiplier?: number // Points multiplier for rewards calculation
+}
+```
+
+### Default Values
+
+- **`pointsMultiplier`**: Defaults to `0` if not provided
+- **APR Providers**: Defaults to Ether.fi if no provider specified
+- **Borrow APR**: Defaults to Morpho if no provider specified  
+- **Rewards**: Defaults to Merkl if no provider specified
+
+### Points Multiplier Behavior
+
+- **When `pointsMultiplier` is defined**: Points are calculated as `pointsMultiplier` (static value)
+- **When `pointsMultiplier` is not defined**: Points default to `0` and are hidden in the UI
+- **UI Display**: Points are only shown when they have a non-zero value
+
+### Example Configurations
+
+**Basic Configuration (no points):**
+```typescript
+apyConfig: {
+  aprProvider: {
+    type: APR_PROVIDERS.LIDO,
+    id: 'steth',
+  },
+  // No pointsMultiplier = points will be 0 and hidden
+}
+```
+
+**With Points Rewards:**
+```typescript
+apyConfig: {
+  aprProvider: {
+    type: APR_PROVIDERS.ETHERFI,
+  },
+  pointsMultiplier: 5, // Shows "5 x" points in UI
+}
 ```
 
 ## Test-Only Tokens
