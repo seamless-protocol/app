@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   ArrowDown,
   ChevronDown,
   ChevronUp,
@@ -17,7 +18,6 @@ import { FilterDropdown } from '../../../../components/ui/filter-dropdown'
 import { Input } from '../../../../components/ui/input'
 import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
-import { AlertTriangle } from 'lucide-react'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
   MIN_MINT_AMOUNT_DISPLAY,
@@ -433,7 +433,7 @@ export function InputStep({
               <summary className="cursor-pointer select-none">Show route & safety details</summary>
               <div className="mt-2 space-y-1">
                 {breakdown.map((row, i) => (
-                  <div key={i} className="flex items-center justify-between">
+                  <div key={`${i}-${row.label}`} className="flex items-center justify-between">
                     <span>{row.label}</span>
                     <span className="text-foreground">{row.value}</span>
                   </div>

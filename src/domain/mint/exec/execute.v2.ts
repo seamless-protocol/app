@@ -39,6 +39,8 @@ export async function executeMintV2(params: {
     expectedTotalCollateral: bigint
     expectedDebt: bigint
   }
+  /** Optional cap for router swap costs (not enforced client-side) */
+  maxSwapCostInCollateralAsset?: bigint
   /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
   routerAddress: Address
   /** Multicall executor address (required for audit-fixes ABI) */

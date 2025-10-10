@@ -5,6 +5,7 @@ import {
   createDebtToCollateralQuote,
   type DebtToCollateralSwapConfig,
 } from '@/domain/mint/utils/createDebtToCollateralQuote'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -80,7 +81,7 @@ export async function planMintTest({
     equityInInputAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    chainId: tokenDefinition.chainId,
+    chainId: tokenDefinition.chainId as SupportedChainId,
   })
 
   return {
