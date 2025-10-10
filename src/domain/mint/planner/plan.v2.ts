@@ -151,7 +151,10 @@ export async function planMintV2(params: {
   })
   const debtIn = r.debtIn
   const debtQuote = r.debtQuote
-  debugMintPlan('quote.initial', { debtIn, out: debtQuote.out })
+  debugMintPlan('quote.initial', { debtIn, out: debtQuote.out, minOut: debtQuote.minOut ?? 0n })
+  if (typeof debtQuote.minOut !== 'bigint') {
+    throw new Error('Swap quote missing minOut')
+  }
 
   // 4) Final preview with total collateral to derive requiredDebt and shares
   const totalCollateralInitial = userCollateralOut + debtQuote.out
@@ -167,9 +170,9 @@ export async function planMintV2(params: {
     shares: final.shares,
   })
 
-  // 5) Single-pass minOut-aware clamp. Size once against worst-case (minOut), add tiny epsilon safety.
-  const guaranteedOut = typeof debtQuote.minOut === 'bigint' ? debtQuote.minOut : debtQuote.out
-  if (guaranteedOut <= 0n) throw new Error('Swap quote missing minOut; cannot size safely')
+  // 5) Single-pass minOut-aware sizing. Use worst-case (minOut) to fail-closed.
+  const guaranteedOut = debtQuote.minOut
+  if (guaranteedOut <= 0n) throw new Error('Swap quote minOut must be > 0')
   const worstCase = await previewFinal({
     config,
     token,
@@ -183,7 +186,8 @@ export async function planMintV2(params: {
   })
 
   const eps = typeof epsilonBps === 'number' ? BigInt(epsilonBps) : EPS_BPS
-  let effectiveDebtIn = (worstCase.requiredDebt * (BPS - eps)) / BPS
+  // Bias to >= worst-case requirement using a tiny upward epsilon
+  let effectiveDebtIn = (worstCase.requiredDebt * (BPS + eps)) / BPS
   let effectiveQuote = await quoteDebtToCollateral({
     inToken: inTokenForQuote,
     outToken: collateralAsset,
@@ -204,32 +208,6 @@ export async function planMintV2(params: {
     shares: final.shares,
   })
 
-  // Safety: if we still exceed required by a hair, shave 1 bp and retry once
-  if (effectiveDebtIn > final.requiredDebt) {
-    const shaved = (final.requiredDebt * (BPS - 1n)) / BPS
-    if (shaved < effectiveDebtIn) {
-      effectiveDebtIn = shaved
-      effectiveQuote = await quoteDebtToCollateral({
-        inToken: inTokenForQuote,
-        outToken: collateralAsset,
-        amountIn: effectiveDebtIn,
-        intent: 'exactIn',
-      })
-      final = await previewFinal({
-        config,
-        token,
-        totalCollateral: userCollateralOut + effectiveQuote.out,
-        chainId,
-      })
-      debugMintPlan('final.shave', {
-        flash: effectiveDebtIn,
-        out: effectiveQuote.out,
-        minOut: typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : 0n,
-        requiredDebt: final.requiredDebt,
-        shares: final.shares,
-      })
-    }
-  }
 
   // Build calls based on the amount actually used for the swap
   const calls: V2Calls = [
