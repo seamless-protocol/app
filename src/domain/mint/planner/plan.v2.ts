@@ -94,7 +94,7 @@ export async function planMintV2(params: {
   slippageBps: number
   quoteDebtToCollateral: QuoteFn
   /** Chain ID to execute the transaction on */
-  chainId: number
+  chainId: SupportedChainId
   /** Optional per-pair epsilon (bps) for single-pass clamp */
   epsilonBps?: number
 }): Promise<MintPlanV2> {

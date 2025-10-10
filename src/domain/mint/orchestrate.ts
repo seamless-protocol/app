@@ -8,7 +8,11 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
-import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
+import {
+  contractAddresses,
+  getContractAddresses,
+  type SupportedChainId,
+} from '@/lib/contracts/addresses'
 import { executeMintV2 } from './exec/execute.v2'
 import { planMintV2 } from './planner/plan.v2'
 import type { QuoteFn } from './planner/types'
@@ -108,7 +112,7 @@ export async function orchestrateMint(params: {
     slippageBps,
     quoteDebtToCollateral,
     ...(quoteInputToCollateral ? { quoteInputToCollateral } : {}),
-    chainId: params.chainId,
+    chainId: params.chainId as SupportedChainId,
   })
 
   const tx = await executeMintV2({
