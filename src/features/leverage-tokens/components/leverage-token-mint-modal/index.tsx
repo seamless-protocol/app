@@ -1,7 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
-import { useAccount, useConfig, usePublicClient, useSwitchChain } from 'wagmi'
+import {
+  useAccount,
+  useConfig,
+  usePublicClient,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+} from 'wagmi'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { captureTxError } from '@/lib/observability/sentry'
@@ -20,13 +27,13 @@ import {
 import { useDebtToCollateralQuote } from '../../hooks/mint/useDebtToCollateralQuote'
 import { useMintForm } from '../../hooks/mint/useMintForm'
 import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
-import { useMintReceipt } from '../../hooks/mint/useMintReceipt'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useMintWrite } from '../../hooks/mint/useMintWrite'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
+import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
 import { ApproveStep } from './ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
 import { ErrorStep } from './ErrorStep'
@@ -82,6 +89,7 @@ export function LeverageTokenMintModal({
   const { switchChainAsync } = useSwitchChain()
   const wagmiConfig = useConfig()
   const publicClient = usePublicClient({ chainId: leverageTokenConfig.chainId })
+  const queryClient = useQueryClient()
   const userAddress = propUserAddress || hookUserAddress
 
   // Get leverage router address for allowance check
@@ -157,9 +165,10 @@ export function LeverageTokenMintModal({
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showBreakdown, _] = useState(false)
   // Derive expected tokens from preview data (no local state needed)
-  const [transactionHash, setTransactionHash] = useState<`0x${string}` | ''>('')
+  const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
   const [isRefreshingRoute, setIsRefreshingRoute] = useState(false)
+  const receiptHandled = useRef<{ hash?: `0x${string}`; outcome?: 'success' | 'error' }>({})
 
   // Hooks: form, preview, allowance, execution
   const currentSupplyFormatted = leverageTokenState
@@ -208,6 +217,14 @@ export function LeverageTokenMintModal({
   // USD estimates now derived inside useMintPlanPreview
   const expectedUsdOut = planPreview.expectedUsdOut
   const guaranteedUsdOut = planPreview.guaranteedUsdOut
+
+  // Track receipt (declared before expectedTokens; effect declared below after expectedTokens)
+  const receiptState = useWaitForTransactionReceipt({
+    hash: transactionHash,
+    chainId: leverageTokenConfig.chainId,
+    confirmations: 1,
+    query: { enabled: Boolean(transactionHash) },
+  })
 
   // Build route/safety breakdown (best-effort)
   const breakdown = useMemo(() => {
@@ -348,7 +365,7 @@ export function LeverageTokenMintModal({
     toInput()
     form.setAmount('')
     setError('')
-    setTransactionHash('')
+    setTransactionHash(undefined)
 
     // Track funnel step: mint modal opened
     analytics.funnelStep('mint_leverage_token', 'modal_opened', 1)
@@ -397,6 +414,74 @@ export function LeverageTokenMintModal({
       TOKEN_AMOUNT_DISPLAY_DECIMALS,
     )
   }, [planPreview.plan?.expectedShares, leverageTokenConfig.decimals])
+
+  // Receipt effect (after expectedTokens to satisfy dependency ordering)
+  useEffect(() => {
+    if (!transactionHash) {
+      receiptHandled.current = {}
+      return
+    }
+    if (receiptState.isSuccess) {
+      if (
+        receiptHandled.current.hash === (transactionHash as `0x${string}`) &&
+        receiptHandled.current.outcome === 'success'
+      )
+        return
+      receiptHandled.current = { hash: transactionHash as `0x${string}`, outcome: 'success' }
+      void (async () => {
+        try {
+          await invalidateLeverageTokenQueries(queryClient, {
+            token: leverageTokenAddress,
+            chainId: leverageTokenConfig.chainId,
+            ...(userAddress ? { owner: userAddress as `0x${string}` } : {}),
+            includeUser: true,
+            refetchType: 'active',
+          })
+          refetchCollateralBalance?.()
+          refetchLeverageTokenBalance?.()
+        } catch {}
+        const tokenSymbol = leverageTokenConfig.symbol
+        const amount = form.amount
+        const usdValue = (parseFloat(form.amount || '0') || 0) * (selectedToken.price || 0)
+        trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
+        analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
+        toast.success('Leverage tokens minted successfully!', {
+          description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} ${leverageTokenConfig.symbol}`,
+        })
+        toSuccess()
+      })()
+    } else if (receiptState.isError) {
+      if (
+        receiptHandled.current.hash === (transactionHash as `0x${string}`) &&
+        receiptHandled.current.outcome === 'error'
+      )
+        return
+      receiptHandled.current = { hash: transactionHash as `0x${string}`, outcome: 'error' }
+      const errMsg = receiptState.error?.message || 'Transaction failed or timed out.'
+      setError(errMsg)
+      toError()
+    }
+  }, [
+    transactionHash,
+    receiptState.isSuccess,
+    receiptState.isError,
+    receiptState.error,
+    leverageTokenConfig.chainId,
+    leverageTokenAddress,
+    userAddress,
+    form.amount,
+    selectedToken.price,
+    selectedToken.symbol,
+    expectedTokens,
+    refetchCollateralBalance,
+    refetchLeverageTokenBalance,
+    trackLeverageTokenMinted,
+    analytics,
+    toSuccess,
+    toError,
+    leverageTokenConfig.symbol,
+    queryClient,
+  ])
 
   // Available tokens for minting (only collateral asset for now)
   const availableTokens: Array<Token> = [
@@ -464,7 +549,7 @@ export function LeverageTokenMintModal({
     }
   }
 
-  // Handle mint confirmation (write-only; receipt handled by useWaitForTransactionReceipt)
+  // Handle mint confirmation
   const handleConfirm = async () => {
     if (!publicClient) return
     if (!userAddress || !isConnected || !form.amountRaw) return
@@ -583,34 +668,6 @@ export function LeverageTokenMintModal({
     }
   }
 
-  // Track receipt and finalize via hook
-  useMintReceipt({
-    ...(transactionHash ? { hash: transactionHash as `0x${string}` } : {}),
-    chainId: leverageTokenConfig.chainId as SupportedChainId,
-    token: leverageTokenAddress,
-    ...(userAddress ? { owner: userAddress as `0x${string}` } : {}),
-    includeUser: true,
-    confirmations: 1,
-    refetchCollateralBalance,
-    refetchLeverageTokenBalance,
-    onSuccess: () => {
-      const tokenSymbol = leverageTokenConfig.symbol
-      const amount = form.amount
-      const usdValue = (parseFloat(form.amount || '0') || 0) * (selectedToken.price || 0)
-      trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
-      analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
-      toast.success('Leverage tokens minted successfully!', {
-        description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} ${leverageTokenConfig.symbol}`,
-      })
-      toSuccess()
-    },
-    onError: (err) => {
-      const errMsg = err?.message || 'Transaction failed or timed out.'
-      setError(errMsg)
-      toError()
-    },
-  })
-
   // Handle retry from error state
   const handleRetry = () => {
     toInput()
@@ -620,6 +677,9 @@ export function LeverageTokenMintModal({
   // Handle modal close
   const handleClose = () => {
     if (currentStep === 'pending') return // Prevent closing during transaction
+    // Reset tx state so next open starts clean
+    setTransactionHash(undefined)
+    receiptHandled.current = {}
     onClose()
   }
 
@@ -720,7 +780,7 @@ export function LeverageTokenMintModal({
             amount={form.amount}
             expectedTokens={expectedTokens}
             leverageTokenSymbol={leverageTokenConfig.symbol}
-            transactionHash={transactionHash}
+            transactionHash={transactionHash ?? ''}
             onClose={handleClose}
           />
         )
