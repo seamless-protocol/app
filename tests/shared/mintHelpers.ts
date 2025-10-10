@@ -1,5 +1,6 @@
 import type { Address, PublicClient } from 'viem'
 import { parseUnits } from 'viem'
+import { planMintV2 } from '@/domain/mint/planner/plan.v2'
 import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import {
@@ -14,13 +15,10 @@ import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
-} from '@/lib/contracts/generated'
-import { ADDR, CHAIN_ID, mode, RPC } from './env'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
-import {
   simulateLeverageRouterV2Deposit,
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
+import { ADDR, CHAIN_ID, mode, RPC } from './env'
 import { readErc20Decimals } from './erc20'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
 

@@ -1,4 +1,4 @@
-import { type Address, type Hash, erc20Abi, getAddress, type PublicClient, parseUnits } from 'viem'
+import { type Address, erc20Abi, getAddress, type Hash, type PublicClient, parseUnits } from 'viem'
 import { planMintV2 } from '@/domain/mint/planner/plan.v2'
 import {
   createDebtToCollateralQuote,
