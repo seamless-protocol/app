@@ -6,8 +6,16 @@ export function useMintForm(params: {
   decimals: number
   walletBalanceFormatted: string // display string like '12.3456'
   minAmountFormatted?: string // e.g. '0.01' (pass from MIN_MINT_AMOUNT_DISPLAY)
+  currentSupply?: number | undefined // current leverage token supply
+  supplyCap?: number | undefined // leverage token supply cap
 }) {
-  const { decimals, walletBalanceFormatted, minAmountFormatted = '0.01' } = params
+  const {
+    decimals,
+    walletBalanceFormatted,
+    minAmountFormatted = '0.01',
+    currentSupply,
+    supplyCap,
+  } = params
 
   const [amount, setAmount] = useState('')
 
@@ -43,6 +51,14 @@ export function useMintForm(params: {
     return Number.isFinite(n) && n >= minAmountNum
   }, [amount, minAmountNum])
 
+  const supplyCapOk = useMemo(() => {
+    if (!supplyCap) return true // No cap defined
+    if (typeof currentSupply !== 'number') return true // No current supply data available
+    const n = Number(amount || '0')
+    if (!Number.isFinite(n) || n <= 0) return true // Invalid amount, let other validations handle it
+    return currentSupply + n <= supplyCap
+  }, [amount, currentSupply, supplyCap])
+
   const onAmountChange = useCallback((value: string) => {
     if (value === '' || /^\d*\.?\d*$/.test(value)) setAmount(value)
   }, [])
@@ -77,6 +93,7 @@ export function useMintForm(params: {
     isAmountValid,
     hasBalance,
     minAmountOk,
+    supplyCapOk,
     onAmountChange,
     onPercent,
   }

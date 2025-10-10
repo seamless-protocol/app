@@ -43,7 +43,6 @@ export function LiFiWidget() {
     () => ({
       integrator: 'seamless-protocol',
       variant: 'wide',
-      subvariant: 'split',
       // Keep LiFi in sync with app mode; do not let it drive mode
       appearance: resolvedTheme,
       theme: {

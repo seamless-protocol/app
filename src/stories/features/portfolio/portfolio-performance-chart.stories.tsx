@@ -123,7 +123,10 @@ export const Default: Story = {
         gradientColors={{ start: '#A16CFE', end: '#A16CFE' }}
         strokeColor="#A16CFE"
         yAxisLabel="Portfolio Value ($)"
-        tooltipFormatter={(value) => [`$${Number(value).toLocaleString()}`, 'Portfolio Value']}
+        tooltipFormatter={(value) => [
+          `$${Number(value).toLocaleString('en-US')}`,
+          'Portfolio Value',
+        ]}
         yAxisFormatter={(value) => {
           if (value >= 1000000) {
             return `${(value / 1000000).toFixed(0)}M`

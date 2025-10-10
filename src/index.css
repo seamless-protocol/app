@@ -553,43 +553,11 @@ html.dark [data-rk] {
 }
 
 @layer components {
-  .lifi-widget button[role="tab"] {
-    color: var(--text-secondary);
-    background-color: transparent;
-  }
-
-  .lifi-widget button[role="tab"][aria-selected="true"] {
-    background-color: color-mix(in srgb, var(--brand-secondary) 20%, var(--surface-card) 80%);
-    color: var(--text-primary);
-    border-radius: 999px;
-  }
-
-  .lifi-widget button[role="tab"][aria-selected="false"]:hover {
-    background-color: color-mix(in srgb, var(--brand-secondary) 12%, var(--surface-card) 88%);
-    color: var(--text-primary);
-  }
-
-  .lifi-widget [class*="MuiToggleButton-root"] {
-    border-radius: 999px !important;
-    border-color: var(--divider-line) !important;
-    color: var(--text-secondary) !important;
-  }
-
-  .lifi-widget [class*="MuiToggleButton-root"].Mui-selected {
-    background-color: color-mix(
-      in srgb,
-      var(--brand-primary) 20%,
-      var(--surface-card) 80%
-    ) !important;
-    color: var(--text-primary) !important;
-  }
-
-  .lifi-widget [class*="MuiTypography-root"] {
-    color: var(--text-secondary) !important;
-  }
-
-  .lifi-widget [class*="MuiTabs-root"] {
-    border: 1px solid var(--lifi-palette-divider) !important;
+  .lifi-widget {
+    border: 1px solid var(--divider-line);
+    border-radius: 16px;
+    background: var(--surface-card);
+    overflow: hidden;
   }
 }
 

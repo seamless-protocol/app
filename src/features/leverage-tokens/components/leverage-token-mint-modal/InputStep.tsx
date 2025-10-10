@@ -74,7 +74,6 @@ interface InputStepProps {
 
   // Warning
   isBelowMinimum?: boolean | undefined
-
   // Estimated USD value of expected shares (optional)
   expectedUsdOut?: number | undefined
   // Guaranteed (minOut-aware) USD value floor (optional)
@@ -83,6 +82,7 @@ interface InputStepProps {
   breakdown?: Array<{ label: string; value: string }>
   // Optional impact warning text
   impactWarning?: string
+  supplyCapExceeded?: boolean | undefined
 }
 
 export function InputStep({
@@ -117,6 +117,8 @@ export function InputStep({
   guaranteedUsdOut,
   breakdown,
   impactWarning,
+  supplyCapExceeded,
+  supplyCapExceeded,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const mintAmountId = useId()
@@ -432,8 +434,8 @@ export function InputStep({
             <details className="mt-2 text-xs text-secondary-foreground">
               <summary className="cursor-pointer select-none">Show route & safety details</summary>
               <div className="mt-2 space-y-1">
-                {breakdown.map((row, i) => (
-                  <div key={`${i}-${row.label}`} className="flex items-center justify-between">
+                {breakdown.map((row) => (
+                  <div key={`${row.label}:${row.value}`} className="flex items-center justify-between">
                     <span>{row.label}</span>
                     <span className="text-foreground">{row.value}</span>
                   </div>
@@ -445,6 +447,15 @@ export function InputStep({
       </Card>
 
       {error && <Alert type="error" title="Error" description={error} />}
+
+      {/* Supply Cap Error */}
+      {supplyCapExceeded && (
+        <Alert
+          type="error"
+          title="Supply Cap Exceeded"
+          description="The mint amount exceeds the current Leverage Token recommended mint cap."
+        />
+      )}
 
       {/* Warning Display */}
       {isBelowMinimum && (

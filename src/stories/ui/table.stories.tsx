@@ -28,7 +28,7 @@ const sampleData = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
   name: `Strategy ${i + 1}`,
   apy: `${(Math.random() * 20 + 5).toFixed(2)}%`,
-  tvl: `$${(Math.random() * 1000000 + 100000).toLocaleString()}`,
+  tvl: `$${(Math.random() * 1000000 + 100000).toLocaleString('en-US')}`,
   risk: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
   status: ['Active', 'Paused', 'Closed'][Math.floor(Math.random() * 3)],
 }))
@@ -248,7 +248,7 @@ export const LargeDataset: Story = {
       id: i + 1,
       name: `Large Strategy ${i + 1}`,
       apy: `${(Math.random() * 30 + 2).toFixed(2)}%`,
-      tvl: `$${(Math.random() * 5000000 + 50000).toLocaleString()}`,
+      tvl: `$${(Math.random() * 5000000 + 50000).toLocaleString('en-US')}`,
       risk: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
       status: ['Active', 'Paused', 'Closed'][Math.floor(Math.random() * 3)],
     }))

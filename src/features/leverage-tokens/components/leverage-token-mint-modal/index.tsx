@@ -24,6 +24,7 @@ import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
+import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateAfterReceipt } from '../../utils/invalidateAfterReceipt'
 import { ApproveStep } from './ApproveStep'
@@ -92,6 +93,12 @@ export function LeverageTokenMintModal({
   // Fetch leverage token fees
   const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(leverageTokenAddress)
 
+  // Fetch leverage token state (current supply)
+  const { data: leverageTokenState } = useLeverageTokenState(
+    leverageTokenAddress,
+    leverageTokenConfig.chainId,
+  )
+
   // Get real wallet balance for collateral asset
   const {
     balance: collateralBalance,
@@ -156,10 +163,20 @@ export function LeverageTokenMintModal({
   const [isRefreshingRoute, setIsRefreshingRoute] = useState(false)
 
   // Hooks: form, preview, allowance, execution
+  const currentSupplyFormatted = leverageTokenState
+    ? Number(formatUnits(leverageTokenState.totalSupply, leverageTokenConfig.decimals))
+    : undefined
+
   const form = useMintForm({
     decimals: leverageTokenConfig.collateralAsset.decimals,
     walletBalanceFormatted: collateralBalanceFormatted,
     minAmountFormatted: MIN_MINT_AMOUNT_DISPLAY,
+    ...(leverageTokenState && {
+      currentSupply: currentSupplyFormatted,
+    }),
+    ...(leverageTokenConfig.supplyCap && {
+      supplyCap: leverageTokenConfig.supplyCap,
+    }),
   })
 
   const quoteDebtToCollateral = useDebtToCollateralQuote({
@@ -401,6 +418,7 @@ export function LeverageTokenMintModal({
     return (
       form.isAmountValid &&
       form.hasBalance &&
+      form.supplyCapOk &&
       !planPreview.isLoading &&
       quoteReady &&
       parseFloat(expectedTokens) > 0 &&
@@ -624,6 +642,7 @@ export function LeverageTokenMintModal({
             mintTokenFee={fees?.mintTokenFee}
             isMintTokenFeeLoading={isFeesLoading}
             isBelowMinimum={isBelowMinimum()}
+            supplyCapExceeded={!form.supplyCapOk}
           />
         )
 
