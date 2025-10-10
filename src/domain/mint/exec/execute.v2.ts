@@ -15,11 +15,9 @@ import {
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
 
-// Infer call array type directly from generated action signature
-type DepositParams = Parameters<typeof simulateLeverageRouterV2Deposit>[1]
+// Infer call array type from write signature to avoid runtime simulate dependency in tests
+type DepositParams = Parameters<typeof writeLeverageRouterV2Deposit>[1]
 type V2Calls = DepositParams['args'][5]
-
-import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from '@/domain/mint/utils/constants'
 
 /**
  * @param config Wagmi Config used to resolve active chain and contract addresses
@@ -41,7 +39,6 @@ export async function executeMintV2(params: {
     expectedTotalCollateral: bigint
     expectedDebt: bigint
   }
-  maxSwapCostInCollateralAsset?: bigint
   /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
   routerAddress: Address
   /** Multicall executor address (required for audit-fixes ABI) */
@@ -54,7 +51,6 @@ export async function executeMintV2(params: {
     token,
     account,
     plan,
-    maxSwapCostInCollateralAsset,
     routerAddress: _routerAddress,
     multicallExecutor,
     chainId,
@@ -62,45 +58,19 @@ export async function executeMintV2(params: {
 
   // No allowance handling here; UI should perform approvals beforehand
 
-  void (
-    maxSwapCostInCollateralAsset ??
-    (plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
-  )
-
-  const args = [
-    token,
-    plan.equityInInputAsset,
-    (plan.flashLoanAmount ?? plan.expectedDebt),
-    plan.minShares,
-    multicallExecutor,
-    plan.calls,
-  ] satisfies DepositParams['args']
-
-  const chain = chainId as SupportedChainId
-  /*
-   * NOTE: Simulation commented out intentionally to surface revert reasons
-   * directly in Tenderly when writing the transaction.
-   *
-   * const { request } = await simulateLeverageRouterV2Deposit(config, {
-   *   args,
-   *   account,
-   *   chainId: chain,
-   * })
-   *
-   * const hash = await writeLeverageRouterV2Deposit(config, {
-   *   args: request.args,
-   *   account,
-   *   ...(request.value ? { value: request.value } : {}),
-   *   chainId: chain,
-   * })
-   * return { hash }
-   */
-
-  // Direct write path (no simulate). Useful for Tenderly debugging to see revert details.
-  const hash = await writeLeverageRouterV2Deposit(config, {
-    args,
+  const { request } = await simulateLeverageRouterV2Deposit(config, {
+    args: [
+      token,
+      plan.equityInInputAsset,
+      plan.flashLoanAmount ?? plan.expectedDebt,
+      plan.minShares,
+      multicallExecutor,
+      plan.calls,
+    ],
     account,
-    chainId: chain,
+    chainId: chainId as SupportedChainId,
   })
+
+  const hash = await writeLeverageRouterV2Deposit(config, request)
   return { hash }
 }
