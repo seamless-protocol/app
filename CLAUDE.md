@@ -106,6 +106,7 @@ The app is designed for 7 incremental production releases:
 ### Code Quality
 - **Biome** for linting and formatting
 - Run `bun check:fix` after changes
+- **Remove unused variables**: Delete dead code/unused vars instead of prefixing with underscores. Keep files clean to avoid confusion and lint noise.
 
 ### Naming & Readability
 - **Descriptive variable names**: Avoid single-letter variable names except for trivial indices in very small scopes. Prefer meaningful names that convey intent (e.g., `previewWithTotalCollateral` over `p`, `debtQuote` over `dq`). This applies across domain code, ports, planners, and tests.

@@ -76,10 +76,6 @@ async function prepareRedeemScenario(
 ): Promise<RedeemScenario> {
   const { config } = ctx
 
-  const uniswapRouter =
-    (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
-    ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
-
   const token: Address = ADDR.leverageToken
   const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
   const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
@@ -102,9 +98,10 @@ async function prepareRedeemScenario(
     equityInInputAsset,
     slippageBps,
     chainId,
+    // Use LiFi on Base VNet to mirror production policy (bridges disabled)
     swap: {
-      type: 'uniswapV2',
-      router: uniswapRouter,
+      type: 'lifi',
+      allowBridges: 'none',
     },
   }
 }
@@ -116,12 +113,21 @@ type MintExecution = {
 async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Promise<MintExecution> {
   const { account, config, publicClient } = ctx
   const previousAdapter = process.env['TEST_QUOTE_ADAPTER']
-  process.env['TEST_QUOTE_ADAPTER'] = 'uniswapv2'
-  if (scenario.swap.type !== 'uniswapV2') {
-    throw new Error('Redeem mint helper currently requires an Uniswap V2 swap configuration')
+  const previousUseLifi = process.env['TEST_USE_LIFI']
+  const hasLifiKey = Boolean(process.env['VITE_LIFI_API_KEY'] || process.env['LIFI_API_KEY'])
+  if (hasLifiKey) {
+    process.env['TEST_QUOTE_ADAPTER'] = 'lifi'
+    process.env['TEST_USE_LIFI'] = '1'
+  } else {
+    // Fall back to deterministic Uniswap V2 mint path if LiFi key not provided
+    process.env['TEST_QUOTE_ADAPTER'] = 'uniswapv2'
   }
+  // Seed Uniswap V2 liquidity for the mint helper regardless of redeem swap path
+  const uniswapRouter =
+    (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
+    ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
   await seedUniswapV2PairLiquidity({
-    router: scenario.swap.router,
+    router: uniswapRouter,
     tokenA: scenario.collateralAsset,
     tokenB: scenario.debtAsset,
   })
@@ -135,11 +141,10 @@ async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Prom
       slippageBps: scenario.slippageBps,
     })
   } finally {
-    if (typeof previousAdapter === 'string') {
-      process.env['TEST_QUOTE_ADAPTER'] = previousAdapter
-    } else {
-      delete process.env['TEST_QUOTE_ADAPTER']
-    }
+    if (typeof previousAdapter === 'string') process.env['TEST_QUOTE_ADAPTER'] = previousAdapter
+    else delete process.env['TEST_QUOTE_ADAPTER']
+    if (typeof previousUseLifi === 'string') process.env['TEST_USE_LIFI'] = previousUseLifi
+    else delete process.env['TEST_USE_LIFI']
   }
 
   const sharesAfterMint = await readLeverageTokenBalanceOf(config, {
@@ -164,6 +169,7 @@ type RedeemExecutionResult = {
   swap: RedeemScenario['swap']
   collateralAsset: Address
   debtAsset: Address
+  equityInInputAsset: bigint
 }
 
 type RedeemTestParams = {
@@ -291,6 +297,7 @@ async function performRedeem(
     swap,
     collateralAsset,
     debtAsset,
+    equityInInputAsset: scenario.equityInInputAsset,
   }
 }
 

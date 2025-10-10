@@ -13,6 +13,7 @@ export enum LeverageTokenKey {
   WEETH_WETH_17X_TENDERLY = 'weeth-weth-17x-tenderly',
   CBBTC_USDC_2X_TENDERLY = 'cbbtc-usdc-2x-tenderly',
   WSTETH_ETH_2X_MAINNET = 'wsteth-eth-2x-mainnet',
+  WEETH_WETH_17X_BASE_MAINNET = 'weeth-weth-17x-base-mainnet',
   // Add more token keys here as they are added
   // ANOTHER_TOKEN = 'another-token',
 }
@@ -97,6 +98,11 @@ export interface LeverageTokenConfig {
     collateralToDebt?: SwapConfig
   }
 
+  // Planner tuning (optional)
+  planner?: {
+    epsilonBps?: number // tiny safety margin used in sizing (default 10 bps)
+  }
+
   // Related resources (optional)
   relatedResources?: {
     underlyingPlatforms: Array<ResourceItem>
@@ -106,6 +112,41 @@ export interface LeverageTokenConfig {
 
 // Leverage token configurations
 export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
+  [LeverageTokenKey.WEETH_WETH_17X_BASE_MAINNET]: {
+    address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
+    name: 'weETH / WETH 17x Leverage Token',
+    symbol: 'WEETH-WETH-17x',
+    description:
+      'weETH / WETH 17x leverage token that amplifies relative price movements between weETH and WETH on Base',
+    decimals: 18,
+    leverageRatio: 17,
+    chainId: 8453,
+    chainName: 'Base',
+    chainLogo: BaseLogo,
+    supplyCap: 150,
+    collateralAsset: {
+      symbol: 'weETH',
+      name: 'Wrapped Ether.fi ETH',
+      address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
+      decimals: 18,
+    },
+    debtAsset: {
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      address: BASE_WETH,
+      decimals: 18,
+    },
+    swaps: {
+      // Temporarily force Uniswap V2 routing on Base to validate logic
+      debtToCollateral: {
+        type: 'lifi',
+      },
+      collateralToDebt: {
+        type: 'lifi',
+      },
+    },
+    planner: { epsilonBps: 10 },
+  },
   [LeverageTokenKey.WSTETH_ETH_2X_MAINNET]: {
     address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
     name: 'wstETH / ETH 2x Leverage Token',
@@ -145,9 +186,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         allowBridges: 'none',
       },
     },
+    planner: { epsilonBps: 10 },
   },
   [LeverageTokenKey.WEETH_WETH_17X_TENDERLY]: {
-    address: '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as Address,
+    address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
     name: 'weETH / WETH 17x Leverage Token (Tenderly)',
     symbol: 'WEETH-WETH-17x',
     description:

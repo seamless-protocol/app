@@ -250,6 +250,7 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
         approvalTarget: getAddress(router),
         calldata,
         deadline,
+        ...(inToken.toLowerCase() === ETH_SENTINEL.toLowerCase() ? { wantsNativeIn: true } : {}),
       }
     }
 
@@ -286,6 +287,7 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
       approvalTarget: getAddress(router),
       calldata,
       deadline,
+      ...(inToken.toLowerCase() === ETH_SENTINEL.toLowerCase() ? { wantsNativeIn: true } : {}),
     }
   }
 }

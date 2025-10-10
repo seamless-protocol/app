@@ -8,11 +8,15 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
-import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
+import {
+  contractAddresses,
+  getContractAddresses,
+  type SupportedChainId,
+} from '@/lib/contracts/addresses'
 import { executeMintV2 } from './exec/execute.v2'
 import { planMintV2 } from './planner/plan.v2'
 import type { QuoteFn } from './planner/types'
-import { createManagerPortV2 } from './ports'
+// ManagerPort removed; planner uses router.previewDeposit directly
 import { DEFAULT_SLIPPAGE_BPS } from './utils/constants'
 
 // Keep parameter types simple to avoid brittle codegen coupling
@@ -93,23 +97,12 @@ export async function orchestrateMint(params: {
       : undefined) ??
       {})
   const envRouterV2 = env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
-  const envManagerV2 = env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
   // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit overrides
   const chainAddresses = getContractAddresses(params.chainId)
   const routerAddressV2 =
     params.routerAddressV2 ||
     (chainAddresses.leverageRouterV2 as Address | undefined) ||
     envRouterV2
-  const managerAddressV2 =
-    params.managerAddressV2 ||
-    (chainAddresses.leverageManagerV2 as Address | undefined) ||
-    envManagerV2
-
-  const managerPort = createManagerPortV2({
-    config,
-    ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
-    ...(routerAddressV2 ? { routerAddress: routerAddressV2 } : {}),
-  })
 
   const plan = await planMintV2({
     config,
@@ -119,9 +112,7 @@ export async function orchestrateMint(params: {
     slippageBps,
     quoteDebtToCollateral,
     ...(quoteInputToCollateral ? { quoteInputToCollateral } : {}),
-    managerPort,
-    ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
-    chainId: params.chainId,
+    chainId: params.chainId as SupportedChainId,
   })
 
   const tx = await executeMintV2({
@@ -131,6 +122,7 @@ export async function orchestrateMint(params: {
     plan: {
       inputAsset: plan.inputAsset,
       equityInInputAsset: plan.equityInInputAsset,
+      flashLoanAmount: plan.flashLoanAmount,
       minShares: plan.minShares,
       calls: plan.calls,
       expectedTotalCollateral: plan.expectedTotalCollateral,

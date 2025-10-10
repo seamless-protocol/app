@@ -5,12 +5,14 @@ import type { Address, Hex } from 'viem'
 
 // Quote for external swaps (if needed during operations)
 export type Quote = {
-  // Amount the router is guaranteed to receive (minOut semantics)
+  // Expected output (nice-weather) in outToken base units
   out: bigint
-  // Explicit minOut field for PRD clarity (alias of out)
+  // Guaranteed output after slippage in outToken base units
   minOut?: bigint
   // For exact-out quotes: maximum input the router may spend to achieve `out` under slippage
   maxIn?: bigint
+  // Adapter may require native (ETH) input value
+  wantsNativeIn?: boolean
   // Optional deadline (if provided by the aggregator/DEX)
   deadline?: bigint
   // Target to approve before submitting calldata

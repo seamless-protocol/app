@@ -171,6 +171,13 @@ export async function seedUniswapV2PairLiquidity(options: {
     return
   }
 
+  // Ensure the signer has native funds to pay gas for pair.sync and approvals
+  try {
+    await topUpNative(account.address, '1')
+  } catch (e) {
+    console.warn('[POOL SEED] Failed to pre-fund signer for gas', e)
+  }
+
   const { router, multiplier = 2000n } = options
   const safeMultiplier = multiplier < 1n ? 1n : multiplier
 

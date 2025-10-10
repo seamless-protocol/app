@@ -26,6 +26,7 @@ interface ConfirmStepProps {
   expectedTokens: string
   leverageTokenConfig: LeverageTokenConfig
   onConfirm: () => void
+  disabled?: boolean
 }
 
 export function ConfirmStep({
@@ -34,6 +35,7 @@ export function ConfirmStep({
   expectedTokens,
   leverageTokenConfig,
   onConfirm,
+  disabled = false,
 }: ConfirmStepProps) {
   // Get real-time gas estimation
   const {
@@ -111,9 +113,15 @@ export function ConfirmStep({
         </div>
       </Card>
 
-      <Button onClick={onConfirm} variant="gradient" size="lg" className="w-full font-medium">
+      <Button
+        onClick={onConfirm}
+        disabled={disabled}
+        variant="gradient"
+        size="lg"
+        className="w-full font-medium"
+      >
         <Zap className="h-4 w-4" aria-hidden="true" />
-        Confirm Mint
+        {disabled ? 'Updating quote…' : 'Confirm Mint'}
       </Button>
     </div>
   )

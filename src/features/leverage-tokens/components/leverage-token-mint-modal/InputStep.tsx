@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   ArrowDown,
   ChevronDown,
   ChevronUp,
@@ -73,6 +74,14 @@ interface InputStepProps {
 
   // Warning
   isBelowMinimum?: boolean | undefined
+  // Estimated USD value of expected shares (optional)
+  expectedUsdOut?: number | undefined
+  // Guaranteed (minOut-aware) USD value floor (optional)
+  guaranteedUsdOut?: number | undefined
+  // Optional route/safety breakdown lines
+  breakdown?: Array<{ label: string; value: string }>
+  // Optional impact warning text
+  impactWarning?: string
   supplyCapExceeded?: boolean | undefined
 }
 
@@ -104,6 +113,10 @@ export function InputStep({
   mintTokenFee,
   isMintTokenFeeLoading,
   isBelowMinimum,
+  expectedUsdOut,
+  guaranteedUsdOut,
+  breakdown,
+  impactWarning,
   supplyCapExceeded,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
@@ -325,6 +338,12 @@ export function InputStep({
       >
         <h4 className="mb-3 text-sm font-medium text-foreground">Transaction Summary</h4>
         <div className="space-y-2 text-sm">
+          {impactWarning && (
+            <div className="flex items-start gap-2 rounded-md border border-[var(--tag-warning-bg)]/40 bg-[var(--tag-warning-bg)]/20 p-2 text-[var(--tag-warning-text)]">
+              <AlertTriangle className="h-4 w-4 mt-0.5" />
+              <div>{impactWarning}</div>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Mint Token Fee</span>
             <span className="text-foreground">
@@ -384,17 +403,48 @@ export function InputStep({
                   ? 'Calculating...'
                   : `${expectedTokens} ${leverageTokenConfig.symbol}`}
               </div>
-              {!isCalculating && amount && parseFloat(amount) > 0 && selectedToken.price && (
-                <div className="text-xs text-secondary-foreground">
-                  ≈ $
-                  {(parseFloat(amount) * selectedToken.price).toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </div>
-              )}
+              {!isCalculating &&
+                typeof expectedUsdOut === 'number' &&
+                Number.isFinite(expectedUsdOut) && (
+                  <div className="text-xs text-secondary-foreground">
+                    ≈ $
+                    {expectedUsdOut.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                )}
+              {!isCalculating &&
+                typeof guaranteedUsdOut === 'number' &&
+                Number.isFinite(guaranteedUsdOut) && (
+                  <div className="text-xs text-secondary-foreground">
+                    Guaranteed ≥ $
+                    {guaranteedUsdOut.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                )}
             </div>
           </div>
+
+          {/* Optional route & safety breakdown */}
+          {!isCalculating && breakdown && breakdown.length > 0 && (
+            <details className="mt-2 text-xs text-secondary-foreground">
+              <summary className="cursor-pointer select-none">Show route & safety details</summary>
+              <div className="mt-2 space-y-1">
+                {breakdown.map((row) => (
+                  <div
+                    key={`${row.label}:${row.value}`}
+                    className="flex items-center justify-between"
+                  >
+                    <span>{row.label}</span>
+                    <span className="text-foreground">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
         </div>
       </Card>
 

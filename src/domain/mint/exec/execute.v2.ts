@@ -15,11 +15,9 @@ import {
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
 
-// Infer call array type directly from generated action signature
-type DepositParams = Parameters<typeof simulateLeverageRouterV2Deposit>[1]
+// Infer call array type from write signature to avoid runtime simulate dependency in tests
+type DepositParams = Parameters<typeof writeLeverageRouterV2Deposit>[1]
 type V2Calls = DepositParams['args'][5]
-
-import { BPS_DENOMINATOR, DEFAULT_MAX_SWAP_COST_BPS } from '@/domain/mint/utils/constants'
 
 /**
  * @param config Wagmi Config used to resolve active chain and contract addresses
@@ -35,11 +33,13 @@ export async function executeMintV2(params: {
   plan: {
     inputAsset: Address
     equityInInputAsset: bigint
+    flashLoanAmount?: bigint
     minShares: bigint
     calls: V2Calls
     expectedTotalCollateral: bigint
     expectedDebt: bigint
   }
+  /** Optional cap for router swap costs (not enforced client-side) */
   maxSwapCostInCollateralAsset?: bigint
   /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
   routerAddress: Address
@@ -53,7 +53,6 @@ export async function executeMintV2(params: {
     token,
     account,
     plan,
-    maxSwapCostInCollateralAsset,
     routerAddress: _routerAddress,
     multicallExecutor,
     chainId,
@@ -61,33 +60,19 @@ export async function executeMintV2(params: {
 
   // No allowance handling here; UI should perform approvals beforehand
 
-  void (
-    maxSwapCostInCollateralAsset ??
-    (plan.expectedTotalCollateral * DEFAULT_MAX_SWAP_COST_BPS) / BPS_DENOMINATOR
-  )
-
-  const args = [
-    token,
-    plan.equityInInputAsset,
-    plan.expectedDebt,
-    plan.minShares,
-    multicallExecutor,
-    plan.calls,
-  ] satisfies DepositParams['args']
-
-  const chain = chainId as SupportedChainId
   const { request } = await simulateLeverageRouterV2Deposit(config, {
-    // deposit(token, collateralFromSender, flashLoanAmount, minShares, multicallExecutor, swapCalls)
-    args,
+    args: [
+      token,
+      plan.equityInInputAsset,
+      plan.flashLoanAmount ?? plan.expectedDebt,
+      plan.minShares,
+      multicallExecutor,
+      plan.calls,
+    ],
     account,
-    chainId: chain,
+    chainId: chainId as SupportedChainId,
   })
 
-  const hash = await writeLeverageRouterV2Deposit(config, {
-    args: request.args,
-    account,
-    ...(request.value ? { value: request.value } : {}),
-    chainId: chain,
-  })
+  const hash = await writeLeverageRouterV2Deposit(config, request)
   return { hash }
 }

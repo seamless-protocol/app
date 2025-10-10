@@ -38,9 +38,10 @@ export function useMintExecution(params: {
   const addresses = useMemo(() => getContractAddresses(chainId), [chainId])
   const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
   const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
-  const envMulticallExecutor = import.meta.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] as
-    | Address
-    | undefined
+  const multicallExecutorAddress = useMemo(
+    () => (addresses.multicallExecutor as Address | undefined) ?? undefined,
+    [addresses.multicallExecutor],
+  )
 
   const routerAddressV2 = useMemo(() => {
     // Prefer chain-scoped addresses (respects Tenderly overrides), fallback to env
@@ -51,11 +52,6 @@ export function useMintExecution(params: {
     // Prefer chain-scoped addresses (respects Tenderly overrides), fallback to env
     return (addresses.leverageManagerV2 as Address | undefined) ?? envManagerV2
   }, [envManagerV2, addresses.leverageManagerV2])
-
-  const multicallExecutorAddress = useMemo(() => {
-    // Prefer chain-scoped multicallExecutor (respects Tenderly overrides), fallback to env
-    return (addresses.multicallExecutor as Address | undefined) ?? envMulticallExecutor
-  }, [envMulticallExecutor, addresses.multicallExecutor])
 
   const canSubmit = useMemo(() => Boolean(account), [account])
 
@@ -82,6 +78,7 @@ export function useMintExecution(params: {
           slippageBps,
           getPublicClient: (cid: number): PublicClient | undefined =>
             cid === chainId ? chainPublicClient : undefined,
+          // Use the multicall executor as fromAddress; it executes swap calls on-chain
           ...(multicallExecutorAddress ? { fromAddress: multicallExecutorAddress } : {}),
         })
 
@@ -89,8 +86,20 @@ export function useMintExecution(params: {
           throw new Error('Quote is required for V2 mint')
         }
 
+        // Ensure wallet is on the correct chain before proceeding
         if (activeChainId !== chainId) {
-          await switchChainAsync({ chainId })
+          try {
+            await switchChainAsync({ chainId })
+          } catch (_switchErr) {
+            const err = new Error(
+              `Wrong network: expected ${chainId}, got ${activeChainId}. Please switch in your wallet.`,
+            ) as Error & { expectedChainId?: number; actualChainId?: number; code?: number }
+            err.expectedChainId = chainId
+            err.actualChainId = activeChainId
+            // Map to common wallet error code used by our classifier
+            err.code = 4902
+            throw err
+          }
         }
 
         const { hash } = await orchestrateMint({
@@ -108,7 +117,11 @@ export function useMintExecution(params: {
         setHash(hash)
         setStatus('pending')
         const receiptClient = (chainPublicClient ?? activePublicClient) as PublicClient | undefined
-        await receiptClient?.waitForTransactionReceipt({ hash })
+        if (!receiptClient) throw new Error('Missing public client to read transaction receipt')
+        const receipt = await receiptClient.waitForTransactionReceipt({ hash })
+        if (receipt.status !== 'success') {
+          throw new Error('Transaction reverted')
+        }
         setStatus('success')
         return hash
       } catch (e: unknown) {

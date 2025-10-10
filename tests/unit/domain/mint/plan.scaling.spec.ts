@@ -8,28 +8,30 @@ const TOKEN = '0x0000000000000000000000000000000000000001' as Address
 const COLLATERAL = '0x0000000000000000000000000000000000000002' as Address
 const DEBT = '0x0000000000000000000000000000000000000003' as Address
 
-// Minimal ManagerPort stub to drive scaling math
-const managerPort = {
-  async idealPreview({ userCollateral }: { token: Address; userCollateral: bigint }) {
-    return {
-      targetCollateral: userCollateral * 2n,
-      idealDebt: 4_463_830_821n,
-      idealShares: 1_000_000_000_000_000_000n,
-    }
-  },
-  async finalPreview({ totalCollateral }: { token: Address; totalCollateral: bigint }) {
-    // Return a previewed debt comfortably above the scaled flash loan amount
-    return {
-      previewDebt: 4_460_000_000n,
-      previewShares: (totalCollateral * 997_010_445_737_461_631n) / 1_994_020_891_474_923_263n,
-    }
-  },
-}
+// Mock router.previewDeposit to drive scaling math
+const routerPreview = vi.fn(async ({ args }: { args: [Address, bigint] }) => {
+  const userCollateral = args[1]
+  return {
+    collateral: userCollateral * 2n,
+    debt: 4_463_830_821n,
+    shares: 1_000_000_000_000_000_000n,
+    tokenFee: 0n,
+    treasuryFee: 0n,
+  }
+})
 
 // Patch manager getters via dynamic import mocking pattern (local override)
 vi.mock('@/lib/contracts/generated', () => ({
   readLeverageManagerV2GetLeverageTokenCollateralAsset: () => COLLATERAL,
   readLeverageManagerV2GetLeverageTokenDebtAsset: () => DEBT,
+  readLeverageManagerV2PreviewDeposit: (_config: any, { args }: { args: [Address, bigint] }) => ({
+    collateral: args[1],
+    debt: 9_999_999_999n,
+    shares: args[1],
+    tokenFee: 0n,
+    treasuryFee: 0n,
+  }),
+  readLeverageRouterV2PreviewDeposit: (_config: any, params: any) => routerPreview(params),
 }))
 
 describe('planner scaling under underfill', () => {
@@ -68,7 +70,6 @@ describe('planner scaling under underfill', () => {
       equityInInputAsset,
       slippageBps: 50,
       quoteDebtToCollateral: quoteDebtToCollateral as any,
-      managerPort: managerPort as any,
       chainId: 8453,
     })
 

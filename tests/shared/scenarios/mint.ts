@@ -1,11 +1,11 @@
-import { type Address, getAddress, type PublicClient, parseUnits } from 'viem'
+import { type Address, erc20Abi, getAddress, type PublicClient, parseUnits } from 'viem'
 import { orchestrateMint } from '@/domain/mint'
 import { planMintV2 } from '@/domain/mint/planner/plan.v2'
-import { createManagerPortV2 } from '@/domain/mint/ports'
 import {
   createDebtToCollateralQuote,
   type DebtToCollateralSwapConfig,
 } from '@/domain/mint/utils/createDebtToCollateralQuote'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -17,8 +17,12 @@ import { readErc20Decimals } from '../erc20'
 import { approveIfNeeded, seedUniswapV2PairLiquidity, topUpErc20, topUpNative } from '../funding'
 import { type WithForkCtx, withFork } from '../withFork'
 
-const DEFAULT_SLIPPAGE_BPS = 50
-const DEFAULT_EQUITY_HUMAN = '10'
+const DEFAULT_SLIPPAGE_BPS = (() => {
+  const raw = process.env['TEST_SLIPPAGE_BPS']
+  const n = raw ? Number(raw) : NaN
+  return Number.isFinite(n) && n > 0 ? n : 50
+})()
+const DEFAULT_EQUITY_HUMAN = process.env['TEST_EQUITY_HUMAN'] || '10'
 
 export type MintTestParams = {
   tokenDefinition: LeverageTokenDefinition
@@ -29,6 +33,11 @@ export type MintTestParams = {
 export type MintExecutionResult = {
   orchestration: Awaited<ReturnType<typeof orchestrateMint>>
   mintedShares: bigint
+  /** User collateral actually spent during mint (balanceBefore - balanceAfter) */
+  collateralDelta?: bigint
+  /** For sanity checks down the line */
+  equityInInputAsset?: bigint
+  collateralAsset?: Address
 }
 
 export type MintPlanResult = {
@@ -65,12 +74,6 @@ export async function planMintTest({
     ensureLiquidity: false,
   })
 
-  const managerPort = createManagerPortV2({
-    config: ctx.config,
-    managerAddress: setup.manager,
-    routerAddress: setup.router,
-  })
-
   const plan = await planMintV2({
     config: ctx.config,
     token: setup.token,
@@ -78,9 +81,7 @@ export async function planMintTest({
     equityInInputAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    managerPort,
-    managerAddress: setup.manager,
-    chainId: tokenDefinition.chainId,
+    chainId: tokenDefinition.chainId as SupportedChainId,
   })
 
   return {
@@ -141,6 +142,14 @@ async function runMintScenario({
     args: [account.address],
   })
 
+  // Capture user collateral balance before mint for accounting sanity
+  const collateralBalanceBefore = (await publicClient.readContract({
+    address: setup.collateralAsset,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: [account.address],
+  })) as bigint
+
   const orchestration = await orchestrateMint({
     config,
     account: account.address,
@@ -165,7 +174,21 @@ async function runMintScenario({
   })
   const mintedShares = sharesAfter - sharesBefore
 
-  return { orchestration, mintedShares }
+  const collateralBalanceAfter = (await publicClient.readContract({
+    address: setup.collateralAsset,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: [account.address],
+  })) as bigint
+  const collateralDelta = collateralBalanceBefore - collateralBalanceAfter
+
+  return {
+    orchestration,
+    mintedShares,
+    collateralDelta,
+    equityInInputAsset: setup.equityInInputAsset,
+    collateralAsset: setup.collateralAsset,
+  }
 }
 
 function resolveTokenAddresses(tokenDefinition: LeverageTokenDefinition) {
@@ -336,7 +359,12 @@ function resolveDebtSwapConfig({
   return { type: 'uniswapV2', router: fallbackRouter }
 }
 
-export function assertMintResult({ orchestration, mintedShares }: MintExecutionResult): void {
+export function assertMintResult({
+  orchestration,
+  mintedShares,
+  collateralDelta,
+  equityInInputAsset,
+}: MintExecutionResult): void {
   if (!/^0x[0-9a-fA-F]{64}$/.test(orchestration.hash)) {
     throw new Error(`Invalid transaction hash returned from mint: ${orchestration.hash}`)
   }
@@ -359,6 +387,15 @@ export function assertMintResult({ orchestration, mintedShares }: MintExecutionR
     throw new Error(
       `Minted shares ${mintedShares} deviate from expected ${expectedShares} beyond tolerance ${tolerance}.`,
     )
+  }
+
+  // Optional accounting sanity: user collateral spent equals declared equity
+  if (typeof collateralDelta === 'bigint' && typeof equityInInputAsset === 'bigint') {
+    if (collateralDelta !== equityInInputAsset) {
+      throw new Error(
+        `Collateral delta ${collateralDelta} does not equal equityInInputAsset ${equityInInputAsset}.`,
+      )
+    }
   }
 }
 

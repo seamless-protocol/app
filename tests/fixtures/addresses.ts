@@ -50,9 +50,9 @@ export const STAKED_SEAM_ADDRESS = assertAddress(
 )
 
 export const BASE_TENDERLY_VNET_PRIMARY_RPC =
-  'https://virtual.base.us-east.rpc.tenderly.co/3433d25e-64a4-4ea1-96c1-fbc9e6022e30' as const
+  'https://virtual.base.eu.rpc.tenderly.co/2faf7455-c3d5-4600-a8e4-26aeaf310092' as const
 export const BASE_TENDERLY_VNET_ADMIN_RPC =
-  'https://virtual.base.us-east.rpc.tenderly.co/a606fc5c-d9c5-4fdc-89d0-8cce505aaf81' as const
+  'https://virtual.base.eu.rpc.tenderly.co/d1da0ec4-9f86-42b9-b747-612ac5efd606' as const
 
 export const MAINNET_TENDERLY_VNET_PRIMARY_RPC =
   'https://virtual.mainnet.us-west.rpc.tenderly.co/60fe0601-dc59-4d58-a97c-e5618290e912' as const
@@ -91,9 +91,9 @@ export interface LeverageTokenDefinition {
 }
 
 const BASE_TENDERLY_VNET_STACK = {
-  leverageManagerV2: '0x959c574EC9A40b64245A3cF89b150Dc278e9E55C' as Address,
-  leverageRouterV2: '0xfd46483b299197c616671b7df295ca5186c805c2' as Address,
-  multicallExecutor: '0xbc097fd3c71c8ec436d8d81e13bceac207fd72cd' as Address,
+  // Base VNet (EU) — aligned to upgraded Base deployment
+  leverageManagerV2: '0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8' as Address,
+  leverageRouterV2: '0x00c66934EBCa0F2A845812bC368B230F6da11A5C' as Address,
 }
 
 const MAINNET_TENDERLY_VNET_STACK = {
@@ -107,14 +107,13 @@ const MAINNET_TENDERLY_VNET_STACK = {
 const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = {
   'weeth-weth-17x': {
     key: 'weeth-weth-17x',
-    address: '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as Address,
+    address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
     label: 'weETH / WETH 17x Leverage Token (Tenderly)',
     chainId: base.id,
     collateralSymbol: 'weETH',
     debtSymbol: 'WETH',
     leverageManagerV2: BASE_TENDERLY_VNET_STACK.leverageManagerV2,
     leverageRouterV2: BASE_TENDERLY_VNET_STACK.leverageRouterV2,
-    multicallExecutor: BASE_TENDERLY_VNET_STACK.multicallExecutor,
     rpcUrl: BASE_TENDERLY_VNET_PRIMARY_RPC,
     adminRpcUrl: BASE_TENDERLY_VNET_ADMIN_RPC,
     swap: {
@@ -168,7 +167,7 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
 const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = {
   'weeth-weth-17x': {
     key: 'weeth-weth-17x',
-    address: '0x17533ef332083aD03417DEe7BC058D10e18b22c5' as Address,
+    address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
     label: 'weETH / WETH 17x Leverage Token',
     chainId: base.id,
     collateralSymbol: 'weETH',
@@ -260,11 +259,9 @@ export const TENDERLY_VNET_CONTRACT_OVERRIDES: Record<number, Partial<ContractAd
     multicallExecutor: MAINNET_TENDERLY_VNET_STACK.multicallExecutor,
   },
   [base.id]: {
-    leverageTokenFactory: '0xA6737ca46336A7714E311597c6C07A18A3aFdCB8' as Address,
+    leverageTokenFactory: '0xE0b2e40EDeb53B96C923381509a25a615c1Abe57' as Address,
     leverageManagerV2: BASE_TENDERLY_VNET_STACK.leverageManagerV2,
     leverageRouterV2: BASE_TENDERLY_VNET_STACK.leverageRouterV2,
-    leverageTokenImpl: '0xfFEF572c179AC02F6285B0da7CB27176A725a8A1' as Address,
-    multicallExecutor: BASE_TENDERLY_VNET_STACK.multicallExecutor,
     tokens: {
       ...(baseContracts.tokens?.usdc ? { usdc: baseContracts.tokens.usdc } : {}),
       weth: BASE_WETH,

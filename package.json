@@ -30,7 +30,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "wagmi": "wagmi generate",
-    "test:integration:wsteth": "TEST_CHAIN=mainnet TEST_MODE=tenderly-static E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-2x bunx vitest -c vitest.integration.config.ts --run tests/integration/leverage-tokens/redeem/router.v2.mainnet.redeem.spec.ts"
+    "test:integration:wsteth": "TEST_CHAIN=mainnet TEST_MODE=tenderly-static E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-2x bunx vitest -c vitest.integration.config.ts --run tests/integration/leverage-tokens/redeem/router.v2.mainnet.redeem.spec.ts tests/integration/leverage-tokens/mint/router.v2.mainnet.mint.spec.ts"
   },
   "dependencies": {
     "@lifi/wallet-management": "^3.17.3",

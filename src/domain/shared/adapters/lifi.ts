@@ -1,6 +1,7 @@
 import type { Address } from 'viem'
 import { getAddress } from 'viem'
 import { base } from 'viem/chains'
+import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
 import type { QuoteFn } from './types'
 
@@ -95,6 +96,8 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       // Allow overriding `fromAddress` to match the executor when needed; otherwise
       // default to the router address.
       fromAddress: (fromAddress ?? router) as Address,
+      // Ensure aggregator sends output to the router so the repay leg has funds
+      toAddress: router as Address,
       slippage,
       ...(integrator ? { integrator } : {}),
       order,
@@ -113,7 +116,18 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     const res = await fetch(url.toString(), { method: 'GET', headers })
     if (!res.ok) throw new Error(`LiFi quote failed: ${res.status} ${res.statusText}`)
     const step = (await res.json()) as Step
-    return mapStepToQuote(step)
+    if ((readEnv('VITE_LIFI_DEBUG') ?? readEnv('LIFI_DEBUG')) === '1') {
+      // eslint-disable-next-line no-console
+      console.info('[LiFi] step', {
+        fromAmount: step.estimate?.fromAmount,
+        toAmount: step.estimate?.toAmount,
+        toAmountMin: step.estimate?.toAmountMin,
+        approvalAddress: step.estimate?.approvalAddress ?? step.transactionRequest?.to,
+        hasTxData: Boolean(step.transactionRequest?.data),
+      })
+    }
+    const wantsNativeIn = inToken.toLowerCase() === ETH_SENTINEL.toLowerCase()
+    return mapStepToQuote(step, wantsNativeIn)
   }
 }
 
@@ -139,6 +153,7 @@ function buildQuoteUrl(
     intent?: 'exactIn' | 'exactOut'
     router: Address
     fromAddress: Address
+    toAddress: Address
     slippage: string
     integrator?: string
     order: LifiOrder
@@ -149,10 +164,15 @@ function buildQuoteUrl(
   // - exact-in:  /v1/quote (fromAmount in query)
   // - exact-out: /v1/quote/toAmount (toAmount in query)
   const url = new URL(params.intent === 'exactOut' ? '/v1/quote/toAmount' : '/v1/quote', baseUrl)
+  const normalizeToken = (token: Address) =>
+    token.toLowerCase() === ETH_SENTINEL.toLowerCase()
+      ? '0x0000000000000000000000000000000000000000'
+      : getAddress(token)
   url.searchParams.set('fromChain', String(params.chainId))
   url.searchParams.set('toChain', String(params.chainId))
-  url.searchParams.set('fromToken', getAddress(params.inToken))
-  url.searchParams.set('toToken', getAddress(params.outToken))
+  url.searchParams.set('fromToken', normalizeToken(params.inToken))
+  url.searchParams.set('toToken', normalizeToken(params.outToken))
+  url.searchParams.set('toAddress', getAddress(params.toAddress))
   // Per LiFi docs, exact-out quotes must provide `toAmount`.
   // Exact-in quotes provide `fromAmount`.
   if (params.intent === 'exactOut') {
@@ -171,22 +191,26 @@ function buildQuoteUrl(
   return url
 }
 
-function mapStepToQuote(step: Step) {
+function mapStepToQuote(step: Step, wantsNativeIn: boolean) {
   const tx = step.transactionRequest
   const approvalTarget = step.estimate?.approvalAddress || tx?.to
   if (!approvalTarget) throw new Error('LiFi quote missing approval target')
   const data = tx?.data
   if (!data) throw new Error('LiFi quote missing transaction data')
 
-  const outStr = step.estimate?.toAmountMin || step.estimate?.toAmount
-  const out = outStr ? BigInt(outStr) : 0n
+  const expectedStr = step.estimate?.toAmount
+  const minStr = step.estimate?.toAmountMin
+  // Prefer minOut (toAmountMin) for safer defaults; fall back to toAmount
+  const out = minStr ? BigInt(minStr) : expectedStr ? BigInt(expectedStr) : 0n
+  const minOut = minStr ? BigInt(minStr) : out
   const maxIn = step.estimate?.fromAmount ? BigInt(step.estimate.fromAmount) : undefined
 
   return {
     out,
-    minOut: out,
+    minOut,
     ...(typeof maxIn === 'bigint' ? { maxIn } : {}),
     approvalTarget: getAddress(approvalTarget),
     calldata: data,
+    wantsNativeIn,
   }
 }

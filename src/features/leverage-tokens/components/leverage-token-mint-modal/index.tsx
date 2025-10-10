@@ -2,12 +2,11 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
-import { useAccount, useConfig, usePublicClient } from 'wagmi'
-import { createManagerPortV2 } from '@/domain/mint/ports'
+import { useAccount, useConfig, usePublicClient, useSwitchChain } from 'wagmi'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
-import { getContractAddresses } from '../../../../lib/contracts/addresses'
+import { BASE_WETH, ETH_SENTINEL, getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
@@ -80,6 +79,7 @@ export function LeverageTokenMintModal({
 
   // Get user account information
   const { address: hookUserAddress, isConnected, chainId: connectedChainId } = useAccount()
+  const { switchChainAsync } = useSwitchChain()
   const wagmiConfig = useConfig()
   const publicClient = usePublicClient({ chainId: leverageTokenConfig.chainId })
   const queryClient = useQueryClient()
@@ -88,7 +88,7 @@ export function LeverageTokenMintModal({
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
   const leverageRouterAddress = contractAddresses.leverageRouterV2
-  const leverageManagerAddress = contractAddresses.leverageManagerV2
+  // manager address not needed for mint plan preview anymore
 
   // Fetch leverage token fees
   const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(leverageTokenAddress)
@@ -119,16 +119,19 @@ export function LeverageTokenMintModal({
     enabled: Boolean(userAddress && isConnected),
   })
 
-  // Get USD price for collateral asset
+  // Get USD prices for collateral and debt assets
   const { data: usdPriceMap, isLoading: isUsdPriceLoading } = useUsdPrices({
     chainId: leverageTokenConfig.chainId,
-    addresses: [leverageTokenConfig.collateralAsset.address],
-    enabled: Boolean(leverageTokenConfig.collateralAsset.address),
+    addresses: [leverageTokenConfig.collateralAsset.address, leverageTokenConfig.debtAsset.address],
+    enabled: Boolean(
+      leverageTokenConfig.collateralAsset.address && leverageTokenConfig.debtAsset.address,
+    ),
   })
 
-  // Get USD price for the collateral asset
+  // USD prices
   const collateralUsdPrice =
     usdPriceMap?.[leverageTokenConfig.collateralAsset.address.toLowerCase()]
+  const debtUsdPrice = usdPriceMap?.[leverageTokenConfig.debtAsset.address.toLowerCase()]
 
   // Format balance for display
   const collateralBalanceFormatted = collateralBalance
@@ -153,9 +156,11 @@ export function LeverageTokenMintModal({
   })
   const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showBreakdown, _] = useState(false)
   // Derive expected tokens from preview data (no local state needed)
   const [transactionHash, setTransactionHash] = useState('')
   const [error, setError] = useState('')
+  const [isRefreshingRoute, setIsRefreshingRoute] = useState(false)
 
   // Hooks: form, preview, allowance, execution
   const currentSupplyFormatted = leverageTokenState
@@ -174,9 +179,6 @@ export function LeverageTokenMintModal({
     }),
   })
 
-  // Removed legacy manager/router preview in favor of route-aware plan preview
-
-  // Optional: route-aware plan preview (uses the actual swap configuration)
   const quoteDebtToCollateral = useDebtToCollateralQuote({
     chainId: leverageTokenConfig.chainId,
     ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
@@ -190,20 +192,6 @@ export function LeverageTokenMintModal({
       : {}),
   })
 
-  // Prefer router-aware preview path to align with tests/integration
-  const managerPort = useMemo(() => {
-    if (!leverageManagerAddress && !leverageRouterAddress) return undefined
-    try {
-      return createManagerPortV2({
-        config: wagmiConfig,
-        ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
-        ...(leverageRouterAddress ? { routerAddress: leverageRouterAddress } : {}),
-      })
-    } catch (_) {
-      return undefined
-    }
-  }, [leverageManagerAddress, leverageRouterAddress, wagmiConfig])
-
   const planPreview = useMintPlanPreview({
     config: wagmiConfig,
     token: leverageTokenAddress,
@@ -212,9 +200,90 @@ export function LeverageTokenMintModal({
     slippageBps,
     chainId: leverageTokenConfig.chainId,
     ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
-    ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
-    ...(managerPort ? { managerPort } : {}),
+    collateralUsdPrice,
+    debtUsdPrice,
+    collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
+    debtDecimals: leverageTokenConfig.debtAsset.decimals,
   })
+
+  // USD estimates now derived inside useMintPlanPreview
+  const expectedUsdOut = planPreview.expectedUsdOut
+  const guaranteedUsdOut = planPreview.guaranteedUsdOut
+
+  // Build route/safety breakdown (best-effort)
+  const breakdown = useMemo(() => {
+    const plan = planPreview.plan
+    const rows: Array<{ label: string; value: string }> = []
+    if (!plan) return rows
+    try {
+      // Leverage multiple ~ expectedDebt / equityIn
+      if (typeof plan.expectedDebt === 'bigint' && typeof plan.equityInInputAsset === 'bigint') {
+        const eq = Number(
+          formatUnits(plan.equityInInputAsset, leverageTokenConfig.collateralAsset.decimals),
+        )
+        const debt = Number(formatUnits(plan.expectedDebt, leverageTokenConfig.debtAsset.decimals))
+        if (eq > 0 && Number.isFinite(eq) && Number.isFinite(debt)) {
+          rows.push({ label: 'Leverage multiple', value: `×${(debt / eq).toFixed(2)}` })
+        }
+      }
+      // Aggregator slippage (from UI setting)
+      rows.push({ label: 'Aggregator slippage', value: `${slippageBps} bps` })
+      // Planner margin (epsilon)
+      const eps = leverageTokenConfig.planner?.epsilonBps ?? 10
+      rows.push({ label: 'Planner safety', value: `${eps} bps` })
+      // Route provider
+      const provider = leverageTokenConfig.swaps?.debtToCollateral?.type ?? '—'
+      rows.push({ label: 'Route provider', value: String(provider) })
+      // MinOut vs Expected out (route floor)
+      if (typeof plan.swapExpectedOut === 'bigint' && typeof plan.swapMinOut === 'bigint') {
+        const exp = Number(
+          formatUnits(plan.swapExpectedOut, leverageTokenConfig.collateralAsset.decimals),
+        )
+        const min = Number(
+          formatUnits(plan.swapMinOut, leverageTokenConfig.collateralAsset.decimals),
+        )
+        if (exp > 0 && Number.isFinite(exp) && Number.isFinite(min)) {
+          const bps = Math.max(0, Math.round((1 - min / exp) * 10000))
+          rows.push({ label: 'Route minOut gap', value: `${bps} bps` })
+        }
+      }
+      return rows
+    } catch {
+      return rows
+    }
+  }, [
+    planPreview.plan,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.decimals,
+    leverageTokenConfig.planner?.epsilonBps,
+    leverageTokenConfig.swaps?.debtToCollateral,
+    slippageBps,
+  ])
+
+  // Impact warning on stable pairs (LST/WETH) if estimated or guaranteed falls below thresholds
+  const impactWarning: string | undefined = useMemo(() => {
+    if (expectedUsdOut === undefined || guaranteedUsdOut === undefined) return undefined
+    const symbol = leverageTokenConfig.collateralAsset.symbol?.toLowerCase?.()
+    const debtSym = leverageTokenConfig.debtAsset.symbol?.toLowerCase?.()
+    const stable = (symbol === 'weeth' || symbol === 'wsteth') && debtSym === 'weth'
+    if (!stable) return undefined
+    const inputUsd = (parseFloat(form.amount || '0') || 0) * (collateralUsdPrice || 0)
+    if (!(inputUsd > 0)) return undefined
+    const expRatio = typeof expectedUsdOut === 'number' ? expectedUsdOut / inputUsd : 1
+    const floorRatio = typeof guaranteedUsdOut === 'number' ? guaranteedUsdOut / inputUsd : 1
+    if (floorRatio < 0.95)
+      return 'Guaranteed outcome is more than 5% below input value for a stable pair.'
+    if (expRatio < 0.97)
+      return 'Estimated outcome is more than 3% below input value for a stable pair.'
+    return undefined
+  }, [
+    leverageTokenConfig.collateralAsset.symbol,
+    leverageTokenConfig.debtAsset.symbol,
+    form.amount,
+    collateralUsdPrice,
+    expectedUsdOut,
+    guaranteedUsdOut,
+  ])
 
   const {
     isAllowanceLoading,
@@ -392,6 +461,64 @@ export function LeverageTokenMintModal({
     // Track funnel step: mint transaction initiated
     analytics.funnelStep('mint_leverage_token', 'transaction_initiated', 2)
 
+    // Provide user feedback if we need to switch chains
+    if (typeof connectedChainId === 'number' && connectedChainId !== leverageTokenConfig.chainId) {
+      try {
+        toast.message('Switching network…', {
+          description: `Switching to ${leverageTokenConfig.chainName}`,
+        })
+        await switchChainAsync({ chainId: leverageTokenConfig.chainId })
+      } catch (switchErr) {
+        const msg =
+          switchErr instanceof Error
+            ? switchErr.message
+            : 'Please switch to the correct network in your wallet and try again.'
+        setError(msg)
+        toError()
+        return
+      }
+    }
+
+    // Pre-flight: protect user's preview floor (minOut) before submitting
+    try {
+      const plan = planPreview.plan
+      const quoteFn = quoteDebtToCollateral.quote
+      if (plan && quoteFn) {
+        const floor = plan.swapMinOut
+        const chainWeth = contractAddresses.tokens?.weth ?? BASE_WETH
+        const inToken =
+          plan.debtAsset.toLowerCase() === chainWeth.toLowerCase()
+            ? ETH_SENTINEL
+            : (plan.debtAsset as `0x${string}`)
+        const outToken = plan.collateralAsset as `0x${string}`
+        const amountIn = plan.flashLoanAmount ?? plan.expectedDebt
+        if (amountIn > 0n && floor > 0n) {
+          const fresh = await quoteFn({ inToken, outToken, amountIn, intent: 'exactIn' })
+          const minNow = typeof fresh.minOut === 'bigint' ? fresh.minOut : fresh.out
+          if (minNow < floor) {
+            toast.message('Refreshing quote…', {
+              description: 'Route moved below your guaranteed floor.',
+            })
+            // Refresh the plan/quote and keep user on Confirm
+            try {
+              setIsRefreshingRoute(true)
+              await planPreview.refetch?.()
+            } catch (_) {
+              // Non-fatal; user can retry
+            } finally {
+              setIsRefreshingRoute(false)
+            }
+            // Do not block; proceed with execution which re-plans with fresh quotes
+          }
+        }
+      }
+    } catch (preCheckErr) {
+      const msg = preCheckErr instanceof Error ? preCheckErr.message : 'Route pre-check failed.'
+      setError(msg)
+      toError()
+      return
+    }
+
     toPending()
     try {
       const hash = await exec.mint(form.amountRaw)
@@ -470,6 +597,14 @@ export function LeverageTokenMintModal({
     onClose()
   }
 
+  // Derive calculating state (used to suppress warnings during refresh)
+  const isCalculating =
+    typeof form.amountRaw === 'bigint' &&
+    form.amountRaw > 0n &&
+    (planPreview.isLoading ||
+      (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
+        quoteDebtToCollateral.status !== 'ready'))
+
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
@@ -488,16 +623,14 @@ export function LeverageTokenMintModal({
             onSlippageChange={setSlippage}
             isCollateralBalanceLoading={isCollateralBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
-            isCalculating={
-              typeof form.amountRaw === 'bigint' &&
-              form.amountRaw > 0n &&
-              (planPreview.isLoading ||
-                (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
-                  quoteDebtToCollateral.status !== 'ready'))
-            }
+            isCalculating={isCalculating}
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedTokens={expectedTokens}
+            expectedUsdOut={expectedUsdOut}
+            guaranteedUsdOut={impactWarning ? guaranteedUsdOut : undefined}
+            breakdown={showBreakdown ? breakdown : []}
+            {...(!isCalculating && impactWarning ? { impactWarning } : {})}
             canProceed={canProceed()}
             needsApproval={needsApproval()}
             isConnected={isConnected}
@@ -535,6 +668,13 @@ export function LeverageTokenMintModal({
               chainId: leverageTokenConfig.chainId,
             }}
             onConfirm={handleConfirm}
+            disabled={
+              isCalculating ||
+              isRefreshingRoute ||
+              (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
+                quoteDebtToCollateral.status !== 'ready') ||
+              !planPreview.plan
+            }
           />
         )
 

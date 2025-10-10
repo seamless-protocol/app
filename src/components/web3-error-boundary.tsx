@@ -202,14 +202,21 @@ export class Web3ErrorBoundary extends Component<Props, State> {
               <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-              {this.state.error && process.env['NODE_ENV'] === 'development' && (
-                <details className="mb-4 rounded-lg bg-muted p-4">
-                  <summary className="cursor-pointer text-sm font-medium">Error details</summary>
-                  <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
-                    {this.state.error.message}
-                  </pre>
-                </details>
-              )}
+              {this.state.error &&
+                ((typeof import.meta !== 'undefined' &&
+                  (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.[
+                    'MODE'
+                  ] === 'development') ||
+                  (typeof process !== 'undefined' &&
+                    process.env &&
+                    process.env['NODE_ENV'] === 'development')) && (
+                  <details className="mb-4 rounded-lg bg-muted p-4">
+                    <summary className="cursor-pointer text-sm font-medium">Error details</summary>
+                    <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
+                      {this.state.error.message}
+                    </pre>
+                  </details>
+                )}
               <div className="flex gap-2">{actions}</div>
             </CardContent>
           </Card>
