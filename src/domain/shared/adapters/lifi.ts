@@ -200,7 +200,8 @@ function mapStepToQuote(step: Step, wantsNativeIn: boolean) {
 
   const expectedStr = step.estimate?.toAmount
   const minStr = step.estimate?.toAmountMin
-  const out = expectedStr ? BigInt(expectedStr) : minStr ? BigInt(minStr) : 0n
+  // Prefer minOut (toAmountMin) for safer defaults; fall back to toAmount
+  const out = minStr ? BigInt(minStr) : expectedStr ? BigInt(expectedStr) : 0n
   const minOut = minStr ? BigInt(minStr) : out
   const maxIn = step.estimate?.fromAmount ? BigInt(step.estimate.fromAmount) : undefined
 

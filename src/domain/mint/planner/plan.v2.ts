@@ -117,24 +117,21 @@ export async function planMintV2(params: {
     throw new Error('epsilonBps out of range (0-100)')
   }
 
-  // 1) Compute user collateral and parallelize initial reads (assets + ideal preview)
+  // 1) Resolve manager assets first, enforce collateral-only input, then preview ideal
   const userCollateralOut = equityInInputAsset
-  const [ideal, assets] = await Promise.all([
-    previewIdeal({ config, token, userCollateralOut, chainId }),
-    getManagerAssets({ config, token, chainId }),
-  ])
-  const { collateralAsset, debtAsset } = assets
+  const { collateralAsset, debtAsset } = await getManagerAssets({ config, token, chainId })
   const normalizedInputAsset = getAddress(inputAsset)
   const normalizedCollateralAsset = getAddress(collateralAsset)
   const normalizedDebtAsset = getAddress(debtAsset)
   debugMintPlan('assets', { inputAsset, collateralAsset, debtAsset })
   if (normalizedInputAsset !== normalizedCollateralAsset) {
     throw new Error(
-      'Mint currently requires inputAsset to equal collateralAsset (no input conversion)',
+      'Router v2 requires collateral-only input (inputAsset must equal collateralAsset)',
     )
   }
 
   // 2) Ideal targets (router semantics)
+  const ideal = await previewIdeal({ config, token, userCollateralOut, chainId })
   debugMintPlan('ideal', {
     userCollateralOut,
     idealDebt: ideal.idealDebt,
@@ -158,7 +155,10 @@ export async function planMintV2(params: {
     quote: quoteDebtToCollateral,
   })
   const debtIn = r.debtIn
-  const debtQuote = r.debtQuote
+  let debtQuote = r.debtQuote
+  if (typeof debtQuote.minOut !== 'bigint') {
+    debtQuote = { ...debtQuote, minOut: debtQuote.out }
+  }
   debugMintPlan('quote.initial', { debtIn, out: debtQuote.out, minOut: debtQuote.minOut ?? 0n })
   assertDebtSwapQuote(debtQuote, debtAsset, useNativeDebtPath)
 
@@ -184,12 +184,15 @@ export async function planMintV2(params: {
   const eps = typeof epsilonBps === 'number' ? BigInt(epsilonBps) : EPS_BPS
   // Bias to >= worst-case requirement using a tiny upward epsilon
   const effectiveDebtIn = (worstCase.requiredDebt * (BPS + eps)) / BPS
-  const effectiveQuote = await quoteDebtToCollateral({
+  let effectiveQuote = await quoteDebtToCollateral({
     inToken: inTokenForQuote,
     outToken: collateralAsset,
     amountIn: effectiveDebtIn,
     intent: 'exactIn',
   })
+  if (typeof effectiveQuote.minOut !== 'bigint') {
+    effectiveQuote = { ...effectiveQuote, minOut: effectiveQuote.out }
+  }
   assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
   final = await previewFinal({
     config,
@@ -211,7 +214,7 @@ export async function planMintV2(params: {
       debtAsset,
       debtQuote: effectiveQuote,
       debtIn: effectiveDebtIn,
-      useNative: useNativeDebtPath && Boolean(effectiveQuote.wantsNativeIn),
+      useNative: useNativeDebtPath,
     }),
   ]
 
@@ -374,7 +377,8 @@ function assertDebtSwapQuote(
 ): asserts quote is Quote & { minOut: bigint } {
   if (typeof quote.minOut !== 'bigint') throw new Error('Swap quote missing minOut')
   if (useNativeDebtPath) {
-    if (quote.wantsNativeIn !== true) {
+    // Only error if adapter explicitly indicates non-native input
+    if (quote.wantsNativeIn === false) {
       throw new Error(
         'Adapter inconsistency: native path selected but quote does not want native in',
       )
