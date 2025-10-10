@@ -109,12 +109,13 @@ export async function planMintV2(params: {
     epsilonBps,
   } = params
 
-  // 1) Resolve manager assets and enforce collateral-only input (current scope)
-  const { collateralAsset, debtAsset } = await getManagerAssets({
-    config,
-    token,
-    chainId,
-  })
+  // 1) Compute user collateral and parallelize initial reads (assets + ideal preview)
+  const userCollateralOut = equityInInputAsset
+  const [ideal, assets] = await Promise.all([
+    previewIdeal({ config, token, userCollateralOut, chainId }),
+    getManagerAssets({ config, token, chainId }),
+  ])
+  const { collateralAsset, debtAsset } = assets
   const normalizedInputAsset = getAddress(inputAsset)
   const normalizedCollateralAsset = getAddress(collateralAsset)
   const normalizedDebtAsset = getAddress(debtAsset)
@@ -124,10 +125,8 @@ export async function planMintV2(params: {
       'Mint currently requires inputAsset to equal collateralAsset (no input conversion)',
     )
   }
-  const userCollateralOut = equityInInputAsset
 
-  // 2) Preview ideal targets using only user collateral (router semantics)
-  const ideal = await previewIdeal({ config, token, userCollateralOut, chainId })
+  // 2) Ideal targets (router semantics)
   debugMintPlan('ideal', {
     userCollateralOut,
     idealDebt: ideal.idealDebt,
