@@ -28,9 +28,8 @@ export async function fetchBorrowApyForToken(
 
   // Route to appropriate provider based on config
   switch (borrowAprProvider?.type) {
-    case BORROW_APR_PROVIDERS.MORPHO:
     default: {
-      logger.info('Fetching borrow APR using Morpho', { chainId, tokenAddress })
+      logger.info('Fetching borrow APY using Morpho', { chainId, tokenAddress })
       const morphoProvider = new MorphoBorrowApyProvider()
       return await morphoProvider.fetchBorrowApy(tokenAddress, chainId, config)
     }

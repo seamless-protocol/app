@@ -121,7 +121,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     apyConfig: {
       aprProvider: {
         type: APR_PROVIDERS.LIDO,
-        id: 'steth',
       },
     },
     collateralAsset: {

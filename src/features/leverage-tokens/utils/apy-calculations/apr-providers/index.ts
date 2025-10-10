@@ -29,11 +29,9 @@ export async function fetchAprForToken(
   switch (aprProvider) {
     case APR_PROVIDERS.LIDO: {
       logger.info('Fetching APR using Lido', { chainId, tokenAddress })
-      const lidoProvider = new LidoAprProvider(tokenAddress, chainId)
+      const lidoProvider = new LidoAprProvider()
       return await lidoProvider.fetchApr()
     }
-
-    case APR_PROVIDERS.ETHERFI:
     default: {
       logger.info('Fetching APR using Ether.fi', { chainId, tokenAddress })
       const etherfiProvider = new EtherFiAprProvider()

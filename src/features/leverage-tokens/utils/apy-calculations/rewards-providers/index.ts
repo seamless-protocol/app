@@ -26,10 +26,10 @@ export async function fetchRewardsAprForToken(
 
   // Route to appropriate provider based on config
   switch (rewardsProvider?.type) {
-    case REWARDS_PROVIDERS.MERKL:
-    default:
+    default: {
       logger.info('Fetching rewards APR using Merkl', { chainId, tokenAddress })
       const merklProvider = new MerklRewardsAprProvider()
       return await merklProvider.fetchRewardsApr(tokenAddress)
+    }
   }
 }

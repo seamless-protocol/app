@@ -1,6 +1,5 @@
 import { captureApiError } from '@/lib/observability/sentry'
 import { elapsedMsSince, getNowMs } from '@/lib/utils/time'
-import { getLeverageTokenConfig } from '../../../leverageTokens.config'
 import type { AprFetcher, BaseAprData } from './types'
 
 /**
@@ -23,34 +22,17 @@ interface LidoApiResponse {
 
 /**
  * Lido APR provider implementation
- * Fetches APR data from Lido API for supported tokens (stETH, wstETH, etc.)
+ * Fetches APR data from Lido API for stETH
  */
 export class LidoAprProvider implements AprFetcher {
   protocolId = 'lido'
   protocolName = 'Lido'
 
-  constructor(
-    private tokenAddress: string,
-    private chainId: number,
-  ) {}
-
   /**
    * Fetch APR data from Lido API
    */
   async fetchApr(): Promise<BaseAprData> {
-    // Get the leverage token config to determine provider ID
-    const config = getLeverageTokenConfig(this.tokenAddress as `0x${string}`, this.chainId)
-
-    // Use aprProvider.id if specified, otherwise fall back to collateral symbol
-    const providerId = config?.apyConfig?.aprProvider?.id || config?.collateralAsset.symbol
-
-    if (!providerId) {
-      throw new Error(
-        `No provider ID or collateral symbol found for token ${this.tokenAddress} on chain ${this.chainId}`,
-      )
-    }
-
-    const url = `https://eth-api.lido.fi/v1/protocol/${providerId.toLowerCase()}/apr/sma`
+    const url = `https://eth-api.lido.fi/v1/protocol/steth/apr/sma`
     const provider = 'lido'
     const method = 'GET'
     const start = getNowMs()
