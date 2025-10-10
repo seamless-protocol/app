@@ -7,7 +7,7 @@
  * V2 planner assumes `inputAsset === collateralAsset`.
  */
 import type { Address } from 'viem'
-import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
+import { encodeFunctionData, erc20Abi, getAddress, parseAbi, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import {
   BASE_WETH,
@@ -152,9 +152,7 @@ export async function planMintV2(params: {
   const debtIn = r.debtIn
   const debtQuote = r.debtQuote
   debugMintPlan('quote.initial', { debtIn, out: debtQuote.out, minOut: debtQuote.minOut ?? 0n })
-  if (typeof debtQuote.minOut !== 'bigint') {
-    throw new Error('Swap quote missing minOut')
-  }
+  assertDebtSwapQuote(debtQuote, debtAsset, useNativeDebtPath)
 
   // 4) Final preview with total collateral to derive requiredDebt and shares
   const totalCollateralInitial = userCollateralOut + debtQuote.out
@@ -194,6 +192,7 @@ export async function planMintV2(params: {
     amountIn: effectiveDebtIn,
     intent: 'exactIn',
   })
+  assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
   final = await previewFinal({
     config,
     token,
@@ -368,6 +367,30 @@ function buildDebtSwapCalls(args: {
     },
     { target: debtQuote.approvalTarget, data: debtQuote.calldata, value: 0n },
   ]
+}
+
+// Shared validation for swap quotes used by the planner
+function assertDebtSwapQuote(
+  quote: Quote,
+  debtAsset: Address,
+  useNativeDebtPath: boolean,
+): asserts quote is Quote & { minOut: bigint } {
+  if (typeof quote.minOut !== 'bigint') throw new Error('Swap quote missing minOut')
+  if (useNativeDebtPath) {
+    if (quote.wantsNativeIn !== true) {
+      throw new Error(
+        'Adapter inconsistency: native path selected but quote does not want native in',
+      )
+    }
+  } else {
+    const approval = quote.approvalTarget
+    if (!approval) throw new Error('Missing approval target for ERC20 swap')
+    const normalizedApproval = getAddress(approval)
+    if (normalizedApproval === zeroAddress) throw new Error('Missing approval target for ERC20 swap')
+    if (normalizedApproval === getAddress(debtAsset)) {
+      throw new Error('Approval target cannot equal input token')
+    }
+  }
 }
 
 // Internal test-aware debug logger (no-ops outside test runs)
