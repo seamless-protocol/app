@@ -1,5 +1,6 @@
 import { createLogger } from '@/lib/logger'
 import { getLeverageTokenConfig } from '../../../leverageTokens.config'
+import { DefiLlamaAprProvider } from './defillama'
 import { EtherFiAprProvider } from './etherfi'
 import { LidoAprProvider } from './lido'
 import type { BaseAprData } from './types'
@@ -12,6 +13,7 @@ const logger = createLogger('apr-provider')
 export enum APR_PROVIDERS {
   ETHERFI = 'etherfi',
   LIDO = 'lido',
+  DEFI_LLAMA = 'defillama',
 }
 
 /**
@@ -31,6 +33,15 @@ export async function fetchAprForToken(
       logger.info('Fetching APR using Lido', { chainId, tokenAddress })
       const lidoProvider = new LidoAprProvider()
       return await lidoProvider.fetchApr()
+    }
+    case APR_PROVIDERS.DEFI_LLAMA: {
+      const id = config?.apyConfig?.aprProvider?.id
+      if (!id) {
+        throw new Error('DeFi Llama provider requires protocol ID')
+      }
+      logger.info('Fetching APR using DeFi Llama', { chainId, tokenAddress, id })
+      const defillamaProvider = new DefiLlamaAprProvider(id)
+      return await defillamaProvider.fetchApr()
     }
     default: {
       logger.info('Fetching APR using Ether.fi', { chainId, tokenAddress })
