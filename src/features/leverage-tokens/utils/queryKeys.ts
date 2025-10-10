@@ -108,6 +108,18 @@ export const ltKeys = {
             params.outputAsset,
           ),
   },
+  // Mutations (writes)
+  mutations: {
+    // Key for mint write mutations, scoped by chain/token/account and a compact plan signature
+    mintWrite: (params: { chainId: number; addr: Address; account: Address; planSig: string }) =>
+      [
+        ...ltKeys.tokenOnChain(params.chainId, params.addr),
+        'mutate',
+        'mint',
+        params.account,
+        params.planSig,
+      ] as const,
+  },
   // External data sources (shared across all tokens)
   external: {
     etherFiApr: () => [...ltKeys.all, 'external', 'etherfi-apr'] as const,
