@@ -1,9 +1,9 @@
 Mint Domain — Planner, Ports, Executor
 
 Overview
-- Purpose: Orchestrate leverage-token minting (V2 only).
-- Current scope: A v2 planner and v2 executor. Approvals handled in UI/hooks.
-- Key files: `planner/plan.v2.ts`, `exec/execute.v2.ts`, `ports/*`, `orchestrate.ts`, `adapters/lifi.ts`, `utils/allowance.ts`.
+- Purpose: Plan leverage-token minting (V2 only).
+- Current scope: A v2 planner. Approvals handled in UI/hooks. Execution is performed directly via generated actions (simulate → write) in app hooks and tests.
+- Key files: `planner/plan.v2.ts`, `ports/*`, `adapters/lifi.ts`, `utils/allowance.ts`.
 
 Folder Structure
 - `planner/`: Planning and math
@@ -14,15 +14,14 @@ Folder Structure
   - `managerPort.ts`: Manager previews for v2
   - `routerPort.v2.ts`: Router v2 preview + invoke
   - `index.ts`: Re-exports
-- `exec/`: Transaction senders
-  - `execute.v2.ts`: V2 deposit path (with calls)
+- (removed) `exec/`: Transaction senders. Execution is now done in-app via generated actions.
 - `adapters/`
   - `lifi.ts`: Exact-input quote builder
 - `utils/`
   - `constants.ts`: Defaults and BPS helpers
   - `allowance.ts`: Allowance utilities
   - `previewMint.ts`: Local preview helper for tests
-- `orchestrate.ts`: V2 plan and execute
+- (removed) `orchestrate.ts`: In-app hooks call generated actions directly.
 - `index.ts`: Public entry for domain exports
 
 Planner (v2)
@@ -30,8 +29,8 @@ Planner (v2)
 - Behavior: collateral-only initial scope. Reads assets, previews ideal, sizes debt with underfill scaling, re-previews to enforce repayability, computes `minShares`, and returns debt-leg `calls[]` (approve+swap) for the router.
 - Not yet implemented: input→collateral conversion leg (v2). Throws if `inputAsset != collateralAsset`.
 
-Executors
-- v2: `exec/execute.v2.ts` simulates then writes `deposit(token, collateralFromSender, flashLoanAmount, minShares, calls)`.
+Execution
+- In-app: `useMintWrite` hook performs network switch → simulate → write using generated actions.
 
 Ports
 - V2 previews use `router.previewDeposit(token, userCollateral)` exclusively (equity-only semantics).
@@ -45,10 +44,10 @@ Quotes
 - Note: We currently don’t enforce a `deadline` field on quotes; add if required by policy.
 
 Orchestrator
-- `orchestrate.ts` plans and executes mint. Returns `{ hash, plan }`.
+- Removed. Use `planMintV2` + generated actions directly.
 
 Testing
-- Unit: planner math/guards, ports, orchestrator, allowance helper.
+- Unit: planner math/guards, ports, allowance helper, hooks.
 - Integration: `tests/integration/leverage-tokens/mint/router.v2.mint.spec.ts` (Tenderly VNet happy path). Run `bun run test:integration` with Tenderly env, or use `TEST_RPC_URL` for local fallback.
 
 Alignment with Planner Doc

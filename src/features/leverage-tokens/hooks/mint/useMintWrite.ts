@@ -23,6 +23,7 @@ type Args = {
     | 'calls'
     | 'expectedTotalCollateral'
     | 'expectedDebt'
+    | 'flashLoanAmount'
   >
 }
 
@@ -58,7 +59,7 @@ export function useMintWrite(key?: {
         args: [
           token,
           plan.equityInInputAsset,
-          plan.expectedDebt,
+          plan.flashLoanAmount ?? plan.expectedDebt,
           plan.minShares,
           executor,
           plan.calls,

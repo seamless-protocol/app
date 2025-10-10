@@ -307,7 +307,7 @@ export function LeverageTokenMintModal({
       ? {
           chainId: leverageTokenConfig.chainId as SupportedChainId,
           token: leverageTokenAddress,
-          account: userAddress as `0x${string}`,
+          account: userAddress,
           plan: {
             inputAsset: planPreview.plan.inputAsset,
             equityInInputAsset: planPreview.plan.equityInInputAsset,
@@ -315,6 +315,7 @@ export function LeverageTokenMintModal({
             calls: planPreview.plan.calls,
             expectedTotalCollateral: planPreview.plan.expectedTotalCollateral,
             expectedDebt: planPreview.plan.expectedDebt,
+            flashLoanAmount: planPreview.plan.flashLoanAmount,
           },
         }
       : undefined,
@@ -547,6 +548,7 @@ export function LeverageTokenMintModal({
           calls: p.calls,
           expectedTotalCollateral: p.expectedTotalCollateral,
           expectedDebt: p.expectedDebt,
+          flashLoanAmount: p.flashLoanAmount,
         },
       })
       setTransactionHash(hash)

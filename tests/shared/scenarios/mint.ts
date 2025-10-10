@@ -1,5 +1,4 @@
-import { type Address, erc20Abi, getAddress, type PublicClient, parseUnits } from 'viem'
-import { orchestrateMint } from '@/domain/mint'
+import { type Address, type Hash, erc20Abi, getAddress, type PublicClient, parseUnits } from 'viem'
 import { planMintV2 } from '@/domain/mint/planner/plan.v2'
 import {
   createDebtToCollateralQuote,
@@ -31,7 +30,7 @@ export type MintTestParams = {
 }
 
 export type MintExecutionResult = {
-  orchestration: Awaited<ReturnType<typeof orchestrateMint>>
+  orchestration: { hash: Hash; plan: Awaited<ReturnType<typeof planMintV2>> }
   mintedShares: bigint
   /** User collateral actually spent during mint (balanceBefore - balanceAfter) */
   collateralDelta?: bigint
@@ -150,20 +149,36 @@ async function runMintScenario({
     args: [account.address],
   })) as bigint
 
-  const orchestration = await orchestrateMint({
+  // Plan + simulate + write (no orchestrator)
+  const plan = await planMintV2({
     config,
-    account: account.address,
     token: setup.token,
     inputAsset: setup.collateralAsset,
     equityInInputAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    routerAddressV2: setup.router,
-    managerAddressV2: setup.manager,
-    chainId: tokenDefinition.chainId,
+    chainId: tokenDefinition.chainId as SupportedChainId,
   })
 
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: orchestration.hash })
+  const { simulateLeverageRouterV2Deposit, writeLeverageRouterV2Deposit } = await import(
+    '@/lib/contracts/generated'
+  )
+  const { request } = await simulateLeverageRouterV2Deposit(config, {
+    args: [
+      setup.token,
+      plan.equityInInputAsset,
+      plan.flashLoanAmount ?? plan.expectedDebt,
+      plan.minShares,
+      getAddressesForToken(tokenDefinition.key).executor as Address,
+      plan.calls,
+    ],
+    account: account.address,
+    chainId: tokenDefinition.chainId as SupportedChainId,
+  })
+  const hash: Hash = await writeLeverageRouterV2Deposit(config, request)
+  const orchestration = { hash, plan }
+
+  const receipt = await publicClient.waitForTransactionReceipt({ hash })
   if (receipt.status !== 'success') {
     throw new Error(`Mint transaction reverted: ${receipt.status}`)
   }

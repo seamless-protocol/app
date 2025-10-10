@@ -16,6 +16,11 @@ import {
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
 import { ADDR, CHAIN_ID, mode, RPC } from './env'
+import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import {
+  simulateLeverageRouterV2Deposit,
+  writeLeverageRouterV2Deposit,
+} from '@/lib/contracts/generated'
 import { readErc20Decimals } from './erc20'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
 
@@ -131,32 +136,43 @@ export async function executeSharedMint({
     args: [account.address],
   })
 
-  console.info('[SHARED MINT] Orchestrating V2 mint (simulate+write)')
-  const { orchestrateMint } = await import('@/domain/mint')
-  const res = await orchestrateMint({
+  console.info('[SHARED MINT] Planning V2 mint')
+  const plan = await planMintV2({
     config,
-    account: account.address,
     token,
     inputAsset: collateralAsset,
     equityInInputAsset,
     slippageBps: resolvedSlippageBps,
     quoteDebtToCollateral,
-    routerAddressV2: router,
-    managerAddressV2: manager,
-    chainId,
+    chainId: chainId as any,
   })
-
-  console.info('[SHARED MINT RESULT]', { hash: res.hash })
 
   console.info('[SHARED MINT PLAN]', {
-    minShares: res.plan.minShares.toString(),
-    expectedShares: res.plan.expectedShares.toString(),
-    expectedDebt: res.plan.expectedDebt.toString(),
-    expectedTotalCollateral: res.plan.expectedTotalCollateral.toString(),
-    calls: res.plan.calls.length,
+    minShares: plan.minShares.toString(),
+    expectedShares: plan.expectedShares.toString(),
+    expectedDebt: plan.expectedDebt.toString(),
+    expectedTotalCollateral: plan.expectedTotalCollateral.toString(),
+    calls: plan.calls.length,
   })
 
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: res.hash })
+  console.info('[SHARED MINT] Simulate + write deposit')
+  const { request } = await simulateLeverageRouterV2Deposit(config, {
+    args: [
+      token,
+      plan.equityInInputAsset,
+      plan.flashLoanAmount ?? plan.expectedDebt,
+      plan.minShares,
+      executor,
+      plan.calls,
+    ],
+    account: account.address,
+    chainId: chainId as any,
+  })
+
+  const hash = await writeLeverageRouterV2Deposit(config, request)
+  console.info('[SHARED MINT RESULT]', { hash })
+
+  const receipt = await publicClient.waitForTransactionReceipt({ hash })
   if (receipt.status !== 'success') {
     throw new Error(`Mint transaction reverted: ${receipt.status}`)
   }
