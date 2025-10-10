@@ -82,11 +82,7 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
             // Fetch all required data in parallel
             const [leverageRatios, aprData, borrowApyData, rewardsAPRData] = await Promise.all([
               fetchLeverageRatios(tokenAddress, tokenConfig.chainId, config),
-              fetchAprForToken(
-                tokenAddress,
-                tokenConfig.chainId,
-                tokenConfig.collateralAsset.symbol,
-              ),
+              fetchAprForToken(tokenAddress, tokenConfig.chainId),
               fetchBorrowApyForToken(tokenAddress, tokenConfig.chainId, config),
               fetchRewardsAprForToken(tokenAddress, tokenConfig.chainId),
             ])
@@ -109,7 +105,9 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
               (borrowAPY && targetLeverage ? borrowAPY * -1 * (targetLeverage - 1) : undefined) ?? 0
 
             const rewardsAPR = rewardsAPRData?.rewardsAPR ?? 0
-            const points = (targetLeverage ? targetLeverage * 2 : undefined) ?? 0
+
+            // Points calculation - use pointsMultiplier from config if available, otherwise default to 0
+            const points = tokenConfig.apyConfig?.pointsMultiplier ?? 0
 
             const totalAPY = stakingYield + restakingYield + rewardsAPR + borrowRate
 

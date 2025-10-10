@@ -134,7 +134,7 @@ export function useLeverageTokenAPY({
       const rewardsAPR = rewardsAPRData?.rewardsAPR ?? 0
 
       // Points calculation
-      const points = (targetLeverage ? targetLeverage * 2 : undefined) ?? 0
+      const points = leverageToken.apyConfig?.pointsMultiplier ?? 0
 
       // Calculate total net yield
       const totalAPY = stakingYield + restakingYield + rewardsAPR + borrowRate

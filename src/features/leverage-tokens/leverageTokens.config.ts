@@ -75,6 +75,7 @@ export interface LeverageTokenConfig {
       type: REWARDS_PROVIDERS
       id?: string // Optional provider-specific identifier
     }
+    pointsMultiplier?: number // Optional points multiplier (defaults to 0 if not provided)
   }
 
   // Asset configuration
@@ -159,6 +160,9 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainLogo: BaseLogo,
     supplyCap: 150,
     isTestOnly: true,
+    apyConfig: {
+      pointsMultiplier: 7,
+    },
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether.fi ETH',
