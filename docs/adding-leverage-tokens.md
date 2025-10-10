@@ -95,7 +95,7 @@ Here's the complete configuration for `WSTETH_ETH_2X_MAINNET` as a reference:
   apyConfig: {
     aprProvider: {
       type: APR_PROVIDERS.LIDO,
-      id: 'steth',
+      // Note: Lido only supports stETH, so no 'id' field needed
     },
     pointsMultiplier: 2, // Optional: Points multiplier for rewards (defaults to 0 if not provided)
   },
@@ -179,7 +179,7 @@ apyConfig: {
   // APR Provider Configuration
   aprProvider?: {
     type: APR_PROVIDERS.LIDO | APR_PROVIDERS.ETHERFI,
-    id?: string // Optional provider-specific identifier
+    id?: string // Optional provider-specific identifier (not needed for current providers)
   },
   
   // Borrow APR Provider Configuration  
@@ -198,6 +198,22 @@ apyConfig: {
   pointsMultiplier?: number // Points multiplier for rewards calculation
 }
 ```
+
+### Provider-Specific Notes
+
+**Lido APR Provider:**
+- Only supports stETH tokens
+- No `id` field needed - automatically uses stETH
+- Fetches APR data from Lido's API: `https://eth-api.lido.fi/v1/protocol/steth/apr/sma`
+
+**Ether.fi APR Provider:**
+- Supports weETH tokens
+- No `id` field needed - automatically uses weETH
+- Fetches APR data from Ether.fi's API
+
+**Future Providers (e.g., DeFi Llama):**
+- Will require `id` field to specify the token/protocol
+- Used for providers that support multiple tokens or protocols
 
 ### Default Values
 
@@ -219,7 +235,7 @@ apyConfig: {
 apyConfig: {
   aprProvider: {
     type: APR_PROVIDERS.LIDO,
-    id: 'steth',
+    // No 'id' needed - Lido only supports stETH
   },
   // No pointsMultiplier = points will be 0 and hidden
 }
@@ -232,6 +248,38 @@ apyConfig: {
     type: APR_PROVIDERS.ETHERFI,
   },
   pointsMultiplier: 5, // Shows "5 x" points in UI
+}
+```
+
+**Current Provider Configurations:**
+
+**Lido (stETH only):**
+```typescript
+apyConfig: {
+  aprProvider: {
+    type: APR_PROVIDERS.LIDO,
+    // No 'id' field needed - automatically uses stETH
+  },
+}
+```
+
+**Ether.fi (weETH only):**
+```typescript
+apyConfig: {
+  aprProvider: {
+    type: APR_PROVIDERS.ETHERFI,
+    // No 'id' needed - automatically uses weETH
+  },
+}
+```
+
+**Future DeFi Llama (multiple protocols):**
+```typescript
+apyConfig: {
+  aprProvider: {
+    type: APR_PROVIDERS.DEFI_LLAMA, // When implemented
+    id: '747c1d2a-c668-4682-b9f9-296708a3dd90', // Specify the protocol
+  },
 }
 ```
 
