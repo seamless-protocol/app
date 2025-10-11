@@ -402,7 +402,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   },
   [LeverageTokenKey.WSTETH_ETH_2X_MAINNET]: {
     address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
-    name: 'wstETH / ETH 2x Leverage Token',
+    name: 'wstETH / WETH 2x Leverage Token',
     symbol: 'WSTETH-ETH-2x',
     description:
       'wstETH / ETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Ether',
