@@ -3,6 +3,7 @@ import { GauntletLogo } from '@/components/icons/logos'
 import { MorphoLogo } from '@/components/icons/logos/morpho-logo'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useLeverageTokensTVLSubgraph } from '@/features/leverage-tokens/hooks/useLeverageTokensTVLSubgraph'
 import { useDeFiLlamaProtocolTVL } from '@/lib/defillama/useProtocolTVL'
 import { cn } from '@/lib/utils/cn'
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting'
@@ -22,9 +23,16 @@ export function VaultStatCards({ className, tvlUsdOverride, maxApyOverride }: Va
     isError: isTvlError,
   } = useDeFiLlamaProtocolTVL()
 
-  const tvlUsd = typeof tvlUsdOverride === 'number' ? tvlUsdOverride : defillama?.tvl
+  const protocolTvlUsd = typeof tvlUsdOverride === 'number' ? tvlUsdOverride : defillama?.tvl
   // Until we wire Morpho vault yield aggregation, present a sensible placeholder
   const maxApy = typeof maxApyOverride === 'number' ? maxApyOverride : 0.123
+  // Leverage Tokens TVL via subgraph
+  const { tvlUsd: leverageTokensTvlUsd, isLoading: isLeverageTvlLoading } =
+    useLeverageTokensTVLSubgraph()
+  const vaultsTvlUsd =
+    typeof protocolTvlUsd === 'number' && typeof leverageTokensTvlUsd === 'number'
+      ? Math.max(protocolTvlUsd - leverageTokensTvlUsd, 0)
+      : undefined
 
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-2 gap-6', className)}>
@@ -48,15 +56,15 @@ export function VaultStatCards({ className, tvlUsdOverride, maxApyOverride }: Va
                 Total Vault TVL
               </p>
 
-              {isTvlLoading ? (
+              {isTvlLoading || isLeverageTvlLoading ? (
                 <div className="flex justify-center">
                   <Skeleton className="h-10 w-28" />
                 </div>
-              ) : isTvlError || typeof tvlUsd !== 'number' ? (
+              ) : isTvlError || typeof vaultsTvlUsd !== 'number' ? (
                 <p className="text-4xl font-bold tracking-tight">—</p>
               ) : (
                 <p className="text-4xl font-bold text-white tracking-tight">
-                  {formatCurrency(tvlUsd, { millionDecimals: 1, thousandDecimals: 1 })}
+                  {formatCurrency(vaultsTvlUsd, { millionDecimals: 1, thousandDecimals: 1 })}
                 </p>
               )}
 
@@ -73,6 +81,8 @@ export function VaultStatCards({ className, tvlUsdOverride, maxApyOverride }: Va
                 </div>
                 <span className="text-xs font-medium">Secured by Morpho & Gauntlet</span>
               </div>
+
+              {/* Intentionally no extra badges shown here */}
             </div>
           </div>
         </CardContent>
