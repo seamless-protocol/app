@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { PageContainer } from '@/components/PageContainer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { VaultStatCards } from '@/features/vaults/components/VaultStatCards'
 import { useGA } from '@/lib/config/ga4.config'
 
 export const Route = createFileRoute('/vaults')({
@@ -40,10 +41,11 @@ function VaultsPage() {
           </div>
         </div>
 
-        {/* Backlog: TVL/APY cards intentionally omitted for launch */}
+        {/* Vault Stats */}
+        <VaultStatCards />
 
         {/* CTA Card */}
-        <Card className="bg-card border border-border">
+        <Card className="text-card-foreground flex flex-col gap-6 rounded-xl bg-gradient-to-br from-purple-500/10 via-slate-900/80 to-cyan-500/10 border border-purple-500/20 hover:border-purple-500/30 transition-all duration-300">
           <CardContent className="p-8 text-center space-y-8">
             <div className="space-y-6">
               <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">
@@ -53,15 +55,15 @@ function VaultsPage() {
               <div className="max-w-3xl mx-auto">
                 <div className="flex items-center justify-center flex-wrap gap-x-8 gap-y-3 text-sm">
                   <div className="flex items-center space-x-2 rounded-full px-4 py-2 bg-secondary text-secondary-foreground border border-secondary">
-                    <div className="w-3 h-3 bg-[var(--tag-success-text)] rounded-full " />
+                    <div className="w-3 h-3 bg-[var(--tag-success-text)] rounded-full animate-pulse" />
                     <span className="font-medium">USDC Vault</span>
                   </div>
                   <div className="flex items-center space-x-2 rounded-full px-4 py-2 bg-secondary text-secondary-foreground border border-secondary">
-                    <div className="w-3 h-3 bg-[var(--tag-info-text)] rounded-full " />
+                    <div className="w-3 h-3 bg-[var(--tag-info-text)] rounded-full animate-pulse" />
                     <span className="font-medium">WETH Vault</span>
                   </div>
                   <div className="flex items-center space-x-2 rounded-full px-4 py-2 bg-secondary text-secondary-foreground border border-secondary">
-                    <div className="w-3 h-3 bg-[var(--tag-warning-text)] rounded-full " />
+                    <div className="w-3 h-3 bg-[var(--tag-warning-text)] rounded-full animate-pulse" />
                     <span className="font-medium">cbBTC Vault</span>
                   </div>
                 </div>
