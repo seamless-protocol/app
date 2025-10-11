@@ -18,6 +18,7 @@ export interface MultiStepModalProps {
   steps: Array<StepConfig>
   children: ReactNode
   className?: string
+  closable?: boolean // if false, block outside/Esc close
 }
 
 export function MultiStepModal({
@@ -29,6 +30,7 @@ export function MultiStepModal({
   steps,
   children,
   className = 'max-w-md border border-border bg-card text-foreground',
+  closable = true,
 }: MultiStepModalProps) {
   const getStepProgress = () => {
     const step = steps.find((s) => s.id === currentStep)
@@ -52,9 +54,25 @@ export function MultiStepModal({
     return step?.label || currentStep
   }
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      if (!closable) return
+      onClose()
+      return
+    }
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={className}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent
+        className={className}
+        onEscapeKeyDown={(e) => {
+          if (!closable) e.preventDefault()
+        }}
+        onPointerDownOutside={(e) => {
+          if (!closable) e.preventDefault()
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="text-foreground">{title}</DialogTitle>
           <DialogDescription className="text-secondary-foreground">{description}</DialogDescription>
