@@ -58,8 +58,8 @@ export function FeaturedLeverageToken({
 
           {/* Stats Grid */}
           <div className="space-y-2">
-            {/* APY Row - only show if not zero */}
-            {apyData && apyData.totalAPY !== 0 && (
+            {/* APY Row - show skeleton while loading; hide after load if zero */}
+            {(isApyLoading || isApyError || (apyData && apyData.totalAPY !== 0)) && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-[var(--text-secondary)]">APY</span>
                 {isApyError ? (
