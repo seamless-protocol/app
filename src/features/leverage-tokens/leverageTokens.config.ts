@@ -126,7 +126,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     name: 'weETH / WETH 17x Leverage Token',
     symbol: 'WEETH-WETH-17x',
     description:
-      'weETH / WETH 17x leverage token that amplifies relative price movements between weETH and WETH on Base',
+      'weETH / WETH 17x Leverage Token that amplifies relative price movements between weETH and WETH on Base',
     decimals: 18,
     leverageRatio: 17,
     chainId: 8453,
@@ -143,7 +143,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       symbol: 'weETH',
       name: 'Wrapped Ether.fi ETH',
       description:
-        "weETH is Ether.Fi's wrapped, non-rebasing version of eETH. It represents ETH staked through Ether.Fi's liquid restaking system and accumulates staking rewards over time, making its price increase relative to ETH as more rewards accrue.",
+        "weETH is Ether.fi's wrapped, non-rebasing version of eETH. It represents ETH staked through Ether.fi's liquid restaking system and accumulates staking rewards over time, making its price increase relative to ETH as more rewards accrue.",
       address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
       decimals: 18,
     },
@@ -194,7 +194,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         {
           id: 'morpho-lending',
           title: 'Morpho Lending Market',
-          description: 'View the underlying lending market powering this leverage token',
+          description: 'View the underlying lending market powering this Leverage Token',
           url: 'https://app.morpho.org/base/market/0xb8fc70e82bc5bb53e773626fcc6a23f7eefa036918d7ef216ecfb1950a94a85e',
           icon: MorphoLogo,
           badge: {
@@ -221,7 +221,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     name: 'wstETH / ETH 25x Leverage Token',
     symbol: 'WSTETH-ETH-25x',
     description:
-      'wstETH / ETH 25x leverage token that amplifies relative price movements between Wrapped stETH and Ether',
+      'wstETH / ETH 25x Leverage Token that amplifies relative price movements between Wrapped stETH and Ether',
     decimals: 18,
     leverageRatio: 25,
     chainId: 1,
@@ -280,7 +280,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         {
           id: 'morpho-lending',
           title: 'Morpho Lending Market',
-          description: 'View the underlying lending market powering this leverage token',
+          description: 'View the underlying lending market powering this Leverage Token',
           url: 'https://app.morpho.org/ethereum/market/0xb8fc70e82bc5bb53e773626fcc6a23f7eefa036918d7ef216ecfb1950a94a85e',
           icon: MorphoLogo,
           badge: {
@@ -307,7 +307,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     name: 'RLP / USDC 6.75x Leverage Token',
     symbol: 'RLP-USDC-6.75x',
     description:
-      'RLP / USDC 6.75x leverage token that amplifies relative price movements between RLP and USDC',
+      'RLP / USDC 6.75x Leverage Token that amplifies relative price movements between RLP and USDC',
     decimals: 18,
     leverageRatio: 6.75,
     chainId: 1,
@@ -378,7 +378,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         {
           id: 'morpho-lending',
           title: 'Morpho Lending Market',
-          description: 'View the underlying lending market powering this leverage token',
+          description: 'View the underlying lending market powering this Leverage Token',
           url: 'https://app.morpho.org/ethereum/market/0xe1b65304edd8ceaea9b629df4c3c926a37d1216e27900505c04f14b2ed279f33',
           icon: MorphoLogo,
           badge: {
@@ -405,7 +405,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     name: 'wstETH / WETH 2x Leverage Token',
     symbol: 'WSTETH-ETH-2x',
     description:
-      'wstETH / ETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Ether',
+      'wstETH / ETH 2x Leverage Token that amplifies relative price movements between Wrapped stETH and Ether',
     decimals: 18,
     leverageRatio: 2,
     chainId: 1,
@@ -448,7 +448,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     name: 'weETH / WETH 17x Leverage Token (Tenderly)',
     symbol: 'WEETH-WETH-17x',
     description:
-      'Tenderly VNet deployment of the weETH / WETH 17x leverage token used for automated integration testing.',
+      'Tenderly VNet deployment of the weETH / WETH 17x Leverage Token used for automated integration testing.',
     decimals: 18,
     leverageRatio: 17,
     chainId: 8453,
@@ -489,7 +489,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     name: 'cbBTC / USDC 2x Leverage Token (Tenderly)',
     symbol: 'CBBTC-USDC-2x',
     description:
-      'Tenderly VNet deployment of the cbBTC / USDC 2x leverage token used for automated integration testing.',
+      'Tenderly VNet deployment of the cbBTC / USDC 2x Leverage Token used for automated integration testing.',
     decimals: 18,
     leverageRatio: 2,
     chainId: 1,
