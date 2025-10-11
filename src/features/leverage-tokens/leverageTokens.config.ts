@@ -154,7 +154,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       decimals: 18,
     },
     swaps: {
-      // Temporarily force Uniswap V2 routing on Base to validate logic
+      // Use LiFi for same-chain routing (bridges are irrelevant for same-chain quotes)
       debtToCollateral: {
         type: 'lifi',
       },
@@ -304,7 +304,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   },
   [LeverageTokenKey.RLP_USDC_6_75X_ETHEREUM_MAINNET]: {
     address: '0x6426811fF283Fa7c78F0BC5D71858c2f79c0Fc3d' as Address,
-    name: 'RLP / USDC 6.75x Leverage Token', // TODO: fetch from ERC20 contract
+    name: 'RLP / USDC 6.75x Leverage Token',
     symbol: 'RLP-USDC-6.75x',
     description:
       'RLP / USDC 6.75x leverage token that amplifies relative price movements between RLP and USDC',
@@ -333,7 +333,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       symbol: 'USDC',
       name: 'USD Coin',
       address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Address,
-      decimals: 18,
+      decimals: 6,
     },
     swaps: {
       debtToCollateral: {
