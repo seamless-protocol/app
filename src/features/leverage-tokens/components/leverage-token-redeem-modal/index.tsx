@@ -673,6 +673,7 @@ export function LeverageTokenRedeemModal({
             redemptionFee={fees?.redeemTreasuryFee}
             isRedemptionFeeLoading={isFeesLoading}
             onConfirm={handleConfirm}
+            disabled={isCalculating || exec.quoteStatus !== 'ready' || !planPreview.plan}
           />
         )
 
