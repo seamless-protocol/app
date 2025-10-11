@@ -9,6 +9,7 @@ import {
   useSwitchChain,
   useWaitForTransactionReceipt,
 } from 'wagmi'
+import { parseMintedSharesFromReceipt } from '@/features/leverage-tokens/utils/receipt'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { captureTxError } from '@/lib/observability/sentry'
@@ -415,6 +416,25 @@ export function LeverageTokenMintModal({
     )
   }, [planPreview.plan?.expectedShares, leverageTokenConfig.decimals])
 
+  // Parse actual minted shares from receipt logs (typed util) and format for display
+  const actualMintedTokens = useMemo(() => {
+    const receipt = receiptState.data
+    if (!receipt || !userAddress) return undefined
+    const shares = parseMintedSharesFromReceipt({
+      receipt,
+      leverageTokenAddress,
+      userAddress: userAddress as `0x${string}`,
+    })
+    if (typeof shares === 'bigint') {
+      return formatTokenAmountFromBase(
+        shares,
+        leverageTokenConfig.decimals,
+        TOKEN_AMOUNT_DISPLAY_DECIMALS,
+      )
+    }
+    return undefined
+  }, [receiptState.data, userAddress, leverageTokenAddress, leverageTokenConfig.decimals])
+
   // Receipt effect (after expectedTokens to satisfy dependency ordering)
   useEffect(() => {
     if (!transactionHash) {
@@ -446,7 +466,9 @@ export function LeverageTokenMintModal({
         trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
         analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
         toast.success('Leverage tokens minted successfully!', {
-          description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} ${leverageTokenConfig.symbol}`,
+          description: `${form.amount} ${selectedToken.symbol} -> ${
+            actualMintedTokens ? actualMintedTokens : `~${expectedTokens}`
+          } ${leverageTokenConfig.symbol}`,
         })
         toSuccess()
       })()
@@ -473,6 +495,7 @@ export function LeverageTokenMintModal({
     selectedToken.price,
     selectedToken.symbol,
     expectedTokens,
+    actualMintedTokens,
     refetchCollateralBalance,
     refetchLeverageTokenBalance,
     trackLeverageTokenMinted,
@@ -778,7 +801,7 @@ export function LeverageTokenMintModal({
           <SuccessStep
             selectedToken={selectedTokenView}
             amount={form.amount}
-            expectedTokens={expectedTokens}
+            expectedTokens={actualMintedTokens ?? expectedTokens}
             leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash ?? ''}
             onClose={handleClose}

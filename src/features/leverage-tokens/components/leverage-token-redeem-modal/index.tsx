@@ -2,8 +2,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
-import { useAccount, useConfig } from 'wagmi'
+import { useAccount, useConfig, useWaitForTransactionReceipt } from 'wagmi'
 import type { OrchestrateRedeemResult } from '@/domain/redeem'
+import { parseErc20ReceivedFromReceipt } from '@/features/leverage-tokens/utils/receipt'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
@@ -320,6 +321,38 @@ export function LeverageTokenRedeemModal({
     leverageTokenConfig.debtAsset.decimals,
   ])
 
+  // Wait for receipt once we have a hash to derive actual received amount
+  const receiptState = useWaitForTransactionReceipt({
+    hash: (transactionHash || undefined) as `0x${string}` | undefined,
+    chainId: leverageTokenConfig.chainId,
+    confirmations: 1,
+    query: { enabled: Boolean(transactionHash) },
+  })
+
+  // Parse actual received amount from logs for the selected output asset
+  const actualReceivedAmount = useMemo(() => {
+    const receipt = receiptState.data
+    if (!receipt || !userAddress) return undefined
+    const raw = parseErc20ReceivedFromReceipt({
+      receipt,
+      tokenAddress: selectedOutputAsset.address as `0x${string}`,
+      userAddress: userAddress as `0x${string}`,
+    })
+    if (typeof raw !== 'bigint') return undefined
+    const decimals =
+      selectedOutputAsset.id === 'debt'
+        ? leverageTokenConfig.debtAsset.decimals
+        : leverageTokenConfig.collateralAsset.decimals
+    return formatTokenAmountFromBase(raw, decimals, TOKEN_AMOUNT_DISPLAY_DECIMALS)
+  }, [
+    receiptState.data,
+    userAddress,
+    selectedOutputAsset.address,
+    selectedOutputAsset.id,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.decimals,
+  ])
+
   const {
     isAllowanceLoading,
     needsApproval: needsApprovalFlag,
@@ -513,17 +546,10 @@ export function LeverageTokenRedeemModal({
         })
       }
 
-      const toastAmount = formatTokenAmountFromBase(
-        result.plan.payoutAmount,
-        result.plan.payoutAsset.toLowerCase() ===
-          leverageTokenConfig.debtAsset.address.toLowerCase()
-          ? leverageTokenConfig.debtAsset.decimals
-          : leverageTokenConfig.collateralAsset.decimals,
-        TOKEN_AMOUNT_DISPLAY_DECIMALS,
-      )
-
       toast.success('Redemption successful!', {
-        description: `${form.amount} ${leverageTokenConfig.symbol} redeemed for ${toastAmount} ${selectedOutputAsset.symbol}`,
+        description: `${form.amount} ${leverageTokenConfig.symbol} redeemed for ${
+          actualReceivedAmount ?? expectedAmount
+        } ${selectedOutputAsset.symbol}`,
       })
 
       refetchLeverageTokenBalance?.()
@@ -657,7 +683,7 @@ export function LeverageTokenRedeemModal({
         return (
           <SuccessStep
             amount={form.amount}
-            expectedAmount={expectedAmount}
+            expectedAmount={actualReceivedAmount ?? expectedAmount}
             selectedAsset={selectedOutputAsset.symbol}
             leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash}
