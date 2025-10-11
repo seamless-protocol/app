@@ -307,6 +307,7 @@ export function LeverageTokenMintModal({
     isPending: isApprovingPending,
     isApproved: isApprovedFlag,
     error: approveErr,
+    hash: approveHash,
   } = useApprovalFlow({
     tokenAddress: leverageTokenConfig.collateralAsset.address,
     ...(userAddress ? { owner: userAddress } : {}),
@@ -740,6 +741,9 @@ export function LeverageTokenMintModal({
             selectedToken={selectedTokenView}
             amount={form.amount}
             isApproving={!!isApprovingPending}
+            chainId={leverageTokenConfig.chainId}
+            transactionHash={approveHash as `0x${string}` | undefined}
+            mode={approveHash ? 'onChain' : 'awaitingWallet'}
           />
         )
 
@@ -849,5 +853,6 @@ function useApprovalFlow(params: {
     isPending: approveState.isPending,
     isApproved: approveState.isApproved,
     error: approveState.error,
+    hash: approveState.hash,
   }
 }
