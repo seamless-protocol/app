@@ -54,9 +54,9 @@ export function SuccessStep({
             <button
               type="button"
               onClick={() => window.open(txUrl, '_blank')}
-              className="text-brand-purple hover:underline flex items-center"
+              className="text-brand-purple hover:underline flex items-center hover:cursor-pointer"
             >
-              View on {explorer.name}
+              View on explorer
               <ExternalLink className="h-3 w-3 ml-1" />
             </button>
           </div>

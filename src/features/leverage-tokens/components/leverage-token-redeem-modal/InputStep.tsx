@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Percent, Settings, TrendingDown } from 'lucide-react'
+import { ChevronDown, ChevronUp, Loader2, Percent, Settings, TrendingDown } from 'lucide-react'
 import { useEffect, useId, useRef } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
@@ -471,7 +471,9 @@ export function InputStep({
             <div className="text-right">
               <div className="text-foreground">
                 {isCalculating ? (
-                  <Skeleton className="inline-block h-4 w-24" />
+                  <span className="inline-flex items-center" aria-live="polite">
+                    <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
+                  </span>
                 ) : (
                   `${expectedAmount} ${selectedAssetSymbol}`
                 )}
