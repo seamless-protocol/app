@@ -105,7 +105,7 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
                 href="https://github.com/seamless-protocol/leverage-tokens/blob/main/src/rebalance/CollateralRatiosRebalanceAdapter.sol"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline"
+                className="text-[var(--link-normal)] hover:text-[var(--link-hover)] underline underline-offset-2 transition-colors"
               >
                 <strong>CollateralRatiosRebalanceAdapter</strong>
               </a>
@@ -115,7 +115,7 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
                 href="https://github.com/seamless-protocol/leverage-tokens/blob/main/src/rebalance/DutchAuctionRebalanceAdapter.sol"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline"
+                className="text-[var(--link-normal)] hover:text-[var(--link-hover)] underline underline-offset-2 transition-colors"
               >
                 <strong>DutchAuctionRebalanceAdapter</strong>
               </a>
@@ -125,7 +125,7 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
                 href="https://github.com/seamless-protocol/leverage-tokens/blob/main/src/rebalance/PreLiquidationRebalanceAdapter.sol"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline"
+                className="text-[var(--link-normal)] hover:text-[var(--link-hover)] underline underline-offset-2 transition-colors"
               >
                 <strong>PreLiquidationRebalanceAdapter</strong>
               </a>
@@ -212,8 +212,7 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
           <strong>{debtAsset.symbol} borrow rate</strong> &gt;{' '}
           <strong>{collateralAsset.symbol} yield</strong>) can erode value. In extreme scenarios
           like <strong>oracle malfunction</strong> or <strong>protocol exploit</strong>,{' '}
-          <strong>liquidation</strong> or <strong>capital loss</strong>
-          is possible.
+          <strong>liquidation</strong> or <strong>capital loss</strong> is possible.
         </p>
       ),
     },
@@ -227,7 +226,7 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
               href="https://docs.seamlessprotocol.org"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline"
+              className="text-[var(--link-normal)] hover:text-[var(--link-hover)] underline underline-offset-2 transition-colors"
             >
               GitBook Documentation
             </a>
@@ -237,7 +236,7 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
               href={tokenExplorerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline"
+              className="text-[var(--link-normal)] hover:text-[var(--link-hover)] underline underline-offset-2 transition-colors"
             >
               Block Explorer
             </a>
