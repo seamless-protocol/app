@@ -1,7 +1,9 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { ChevronRight, Github, Menu } from 'lucide-react'
 import type * as React from 'react'
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
+import { prefetchLeverageTokensTVL } from '@/features/leverage-tokens/hooks/useLeverageTokensTVLSubgraph'
 import { getRepoCommitUrl, getShortCommitHash } from '@/lib/config/buildInfo'
 import { SeamlessLogo } from './icons'
 import { Badge } from './ui/badge'
@@ -86,6 +88,8 @@ function NavigationItem({
   onClick: (options?: { externalUrl?: string }) => void
 }) {
   const Icon = item.icon
+  const queryClient = useQueryClient()
+  const prefetchedRef = useRef(false)
 
   const handleClick = () => {
     if (item.externalUrl) {
@@ -96,8 +100,19 @@ function NavigationItem({
     onClick()
   }
 
+  const handleMouseEnter = () => {
+    if (prefetchedRef.current) return
+    // Prefetch leverage token TVL when hovering the Vaults tab
+    if (item.id?.toLowerCase?.() === 'vaults') {
+      prefetchedRef.current = true
+      // Fire-and-forget; errors are fine to ignore for prefetching
+      prefetchLeverageTokensTVL(queryClient).catch(() => {})
+    }
+  }
+
   return (
     <motion.button
+      onMouseEnter={handleMouseEnter}
       onClick={handleClick}
       className={cn(
         'w-full group relative rounded-xl border transition-all duration-200 cursor-pointer bg-card text-foreground',
