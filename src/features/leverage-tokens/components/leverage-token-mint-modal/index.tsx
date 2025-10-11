@@ -445,9 +445,7 @@ export function LeverageTokenMintModal({
         const usdValue = (parseFloat(form.amount || '0') || 0) * (selectedToken.price || 0)
         trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
         analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
-        toast.success('Leverage tokens minted successfully!', {
-          description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} ${leverageTokenConfig.symbol}`,
-        })
+        // Success feedback is conveyed by the Success step UI
         toSuccess()
       })()
     }
@@ -461,8 +459,6 @@ export function LeverageTokenMintModal({
     userAddress,
     form.amount,
     selectedToken.price,
-    selectedToken.symbol,
-    expectedTokens,
     refetchCollateralBalance,
     refetchLeverageTokenBalance,
     trackLeverageTokenMinted,

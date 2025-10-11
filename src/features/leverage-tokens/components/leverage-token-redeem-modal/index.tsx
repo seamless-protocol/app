@@ -1,6 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig, useWaitForTransactionReceipt } from 'wagmi'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
@@ -565,9 +564,7 @@ export function LeverageTokenRedeemModal({
         }
       } catch {}
 
-      toast.success('Redemption successful!', {
-        description: `${form.amount} ${leverageTokenConfig.symbol} redeemed for ${expectedAmount} ${selectedOutputAsset.symbol}`,
-      })
+      // Success feedback is conveyed by the Success step UI
       toSuccess()
     }
   }, [
@@ -578,8 +575,6 @@ export function LeverageTokenRedeemModal({
     leverageTokenConfig.symbol,
     leverageTokenAddress,
     form.amount,
-    expectedAmount,
-    selectedOutputAsset.symbol,
     selectedOutputAsset.price,
     refetchLeverageTokenBalance,
     refetchCollateralTokenBalance,
