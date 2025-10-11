@@ -154,9 +154,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
 
     // Generate FAQ data dynamically
     const faqData = generateLeverageTokenFAQ({
-      leverageRatio: tokenConfig.leverageRatio,
-      collateralSymbol: tokenConfig.collateralAsset.symbol,
-      debtSymbol: tokenConfig.debtAsset.symbol,
+      tokenConfig,
     })
 
     const userShares = userPosData?.balance

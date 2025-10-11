@@ -91,6 +91,7 @@ export interface LeverageTokenConfig {
   collateralAsset: {
     symbol: string
     name: string
+    description: string
     address: Address
     decimals: number
   }
@@ -141,6 +142,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether.fi ETH',
+      description:
+        "weETH is Ether.Fi's wrapped, non-rebasing version of eETH. It represents ETH staked through Ether.Fi's liquid restaking system and accumulates staking rewards over time, making its price increase relative to ETH as more rewards accrue.",
       address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
       decimals: 18,
     },
@@ -234,6 +237,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'wstETH',
       name: 'Wrapped stETH',
+      description:
+        "wstETH is Lido's wrapped, non-rebasing version of stETH. It represents a user's share of ETH staked through Lido's validators and accrues staking rewards over time. These staking rewards make wstETH's price increase relative to ETH as more rewards accrue.",
       address: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address,
       decimals: 18,
     },
@@ -319,6 +324,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'RLP',
       name: 'RLP',
+      description:
+        "RLP is Resolv's insurance or junior-tranche token. It captures excess yield from Resolv's delta-neutral strategy, which involves staking ETH while shorting ETH perpetuals to earn funding rates. RLP holders receive a larger share of profits when funding rates and staking are positive, but also absorb losses first if funding turns negative, helping to protect USR's peg.",
       address: '0x4956b52aE2fF65D74CA2d61207523288e4528f96' as Address,
       decimals: 18,
     },
@@ -414,6 +421,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'wstETH',
       name: 'Wrapped stETH',
+      description: "Wrapped version of Lido's staked ETH token, providing liquid staking rewards",
       address: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address,
       decimals: 18,
     },
@@ -454,6 +462,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether.fi ETH',
+      description:
+        'Liquid staking token from Ether.fi that represents staked ETH with additional rewards',
       address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
       decimals: 18,
     },
@@ -490,6 +500,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'cbBTC',
       name: 'Coinbase Wrapped BTC',
+      description: "Coinbase's wrapped Bitcoin token, bringing Bitcoin liquidity to Ethereum",
       address: '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf' as Address,
       decimals: 8,
     },
