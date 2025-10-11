@@ -245,11 +245,12 @@ export function LeverageTokenRedeemModal({
     outputAsset: selectedOutputAsset.address,
   })
 
-  // Mirror exec.hash into local transactionHash so UI can flip to on-chain immediately
+  // Mirror exec.hash only while pending to avoid reviving stale hashes on reopen
   useEffect(() => {
+    if (currentStep !== 'pending') return
     const nextHash = exec.hash as `0x${string}` | undefined
-    if (nextHash && !transactionHash) setTransactionHash(nextHash)
-  }, [exec.hash, transactionHash])
+    if (nextHash && nextHash !== transactionHash) setTransactionHash(nextHash)
+  }, [exec.hash, transactionHash, currentStep])
 
   // Watch receipt for success/error transitions
   const {
