@@ -680,7 +680,9 @@ export function LeverageTokenMintModal({
 
   // Handle modal close
   const handleClose = () => {
-    if (currentStep === 'pending') return // Prevent closing during transaction
+    // Prevent closing while any tx is on-chain pending
+    if (currentStep === 'pending') return
+    if (currentStep === 'approve' && approveHash) return
     // Reset tx state so next open starts clean
     setTransactionHash(undefined)
     onClose()

@@ -604,7 +604,9 @@ export function LeverageTokenRedeemModal({
 
   // Handle modal close
   const handleClose = () => {
-    if (currentStep === 'pending') return // Prevent closing during transaction
+    // Prevent closing while any tx is on-chain pending (approve or redeem)
+    if (currentStep === 'pending') return
+    if (currentStep === 'approve' && approveHash) return
     onClose()
   }
 
