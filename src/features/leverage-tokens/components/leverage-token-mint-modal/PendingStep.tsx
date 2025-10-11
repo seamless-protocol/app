@@ -43,11 +43,11 @@ export function PendingStep({
           {mode === 'awaitingWallet' ? 'Confirm in Wallet' : 'Processing Mint'}
         </h3>
         {mode === 'awaitingWallet' ? (
-          <p className="mx-auto max-w-sm text-secondary-foreground" aria-live="polite">
+          <p className="mx-auto max-w-sm text-secondary-foreground text-sm" aria-live="polite">
             Review and confirm the transaction in your wallet to continue.
           </p>
         ) : (
-          <p className="mx-auto max-w-sm text-secondary-foreground" aria-live="polite">
+          <p className="mx-auto max-w-sm text-secondary-foreground text-sm" aria-live="polite">
             Your leverage token mint is being processed. This may take a few moments.
           </p>
         )}

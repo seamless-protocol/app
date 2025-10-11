@@ -29,7 +29,7 @@ export function SuccessStep({
           <CheckCircle className="h-8 w-8 text-[var(--state-success-text)]" />
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">Redemption Completed!</h3>
-        <p className="text-secondary-foreground text-center max-w-sm">
+        <p className="text-secondary-foreground text-center max-w-sm text-sm">
           Your {amount} {leverageTokenSymbol} have been successfully redeemed for {expectedAmount}{' '}
           {selectedAsset}.
         </p>
