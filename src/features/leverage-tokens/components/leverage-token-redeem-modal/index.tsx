@@ -427,7 +427,7 @@ export function LeverageTokenRedeemModal({
       setError(approveErr?.message || 'Approval failed. Please try again.')
       toError()
     }
-  }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
+  }, [isApprovedFlag, approveErr, currentStep, toConfirm, toError])
 
   // Check if approval is needed
   const needsApproval = () => Boolean(needsApprovalFlag)

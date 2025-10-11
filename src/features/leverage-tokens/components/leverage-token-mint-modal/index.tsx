@@ -401,7 +401,7 @@ export function LeverageTokenMintModal({
       setError(approveErr?.message || 'Approval failed. Please try again.')
       toError()
     }
-  }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
+  }, [isApprovedFlag, approveErr, currentStep, toConfirm, toError])
 
   const expectedTokens = useMemo(() => {
     const shares = planPreview.plan?.expectedShares
