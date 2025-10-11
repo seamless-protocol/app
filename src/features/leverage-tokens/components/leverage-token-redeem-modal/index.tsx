@@ -420,9 +420,6 @@ export function LeverageTokenRedeemModal({
   useEffect(() => {
     if (currentStep !== 'approve') return
     if (isApprovedFlag) {
-      toast.success('Token approval confirmed', {
-        description: `${selectedToken.symbol} spending approved`,
-      })
       toConfirm()
       return
     }
