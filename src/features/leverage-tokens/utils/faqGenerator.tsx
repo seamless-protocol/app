@@ -25,11 +25,11 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
           <strong>
             {collateralAsset.symbol}/{debtAsset.symbol} {leverageRatio}x Leverage Token
           </strong>{' '}
-          with <strong>{collateralAsset.symbol}</strong>, you receive a new token that represents a
+          with <strong>{collateralAsset.symbol}</strong>, you receive a new token that represents a{' '}
           <strong>
             {leverageRatio}x leveraged {collateralAsset.symbol}/{debtAsset.symbol} position
           </strong>{' '}
-          on <strong>Morpho</strong>. This position provides amplified exposure to the
+          on <strong>Morpho</strong>. This position provides amplified exposure to the{' '}
           <strong>
             {collateralAsset.symbol}/{debtAsset.symbol} staking yield spread
           </strong>
