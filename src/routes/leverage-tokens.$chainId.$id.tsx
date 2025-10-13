@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
+import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { FAQ } from '@/components/FAQ'
 import { PageContainer } from '@/components/PageContainer'
@@ -86,15 +87,6 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
     const supplyCap = tokenConfig?.supplyCap || 0
 
     // All hooks must be called at top level before any conditional returns
-    const {
-      data: detailedMetrics,
-      isLoading: isDetailedMetricsLoading,
-      isError: isDetailedMetricsError,
-    } = useLeverageTokenDetailedMetrics(tokenAddress as Address, {
-      currentSupply,
-      supplyCap,
-      collateralAssetSymbol: tokenConfig?.collateralAsset.symbol || '',
-    })
 
     // USD price map for debt and collateral assets (guard when config is missing)
     const { data: usdPriceMap } = useUsdPrices({
@@ -144,6 +136,32 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
 
     // Get APY data for this specific token
     const apyData = tokenConfig ? tokensAPYData?.get(tokenConfig.address) : undefined
+
+    // Detailed metrics with APY data
+    // Prepare borrow rate data
+    const getBorrowRateData = (apyData: APYBreakdownData | undefined, isLoading: boolean) => {
+      if (!apyData || isLoading) return undefined
+      return {
+        borrowRate: Math.abs(apyData.borrowRate),
+        baseYield: apyData.stakingYield + apyData.restakingYield,
+      }
+    }
+
+    const borrowRateData = getBorrowRateData(apyData, isApyLoading)
+
+    const {
+      data: detailedMetrics,
+      isLoading: isDetailedMetricsLoading,
+      isError: isDetailedMetricsError,
+    } = useLeverageTokenDetailedMetrics(
+      tokenAddress as Address,
+      {
+        currentSupply,
+        supplyCap,
+        collateralAssetSymbol: tokenConfig?.collateralAsset.symbol || '',
+      },
+      borrowRateData,
+    )
 
     if (!tokenConfig) {
       return (
