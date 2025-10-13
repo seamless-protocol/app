@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/
 
 export interface MetricItem {
   label: string
-  value: string
+  value: string | React.ReactNode
   highlight?: boolean
   color?: string
   tooltip?: string
@@ -145,9 +145,15 @@ export function LeverageTokenDetailedMetrics({
                               )}
                             </div>
                           </div>
-                          <p className={cn('text-lg font-semibold text-foreground', metric.color)}>
-                            {metric.value}
-                          </p>
+                          {typeof metric.value === 'string' ? (
+                            <p
+                              className={cn('text-lg font-semibold text-foreground', metric.color)}
+                            >
+                              {metric.value}
+                            </p>
+                          ) : (
+                            <div className="text-lg font-semibold">{metric.value}</div>
+                          )}
                         </div>
                       ))}
                     </div>

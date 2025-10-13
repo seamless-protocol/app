@@ -1,3 +1,4 @@
+import React from 'react'
 import type { Address } from 'viem'
 import { useReadContracts } from 'wagmi'
 import { lendingAdapterAbi } from '../../../lib/contracts/abis/lendingAdapter'
@@ -409,21 +410,17 @@ function transformDetailedMetricsData(
       ? formatMultiplier(minPriceMultiplierResult.result as bigint)
       : 'N/A'
 
-  // Calculate supply cap status and color
-  let supplyCapValue = 'N/A'
+  // Calculate supply cap status and color (same logic as SupplyCap component)
   let supplyCapColor = 'text-foreground'
 
   if (supplyCapData && supplyCapData.supplyCap > 0) {
     const percentage = (supplyCapData.currentSupply / supplyCapData.supplyCap) * 100
-    supplyCapValue = `${supplyCapData.currentSupply.toLocaleString()} / ${supplyCapData.supplyCap.toLocaleString()} ${supplyCapData.collateralAssetSymbol} (${percentage.toFixed(1)}%)`
 
-    if (percentage >= 100) {
-      supplyCapColor = 'text-red-500' // Red when reached or exceeded
-    } else if (percentage >= 90) {
-      supplyCapColor = 'text-yellow-500' // Yellow when nearly reached (within 10%)
-    } else {
-      supplyCapColor = 'text-green-500' // Green when there's room
-    }
+    // Show available amount with color, rest in default color
+    const availableColor =
+      percentage >= 100 ? 'text-red-500' : percentage >= 90 ? 'text-yellow-500' : 'text-green-500'
+
+    supplyCapColor = availableColor
   }
 
   // Calculate borrow rate status and color
@@ -457,7 +454,7 @@ function transformDetailedMetricsData(
   let utilizationTooltip = ''
 
   if (utilizationData && utilizationData.utilization !== undefined) {
-    utilizationValue = `${utilizationData.utilization.toFixed(1)}%`
+    utilizationValue = `${formatPercentage(utilizationData.utilization, { decimals: 2, showSign: false })}`
 
     if (utilizationData.utilization >= 90) {
       utilizationColor = 'text-red-500' // Red when utilization is high (>= 90%)
@@ -483,10 +480,26 @@ function transformDetailedMetricsData(
     ],
     'Lending Market': [
       {
-        label: 'Recommended Supply Cap',
-        value: supplyCapValue,
+        label: 'Available Supply Cap',
+        value: React.createElement(
+          React.Fragment,
+          null,
+          React.createElement(
+            'span',
+            { className: supplyCapColor },
+            supplyCapData
+              ? (supplyCapData.supplyCap - supplyCapData.currentSupply).toLocaleString()
+              : 'N/A',
+          ),
+          React.createElement(
+            'span',
+            { className: 'text-foreground' },
+            supplyCapData
+              ? ` of ${supplyCapData.supplyCap.toLocaleString()} ${supplyCapData.collateralAssetSymbol}`
+              : '',
+          ),
+        ),
         highlight: true,
-        color: supplyCapColor,
       },
       {
         label: 'Current Borrow Rate',
