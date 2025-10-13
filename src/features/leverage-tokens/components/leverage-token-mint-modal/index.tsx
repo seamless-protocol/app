@@ -12,7 +12,8 @@ import {
 import { parseMintedSharesFromReceipt } from '@/features/leverage-tokens/utils/receipt'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
-import { captureTxError } from '@/lib/observability/sentry'
+import { captureSimulationError } from '@/lib/observability/sentry'
+// Sentry tx capture is handled inside useMintWrite's mutation onError
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { BASE_WETH, ETH_SENTINEL, getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
@@ -213,6 +214,28 @@ export function LeverageTokenMintModal({
     collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
     debtDecimals: leverageTokenConfig.debtAsset.decimals,
   })
+
+  // Capture plan preview errors (simulation-stage failures before any write)
+  useEffect(() => {
+    if (!planPreview.error) return
+    captureSimulationError({
+      flow: 'mint',
+      stage: 'plan',
+      chainId: leverageTokenConfig.chainId,
+      token: leverageTokenAddress,
+      inputAsset: leverageTokenConfig.collateralAsset.address,
+      slippageBps,
+      amountIn: form.amount,
+      error: planPreview.error,
+    })
+  }, [
+    planPreview.error,
+    leverageTokenConfig.chainId,
+    leverageTokenConfig.collateralAsset.address,
+    leverageTokenAddress,
+    slippageBps,
+    form.amount,
+  ])
 
   // USD estimates now derived inside useMintPlanPreview
   const expectedUsdOut = planPreview.expectedUsdOut
@@ -648,32 +671,7 @@ export function LeverageTokenMintModal({
         setTransactionHash(hash)
       } catch (e: unknown) {
         const error = e as Error
-
-        // Track mint transaction error
         trackTransactionError('mint_failed', 'leverage_token', error.message)
-
-        const provider = (() => {
-          const swap = leverageTokenConfig.swaps?.debtToCollateral
-          if (!swap) return undefined
-          if (swap.type === 'lifi') return 'lifi'
-          if (swap.type === 'uniswapV2' || swap.type === 'uniswapV3') return 'uniswap'
-          return undefined
-        })()
-
-        captureTxError({
-          flow: 'mint',
-          chainId: leverageTokenConfig.chainId,
-          ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
-          token: leverageTokenAddress,
-          inputAsset: leverageTokenConfig.collateralAsset.address,
-          slippageBps,
-          amountIn: form.amount,
-          expectedOut: String(expectedTokens),
-          ...(provider ? { provider } : {}),
-          error,
-        })
-
-        // Pass the raw error to ErrorStep - it will handle the formatting
         setError(error?.message || 'Mint failed. Please try again.')
         toError()
       }

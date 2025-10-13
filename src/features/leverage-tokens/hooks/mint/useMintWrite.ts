@@ -8,6 +8,20 @@ import {
   simulateLeverageRouterV2Deposit,
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
+import { captureTxError } from '@/lib/observability/sentry'
+
+class HandledTxError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message)
+    this.name = 'HandledTxError'
+    // Preserve original error as cause when provided (TS may not have type for cause)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (options && (options as any).cause !== undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+      ;(this as any).cause = (options as any).cause
+    }
+  }
+}
 
 type Args = {
   config: Config
@@ -45,26 +59,82 @@ export function useMintWrite(key?: {
 
   return useMutation<Hash, Error, Args>({
     mutationKey,
-    mutationFn: async ({ config, chainId, account, token, plan }) => {
+    mutationFn: async ({ config, chainId, account: _account, token, plan }) => {
       const { multicallExecutor } = getContractAddresses(chainId)
       const executor = multicallExecutor as Address
 
-      const { request } = await simulateLeverageRouterV2Deposit(config, {
-        args: [
+      let request: Parameters<typeof writeLeverageRouterV2Deposit>[1]
+      try {
+        const sim = await simulateLeverageRouterV2Deposit(config, {
+          args: [
+            token,
+            plan.equityInInputAsset,
+            plan.flashLoanAmount ?? plan.expectedDebt,
+            plan.minShares,
+            executor,
+            plan.calls,
+          ],
+          account: _account,
+          chainId,
+        })
+        request = sim.request
+      } catch (error) {
+        try {
+          ;(error as Record<string, unknown>)['__sentryCaptured'] = true
+          captureTxError({
+            flow: 'mint',
+            chainId,
+            token,
+            inputAsset: plan.inputAsset,
+            amountIn: plan.equityInInputAsset.toString(),
+            expectedOut: plan.minShares.toString(),
+            error,
+          })
+        } catch {}
+        throw new HandledTxError(
+          error instanceof Error ? error.message : 'Mint simulation failed',
+          { cause: error },
+        )
+      }
+
+      try {
+        const hash = await writeLeverageRouterV2Deposit(config, request)
+        return hash
+      } catch (error) {
+        try {
+          ;(error as Record<string, unknown>)['__sentryCaptured'] = true
+          captureTxError({
+            flow: 'mint',
+            chainId,
+            token,
+            inputAsset: plan.inputAsset,
+            amountIn: plan.equityInInputAsset.toString(),
+            expectedOut: plan.minShares.toString(),
+            error,
+          })
+        } catch {}
+        throw new HandledTxError(error instanceof Error ? error.message : 'Mint submit failed', {
+          cause: error,
+        })
+      }
+    },
+    onError: (error, variables) => {
+      try {
+        const err = error as unknown as { [key: string]: unknown }
+        if (err['__sentryCaptured']) return
+        const { chainId, token, plan } = variables
+        captureTxError({
+          flow: 'mint',
+          chainId,
           token,
-          plan.equityInInputAsset,
-          plan.flashLoanAmount ?? plan.expectedDebt,
-          plan.minShares,
-          executor,
-          plan.calls,
-        ],
-        account,
-        chainId,
-      })
-
-      const hash = await writeLeverageRouterV2Deposit(config, request)
-
-      return hash
+          inputAsset: plan?.inputAsset,
+          amountIn: plan?.equityInInputAsset?.toString?.(),
+          expectedOut: plan?.minShares?.toString?.(),
+          error,
+        })
+      } catch {
+        // best-effort only
+      }
     },
   })
 }

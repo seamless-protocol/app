@@ -11,6 +11,7 @@ import { useMutation } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import { useConfig } from 'wagmi'
 import { type OrchestrateRedeemResult, orchestrateRedeem, type QuoteFn } from '@/domain/redeem'
+import { captureTxError } from '@/lib/observability/sentry'
 
 type Gen = typeof import('@/lib/contracts/generated')
 
@@ -36,29 +37,66 @@ export interface UseRedeemWithRouterParams {
  */
 export function useRedeemWithRouter() {
   const config = useConfig()
+  class HandledTxError extends Error {}
+
   return useMutation<OrchestrateRedeemResult, Error, UseRedeemWithRouterParams>({
-    mutationFn: async ({
-      token,
-      account,
-      sharesToRedeem,
-      slippageBps,
-      chainId,
-      quoteCollateralToDebt,
-      routerAddress,
-      managerAddress,
-      outputAsset,
-    }) =>
-      orchestrateRedeem({
-        config,
-        account,
+    mutationFn: async (vars) => {
+      const {
         token,
+        account,
         sharesToRedeem,
+        slippageBps,
         chainId,
-        ...(typeof slippageBps !== 'undefined' ? { slippageBps } : {}),
         quoteCollateralToDebt,
-        ...(typeof routerAddress !== 'undefined' ? { routerAddressV2: routerAddress } : {}),
-        ...(typeof managerAddress !== 'undefined' ? { managerAddressV2: managerAddress } : {}),
-        ...(typeof outputAsset !== 'undefined' ? { outputAsset } : {}),
-      }),
+        routerAddress,
+        managerAddress,
+        outputAsset,
+      } = vars
+      try {
+        return await orchestrateRedeem({
+          config,
+          account,
+          token,
+          sharesToRedeem,
+          chainId,
+          ...(typeof slippageBps !== 'undefined' ? { slippageBps } : {}),
+          quoteCollateralToDebt,
+          ...(typeof routerAddress !== 'undefined' ? { routerAddressV2: routerAddress } : {}),
+          ...(typeof managerAddress !== 'undefined' ? { managerAddressV2: managerAddress } : {}),
+          ...(typeof outputAsset !== 'undefined' ? { outputAsset } : {}),
+        })
+      } catch (error) {
+        try {
+          // Mark and capture once with normalized tags
+          const err = error as unknown as { [key: string]: unknown }
+          err['__sentryCaptured'] = true
+          captureTxError({
+            flow: 'redeem',
+            chainId,
+            token,
+            ...(typeof outputAsset !== 'undefined' ? { outputAsset } : {}),
+            ...(typeof slippageBps !== 'undefined' ? { slippageBps } : {}),
+            amountIn: sharesToRedeem?.toString?.(),
+            error,
+          })
+        } catch {}
+        throw new HandledTxError(error instanceof Error ? error.message : 'Redeem failed')
+      }
+    },
+    onError: (error, vars) => {
+      try {
+        if (error instanceof HandledTxError) return
+        const { chainId, token, outputAsset, slippageBps, sharesToRedeem } = vars
+        captureTxError({
+          flow: 'redeem',
+          chainId,
+          token,
+          ...(typeof outputAsset !== 'undefined' ? { outputAsset } : {}),
+          ...(typeof slippageBps !== 'undefined' ? { slippageBps } : {}),
+          amountIn: sharesToRedeem?.toString?.(),
+          error,
+        })
+      } catch {}
+    },
   })
 }

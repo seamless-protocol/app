@@ -168,3 +168,77 @@ export function captureTxError(params: {
     status,
   })
 }
+
+export function captureSimulationError(params: {
+  flow: 'mint' | 'redeem'
+  stage: 'plan' | 'preview' | 'preflight' | 'quote-init'
+  chainId?: number
+  token?: string
+  inputAsset?: string
+  outputAsset?: string
+  slippageBps?: number
+  amountIn?: string | bigint
+  expectedOut?: string | bigint
+  provider?: string
+  swapKey?: string
+  error?: unknown
+  route?: string
+}) {
+  const {
+    flow,
+    stage,
+    chainId,
+    token,
+    inputAsset,
+    outputAsset,
+    slippageBps,
+    amountIn,
+    expectedOut,
+    provider,
+    swapKey,
+    error,
+    route,
+  } = params
+
+  const routeTag = route ?? getCurrentRoute()
+
+  Sentry.addBreadcrumb({
+    category: 'simulation',
+    level: 'error',
+    message: `${flow} ${stage} failed`,
+    data: {
+      flow,
+      stage,
+      chainId,
+      token,
+      inputAsset,
+      outputAsset,
+      slippageBps,
+      amountIn: typeof amountIn === 'bigint' ? amountIn.toString() : amountIn,
+      expectedOut: typeof expectedOut === 'bigint' ? expectedOut.toString() : expectedOut,
+      provider,
+      swapKey,
+    },
+  })
+
+  logger.error('Simulation error', {
+    error,
+    flow,
+    stage,
+    ...(typeof chainId === 'number' ? { chainId } : {}),
+    ...(token ? { token } : {}),
+    ...(inputAsset ? { inputAsset } : {}),
+    ...(outputAsset ? { outputAsset } : {}),
+    ...(typeof slippageBps === 'number' ? { slippageBps } : {}),
+    ...(amountIn !== undefined
+      ? { amountIn: typeof amountIn === 'bigint' ? amountIn.toString() : amountIn }
+      : {}),
+    ...(expectedOut !== undefined
+      ? { expectedOut: typeof expectedOut === 'bigint' ? expectedOut.toString() : expectedOut }
+      : {}),
+    ...(provider ? { provider } : {}),
+    ...(swapKey ? { swapKey } : {}),
+    ...(routeTag ? { route: routeTag } : {}),
+    status: 'simulation-failed',
+  })
+}
