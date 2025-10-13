@@ -79,14 +79,11 @@ export class DefiLlamaAprProvider implements AprFetcher {
 
       const data = responseData.data
 
-      // Calculate 7-day average APR (or max available if less than 7 days)
-      // Get up to the last 7 data points (most recent days available)
-      const maxDays = Math.min(7, data.length)
-      const lastDays = data.slice(-maxDays)
-      const validData = lastDays.filter((item) => item.apy != null && !Number.isNaN(item.apy))
-
-      if (validData.length === 0) {
-        const error = new Error('No valid APR data found')
+      // Calculate 7-day average APR by filtering to last 7 days from the most recent entry
+      // Get the most recent entry to determine the cutoff date
+      const mostRecentEntry = data[data.length - 1]
+      if (!mostRecentEntry) {
+        const error = new Error('No data entries found')
         captureApiError({
           provider,
           method,
@@ -97,7 +94,36 @@ export class DefiLlamaAprProvider implements AprFetcher {
         throw error
       }
 
-      // Calculate average APR over available days
+      // Calculate 7 days ago from the most recent entry (excluding current day)
+      const mostRecentDate = new Date(mostRecentEntry.timestamp)
+      const sevenDaysAgo = new Date(mostRecentDate.getTime() - 7 * 24 * 60 * 60 * 1000)
+
+      // Filter data to only include entries from the last 7 days (excluding current day)
+      const last7DaysData = data.filter((item) => {
+        const itemDate = new Date(item.timestamp)
+        return (
+          itemDate >= sevenDaysAgo &&
+          itemDate < mostRecentDate &&
+          item.apy != null &&
+          !Number.isNaN(item.apy)
+        )
+      })
+
+      if (last7DaysData.length === 0) {
+        const error = new Error('No valid APR data found in the last 7 days')
+        captureApiError({
+          provider,
+          method,
+          url,
+          durationMs: elapsed,
+          error,
+        })
+        throw error
+      }
+
+      const validData = last7DaysData
+
+      // Calculate average APR over the last 7 days
       // This gives us a more stable APR value by smoothing out daily fluctuations
       const averageAPR = validData.reduce((sum, item) => sum + item.apy, 0) / validData.length
 

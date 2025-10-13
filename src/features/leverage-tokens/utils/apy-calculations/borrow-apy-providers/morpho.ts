@@ -98,8 +98,9 @@ export class MorphoBorrowApyProvider implements BorrowApyFetcher {
 
       const marketData = response.marketByUniqueKey
 
-      // The borrow APY is already in decimal format from the GraphQL response
-      const borrowAPY = marketData.state.borrowApy
+      // Use 7-day average borrow APY for more stable rates
+      // This provides a more consistent representation of borrowing costs
+      const borrowAPY = marketData.state.weeklyBorrowApy
 
       const result: BaseBorrowApyData = {
         borrowAPY,

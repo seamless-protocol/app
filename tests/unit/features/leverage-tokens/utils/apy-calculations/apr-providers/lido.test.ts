@@ -14,6 +14,12 @@ describe('LidoAprProvider', () => {
         aprs: [
           { timeUnix: 1759407791, apr: 2.575 },
           { timeUnix: 1759494179, apr: 2.57 },
+          { timeUnix: 1759580579, apr: 2.58 },
+          { timeUnix: 1759666979, apr: 2.59 },
+          { timeUnix: 1759753379, apr: 2.6 },
+          { timeUnix: 1759839779, apr: 2.61 },
+          { timeUnix: 1759926179, apr: 2.62 },
+          { timeUnix: 1760012579, apr: 2.63 },
         ],
         smaApr: 3.25,
       },
@@ -32,9 +38,9 @@ describe('LidoAprProvider', () => {
     const result = await provider.fetchApr()
 
     expect(result).toEqual({
-      stakingAPR: 3.25,
+      stakingAPR: 2.592142857142857,
       restakingAPR: 0,
-      totalAPR: 3.25,
+      totalAPR: 2.592142857142857,
     })
 
     expect(mockFetch).toHaveBeenCalledWith('https://eth-api.lido.fi/v1/protocol/steth/apr/sma')
@@ -70,8 +76,22 @@ describe('LidoAprProvider', () => {
   it('should handle zero APR value', async () => {
     const mockData = {
       data: {
-        smaApr: '0',
-        timestamp: '2024-01-01T00:00:00Z',
+        aprs: [
+          { timeUnix: 1759407791, apr: 0 },
+          { timeUnix: 1759494179, apr: 0 },
+          { timeUnix: 1759580579, apr: 0 },
+          { timeUnix: 1759666979, apr: 0 },
+          { timeUnix: 1759753379, apr: 0 },
+          { timeUnix: 1759839779, apr: 0 },
+          { timeUnix: 1759926179, apr: 0 },
+          { timeUnix: 1760012579, apr: 0 },
+        ],
+        smaApr: 0,
+      },
+      meta: {
+        symbol: 'stETH',
+        address: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
+        chainId: 1,
       },
     }
 
@@ -82,15 +102,29 @@ describe('LidoAprProvider', () => {
 
     const result = await provider.fetchApr()
 
-    expect(result.stakingAPR).toBe('0')
-    expect(result.totalAPR).toBe('0')
+    expect(result.stakingAPR).toBe(0)
+    expect(result.totalAPR).toBe(0)
   })
 
   it('should handle high APR values', async () => {
     const mockData = {
       data: {
-        smaApr: '15.75',
-        timestamp: '2024-01-01T00:00:00Z',
+        aprs: [
+          { timeUnix: 1759407791, apr: 15.0 },
+          { timeUnix: 1759494179, apr: 15.5 },
+          { timeUnix: 1759580579, apr: 16.0 },
+          { timeUnix: 1759666979, apr: 16.5 },
+          { timeUnix: 1759753379, apr: 17.0 },
+          { timeUnix: 1759839779, apr: 17.5 },
+          { timeUnix: 1759926179, apr: 18.0 },
+          { timeUnix: 1760012579, apr: 18.5 },
+        ],
+        smaApr: 15.75,
+      },
+      meta: {
+        symbol: 'stETH',
+        address: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
+        chainId: 1,
       },
     }
 
@@ -101,15 +135,29 @@ describe('LidoAprProvider', () => {
 
     const result = await provider.fetchApr()
 
-    expect(result.stakingAPR).toBe('15.75')
-    expect(result.totalAPR).toBe('15.75')
+    expect(result.stakingAPR).toBe(16.5)
+    expect(result.totalAPR).toBe(16.5)
   })
 
   it('should handle decimal APR values', async () => {
     const mockData = {
       data: {
+        aprs: [
+          { timeUnix: 1759407791, apr: 2.1 },
+          { timeUnix: 1759494179, apr: 2.2 },
+          { timeUnix: 1759580579, apr: 2.3 },
+          { timeUnix: 1759666979, apr: 2.4 },
+          { timeUnix: 1759753379, apr: 2.5 },
+          { timeUnix: 1759839779, apr: 2.6 },
+          { timeUnix: 1759926179, apr: 2.7 },
+          { timeUnix: 1760012579, apr: 2.8 },
+        ],
         smaApr: 2.6,
-        timestamp: '2024-01-01T00:00:00Z',
+      },
+      meta: {
+        symbol: 'stETH',
+        address: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
+        chainId: 1,
       },
     }
 
@@ -120,8 +168,8 @@ describe('LidoAprProvider', () => {
 
     const result = await provider.fetchApr()
 
-    expect(result.stakingAPR).toBe(2.6)
-    expect(result.totalAPR).toBe(2.6)
+    expect(result.stakingAPR).toBe(2.4)
+    expect(result.totalAPR).toBe(2.4)
   })
 
   it('should have correct protocol properties', () => {
