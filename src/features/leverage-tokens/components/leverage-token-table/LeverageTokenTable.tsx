@@ -26,7 +26,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../../../components/ui/tooltip'
 import type { LeverageTokenConfig } from '../../leverageTokens.config'
 import { LeverageBadge } from '../LeverageBadge'
-import { SupplyCap } from '../SupplyCap'
 import { LeverageTokenMobileCard } from './LeverageTokenMobileCard'
 
 interface LeverageToken extends LeverageTokenConfig {
@@ -63,7 +62,7 @@ export function LeverageTokenTable({
   const [filters, setFilters] = useState({
     collateralAsset: 'all',
     debtAsset: 'all',
-    supplyCap: 'both',
+    network: 'all',
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [pageSize] = useState(10) // Default page size, could be made configurable
@@ -118,17 +117,9 @@ export function LeverageTokenTable({
       filtered = filtered.filter((token) => token.debtAsset.symbol === filters.debtAsset)
     }
 
-    // Apply supply cap filter
-    if (filters.supplyCap !== 'both') {
-      const isNearCapacity = (token: LeverageToken) =>
-        token.currentSupply && token.supplyCap
-          ? (token.currentSupply / token.supplyCap) * 100 >= 90
-          : false
-      if (filters.supplyCap === 'near-capacity') {
-        filtered = filtered.filter(isNearCapacity)
-      } else if (filters.supplyCap === 'available') {
-        filtered = filtered.filter((token) => !isNearCapacity(token))
-      }
+    // Apply network filter
+    if (filters.network !== 'all') {
+      filtered = filtered.filter((token) => token.chainName === filters.network)
     }
 
     // Sort the filtered data
@@ -155,6 +146,8 @@ export function LeverageTokenTable({
           return item.currentSupply
         case 'supplyCap':
           return item.supplyCap
+        case 'network':
+          return item.chainName
         default:
           console.warn(`Unknown sort key: ${key}`)
           return 0
@@ -192,18 +185,16 @@ export function LeverageTokenTable({
     return [{ value: 'all', label: 'All', count: sortedAndFilteredData.length }, ...options]
   }
 
-  const getSupplyCapOptions = () => {
-    const nearCapacityCount = tokens.filter((token) =>
-      token.currentSupply && token.supplyCap
-        ? (token.currentSupply / token.supplyCap) * 100 >= 90
-        : false,
-    ).length
-    const availableCount = tokens.length - nearCapacityCount
+  const getNetworkOptions = () => {
+    const networks = Array.from(new Set(tokens.map((token) => token.chainName))).sort()
 
     return [
-      { value: 'both', label: 'Both', count: sortedAndFilteredData.length },
-      { value: 'available', label: 'Available', count: availableCount },
-      { value: 'near-capacity', label: 'Near Capacity', count: nearCapacityCount },
+      { value: 'all', label: 'All Networks', count: sortedAndFilteredData.length },
+      ...networks.map((network) => ({
+        value: network,
+        label: network,
+        count: tokens.filter((token) => token.chainName === network).length,
+      })),
     ]
   }
 
@@ -233,12 +224,12 @@ export function LeverageTokenTable({
               onValueChange={(value) => setFilters((prev) => ({ ...prev, debtAsset: value }))}
             />
 
-            {/* Supply Cap Filter */}
+            {/* Network Filter */}
             <FilterDropdown
-              label="Supply Cap"
-              value={filters.supplyCap}
-              options={getSupplyCapOptions()}
-              onValueChange={(value) => setFilters((prev) => ({ ...prev, supplyCap: value }))}
+              label="Network"
+              value={filters.network}
+              options={getNetworkOptions()}
+              onValueChange={(value) => setFilters((prev) => ({ ...prev, network: value }))}
             />
           </div>
 
@@ -346,23 +337,20 @@ export function LeverageTokenTable({
                   </button>
                 </TableHead>
                 <TableHead className="py-4 px-6 text-center text-[var(--text-secondary)] font-medium">
-                  <span>Network</span>
-                </TableHead>
-                <TableHead className="py-4 px-6 text-right text-[var(--text-secondary)] font-medium min-w-[140px]">
                   <button
                     type="button"
-                    className="ml-auto flex items-center space-x-2 transition-colors cursor-pointer hover:text-[var(--text-primary)]"
-                    onClick={() => handleSort('available')}
+                    className="mx-auto flex items-center space-x-2 transition-colors cursor-pointer hover:text-[var(--text-primary)]"
+                    onClick={() => handleSort('network')}
                   >
-                    <span>Supply Cap Available</span>
-                    {getSortIcon('available')}
+                    <span>Network</span>
+                    {getSortIcon('network')}
                   </button>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {currentItems.length === 0 ? (
-                <TableEmpty colSpan={6} />
+                <TableEmpty colSpan={5} />
               ) : (
                 currentItems.map((token, index) => {
                   const tokenApyData = apyDataMap?.get(token.address)
@@ -508,13 +496,6 @@ export function LeverageTokenTable({
                             {token.chainName}
                           </span>
                         </div>
-                      </TableCell>
-
-                      <TableCell className="py-4 px-6 text-right">
-                        <SupplyCap
-                          currentSupply={token.currentSupply ?? 0}
-                          supplyCap={token.supplyCap ?? 0}
-                        />
                       </TableCell>
                     </motion.tr>
                   )
