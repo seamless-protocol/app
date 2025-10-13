@@ -15,7 +15,10 @@ export type ReadResult<T> = { status: 'success'; result: T } | { status: 'failur
  * Hook to fetch detailed metrics for a leverage token using two-contract architecture
  * First fetches config from LeverageManager, then fetches detailed metrics from RebalanceAdapter
  */
-export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
+export function useLeverageTokenDetailedMetrics(
+  tokenAddress?: Address,
+  supplyCapData?: { currentSupply: number; supplyCap: number; collateralAssetSymbol: string },
+) {
   // Get the token config to determine the correct chain ID
   const tokenConfig = tokenAddress ? getLeverageTokenConfig(tokenAddress) : undefined
   const chainId = tokenConfig?.chainId
@@ -211,6 +214,7 @@ export function useLeverageTokenDetailedMetrics(tokenAddress?: Address) {
           ],
           adapterData as AdapterData,
           lendingData as LendData,
+          supplyCapData,
         )
       : undefined
 
@@ -272,6 +276,7 @@ function transformDetailedMetricsData(
     ReadResult<bigint>,
   ],
   lendingData: readonly [ReadResult<bigint>],
+  supplyCapData?: { currentSupply: number; supplyCap: number; collateralAssetSymbol: string },
 ): LeverageTokenMetrics {
   // Extract data from manager calls
   const configResult = managerData[0]
@@ -397,6 +402,23 @@ function transformDetailedMetricsData(
       ? formatMultiplier(minPriceMultiplierResult.result as bigint)
       : 'N/A'
 
+  // Calculate supply cap status and color
+  let supplyCapValue = 'N/A'
+  let supplyCapColor = 'text-foreground'
+
+  if (supplyCapData && supplyCapData.supplyCap > 0) {
+    const percentage = (supplyCapData.currentSupply / supplyCapData.supplyCap) * 100
+    supplyCapValue = `${supplyCapData.currentSupply.toLocaleString()} / ${supplyCapData.supplyCap.toLocaleString()} ${supplyCapData.collateralAssetSymbol} (${percentage.toFixed(1)}%)`
+
+    if (percentage >= 100) {
+      supplyCapColor = 'text-red-500' // Red when reached or exceeded
+    } else if (percentage >= 90) {
+      supplyCapColor = 'text-yellow-500' // Yellow when nearly reached (within 10%)
+    } else {
+      supplyCapColor = 'text-green-500' // Green when there's room
+    }
+  }
+
   return {
     Leverage: [
       {
@@ -409,6 +431,14 @@ function transformDetailedMetricsData(
         label: 'Min - Max Leverage',
         value: `${minLeverage} - ${maxLeverage}`,
         color: 'text-foreground',
+      },
+    ],
+    'Lending Market': [
+      {
+        label: 'Recommended Supply Cap',
+        value: supplyCapValue,
+        highlight: true,
+        color: supplyCapColor,
       },
     ],
     Fees: [

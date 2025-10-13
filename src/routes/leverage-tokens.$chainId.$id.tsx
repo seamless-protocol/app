@@ -23,6 +23,7 @@ import { RelatedResources } from '@/features/leverage-tokens/components/RelatedR
 import { useLeverageTokenCollateral } from '@/features/leverage-tokens/hooks/useLeverageTokenCollateral'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
+import { useLeverageTokenState } from '@/features/leverage-tokens/hooks/useLeverageTokenState'
 import { useLeverageTokenUserPosition } from '@/features/leverage-tokens/hooks/useLeverageTokenUserPosition'
 import {
   getAllLeverageTokenConfigs,
@@ -77,12 +78,23 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
     // Get leverage token config (used for decimals, addresses, etc.)
     const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`, chainId)
 
+    // Get supply cap data for the lending market section
+    const { data: stateData } = useLeverageTokenState(tokenAddress as Address, chainId)
+    const currentSupply = stateData?.totalSupply
+      ? Number(formatUnits(stateData.totalSupply, tokenConfig?.decimals || 18))
+      : 0
+    const supplyCap = tokenConfig?.supplyCap || 0
+
     // All hooks must be called at top level before any conditional returns
     const {
       data: detailedMetrics,
       isLoading: isDetailedMetricsLoading,
       isError: isDetailedMetricsError,
-    } = useLeverageTokenDetailedMetrics(tokenAddress as Address)
+    } = useLeverageTokenDetailedMetrics(tokenAddress as Address, {
+      currentSupply,
+      supplyCap,
+      collateralAssetSymbol: tokenConfig?.collateralAsset.symbol || '',
+    })
 
     // USD price map for debt and collateral assets (guard when config is missing)
     const { data: usdPriceMap } = useUsdPrices({
