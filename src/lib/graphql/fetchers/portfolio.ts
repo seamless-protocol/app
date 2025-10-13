@@ -82,6 +82,7 @@ export async function fetchAllLeverageTokenStateHistory(
     try {
       let skip = 0
       const batchSize = 1000
+      let chainStates: Array<LeverageTokenState> = []
 
       while (skip < maxRecords) {
         const result = await fetchLeverageTokenStateHistory(
@@ -101,7 +102,7 @@ export async function fetchAllLeverageTokenStateHistory(
           leverageToken: leverageToken.id,
         }))
 
-        allStates.push(...statesWithTokenAddress)
+        chainStates.push(...statesWithTokenAddress)
 
         // If we got less than batchSize, we've reached the end
         if (result.leverageToken.stateHistory.length < batchSize) {
@@ -110,6 +111,8 @@ export async function fetchAllLeverageTokenStateHistory(
 
         skip += batchSize
       }
+
+      allStates.push(...chainStates)
     } catch (error) {
       logger.warn('Failed to fetch state history for token from chain', {
         leverageTokenAddress,

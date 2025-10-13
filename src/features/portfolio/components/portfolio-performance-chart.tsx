@@ -15,6 +15,7 @@ export interface PortfolioDataPoint {
   date: string
   value: number
   earnings?: number
+  timestamp?: number
 }
 
 export interface PortfolioPerformanceChartProps {
@@ -125,6 +126,21 @@ export function PortfolioPerformanceChart({
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'var(--text-secondary)', fontSize: 12, dy: 8 }}
+                  tickFormatter={(dateString: string) => {
+                    const date = new Date(dateString)
+                    // Handle different timeframes with appropriate formatting
+                    if (selectedTimeframe === '1Y') {
+                      return date.toLocaleDateString('en-US', {
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    } else {
+                      return date.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })
+                    }
+                  }}
                 />
                 <YAxis
                   axisLine={false}

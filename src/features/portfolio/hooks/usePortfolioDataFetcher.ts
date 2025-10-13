@@ -73,7 +73,28 @@ function calculatePositionValues(
   const mostRecentState = tokenStates
     .map((state) => ({
       ...state,
-      timestamp: Number(state.timestamp) / 1000000, // Convert microseconds to seconds
+      timestamp: (() => {
+        try {
+          const rawTimestamp = Number(state.timestamp)
+          const timestamp = rawTimestamp > 4102444800 ? rawTimestamp / 1000000 : rawTimestamp
+          // Validate timestamp
+          if (isNaN(timestamp) || timestamp <= 0 || timestamp > 4102444800) {
+            console.warn('Invalid timestamp in usePortfolioDataFetcher:', {
+              raw: state.timestamp,
+              rawTimestamp,
+              timestamp,
+            })
+            return 0 // Return 0 for invalid timestamps
+          }
+          return timestamp
+        } catch (error) {
+          console.error('Error processing timestamp in usePortfolioDataFetcher:', {
+            timestamp: state.timestamp,
+            error,
+          })
+          return 0
+        }
+      })(),
     }))
     .sort((a, b) => b.timestamp - a.timestamp)
     .find((state) => state.timestamp <= now)
