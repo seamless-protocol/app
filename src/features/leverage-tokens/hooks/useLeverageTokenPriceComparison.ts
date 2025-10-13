@@ -92,60 +92,80 @@ export function useLeverageTokenPriceComparison({
         (item) => item.timestamp >= cutoffTime,
       )
 
-      // Combine the data using efficient O(N+M) algorithm
+      console.log('🔍 [Price Comparison] Data for timeframe:', {
+        timeframe,
+        cutoffTime: new Date(cutoffTime).toISOString(),
+        leverageTokenDataCount: leverageTokenData.length,
+        collateralPriceDataCount: collateralPriceData.length,
+        filteredLeverageCount: filteredLeverageTokenData.length,
+        filteredCollateralCount: filteredCollateralPriceData.length,
+        leverageTokenTimestamps: filteredLeverageTokenData.map(d => ({
+          timestamp: d.timestamp,
+          date: new Date(d.timestamp).toISOString()
+        })),
+        collateralTimestamps: filteredCollateralPriceData.map(d => ({
+          timestamp: d.timestamp,
+          date: new Date(d.timestamp).toISOString()
+        }))
+      })
+
+      // For each collateral price update, interpolate the leverage token price
       const combinedData: Array<PriceDataPoint> = []
-      const timeWindow = 24 * 60 * 60 * 1000 // 24 hours
 
-      // Use a sliding window approach for O(N+M) performance
-      let collateralIndex = 0
+      // If we have leverage token data, use it to interpolate
+      if (filteredLeverageTokenData.length > 0) {
+        for (const collateralItem of filteredCollateralPriceData) {
+          // Find the two leverage token data points that bracket this collateral timestamp
+          let beforeIndex = -1
+          let afterIndex = -1
 
-      for (const leverageItem of filteredLeverageTokenData) {
-        if (!leverageItem) continue
-
-        let closestCollateralPrice: number | undefined
-        let closestTimeDiff = Infinity
-
-        // Find the start of the relevant time window for this leverage item
-        const windowStart = leverageItem.timestamp - timeWindow
-        const windowEnd = leverageItem.timestamp + timeWindow
-
-        // Skip collateral items that are too far behind
-        while (collateralIndex < filteredCollateralPriceData.length) {
-          const collateralItem = filteredCollateralPriceData[collateralIndex]
-          if (!collateralItem) {
-            collateralIndex++
-            continue
-          }
-          if (collateralItem.timestamp >= windowStart) break
-          collateralIndex++
-        }
-
-        // Scan forward through the time window
-        let scanIndex = collateralIndex
-        while (scanIndex < filteredCollateralPriceData.length) {
-          const collateralItem = filteredCollateralPriceData[scanIndex]
-          if (!collateralItem) {
-            scanIndex++
-            continue
+          for (let i = 0; i < filteredLeverageTokenData.length; i++) {
+            const item = filteredLeverageTokenData[i]
+            if (!item) continue
+            
+            if (item.timestamp <= collateralItem.timestamp) {
+              beforeIndex = i
+            }
+            if (item.timestamp >= collateralItem.timestamp && afterIndex === -1) {
+              afterIndex = i
+              break
+            }
           }
 
-          // If we've moved beyond the time window, stop scanning
-          if (collateralItem.timestamp > windowEnd) break
+          let leverageTokenPrice: number
 
-          const timeDiff = Math.abs(collateralItem.timestamp - leverageItem.timestamp)
-          if (timeDiff < closestTimeDiff) {
-            closestCollateralPrice = collateralItem.price
-            closestTimeDiff = timeDiff
+          const firstItem = filteredLeverageTokenData[0]
+          const lastItem = filteredLeverageTokenData[filteredLeverageTokenData.length - 1]
+          const beforeItem = beforeIndex >= 0 ? filteredLeverageTokenData[beforeIndex] : undefined
+          const afterItem = afterIndex >= 0 ? filteredLeverageTokenData[afterIndex] : undefined
+
+          if (beforeIndex === -1 && firstItem) {
+            // Before all leverage token data, use the first available
+            leverageTokenPrice = firstItem.equityPerTokenInDebt / 10 ** 18
+          } else if (afterIndex === -1 && lastItem) {
+            // After all leverage token data, use the last available
+            leverageTokenPrice = lastItem.equityPerTokenInDebt / 10 ** 18
+          } else if (beforeIndex === afterIndex && beforeItem) {
+            // Exact match
+            leverageTokenPrice = beforeItem.equityPerTokenInDebt / 10 ** 18
+          } else if (beforeItem && afterItem) {
+            // Interpolate between two points
+            const timeDiff = afterItem.timestamp - beforeItem.timestamp
+            const timeFromBefore = collateralItem.timestamp - beforeItem.timestamp
+            const ratio = timeDiff > 0 ? timeFromBefore / timeDiff : 0
+
+            const beforePrice = beforeItem.equityPerTokenInDebt / 10 ** 18
+            const afterPrice = afterItem.equityPerTokenInDebt / 10 ** 18
+            leverageTokenPrice = beforePrice + (afterPrice - beforePrice) * ratio
+          } else {
+            // Fallback: use first available if exists
+            leverageTokenPrice = firstItem ? firstItem.equityPerTokenInDebt / 10 ** 18 : 0
           }
 
-          scanIndex++
-        }
-
-        if (closestCollateralPrice !== undefined) {
           combinedData.push({
-            date: new Date(leverageItem.timestamp).toISOString(),
-            weethPrice: closestCollateralPrice,
-            leverageTokenPrice: leverageItem.equityPerTokenInDebt / 10 ** 18, // Convert from wei to decimal
+            date: new Date(collateralItem.timestamp).toISOString(),
+            weethPrice: collateralItem.price,
+            leverageTokenPrice,
           })
         }
       }
@@ -154,6 +174,17 @@ export function useLeverageTokenPriceComparison({
       const finalResult = combinedData.sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
       )
+      
+      console.log('🔍 [Price Comparison] Final combined data:', {
+        combinedDataCount: combinedData.length,
+        finalResultCount: finalResult.length,
+        dataPoints: finalResult.map(d => ({
+          date: d.date,
+          weethPrice: d.weethPrice,
+          leverageTokenPrice: d.leverageTokenPrice
+        }))
+      })
+      
       return finalResult
     },
     staleTime: STALE_TIME.historical,
