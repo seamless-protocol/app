@@ -78,7 +78,7 @@ function calculatePositionValues(
           const rawTimestamp = Number(state.timestamp)
           const timestamp = rawTimestamp > 4102444800 ? rawTimestamp / 1000000 : rawTimestamp
           // Validate timestamp
-          if (isNaN(timestamp) || timestamp <= 0 || timestamp > 4102444800) {
+          if (Number.isNaN(timestamp) || timestamp <= 0 || timestamp > 4102444800) {
             console.warn('Invalid timestamp in usePortfolioDataFetcher:', {
               raw: state.timestamp,
               rawTimestamp,

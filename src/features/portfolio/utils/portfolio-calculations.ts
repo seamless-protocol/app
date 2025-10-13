@@ -79,7 +79,7 @@ function _findClosestStateByTimestamp(
     const stateTimestamp = rawTimestamp > 4102444800 ? rawTimestamp / 1000000 : rawTimestamp
 
     // Validate timestamp
-    if (isNaN(stateTimestamp) || stateTimestamp <= 0 || stateTimestamp > 4102444800) {
+    if (Number.isNaN(stateTimestamp) || stateTimestamp <= 0 || stateTimestamp > 4102444800) {
       continue // Skip invalid timestamps
     }
 
@@ -191,45 +191,14 @@ export function generatePortfolioPerformanceData(
   usdPrices: Record<string, number>,
 ): Array<PortfolioDataPoint> {
   try {
-    console.log('🔍 [Portfolio Calculations] Generating performance data:', {
-      userPositionsCount: userPositions.length,
-      leverageTokenStatesCount: leverageTokenStates.size,
-      timeframe,
-      usdPricesCount: Object.keys(usdPrices).length,
-    })
-
     if (userPositions.length === 0 || leverageTokenStates.size === 0) {
-      console.log('🔍 [Portfolio Calculations] No data available, returning empty array')
       return []
     }
 
     // Get all unique timestamps from all leverage tokens
     const allTimestamps = new Set<number>()
 
-    for (const [tokenAddress, states] of leverageTokenStates.entries()) {
-      console.log(`🔍 [Portfolio Calculations] Processing states for token ${tokenAddress}:`, {
-        statesCount: states.length,
-        sampleTimestamps: states.slice(0, 3).map((s) => {
-          try {
-            const rawTimestamp = Number(s.timestamp)
-            const isMicroseconds = rawTimestamp > 4102444800
-            const timestampInSeconds = isMicroseconds ? rawTimestamp / 1000000 : rawTimestamp
-            return {
-              raw: s.timestamp,
-              number: rawTimestamp,
-              isMicroseconds,
-              timestampInSeconds,
-              date: new Date(timestampInSeconds * 1000).toISOString(),
-            }
-          } catch (error) {
-            return {
-              raw: s.timestamp,
-              error: error.message,
-            }
-          }
-        }),
-      })
-
+    for (const [, states] of leverageTokenStates.entries()) {
       for (const state of states) {
         try {
           // Subgraph timestamps are typically in seconds, not microseconds
@@ -241,32 +210,18 @@ export function generatePortfolioPerformanceData(
           const timestamp = rawTimestamp > 4102444800 ? rawTimestamp / 1000000 : rawTimestamp
 
           // Validate the timestamp is reasonable (not NaN, not too far in past/future)
-          if (!isNaN(timestamp) && timestamp > 0 && timestamp < 4102444800) {
+          if (!Number.isNaN(timestamp) && timestamp > 0 && timestamp < 4102444800) {
             allTimestamps.add(timestamp)
           } else {
-            console.warn('🔍 [Portfolio Calculations] Invalid timestamp:', {
-              raw: state.timestamp,
-              rawTimestamp,
-              timestamp,
-              date: new Date(timestamp * 1000).toISOString(),
-            })
           }
-        } catch (error) {
-          console.error('🔍 [Portfolio Calculations] Error processing timestamp:', {
-            timestamp: state.timestamp,
-            error,
-          })
-        }
+        } catch {}
       }
     }
 
     // Convert to array and sort
     const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b)
 
-    // Debug logging removed - chart is working correctly
-
     if (sortedTimestamps.length === 0) {
-      console.log('🔍 [Portfolio Calculations] No timestamps found, returning empty array')
       return []
     }
 
@@ -277,10 +232,7 @@ export function generatePortfolioPerformanceData(
 
     const filteredTimestamps = sortedTimestamps.filter((ts) => ts >= startTime)
 
-    // Debug logging removed - chart is working correctly
-
     if (filteredTimestamps.length === 0) {
-      console.log('🔍 [Portfolio Calculations] No timestamps in timeframe, returning empty array')
       return []
     }
 
@@ -295,8 +247,6 @@ export function generatePortfolioPerformanceData(
       // For other timeframes, use the sampling logic
       sampledTimestamps = _sampleTimestampsForTimeframe(filteredTimestamps, timeframe)
     }
-
-    // Debug logging removed - chart is working correctly
 
     // Generate data points
     const dataPoints: Array<PortfolioDataPoint> = []
@@ -315,16 +265,8 @@ export function generatePortfolioPerformanceData(
         // Check if we already have a data point for this formatted date
         const existingDataPoint = dataPoints.find((dp) => dp.date === formattedDate)
         if (existingDataPoint) {
-          console.warn('🔍 [Portfolio Calculations] Duplicate date detected:', {
-            timestamp,
-            formattedDate,
-            existingTimestamp: (existingDataPoint as any).timestamp,
-            existingDate: new Date((existingDataPoint as any).timestamp * 1000).toISOString(),
-            newDate: new Date(timestamp * 1000).toISOString(),
-          })
-
           // Keep the later timestamp
-          if (timestamp > (existingDataPoint as any).timestamp) {
+          if (existingDataPoint.timestamp && timestamp > existingDataPoint.timestamp) {
             // Replace the existing data point
             const index = dataPoints.indexOf(existingDataPoint)
             dataPoints[index] = {
@@ -336,14 +278,6 @@ export function generatePortfolioPerformanceData(
           }
           // If the new timestamp is earlier, skip it
         } else {
-          // Debug logging can be removed in production
-          // console.log('🔍 [Portfolio Calculations] Data point:', {
-          //   timestamp,
-          //   formattedDate,
-          //   portfolioValue,
-          //   date: new Date(timestamp * 1000).toISOString()
-          // })
-
           dataPoints.push({
             date: formattedDate,
             value: portfolioValue,
@@ -354,19 +288,8 @@ export function generatePortfolioPerformanceData(
       }
     }
 
-    // Debug logging can be removed in production
-    // console.log('🔍 [Portfolio Calculations] Final data points:', {
-    //   dataPointsCount: dataPoints.length,
-    //   dataPoints: dataPoints.map(dp => ({
-    //     date: dp.date,
-    //     value: dp.value,
-    //     timestamp: dp.timestamp,
-    //     dateObj: new Date((dp as any).timestamp * 1000).toISOString()
-    //   }))
-    // })
-
     // Sort by original timestamp ascending for chart display
-    return dataPoints.sort((a, b) => (a as any).timestamp - (b as any).timestamp)
+    return dataPoints.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
   } catch (error) {
     console.error('❌ [Portfolio Calculations] Error generating performance data:', error)
     return []
@@ -423,32 +346,13 @@ function _sampleTimestampsForTimeframe(
     // Daily grouping logic - keeps latest timestamp for each day
 
     // Keep the latest timestamp for each day
-    if (!timestampsByDay.has(dayKey) || timestampsByDay.get(dayKey)! < timestamp) {
+    const existingTimestamp = timestampsByDay.get(dayKey)
+    if (!timestampsByDay.has(dayKey) || (existingTimestamp && existingTimestamp < timestamp)) {
       timestampsByDay.set(dayKey, timestamp)
     }
   }
 
   const uniqueDailyTimestamps = Array.from(timestampsByDay.values()).sort((a, b) => a - b)
-
-  // Debug logging can be removed in production
-  // console.log('🔍 [Portfolio Calculations] Unique daily timestamps:', {
-  //   originalCount: timestamps.length,
-  //   uniqueDailyCount: uniqueDailyTimestamps.length,
-  //   sampleDaily: uniqueDailyTimestamps.slice(0, 5).map(ts => ({
-  //     timestamp: ts,
-  //     date: new Date(ts * 1000).toISOString().split('T')[0]
-  //   })),
-  //   allDailyTimestamps: uniqueDailyTimestamps.map(ts => {
-  //     const date = new Date(ts * 1000)
-  //     const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })
-  //     const day = date.getUTCDate()
-  //     return {
-  //       timestamp: ts,
-  //       date: date.toISOString().split('T')[0],
-  //       formattedDate: `${month} ${day}`
-  //     }
-  //   })
-  // })
 
   // If we have a reasonable number of unique daily timestamps, return all of them
   // This ensures we don't lose any data points unnecessarily
@@ -461,17 +365,24 @@ function _sampleTimestampsForTimeframe(
   const sampled: Array<number> = []
 
   // Always include the first timestamp
-  sampled.push(uniqueDailyTimestamps[0])
+  const firstTimestamp = uniqueDailyTimestamps[0]
+  if (firstTimestamp !== undefined) {
+    sampled.push(firstTimestamp)
+  }
 
   // Sample evenly distributed points
   for (let i = step; i < uniqueDailyTimestamps.length - 1; i += step) {
-    sampled.push(uniqueDailyTimestamps[i])
+    const timestamp = uniqueDailyTimestamps[i]
+    if (timestamp !== undefined) {
+      sampled.push(timestamp)
+    }
     if (sampled.length >= maxPoints - 1) break // Leave room for the last timestamp
   }
 
   // Always include the last timestamp
-  if (sampled[sampled.length - 1] !== uniqueDailyTimestamps[uniqueDailyTimestamps.length - 1]) {
-    sampled.push(uniqueDailyTimestamps[uniqueDailyTimestamps.length - 1])
+  const lastTimestamp = uniqueDailyTimestamps[uniqueDailyTimestamps.length - 1]
+  if (lastTimestamp !== undefined && sampled[sampled.length - 1] !== lastTimestamp) {
+    sampled.push(lastTimestamp)
   }
 
   return sampled
@@ -505,8 +416,7 @@ function _formatTimestampForChart(
   const date = new Date(timestamp * 1000)
 
   // Ensure the date is valid
-  if (isNaN(date.getTime())) {
-    console.warn('Invalid date for timestamp:', timestamp)
+  if (Number.isNaN(date.getTime())) {
     return 'Invalid Date'
   }
 
