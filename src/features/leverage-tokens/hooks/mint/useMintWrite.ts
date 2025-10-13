@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
-import { useChainId, useSwitchChain } from 'wagmi'
 import type { MintPlanV2 } from '@/domain/mint/planner/plan.v2'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
@@ -33,8 +32,7 @@ export function useMintWrite(key?: {
   account: Address
   plan?: Args['plan']
 }) {
-  const activeChainId = useChainId()
-  const { switchChainAsync } = useSwitchChain()
+  // No internal chain switching; caller ensures correct network.
 
   const mutationKey = key
     ? ltKeys.mutations.mintWrite({
@@ -48,10 +46,6 @@ export function useMintWrite(key?: {
   return useMutation<Hash, Error, Args>({
     mutationKey,
     mutationFn: async ({ config, chainId, account, token, plan }) => {
-      if (activeChainId !== chainId) {
-        await switchChainAsync({ chainId })
-      }
-
       const { multicallExecutor } = getContractAddresses(chainId)
       const executor = multicallExecutor as Address
 

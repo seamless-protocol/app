@@ -29,7 +29,7 @@ export function SuccessStep({
           <CheckCircle className="h-8 w-8 text-[var(--state-success-text)]" />
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">Redemption Completed!</h3>
-        <p className="text-secondary-foreground text-center max-w-sm">
+        <p className="text-secondary-foreground text-center max-w-sm text-sm">
           Your {amount} {leverageTokenSymbol} have been successfully redeemed for {expectedAmount}{' '}
           {selectedAsset}.
         </p>
@@ -54,9 +54,9 @@ export function SuccessStep({
             <button
               type="button"
               onClick={() => window.open(txUrl, '_blank')}
-              className="text-brand-purple hover:underline flex items-center"
+              className="text-brand-purple hover:underline flex items-center hover:cursor-pointer"
             >
-              View on {explorer.name}
+              View on explorer
               <ExternalLink className="h-3 w-3 ml-1" />
             </button>
           </div>

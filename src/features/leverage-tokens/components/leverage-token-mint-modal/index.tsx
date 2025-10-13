@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import {
@@ -168,7 +168,6 @@ export function LeverageTokenMintModal({
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
   const [isRefreshingRoute, setIsRefreshingRoute] = useState(false)
-  const receiptHandled = useRef<{ hash?: `0x${string}`; outcome?: 'success' | 'error' }>({})
 
   // Hooks: form, preview, allowance, execution
   const currentSupplyFormatted = leverageTokenState
@@ -308,6 +307,7 @@ export function LeverageTokenMintModal({
     isPending: isApprovingPending,
     isApproved: isApprovedFlag,
     error: approveErr,
+    hash: approveHash,
   } = useApprovalFlow({
     tokenAddress: leverageTokenConfig.collateralAsset.address,
     ...(userAddress ? { owner: userAddress } : {}),
@@ -394,9 +394,6 @@ export function LeverageTokenMintModal({
   useEffect(() => {
     if (currentStep !== 'approve') return
     if (isApprovedFlag) {
-      toast.success('Token approval confirmed', {
-        description: `${selectedToken.symbol} spending approved`,
-      })
       toConfirm()
       return
     }
@@ -404,7 +401,7 @@ export function LeverageTokenMintModal({
       setError(approveErr?.message || 'Approval failed. Please try again.')
       toError()
     }
-  }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
+  }, [isApprovedFlag, approveErr, currentStep, toConfirm, toError])
 
   const expectedTokens = useMemo(() => {
     const shares = planPreview.plan?.expectedShares
@@ -415,20 +412,23 @@ export function LeverageTokenMintModal({
     )
   }, [planPreview.plan?.expectedShares, leverageTokenConfig.decimals])
 
-  // Receipt effect (after expectedTokens to satisfy dependency ordering)
+  // Debug logs removed
+
+  // Receipt effect: transition to success/error once receipt resolves
   useEffect(() => {
-    if (!transactionHash) {
-      receiptHandled.current = {}
+    if (!transactionHash) return
+    if (receiptState.isError) {
+      const errMsg = receiptState.error?.message || 'Transaction failed or timed out.'
+      setError(errMsg)
+      toError()
       return
     }
     if (receiptState.isSuccess) {
-      if (
-        receiptHandled.current.hash === (transactionHash as `0x${string}`) &&
-        receiptHandled.current.outcome === 'success'
-      )
-        return
-      receiptHandled.current = { hash: transactionHash as `0x${string}`, outcome: 'success' }
       void (async () => {
+        // Ensure a paint so on-chain pending text can flash on instant receipts
+        try {
+          await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+        } catch {}
         try {
           await invalidateLeverageTokenQueries(queryClient, {
             token: leverageTokenAddress,
@@ -445,21 +445,9 @@ export function LeverageTokenMintModal({
         const usdValue = (parseFloat(form.amount || '0') || 0) * (selectedToken.price || 0)
         trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
         analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
-        toast.success('Leverage tokens minted successfully!', {
-          description: `${form.amount} ${selectedToken.symbol} -> ~${expectedTokens} ${leverageTokenConfig.symbol}`,
-        })
+        // Success feedback is conveyed by the Success step UI
         toSuccess()
       })()
-    } else if (receiptState.isError) {
-      if (
-        receiptHandled.current.hash === (transactionHash as `0x${string}`) &&
-        receiptHandled.current.outcome === 'error'
-      )
-        return
-      receiptHandled.current = { hash: transactionHash as `0x${string}`, outcome: 'error' }
-      const errMsg = receiptState.error?.message || 'Transaction failed or timed out.'
-      setError(errMsg)
-      toError()
     }
   }, [
     transactionHash,
@@ -471,8 +459,6 @@ export function LeverageTokenMintModal({
     userAddress,
     form.amount,
     selectedToken.price,
-    selectedToken.symbol,
-    expectedTokens,
     refetchCollateralBalance,
     refetchLeverageTokenBalance,
     trackLeverageTokenMinted,
@@ -557,115 +543,126 @@ export function LeverageTokenMintModal({
     // Track funnel step: mint transaction initiated
     analytics.funnelStep('mint_leverage_token', 'transaction_initiated', 2)
 
-    // Provide user feedback if we need to switch chains
-    if (typeof connectedChainId === 'number' && connectedChainId !== leverageTokenConfig.chainId) {
+    // Immediately show awaiting wallet state to avoid perceived lag
+    toPending()
+
+    const proceed = async () => {
+      // Provide user feedback if we need to switch chains
+      if (
+        typeof connectedChainId === 'number' &&
+        connectedChainId !== leverageTokenConfig.chainId
+      ) {
+        try {
+          toast.message('Switching network…', {
+            description: `Switching to ${leverageTokenConfig.chainName}`,
+          })
+          await switchChainAsync({ chainId: leverageTokenConfig.chainId })
+        } catch (switchErr) {
+          const msg =
+            switchErr instanceof Error
+              ? switchErr.message
+              : 'Please switch to the correct network in your wallet and try again.'
+          setError(msg)
+          toError()
+          return
+        }
+      }
+
+      // Pre-flight: protect user's preview floor (minOut) before submitting
       try {
-        toast.message('Switching network…', {
-          description: `Switching to ${leverageTokenConfig.chainName}`,
-        })
-        await switchChainAsync({ chainId: leverageTokenConfig.chainId })
-      } catch (switchErr) {
-        const msg =
-          switchErr instanceof Error
-            ? switchErr.message
-            : 'Please switch to the correct network in your wallet and try again.'
+        const plan = planPreview.plan
+        const quoteFn = quoteDebtToCollateral.quote
+        if (plan && quoteFn) {
+          const floor = plan.swapMinOut
+          const chainWeth = contractAddresses.tokens?.weth ?? BASE_WETH
+          const inToken =
+            plan.debtAsset.toLowerCase() === chainWeth.toLowerCase()
+              ? ETH_SENTINEL
+              : (plan.debtAsset as `0x${string}`)
+          const outToken = plan.collateralAsset as `0x${string}`
+          const amountIn = plan.flashLoanAmount ?? plan.expectedDebt
+          if (amountIn > 0n && floor > 0n) {
+            const fresh = await quoteFn({ inToken, outToken, amountIn, intent: 'exactIn' })
+            const minNow = typeof fresh.minOut === 'bigint' ? fresh.minOut : fresh.out
+            if (minNow < floor) {
+              toast.message('Refreshing quote…', {
+                description: 'Route moved below your guaranteed floor.',
+              })
+              // Refresh the plan/quote and keep user on Confirm
+              try {
+                setIsRefreshingRoute(true)
+                await planPreview.refetch?.()
+              } catch (_) {
+                // Non-fatal; user can retry
+              } finally {
+                setIsRefreshingRoute(false)
+              }
+              // Do not block; proceed with execution which re-plans with fresh quotes
+            }
+          }
+        }
+      } catch (preCheckErr) {
+        const msg = preCheckErr instanceof Error ? preCheckErr.message : 'Route pre-check failed.'
         setError(msg)
         toError()
         return
       }
-    }
 
-    // Pre-flight: protect user's preview floor (minOut) before submitting
-    try {
-      const plan = planPreview.plan
-      const quoteFn = quoteDebtToCollateral.quote
-      if (plan && quoteFn) {
-        const floor = plan.swapMinOut
-        const chainWeth = contractAddresses.tokens?.weth ?? BASE_WETH
-        const inToken =
-          plan.debtAsset.toLowerCase() === chainWeth.toLowerCase()
-            ? ETH_SENTINEL
-            : (plan.debtAsset as `0x${string}`)
-        const outToken = plan.collateralAsset as `0x${string}`
-        const amountIn = plan.flashLoanAmount ?? plan.expectedDebt
-        if (amountIn > 0n && floor > 0n) {
-          const fresh = await quoteFn({ inToken, outToken, amountIn, intent: 'exactIn' })
-          const minNow = typeof fresh.minOut === 'bigint' ? fresh.minOut : fresh.out
-          if (minNow < floor) {
-            toast.message('Refreshing quote…', {
-              description: 'Route moved below your guaranteed floor.',
-            })
-            // Refresh the plan/quote and keep user on Confirm
-            try {
-              setIsRefreshingRoute(true)
-              await planPreview.refetch?.()
-            } catch (_) {
-              // Non-fatal; user can retry
-            } finally {
-              setIsRefreshingRoute(false)
-            }
-            // Do not block; proceed with execution which re-plans with fresh quotes
-          }
-        }
+      try {
+        const p = planPreview.plan
+        if (!p || !userAddress) throw new Error('Missing finalized plan or account')
+
+        const hash = await mintWrite.mutateAsync({
+          config: wagmiConfig,
+          chainId: leverageTokenConfig.chainId as SupportedChainId,
+          account: userAddress as `0x${string}`,
+          token: leverageTokenAddress,
+          plan: {
+            inputAsset: p.inputAsset,
+            equityInInputAsset: p.equityInInputAsset,
+            minShares: p.minShares,
+            calls: p.calls,
+            expectedTotalCollateral: p.expectedTotalCollateral,
+            expectedDebt: p.expectedDebt,
+            flashLoanAmount: p.flashLoanAmount,
+          },
+        })
+        setTransactionHash(hash)
+      } catch (e: unknown) {
+        const error = e as Error
+
+        // Track mint transaction error
+        trackTransactionError('mint_failed', 'leverage_token', error.message)
+
+        const provider = (() => {
+          const swap = leverageTokenConfig.swaps?.debtToCollateral
+          if (!swap) return undefined
+          if (swap.type === 'lifi') return 'lifi'
+          if (swap.type === 'uniswapV2' || swap.type === 'uniswapV3') return 'uniswap'
+          return undefined
+        })()
+
+        captureTxError({
+          flow: 'mint',
+          chainId: leverageTokenConfig.chainId,
+          ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
+          token: leverageTokenAddress,
+          inputAsset: leverageTokenConfig.collateralAsset.address,
+          slippageBps,
+          amountIn: form.amount,
+          expectedOut: String(expectedTokens),
+          ...(provider ? { provider } : {}),
+          error,
+        })
+
+        // Pass the raw error to ErrorStep - it will handle the formatting
+        setError(error?.message || 'Mint failed. Please try again.')
+        toError()
       }
-    } catch (preCheckErr) {
-      const msg = preCheckErr instanceof Error ? preCheckErr.message : 'Route pre-check failed.'
-      setError(msg)
-      toError()
-      return
     }
 
-    toPending()
-    try {
-      const p = planPreview.plan
-      if (!p || !userAddress) throw new Error('Missing finalized plan or account')
-      const hash = await mintWrite.mutateAsync({
-        config: wagmiConfig,
-        chainId: leverageTokenConfig.chainId as SupportedChainId,
-        account: userAddress as `0x${string}`,
-        token: leverageTokenAddress,
-        plan: {
-          inputAsset: p.inputAsset,
-          equityInInputAsset: p.equityInInputAsset,
-          minShares: p.minShares,
-          calls: p.calls,
-          expectedTotalCollateral: p.expectedTotalCollateral,
-          expectedDebt: p.expectedDebt,
-          flashLoanAmount: p.flashLoanAmount,
-        },
-      })
-      setTransactionHash(hash)
-    } catch (e: unknown) {
-      const error = e as Error
-
-      // Track mint transaction error
-      trackTransactionError('mint_failed', 'leverage_token', error.message)
-
-      const provider = (() => {
-        const swap = leverageTokenConfig.swaps?.debtToCollateral
-        if (!swap) return undefined
-        if (swap.type === 'lifi') return 'lifi'
-        if (swap.type === 'uniswapV2' || swap.type === 'uniswapV3') return 'uniswap'
-        return undefined
-      })()
-
-      captureTxError({
-        flow: 'mint',
-        chainId: leverageTokenConfig.chainId,
-        ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
-        token: leverageTokenAddress,
-        inputAsset: leverageTokenConfig.collateralAsset.address,
-        slippageBps,
-        amountIn: form.amount,
-        expectedOut: String(expectedTokens),
-        ...(provider ? { provider } : {}),
-        error,
-      })
-
-      // Pass the raw error to ErrorStep - it will handle the formatting
-      setError(error?.message || 'Mint failed. Please try again.')
-      toError()
-    }
+    // Kick off the async flow without blocking this render; UI is already Pending
+    void proceed()
   }
 
   // Handle retry from error state
@@ -676,10 +673,11 @@ export function LeverageTokenMintModal({
 
   // Handle modal close
   const handleClose = () => {
-    if (currentStep === 'pending') return // Prevent closing during transaction
+    // Prevent closing while any tx is on-chain pending
+    if (currentStep === 'pending') return
+    if (currentStep === 'approve' && approveHash) return
     // Reset tx state so next open starts clean
     setTransactionHash(undefined)
-    receiptHandled.current = {}
     onClose()
   }
 
@@ -738,6 +736,9 @@ export function LeverageTokenMintModal({
             selectedToken={selectedTokenView}
             amount={form.amount}
             isApproving={!!isApprovingPending}
+            chainId={leverageTokenConfig.chainId}
+            transactionHash={approveHash as `0x${string}` | undefined}
+            mode={approveHash ? 'onChain' : 'awaitingWallet'}
           />
         )
 
@@ -770,6 +771,8 @@ export function LeverageTokenMintModal({
             selectedToken={selectedTokenView}
             amount={form.amount}
             leverageTokenConfig={leverageTokenConfig}
+            mode={transactionHash ? 'onChain' : 'awaitingWallet'}
+            transactionHash={transactionHash}
           />
         )
 
@@ -802,6 +805,7 @@ export function LeverageTokenMintModal({
       currentStep={currentStep}
       steps={steps}
       className="max-w-lg border border-[var(--divider-line)] bg-[var(--surface-card)]"
+      closable={!(currentStep === 'pending' || (currentStep === 'approve' && Boolean(approveHash)))}
     >
       {renderStepContent()}
     </MultiStepModal>
@@ -845,5 +849,6 @@ function useApprovalFlow(params: {
     isPending: approveState.isPending,
     isApproved: approveState.isApproved,
     error: approveState.error,
+    hash: approveState.hash,
   }
 }

@@ -1,9 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 import { formatUnits } from 'viem'
-import { useAccount, useConfig } from 'wagmi'
-import type { OrchestrateRedeemResult } from '@/domain/redeem'
+import { useAccount, useConfig, useWaitForTransactionReceipt } from 'wagmi'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
@@ -211,7 +209,7 @@ export function LeverageTokenRedeemModal({
 
   const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [transactionHash, setTransactionHash] = useState('')
+  const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
 
   const [selectedOutputId, setSelectedOutputId] = useState<OutputAssetId>('collateral')
@@ -244,6 +242,25 @@ export function LeverageTokenRedeemModal({
       ? { swap: leverageTokenConfig.swaps.collateralToDebt }
       : {}),
     outputAsset: selectedOutputAsset.address,
+  })
+
+  // Mirror exec.hash only while pending to avoid reviving stale hashes on reopen
+  useEffect(() => {
+    if (currentStep !== 'pending') return
+    const nextHash = exec.hash as `0x${string}` | undefined
+    if (nextHash && nextHash !== transactionHash) setTransactionHash(nextHash)
+  }, [exec.hash, transactionHash, currentStep])
+
+  // Watch receipt for success/error transitions
+  const {
+    isSuccess: redeemSuccess,
+    isError: redeemError,
+    error: redeemReceiptError,
+  } = useWaitForTransactionReceipt({
+    hash: transactionHash,
+    chainId: leverageTokenConfig.chainId,
+    confirmations: 1,
+    query: { enabled: Boolean(transactionHash) },
   })
 
   const collateralSwapConfig = leverageTokenConfig.swaps?.collateralToDebt
@@ -327,6 +344,7 @@ export function LeverageTokenRedeemModal({
     isPending: isApprovingPending,
     isApproved: isApprovedFlag,
     error: approveErr,
+    hash: approveHash,
   } = useApprovalFlow({
     tokenAddress: leverageTokenAddress,
     ...(userAddress ? { owner: userAddress } : {}),
@@ -386,7 +404,7 @@ export function LeverageTokenRedeemModal({
     toInput()
     form.setAmount('')
     setSelectedOutputId('collateral')
-    setTransactionHash('')
+    setTransactionHash(undefined)
     setError('')
 
     // Track funnel step: redeem modal opened
@@ -401,9 +419,6 @@ export function LeverageTokenRedeemModal({
   useEffect(() => {
     if (currentStep !== 'approve') return
     if (isApprovedFlag) {
-      toast.success('Token approval confirmed', {
-        description: `${selectedToken.symbol} spending approved`,
-      })
       toConfirm()
       return
     }
@@ -411,7 +426,7 @@ export function LeverageTokenRedeemModal({
       setError(approveErr?.message || 'Approval failed. Please try again.')
       toError()
     }
-  }, [isApprovedFlag, approveErr, currentStep, selectedToken.symbol, toConfirm, toError])
+  }, [isApprovedFlag, approveErr, currentStep, toConfirm, toError])
 
   // Check if approval is needed
   const needsApproval = () => Boolean(needsApprovalFlag)
@@ -487,54 +502,9 @@ export function LeverageTokenRedeemModal({
       // Track funnel step: redeem transaction initiated
       analytics.funnelStep('redeem_leverage_token', 'transaction_initiated', 2)
 
+      // Transition UI and initiate redeem without awaiting receipt
       toPending()
-      const result = await exec.redeem(form.amountRaw)
-      setTransactionHash(result.hash)
-
-      // Track successful redeem transaction
-      const tokenSymbol = leverageTokenConfig.symbol
-      const amount = form.amount
-      const usdValue = parseFloat(form.amount) * (selectedOutputAsset.price || 0)
-      trackLeverageTokenRedeemed(tokenSymbol, amount, usdValue)
-
-      // Track funnel step: redeem transaction completed
-      analytics.funnelStep('redeem_leverage_token', 'transaction_completed', 3)
-
-      if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
-        logRedeemDiagnostics({
-          result,
-          collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
-          debtDecimals: leverageTokenConfig.debtAsset.decimals,
-          payoutAsset: selectedOutputAsset.address,
-          ...(typeof preview.data?.collateral === 'bigint'
-            ? { previewCollateral: preview.data.collateral }
-            : {}),
-          ...(typeof preview.data?.debt === 'bigint' ? { previewDebt: preview.data.debt } : {}),
-        })
-      }
-
-      const toastAmount = formatTokenAmountFromBase(
-        result.plan.payoutAmount,
-        result.plan.payoutAsset.toLowerCase() ===
-          leverageTokenConfig.debtAsset.address.toLowerCase()
-          ? leverageTokenConfig.debtAsset.decimals
-          : leverageTokenConfig.collateralAsset.decimals,
-        TOKEN_AMOUNT_DISPLAY_DECIMALS,
-      )
-
-      toast.success('Redemption successful!', {
-        description: `${form.amount} ${leverageTokenConfig.symbol} redeemed for ${toastAmount} ${selectedOutputAsset.symbol}`,
-      })
-
-      refetchLeverageTokenBalance?.()
-      refetchCollateralTokenBalance?.()
-      refetchDebtTokenBalance?.()
-      queryClient.invalidateQueries({ queryKey: ltKeys.token(leverageTokenAddress) })
-      if (userAddress) {
-        queryClient.invalidateQueries({ queryKey: ltKeys.user(leverageTokenAddress, userAddress) })
-      }
-
-      toSuccess()
+      void exec.redeem(form.amountRaw)
     } catch (error) {
       // Track redeem transaction error
       const errorMessage =
@@ -567,15 +537,68 @@ export function LeverageTokenRedeemModal({
     }
   }
 
+  // Drive success/error once receipt resolves
+  useEffect(() => {
+    if (!transactionHash) return
+    if (redeemError) {
+      setError(redeemReceiptError?.message || 'Redemption failed. Please try again.')
+      toError()
+      return
+    }
+    if (redeemSuccess) {
+      const tokenSymbol = leverageTokenConfig.symbol
+      const amount = form.amount
+      const usdValue = parseFloat(form.amount) * (selectedOutputAsset.price || 0)
+      trackLeverageTokenRedeemed(tokenSymbol, amount, usdValue)
+      analytics.funnelStep('redeem_leverage_token', 'transaction_completed', 3)
+
+      try {
+        refetchLeverageTokenBalance?.()
+        refetchCollateralTokenBalance?.()
+        refetchDebtTokenBalance?.()
+        queryClient.invalidateQueries({ queryKey: ltKeys.token(leverageTokenAddress) })
+        if (userAddress) {
+          queryClient.invalidateQueries({
+            queryKey: ltKeys.user(leverageTokenAddress, userAddress),
+          })
+        }
+      } catch {}
+
+      // Success feedback is conveyed by the Success step UI
+      toSuccess()
+    }
+  }, [
+    transactionHash,
+    redeemSuccess,
+    redeemError,
+    redeemReceiptError?.message,
+    leverageTokenConfig.symbol,
+    leverageTokenAddress,
+    form.amount,
+    selectedOutputAsset.price,
+    refetchLeverageTokenBalance,
+    refetchCollateralTokenBalance,
+    refetchDebtTokenBalance,
+    queryClient,
+    userAddress,
+    trackLeverageTokenRedeemed,
+    analytics,
+    toSuccess,
+    toError,
+  ])
+
   // Handle retry from error state
   const handleRetry = () => {
     toInput()
     setError('')
+    setTransactionHash(undefined)
   }
 
   // Handle modal close
   const handleClose = () => {
-    if (currentStep === 'pending') return // Prevent closing during transaction
+    // Prevent closing while any tx is on-chain pending (approve or redeem)
+    if (currentStep === 'pending') return
+    if (currentStep === 'approve' && approveHash) return
     onClose()
   }
 
@@ -628,6 +651,9 @@ export function LeverageTokenRedeemModal({
             selectedToken={selectedTokenView}
             amount={form.amount}
             isApproving={!!isApprovingPending}
+            chainId={leverageTokenConfig.chainId}
+            transactionHash={approveHash as `0x${string}` | undefined}
+            mode={approveHash ? 'onChain' : 'awaitingWallet'}
           />
         )
 
@@ -647,11 +673,24 @@ export function LeverageTokenRedeemModal({
             redemptionFee={fees?.redeemTreasuryFee}
             isRedemptionFeeLoading={isFeesLoading}
             onConfirm={handleConfirm}
+            disabled={isCalculating || exec.quoteStatus !== 'ready' || !planPreview.plan}
           />
         )
 
       case 'pending':
-        return <PendingStep amount={form.amount} leverageTokenConfig={leverageTokenConfig} />
+        return (
+          <PendingStep
+            amount={form.amount}
+            leverageTokenConfig={{
+              symbol: leverageTokenConfig.symbol,
+              name: leverageTokenConfig.name,
+              leverageRatio: leverageTokenConfig.leverageRatio,
+              chainId: leverageTokenConfig.chainId,
+            }}
+            mode={transactionHash ? 'onChain' : 'awaitingWallet'}
+            transactionHash={transactionHash as `0x${string}` | undefined}
+          />
+        )
 
       case 'success':
         return (
@@ -660,7 +699,7 @@ export function LeverageTokenRedeemModal({
             expectedAmount={expectedAmount}
             selectedAsset={selectedOutputAsset.symbol}
             leverageTokenSymbol={leverageTokenConfig.symbol}
-            transactionHash={transactionHash}
+            transactionHash={transactionHash ?? ('' as unknown as `0x${string}`)}
             onClose={handleClose}
           />
         )
@@ -686,60 +725,14 @@ export function LeverageTokenRedeemModal({
       currentStep={currentStep}
       steps={steps}
       className="max-w-lg border border-[var(--divider-line)] bg-[var(--surface-card)]"
+      closable={!(currentStep === 'pending' || (currentStep === 'approve' && Boolean(approveHash)))}
     >
       {renderStepContent()}
     </MultiStepModal>
   )
 }
 
-function logRedeemDiagnostics(params: {
-  result: OrchestrateRedeemResult
-  previewCollateral?: bigint
-  previewDebt?: bigint
-  collateralDecimals: number
-  debtDecimals: number
-  payoutAsset?: string
-}) {
-  const { result, previewCollateral, previewDebt, collateralDecimals, debtDecimals, payoutAsset } =
-    params
-
-  const formatValue = (value: bigint | undefined, decimals: number) =>
-    typeof value === 'bigint' ? formatUnits(value, decimals) : 'n/a'
-
-  // V2 diagnostics
-  {
-    const gross = formatValue(
-      previewCollateral ?? result.plan.expectedTotalCollateral,
-      collateralDecimals,
-    )
-    const debt = formatValue(previewDebt ?? result.plan.expectedDebt, debtDecimals)
-    const net = formatValue(result.plan.expectedCollateral, collateralDecimals)
-    const swapInput = formatValue(
-      result.plan.expectedTotalCollateral - result.plan.expectedCollateral,
-      collateralDecimals,
-    )
-    const payoutDecimals =
-      result.plan.payoutAsset.toLowerCase() === result.plan.debtAsset.toLowerCase()
-        ? debtDecimals
-        : collateralDecimals
-    const payout = formatValue(result.plan.payoutAmount, payoutDecimals)
-    const debtPayout = formatValue(result.plan.expectedDebtPayout, debtDecimals)
-
-    console.groupCollapsed('[redeem][v2] diagnostics')
-    console.table({
-      grossCollateral: gross,
-      debtToRepay: debt,
-      swapInput,
-      netCollateral: net,
-      slippageBps: result.plan.slippageBps,
-      payoutAsset: result.plan.payoutAsset,
-      requestedPayoutAsset: payoutAsset ?? 'n/a',
-      payoutAmount: payout,
-      debtPayout,
-    })
-    console.groupEnd()
-  }
-}
+// Removed unused diagnostics helper to satisfy strict TS/no-unused rules.
 
 // Local hook: wraps token allowance + approval flow
 function useApprovalFlow(params: {
@@ -778,5 +771,6 @@ function useApprovalFlow(params: {
     isPending: approveState.isPending,
     isApproved: approveState.isApproved,
     error: approveState.error,
+    hash: approveState.hash,
   }
 }
