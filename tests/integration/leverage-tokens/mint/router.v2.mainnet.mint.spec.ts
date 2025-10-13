@@ -16,10 +16,12 @@ const mintSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 mintSuite('Leverage Router V2 Mint (Tenderly VNet, Mainnet wstETH/ETH 2x)', () => {
   const SLIPPAGE_BPS = 50
 
-  it('mints shares successfully via LiFi debt->collateral swap', async () => {
+  it('mints shares successfully via Uniswap V2 debt->collateral swap', async () => {
     await withFork(async ({ account, publicClient, config }) => {
       const prev = process.env['TEST_USE_LIFI']
-      process.env['TEST_USE_LIFI'] = '1'
+      const prevQuoteAdapter = process.env['TEST_QUOTE_ADAPTER']
+      process.env['TEST_USE_LIFI'] = '0'
+      process.env['TEST_QUOTE_ADAPTER'] = 'uniswapv2'
       try {
         const res = await executeSharedMint({
           account,
@@ -38,6 +40,8 @@ mintSuite('Leverage Router V2 Mint (Tenderly VNet, Mainnet wstETH/ETH 2x)', () =
       } finally {
         if (typeof prev === 'string') process.env['TEST_USE_LIFI'] = prev
         else delete process.env['TEST_USE_LIFI']
+        if (typeof prevQuoteAdapter === 'string') process.env['TEST_QUOTE_ADAPTER'] = prevQuoteAdapter
+        else delete process.env['TEST_QUOTE_ADAPTER']
       }
     })
   }, 120_000)

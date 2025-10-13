@@ -25,10 +25,21 @@ const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 redeemSuite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet wstETH/ETH 2x)', () => {
   const SLIPPAGE_BPS = 50
 
-  it('redeems all minted shares into collateral asset via LiFi', async () => {
-    const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
-    assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
-    assertRedeemExecution(result)
+  it('redeems all minted shares into collateral asset via Uniswap V2', async () => {
+    const prevUseLifi = process.env['TEST_USE_LIFI']
+    const prevQuoteAdapter = process.env['TEST_QUOTE_ADAPTER']
+    process.env['TEST_USE_LIFI'] = '0'
+    process.env['TEST_QUOTE_ADAPTER'] = 'uniswapv2'
+    try {
+      const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
+      assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
+      assertRedeemExecution(result)
+    } finally {
+      if (typeof prevUseLifi === 'string') process.env['TEST_USE_LIFI'] = prevUseLifi
+      else delete process.env['TEST_USE_LIFI']
+      if (typeof prevQuoteAdapter === 'string') process.env['TEST_QUOTE_ADAPTER'] = prevQuoteAdapter
+      else delete process.env['TEST_QUOTE_ADAPTER']
+    }
   }, 120_000)
 })
 
