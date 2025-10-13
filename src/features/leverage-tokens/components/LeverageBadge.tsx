@@ -30,8 +30,12 @@ export function LeverageBadge({ leverage, size = 'md', className }: LeverageBadg
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 bg-[#2A1D3F] text-[#C15BDB] border-[#C15BDB]/30',
+        'inline-flex items-center justify-center rounded-md border font-medium w-fit whitespace-nowrap shrink-0',
+        'bg-[color-mix(in_srgb,var(--brand-secondary) 15%,transparent)] text-[var(--brand-secondary)] border-[var(--brand-secondary)]/30',
+        'dark:bg-[#2A1D3F] dark:text-[#C15BDB] dark:border-[#C15BDB]/30',
+        'hover:bg-[color-mix(in_srgb,var(--brand-secondary) 20%,transparent)] dark:hover:bg-[#3A2D4F] transition-colors',
         sizeConfig.container,
+        sizeConfig.text,
         className,
       )}
     >
