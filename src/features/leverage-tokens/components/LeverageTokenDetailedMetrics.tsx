@@ -18,6 +18,7 @@ export interface MetricItem {
   highlight?: boolean
   color?: string
   tooltip?: string
+  isLoading?: boolean
 }
 
 export interface LeverageTokenMetrics {
@@ -145,7 +146,9 @@ export function LeverageTokenDetailedMetrics({
                               )}
                             </div>
                           </div>
-                          {typeof metric.value === 'string' ? (
+                          {metric.isLoading ? (
+                            <Skeleton className="h-6 w-24" />
+                          ) : typeof metric.value === 'string' ? (
                             <p
                               className={cn('text-lg font-semibold text-foreground', metric.color)}
                             >
