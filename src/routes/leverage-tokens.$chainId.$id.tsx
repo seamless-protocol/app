@@ -60,6 +60,17 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
     )
     const [isMintModalOpen, setIsMintModalOpen] = useState(false)
     const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false)
+    const [visibleLines, setVisibleLines] = useState({
+      weethPrice: true,
+      leverageTokenPrice: true,
+    })
+
+    const handleLineVisibilityChange = (lineKey: string) => {
+      setVisibleLines((prev) => ({
+        ...prev,
+        [lineKey]: !prev[lineKey as keyof typeof prev],
+      }))
+    }
 
     // Parse chainId from route parameter
     const chainId = parseInt(routeChainId || CHAIN_IDS.BASE.toString(), 10)
@@ -536,10 +547,8 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                       color: 'var(--chart-1)',
                     },
                   ]}
-                  visibleLines={{
-                    weethPrice: true,
-                    leverageTokenPrice: true,
-                  }}
+                  visibleLines={visibleLines}
+                  onLineVisibilityChange={handleLineVisibilityChange}
                   title="Price History"
                   height={320}
                   className="border border-border bg-card"
