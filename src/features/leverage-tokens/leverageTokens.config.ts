@@ -401,6 +401,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
   },
   [LeverageTokenKey.WSTETH_ETH_2X_MAINNET]: {
+    isTestOnly: true,
     address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
     name: 'wstETH / WETH 2x Leverage Token',
     symbol: 'WSTETH-ETH-2x',
@@ -444,6 +445,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     planner: { epsilonBps: 10 },
   },
   [LeverageTokenKey.WEETH_WETH_17X_TENDERLY]: {
+    isTestOnly: true,
     address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
     name: 'weETH / WETH 17x Leverage Token (Tenderly)',
     symbol: 'WEETH-WETH-17x',
@@ -455,7 +457,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainName: 'Base (Tenderly VNet)',
     chainLogo: BaseLogo,
     supplyCap: 150,
-    isTestOnly: true,
     apyConfig: {
       pointsMultiplier: 7,
     },
@@ -485,6 +486,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
   },
   [LeverageTokenKey.CBBTC_USDC_2X_TENDERLY]: {
+    isTestOnly: true,
     address: '0x662c3f931D4101b7e2923f8493D6b35368a991aD' as Address,
     name: 'cbBTC / USDC 2x Leverage Token (Tenderly)',
     symbol: 'CBBTC-USDC-2x',
@@ -496,7 +498,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainName: 'Ethereum (Tenderly VNet)',
     chainLogo: EthereumLogo,
     supplyCap: 200,
-    isTestOnly: true,
     collateralAsset: {
       symbol: 'cbBTC',
       name: 'Coinbase Wrapped BTC',
