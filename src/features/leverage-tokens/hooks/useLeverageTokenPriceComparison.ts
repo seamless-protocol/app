@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import type { PriceDataPoint } from '@/components/ui/price-line-chart'
 import { fetchLeverageTokenPriceComparison } from '@/lib/graphql/fetchers/leverage-tokens'
+import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { STALE_TIME } from '../utils/constants'
 import { ltKeys } from '../utils/queryKeys'
 
@@ -32,6 +33,10 @@ export function useLeverageTokenPriceComparison({
       if (!result.leverageToken) {
         return []
       }
+
+      // Get leverage token config to access leverage token decimals
+      const tokenConfig = getLeverageTokenConfig(tokenAddress)
+      const leverageTokenDecimals = tokenConfig?.decimals || 18 // Fallback to 18 if not found
 
       const { stateHistory, lendingAdapter } = result.leverageToken
 
@@ -92,81 +97,64 @@ export function useLeverageTokenPriceComparison({
         (item) => item.timestamp >= cutoffTime,
       )
 
-      console.log('🔍 [Price Comparison] Data for timeframe:', {
-        timeframe,
-        cutoffTime: new Date(cutoffTime).toISOString(),
-        leverageTokenDataCount: leverageTokenData.length,
-        collateralPriceDataCount: collateralPriceData.length,
-        filteredLeverageCount: filteredLeverageTokenData.length,
-        filteredCollateralCount: filteredCollateralPriceData.length,
-        leverageTokenTimestamps: filteredLeverageTokenData.map((d) => ({
-          timestamp: d.timestamp,
-          date: new Date(d.timestamp).toISOString(),
-        })),
-        collateralTimestamps: filteredCollateralPriceData.map((d) => ({
-          timestamp: d.timestamp,
-          date: new Date(d.timestamp).toISOString(),
-        })),
-      })
-
-      // For each collateral price update, interpolate the leverage token price
       const combinedData: Array<PriceDataPoint> = []
 
-      // If we have leverage token data, use it to interpolate
-      if (filteredLeverageTokenData.length > 0) {
-        for (const collateralItem of filteredCollateralPriceData) {
-          // Find the two leverage token data points that bracket this collateral timestamp
-          let beforeIndex = -1
-          let afterIndex = -1
+      if (filteredLeverageTokenData.length > 0 && filteredCollateralPriceData.length > 0) {
+        // Build merged timestamp list (like _sources)
+        const allTimestamps = Array.from(
+          new Set([
+            ...filteredLeverageTokenData.map((pt) => pt.timestamp),
+            ...filteredCollateralPriceData.map((pt) => pt.timestamp),
+          ]),
+        ).sort((a, b) => a - b)
 
-          for (let i = 0; i < filteredLeverageTokenData.length; i++) {
-            const item = filteredLeverageTokenData[i]
-            if (!item) continue
+        // Prepare arrays for series data
+        const collateralSeriesData: Array<number | null> = []
+        const leverageTokenSeriesData: Array<number | null> = []
 
-            if (item.timestamp <= collateralItem.timestamp) {
-              beforeIndex = i
-            }
-            if (item.timestamp >= collateralItem.timestamp && afterIndex === -1) {
-              afterIndex = i
-              break
-            }
+        // Use a pointer to forward-fill collateral price (like _sources)
+        let j = 0
+        for (const ts of allTimestamps) {
+          // Advance j to the latest collateralPoints index where collateralPoints[j].ts <= ts
+          while (
+            j + 1 < filteredCollateralPriceData.length &&
+            filteredCollateralPriceData[j + 1] &&
+            (filteredCollateralPriceData[j + 1]?.timestamp ?? 0) <= ts
+          ) {
+            j++
           }
-
-          let leverageTokenPrice: number
-
-          const firstItem = filteredLeverageTokenData[0]
-          const lastItem = filteredLeverageTokenData[filteredLeverageTokenData.length - 1]
-          const beforeItem = beforeIndex >= 0 ? filteredLeverageTokenData[beforeIndex] : undefined
-          const afterItem = afterIndex >= 0 ? filteredLeverageTokenData[afterIndex] : undefined
-
-          if (beforeIndex === -1 && firstItem) {
-            // Before all leverage token data, use the first available
-            leverageTokenPrice = firstItem.equityPerTokenInDebt / 10 ** 18
-          } else if (afterIndex === -1 && lastItem) {
-            // After all leverage token data, use the last available
-            leverageTokenPrice = lastItem.equityPerTokenInDebt / 10 ** 18
-          } else if (beforeIndex === afterIndex && beforeItem) {
-            // Exact match
-            leverageTokenPrice = beforeItem.equityPerTokenInDebt / 10 ** 18
-          } else if (beforeItem && afterItem) {
-            // Interpolate between two points
-            const timeDiff = afterItem.timestamp - beforeItem.timestamp
-            const timeFromBefore = collateralItem.timestamp - beforeItem.timestamp
-            const ratio = timeDiff > 0 ? timeFromBefore / timeDiff : 0
-
-            const beforePrice = beforeItem.equityPerTokenInDebt / 10 ** 18
-            const afterPrice = afterItem.equityPerTokenInDebt / 10 ** 18
-            leverageTokenPrice = beforePrice + (afterPrice - beforePrice) * ratio
+          // If collateralPoints[j].ts <= ts, use collateralPoints[j].value; else null
+          const collateralItem = filteredCollateralPriceData[j]
+          if (
+            filteredCollateralPriceData.length > 0 &&
+            collateralItem &&
+            collateralItem.timestamp <= ts
+          ) {
+            collateralSeriesData.push(collateralItem.price)
           } else {
-            // Fallback: use first available if exists
-            leverageTokenPrice = firstItem ? firstItem.equityPerTokenInDebt / 10 ** 18 : 0
+            collateralSeriesData.push(null)
           }
 
-          combinedData.push({
-            date: new Date(collateralItem.timestamp).toISOString(),
-            weethPrice: collateralItem.price,
-            leverageTokenPrice,
-          })
+          // For leverage token, use exact match or null
+          const leveragePt = filteredLeverageTokenData.find((pt) => pt.timestamp === ts)
+          leverageTokenSeriesData.push(
+            leveragePt ? leveragePt.equityPerTokenInDebt / 10 ** leverageTokenDecimals : null,
+          )
+        }
+
+        // Build final data points
+        for (let i = 0; i < allTimestamps.length; i++) {
+          const timestamp = allTimestamps[i]
+          if (timestamp !== undefined) {
+            const weethPrice = collateralSeriesData[i]
+            const leverageTokenPrice = leverageTokenSeriesData[i]
+
+            combinedData.push({
+              date: new Date(timestamp).toISOString(),
+              ...(weethPrice !== null && { weethPrice }),
+              ...(leverageTokenPrice !== null && { leverageTokenPrice }),
+            })
+          }
         }
       }
 
@@ -174,16 +162,6 @@ export function useLeverageTokenPriceComparison({
       const finalResult = combinedData.sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
       )
-
-      console.log('🔍 [Price Comparison] Final combined data:', {
-        combinedDataCount: combinedData.length,
-        finalResultCount: finalResult.length,
-        dataPoints: finalResult.map((d) => ({
-          date: d.date,
-          weethPrice: d.weethPrice,
-          leverageTokenPrice: d.leverageTokenPrice,
-        })),
-      })
 
       return finalResult
     },

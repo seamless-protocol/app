@@ -38,6 +38,26 @@ import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 import { CHAIN_IDS } from '@/lib/utils/chain-logos'
 import { formatAPY, formatCurrency, formatNumber } from '@/lib/utils/formatting'
 
+// Helper function to format numbers to show first N non-zero digits
+function formatToSignificantDigits(num: number, digits: number): string {
+  if (num === 0) return '0'
+
+  const absNum = Math.abs(num)
+  const sign = num < 0 ? '-' : ''
+
+  if (absNum >= 1) {
+    // For numbers >= 1, use toPrecision but avoid scientific notation
+    const integerDigits = Math.floor(Math.log10(absNum)) + 1
+    const decimalPlaces = Math.max(0, digits - integerDigits)
+    return sign + absNum.toFixed(decimalPlaces)
+  } else {
+    // For numbers < 1, find the first non-zero digit position
+    const firstNonZeroPosition = Math.floor(Math.log10(absNum))
+    const totalDecimalPlaces = Math.abs(firstNonZeroPosition) + digits - 1
+    return sign + absNum.toFixed(totalDecimalPlaces)
+  }
+}
+
 export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
   component: () => {
     const { chainId: routeChainId, id: tokenAddress } = useParams({ strict: false })
@@ -556,6 +576,15 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                   title="Price History"
                   height={320}
                   className="border border-border bg-card"
+                  yAxisFormatter={(value: number) => {
+                    const formatted = formatToSignificantDigits(value, 3)
+                    return `$${formatted}`
+                  }}
+                  tooltipFormatter={(value: number | string, name?: string) => {
+                    const numValue = Number(value)
+                    const formatted = formatToSignificantDigits(numValue, 6)
+                    return [`$${formatted}`, name || 'Price']
+                  }}
                 />
               )}
             </motion.div>

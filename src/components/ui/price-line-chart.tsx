@@ -43,6 +43,7 @@ export interface PriceLineChartProps {
   xAxisFormatter?: (dateString: string) => string
   yAxisFormatter?: (value: number) => string
   tooltipFormatter?: (value: number | string, name?: string) => [string, string]
+  labelFormatter?: (dateString: string) => string
   yAxisLabel?: string
   dataKey?: string
   strokeColor?: string
@@ -64,6 +65,7 @@ export function PriceLineChart({
   xAxisFormatter,
   yAxisFormatter,
   tooltipFormatter,
+  labelFormatter,
   yAxisLabel,
   dataKey,
   strokeColor,
@@ -91,9 +93,15 @@ export function PriceLineChart({
     return [`$${Number(value).toFixed(3)}`, name || 'Price']
   }
 
+  const defaultLabelFormatter = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
   const formatChartDate = xAxisFormatter || defaultXAxisFormatter
   const formatYAxis = yAxisFormatter || defaultYAxisFormatter
   const formatTooltipValue = tooltipFormatter || defaultTooltipFormatter
+  const formatTooltipLabel = labelFormatter || defaultLabelFormatter
 
   // Get chart configuration based on chart type
   const getChartConfig = () => {
@@ -219,6 +227,7 @@ export function PriceLineChart({
                   color: 'var(--text-primary)',
                 }}
                 formatter={formatTooltipValue}
+                labelFormatter={formatTooltipLabel}
               />
               {chartType === 'comparison' && chartLines.length > 0 ? (
                 // Render comparison lines
