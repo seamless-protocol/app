@@ -61,7 +61,7 @@ describe('MorphoBorrowApyProvider', () => {
             name: 'WETH',
           },
           state: {
-            borrowApy: 0.0387, // 3.87% as decimal
+            weeklyBorrowApy: 0.0387, // 3.87% as decimal
           },
         },
       }
@@ -245,7 +245,7 @@ describe('MorphoBorrowApyProvider', () => {
             name: 'WETH',
           },
           state: {
-            borrowApy: 0, // Zero borrow APY
+            weeklyBorrowApy: 0, // Zero borrow APY
           },
         },
       }
@@ -282,7 +282,7 @@ describe('MorphoBorrowApyProvider', () => {
             name: 'WETH',
           },
           state: {
-            borrowApy: 0.5, // 50% borrow APY
+            weeklyBorrowApy: 0.5, // 50% borrow APY
           },
         },
       }

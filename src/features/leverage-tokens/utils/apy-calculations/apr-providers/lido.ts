@@ -64,12 +64,29 @@ export class LidoAprProvider implements AprFetcher {
       }
 
       const data: LidoApiResponse = await response.json()
-      const smaApr = data.data.smaApr
+
+      // Calculate 7-day average from the last 7 entries (excluding most recent)
+      const aprs = data.data.aprs
+      if (aprs.length < 7) {
+        const error = new Error('Insufficient APR data for 7-day average calculation')
+        captureApiError({
+          provider,
+          method,
+          url,
+          durationMs: elapsedMsSince(start),
+          error,
+        })
+        throw error
+      }
+
+      // Take the last 7 entries (excluding the most recent one)
+      const last7Days = aprs.slice(-8, -1) // Get entries 2-8 from the end (7 entries)
+      const averageAPR = last7Days.reduce((sum, item) => sum + item.apr, 0) / last7Days.length
 
       const result: BaseAprData = {
-        stakingAPR: smaApr,
+        stakingAPR: averageAPR,
         restakingAPR: 0, // Lido doesn't have restaking rewards
-        totalAPR: smaApr,
+        totalAPR: averageAPR,
       }
 
       return result
