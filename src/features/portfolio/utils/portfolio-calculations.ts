@@ -54,7 +54,7 @@ function _calculatePortfolioValueAtTimestamp(
 }
 
 /**
- * Find the closest state by timestamp
+ * Find the closest state by timestamp using binary search for O(log N) performance
  */
 function _findClosestStateByTimestamp(
   states: Array<LeverageTokenState>,
@@ -65,18 +65,23 @@ function _findClosestStateByTimestamp(
   // Sort states by timestamp (ascending)
   const sortedStates = [...states].sort((a, b) => Number(a.timestamp) - Number(b.timestamp))
 
-  // Find the closest state that's not after the target timestamp
+  // Binary search for the closest state that's not after the target timestamp
+  let left = 0
+  let right = sortedStates.length - 1
   let closestState: LeverageTokenState | null = null
-  let closestDiff = Infinity
 
-  for (const state of sortedStates) {
-    // Convert microseconds to seconds for comparison (same as in generatePortfolioPerformanceData)
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2)
+    const state = sortedStates[mid]
+    if (!state) break
+
     const stateTimestamp = Number(state.timestamp) / 1000000
-    const diff = Math.abs(stateTimestamp - targetTimestamp)
 
-    if (stateTimestamp <= targetTimestamp && diff < closestDiff) {
+    if (stateTimestamp <= targetTimestamp) {
       closestState = state
-      closestDiff = diff
+      left = mid + 1 // Look for a later state that's still <= target
+    } else {
+      right = mid - 1 // Look for an earlier state
     }
   }
 
