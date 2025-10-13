@@ -23,7 +23,6 @@ import { RelatedResources } from '@/features/leverage-tokens/components/RelatedR
 import { useLeverageTokenCollateral } from '@/features/leverage-tokens/hooks/useLeverageTokenCollateral'
 import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hooks/useLeverageTokenDetailedMetrics'
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
-import { useLeverageTokenState } from '@/features/leverage-tokens/hooks/useLeverageTokenState'
 import { useLeverageTokenUserPosition } from '@/features/leverage-tokens/hooks/useLeverageTokenUserPosition'
 import {
   getAllLeverageTokenConfigs,
@@ -85,14 +84,8 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
       isError: isDetailedMetricsError,
     } = useLeverageTokenDetailedMetrics(tokenAddress as Address)
 
-    // Live on-chain state for TVL (equity) in debt asset units
-    const { data: stateData, isLoading: isStateLoading } = useLeverageTokenState(
-      tokenAddress as Address,
-      chainId,
-    )
-
     // USD price map for debt and collateral assets (guard when config is missing)
-    const { data: usdPriceMap, isLoading: isUsdLoading } = useUsdPrices({
+    const { data: usdPriceMap } = useUsdPrices({
       chainId,
       addresses: tokenConfig
         ? [tokenConfig.debtAsset.address, tokenConfig.collateralAsset.address]
@@ -124,20 +117,6 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
       chainId,
     )
 
-    const tvlDebtUnits =
-      stateData && tokenConfig
-        ? Number(formatUnits(stateData.equity, tokenConfig.debtAsset.decimals))
-        : undefined
-    const debtPriceUsd = tokenConfig
-      ? usdPriceMap[tokenConfig.debtAsset.address.toLowerCase()]
-      : undefined
-    const tvlUsd =
-      typeof tvlDebtUnits === 'number' &&
-      Number.isFinite(tvlDebtUnits) &&
-      typeof debtPriceUsd === 'number' &&
-      Number.isFinite(debtPriceUsd)
-        ? tvlDebtUnits * debtPriceUsd
-        : undefined
     // No collateral read in this route for now
 
     // Pre-load APY data for all leverage tokens so navigation shares cache
@@ -201,22 +180,6 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
     const keyMetricsCards = [
       {
         title: 'TVL',
-        stat: isStateLoading ? (
-          <Skeleton className="h-6 w-36" />
-        ) : typeof tvlDebtUnits === 'number' && Number.isFinite(tvlDebtUnits) ? (
-          `${formatNumber(tvlDebtUnits, { decimals: 2, thousandDecimals: 2, millionDecimals: 2, billionDecimals: 2 })} ${tokenConfig.debtAsset.symbol}`
-        ) : (
-          'N/A'
-        ),
-        caption:
-          isStateLoading || (typeof tvlDebtUnits === 'number' && isUsdLoading) ? (
-            <Skeleton className="h-4 w-24 mt-1" />
-          ) : typeof tvlUsd === 'number' && Number.isFinite(tvlUsd) ? (
-            `${formatCurrency(tvlUsd, { millionDecimals: 2, thousandDecimals: 2 })}`
-          ) : undefined,
-      },
-      {
-        title: 'Total Collateral',
         stat:
           collateral && tokenConfig ? (
             `${formatNumber(Number(formatUnits(collateral, tokenConfig.collateralAsset.decimals)), {
