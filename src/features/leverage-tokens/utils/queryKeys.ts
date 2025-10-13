@@ -128,4 +128,12 @@ export const ltKeys = {
       [...ltKeys.all, 'external', 'leverage-ratios', addr] as const,
     rewardsApr: (addr: Address) => [...ltKeys.all, 'external', 'rewards-apr', addr] as const,
   },
+  // Aggregates
+  tvlSubgraphAggregate: (addresses: Array<string>) =>
+    [
+      ...ltKeys.all,
+      'tvl',
+      'subgraph',
+      [...new Set(addresses.map((a) => a.toLowerCase()))].sort(),
+    ] as const,
 } as const
