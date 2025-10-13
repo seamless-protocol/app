@@ -4,6 +4,7 @@ import { lendingAdapterAbi } from '../../../lib/contracts/abis/lendingAdapter'
 import { leverageManagerV2Abi } from '../../../lib/contracts/abis/leverageManagerV2'
 import { rebalanceAdapterAbi } from '../../../lib/contracts/abis/rebalanceAdapter'
 import { getLeverageManagerAddress, type SupportedChainId } from '../../../lib/contracts/addresses'
+import { formatPercentage } from '../../../lib/utils/formatting'
 import type { LeverageTokenMetrics } from '../components/LeverageTokenDetailedMetrics'
 import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { collateralRatioToLeverage } from '../utils/apy-calculations/leverage-ratios'
@@ -18,6 +19,7 @@ export type ReadResult<T> = { status: 'success'; result: T } | { status: 'failur
 export function useLeverageTokenDetailedMetrics(
   tokenAddress?: Address,
   supplyCapData?: { currentSupply: number; supplyCap: number; collateralAssetSymbol: string },
+  borrowRateData?: { borrowRate: number; baseYield: number },
 ) {
   // Get the token config to determine the correct chain ID
   const tokenConfig = tokenAddress ? getLeverageTokenConfig(tokenAddress) : undefined
@@ -215,6 +217,7 @@ export function useLeverageTokenDetailedMetrics(
           adapterData as AdapterData,
           lendingData as LendData,
           supplyCapData,
+          borrowRateData,
         )
       : undefined
 
@@ -277,6 +280,7 @@ function transformDetailedMetricsData(
   ],
   lendingData: readonly [ReadResult<bigint>],
   supplyCapData?: { currentSupply: number; supplyCap: number; collateralAssetSymbol: string },
+  borrowRateData?: { borrowRate: number; baseYield: number },
 ): LeverageTokenMetrics {
   // Extract data from manager calls
   const configResult = managerData[0]
@@ -419,6 +423,31 @@ function transformDetailedMetricsData(
     }
   }
 
+  // Calculate borrow rate status and color
+  let borrowRateValue = 'N/A'
+  let borrowRateColor = 'text-foreground'
+  let borrowRateTooltip = ''
+
+  if (borrowRateData && borrowRateData.borrowRate > 0) {
+    borrowRateValue = formatPercentage(borrowRateData.borrowRate, {
+      decimals: 2,
+      showSign: false,
+    })
+
+    const { borrowRate, baseYield } = borrowRateData
+    const threshold = baseYield * 0.95 // 5% below base yield
+
+    if (borrowRate > baseYield) {
+      borrowRateColor = 'text-red-500' // Red when exceeds base yield
+      borrowRateTooltip = 'Warning: The borrow rate currently exceeds the base yield.'
+    } else if (borrowRate >= threshold) {
+      borrowRateColor = 'text-yellow-500' // Yellow when near base yield (within 5%)
+      borrowRateTooltip = 'Warning: The borrow rate is currently near the base yield.'
+    } else {
+      borrowRateColor = 'text-green-500' // Green when below base yield
+    }
+  }
+
   return {
     Leverage: [
       {
@@ -439,6 +468,13 @@ function transformDetailedMetricsData(
         value: supplyCapValue,
         highlight: true,
         color: supplyCapColor,
+      },
+      {
+        label: 'Current Borrow Rate',
+        value: borrowRateValue,
+        highlight: true,
+        color: borrowRateColor,
+        ...(borrowRateTooltip && { tooltip: borrowRateTooltip }),
       },
     ],
     Fees: [
