@@ -7,6 +7,8 @@ import type { Config } from 'wagmi'
 export interface BaseBorrowApyData {
   /** Borrow APY as a decimal (e.g., 0.05 for 5%) */
   borrowAPY: number
+  /** Market utilization as a percentage (e.g., 85 for 85%) */
+  utilization?: number
 }
 
 /**

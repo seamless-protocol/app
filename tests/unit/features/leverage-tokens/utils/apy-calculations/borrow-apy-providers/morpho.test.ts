@@ -62,6 +62,7 @@ describe('MorphoBorrowApyProvider', () => {
           },
           state: {
             weeklyBorrowApy: 0.0387, // 3.87% as decimal
+            utilization: 75.5, // 75.5% utilization
           },
         },
       }
@@ -78,6 +79,7 @@ describe('MorphoBorrowApyProvider', () => {
       // Verify the result
       expect(result).toEqual({
         borrowAPY: 0.0387,
+        utilization: 75.5,
       })
 
       // Verify contract calls
@@ -246,6 +248,7 @@ describe('MorphoBorrowApyProvider', () => {
           },
           state: {
             weeklyBorrowApy: 0, // Zero borrow APY
+            utilization: 45.2, // 45.2% utilization
           },
         },
       }
@@ -258,6 +261,7 @@ describe('MorphoBorrowApyProvider', () => {
 
       expect(result).toEqual({
         borrowAPY: 0,
+        utilization: 45.2,
       })
     })
 
@@ -283,6 +287,7 @@ describe('MorphoBorrowApyProvider', () => {
           },
           state: {
             weeklyBorrowApy: 0.5, // 50% borrow APY
+            utilization: 92.1, // 92.1% utilization
           },
         },
       }
@@ -295,6 +300,7 @@ describe('MorphoBorrowApyProvider', () => {
 
       expect(result).toEqual({
         borrowAPY: 0.5,
+        utilization: 92.1,
       })
     })
   })
