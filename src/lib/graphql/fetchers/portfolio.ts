@@ -82,7 +82,7 @@ export async function fetchAllLeverageTokenStateHistory(
     try {
       let skip = 0
       const batchSize = 1000
-      let chainStates: Array<LeverageTokenState> = []
+      const chainStates: Array<LeverageTokenState> = []
 
       while (skip < maxRecords) {
         const result = await fetchLeverageTokenStateHistory(

@@ -99,14 +99,14 @@ export function useLeverageTokenPriceComparison({
         collateralPriceDataCount: collateralPriceData.length,
         filteredLeverageCount: filteredLeverageTokenData.length,
         filteredCollateralCount: filteredCollateralPriceData.length,
-        leverageTokenTimestamps: filteredLeverageTokenData.map(d => ({
+        leverageTokenTimestamps: filteredLeverageTokenData.map((d) => ({
           timestamp: d.timestamp,
-          date: new Date(d.timestamp).toISOString()
+          date: new Date(d.timestamp).toISOString(),
         })),
-        collateralTimestamps: filteredCollateralPriceData.map(d => ({
+        collateralTimestamps: filteredCollateralPriceData.map((d) => ({
           timestamp: d.timestamp,
-          date: new Date(d.timestamp).toISOString()
-        }))
+          date: new Date(d.timestamp).toISOString(),
+        })),
       })
 
       // For each collateral price update, interpolate the leverage token price
@@ -122,7 +122,7 @@ export function useLeverageTokenPriceComparison({
           for (let i = 0; i < filteredLeverageTokenData.length; i++) {
             const item = filteredLeverageTokenData[i]
             if (!item) continue
-            
+
             if (item.timestamp <= collateralItem.timestamp) {
               beforeIndex = i
             }
@@ -174,17 +174,17 @@ export function useLeverageTokenPriceComparison({
       const finalResult = combinedData.sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
       )
-      
+
       console.log('🔍 [Price Comparison] Final combined data:', {
         combinedDataCount: combinedData.length,
         finalResultCount: finalResult.length,
-        dataPoints: finalResult.map(d => ({
+        dataPoints: finalResult.map((d) => ({
           date: d.date,
           weethPrice: d.weethPrice,
-          leverageTokenPrice: d.leverageTokenPrice
-        }))
+          leverageTokenPrice: d.leverageTokenPrice,
+        })),
       })
-      
+
       return finalResult
     },
     staleTime: STALE_TIME.historical,
