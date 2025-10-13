@@ -856,6 +856,7 @@ function useApprovalFlow(params: {
     decimals,
     targetChainId: chainId,
     enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
+    flow: 'mint',
   })
 
   return {

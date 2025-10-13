@@ -1,10 +1,13 @@
 import * as Sentry from '@sentry/react'
+import { useEffect } from 'react'
 import type { Address } from 'viem'
 import { parseUnits } from 'viem'
 import { useChainId, useSwitchChain, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { TX_SETTINGS } from '@/features/leverage-tokens/utils/constants'
+import { classifyError, isActionableError } from '@/features/leverage-tokens/utils/errors'
 import { leverageTokenAbi } from '@/lib/contracts/abis/leverageToken'
 import { createLogger } from '@/lib/logger'
+import { captureApprovalError } from '@/lib/observability/sentry'
 
 const logger = createLogger('useTokenApprove')
 
@@ -15,6 +18,7 @@ export interface UseTokenApproveParams {
   decimals?: number // Token decimals
   targetChainId: number
   enabled?: boolean
+  flow?: 'mint' | 'redeem'
 }
 
 /**
@@ -28,6 +32,7 @@ export function useTokenApprove({
   decimals = 18,
   targetChainId,
   enabled = true,
+  flow,
 }: UseTokenApproveParams) {
   const activeChainId = useChainId()
   const { switchChain } = useSwitchChain()
@@ -56,6 +61,43 @@ export function useTokenApprove({
     confirmations: TX_SETTINGS.confirmations,
     timeout: TX_SETTINGS.timeout,
   })
+
+  // Capture approval errors (submit failures or on-chain reverts)
+  useEffect(() => {
+    const actionable = (e: unknown) => isActionableError(classifyError(e))
+    if (isApproveError && approveError && actionable(approveError)) {
+      captureApprovalError({
+        ...(flow ? { flow } : {}),
+        chainId: targetChainId,
+        token: tokenAddress || 'unknown',
+        ...(spender ? { spender } : {}),
+        ...(amount ? { amount } : {}),
+        error: approveError,
+      })
+    }
+    if (isConfirmError && confirmError && actionable(confirmError)) {
+      captureApprovalError({
+        ...(flow ? { flow } : {}),
+        chainId: targetChainId,
+        token: tokenAddress || 'unknown',
+        ...(spender ? { spender } : {}),
+        ...(amount ? { amount } : {}),
+        ...(hash ? { txHash: hash } : {}),
+        error: confirmError,
+      })
+    }
+  }, [
+    isApproveError,
+    approveError,
+    isConfirmError,
+    confirmError,
+    flow,
+    targetChainId,
+    tokenAddress,
+    spender,
+    amount,
+    hash,
+  ])
 
   // Execute approval
   const approve = () => {
@@ -88,13 +130,28 @@ export function useTokenApprove({
       },
     })
 
-    writeContract({
-      address: tokenAddress,
-      abi: leverageTokenAbi,
-      functionName: 'approve',
-      args: [spender, approvalAmount],
-      chainId: targetChainId,
-    })
+    try {
+      writeContract({
+        address: tokenAddress,
+        abi: leverageTokenAbi,
+        functionName: 'approve',
+        args: [spender, approvalAmount],
+        chainId: targetChainId,
+      })
+    } catch (error) {
+      const err = classifyError(error)
+      if (isActionableError(err)) {
+        captureApprovalError({
+          ...(flow ? { flow } : {}),
+          chainId: targetChainId,
+          token: tokenAddress,
+          ...(spender ? { spender } : {}),
+          ...(amount ? { amount } : {}),
+          error,
+        })
+      }
+      throw error
+    }
   }
 
   return {

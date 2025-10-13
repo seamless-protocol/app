@@ -169,6 +169,40 @@ export function captureTxError(params: {
   })
 }
 
+export function captureApprovalError(params: {
+  flow?: 'mint' | 'redeem'
+  chainId: number
+  token: string
+  spender?: string
+  amount?: string
+  txHash?: string
+  error?: unknown
+  route?: string
+}) {
+  const { flow, chainId, token, spender, amount, txHash, error, route } = params
+  const status = txHash ? 'tx-reverted' : 'submit-failed'
+  const routeTag = route ?? getCurrentRoute()
+
+  Sentry.addBreadcrumb({
+    category: 'tx',
+    level: 'error',
+    message: `approve ${status}`,
+    data: { flow: flow ?? 'approve', chainId, token, spender, amount, txHash, status },
+  })
+
+  logger.error('Approval transaction error', {
+    error,
+    flow: flow ?? 'approve',
+    chainId,
+    token,
+    ...(spender ? { spender } : {}),
+    ...(amount ? { amount } : {}),
+    ...(txHash ? { txHash } : {}),
+    ...(routeTag ? { route: routeTag } : {}),
+    status,
+  })
+}
+
 export function captureSimulationError(params: {
   flow: 'mint' | 'redeem'
   stage: 'plan' | 'preview' | 'preflight' | 'quote-init'
