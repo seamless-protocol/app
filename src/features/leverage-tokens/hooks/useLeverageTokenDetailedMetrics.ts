@@ -221,6 +221,25 @@ export function useLeverageTokenDetailedMetrics(
           supplyCapData,
           borrowRateData,
           utilizationData,
+          {
+            currentLeverage: managerStateRes?.status !== 'success',
+            minMaxLeverage:
+              adapterData?.[0]?.status !== 'success' || adapterData?.[1]?.status !== 'success',
+            supplyCap: !supplyCapData,
+            borrowRate: !borrowRateData,
+            utilization: !utilizationData,
+            fees: managerConfigRes?.status !== 'success',
+            treasuryFees:
+              mintTreasuryFeeRes?.status !== 'success' ||
+              redeemTreasuryFeeRes?.status !== 'success' ||
+              managementFeeRes?.status !== 'success',
+            auctionSettings:
+              adapterData?.[2]?.status !== 'success' || adapterData?.[3]?.status !== 'success',
+            rebalanceReward:
+              lendingData?.[0]?.status !== 'success' || adapterData?.[4]?.status !== 'success',
+            priceMultipliers:
+              adapterData?.[5]?.status !== 'success' || adapterData?.[6]?.status !== 'success',
+          },
         )
       : undefined
 
@@ -229,6 +248,26 @@ export function useLeverageTokenDetailedMetrics(
     isLoading,
     isError,
     error,
+    // Individual loading states for metrics
+    loadingStates: {
+      currentLeverage: managerStateRes?.status !== 'success',
+      minMaxLeverage:
+        adapterData?.[0]?.status !== 'success' || adapterData?.[1]?.status !== 'success',
+      supplyCap: !supplyCapData,
+      borrowRate: !borrowRateData,
+      utilization: !utilizationData,
+      fees: managerConfigRes?.status !== 'success',
+      treasuryFees:
+        mintTreasuryFeeRes?.status !== 'success' ||
+        redeemTreasuryFeeRes?.status !== 'success' ||
+        managementFeeRes?.status !== 'success',
+      auctionSettings:
+        adapterData?.[2]?.status !== 'success' || adapterData?.[3]?.status !== 'success',
+      rebalanceReward:
+        lendingData?.[0]?.status !== 'success' || adapterData?.[4]?.status !== 'success',
+      priceMultipliers:
+        adapterData?.[5]?.status !== 'success' || adapterData?.[6]?.status !== 'success',
+    },
     refetch: async () => {
       await Promise.all([
         (async () => {
@@ -285,6 +324,18 @@ function transformDetailedMetricsData(
   supplyCapData?: { currentSupply: number; supplyCap: number; collateralAssetSymbol: string },
   borrowRateData?: { borrowRate: number; baseYield: number },
   utilizationData?: { utilization: number },
+  loadingStates?: {
+    currentLeverage: boolean
+    minMaxLeverage: boolean
+    supplyCap: boolean
+    borrowRate: boolean
+    utilization: boolean
+    fees: boolean
+    treasuryFees: boolean
+    auctionSettings: boolean
+    rebalanceReward: boolean
+    priceMultipliers: boolean
+  },
 ): LeverageTokenMetrics {
   // Extract data from manager calls
   const configResult = managerData[0]
@@ -471,11 +522,13 @@ function transformDetailedMetricsData(
         value: currentLeverage,
         highlight: true,
         color: 'text-foreground',
+        isLoading: loadingStates?.currentLeverage || false,
       },
       {
         label: 'Min - Max Leverage',
         value: `${minLeverage} - ${maxLeverage}`,
         color: 'text-foreground',
+        isLoading: loadingStates?.minMaxLeverage || false,
       },
     ],
     'Lending Market': [
@@ -500,12 +553,14 @@ function transformDetailedMetricsData(
           ),
         ),
         highlight: true,
+        isLoading: loadingStates?.supplyCap || false,
       },
       {
         label: 'Current Borrow Rate',
         value: borrowRateValue,
         highlight: true,
         color: borrowRateColor,
+        isLoading: loadingStates?.borrowRate || false,
         ...(borrowRateTooltip && { tooltip: borrowRateTooltip }),
       },
       {
@@ -513,6 +568,7 @@ function transformDetailedMetricsData(
         value: utilizationValue,
         highlight: true,
         color: utilizationColor,
+        isLoading: loadingStates?.utilization || false,
         ...(utilizationTooltip && { tooltip: utilizationTooltip }),
       },
     ],
@@ -522,6 +578,7 @@ function transformDetailedMetricsData(
         value: mintTokenFee,
         highlight: true,
         color: 'text-foreground',
+        isLoading: loadingStates?.fees || false,
         tooltip:
           'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users minting.',
       },
@@ -529,6 +586,7 @@ function transformDetailedMetricsData(
         label: 'Redeem Token Fee',
         value: redeemTokenFee,
         color: 'text-foreground',
+        isLoading: loadingStates?.fees || false,
         tooltip:
           'Token fees accrue to current Leverage Token holders. This means users holding the LT benefit from the token fees paid by users redeeming.',
       },
@@ -536,18 +594,21 @@ function transformDetailedMetricsData(
         label: 'Mint Treasury Fee',
         value: mintTreasuryFee,
         color: 'text-foreground',
+        isLoading: loadingStates?.treasuryFees || false,
         tooltip: 'Mint Treasury Fee is the fee that is charged to the minting user.',
       },
       {
         label: 'Redeem Treasury Fee',
         value: redeemTreasuryFee,
         color: 'text-foreground',
+        isLoading: loadingStates?.treasuryFees || false,
         tooltip: 'Redeem Treasury Fee is the fee that is charged to the redeeming user.',
       },
       {
         label: 'Management Treasury Fee',
         value: managementTreasuryFee,
         color: 'text-foreground',
+        isLoading: loadingStates?.treasuryFees || false,
         tooltip: 'Management Treasury Fee is the fee that is charged to the management user.',
       },
     ],
@@ -556,16 +617,19 @@ function transformDetailedMetricsData(
         label: 'Dutch Auction Duration',
         value: dutchAuctionDuration,
         color: 'text-foreground',
+        isLoading: loadingStates?.auctionSettings || false,
       },
       {
         label: 'Initial Price Multiplier',
         value: initialPriceMultiplier,
         color: 'text-foreground',
+        isLoading: loadingStates?.priceMultipliers || false,
       },
       {
         label: 'Min Price Multiplier',
         value: minPriceMultiplier,
         color: 'text-foreground',
+        isLoading: loadingStates?.priceMultipliers || false,
       },
     ],
     'Pre-liquidation': [
@@ -573,12 +637,14 @@ function transformDetailedMetricsData(
         label: 'Pre-liquidation Leverage',
         value: preLiquidationLeverage,
         color: 'text-foreground',
+        isLoading: loadingStates?.auctionSettings || false,
         tooltip: 'Leverage threshold that triggers pre-liquidation protection',
       },
       {
         label: 'Rebalance Reward',
         value: rebalanceReward,
         color: 'text-foreground',
+        isLoading: loadingStates?.rebalanceReward || false,
         tooltip: 'Reward percentage for successful rebalancing.',
       },
     ],
