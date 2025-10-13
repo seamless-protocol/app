@@ -24,7 +24,7 @@ const SUBGRAPH_ENDPOINTS = {
   ), // Ethereum
   8453: getEnvVar(
     'VITE_LEVERAGE_TOKENS_SUBGRAPH_BASE',
-    'https://api.studio.thegraph.com/query/113147/seamless-leverage-tokens-base/version/latest',
+    'https://gateway.thegraph.com/api/subgraphs/id/Eg5yYyLeogmpkh4kYJBirmxjaxWuKuGegBHWVCrvPB9g',
   ), // Base
 } as const
 

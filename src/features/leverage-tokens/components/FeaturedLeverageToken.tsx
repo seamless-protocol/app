@@ -58,8 +58,8 @@ export function FeaturedLeverageToken({
 
           {/* Stats Grid */}
           <div className="space-y-2">
-            {/* APY Row - only show if not zero */}
-            {apyData && apyData.totalAPY !== 0 && (
+            {/* APY Row - show skeleton while loading; hide after load if zero */}
+            {(isApyLoading || isApyError || (apyData && apyData.totalAPY !== 0)) && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-[var(--text-secondary)]">APY</span>
                 {isApyError ? (
@@ -90,21 +90,21 @@ export function FeaturedLeverageToken({
               </div>
             )}
 
-            {/* Points Row - only show if not zero */}
-            {apyData && apyData.points !== 0 && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-[var(--text-secondary)]">Points</span>
-                {isApyError ? (
-                  <span className="text-[var(--text-muted)] font-medium">N/A</span>
-                ) : isApyLoading || !apyData ? (
-                  <Skeleton className="h-4 w-16" />
-                ) : (
-                  <span className="font-medium text-[var(--state-warning-text)]">
-                    {`${apyData.points.toLocaleString('en-US')} x`}
-                  </span>
-                )}
-              </div>
-            )}
+            {/* Points Row - always render for consistent card height */}
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-[var(--text-secondary)]">Points</span>
+              {isApyError ? (
+                <span className="text-[var(--text-muted)] font-medium">N/A</span>
+              ) : isApyLoading || !apyData ? (
+                <Skeleton className="h-4 w-16" />
+              ) : apyData.points !== 0 ? (
+                <span className="font-medium text-[var(--state-warning-text)]">
+                  {`${apyData.points.toLocaleString('en-US')} x`}
+                </span>
+              ) : (
+                <span className="text-[var(--text-muted)] font-medium">—</span>
+              )}
+            </div>
 
             {/* Leverage Row with Divider */}
             <div className="flex justify-between items-center pt-2 border-t border-[var(--divider-line)]">

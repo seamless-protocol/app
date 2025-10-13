@@ -47,6 +47,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether',
+      description: 'Wrapped Ether token',
       address: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619' as Address,
       decimals: 18,
     },
@@ -73,12 +74,14 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'USDC',
       name: 'USD Coin',
+      description: 'USD Coin stablecoin',
       address: '0xa0b86a33e6441b8c4c8c8c8c8c8c8c8c8c8c8c8c' as Address,
       decimals: 6,
     },
     debtAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether',
+      description: 'Wrapped Ether token',
       address: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619' as Address,
       decimals: 18,
     },
@@ -99,6 +102,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether',
+      description: 'Wrapped Ether token',
       address: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619' as Address,
       decimals: 18,
     },
@@ -125,6 +129,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'ETH',
       name: 'Ethereum',
+      description: 'Ethereum native token',
       address: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619' as Address,
       decimals: 18,
     },
@@ -151,6 +156,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'WBTC',
       name: 'Wrapped Bitcoin',
+      description: 'Wrapped Bitcoin token',
       address: '0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6' as Address,
       decimals: 8,
     },
@@ -177,6 +183,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'MATIC',
       name: 'Polygon',
+      description: 'Polygon native token',
       address: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270' as Address,
       decimals: 18,
     },
@@ -203,6 +210,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'LINK',
       name: 'Chainlink',
+      description: 'Chainlink oracle token',
       address: '0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39' as Address,
       decimals: 18,
     },
@@ -229,6 +237,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'AAVE',
       name: 'Aave',
+      description: 'Aave protocol token',
       address: '0xd6df932a45c0f255f85145f286ea0b292b21c90b' as Address,
       decimals: 18,
     },
@@ -255,6 +264,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'UNI',
       name: 'Uniswap',
+      description: 'Uniswap governance token',
       address: '0xb33eaad8d922b1083446dc23f610c2567fb5180f' as Address,
       decimals: 18,
     },
@@ -281,6 +291,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'SUSHI',
       name: 'SushiSwap',
+      description: 'SushiSwap governance token',
       address: '0x0b3f868e0be5597d5db7feb9839de74c76867b58' as Address,
       decimals: 18,
     },
@@ -307,6 +318,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'COMP',
       name: 'Compound',
+      description: 'Compound governance token',
       address: '0x8505b9d2254a7ae876c3cbb50a7cd71b7a8ddf81' as Address,
       decimals: 18,
     },

@@ -9,7 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 export interface FAQItem {
   id: string
   question: string
-  answer: string
+  answer: string | React.ReactNode
 }
 
 interface FAQProps {
@@ -61,7 +61,7 @@ export function FAQ({ title = 'Frequently Asked Questions', items, className = '
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
                 <div className="rounded-lg border border-border bg-accent p-4">
-                  <p className="leading-relaxed text-secondary-foreground">{faq.answer}</p>
+                  <div className="leading-relaxed text-secondary-foreground">{faq.answer}</div>
                 </div>
               </CollapsibleContent>
             </Collapsible>

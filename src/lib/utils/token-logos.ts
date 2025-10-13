@@ -1,6 +1,7 @@
 import React from 'react'
 import {
   CBBTCLogo,
+  RLPLogo,
   rETHLogo,
   USDCLogo,
   WETHLogo,
@@ -23,6 +24,8 @@ export function getTokenLogo(asset: string) {
       return wstETHLogo
     case 'rETH':
       return rETHLogo
+    case 'RLP':
+      return RLPLogo
     default:
       return null
   }

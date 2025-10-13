@@ -28,6 +28,7 @@ interface ConfirmStepProps {
   redemptionFee?: string | undefined
   isRedemptionFeeLoading?: boolean | undefined
   onConfirm: () => void
+  disabled?: boolean
 }
 
 export function ConfirmStep({
@@ -39,6 +40,7 @@ export function ConfirmStep({
   redemptionFee,
   isRedemptionFeeLoading,
   onConfirm,
+  disabled = false,
 }: ConfirmStepProps) {
   // Get real-time gas estimation
   const {
@@ -124,9 +126,15 @@ export function ConfirmStep({
         </div>
       </Card>
 
-      <Button onClick={onConfirm} variant="gradient" size="lg" className="w-full font-medium">
+      <Button
+        onClick={onConfirm}
+        disabled={disabled}
+        variant="gradient"
+        size="lg"
+        className="w-full font-medium"
+      >
         <Zap className="h-4 w-4" aria-hidden="true" />
-        Confirm Redemption
+        {disabled ? 'Updating quote…' : 'Confirm Redemption'}
       </Button>
     </div>
   )

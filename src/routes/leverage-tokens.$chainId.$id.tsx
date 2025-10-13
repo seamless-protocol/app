@@ -25,7 +25,10 @@ import { useLeverageTokenDetailedMetrics } from '@/features/leverage-tokens/hook
 import { useLeverageTokenPriceComparison } from '@/features/leverage-tokens/hooks/useLeverageTokenPriceComparison'
 import { useLeverageTokenState } from '@/features/leverage-tokens/hooks/useLeverageTokenState'
 import { useLeverageTokenUserPosition } from '@/features/leverage-tokens/hooks/useLeverageTokenUserPosition'
-import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
+import {
+  getAllLeverageTokenConfigs,
+  getLeverageTokenConfig,
+} from '@/features/leverage-tokens/leverageTokens.config'
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
 import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
 import { useGA } from '@/lib/config/ga4.config'
@@ -62,7 +65,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
     const chainId = parseInt(routeChainId || CHAIN_IDS.BASE.toString(), 10)
 
     // Get leverage token config (used for decimals, addresses, etc.)
-    const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`)
+    const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`, chainId)
 
     // All hooks must be called at top level before any conditional returns
     const {
@@ -126,14 +129,15 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
         : undefined
     // No collateral read in this route for now
 
-    // Pre-load APY data for the tooltip
+    // Pre-load APY data for all leverage tokens so navigation shares cache
+    const allLeverageConfigs = getAllLeverageTokenConfigs()
     const {
       data: tokensAPYData,
       isLoading: isApyLoading,
       isError: isApyError,
     } = useTokensAPY({
-      tokens: tokenConfig ? [tokenConfig] : [],
-      enabled: !!tokenConfig, // Only enable if we have a valid config
+      tokens: allLeverageConfigs,
+      enabled: allLeverageConfigs.length > 0,
     })
 
     // Get APY data for this specific token
@@ -154,9 +158,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
 
     // Generate FAQ data dynamically
     const faqData = generateLeverageTokenFAQ({
-      leverageRatio: tokenConfig.leverageRatio,
-      collateralSymbol: tokenConfig.collateralAsset.symbol,
-      debtSymbol: tokenConfig.debtAsset.symbol,
+      tokenConfig,
     })
 
     const userShares = userPosData?.balance

@@ -3,8 +3,8 @@ import {
   ArrowDown,
   ChevronDown,
   ChevronUp,
+  Loader2,
   Percent,
-  RefreshCw,
   Settings,
   TrendingUp,
 } from 'lucide-react'
@@ -132,6 +132,20 @@ export function InputStep({
       }, 100)
     }
   }, [showAdvanced])
+
+  // Derive action button state
+  const actionState = (() => {
+    if (!isConnected) return { label: 'Connect Wallet', busy: false }
+    const amountNum = parseFloat(amount || '0')
+    const balanceNum = parseFloat(selectedToken.balance || '0')
+    if (amountNum === 0) return { label: 'Enter an amount', busy: false }
+    if (amountNum > balanceNum) return { label: 'Insufficient balance', busy: false }
+    if (isCalculating) return { label: 'Calculating...', busy: true }
+    if (isAllowanceLoading) return { label: 'Checking allowance...', busy: true }
+    if (isApproving) return { label: 'Approving...', busy: true }
+    if (needsApproval) return { label: `Approve ${selectedToken.symbol}`, busy: false }
+    return { label: `Mint ${leverageTokenConfig.symbol}`, busy: false }
+  })()
 
   return (
     <div className="space-y-6">
@@ -294,9 +308,8 @@ export function InputStep({
           <div className="mb-2 flex items-center justify-between">
             <div className="text-sm text-secondary-foreground">You will receive</div>
             {isCalculating && (
-              <div className="flex items-center text-xs text-slate-400">
-                <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                Calculating...
+              <div className="flex items-center text-xs text-slate-400" aria-live="polite">
+                <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
               </div>
             )}
           </div>
@@ -399,9 +412,13 @@ export function InputStep({
             <span className="text-foreground">You will receive</span>
             <div className="text-right">
               <div className="text-foreground">
-                {isCalculating
-                  ? 'Calculating...'
-                  : `${expectedTokens} ${leverageTokenConfig.symbol}`}
+                {isCalculating ? (
+                  <span className="inline-flex items-center" aria-live="polite">
+                    <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
+                  </span>
+                ) : (
+                  `${expectedTokens} ${leverageTokenConfig.symbol}`
+                )}
               </div>
               {!isCalculating &&
                 typeof expectedUsdOut === 'number' &&
@@ -471,26 +488,16 @@ export function InputStep({
       {/* Action Button */}
       <Button
         onClick={onApprove}
-        disabled={!canProceed}
+        disabled={!canProceed || actionState.busy}
+        aria-busy={actionState.busy}
         variant="gradient"
         size="lg"
         className="w-full font-medium"
       >
-        {!isConnected
-          ? 'Connect Wallet'
-          : !canProceed && parseFloat(amount || '0') === 0
-            ? 'Enter an amount'
-            : !canProceed && parseFloat(amount || '0') > parseFloat(selectedToken.balance)
-              ? 'Insufficient balance'
-              : isCalculating
-                ? 'Calculating...'
-                : isAllowanceLoading
-                  ? 'Checking allowance...'
-                  : isApproving
-                    ? 'Approving...'
-                    : needsApproval
-                      ? `Approve ${selectedToken.symbol}`
-                      : `Mint ${leverageTokenConfig.symbol}`}
+        <span className="inline-flex items-center justify-center gap-2">
+          {actionState.busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {actionState.label}
+        </span>
       </Button>
     </div>
   )

@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Percent, Settings, TrendingDown } from 'lucide-react'
+import { ChevronDown, ChevronUp, Loader2, Percent, Settings, TrendingDown } from 'lucide-react'
 import { useEffect, useId, useRef } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
@@ -191,6 +191,21 @@ export function InputStep({
 
   const balanceFloat = parseFloat(selectedToken.balance)
   const pricePerToken = balanceFloat > 0 ? selectedToken.price / balanceFloat : 0
+
+  // Derive minimal, KISS action button state for consistency with Mint
+  const actionState = (() => {
+    if (!isConnected) return { label: 'Connect Wallet', busy: false }
+    const amountNum = parseFloat(amount || '0')
+    const balanceNum = parseFloat(selectedToken.balance || '0')
+    if (amountNum === 0) return { label: 'Enter an amount', busy: false }
+    if (amountNum > balanceNum)
+      return { label: `Insufficient ${selectedToken.symbol}`, busy: false }
+    if (isCalculating) return { label: 'Calculating...', busy: true }
+    if (isAllowanceLoading) return { label: 'Checking allowance...', busy: true }
+    if (isApproving) return { label: 'Approving...', busy: true }
+    if (needsApproval) return { label: `Approve ${selectedToken.symbol}`, busy: false }
+    return { label: `Redeem ${leverageTokenConfig.symbol}`, busy: false }
+  })()
 
   return (
     <div className="space-y-6">
@@ -471,7 +486,9 @@ export function InputStep({
             <div className="text-right">
               <div className="text-foreground">
                 {isCalculating ? (
-                  <Skeleton className="inline-block h-4 w-24" />
+                  <span className="inline-flex items-center" aria-live="polite">
+                    <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
+                  </span>
                 ) : (
                   `${expectedAmount} ${selectedAssetSymbol}`
                 )}
@@ -525,26 +542,16 @@ export function InputStep({
       {/* Action Button */}
       <Button
         onClick={onApprove}
-        disabled={!canProceed}
+        disabled={!canProceed || actionState.busy}
+        aria-busy={actionState.busy}
         variant="gradient"
         size="lg"
         className="w-full font-medium"
       >
-        {!isConnected
-          ? 'Connect Wallet'
-          : !canProceed && parseFloat(amount || '0') === 0
-            ? 'Enter an amount'
-            : !canProceed && parseFloat(amount || '0') > parseFloat(selectedToken.balance)
-              ? `Insufficient ${selectedToken.symbol}`
-              : isCalculating
-                ? 'Calculating...'
-                : isAllowanceLoading
-                  ? 'Checking allowance...'
-                  : isApproving
-                    ? 'Approving...'
-                    : needsApproval
-                      ? `Approve ${selectedToken.symbol}`
-                      : `Redeem ${leverageTokenConfig.symbol}`}
+        <span className="inline-flex items-center justify-center gap-2">
+          {actionState.busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {actionState.label}
+        </span>
       </Button>
     </div>
   )
