@@ -88,7 +88,7 @@ export function PriceLineChart({
     if (chartType === 'tvl') {
       return [`$${Number(value).toFixed(2)}M`, 'TVL']
     }
-    return [`$${Number(value).toFixed(2)}`, name || 'Price']
+    return [`$${Number(value).toFixed(3)}`, name || 'Price']
   }
 
   const formatChartDate = xAxisFormatter || defaultXAxisFormatter
