@@ -88,6 +88,7 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
             ])
 
             const borrowAPY = borrowApyData.borrowAPY
+            const utilization = borrowApyData.utilization
             const targetLeverage = leverageRatios.targetLeverage
 
             // Calculate APY components
@@ -118,6 +119,7 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
               rewardsAPR,
               points,
               totalAPY,
+              utilization,
             }
 
             const tokenId = token.id || token.address || token.leverageTokenAddress

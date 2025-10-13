@@ -11,6 +11,7 @@ export interface MorphoMarketData {
   }
   state: {
     weeklyBorrowApy: number
+    utilization: number
   }
 }
 

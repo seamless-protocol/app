@@ -149,6 +149,16 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
 
     const borrowRateData = getBorrowRateData(apyData, isApyLoading)
 
+    // Prepare utilization data
+    const getUtilizationData = (apyData: APYBreakdownData | undefined, isLoading: boolean) => {
+      if (!apyData || isLoading) return undefined
+      return {
+        utilization: apyData.utilization ?? 0,
+      }
+    }
+
+    const utilizationData = getUtilizationData(apyData, isApyLoading)
+
     const {
       data: detailedMetrics,
       isLoading: isDetailedMetricsLoading,
@@ -161,6 +171,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
         collateralAssetSymbol: tokenConfig?.collateralAsset.symbol || '',
       },
       borrowRateData,
+      utilizationData,
     )
 
     if (!tokenConfig) {

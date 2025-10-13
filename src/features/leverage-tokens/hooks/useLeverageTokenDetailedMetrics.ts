@@ -20,6 +20,7 @@ export function useLeverageTokenDetailedMetrics(
   tokenAddress?: Address,
   supplyCapData?: { currentSupply: number; supplyCap: number; collateralAssetSymbol: string },
   borrowRateData?: { borrowRate: number; baseYield: number },
+  utilizationData?: { utilization: number },
 ) {
   // Get the token config to determine the correct chain ID
   const tokenConfig = tokenAddress ? getLeverageTokenConfig(tokenAddress) : undefined
@@ -218,6 +219,7 @@ export function useLeverageTokenDetailedMetrics(
           lendingData as LendData,
           supplyCapData,
           borrowRateData,
+          utilizationData,
         )
       : undefined
 
@@ -281,6 +283,7 @@ function transformDetailedMetricsData(
   lendingData: readonly [ReadResult<bigint>],
   supplyCapData?: { currentSupply: number; supplyCap: number; collateralAssetSymbol: string },
   borrowRateData?: { borrowRate: number; baseYield: number },
+  utilizationData?: { utilization: number },
 ): LeverageTokenMetrics {
   // Extract data from manager calls
   const configResult = managerData[0]
@@ -448,6 +451,22 @@ function transformDetailedMetricsData(
     }
   }
 
+  // Calculate market utilization status and color
+  let utilizationValue = 'N/A'
+  let utilizationColor = 'text-foreground'
+  let utilizationTooltip = ''
+
+  if (utilizationData && utilizationData.utilization !== undefined) {
+    utilizationValue = `${utilizationData.utilization.toFixed(1)}%`
+
+    if (utilizationData.utilization >= 90) {
+      utilizationColor = 'text-red-500' // Red when utilization is high (>= 90%)
+      utilizationTooltip = 'Underlying lending market utilization is currently HIGH'
+    } else {
+      utilizationColor = 'text-green-500' // Green when utilization is below 90%
+    }
+  }
+
   return {
     Leverage: [
       {
@@ -475,6 +494,13 @@ function transformDetailedMetricsData(
         highlight: true,
         color: borrowRateColor,
         ...(borrowRateTooltip && { tooltip: borrowRateTooltip }),
+      },
+      {
+        label: 'Current Borrow Market Utilization',
+        value: utilizationValue,
+        highlight: true,
+        color: utilizationColor,
+        ...(utilizationTooltip && { tooltip: utilizationTooltip }),
       },
     ],
     Fees: [

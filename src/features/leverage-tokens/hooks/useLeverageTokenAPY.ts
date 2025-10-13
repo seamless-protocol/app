@@ -113,6 +113,7 @@ export function useLeverageTokenAPY({
         rewardsAPRDataResult.status === 'fulfilled' ? rewardsAPRDataResult.value : { rewardsAPR: 0 }
 
       const borrowAPY = borrowApyData.borrowAPY
+      const utilization = borrowApyData.utilization
       const targetLeverage = leverageRatios.targetLeverage
 
       // Staking Yield = Protocol APR * leverage (APR is already in percentage format)
@@ -146,6 +147,7 @@ export function useLeverageTokenAPY({
         rewardsAPR,
         points,
         totalAPY,
+        utilization,
       }
     },
     enabled: enabled && !!tokenAddress,

@@ -8,6 +8,7 @@ export interface APYBreakdownData {
   rewardsAPR: number
   points: number
   totalAPY: number
+  utilization?: number | undefined
 }
 
 interface APYBreakdownProps {

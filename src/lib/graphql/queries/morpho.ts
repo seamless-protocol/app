@@ -9,6 +9,7 @@ export const MORPHO_MARKET_BORROW_RATE_QUERY = `
       }
       state {
         weeklyBorrowApy
+        utilization
       }
     }
   }
