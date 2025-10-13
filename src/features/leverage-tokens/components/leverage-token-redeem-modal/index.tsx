@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig, useWaitForTransactionReceipt } from 'wagmi'
+import { parseErc20ReceivedFromReceipt } from '@/features/leverage-tokens/utils/receipt'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
@@ -332,6 +333,38 @@ export function LeverageTokenRedeemModal({
     return formatTokenAmountFromBase(expectedPayoutRaw, decimals, TOKEN_AMOUNT_DISPLAY_DECIMALS)
   }, [
     expectedPayoutRaw,
+    selectedOutputAsset.id,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.decimals,
+  ])
+
+  // Wait for receipt once we have a hash to derive actual received amount
+  const receiptState = useWaitForTransactionReceipt({
+    hash: (transactionHash || undefined) as `0x${string}` | undefined,
+    chainId: leverageTokenConfig.chainId,
+    confirmations: 1,
+    query: { enabled: Boolean(transactionHash) },
+  })
+
+  // Parse actual received amount from logs for the selected output asset
+  const actualReceivedAmount = useMemo(() => {
+    const receipt = receiptState.data
+    if (!receipt || !userAddress) return undefined
+    const raw = parseErc20ReceivedFromReceipt({
+      receipt,
+      tokenAddress: selectedOutputAsset.address as `0x${string}`,
+      userAddress: userAddress as `0x${string}`,
+    })
+    if (typeof raw !== 'bigint') return undefined
+    const decimals =
+      selectedOutputAsset.id === 'debt'
+        ? leverageTokenConfig.debtAsset.decimals
+        : leverageTokenConfig.collateralAsset.decimals
+    return formatTokenAmountFromBase(raw, decimals, TOKEN_AMOUNT_DISPLAY_DECIMALS)
+  }, [
+    receiptState.data,
+    userAddress,
+    selectedOutputAsset.address,
     selectedOutputAsset.id,
     leverageTokenConfig.collateralAsset.decimals,
     leverageTokenConfig.debtAsset.decimals,
@@ -696,7 +729,7 @@ export function LeverageTokenRedeemModal({
         return (
           <SuccessStep
             amount={form.amount}
-            expectedAmount={expectedAmount}
+            expectedAmount={actualReceivedAmount ?? expectedAmount}
             selectedAsset={selectedOutputAsset.symbol}
             leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash ?? ('' as unknown as `0x${string}`)}
