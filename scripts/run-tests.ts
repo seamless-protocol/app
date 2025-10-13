@@ -194,7 +194,7 @@ async function main() {
     const { cmd, args } = getTestCommand(testType, passThroughArgs)
     const env = withTestDefaults(
       testType,
-      { ...process.env, TEST_RPC_URL: explicitRpcUrl },
+      { ...process.env, TEST_RPC_URL: explicitRpcUrl } as Record<string, string>,
       'custom',
     )
     await runCommand(cmd, args, env)
@@ -210,7 +210,7 @@ async function main() {
     const { cmd, args } = getTestCommand(testType, passThroughArgs)
     const env = withTestDefaults(
       testType,
-      { ...process.env, TEST_RPC_URL: 'http://127.0.0.1:8545' },
+      { ...process.env, TEST_RPC_URL: 'http://127.0.0.1:8545' } as Record<string, string>,
       'anvil',
     )
     await runCommand(cmd, args, env)
@@ -225,7 +225,11 @@ async function main() {
 
   try {
     const { cmd, args } = getTestCommand(testType, passThroughArgs)
-    const env = withTestDefaults(testType, { ...process.env, TEST_RPC_URL: rpcUrl }, 'tenderly')
+    const env = withTestDefaults(
+      testType,
+      { ...process.env, TEST_RPC_URL: rpcUrl } as Record<string, string>,
+      'tenderly',
+    )
     console.log(`🚀 Running ${testType} tests against Tenderly fork...`)
     await runCommand(cmd, args, env)
   } finally {
@@ -268,7 +272,9 @@ async function runForChainOption(
     }
 
     const envSeed: Record<string, string> = {
-      ...process.env,
+      ...Object.fromEntries(
+        Object.entries(process.env).filter(([_, value]) => value !== undefined),
+      ),
       TEST_CHAIN: backend.chainKey,
       TEST_MODE: backend.mode,
       TEST_SCENARIO: backend.scenario.key,

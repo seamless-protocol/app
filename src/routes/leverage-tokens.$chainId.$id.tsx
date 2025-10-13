@@ -62,7 +62,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
     const chainId = parseInt(routeChainId || CHAIN_IDS.BASE.toString(), 10)
 
     // Get leverage token config (used for decimals, addresses, etc.)
-    const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`)
+    const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`, chainId)
 
     // All hooks must be called at top level before any conditional returns
     const {
@@ -154,9 +154,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
 
     // Generate FAQ data dynamically
     const faqData = generateLeverageTokenFAQ({
-      leverageRatio: tokenConfig.leverageRatio,
-      collateralSymbol: tokenConfig.collateralAsset.symbol,
-      debtSymbol: tokenConfig.debtAsset.symbol,
+      tokenConfig,
     })
 
     const userShares = userPosData?.balance

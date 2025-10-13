@@ -32,6 +32,7 @@ describe('useLeverageTokenAPY', () => {
     collateralAsset: {
       symbol: 'WETH',
       name: 'Wrapped Ether',
+      description: 'Wrapped Ether token',
       address: BASE_WETH,
       decimals: 18,
     },

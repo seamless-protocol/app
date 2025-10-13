@@ -1,5 +1,13 @@
 import type { Address } from 'viem'
-import { BaseLogo, EthereumLogo } from '@/components/icons/logos'
+import {
+  BaseLogo,
+  EthereumLogo,
+  EtherfiLogo,
+  LidoLogo,
+  MerklLogo,
+  MorphoLogo,
+  ResolvLogo,
+} from '@/components/icons'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
 import { APR_PROVIDERS } from './utils/apy-calculations/apr-providers'
@@ -14,6 +22,8 @@ export enum LeverageTokenKey {
   CBBTC_USDC_2X_TENDERLY = 'cbbtc-usdc-2x-tenderly',
   WSTETH_ETH_2X_MAINNET = 'wsteth-eth-2x-mainnet',
   WEETH_WETH_17X_BASE_MAINNET = 'weeth-weth-17x-base-mainnet',
+  WSTETH_ETH_25X_ETHEREUM_MAINNET = 'wsteth-eth-25x-ethereum-mainnet',
+  RLP_USDC_6_75X_ETHEREUM_MAINNET = 'rlp-usdc-6.75x-ethereum-mainnet',
   // Add more token keys here as they are added
   // ANOTHER_TOKEN = 'another-token',
 }
@@ -81,6 +91,7 @@ export interface LeverageTokenConfig {
   collateralAsset: {
     symbol: string
     name: string
+    description: string
     address: Address
     decimals: number
   }
@@ -115,16 +126,24 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     name: 'weETH / WETH 17x Leverage Token',
     symbol: 'WEETH-WETH-17x',
     description:
-      'weETH / WETH 17x leverage token that amplifies relative price movements between weETH and WETH on Base',
+      'weETH / WETH 17x Leverage Token that amplifies relative price movements between weETH and WETH on Base',
     decimals: 18,
     leverageRatio: 17,
     chainId: 8453,
     chainName: 'Base',
     chainLogo: BaseLogo,
     supplyCap: 150,
+    apyConfig: {
+      aprProvider: {
+        type: APR_PROVIDERS.ETHERFI,
+      },
+      pointsMultiplier: 34,
+    },
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether.fi ETH',
+      description:
+        "weETH is Ether.fi's wrapped, non-rebasing version of eETH. It represents ETH staked through Ether.fi's liquid restaking system and accumulates staking rewards over time, making its price increase relative to ETH as more rewards accrue.",
       address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
       decimals: 18,
     },
@@ -135,7 +154,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       decimals: 18,
     },
     swaps: {
-      // Temporarily force Uniswap V2 routing on Base to validate logic
+      // Use LiFi for same-chain routing (bridges are irrelevant for same-chain quotes)
       debtToCollateral: {
         type: 'lifi',
       },
@@ -144,13 +163,249 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       },
     },
     planner: { epsilonBps: 10 },
+    relatedResources: {
+      additionalRewards: [
+        {
+          id: 'etherfi-points',
+          title: 'Ether.fi Points',
+          description: 'Track your points and rewards from weETH staking activity',
+          url: 'https://www.ether.fi/app/portfolio',
+          icon: EtherfiLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'indigo' as const,
+          },
+        },
+        {
+          id: 'merkl-rewards',
+          title: 'Merkl Rewards',
+          description: 'Additional DeFi rewards and incentive tracking',
+          url: 'https://app.merkl.xyz/users/',
+          getUrl: ({ address }) =>
+            address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
+          icon: MerklLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'purple' as const,
+          },
+        },
+      ],
+      underlyingPlatforms: [
+        {
+          id: 'morpho-lending',
+          title: 'Morpho Lending Market',
+          description: 'View the underlying lending market powering this Leverage Token',
+          url: 'https://app.morpho.org/base/market/0xb8fc70e82bc5bb53e773626fcc6a23f7eefa036918d7ef216ecfb1950a94a85e',
+          icon: MorphoLogo,
+          badge: {
+            text: 'Lending Market',
+            color: 'blue' as const,
+          },
+        },
+        {
+          id: 'etherfi-protocol',
+          title: 'Ether.fi Protocol',
+          description: 'Learn more about the weETH liquid staking token',
+          url: 'https://ether.fi/',
+          icon: EtherfiLogo,
+          badge: {
+            text: 'Protocol Info',
+            color: 'indigo' as const,
+          },
+        },
+      ],
+    },
+  },
+  [LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]: {
+    address: '0x98c4E43e3Bde7B649E5aa2F88DE1658E8d3eD1bF' as Address,
+    name: 'wstETH / ETH 25x Leverage Token',
+    symbol: 'WSTETH-ETH-25x',
+    description:
+      'wstETH / ETH 25x Leverage Token that amplifies relative price movements between Wrapped stETH and Ether',
+    decimals: 18,
+    leverageRatio: 25,
+    chainId: 1,
+    chainName: 'Ethereum',
+    chainLogo: EthereumLogo,
+    supplyCap: 260,
+    apyConfig: {
+      aprProvider: {
+        type: APR_PROVIDERS.DEFI_LLAMA,
+        id: '747c1d2a-c668-4682-b9f9-296708a3dd90',
+      },
+    },
+    collateralAsset: {
+      symbol: 'wstETH',
+      name: 'Wrapped stETH',
+      description:
+        "wstETH is Lido's wrapped, non-rebasing version of stETH. It represents a user's share of ETH staked through Lido's validators and accrues staking rewards over time. These staking rewards make wstETH's price increase relative to ETH as more rewards accrue.",
+      address: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address,
+      decimals: 18,
+    },
+    debtAsset: {
+      symbol: 'ETH',
+      name: 'Ether',
+      address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
+      decimals: 18,
+    },
+    swaps: {
+      debtToCollateral: {
+        type: 'lifi',
+        allowBridges: 'none',
+      },
+      collateralToDebt: {
+        type: 'lifi',
+        allowBridges: 'none',
+      },
+    },
+    planner: { epsilonBps: 10 },
+    relatedResources: {
+      additionalRewards: [
+        {
+          id: 'merkl-rewards',
+          title: 'Merkl Rewards',
+          description: 'Additional DeFi rewards and incentive tracking',
+          // Default goes to dashboard; if connected, deep-link to user page
+          url: 'https://app.merkl.xyz/users/',
+          getUrl: ({ address }) =>
+            address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
+          icon: MerklLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'purple' as const,
+          },
+        },
+      ],
+      underlyingPlatforms: [
+        {
+          id: 'morpho-lending',
+          title: 'Morpho Lending Market',
+          description: 'View the underlying lending market powering this Leverage Token',
+          url: 'https://app.morpho.org/ethereum/market/0xb8fc70e82bc5bb53e773626fcc6a23f7eefa036918d7ef216ecfb1950a94a85e',
+          icon: MorphoLogo,
+          badge: {
+            text: 'Lending Market',
+            color: 'blue' as const,
+          },
+        },
+        {
+          id: 'lido',
+          title: 'Lido',
+          description: 'Lido',
+          url: 'https://lido.fi/',
+          icon: LidoLogo,
+          badge: {
+            text: 'Protocol Info',
+            color: 'yellow' as const,
+          },
+        },
+      ],
+    },
+  },
+  [LeverageTokenKey.RLP_USDC_6_75X_ETHEREUM_MAINNET]: {
+    address: '0x6426811fF283Fa7c78F0BC5D71858c2f79c0Fc3d' as Address,
+    name: 'RLP / USDC 6.75x Leverage Token',
+    symbol: 'RLP-USDC-6.75x',
+    description:
+      'RLP / USDC 6.75x Leverage Token that amplifies relative price movements between RLP and USDC',
+    decimals: 18,
+    leverageRatio: 6.75,
+    chainId: 1,
+    chainName: 'Ethereum',
+    chainLogo: EthereumLogo,
+    supplyCap: 480000,
+    apyConfig: {
+      aprProvider: {
+        type: APR_PROVIDERS.DEFI_LLAMA,
+        id: '2ad8497d-c855-4840-85ad-cdc536b92ced',
+      },
+      pointsMultiplier: 6.75,
+    },
+    collateralAsset: {
+      symbol: 'RLP',
+      name: 'RLP',
+      description:
+        "RLP is Resolv's insurance or junior-tranche token. It captures excess yield from Resolv's delta-neutral strategy, which involves staking ETH while shorting ETH perpetuals to earn funding rates. RLP holders receive a larger share of profits when funding rates and staking are positive, but also absorb losses first if funding turns negative, helping to protect USR's peg.",
+      address: '0x4956b52aE2fF65D74CA2d61207523288e4528f96' as Address,
+      decimals: 18,
+    },
+    debtAsset: {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Address,
+      decimals: 6,
+    },
+    swaps: {
+      debtToCollateral: {
+        type: 'lifi',
+        allowBridges: 'none',
+      },
+      collateralToDebt: {
+        type: 'lifi',
+        allowBridges: 'none',
+      },
+    },
+    planner: { epsilonBps: 10 },
+    relatedResources: {
+      additionalRewards: [
+        {
+          id: 'resolv-points',
+          title: 'Resolv Points',
+          description: 'Resolv Points',
+          url: 'https://app.resolv.xyz/points',
+          icon: ResolvLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'yellow' as const,
+          },
+        },
+        {
+          id: 'merkl-rewards',
+          title: 'Merkl Rewards',
+          description: 'Additional DeFi rewards and incentive tracking',
+          // Default goes to dashboard; if connected, deep-link to user page
+          url: 'https://app.merkl.xyz/users/',
+          getUrl: ({ address }) =>
+            address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
+          icon: MerklLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'purple' as const,
+          },
+        },
+      ],
+      underlyingPlatforms: [
+        {
+          id: 'morpho-lending',
+          title: 'Morpho Lending Market',
+          description: 'View the underlying lending market powering this Leverage Token',
+          url: 'https://app.morpho.org/ethereum/market/0xe1b65304edd8ceaea9b629df4c3c926a37d1216e27900505c04f14b2ed279f33',
+          icon: MorphoLogo,
+          badge: {
+            text: 'Lending Market',
+            color: 'blue' as const,
+          },
+        },
+        {
+          id: 'resolv',
+          title: 'Resolv',
+          description: 'Resolv',
+          url: 'https://resolv.xyz/',
+          icon: ResolvLogo,
+          badge: {
+            text: 'Protocol Info',
+            color: 'yellow' as const,
+          },
+        },
+      ],
+    },
   },
   [LeverageTokenKey.WSTETH_ETH_2X_MAINNET]: {
     address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
-    name: 'wstETH / ETH 2x Leverage Token',
+    name: 'wstETH / WETH 2x Leverage Token',
     symbol: 'WSTETH-ETH-2x',
     description:
-      'wstETH / ETH 2x leverage token that amplifies relative price movements between Wrapped stETH and Ether',
+      'wstETH / ETH 2x Leverage Token that amplifies relative price movements between Wrapped stETH and Ether',
     decimals: 18,
     leverageRatio: 2,
     chainId: 1,
@@ -166,6 +421,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'wstETH',
       name: 'Wrapped stETH',
+      description: "Wrapped version of Lido's staked ETH token, providing liquid staking rewards",
       address: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address,
       decimals: 18,
     },
@@ -192,7 +448,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     name: 'weETH / WETH 17x Leverage Token (Tenderly)',
     symbol: 'WEETH-WETH-17x',
     description:
-      'Tenderly VNet deployment of the weETH / WETH 17x leverage token used for automated integration testing.',
+      'Tenderly VNet deployment of the weETH / WETH 17x Leverage Token used for automated integration testing.',
     decimals: 18,
     leverageRatio: 17,
     chainId: 8453,
@@ -206,6 +462,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'weETH',
       name: 'Wrapped Ether.fi ETH',
+      description:
+        'Liquid staking token from Ether.fi that represents staked ETH with additional rewards',
       address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
       decimals: 18,
     },
@@ -231,7 +489,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     name: 'cbBTC / USDC 2x Leverage Token (Tenderly)',
     symbol: 'CBBTC-USDC-2x',
     description:
-      'Tenderly VNet deployment of the cbBTC / USDC 2x leverage token used for automated integration testing.',
+      'Tenderly VNet deployment of the cbBTC / USDC 2x Leverage Token used for automated integration testing.',
     decimals: 18,
     leverageRatio: 2,
     chainId: 1,
@@ -242,6 +500,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'cbBTC',
       name: 'Coinbase Wrapped BTC',
+      description: "Coinbase's wrapped Bitcoin token, bringing Bitcoin liquidity to Ethereum",
       address: '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf' as Address,
       decimals: 8,
     },

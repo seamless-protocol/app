@@ -54,6 +54,7 @@ const mockToken = {
   collateralAsset: {
     symbol: 'SEAM',
     name: 'Seamless Protocol',
+    description: 'Seamless Protocol governance token',
     address: '0x1234567890123456789012345678901234567890' as Address,
     decimals: 18,
   },
@@ -89,6 +90,7 @@ const mockTokens = [
     collateralAsset: {
       symbol: 'USDC',
       name: 'USD Coin',
+      description: 'USD Coin stablecoin',
       address: '0xa0b86a33e6441b8c4c8c8c8c8c8c8c8c8c8c8c8c' as Address,
       decimals: 6,
     },
