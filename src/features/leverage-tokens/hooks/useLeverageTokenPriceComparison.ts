@@ -92,27 +92,53 @@ export function useLeverageTokenPriceComparison({
         (item) => item.timestamp >= cutoffTime,
       )
 
-      // Create a map of timestamps to prices for efficient lookup
-      const collateralPriceMap = new Map<number, number>()
-      filteredCollateralPriceData.forEach((item) => {
-        collateralPriceMap.set(item.timestamp, item.price)
-      })
-
-      // Combine the data, matching timestamps as closely as possible
+      // Combine the data using efficient O(N+M) algorithm
       const combinedData: Array<PriceDataPoint> = []
+      const timeWindow = 24 * 60 * 60 * 1000 // 24 hours
 
-      filteredLeverageTokenData.forEach((leverageItem) => {
-        // Find the closest collateral price within a reasonable time window (24 hours)
-        const timeWindow = 24 * 60 * 60 * 1000 // 24 hours
+      // Use a sliding window approach for O(N+M) performance
+      let collateralIndex = 0
+
+      for (const leverageItem of filteredLeverageTokenData) {
+        if (!leverageItem) continue
+
         let closestCollateralPrice: number | undefined
         let closestTimeDiff = Infinity
 
-        for (const [timestamp, price] of collateralPriceMap.entries()) {
-          const timeDiff = Math.abs(timestamp - leverageItem.timestamp)
-          if (timeDiff <= timeWindow && timeDiff < closestTimeDiff) {
-            closestCollateralPrice = price
+        // Find the start of the relevant time window for this leverage item
+        const windowStart = leverageItem.timestamp - timeWindow
+        const windowEnd = leverageItem.timestamp + timeWindow
+
+        // Skip collateral items that are too far behind
+        while (collateralIndex < filteredCollateralPriceData.length) {
+          const collateralItem = filteredCollateralPriceData[collateralIndex]
+          if (!collateralItem) {
+            collateralIndex++
+            continue
+          }
+          if (collateralItem.timestamp >= windowStart) break
+          collateralIndex++
+        }
+
+        // Scan forward through the time window
+        let scanIndex = collateralIndex
+        while (scanIndex < filteredCollateralPriceData.length) {
+          const collateralItem = filteredCollateralPriceData[scanIndex]
+          if (!collateralItem) {
+            scanIndex++
+            continue
+          }
+
+          // If we've moved beyond the time window, stop scanning
+          if (collateralItem.timestamp > windowEnd) break
+
+          const timeDiff = Math.abs(collateralItem.timestamp - leverageItem.timestamp)
+          if (timeDiff < closestTimeDiff) {
+            closestCollateralPrice = collateralItem.price
             closestTimeDiff = timeDiff
           }
+
+          scanIndex++
         }
 
         if (closestCollateralPrice !== undefined) {
@@ -122,7 +148,7 @@ export function useLeverageTokenPriceComparison({
             leverageTokenPrice: leverageItem.equityPerTokenInDebt / 10 ** 18, // Convert from wei to decimal
           })
         }
-      })
+      }
 
       // Sort by date (oldest first) and return
       const finalResult = combinedData.sort(
