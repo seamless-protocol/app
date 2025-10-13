@@ -26,6 +26,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../../../components/ui/tooltip'
 import type { LeverageTokenConfig } from '../../leverageTokens.config'
 import { LeverageBadge } from '../LeverageBadge'
+import { SupplyCap } from '../SupplyCap'
 import { LeverageTokenMobileCard } from './LeverageTokenMobileCard'
 
 interface LeverageToken extends LeverageTokenConfig {
@@ -346,11 +347,21 @@ export function LeverageTokenTable({
                     {getSortIcon('network')}
                   </button>
                 </TableHead>
+                <TableHead className="py-4 px-6 text-right text-[var(--text-secondary)] font-medium min-w-[140px]">
+                  <button
+                    type="button"
+                    className="ml-auto flex items-center space-x-2 transition-colors cursor-pointer hover:text-[var(--text-primary)]"
+                    onClick={() => handleSort('available')}
+                  >
+                    <span>Supply Cap Available</span>
+                    {getSortIcon('available')}
+                  </button>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {currentItems.length === 0 ? (
-                <TableEmpty colSpan={5} />
+                <TableEmpty colSpan={6} />
               ) : (
                 currentItems.map((token, index) => {
                   const tokenApyData = apyDataMap?.get(token.address)
@@ -496,6 +507,13 @@ export function LeverageTokenTable({
                             {token.chainName}
                           </span>
                         </div>
+                      </TableCell>
+
+                      <TableCell className="py-4 px-6 text-right">
+                        <SupplyCap
+                          currentSupply={token.currentSupply ?? 0}
+                          supplyCap={token.supplyCap ?? 0}
+                        />
                       </TableCell>
                     </motion.tr>
                   )
