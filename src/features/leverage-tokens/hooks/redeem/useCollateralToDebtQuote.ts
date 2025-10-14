@@ -6,6 +6,7 @@ import {
   createCollateralToDebtQuote,
 } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
+import { getContractAddresses } from '@/lib/contracts/addresses'
 
 export type QuoteStatus =
   | 'not-required'
@@ -54,11 +55,15 @@ export function useCollateralToDebtQuote({
       cid === chainId ? (publicClient as unknown as PublicClient | undefined) : undefined
 
     try {
+      // Resolve MulticallExecutor (actual on-chain caller for swapCalls)
+      const executor = getContractAddresses(chainId).multicallExecutor as Address | undefined
       const { quote } = createCollateralToDebtQuote({
         chainId,
         routerAddress,
         swap,
         slippageBps,
+        // Align aggregator expectations: executor executes the swap on-chain
+        ...(executor ? { fromAddress: executor } : {}),
         getPublicClient,
       })
       return { status: 'ready' as QuoteStatus, quote, error: undefined }

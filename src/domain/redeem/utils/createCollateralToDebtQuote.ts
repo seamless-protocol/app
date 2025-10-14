@@ -35,6 +35,8 @@ export interface CreateCollateralToDebtQuoteParams {
   swap: CollateralToDebtSwapConfig
   slippageBps: number
   getPublicClient: (chainId: number) => PublicClient | undefined
+  /** Optional override for aggregator `fromAddress` (defaults handled by adapter). */
+  fromAddress?: Address
 }
 
 export interface CreateCollateralToDebtQuoteResult {
@@ -48,12 +50,14 @@ export function createCollateralToDebtQuote({
   swap,
   slippageBps,
   getPublicClient,
+  fromAddress,
 }: CreateCollateralToDebtQuoteParams): CreateCollateralToDebtQuoteResult {
   if (swap.type === 'lifi') {
     const quote = createLifiQuoteAdapter({
       chainId,
       router: routerAddress,
       slippageBps,
+      ...(fromAddress ? { fromAddress } : {}),
       ...(swap.allowBridges ? { allowBridges: swap.allowBridges } : {}),
       ...(swap.order ? { order: swap.order } : {}),
     })
