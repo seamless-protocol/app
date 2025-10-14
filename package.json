@@ -31,7 +31,8 @@
     "build-storybook": "storybook build",
     "wagmi": "wagmi generate",
     "test:integration:wsteth-2x": "TEST_CHAIN=mainnet TENDERLY_CHAIN_ID=1 E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-2x bun scripts/run-tests.ts integration tests/integration/leverage-tokens/mint/router.v2.mainnet.mint.spec.ts",
-    "test:integration:wsteth-25x": "TEST_CHAIN=mainnet TENDERLY_CHAIN_ID=1 E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration tests/integration/leverage-tokens/mint/router.v2.mainnet.mint.spec.ts"
+    "test:integration:wsteth-25x": "TEST_CHAIN=mainnet TENDERLY_CHAIN_ID=1 E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration tests/integration/leverage-tokens/mint/router.v2.mainnet.mint.spec.ts",
+    "test:integration:redeem:wsteth-25x": "TEST_CHAIN=mainnet TENDERLY_CHAIN_ID=1 E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration tests/integration/leverage-tokens/redeem/router.v2.mainnet.redeem.spec.ts"
   },
   "dependencies": {
     "@lifi/wallet-management": "^3.17.3",
