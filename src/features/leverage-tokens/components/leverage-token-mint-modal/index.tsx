@@ -10,6 +10,7 @@ import {
   useWaitForTransactionReceipt,
 } from 'wagmi'
 import { parseMintedSharesFromReceipt } from '@/features/leverage-tokens/utils/receipt'
+import { invalidatePortfolioQueries } from '@/features/portfolio/utils/invalidation'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { captureTxError } from '@/lib/observability/sentry'
@@ -448,13 +449,24 @@ export function LeverageTokenMintModal({
           await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
         } catch {}
         try {
-          await invalidateLeverageTokenQueries(queryClient, {
-            token: leverageTokenAddress,
-            chainId: leverageTokenConfig.chainId,
-            ...(userAddress ? { owner: userAddress as `0x${string}` } : {}),
-            includeUser: true,
-            refetchType: 'active',
-          })
+          // Invalidate leverage-token and portfolio caches in parallel
+          await Promise.all([
+            invalidateLeverageTokenQueries(queryClient, {
+              token: leverageTokenAddress,
+              chainId: leverageTokenConfig.chainId,
+              ...(userAddress ? { owner: userAddress } : {}),
+              includeUser: true,
+              refetchType: 'active',
+            }),
+            userAddress
+              ? invalidatePortfolioQueries(queryClient, {
+                  address: userAddress,
+                  refetchType: 'active',
+                  includePerformance: true,
+                })
+              : Promise.resolve(),
+          ])
+
           refetchCollateralBalance?.()
           refetchLeverageTokenBalance?.()
         } catch {}

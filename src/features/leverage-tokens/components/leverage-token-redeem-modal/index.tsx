@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig, useWaitForTransactionReceipt } from 'wagmi'
 import { parseErc20ReceivedFromReceipt } from '@/features/leverage-tokens/utils/receipt'
+import { invalidatePortfolioQueries } from '@/features/portfolio/utils/invalidation'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
@@ -28,7 +29,7 @@ import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenUserMetrics } from '../../hooks/useLeverageTokenUserMetrics'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
-import { ltKeys } from '../../utils/queryKeys'
+import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
 import { ApproveStep } from '../leverage-token-mint-modal/ApproveStep'
 import { ConfirmStep } from './ConfirmStep'
 import { ErrorStep } from './ErrorStep'
@@ -591,26 +592,41 @@ export function LeverageTokenRedeemModal({
       return
     }
     if (redeemSuccess) {
-      const tokenSymbol = leverageTokenConfig.symbol
-      const amount = form.amount
-      const usdValue = parseFloat(form.amount) * (selectedOutputAsset.price || 0)
-      trackLeverageTokenRedeemed(tokenSymbol, amount, usdValue)
-      analytics.funnelStep('redeem_leverage_token', 'transaction_completed', 3)
+      void (async () => {
+        const tokenSymbol = leverageTokenConfig.symbol
+        const amount = form.amount
+        const usdValue = parseFloat(form.amount) * (selectedOutputAsset.price || 0)
+        trackLeverageTokenRedeemed(tokenSymbol, amount, usdValue)
+        analytics.funnelStep('redeem_leverage_token', 'transaction_completed', 3)
 
-      try {
-        refetchLeverageTokenBalance?.()
-        refetchCollateralTokenBalance?.()
-        refetchDebtTokenBalance?.()
-        queryClient.invalidateQueries({ queryKey: ltKeys.token(leverageTokenAddress) })
-        if (userAddress) {
-          queryClient.invalidateQueries({
-            queryKey: ltKeys.user(leverageTokenAddress, userAddress),
-          })
-        }
-      } catch {}
+        try {
+          // Invalidate leverage-token and portfolio caches in parallel
+          await Promise.all([
+            invalidateLeverageTokenQueries(queryClient, {
+              token: leverageTokenAddress,
+              chainId: leverageTokenConfig.chainId,
+              ...(userAddress ? { owner: userAddress } : {}),
+              includeUser: true,
+              refetchType: 'active',
+            }),
+            userAddress
+              ? invalidatePortfolioQueries(queryClient, {
+                  address: userAddress,
+                  refetchType: 'active',
+                  includePerformance: true,
+                })
+              : Promise.resolve(),
+          ])
 
-      // Success feedback is conveyed by the Success step UI
-      toSuccess()
+          // Refresh immediate wallet balances for UX
+          refetchLeverageTokenBalance?.()
+          refetchCollateralTokenBalance?.()
+          refetchDebtTokenBalance?.()
+        } catch {}
+
+        // Success feedback is conveyed by the Success step UI
+        toSuccess()
+      })()
     }
   }, [
     transactionHash,
@@ -630,6 +646,7 @@ export function LeverageTokenRedeemModal({
     analytics,
     toSuccess,
     toError,
+    leverageTokenConfig.chainId,
   ])
 
   // Handle retry from error state
