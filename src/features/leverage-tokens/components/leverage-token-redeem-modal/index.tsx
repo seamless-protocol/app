@@ -570,6 +570,15 @@ export function LeverageTokenRedeemModal({
     }
   }
 
+  // Handle execution hook errors
+  useEffect(() => {
+    if (exec.error && currentStep === 'pending') {
+      const errorMessage = exec.error.message || 'Redemption failed. Please try again.'
+      setError(errorMessage)
+      toError()
+    }
+  }, [exec.error, currentStep, toError])
+
   // Drive success/error once receipt resolves
   useEffect(() => {
     if (!transactionHash) return
