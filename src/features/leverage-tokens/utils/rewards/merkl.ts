@@ -71,8 +71,6 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
    */
   async fetchClaimableRewards(userAddress: Address): Promise<Array<BaseRewardClaimData>> {
     try {
-      // TEMPORARY: Hardcode test address for debugging
-      userAddress = '0xda7a1ab9Fbc0c41F0210F5CCEB56b0527B61Af5d' as Address
       // Fetch user rewards from Merkl API for all supported chains
       const userRewards = await this.fetchUserRewardsFromMerkl(userAddress, this.supportedChainIds)
 
