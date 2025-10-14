@@ -198,7 +198,7 @@ export async function planMintV2(params: {
     shares: final.shares,
   })
 
-  // Slippage is calculated wrt the ideal shares (follows underlying oracle of the LeverageToken)
+  // Slippage is calculated wrt the ideal shares
   const minShares = applySlippageFloor(ideal.idealShares, slippageBps)
   // TODO: Do we throw an error here if minShares > final.shares, that is caught so that the ui displays a warning
   // that the tx will likely revert due to slippage, so they should increase slippage?

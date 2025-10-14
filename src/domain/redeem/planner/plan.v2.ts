@@ -96,8 +96,7 @@ export async function planRedeemV2(params: {
     ...(managerAddress ? { managerAddress } : {}),
   })
 
-  // Amount of collateral the sender would receive if there is 0 slippage, based on the underlying oracle of the
-  // LeverageToken
+  // Amount of collateral the sender would receive if there is 0 slippage
   const [idealCollateralForSender, initialPreview] = await Promise.all([
     readLeverageManagerV2ConvertToAssets(config, {
       args: [token, sharesToRedeem],
