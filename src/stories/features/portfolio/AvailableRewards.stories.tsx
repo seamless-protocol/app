@@ -35,10 +35,10 @@ const handleClaim = () => {
 
 export const Default: Story = {
   args: {
-    tokenAddresses: ['USDC', 'WETH', 'WeETH', 'SEAM'],
-    accruingAmount: '$1,294.34',
     seamToken: '247.83',
-    protocolFees: '$156.42',
+    seamTokenUsd: '$1,294.34',
+    morphoToken: '12.45',
+    morphoTokenUsd: '$156.42',
     onClaim: handleClaim,
   },
 }

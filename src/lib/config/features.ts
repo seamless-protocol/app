@@ -16,7 +16,6 @@ export const features = {
   featuredTokensSection: import.meta.env['VITE_DISABLE_FEATURED_LEVERAGE_TOKENS'] !== 'true',
 
   // Portfolio Features
-  availableRewards: import.meta.env['VITE_DISABLE_AVAILABLE_REWARDS'] !== 'true',
   seamStaking: import.meta.env['VITE_DISABLE_SEAM_STAKING'] !== 'true',
 
   // Testing

@@ -1,8 +1,10 @@
 import React from 'react'
 import {
   CBBTCLogo,
+  MorphoLogo,
   RLPLogo,
   rETHLogo,
+  SeamlessLogo,
   USDCLogo,
   WETHLogo,
   weETHLogo,
@@ -26,6 +28,10 @@ export function getTokenLogo(asset: string) {
       return rETHLogo
     case 'RLP':
       return RLPLogo
+    case 'SEAM':
+      return SeamlessLogo
+    case 'MORPHO':
+      return MorphoLogo
     default:
       return null
   }
