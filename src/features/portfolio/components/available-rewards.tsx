@@ -7,6 +7,8 @@ interface AvailableRewardsProps {
   tokenAddresses: Array<string>
   accruingAmount: string
   seamToken: string
+  claimableSoonAmount?: string | undefined
+  claimableSoonTokens?: string | undefined
   protocolFees: string
   onClaim: () => void
   className?: string
@@ -16,6 +18,8 @@ export function AvailableRewards({
   tokenAddresses,
   accruingAmount,
   seamToken,
+  claimableSoonAmount,
+  claimableSoonTokens,
   protocolFees,
   onClaim,
   className,
@@ -44,7 +48,10 @@ export function AvailableRewards({
                     style={{ zIndex: 10 + index }}
                   >
                     <AssetDisplay
-                      asset={{ symbol: tokenAddress, name: tokenAddress }}
+                      asset={{
+                        symbol: tokenAddress,
+                        name: tokenAddress,
+                      }}
                       size="md"
                       variant="logo-only"
                     />
@@ -60,6 +67,17 @@ export function AvailableRewards({
             <span className="text-secondary-foreground">SEAM Tokens</span>
             <span className="text-foreground font-semibold">{seamToken} SEAM</span>
           </div>
+
+          {/* Claimable Soon */}
+          {claimableSoonAmount && claimableSoonTokens && (
+            <div className="flex justify-between items-center py-2">
+              <span className="text-secondary-foreground">Claimable Soon</span>
+              <div className="text-right">
+                <div className="text-foreground font-semibold">{claimableSoonAmount}</div>
+                <div className="text-xs text-muted-foreground">{claimableSoonTokens} SEAM</div>
+              </div>
+            </div>
+          )}
 
           {/* Protocol Fees */}
           <div className="flex justify-between items-center py-2">

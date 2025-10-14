@@ -54,10 +54,42 @@ function PortfolioPage() {
     positionsAPYLoading,
   } = usePortfolioWithTotalValue()
   const performanceData = usePortfolioPerformance()
-  const { isLoading: rewardsLoading } = usePortfolioRewards()
+  const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
 
-  // TODO: Use rewardsData when rewards feature is implemented
-  // console.log('Rewards data:', { rewardsData, rewardsLoading })
+  // Calculate total SEAM tokens from rewards (claimable now)
+  const totalSeamTokens =
+    rewardsData?.claimableRewards
+      ?.filter((r) => r.tokenSymbol === 'SEAM')
+      ?.reduce((total, reward) => {
+        const rawAmount = BigInt(reward.claimableAmount)
+        const decimals = reward.tokenDecimals
+        const divisor = BigInt(10 ** decimals)
+        const humanReadableAmount = Number(rawAmount) / Number(divisor)
+        return total + humanReadableAmount
+      }, 0) || 0
+
+  // Calculate "Claimable Soon" amounts from pending rewards
+  const claimableSoonData = rewardsData?.claimableRewards
+    ?.filter((r) => r.tokenSymbol === 'SEAM')
+    ?.reduce(
+      (total, reward) => {
+        const pendingAmount = BigInt((reward.metadata as any)?.pendingAmount || '0')
+        const decimals = reward.tokenDecimals
+        const divisor = BigInt(10 ** decimals)
+        const humanReadableAmount = Number(pendingAmount) / Number(divisor)
+        const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+        const usdValue = humanReadableAmount * tokenPrice
+
+        return {
+          tokens: total.tokens + humanReadableAmount,
+          usdValue: total.usdValue + usdValue,
+        }
+      },
+      { tokens: 0, usdValue: 0 },
+    ) || { tokens: 0, usdValue: 0 }
+
+  // Check if user has any claimable rewards
+  const hasClaimableRewards = rewardsData?.hasClaimableRewards || false
 
   const { data: stakingData, isLoading: stakingLoading } = usePortfolioStaking()
 
@@ -238,7 +270,10 @@ function PortfolioPage() {
   }
 
   const handleClaimRewards = () => {
-    // TODO: Implement claim rewards
+    // Redirect to Merkl dashboard for claiming rewards
+    if (userAddress) {
+      window.open(`https://app.merkl.xyz/users/${userAddress}`, '_blank')
+    }
   }
 
   const handleStake = () => {
@@ -401,14 +436,14 @@ function PortfolioPage() {
         </motion.section>
 
         {/* Available Rewards & Staking Section */}
-        {(features.availableRewards || features.seamStaking) && (
+        {(hasClaimableRewards || features.seamStaking) && (
           <motion.section
             aria-labelledby={rewardsHeadingId}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
             className={`grid gap-6 ${
-              features.availableRewards && features.seamStaking
+              hasClaimableRewards && features.seamStaking
                 ? 'grid-cols-1 lg:grid-cols-2'
                 : 'grid-cols-1'
             }`}
@@ -416,12 +451,22 @@ function PortfolioPage() {
             <h2 id={rewardsHeadingId} className="sr-only">
               Rewards and Staking
             </h2>
-            {features.availableRewards && (
+            {hasClaimableRewards && (
               <div className="relative">
                 <AvailableRewards
-                  tokenAddresses={[]}
-                  accruingAmount={'$0.00'}
-                  seamToken={'$0.00'}
+                  tokenAddresses={rewardsData?.claimableRewards?.map((r) => r.tokenSymbol) || []}
+                  accruingAmount={rewardsData?.totalClaimableAmount || '$0.00'}
+                  seamToken={totalSeamTokens.toFixed(3)}
+                  claimableSoonAmount={
+                    claimableSoonData.usdValue > 0
+                      ? claimableSoonData.usdValue < 0.01
+                        ? '< $0.01'
+                        : `$${claimableSoonData.usdValue.toFixed(2)}`
+                      : undefined
+                  }
+                  claimableSoonTokens={
+                    claimableSoonData.tokens > 0 ? claimableSoonData.tokens.toFixed(6) : undefined
+                  }
                   protocolFees={'$0.00'}
                   onClaim={handleClaimRewards}
                 />

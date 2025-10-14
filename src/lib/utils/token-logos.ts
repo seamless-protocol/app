@@ -3,6 +3,7 @@ import {
   CBBTCLogo,
   RLPLogo,
   rETHLogo,
+  SeamlessLogo,
   USDCLogo,
   WETHLogo,
   weETHLogo,
@@ -26,6 +27,8 @@ export function getTokenLogo(asset: string) {
       return rETHLogo
     case 'RLP':
       return RLPLogo
+    case 'SEAM':
+      return SeamlessLogo
     default:
       return null
   }

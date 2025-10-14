@@ -33,12 +33,43 @@ export function usePortfolioRewards() {
       // Test account: 0x4F2BF7469Bc38d1aE779b1F4affC588f35E60973
       const claimableRewards = await fetchClaimableRewards(address)
 
-      // Calculate totals for UI display
-      const totalClaimableAmount = claimableRewards
-        .reduce((total, reward) => {
-          return total + BigInt(reward.claimableAmount)
-        }, 0n)
-        .toString()
+      // Convert the final total to human-readable format using real token prices
+      const totalClaimableAmountHuman = claimableRewards.reduce((total, reward) => {
+        const rawAmount = BigInt(reward.claimableAmount)
+        const decimals = reward.tokenDecimals
+        const divisor = BigInt(10 ** decimals)
+        const humanReadableAmount = Number(rawAmount) / Number(divisor)
+
+        // Get token price from metadata (if available) or use $1.00 as fallback
+        const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+        const usdValue = humanReadableAmount * tokenPrice
+
+        return total + usdValue
+      }, 0)
+
+      // Format with 3 significant digits
+      const formatToSignificantDigits = (value: number): string => {
+        if (value === 0) return '$0.00'
+
+        // Convert to scientific notation to get the exponent
+        const exp = Math.floor(Math.log10(Math.abs(value)))
+        const significantDigits = 3
+        const multiplier = 10 ** (significantDigits - 1 - exp)
+        const rounded = Math.round(value * multiplier) / multiplier
+
+        // Format with appropriate decimal places
+        if (exp >= 0) {
+          return `$${rounded.toFixed(2)}`
+        } else if (exp >= -2) {
+          return `$${rounded.toFixed(4)}`
+        } else if (exp >= -4) {
+          return `$${rounded.toFixed(6)}`
+        } else {
+          return `$${rounded.toExponential(2)}`
+        }
+      }
+
+      const formattedAmount = formatToSignificantDigits(totalClaimableAmountHuman)
 
       const totalClaimedAmount = claimableRewards
         .reduce((total, reward) => {
@@ -69,7 +100,7 @@ export function usePortfolioRewards() {
 
       return {
         claimableRewards,
-        totalClaimableAmount,
+        totalClaimableAmount: formattedAmount,
         totalClaimedAmount,
         totalEarnedAmount,
         tokenCount,

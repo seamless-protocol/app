@@ -17,7 +17,6 @@ interface ImportMetaEnv {
   readonly VITE_DISABLE_STAKING?: string
   readonly VITE_DISABLE_GOVERNANCE?: string
   readonly VITE_DISABLE_FEATURED_LEVERAGE_TOKENS?: string
-  readonly VITE_DISABLE_AVAILABLE_REWARDS?: string
   readonly VITE_DISABLE_SEAM_STAKING?: string
 
   // API endpoint overrides (optional - defaults in config)

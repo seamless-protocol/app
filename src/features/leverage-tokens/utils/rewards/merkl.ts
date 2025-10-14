@@ -2,7 +2,6 @@ import type { Address, PublicClient, WalletClient } from 'viem'
 import { merklDistributorAbi } from '@/lib/contracts/abis/merklDistributor'
 import { createLogger } from '@/lib/logger'
 import { CHAIN_IDS } from '@/lib/utils/chain-logos'
-import { getAllLeverageTokenConfigs } from '../../leverageTokens.config'
 import type { BaseRewardClaimData, RewardClaimFetcher } from './types'
 
 const logger = createLogger('merkl-rewards')
@@ -44,8 +43,8 @@ interface MerklUserRewards {
 /**
  * Merkl rewards claim provider implementation
  *
- * This provider fetches and claims rewards from Merkl for Seamless leverage tokens.
- * It filters rewards to only include those related to Seamless leverage tokens.
+ * This provider fetches and claims rewards from Merkl for Seamless protocol.
+ * It filters rewards to include both leverage token rewards AND SEAM protocol token rewards.
  */
 export class MerklRewardClaimProvider implements RewardClaimFetcher {
   protocolId = 'merkl'
@@ -68,10 +67,12 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
 
   /**
    * Fetch claimable rewards for a user from Merkl
-   * Filters to only include rewards related to Seamless leverage tokens
+   * Filters to include both leverage token rewards AND SEAM protocol token rewards
    */
   async fetchClaimableRewards(userAddress: Address): Promise<Array<BaseRewardClaimData>> {
     try {
+      // TEMPORARY: Hardcode test address for debugging
+      userAddress = '0xda7a1ab9Fbc0c41F0210F5CCEB56b0527B61Af5d' as Address
       // Fetch user rewards from Merkl API for all supported chains
       const userRewards = await this.fetchUserRewardsFromMerkl(userAddress, this.supportedChainIds)
 
@@ -92,8 +93,11 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
 
           // Only include rewards that have either pending or claimed amounts
           if (hasClaimable || hasClaimed) {
+            // Calculate total claimable amount (total earned - already claimed)
+            const totalClaimable = BigInt(reward.amount) - BigInt(reward.claimed)
+
             const claimData: BaseRewardClaimData = {
-              claimableAmount: reward.pending, // Use pending amount as claimable
+              claimableAmount: totalClaimable.toString(), // Use total claimable amount
               tokenAddress: reward.token.address as Address,
               tokenSymbol: reward.token.symbol,
               tokenDecimals: reward.token.decimals,
@@ -106,6 +110,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
                 pendingAmount: reward.pending, // Amount available to claim
                 hasClaimable, // Boolean for easy UI checks
                 hasClaimed, // Boolean for easy UI checks
+                tokenPrice: (reward.token as any).price, // Token price in USD
               },
             }
 
@@ -114,17 +119,9 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
         }
       }
 
-      logger.info('Found rewards', {
-        totalRewards: allRewards.length,
-        userAddress,
-      })
       // Filter to only include Seamless-related rewards
-      const seamlessRewards = this.filterSeamlessRewards(allRewards)
+      const seamlessRewards = await this.filterSeamlessRewards(allRewards)
 
-      logger.info('Found Seamless-related claimable rewards', {
-        seamlessRewards: seamlessRewards.length,
-        userAddress,
-      })
       return seamlessRewards
     } catch (error) {
       logger.error('Error fetching claimable rewards', { error, userAddress })
@@ -254,18 +251,63 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
   }
 
   /**
-   * Filter rewards to only include those related to Seamless leverage tokens
+   * Filter rewards to include both leverage token rewards AND protocol token rewards
+   * This includes:
+   * 1. Leverage token addresses (original logic) - rewards for holding leverage tokens
+   * 2. SEAM tokens (new logic) - Seamless protocol rewards
    */
-  private filterSeamlessRewards(rewards: Array<BaseRewardClaimData>): Array<BaseRewardClaimData> {
-    const leverageTokenConfigs = getAllLeverageTokenConfigs()
+  private async filterSeamlessRewards(
+    rewards: Array<BaseRewardClaimData>,
+  ): Promise<Array<BaseRewardClaimData>> {
+    // Get leverage token addresses (original logic)
+    // Import dynamically to avoid circular dependencies
+    const leverageTokenConfigs = await this.getLeverageTokenConfigs()
     const leverageTokenAddresses = new Set(
-      leverageTokenConfigs.map((config) => config.address.toLowerCase()),
+      leverageTokenConfigs.map((config: any) => config.address.toLowerCase()),
     )
 
-    return rewards.filter((reward) => {
-      // Check if this reward's token address matches any Seamless leverage token
-      return leverageTokenAddresses.has(reward.tokenAddress.toLowerCase())
+    // Get SEAM token addresses from contract addresses
+    const seamTokenAddresses = new Set<string>()
+
+    // Add SEAM token addresses for supported chains
+    for (const chainId of this.supportedChainIds) {
+      const addresses = await this.getContractAddresses(chainId)
+      if (addresses?.seamlessToken) {
+        seamTokenAddresses.add(addresses.seamlessToken.toLowerCase())
+      }
+      if (addresses?.stakedSeam) {
+        seamTokenAddresses.add(addresses.stakedSeam.toLowerCase())
+      }
+    }
+
+    // Combine all allowed addresses: leverage tokens + SEAM tokens
+    const allowedTokenAddresses = new Set([...leverageTokenAddresses, ...seamTokenAddresses])
+
+    const filteredRewards = rewards.filter((reward) => {
+      // Check if this reward's token address matches leverage tokens OR SEAM tokens
+      const isAllowed = allowedTokenAddresses.has(reward.tokenAddress.toLowerCase())
+      return isAllowed
     })
+
+    return filteredRewards
+  }
+
+  /**
+   * Helper method to get contract addresses for a specific chain
+   */
+  private async getContractAddresses(chainId: number) {
+    // Import the addresses dynamically to avoid circular dependencies
+    const { getContractAddresses } = await import('@/lib/contracts/addresses')
+    return getContractAddresses(chainId)
+  }
+
+  /**
+   * Helper method to get leverage token configs
+   */
+  private async getLeverageTokenConfigs() {
+    // Import the configs dynamically to avoid circular dependencies
+    const { getAllLeverageTokenConfigs } = await import('../../leverageTokens.config')
+    return getAllLeverageTokenConfigs()
   }
 
   /**
