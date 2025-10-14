@@ -59,6 +59,8 @@ export function useCollateralToDebtQuote({
         routerAddress,
         swap,
         slippageBps,
+        // Align aggregator expectations: router executes the swap on-chain
+        fromAddress: routerAddress as Address,
         getPublicClient,
       })
       return { status: 'ready' as QuoteStatus, quote, error: undefined }
