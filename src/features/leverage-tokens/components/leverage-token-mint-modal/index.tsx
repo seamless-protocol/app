@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { portfolioKeys } from '@/features/portfolio/utils/queryKeys'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
@@ -455,9 +456,41 @@ export function LeverageTokenMintModal({
             includeUser: true,
             refetchType: 'active',
           })
+          
+          // Invalidate and refetch all portfolio queries to refresh portfolio data
+          if (userAddress) {
+            // Add a delay to ensure blockchain data has propagated
+            setTimeout(() => {
+              console.log('🔄 Refreshing portfolio data after mint...')
+              // Invalidate all portfolio-related queries
+              queryClient.invalidateQueries({ queryKey: ['portfolio'] })
+              queryClient.invalidateQueries({ queryKey: portfolioKeys.all })
+              queryClient.invalidateQueries({ queryKey: portfolioKeys.data(userAddress) })
+              queryClient.invalidateQueries({ queryKey: portfolioKeys.rewards(userAddress) })
+              queryClient.invalidateQueries({ queryKey: portfolioKeys.staking(userAddress) })
+              
+              // Force refetch portfolio data immediately
+              queryClient.refetchQueries({ queryKey: portfolioKeys.data(userAddress) })
+              queryClient.refetchQueries({ queryKey: portfolioKeys.rewards(userAddress) })
+              queryClient.refetchQueries({ queryKey: portfolioKeys.staking(userAddress) })
+              
+              // Additional aggressive cache clearing
+              queryClient.removeQueries({ queryKey: ['portfolio'] })
+              queryClient.removeQueries({ queryKey: portfolioKeys.all })
+              
+              // Force immediate refetch after cache clear
+              queryClient.refetchQueries({ queryKey: portfolioKeys.data(userAddress) })
+              queryClient.refetchQueries({ queryKey: portfolioKeys.rewards(userAddress) })
+              queryClient.refetchQueries({ queryKey: portfolioKeys.staking(userAddress) })
+              console.log('✅ Portfolio refresh completed')
+            }, 3000)
+          }
+          
           refetchCollateralBalance?.()
           refetchLeverageTokenBalance?.()
-        } catch {}
+        } catch (error) {
+          console.error('Error refreshing data after mint:', error)
+        }
         const tokenSymbol = leverageTokenConfig.symbol
         const amount = form.amount
         const usdValue = (parseFloat(form.amount || '0') || 0) * (selectedToken.price || 0)

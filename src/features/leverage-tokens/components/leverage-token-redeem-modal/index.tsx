@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { portfolioKeys } from '@/features/portfolio/utils/queryKeys'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig, useWaitForTransactionReceipt } from 'wagmi'
@@ -595,7 +596,28 @@ export function LeverageTokenRedeemModal({
             queryKey: ltKeys.user(leverageTokenAddress, userAddress),
           })
         }
-      } catch {}
+        
+        // Refresh portfolio data after successful transaction
+        if (userAddress) {
+          setTimeout(() => {
+            console.log('🔄 Refreshing portfolio data after redeem...')
+            // Invalidate all portfolio queries
+            queryClient.invalidateQueries({ queryKey: portfolioKeys.all })
+            queryClient.invalidateQueries({ queryKey: portfolioKeys.data(userAddress) })
+            queryClient.invalidateQueries({ queryKey: portfolioKeys.rewards(userAddress) })
+            queryClient.invalidateQueries({ queryKey: portfolioKeys.staking(userAddress) })
+            
+            // Force refetch with cache clearing
+            queryClient.removeQueries({ queryKey: portfolioKeys.all })
+            queryClient.refetchQueries({ queryKey: portfolioKeys.data(userAddress) })
+            queryClient.refetchQueries({ queryKey: portfolioKeys.rewards(userAddress) })
+            queryClient.refetchQueries({ queryKey: portfolioKeys.staking(userAddress) })
+            console.log('✅ Portfolio refresh completed')
+          }, 3000)
+        }
+      } catch (error) {
+        console.error('Error refreshing data after redeem:', error)
+      }
 
       // Success feedback is conveyed by the Success step UI
       toSuccess()
