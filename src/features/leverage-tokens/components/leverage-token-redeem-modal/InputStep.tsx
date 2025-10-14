@@ -271,7 +271,7 @@ export function InputStep({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <label htmlFor={redeemAmountId} className="text-sm font-medium text-foreground">
-            Redemption Amount (Tokens)
+            Redemption Amount
           </label>
           <div className="text-xs text-secondary-foreground">
             Available:{' '}
@@ -310,7 +310,9 @@ export function InputStep({
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent">
                 <TrendingDown className="h-3 w-3 text-brand-purple" />
               </div>
-              <span className="text-sm font-medium text-foreground">Tokens</span>
+              <span className="text-sm font-medium text-foreground">
+                {leverageTokenConfig.symbol}
+              </span>
             </div>
           </div>
 
