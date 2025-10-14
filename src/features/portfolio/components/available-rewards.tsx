@@ -4,29 +4,31 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface AvailableRewardsProps {
-  tokenAddresses: Array<string>
-  accruingAmount: string
   seamToken: string
+  seamTokenUsd: string
+  morphoToken?: string | undefined
+  morphoTokenUsd?: string | undefined
   claimableSoonAmount?: string | undefined
-  claimableSoonTokens?: string | undefined
-  protocolFees: string
+  claimableSoonSeamTokens?: string | undefined
+  claimableSoonMorphoTokens?: string | undefined
   onClaim: () => void
   className?: string
 }
 
 export function AvailableRewards({
-  tokenAddresses,
-  accruingAmount,
   seamToken,
+  seamTokenUsd,
+  morphoToken,
+  morphoTokenUsd,
   claimableSoonAmount,
-  claimableSoonTokens,
-  protocolFees,
+  claimableSoonSeamTokens,
+  claimableSoonMorphoTokens,
   onClaim,
   className,
 }: AvailableRewardsProps) {
   return (
     <Card
-      className={`bg-card border-border hover:bg-accent transition-all duration-300 ${className}`}
+      className={`bg-card border-border hover:bg-accent transition-all duration-300 gap-0 ${className}`}
     >
       <CardHeader className="pb-4">
         <CardTitle className="text-foreground flex items-center">
@@ -36,54 +38,86 @@ export function AvailableRewards({
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-4">
-          {/* Accruing Rewards with Token Logos */}
-          <div className="flex justify-between items-center py-2">
-            <span className="text-secondary-foreground">Accruing</span>
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center relative">
-                {tokenAddresses.map((tokenAddress, index) => (
-                  <div
-                    key={tokenAddress}
-                    className={`w-6 h-6 rounded-full relative ${index > 0 ? '-ml-2' : ''}`}
-                    style={{ zIndex: 10 + index }}
-                  >
-                    <AssetDisplay
-                      asset={{
-                        symbol: tokenAddress,
-                        name: tokenAddress,
-                      }}
-                      size="md"
-                      variant="logo-only"
-                    />
-                  </div>
-                ))}
-              </div>
-              <span className="text-foreground font-semibold">{accruingAmount}</span>
-            </div>
-          </div>
-
           {/* SEAM Tokens */}
           <div className="flex justify-between items-center py-2">
             <span className="text-secondary-foreground">SEAM Tokens</span>
-            <span className="text-foreground font-semibold">{seamToken} SEAM</span>
+            <div className="text-right">
+              <div className="flex items-center justify-end gap-1 text-foreground font-semibold">
+                <AssetDisplay
+                  asset={{
+                    symbol: 'SEAM',
+                    name: 'SEAM',
+                  }}
+                  size="sm"
+                  variant="logo-only"
+                />
+                {seamToken} SEAM
+              </div>
+              <div className="text-sm text-muted-foreground">{seamTokenUsd}</div>
+            </div>
           </div>
 
-          {/* Claimable Soon */}
-          {claimableSoonAmount && claimableSoonTokens && (
+          {/* MORPHO Tokens */}
+          {morphoToken && (
             <div className="flex justify-between items-center py-2">
-              <span className="text-secondary-foreground">Claimable Soon</span>
+              <span className="text-secondary-foreground">MORPHO Tokens</span>
               <div className="text-right">
-                <div className="text-foreground font-semibold">{claimableSoonAmount}</div>
-                <div className="text-xs text-muted-foreground">{claimableSoonTokens} SEAM</div>
+                <div className="flex items-center justify-end gap-1 text-foreground font-semibold">
+                  <AssetDisplay
+                    asset={{
+                      symbol: 'MORPHO',
+                      name: 'MORPHO',
+                    }}
+                    size="sm"
+                    variant="logo-only"
+                  />
+                  {morphoToken} MORPHO
+                </div>
+                <div className="text-sm text-muted-foreground">{morphoTokenUsd}</div>
               </div>
             </div>
           )}
 
-          {/* Protocol Fees */}
-          <div className="flex justify-between items-center py-2">
-            <span className="text-secondary-foreground">Protocol Fees</span>
-            <span className="text-foreground font-semibold">{protocolFees}</span>
-          </div>
+          {/* Claimable Soon */}
+          {claimableSoonAmount && (claimableSoonSeamTokens || claimableSoonMorphoTokens) && (
+            <div className="flex justify-between items-center py-2">
+              <span className="text-secondary-foreground">Claimable Soon</span>
+              <div className="text-right">
+                <div className="text-foreground font-semibold">{claimableSoonAmount}</div>
+                <div className="flex items-center gap-2">
+                  {claimableSoonSeamTokens && (
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <AssetDisplay
+                        asset={{
+                          symbol: 'SEAM',
+                          name: 'SEAM',
+                        }}
+                        size="sm"
+                        variant="logo-only"
+                      />
+                      {claimableSoonSeamTokens} SEAM
+                    </div>
+                  )}
+                  {claimableSoonSeamTokens && claimableSoonMorphoTokens && (
+                    <span className="text-muted-foreground">+</span>
+                  )}
+                  {claimableSoonMorphoTokens && (
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <AssetDisplay
+                        asset={{
+                          symbol: 'MORPHO',
+                          name: 'MORPHO',
+                        }}
+                        size="sm"
+                        variant="logo-only"
+                      />
+                      {claimableSoonMorphoTokens} MORPHO
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Claim Button */}
           <Button onClick={onClaim} variant="gradient" size="lg" className="w-full mt-2">

@@ -56,20 +56,48 @@ function PortfolioPage() {
   const performanceData = usePortfolioPerformance()
   const { data: rewardsData, isLoading: rewardsLoading } = usePortfolioRewards()
 
-  // Calculate total SEAM tokens from rewards (claimable now)
-  const totalSeamTokens =
-    rewardsData?.claimableRewards
-      ?.filter((r) => r.tokenSymbol === 'SEAM')
-      ?.reduce((total, reward) => {
-        const rawAmount = BigInt(reward.claimableAmount)
-        const decimals = reward.tokenDecimals
-        const divisor = BigInt(10 ** decimals)
-        const humanReadableAmount = Number(rawAmount) / Number(divisor)
-        return total + humanReadableAmount
-      }, 0) || 0
+  // Calculate total SEAM and MORPHO tokens from rewards (claimable now)
+  const seamRewards = rewardsData?.claimableRewards?.filter((r) => r.tokenSymbol === 'SEAM') || []
+  const morphoRewards =
+    rewardsData?.claimableRewards?.filter((r) => r.tokenSymbol === 'MORPHO') || []
 
-  // Calculate "Claimable Soon" amounts from pending rewards
-  const claimableSoonData = rewardsData?.claimableRewards
+  const totalSeamTokens = seamRewards.reduce((total, reward) => {
+    const rawAmount = BigInt(reward.claimableAmount)
+    const decimals = reward.tokenDecimals
+    const divisor = BigInt(10 ** decimals)
+    const humanReadableAmount = Number(rawAmount) / Number(divisor)
+    return total + humanReadableAmount
+  }, 0)
+
+  const totalMorphoTokens = morphoRewards.reduce((total, reward) => {
+    const rawAmount = BigInt(reward.claimableAmount)
+    const decimals = reward.tokenDecimals
+    const divisor = BigInt(10 ** decimals)
+    const humanReadableAmount = Number(rawAmount) / Number(divisor)
+    return total + humanReadableAmount
+  }, 0)
+
+  // Calculate USD values for each token
+  const seamUsdValue = seamRewards.reduce((total, reward) => {
+    const rawAmount = BigInt(reward.claimableAmount)
+    const decimals = reward.tokenDecimals
+    const divisor = BigInt(10 ** decimals)
+    const humanReadableAmount = Number(rawAmount) / Number(divisor)
+    const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+    return total + humanReadableAmount * tokenPrice
+  }, 0)
+
+  const morphoUsdValue = morphoRewards.reduce((total, reward) => {
+    const rawAmount = BigInt(reward.claimableAmount)
+    const decimals = reward.tokenDecimals
+    const divisor = BigInt(10 ** decimals)
+    const humanReadableAmount = Number(rawAmount) / Number(divisor)
+    const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+    return total + humanReadableAmount * tokenPrice
+  }, 0)
+
+  // Calculate "Claimable Soon" amounts from pending rewards (SEAM + MORPHO)
+  const claimableSoonSeam = rewardsData?.claimableRewards
     ?.filter((r) => r.tokenSymbol === 'SEAM')
     ?.reduce(
       (total, reward) => {
@@ -79,14 +107,31 @@ function PortfolioPage() {
         const humanReadableAmount = Number(pendingAmount) / Number(divisor)
         const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
         const usdValue = humanReadableAmount * tokenPrice
-
-        return {
-          tokens: total.tokens + humanReadableAmount,
-          usdValue: total.usdValue + usdValue,
-        }
+        return { tokens: total.tokens + humanReadableAmount, usdValue: total.usdValue + usdValue }
       },
       { tokens: 0, usdValue: 0 },
     ) || { tokens: 0, usdValue: 0 }
+
+  const claimableSoonMorpho = rewardsData?.claimableRewards
+    ?.filter((r) => r.tokenSymbol === 'MORPHO')
+    ?.reduce(
+      (total, reward) => {
+        const pendingAmount = BigInt((reward.metadata as any)?.pendingAmount || '0')
+        const decimals = reward.tokenDecimals
+        const divisor = BigInt(10 ** decimals)
+        const humanReadableAmount = Number(pendingAmount) / Number(divisor)
+        const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+        const usdValue = humanReadableAmount * tokenPrice
+        return { tokens: total.tokens + humanReadableAmount, usdValue: total.usdValue + usdValue }
+      },
+      { tokens: 0, usdValue: 0 },
+    ) || { tokens: 0, usdValue: 0 }
+
+  // Combined totals for display
+  const claimableSoonData = {
+    tokens: claimableSoonSeam.tokens + claimableSoonMorpho.tokens,
+    usdValue: claimableSoonSeam.usdValue + claimableSoonMorpho.usdValue,
+  }
 
   // Check if user has any claimable rewards
   const hasClaimableRewards = rewardsData?.hasClaimableRewards || false
@@ -454,9 +499,16 @@ function PortfolioPage() {
             {hasClaimableRewards && (
               <div className="relative">
                 <AvailableRewards
-                  tokenAddresses={rewardsData?.claimableRewards?.map((r) => r.tokenSymbol) || []}
-                  accruingAmount={rewardsData?.totalClaimableAmount || '$0.00'}
                   seamToken={totalSeamTokens.toFixed(3)}
+                  seamTokenUsd={seamUsdValue < 0.01 ? '< $0.01' : `$${seamUsdValue.toFixed(2)}`}
+                  morphoToken={totalMorphoTokens > 0 ? totalMorphoTokens.toFixed(3) : undefined}
+                  morphoTokenUsd={
+                    totalMorphoTokens > 0
+                      ? morphoUsdValue < 0.01
+                        ? '< $0.01'
+                        : `$${morphoUsdValue.toFixed(2)}`
+                      : undefined
+                  }
                   claimableSoonAmount={
                     claimableSoonData.usdValue > 0
                       ? claimableSoonData.usdValue < 0.01
@@ -464,10 +516,14 @@ function PortfolioPage() {
                         : `$${claimableSoonData.usdValue.toFixed(2)}`
                       : undefined
                   }
-                  claimableSoonTokens={
-                    claimableSoonData.tokens > 0 ? claimableSoonData.tokens.toFixed(6) : undefined
+                  claimableSoonSeamTokens={
+                    claimableSoonSeam.tokens > 0 ? claimableSoonSeam.tokens.toFixed(6) : undefined
                   }
-                  protocolFees={'$0.00'}
+                  claimableSoonMorphoTokens={
+                    claimableSoonMorpho.tokens > 0
+                      ? claimableSoonMorpho.tokens.toFixed(6)
+                      : undefined
+                  }
                   onClaim={handleClaimRewards}
                 />
                 {rewardsLoading && (

@@ -251,10 +251,11 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
   }
 
   /**
-   * Filter rewards to include both leverage token rewards AND protocol token rewards
+   * Filter rewards to include leverage token rewards, SEAM tokens, and MORPHO tokens
    * This includes:
-   * 1. Leverage token addresses (original logic) - rewards for holding leverage tokens
-   * 2. SEAM tokens (new logic) - Seamless protocol rewards
+   * 1. Leverage token addresses - rewards for holding leverage tokens
+   * 2. SEAM tokens - Seamless protocol rewards
+   * 3. MORPHO tokens - Morpho protocol rewards
    */
   private async filterSeamlessRewards(
     rewards: Array<BaseRewardClaimData>,
@@ -280,8 +281,16 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
       }
     }
 
-    // Combine all allowed addresses: leverage tokens + SEAM tokens
-    const allowedTokenAddresses = new Set([...leverageTokenAddresses, ...seamTokenAddresses])
+    // Add MORPHO token addresses (hardcoded for now)
+    const morphoTokenAddresses = new Set<string>()
+    morphoTokenAddresses.add('0xBAa5CC21fd487B8Fcc2F632f3F4E8D37262a0842'.toLowerCase())
+
+    // Combine all allowed addresses: leverage tokens + SEAM tokens + MORPHO tokens
+    const allowedTokenAddresses = new Set([
+      ...leverageTokenAddresses,
+      ...seamTokenAddresses,
+      ...morphoTokenAddresses,
+    ])
 
     const filteredRewards = rewards.filter((reward) => {
       // Check if this reward's token address matches leverage tokens OR SEAM tokens
