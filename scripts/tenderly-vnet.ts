@@ -12,6 +12,7 @@ export interface VNetConfig {
 export interface VNetResult {
   id: string
   rpcUrl: string
+  adminRpcUrl: string
 }
 
 /** Create a Tenderly VirtualNet (recommended for CI) */
@@ -57,15 +58,22 @@ export async function createVNet({
   const json = await res.json().catch(() => ({}))
   const id = json.id || json.virtual_network?.id || json.vnet?.id
   let rpcUrl = json.rpc_url || json.endpoints?.rpc || json.virtual_network?.rpc_url
-  if (!rpcUrl && Array.isArray(json.rpcs)) {
+  let adminRpcUrl = rpcUrl
+
+  if (Array.isArray(json.rpcs)) {
     const admin = json.rpcs.find((r: any) => r?.name?.toLowerCase?.().includes('admin') && r.url)
     const pub = json.rpcs.find((r: any) => r?.name?.toLowerCase?.().includes('public') && r.url)
-    rpcUrl = admin?.url || pub?.url || json.rpcs[0]?.url
+
+    // Prefer public RPC for standard operations
+    rpcUrl = pub?.url || admin?.url || json.rpcs[0]?.url || rpcUrl
+    // Use admin RPC for privileged operations (tenderly_setBalance, etc.)
+    adminRpcUrl = admin?.url || pub?.url || json.rpcs[0]?.url || rpcUrl
   }
+
   if (!id || !rpcUrl) {
     throw new Error(`VNet response missing id/rpc_url: ${JSON.stringify(json)}`)
   }
-  return { id, rpcUrl }
+  return { id, rpcUrl, adminRpcUrl }
 }
 
 export async function deleteVNet({ account, project, accessKey, token, id }: VNetConfig & { id: string }): Promise<void> {

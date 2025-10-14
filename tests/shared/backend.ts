@@ -55,7 +55,9 @@ const STATIC_ENDPOINTS: Record<
 }
 
 const DEFAULT_CHAIN: ChainKey = 'base'
-const DEFAULT_MODE: BackendMode = 'tenderly-static'
+// Prefer JIT Tenderly forks by default for isolation and fresh state.
+// Falls back to static endpoints when a JIT RPC isn't provided.
+const DEFAULT_MODE: BackendMode = 'tenderly-jit'
 const DEFAULT_ANVIL_RPC_URL = anvil.rpcUrls.default.http[0]
 
 const CHAIN_ALIAS_MAP: Record<string, ChainKey> = {
@@ -95,7 +97,18 @@ async function resolveBackendInternal(
     case 'tenderly-static':
       return resolveStaticBackend({ chainKey, scenario }, allowFallback, options)
     case 'tenderly-jit':
-      return resolveJitBackend({ chainKey, scenario })
+      try {
+        return await resolveJitBackend({ chainKey, scenario })
+      } catch (error) {
+        if (allowFallback) {
+          console.warn(
+            '[resolveBackend] JIT Tenderly RPC unavailable, falling back to static VNet',
+            composeErrorDetails(error),
+          )
+          return resolveStaticBackend({ chainKey, scenario }, false, options)
+        }
+        throw error
+      }
     case 'anvil':
       return resolveAnvilBackend({ chainKey, scenario })
     default:
@@ -257,19 +270,20 @@ function parseScenario(chain: ChainKey, raw: string | undefined): ScenarioKey {
 }
 
 function getJitRpcCandidate(): { rpcUrl?: string; adminRpcUrl?: string } | undefined {
+  // Require both a primary and an admin RPC for JIT so admin-only methods work.
+  // This keeps direct Vitest runs stable (fallback to static) unless a full JIT
+  // context is provided (e.g., via scripts/run-tests.ts which sets both URLs).
   const rpcUrl = pickNonLocalRpc([
     process.env['TENDERLY_RPC_URL'],
     process.env['TEST_RPC_URL'],
     process.env['RPC_URL'],
   ])
-  if (!rpcUrl) {
-    return undefined
-  }
   const adminRpcUrl = pickNonLocalRpc([
     process.env['TENDERLY_ADMIN_RPC_URL'],
     process.env['TENDERLY_VNET_ADMIN_RPC'],
   ])
-  return adminRpcUrl ? { rpcUrl, adminRpcUrl } : { rpcUrl }
+  if (!rpcUrl || !adminRpcUrl) return undefined
+  return { rpcUrl, adminRpcUrl }
 }
 
 function pickAnvilRpcUrl(): string {

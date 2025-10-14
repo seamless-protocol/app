@@ -219,15 +219,21 @@ async function main() {
 
   // Use Tenderly JIT VNet
   console.log(`⏳ Creating Tenderly fork for ${testType} tests...`)
-  const { id, rpcUrl } = await createVNet(tenderlyConfig)
+  const { id, rpcUrl, adminRpcUrl } = await createVNet(tenderlyConfig)
   console.log(`✅ Fork created: ${id}`)
   console.log(`🔗 RPC: ${rpcUrl}`)
+  console.log(`🔗 Admin RPC: ${adminRpcUrl}`)
 
   try {
     const { cmd, args } = getTestCommand(testType, passThroughArgs)
     const env = withTestDefaults(
       testType,
-      { ...process.env, TEST_RPC_URL: rpcUrl } as Record<string, string>,
+      {
+        ...process.env,
+        TEST_RPC_URL: rpcUrl,
+        TENDERLY_RPC_URL: rpcUrl,
+        TENDERLY_ADMIN_RPC_URL: adminRpcUrl,
+      } as Record<string, string>,
       'tenderly',
     )
     console.log(`🚀 Running ${testType} tests against Tenderly fork...`)

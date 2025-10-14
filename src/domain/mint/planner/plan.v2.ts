@@ -181,9 +181,36 @@ export async function planMintV2(params: {
     shares: worstCase.shares,
   })
 
-  const eps = typeof epsilonBps === 'number' ? BigInt(epsilonBps) : EPS_BPS
-  // Bias to >= worst-case requirement using a tiny upward epsilon
-  const effectiveDebtIn = (worstCase.requiredDebt * (BPS + eps)) / BPS
+  // Determine a repay-safe flash size without oversizing:
+  // - Start from a "swap floor" sized so minOut >= neededFromDebtSwap
+  // - Compute repayable floor as min(final.requiredDebt, worstCase.requiredDebt)
+  // - Borrow = max(swapFloor, repayableFloor)
+  // - Re-quote + clamp downward once if borrow still exceeds repayable
+  const repayableFloor0 = final.requiredDebt < worstCase.requiredDebt ? final.requiredDebt : worstCase.requiredDebt
+
+  // Ensure swap minOut covers the missing collateral by scaling debtIn upward if needed
+  let swapFloor = debtIn
+  if (debtQuote.minOut < neededFromDebtSwap) {
+    let localIn = debtIn
+    let localQuote = debtQuote
+    let tries = 0
+    while (localQuote.minOut < neededFromDebtSwap && tries < 3) {
+      localIn = mulDivCeil(localIn, neededFromDebtSwap, localQuote.minOut)
+      const q = await quoteDebtToCollateral({
+        inToken: inTokenForQuote,
+        outToken: collateralAsset,
+        amountIn: localIn,
+        intent: 'exactIn',
+      })
+      localQuote = typeof q.minOut === 'bigint' ? q : { ...q, minOut: q.out }
+      tries += 1
+    }
+    swapFloor = localIn
+  }
+
+  let effectiveDebtIn = swapFloor > repayableFloor0 ? swapFloor : repayableFloor0
+
+  // Re-quote at effectiveDebtIn, then clamp downward (never below swapFloor)
   let effectiveQuote = await quoteDebtToCollateral({
     inToken: inTokenForQuote,
     outToken: collateralAsset,
@@ -194,12 +221,39 @@ export async function planMintV2(params: {
     effectiveQuote = { ...effectiveQuote, minOut: effectiveQuote.out }
   }
   assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
-  final = await previewFinal({
+  let finalPass = await previewFinal({
     config,
     token,
     totalCollateral: userCollateralOut + effectiveQuote.out,
     chainId,
   })
+  const worstPass = await previewFinal({
+    config,
+    token,
+    totalCollateral: userCollateralOut + effectiveQuote.minOut,
+    chainId,
+  })
+  const repayableFloor1 = finalPass.requiredDebt < worstPass.requiredDebt ? finalPass.requiredDebt : worstPass.requiredDebt
+  if (repayableFloor1 < effectiveDebtIn && repayableFloor1 >= swapFloor) {
+    effectiveDebtIn = repayableFloor1
+    effectiveQuote = await quoteDebtToCollateral({
+      inToken: inTokenForQuote,
+      outToken: collateralAsset,
+      amountIn: effectiveDebtIn,
+      intent: 'exactIn',
+    })
+    if (typeof effectiveQuote.minOut !== 'bigint') {
+      effectiveQuote = { ...effectiveQuote, minOut: effectiveQuote.out }
+    }
+    assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
+    finalPass = await previewFinal({
+      config,
+      token,
+      totalCollateral: userCollateralOut + effectiveQuote.out,
+      chainId,
+    })
+  }
+  final = finalPass
   debugMintPlan('final.singlepass', {
     flash: effectiveDebtIn,
     out: effectiveQuote.out,
@@ -233,7 +287,7 @@ export async function planMintV2(params: {
     expectedShares: final.shares,
     expectedDebt: final.requiredDebt,
     expectedTotalCollateral: userCollateralOut + effectiveQuote.out,
-    expectedExcessDebt: debtExcess,
+    expectedExcessDebt: 0n,
     worstCaseRequiredDebt: worstCase.requiredDebt,
     worstCaseShares: worstCase.shares,
     swapExpectedOut: effectiveQuote.out,
@@ -260,19 +314,26 @@ export async function quoteDebtForMissingCollateral(args: {
   quote: QuoteFn
 }): Promise<{ debtIn: bigint; debtQuote: Quote }> {
   const { idealDebt, neededOut, inToken, outToken, quote } = args
-  // Exact-in quote with manager-sized idealDebt
+  // Exact-in quote seeded from manager-sized idealDebt
   let debtIn = idealDebt
   let debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
 
-  // If the quote out is below the target, proportionally reduce once and re-quote.
-  if (debtQuote.out < neededOut) {
-    const adjusted = mulDivFloor(idealDebt, debtQuote.out, neededOut)
-    if (adjusted > 0n && adjusted < debtIn) {
-      debtIn = adjusted
-      debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
-      debugMintPlan('quote.adjusted', { debtIn, out: debtQuote.out, neededOut })
-    }
+  // If minOut is below target, scale debtIn upward to meet the missing collateral.
+  let attempts = 0
+  while (typeof debtQuote.minOut === 'bigint' && debtQuote.minOut < neededOut && attempts < 3) {
+    // scale up assuming quasi-linear behavior; will be corrected by re-quote
+    const scaled = mulDivCeil(debtIn, neededOut, debtQuote.minOut)
+    if (scaled <= debtIn) break
+    debtIn = scaled
+    debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
+    attempts += 1
   }
+  debugMintPlan('quote.adjusted', {
+    debtIn,
+    out: debtQuote.out,
+    minOut: typeof debtQuote.minOut === 'bigint' ? debtQuote.minOut : 0n,
+    neededOut,
+  })
   return { debtIn, debtQuote }
 }
 
@@ -433,3 +494,7 @@ function sanitizeBigints(obj: Record<string, unknown>): Record<string, unknown> 
 }
 
 // Iterative refinement removed in favor of a single minOut-aware pass.
+function mulDivCeil(a: bigint, b: bigint, c: bigint): bigint {
+  if (c === 0n) return 0n
+  return (a * b + (c - 1n)) / c
+}

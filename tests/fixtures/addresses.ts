@@ -60,7 +60,12 @@ export const MAINNET_TENDERLY_VNET_ADMIN_RPC =
   'https://virtual.mainnet.us-west.rpc.tenderly.co/da333276-fa7b-4f3b-a6b9-319102e4ec5d' as const
 
 export type LeverageTokenSource = 'tenderly' | 'prod'
-export type LeverageTokenKey = 'weeth-weth-17x' | 'cbbtc-usdc-2x' | 'wsteth-eth-2x'
+export type LeverageTokenKey =
+  | 'weeth-weth-17x'
+  | 'cbbtc-usdc-2x'
+  | 'wsteth-eth-2x'
+  | 'wsteth-eth-25x'
+  | 'rlp-usdc-6.75x'
 
 export interface LeverageTokenDefinition {
   key: LeverageTokenKey
@@ -162,6 +167,43 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
       useLiFi: true,
     },
   },
+  'wsteth-eth-25x': {
+    key: 'wsteth-eth-25x',
+    address: '0x98c4E43e3Bde7B649E5aa2F88DE1658E8d3eD1bF' as Address,
+    label: 'wstETH / ETH 25x Leverage Token (Tenderly)',
+    chainId: mainnet.id,
+    collateralSymbol: 'wstETH',
+    debtSymbol: 'WETH',
+    leverageManagerV2: MAINNET_TENDERLY_VNET_STACK.leverageManagerV2,
+    leverageRouterV2: MAINNET_TENDERLY_VNET_STACK.leverageRouterV2,
+    multicallExecutor: MAINNET_TENDERLY_VNET_STACK.multicallExecutor,
+    rpcUrl: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
+    adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
+    swap: {
+      // Deterministic on-chain routing preferred in tests
+      uniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D' as Address,
+    },
+  },
+  'rlp-usdc-6.75x': {
+    key: 'rlp-usdc-6.75x',
+    address: '0x6426811fF283Fa7c78F0BC5D71858c2f79c0Fc3d' as Address,
+    label: 'RLP / USDC 6.75x Leverage Token (Tenderly)',
+    chainId: mainnet.id,
+    collateralSymbol: 'RLP',
+    debtSymbol: 'USDC',
+    leverageManagerV2: MAINNET_TENDERLY_VNET_STACK.leverageManagerV2,
+    leverageRouterV2: MAINNET_TENDERLY_VNET_STACK.leverageRouterV2,
+    multicallExecutor: MAINNET_TENDERLY_VNET_STACK.multicallExecutor,
+    rebalanceAdapter: '0x21DaC768668cAb4a33f4069B4002bB4B1DA33d32' as Address,
+    lendingAdapter: '0x1B1bCfd0b1FB7559407c2b73E0d6e606B2d26b69' as Address,
+    veloraAdapter: MAINNET_TENDERLY_VNET_STACK.veloraAdapter,
+    rpcUrl: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
+    adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
+    swap: {
+      // RLP has no DEX pools - must use LiFi for swaps
+      useLiFi: true,
+    },
+  },
 }
 
 const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = {
@@ -188,6 +230,22 @@ const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = 
     chainId: mainnet.id,
     collateralSymbol: 'wstETH',
     debtSymbol: 'WETH',
+  },
+  'wsteth-eth-25x': {
+    key: 'wsteth-eth-25x',
+    address: '0x98c4E43e3Bde7B649E5aa2F88DE1658E8d3eD1bF' as Address,
+    label: 'wstETH / ETH 25x Leverage Token',
+    chainId: mainnet.id,
+    collateralSymbol: 'wstETH',
+    debtSymbol: 'WETH',
+  },
+  'rlp-usdc-6.75x': {
+    key: 'rlp-usdc-6.75x',
+    address: '0x6426811fF283Fa7c78F0BC5D71858c2f79c0Fc3d' as Address,
+    label: 'RLP / USDC 6.75x Leverage Token',
+    chainId: mainnet.id,
+    collateralSymbol: 'RLP',
+    debtSymbol: 'USDC',
   },
 }
 
@@ -232,7 +290,13 @@ export const WEETH_WETH_17X_TENDERLY_TOKEN_ADDRESS =
   TENDERLY_LEVERAGE_TOKENS['weeth-weth-17x'].address
 
 export function isLeverageTokenKey(value: unknown): value is LeverageTokenKey {
-  return value === 'weeth-weth-17x' || value === 'cbbtc-usdc-2x' || value === 'wsteth-eth-2x'
+  return (
+    value === 'weeth-weth-17x' ||
+    value === 'cbbtc-usdc-2x' ||
+    value === 'wsteth-eth-2x' ||
+    value === 'wsteth-eth-25x' ||
+    value === 'rlp-usdc-6.75x'
+  )
 }
 
 export function getLeverageTokenAddress(
