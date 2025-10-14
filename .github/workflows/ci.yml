@@ -127,8 +127,8 @@ jobs:
           cp tests/integration/.env.example tests/integration/.env
           echo "Integration test environment prepared"
 
-      - name: Run integration tests (Mainnet wstETH 2x, JIT VNet)
-        run: bun run test:integration:wsteth-2x
+      - name: Run integration tests (Mainnet wstETH 25x Mint, JIT VNet)
+        run: bun run test:integration:wsteth-25x
         env:
           TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
@@ -139,8 +139,8 @@ jobs:
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless-protocol
 
-      - name: Run integration tests (Mainnet wstETH 25x, JIT VNet)
-        run: bun run test:integration:wsteth-25x
+      - name: Run integration tests (Mainnet wstETH 25x Redeem, JIT VNet)
+        run: bun run test:integration:redeem:wsteth-25x
         env:
           TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
           TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
