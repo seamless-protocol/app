@@ -7,8 +7,8 @@ import { createLogger } from '@/lib/logger'
 const logger = createLogger('portfolio-data-fetcher')
 
 import {
+  getAllLeverageTokenConfigs,
   getLeverageTokenConfig,
-  leverageTokenConfigs,
 } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   fetchAllLeverageTokenStateHistory,
@@ -122,7 +122,7 @@ function calculatePositionValues(
 
   // Get the collateral asset decimals from the leverage token config
   const leverageTokenAddress = userPosition.leverageToken.id.toLowerCase()
-  const tokenConfig = Object.values(leverageTokenConfigs).find(
+  const tokenConfig = getAllLeverageTokenConfigs().find(
     (config) => config.address.toLowerCase() === leverageTokenAddress,
   )
   const collateralDecimals = tokenConfig?.collateralAsset?.decimals || 18
@@ -234,55 +234,56 @@ export function usePortfolioDataFetcher() {
         const userPositions = userPositionsResponse.user.positions
 
         // Convert subgraph positions to UI positions (without calculated values yet)
-        const positions = userPositions.map((userPosition) => {
-          // Find the leverage token config by matching the address
-          const leverageTokenAddress = userPosition.leverageToken.id.toLowerCase()
-          const tokenConfig = Object.values(leverageTokenConfigs).find(
-            (config) => config.address.toLowerCase() === leverageTokenAddress,
-          )
+        // Only include positions that have matching leverage token configs (filters out test tokens)
+        const positions = userPositions
+          .map((userPosition) => {
+            // Find the leverage token config by matching the address
+            const leverageTokenAddress = userPosition.leverageToken.id.toLowerCase()
+            const tokenConfig = getAllLeverageTokenConfigs().find(
+              (config) => config.address.toLowerCase() === leverageTokenAddress,
+            )
 
-          // Use config data if available, otherwise fallback to placeholder values
-          const collateralAsset = tokenConfig?.collateralAsset || {
-            symbol: 'UNKNOWN',
-            name: 'Unknown Collateral Asset',
-          }
+            // Skip positions that don't have matching configs (test tokens, unknown tokens)
+            if (!tokenConfig) {
+              return null
+            }
 
-          const debtAsset = tokenConfig?.debtAsset || {
-            symbol: 'UNKNOWN',
-            name: 'Unknown Debt Asset',
-          }
+            const collateralAsset = tokenConfig.collateralAsset
+            const debtAsset = tokenConfig.debtAsset
 
-          return {
-            id: userPosition.id,
-            name:
-              tokenConfig?.name || `${collateralAsset.symbol} / ${debtAsset.symbol} Leverage Token`,
-            type: 'leverage-token' as const,
-            token: collateralAsset.symbol as 'USDC' | 'WETH' | 'weETH', // Use collateral asset as primary token
-            currentValue: {
-              amount: '0.00', // Will be calculated later
-              symbol: 'USD',
-              usdValue: '$0.00',
-            },
-            unrealizedGain: {
-              amount: '0.00', // Will be calculated later
-              symbol: 'USD',
-              percentage: '0.00%',
-            },
-            apy: '0.00%', // Will be calculated later
-            collateralAsset: {
-              symbol: collateralAsset.symbol,
-              name: collateralAsset.name,
-            },
-            debtAsset: {
-              symbol: debtAsset.symbol,
-              name: debtAsset.name,
-            },
-            leverageTokenAddress: userPosition.leverageToken.id,
-          }
-        })
+            return {
+              id: userPosition.id,
+              name:
+                tokenConfig?.name ||
+                `${collateralAsset.symbol} / ${debtAsset.symbol} Leverage Token`,
+              type: 'leverage-token' as const,
+              token: collateralAsset.symbol as 'USDC' | 'WETH' | 'weETH', // Use collateral asset as primary token
+              currentValue: {
+                amount: '0.00', // Will be calculated later
+                symbol: 'USD',
+                usdValue: '$0.00',
+              },
+              unrealizedGain: {
+                amount: '0.00', // Will be calculated later
+                symbol: 'USD',
+                percentage: '0.00%',
+              },
+              apy: '0.00%', // Will be calculated later
+              collateralAsset: {
+                symbol: collateralAsset.symbol,
+                name: collateralAsset.name,
+              },
+              debtAsset: {
+                symbol: debtAsset.symbol,
+                name: debtAsset.name,
+              },
+              leverageTokenAddress: userPosition.leverageToken.id,
+            }
+          })
+          .filter((pos): pos is NonNullable<typeof pos> => pos !== null)
 
         // Fetch state history for all leverage tokens in parallel for better performance
-        const leverageTokenAddresses = userPositions.map((pos) => pos.leverageToken.id)
+        const leverageTokenAddresses = positions.map((pos) => pos.leverageTokenAddress)
 
         // Use Promise.allSettled to handle partial failures gracefully
         const stateHistoryPromises = leverageTokenAddresses.map((tokenAddress) =>
@@ -427,8 +428,17 @@ export function usePortfolioWithTotalValue() {
       }
     }
 
+    // Filter raw positions to only include those with matching leverage token configs
+    const filteredUserPositions = portfolioQueryData.rawUserPositions.filter((position) => {
+      const leverageTokenAddress = position.leverageToken.id.toLowerCase()
+      const tokenConfig = getAllLeverageTokenConfigs().find(
+        (config) => config.address.toLowerCase() === leverageTokenAddress,
+      )
+      return tokenConfig !== undefined
+    })
+
     return calculatePortfolioMetrics(
-      portfolioQueryData.rawUserPositions,
+      filteredUserPositions,
       portfolioQueryData.leverageTokenStates,
       usdPrices,
     )
@@ -516,9 +526,18 @@ export function usePortfolioPerformance() {
         return []
       }
 
-      // Generate portfolio performance data using the cached raw positions and states
+      // Filter raw positions to only include those with matching leverage token configs
+      const filteredUserPositions = rawUserPositions.filter((position) => {
+        const leverageTokenAddress = position.leverageToken.id.toLowerCase()
+        const tokenConfig = getAllLeverageTokenConfigs().find(
+          (config) => config.address.toLowerCase() === leverageTokenAddress,
+        )
+        return tokenConfig !== undefined
+      })
+
+      // Generate portfolio performance data using the filtered positions and states
       const performanceData = generatePortfolioPerformanceData(
-        rawUserPositions,
+        filteredUserPositions,
         leverageTokenStates,
         selectedTimeframe as '7D' | '30D' | '90D' | '1Y',
         usdPrices,
