@@ -83,7 +83,7 @@ function PortfolioPage() {
     const decimals = reward.tokenDecimals
     const divisor = BigInt(10 ** decimals)
     const humanReadableAmount = Number(rawAmount) / Number(divisor)
-    const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+    const tokenPrice = (reward.metadata as unknown as { tokenPrice?: number })?.tokenPrice || 1.0
     return total + humanReadableAmount * tokenPrice
   }, 0)
 
@@ -92,7 +92,7 @@ function PortfolioPage() {
     const decimals = reward.tokenDecimals
     const divisor = BigInt(10 ** decimals)
     const humanReadableAmount = Number(rawAmount) / Number(divisor)
-    const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+    const tokenPrice = (reward.metadata as unknown as { tokenPrice?: number })?.tokenPrice || 1.0
     return total + humanReadableAmount * tokenPrice
   }, 0)
 
@@ -101,11 +101,14 @@ function PortfolioPage() {
     ?.filter((r) => r.tokenSymbol === 'SEAM')
     ?.reduce(
       (total, reward) => {
-        const pendingAmount = BigInt((reward.metadata as any)?.pendingAmount || '0')
+        const pendingAmount = BigInt(
+          (reward.metadata as unknown as { pendingAmount?: string })?.pendingAmount || '0',
+        )
         const decimals = reward.tokenDecimals
         const divisor = BigInt(10 ** decimals)
         const humanReadableAmount = Number(pendingAmount) / Number(divisor)
-        const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+        const tokenPrice =
+          (reward.metadata as unknown as { tokenPrice?: number })?.tokenPrice || 1.0
         const usdValue = humanReadableAmount * tokenPrice
         return { tokens: total.tokens + humanReadableAmount, usdValue: total.usdValue + usdValue }
       },
@@ -116,11 +119,14 @@ function PortfolioPage() {
     ?.filter((r) => r.tokenSymbol === 'MORPHO')
     ?.reduce(
       (total, reward) => {
-        const pendingAmount = BigInt((reward.metadata as any)?.pendingAmount || '0')
+        const pendingAmount = BigInt(
+          (reward.metadata as unknown as { pendingAmount?: string })?.pendingAmount || '0',
+        )
         const decimals = reward.tokenDecimals
         const divisor = BigInt(10 ** decimals)
         const humanReadableAmount = Number(pendingAmount) / Number(divisor)
-        const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+        const tokenPrice =
+          (reward.metadata as unknown as { tokenPrice?: number })?.tokenPrice || 1.0
         const usdValue = humanReadableAmount * tokenPrice
         return { tokens: total.tokens + humanReadableAmount, usdValue: total.usdValue + usdValue }
       },
