@@ -162,32 +162,22 @@ export async function planMintV2(params: {
   debugMintPlan('quote.initial', { debtIn, out: debtQuote.out, minOut: debtQuote.minOut ?? 0n })
   assertDebtSwapQuote(debtQuote, debtAsset, useNativeDebtPath)
 
-  // 4) Final preview (nice-weather) and worst-case preview (minOut) in parallel
+  // 4) Final preview with proportionally adjusted debt flash loan amount
   const totalCollateralInitial = userCollateralOut + debtQuote.out
   const guaranteedOut = debtQuote.minOut
   if (guaranteedOut <= 0n) throw new Error('Swap quote minOut must be > 0')
-  let [final, worstCase] = await Promise.all([
-    previewFinal({ config, token, totalCollateral: totalCollateralInitial, chainId }),
-    previewFinal({ config, token, totalCollateral: userCollateralOut + guaranteedOut, chainId }),
-  ])
+  let final = await previewFinal({ config, token, totalCollateral: totalCollateralInitial, chainId })
+
   debugMintPlan('final.initial', {
     totalCollateral: totalCollateralInitial,
     requiredDebt: final.requiredDebt,
     shares: final.shares,
   })
-  debugMintPlan('worst.preview', {
-    totalCollateral: userCollateralOut + guaranteedOut,
-    requiredDebt: worstCase.requiredDebt,
-    shares: worstCase.shares,
-  })
 
-  const eps = typeof epsilonBps === 'number' ? BigInt(epsilonBps) : EPS_BPS
-  // Bias to >= worst-case requirement using a tiny upward epsilon
-  const effectiveDebtIn = (worstCase.requiredDebt * (BPS + eps)) / BPS
   let effectiveQuote = await quoteDebtToCollateral({
     inToken: inTokenForQuote,
     outToken: collateralAsset,
-    amountIn: effectiveDebtIn,
+    amountIn: final.requiredDebt,
     intent: 'exactIn',
   })
   if (typeof effectiveQuote.minOut !== 'bigint') {
@@ -201,41 +191,41 @@ export async function planMintV2(params: {
     chainId,
   })
   debugMintPlan('final.singlepass', {
-    flash: effectiveDebtIn,
+    flash: final.requiredDebt,
     out: effectiveQuote.out,
     minOut: typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : 0n,
     requiredDebt: final.requiredDebt,
     shares: final.shares,
   })
 
+  // Slippage is calculated wrt the ideal shares (follows underlying oracle of the LeverageToken)
+  const minShares = applySlippageFloor(ideal.idealShares, slippageBps)
+  // TODO: Do we throw an error here if minShares > final.shares, that is caught so that the ui displays a warning
+  // that the tx will likely revert due to slippage, so they should increase slippage?
+
   // Build calls based on the amount actually used for the swap
   const calls: V2Calls = [
     ...buildDebtSwapCalls({
       debtAsset,
       debtQuote: effectiveQuote,
-      debtIn: effectiveDebtIn,
+      debtIn: final.requiredDebt,
       useNative: useNativeDebtPath,
     }),
   ]
-
-  const minShares = applySlippageFloor(final.shares, slippageBps)
-  // Excess debt means we plan to borrow above what the manager requires; shortfall is the opposite
-  const debtExcess =
-    effectiveDebtIn > final.requiredDebt ? effectiveDebtIn - final.requiredDebt : 0n
 
   return {
     inputAsset,
     equityInInputAsset,
     collateralAsset,
     debtAsset,
-    flashLoanAmount: effectiveDebtIn,
+    flashLoanAmount: final.requiredDebt,
     minShares,
     expectedShares: final.shares,
     expectedDebt: final.requiredDebt,
     expectedTotalCollateral: userCollateralOut + effectiveQuote.out,
-    expectedExcessDebt: debtExcess,
-    worstCaseRequiredDebt: worstCase.requiredDebt,
-    worstCaseShares: worstCase.shares,
+    expectedExcessDebt: 0n, // TODO: Do we need this?
+    worstCaseRequiredDebt: 0n, // TODO: Do we need this?
+    worstCaseShares: 0n, // TODO: Do we need this?
     swapExpectedOut: effectiveQuote.out,
     swapMinOut:
       typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : effectiveQuote.out,
