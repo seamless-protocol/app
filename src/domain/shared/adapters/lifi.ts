@@ -115,7 +115,20 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     }
     const res = await fetch(url.toString(), { method: 'GET', headers })
     if (!res.ok) throw new Error(`LiFi quote failed: ${res.status} ${res.statusText}`)
-    const step = (await res.json()) as Step
+
+    const responseData = await res.json()
+
+    // Check for LiFi API errors in the response body
+    if (responseData.message && responseData.code) {
+      const errorMessage = responseData.message
+      const errorCode = responseData.code
+      console.error('LiFi error from API', { errorMessage, errorCode })
+      throw new Error(
+        `LiFi quote failed ${errorCode}: Try adjusting slippage tolerance or using a different amount.`,
+      )
+    }
+
+    const step = responseData as Step
     if ((readEnv('VITE_LIFI_DEBUG') ?? readEnv('LIFI_DEBUG')) === '1') {
       // eslint-disable-next-line no-console
       console.info('[LiFi] step', {
