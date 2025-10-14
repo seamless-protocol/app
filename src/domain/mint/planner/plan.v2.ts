@@ -1,5 +1,5 @@
 /**
- * V2 mint planner (single transaction).
+ * Mint planner (single transaction).
  * Sizes a debt→collateral swap from router/manager previews, then verifies repayability
  * with total collateral. Assumes inputAsset equals collateralAsset.
  */
@@ -14,13 +14,12 @@ import {
   type SupportedChainId,
 } from '@/lib/contracts/addresses'
 import {
-  // V2 reads
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewDeposit,
   readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
-import { applySlippageFloor } from './math'
+import { applySlippageFloor, maxBigint, minBigint, mulDivCeil } from './math'
 import type { Quote, QuoteFn } from './types'
 
 // Local types
@@ -216,8 +215,7 @@ export async function planMintV2(params: {
     worstCaseRequiredDebt: worstPass.requiredDebt,
     worstCaseShares: worstPass.shares,
     swapExpectedOut: effectiveQuote.out,
-    swapMinOut:
-      typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : effectiveQuote.out,
+    swapMinOut: effectiveQuote.minOut,
     calls,
   }
 }
@@ -241,14 +239,16 @@ export async function quoteDebtForMissingCollateral(args: {
   const { idealDebt, neededOut, inToken, outToken, quote } = args
   // Exact-in quote seeded from manager-sized idealDebt
   let debtIn = idealDebt
-  let debtQuote: Quote & { minOut: bigint } = ensureQuoteHasMinOut(
+  let debtQuote = ensureQuoteHasMinOut(
     await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' }),
   )
 
   // If minOut is below target, scale debtIn upward to meet the missing collateral.
   let attempts = 0
   while (debtQuote.minOut < neededOut && attempts < 3) {
-    // scale up assuming quasi-linear behavior; will be corrected by re-quote
+    // Increase amountIn proportionally to close the gap:
+    // newIn = ceil(oldIn * neededOut / minOut). Then re-quote to capture
+    // non-linear price impact/route changes.
     const scaled = mulDivCeil(debtIn, neededOut, debtQuote.minOut)
     if (scaled <= debtIn) break
     debtIn = scaled
@@ -265,8 +265,6 @@ export async function quoteDebtForMissingCollateral(args: {
   })
   return { debtIn, debtQuote }
 }
-
-// No clamping helper: deposit returns excess debt to the user when requiredDebt > flash loan.
 
 /**
  * Router-only preview used to determine the ideal target collateral and ideal debt for user equity.
@@ -307,8 +305,11 @@ async function previewFinal(args: {
 }
 
 /**
- * Pick a flash size that is both repayable by the manager and sufficient for the swap to
- * produce the missing collateral under minOut. Performs at most one downward clamp.
+ * Pick a flash size that satisfies two constraints:
+ * 1) Coverage: swap.minOut at that size must produce ≥ the missing collateral.
+ * 2) Repayability: manager.requiredDebt (expected/worst) must be ≤ the flash size.
+ * Start at max(swapFloor, repayableFloor). If manager allows less, attempt one
+ * reduction to the manager floor; keep it only if the re‑quoted swap still meets (1).
  */
 async function chooseRepaySafeFlashAndQuote(args: {
   swapFloor: bigint
@@ -356,20 +357,24 @@ async function chooseRepaySafeFlashAndQuote(args: {
   assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
 
   // Compute previews at expected and worst (minOut) total collateral
-  let finalPass = await previewFinal({
-    config,
-    token,
-    totalCollateral: userCollateralOut + effectiveQuote.out,
-    chainId,
-  })
-  let worstPass = await previewFinal({
-    config,
-    token,
-    totalCollateral: userCollateralOut + effectiveQuote.minOut,
-    chainId,
-  })
+  let [finalPass, worstPass] = await Promise.all([
+    previewFinal({
+      config,
+      token,
+      totalCollateral: userCollateralOut + effectiveQuote.out,
+      chainId,
+    }),
+    previewFinal({
+      config,
+      token,
+      totalCollateral: userCollateralOut + effectiveQuote.minOut,
+      chainId,
+    }),
+  ])
 
-  // Attempt a single clamp if manager requires less debt
+  // Attempt a single clamp: reduce effectiveDebtIn to the manager-repayable floor
+  // (repayableNext). Only accept the reduction if the re-quoted swap still
+  // guarantees minOut ≥ neededFromDebtSwap; otherwise keep the larger size.
   const repayableNext = minBigint(finalPass.requiredDebt, worstPass.requiredDebt)
   if (repayableNext < effectiveDebtIn) {
     const candidateDebtIn = repayableNext > 0n ? repayableNext : 1n
@@ -385,42 +390,38 @@ async function chooseRepaySafeFlashAndQuote(args: {
       effectiveDebtIn = candidateDebtIn
       effectiveQuote = candidateQuote
       assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
-      finalPass = await previewFinal({
-        config,
-        token,
-        totalCollateral: userCollateralOut + effectiveQuote.out,
-        chainId,
-      })
-      worstPass = await previewFinal({
-        config,
-        token,
-        totalCollateral: userCollateralOut + effectiveQuote.minOut,
-        chainId,
-      })
+      ;[finalPass, worstPass] = await Promise.all([
+        previewFinal({
+          config,
+          token,
+          totalCollateral: userCollateralOut + effectiveQuote.out,
+          chainId,
+        }),
+        previewFinal({
+          config,
+          token,
+          totalCollateral: userCollateralOut + effectiveQuote.minOut,
+          chainId,
+        }),
+      ])
     }
   }
 
   return { effectiveDebtIn, effectiveQuote, finalPass, worstPass }
 }
 
-function minBigint(a: bigint, b: bigint): bigint {
-  return a < b ? a : b
-}
-
-function maxBigint(a: bigint, b: bigint): bigint {
-  return a > b ? a : b
-}
-
 async function getManagerAssets(args: { config: Config; token: TokenArg; chainId: number }) {
   const { config, token, chainId } = args
-  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
-  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
+  const [collateralAsset, debtAsset] = await Promise.all([
+    readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
+      args: [token],
+      chainId: chainId as SupportedChainId,
+    }),
+    readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
+      args: [token],
+      chainId: chainId as SupportedChainId,
+    }),
+  ])
   return { collateralAsset, debtAsset }
 }
 
@@ -493,12 +494,4 @@ function assertDebtSwapQuote(
 // Ensure a quote always has a concrete minOut value (fallback to out)
 function ensureQuoteHasMinOut(q: Quote): Quote & { minOut: bigint } {
   return typeof q.minOut === 'bigint' ? (q as Quote & { minOut: bigint }) : { ...q, minOut: q.out }
-}
-
-// debugMintPlan moved to shared util
-
-// Iterative refinement removed in favor of a single minOut-aware pass.
-function mulDivCeil(a: bigint, b: bigint, c: bigint): bigint {
-  if (c === 0n) return 0n
-  return (a * b + (c - 1n)) / c
 }

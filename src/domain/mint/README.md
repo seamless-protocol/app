@@ -63,3 +63,41 @@ Roadmap (high-value next steps)
 
 Rationale
 - Separate planning vs execution concerns; keep ABI-facing ports isolated; make adapters and small utils easily testable; simplify future expansion (conversion leg, shared planner).
+
+Flow & Invariants
+- Goal: Turn your equity (collateral you bring) plus a temporary debt borrow into the exact total collateral needed to mint shares — all in one transaction.
+- Steps:
+  - Resolve assets: read `collateralAsset` and `debtAsset` from the manager.
+  - Require collateral input: `inputAsset === collateralAsset` or throw.
+  - Preview ideal: router preview tells us the target total collateral and an initial “ideal debt” for your equity.
+  - Compute gap: `neededFromDebtSwap = targetCollateral - userCollateralOut` (must be > 0) — this is what the debt→collateral swap must produce.
+  - Size the swap (guaranteed): get a debt→collateral quote with minOut. If `minOut < neededFromDebtSwap`, scale `amountIn` proportionally and re‑quote (few tries) until `minOut ≥ neededFromDebtSwap`.
+  - Preview outcomes: manager preview at expected (`quote.out`) and worst‑case (`quote.minOut`) total collateral to read `requiredDebt` and `shares`.
+  - Repayability floor: `repayableFloor = min(requiredDebt_expected, requiredDebt_worst)`.
+- Choose flash size (explicit):
+  - Coverage amount (swapFloor): smallest debt so the swap’s guaranteed `minOut` is ≥ the missing collateral.
+  - Manager amount (repayableFloor): min of manager `requiredDebt` at expected and worst‑case totals.
+  - Start with `effective = max(coverage amount, manager amount)` — this ensures both coverage and repayability.
+  - If `manager amount` is lower than `effective`, try reducing to `manager amount` and re‑quote the swap. Keep the reduction only if the new quote still guarantees `minOut ≥ missing collateral`; otherwise keep the higher amount.
+  - Example: if coverage=150 and manager=120, try 120; if its `minOut` still covers the gap, use 120. If not, keep 150.
+  - Build calls: 
+    - Native path (WETH debt): `withdraw(WETH)` then payable aggregator call (`value = debtIn`).
+    - ERC‑20 path: `approve(debt)` for `approvalTarget`, then aggregator call (`value = 0`).
+  - Slippage floor: compute `minShares = applySlippageFloor(expectedShares, slippageBps)` for the on‑chain call.
+- Invariants/Safety:
+  - Collateral‑only input: planner throws when `inputAsset !== collateralAsset`.
+  - Coverage: final swap quote must guarantee `minOut ≥ neededFromDebtSwap`.
+  - Repayable: final flash size is ≥ repayable floor; if reduced via clamp, it is re‑quoted and re‑previewed.
+  - Quote validation: 
+    - Native path: adapter must not signal `wantsNativeIn === false`.
+    - ERC‑20 path: `approvalTarget` is required, not zero, and not equal to `debtAsset`.
+  - Bounded loops: quote scaling attempts are capped (no unbounded iteration).
+  - Min shares: on‑chain call uses a floor to protect against share slippage.
+  - Scope: no input→collateral conversion leg yet — only collateral input is supported.
+  - Telemetry/logs: planner can log under `VITE_MINT_PLAN_DEBUG`, `MINT_PLAN_DEBUG`, or test mode.
+
+Pointers in Code
+- Main flow: `planMintV2` (planner/plan.v2.ts).
+- Swap sizing: `quoteDebtForMissingCollateral` (planner/plan.v2.ts).
+- Repay‑safe selection: `chooseRepaySafeFlashAndQuote` (planner/plan.v2.ts).
+- Math helpers: `math.ts` (ceil/floor mul‑div, min/max, slippage).

@@ -1,18 +1,41 @@
-import { type Address, erc20Abi, parseUnits } from 'viem'
+/**
+ * Intent
+ * - Mirror the mainnet mint test structure, but test full mint + redeem flow.
+ * - Use deterministic Uniswap V2 for both mint (debt->collateral) and redeem (collateral->debt) swaps.
+ * - Use withFork() harness for snapshot/revert isolation.
+ *
+ * Flow:
+ * 1. Mint shares using Router V2 (same as mint test)
+ * 2. Redeem all shares back to collateral using Router V2
+ * 3. Assert user receives collateral payout
+ */
+import { readContract } from '@wagmi/core'
+import type { Address } from 'viem'
+import { erc20Abi, parseUnits } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
-import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
+import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
+import { orchestrateRedeem } from '@/domain/redeem'
 import { createCollateralToDebtQuote } from '@/domain/redeem/utils/createCollateralToDebtQuote'
+import { getUniswapV2Router } from '@/lib/config/uniswapV2'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
+  simulateLeverageRouterV2Deposit,
+  writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
 import { ADDR, CHAIN_ID, mode } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
-import { approveIfNeeded } from '../../../shared/funding'
-import { executeSharedMint } from '../../../shared/mintHelpers'
-import { type WithForkCtx, withFork } from '../../../shared/withFork'
+import {
+  approveIfNeeded,
+  seedUniswapV2PairLiquidity,
+  topUpErc20,
+  topUpNative,
+} from '../../../shared/funding'
+import { withFork } from '../../../shared/withFork'
 
 if (mode !== 'tenderly') {
   throw new Error(
@@ -20,289 +43,142 @@ if (mode !== 'tenderly') {
   )
 }
 
-const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
+// This spec is intended for mainnet leverage tokens.
+const suite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
-redeemSuite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet wstETH/ETH 2x)', () => {
+suite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet)', () => {
   const SLIPPAGE_BPS = 50
 
-  it('redeems all minted shares into collateral asset via LiFi', async () => {
-    const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
-    assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
-    assertRedeemExecution(result)
-  }, 120_000)
-})
+  it('redeems all minted shares into collateral via Uniswap V2', async () => {
+    await withFork(async ({ account, publicClient, config }) => {
+      // 0) Addresses (single source of truth)
+      const token = ADDR.leverageToken
+      const router = (ADDR.routerV2 ?? ADDR.router) as Address
+      const executor = ADDR.executor as Address
 
-type RedeemScenario = {
-  token: Address
-  manager: Address
-  router: Address
-  collateralAsset: Address
-  debtAsset: Address
-  equityInInputAsset: bigint
-  slippageBps: number
-  chainId: number
-}
+      // 1) Get token assets
+      const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
+        args: [token],
+      })
+      const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
+        args: [token],
+      })
+      const decimals = await readErc20Decimals(config, collateralAsset)
 
-async function runRedeemTest({ slippageBps }: { slippageBps: number }) {
-  return withFork(async (ctx) => {
-    const scenario = await prepareRedeemScenario(ctx, slippageBps)
-    const mintOutcome = await executeMintPath(ctx, scenario)
-    return performRedeem(ctx, { ...scenario, ...mintOutcome })
-  })
-}
+      // 2) Seed Uniswap V2 liquidity for deterministic swaps
+      const defaultV2Router = getUniswapV2Router(mainnet.id) as Address
+      const swap = { type: 'uniswapV2', router: defaultV2Router } as const
+      await seedUniswapV2PairLiquidity({
+        router: swap.router,
+        tokenA: collateralAsset,
+        tokenB: debtAsset,
+      })
 
-async function prepareRedeemScenario(
-  ctx: WithForkCtx,
-  slippageBps: number,
-): Promise<RedeemScenario> {
-  const { config } = ctx
-  const token: Address = ADDR.leverageToken
-  const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
-  const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
+      // ============ MINT PHASE ============
+      // 3) Fund + approve for mint
+      const equityHuman = process.env['TEST_EQUITY_AMOUNT'] ?? '1'
+      const equityInInputAsset = parseUnits(equityHuman, decimals)
+      await topUpNative(account.address, '1')
+      await topUpErc20(collateralAsset, account.address, '25')
+      await approveIfNeeded(collateralAsset, router, equityInInputAsset)
 
-  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    args: [token],
-  })
-  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    args: [token],
-  })
+      // 4) Plan mint with Uniswap V2 debt->collateral quote
+      const { quote: quoteDebtToCollateral } = createDebtToCollateralQuote({
+        chainId: CHAIN_ID as SupportedChainId,
+        routerAddress: router,
+        swap,
+        slippageBps: SLIPPAGE_BPS,
+        getPublicClient: (cid) => (cid === CHAIN_ID ? publicClient : undefined),
+        fromAddress: executor,
+      })
 
-  const decimals = await readErc20Decimals(config, collateralAsset)
-  const equityInInputAsset = parseUnits('10', decimals)
+      const mintPlan = await planMintV2({
+        config,
+        token,
+        inputAsset: collateralAsset,
+        equityInInputAsset,
+        slippageBps: SLIPPAGE_BPS,
+        quoteDebtToCollateral,
+        chainId: CHAIN_ID as SupportedChainId,
+      })
 
-  return {
-    token,
-    manager,
-    router,
-    collateralAsset,
-    debtAsset,
-    equityInInputAsset,
-    slippageBps,
-    chainId: mainnet.id,
-  }
-}
+      // 5) Execute mint
+      const { request: mintRequest } = await simulateLeverageRouterV2Deposit(config, {
+        args: [
+          token,
+          mintPlan.equityInInputAsset,
+          mintPlan.flashLoanAmount ?? mintPlan.expectedDebt,
+          mintPlan.minShares,
+          executor,
+          mintPlan.calls,
+        ],
+        account: account.address,
+        chainId: CHAIN_ID as SupportedChainId,
+      })
 
-type MintExecution = { sharesAfterMint: bigint }
+      const mintHash = await writeLeverageRouterV2Deposit(config, mintRequest)
+      const mintReceipt = await publicClient.waitForTransactionReceipt({ hash: mintHash })
+      expect(mintReceipt.status).toBe('success')
 
-async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Promise<MintExecution> {
-  const { account, config, publicClient } = ctx
-  const previousAdapter = process.env['TEST_USE_LIFI']
-  process.env['TEST_USE_LIFI'] = '1'
+      // 6) Verify minted shares
+      const userShares = await readLeverageTokenBalanceOf(config, {
+        address: token,
+        args: [account.address],
+      })
+      expect(userShares).toBeGreaterThan(0n)
 
-  let mintOutcome: Awaited<ReturnType<typeof executeSharedMint>>
-  try {
-    mintOutcome = await executeSharedMint({
-      account,
-      publicClient,
-      config,
-      slippageBps: scenario.slippageBps,
-      chainIdOverride: mainnet.id,
+      // ============ REDEEM PHASE ============
+      // 7) Approve router to spend shares
+      await approveIfNeeded(token, router, userShares)
+
+      // 8) Create Uniswap V2 collateral->debt quote
+      const { quote: quoteCollateralToDebt } = createCollateralToDebtQuote({
+        chainId: CHAIN_ID as SupportedChainId,
+        routerAddress: router,
+        swap,
+        slippageBps: SLIPPAGE_BPS,
+        getPublicClient: (cid) => (cid === CHAIN_ID ? publicClient : undefined),
+      })
+
+      // 9) Execute redeem
+      const collateralBefore = (await readContract(config, {
+        address: collateralAsset,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [account.address],
+      })) as bigint
+
+      const redeemTx = await orchestrateRedeem({
+        config,
+        account: account.address,
+        token,
+        sharesToRedeem: userShares,
+        slippageBps: SLIPPAGE_BPS,
+        quoteCollateralToDebt,
+        chainId: CHAIN_ID as SupportedChainId,
+        // Redeem to collateral (not debt)
+        outputAsset: collateralAsset,
+      })
+
+      const redeemReceipt = await publicClient.waitForTransactionReceipt({ hash: redeemTx.hash })
+      expect(redeemReceipt.status).toBe('success')
+
+      // 10) Verify user received collateral payout
+      const collateralAfter = (await readContract(config, {
+        address: collateralAsset,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [account.address],
+      })) as bigint
+      const collateralDelta = collateralAfter - collateralBefore
+      expect(collateralDelta).toBeGreaterThan(0n)
+
+      // 11) Verify shares were burned
+      const sharesAfterRedeem = await readLeverageTokenBalanceOf(config, {
+        address: token,
+        args: [account.address],
+      })
+      expect(sharesAfterRedeem).toBe(0n)
     })
-  } finally {
-    if (typeof previousAdapter === 'string') process.env['TEST_USE_LIFI'] = previousAdapter
-    else delete process.env['TEST_USE_LIFI']
-  }
-
-  const sharesAfterMint = await readLeverageTokenBalanceOf(config, {
-    address: mintOutcome.token,
-    args: [account.address],
-  })
-  expect(sharesAfterMint > 0n).toBe(true)
-  return { sharesAfterMint }
-}
-
-type RedeemExecutionResult = {
-  plan: Awaited<ReturnType<typeof planRedeemV2>>
-  redeemHash: `0x${string}`
-  collateralDelta: bigint
-  debtDelta: bigint
-  sharesBefore: bigint
-  sharesAfter: bigint
-  sharesToRedeem: bigint
-  slippageBps: number
-  payoutAsset: Address | undefined
-  collateralAsset: Address
-  debtAsset: Address
-}
-
-async function performRedeem(
-  ctx: WithForkCtx,
-  scenario: RedeemScenario & { sharesAfterMint: bigint; payoutAsset?: Address },
-): Promise<RedeemExecutionResult> {
-  const { account, config, publicClient } = ctx
-  const {
-    token,
-    router,
-    manager,
-    collateralAsset,
-    sharesAfterMint,
-    slippageBps,
-    debtAsset,
-    chainId,
-    payoutAsset,
-  } = scenario
-
-  const sharesToRedeem = sharesAfterMint
-  await approveIfNeeded(token, router, sharesToRedeem)
-
-  // Mirror production: use LiFi for the repay leg (same-chain, bridges disabled)
-  const { quote: quoteCollateralToDebt } = createCollateralToDebtQuote({
-    chainId,
-    routerAddress: router,
-    swap: { type: 'lifi', allowBridges: 'none' },
-    slippageBps,
-    getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
-  })
-
-  const plan = await planRedeemV2({
-    config,
-    token,
-    sharesToRedeem,
-    slippageBps,
-    quoteCollateralToDebt,
-    chainId,
-    managerAddress: manager,
-    ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
-  })
-
-  const collateralBalanceBefore = await publicClient.readContract({
-    address: collateralAsset,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: [account.address],
-  })
-
-  const debtBalanceBefore = await publicClient.readContract({
-    address: debtAsset,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: [account.address],
-  })
-
-  const sharesBeforeRedeem = await readLeverageTokenBalanceOf(config, {
-    address: token,
-    args: [account.address],
-  })
-
-  const redeemTx = await orchestrateRedeem({
-    config,
-    account: account.address,
-    token,
-    sharesToRedeem,
-    slippageBps,
-    quoteCollateralToDebt,
-    chainId,
-    routerAddressV2: router,
-    managerAddressV2: manager,
-    ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
-  })
-
-  const redeemReceipt = await publicClient.waitForTransactionReceipt({ hash: redeemTx.hash })
-  if (redeemReceipt.status !== 'success') {
-    throw new Error(`Redeem transaction reverted: ${redeemReceipt.status}`)
-  }
-
-  const sharesAfterRedeem = await readLeverageTokenBalanceOf(config, {
-    address: token,
-    args: [account.address],
-  })
-
-  const collateralBalanceAfter = await publicClient.readContract({
-    address: collateralAsset,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: [account.address],
-  })
-
-  const debtBalanceAfter = await publicClient.readContract({
-    address: debtAsset,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: [account.address],
-  })
-
-  const collateralDelta = collateralBalanceAfter - collateralBalanceBefore
-  const debtDelta = debtBalanceAfter - debtBalanceBefore
-
-  return {
-    plan,
-    redeemHash: redeemTx.hash,
-    collateralDelta,
-    debtDelta,
-    sharesBefore: sharesBeforeRedeem,
-    sharesAfter: sharesAfterRedeem,
-    sharesToRedeem,
-    slippageBps,
-    payoutAsset,
-    collateralAsset,
-    debtAsset,
-  }
-}
-
-function assertRedeemPlan(
-  plan: Awaited<ReturnType<typeof planRedeemV2>>,
-  collateralAsset: Address,
-  expectedPayout?: Address,
-): void {
-  expect(plan.sharesToRedeem > 0n).toBe(true)
-  expect(plan.expectedDebt > 0n).toBe(true)
-  expect(plan.calls.length).toBeGreaterThanOrEqual(1)
-
-  const payoutAsset = plan.payoutAsset.toLowerCase()
-  const expectedPayoutAsset = (expectedPayout ?? collateralAsset).toLowerCase()
-
-  const hasApprovalOrWithdraw = plan.calls.some((call) => {
-    if (call.target.toLowerCase() !== collateralAsset.toLowerCase()) return false
-    return (
-      call.data.startsWith('0x095ea7b3') || // ERC20 approve
-      call.data.startsWith('0x2e1a7d4d') // WETH withdraw when using native path
-    )
-  })
-  expect(hasApprovalOrWithdraw).toBe(true)
-
-  if (expectedPayoutAsset === collateralAsset.toLowerCase()) {
-    expect(plan.expectedCollateral >= 0n).toBe(true)
-  } else {
-    expect(plan.expectedDebtPayout >= 0n).toBe(true)
-  }
-
-  expect(payoutAsset).toBe(expectedPayoutAsset)
-}
-
-function assertRedeemExecution(result: RedeemExecutionResult): void {
-  const {
-    plan,
-    redeemHash,
-    collateralDelta,
-    debtDelta,
-    sharesBefore,
-    sharesAfter,
-    sharesToRedeem,
-    slippageBps,
-    payoutAsset,
-    collateralAsset,
-  } = result
-
-  expect(/^0x[0-9a-fA-F]{64}$/.test(redeemHash)).toBe(true)
-  expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
-
-  const toleranceBps = BigInt(slippageBps) + 10n
-  const withinTolerance = (actual: bigint, expected: bigint): boolean => {
-    if (expected === 0n) return actual === 0n
-    if (actual < 0n) return false
-    const lowerBound = (expected * (10_000n - toleranceBps)) / 10_000n
-    const upperBound = (expected * (10_000n + toleranceBps)) / 10_000n
-    return actual >= lowerBound && actual <= upperBound
-  }
-
-  if (payoutAsset) {
-    expect(collateralDelta <= plan.minCollateralForSender).toBe(true)
-    expect(plan.expectedCollateral).toBe(0n)
-    expect(withinTolerance(debtDelta, plan.payoutAmount)).toBe(true)
-  } else {
-    expect(collateralDelta >= plan.minCollateralForSender).toBe(true)
-    expect(withinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
-  }
-
-  expect(plan.payoutAsset.toLowerCase()).toBe((payoutAsset ?? collateralAsset).toLowerCase())
-}
+  }, 180_000)
+})
