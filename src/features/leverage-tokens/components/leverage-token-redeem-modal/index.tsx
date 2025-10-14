@@ -182,7 +182,10 @@ export function LeverageTokenRedeemModal({
   )
 
   const availableAssets = useMemo(
-    () => [outputAssetOptions.collateral, outputAssetOptions.debt],
+    () => [
+      outputAssetOptions.collateral,
+      // outputAssetOptions.debt
+    ],
     [outputAssetOptions],
   )
 
