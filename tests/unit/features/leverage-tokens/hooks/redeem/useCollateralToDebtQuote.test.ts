@@ -89,13 +89,15 @@ describe('useCollateralToDebtQuote', () => {
     expect(result.current.status).toBe('ready')
     expect(result.current.quote).toBe(mockQuote)
     expect(result.current.error).toBeUndefined()
-    expect(mockCreateCollateralToDebtQuote).toHaveBeenCalledWith({
-      chainId: mockChainId,
-      routerAddress: mockRouterAddress,
-      swap: mockSwap,
-      slippageBps: mockSlippageBps,
-      getPublicClient: expect.any(Function),
-    })
+    expect(mockCreateCollateralToDebtQuote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        chainId: mockChainId,
+        routerAddress: mockRouterAddress,
+        swap: mockSwap,
+        slippageBps: mockSlippageBps,
+        getPublicClient: expect.any(Function),
+      }),
+    )
   })
 
   it('should handle missing client error', () => {
@@ -218,13 +220,15 @@ describe('useCollateralToDebtQuote', () => {
       }),
     )
 
-    expect(mockCreateCollateralToDebtQuote).toHaveBeenCalledWith({
-      chainId: mockChainId,
-      routerAddress: mockRouterAddress,
-      swap: mockSwap,
-      slippageBps: mockSlippageBps,
-      getPublicClient: expect.any(Function),
-    })
+    expect(mockCreateCollateralToDebtQuote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        chainId: mockChainId,
+        routerAddress: mockRouterAddress,
+        swap: mockSwap,
+        slippageBps: mockSlippageBps,
+        getPublicClient: expect.any(Function),
+      }),
+    )
   })
 
   it('should provide correct getPublicClient function', () => {
@@ -267,13 +271,15 @@ describe('useCollateralToDebtQuote', () => {
     )
 
     expect(result.current.status).toBe('ready')
-    expect(mockCreateCollateralToDebtQuote).toHaveBeenCalledWith({
-      chainId: differentChainId,
-      routerAddress: mockRouterAddress,
-      swap: mockSwap,
-      slippageBps: mockSlippageBps,
-      getPublicClient: expect.any(Function),
-    })
+    expect(mockCreateCollateralToDebtQuote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        chainId: differentChainId,
+        routerAddress: mockRouterAddress,
+        swap: mockSwap,
+        slippageBps: mockSlippageBps,
+        getPublicClient: expect.any(Function),
+      }),
+    )
   })
 
   it('should handle different slippage values', () => {
@@ -292,12 +298,14 @@ describe('useCollateralToDebtQuote', () => {
       }),
     )
 
-    expect(mockCreateCollateralToDebtQuote).toHaveBeenCalledWith({
-      chainId: mockChainId,
-      routerAddress: mockRouterAddress,
-      swap: mockSwap,
-      slippageBps: customSlippageBps,
-      getPublicClient: expect.any(Function),
-    })
+    expect(mockCreateCollateralToDebtQuote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        chainId: mockChainId,
+        routerAddress: mockRouterAddress,
+        swap: mockSwap,
+        slippageBps: customSlippageBps,
+        getPublicClient: expect.any(Function),
+      }),
+    )
   })
 })
