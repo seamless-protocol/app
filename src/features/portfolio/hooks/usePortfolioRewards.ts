@@ -41,7 +41,8 @@ export function usePortfolioRewards() {
         const humanReadableAmount = Number(rawAmount) / Number(divisor)
 
         // Get token price from metadata (if available) or use $1.00 as fallback
-        const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+        const tokenPrice =
+          (reward.metadata as unknown as { tokenPrice?: number })?.tokenPrice || 1.0
         const usdValue = humanReadableAmount * tokenPrice
 
         return total + usdValue

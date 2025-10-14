@@ -108,7 +108,7 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
                 pendingAmount: reward.pending, // Amount available to claim
                 hasClaimable, // Boolean for easy UI checks
                 hasClaimed, // Boolean for easy UI checks
-                tokenPrice: (reward.token as any).price, // Token price in USD
+                tokenPrice: (reward.token as unknown as { price?: number }).price, // Token price in USD
               },
             }
 
@@ -262,7 +262,9 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
     // Import dynamically to avoid circular dependencies
     const leverageTokenConfigs = await this.getLeverageTokenConfigs()
     const leverageTokenAddresses = new Set(
-      leverageTokenConfigs.map((config: any) => config.address.toLowerCase()),
+      leverageTokenConfigs.map((config: unknown) =>
+        (config as { address: string }).address.toLowerCase(),
+      ),
     )
 
     // Get SEAM token addresses from contract addresses
