@@ -17,7 +17,7 @@ export function RLPLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
     >
       <title id={logoId}>RLP Logo</title>
       {/* Exported from https://www.figma.com/design/abMCGTqHzUJlRkiy3eNcWz/Resolv-Brand-Kit?node-id=78-1591&t=o0zOdnIr1pqDouNu-0 */}
-      <g clip-path="url(#clip0_78_1591)">
+      <g clipPath="url(#clip0_78_1591)">
         <path
           d="M31.9881 16C31.9881 20.296 30.2955 24.1954 27.5401 27.0697C27.4612 27.152 27.3812 27.2331 27.3012 27.3131C27.2212 27.3931 27.1447 27.4674 27.0658 27.544C26.5024 28.0846 25.9001 28.584 25.2635 29.0377C24.9344 29.2731 24.595 29.496 24.2464 29.7063C21.8361 31.1623 19.0098 32 15.9881 32C12.9664 32 10.1481 31.1646 7.73896 29.7109C7.39038 29.5017 7.04981 29.2789 6.71953 29.0423C6.08296 28.5897 5.48067 28.0914 4.91838 27.552C4.75724 27.3977 4.59953 27.24 4.44524 27.0789C1.6841 24.2046 -0.0119019 20.3006 -0.0119019 16C-0.0119019 11.6994 1.77895 7.58171 4.67495 4.68686C7.56981 1.79086 11.5698 0 15.9881 0C20.4064 0 24.4064 1.79086 27.3012 4.68686C30.1972 7.58171 31.9881 11.5817 31.9881 16Z"
           fill="#F8991D"
@@ -38,66 +38,66 @@ export function RLPLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
             d="M15.9879 0L15.9879 32"
             stroke="#F6E8D7"
             style={{ stroke: '#F6E8D7', strokeOpacity: 1 }}
-            stroke-width="1.33333"
-            stroke-linecap="square"
-            stroke-linejoin="round"
+            strokeWidth="1.33333"
+            strokeLinecap="square"
+            strokeLinejoin="round"
           />
           <path
             d="M0.749637 11L20.8746 31.125"
             stroke="#F6E8D7"
             style={{ stroke: '#F6E8D7', strokeOpacity: 1 }}
-            stroke-width="1.33333"
-            stroke-linecap="square"
-            stroke-linejoin="round"
+            strokeWidth="1.33333"
+            strokeLinecap="square"
+            strokeLinejoin="round"
           />
           <path
             d="M-0.012085 16L31.9879 16"
             stroke="#F6E8D7"
             style={{ stroke: '#F6E8D7', strokeOpacity: 1 }}
-            stroke-width="1.33333"
-            stroke-linecap="square"
-            stroke-linejoin="round"
+            strokeWidth="1.33333"
+            strokeLinecap="square"
+            strokeLinejoin="round"
           />
           <path
             d="M15.9879 26.25C21.6488 26.25 26.2379 21.6609 26.2379 16C26.2379 10.3391 21.6488 5.75 15.9879 5.75C10.327 5.75 5.73792 10.3391 5.73792 16C5.73792 21.6609 10.327 26.25 15.9879 26.25Z"
             stroke="#F6E8D7"
             style={{ stroke: '#F6E8D7', strokeOpacity: 1 }}
-            stroke-width="1.33333"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="1.33333"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </g>
         <path
           d="M26.2379 16C26.2379 10.3391 21.6488 5.75 15.9879 5.75V16L23.2379 23.2457C25.0915 21.391 26.2379 18.8294 26.2379 16Z"
           stroke="#F6E8D7"
           style={{ stroke: '#F6E8D7', strokeOpacity: 1 }}
-          stroke-width="1.33333"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.33333"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           d="M15.9881 5.75C10.3272 5.75 5.7381 10.3391 5.7381 16H15.9881V5.75Z"
           stroke="#F6E8D7"
           style={{ stroke: '#F6E8D7', strokeOpacity: 1 }}
-          stroke-width="1.33333"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.33333"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           d="M15.9879 16H5.73792L15.9879 26.25H26.2379L15.9879 16Z"
           stroke="#F6E8D7"
           style={{ stroke: '#F6E8D7', strokeOpacity: 1 }}
-          stroke-width="1.33333"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.33333"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           d="M5.73792 26.25H15.9879L10.8629 21.125L5.73792 26.25Z"
           stroke="#F6E8D7"
           style={{ stroke: '#F6E8D7', strokeOpacity: 1 }}
-          stroke-width="1.33333"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.33333"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
       </g>
       <rect
@@ -108,7 +108,7 @@ export function RLPLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
         rx="15.6667"
         stroke="url(#paint0_linear_78_1591)"
         style={{ stroke: '#F6E8D7', strokeOpacity: 1 }}
-        stroke-width="0.666667"
+        strokeWidth="0.666667"
       />
       <defs>
         <linearGradient
@@ -120,11 +120,11 @@ export function RLPLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
           gradientUnits="userSpaceOnUse"
         >
           <stop
-            stop-color="white"
-            stop-opacity="0.3"
+            stopColor="white"
+            stopOpacity="0.3"
             style={{ stopColor: 'white', stopOpacity: 0.3 }}
           />
-          <stop offset="1" stop-opacity="0.1" style={{ stopColor: 'black', stopOpacity: 0.1 }} />
+          <stop offset="1" stopOpacity="0.1" style={{ stopColor: 'black', stopOpacity: 0.1 }} />
         </linearGradient>
         <clipPath id={`${logoId}-clip0_78_1591`}>
           <rect
