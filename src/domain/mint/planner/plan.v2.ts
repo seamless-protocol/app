@@ -10,9 +10,7 @@ import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import {
-  BASE_WETH,
   ETH_SENTINEL,
-  getContractAddresses,
   type SupportedChainId,
 } from '@/lib/contracts/addresses'
 import {
@@ -22,13 +20,8 @@ import {
   readLeverageManagerV2PreviewDeposit,
   readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
-import { applySlippageFloor, mulDivFloor } from './math'
+import { applySlippageFloor } from './math'
 import type { Quote, QuoteFn } from './types'
-
-// Basis points and convergence controls
-const BPS = 10_000n
-// Tiny epsilon used for single-pass clamp (bps)
-const EPS_BPS = 10n
 
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
 type TokenArg = Address
@@ -122,7 +115,6 @@ export async function planMintV2(params: {
   const { collateralAsset, debtAsset } = await getManagerAssets({ config, token, chainId })
   const normalizedInputAsset = getAddress(inputAsset)
   const normalizedCollateralAsset = getAddress(collateralAsset)
-  const normalizedDebtAsset = getAddress(debtAsset)
   debugMintPlan('assets', { inputAsset, collateralAsset, debtAsset })
   if (normalizedInputAsset !== normalizedCollateralAsset) {
     throw new Error(
@@ -131,7 +123,7 @@ export async function planMintV2(params: {
   }
 
   // 2) Ideal targets (router semantics)
-  const ideal = await previewIdeal({ config, token, userCollateralOut, chainId })
+  let ideal = await previewIdeal({ config, token, userCollateralOut, chainId })
   debugMintPlan('ideal', {
     userCollateralOut,
     idealDebt: ideal.idealDebt,
@@ -142,9 +134,7 @@ export async function planMintV2(params: {
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
   // 3) Quote debt->collateral for the missing collateral
-  const chainWeth = getContractAddresses(chainId).tokens?.weth ?? BASE_WETH
-  const normalizedWeth = getAddress(chainWeth)
-  const useNativeDebtPath = normalizedDebtAsset === normalizedWeth
+  const useNativeDebtPath = false
   const inTokenForQuote = useNativeDebtPath ? ETH_SENTINEL : debtAsset
   // Default to exact-in path for robustness across venues
   const r = await quoteDebtForMissingCollateral({
@@ -153,76 +143,44 @@ export async function planMintV2(params: {
     inToken: inTokenForQuote,
     outToken: collateralAsset,
     quote: quoteDebtToCollateral,
-    slippageBps,
   })
   let debtIn = r.debtIn
-  let debtQuote = r.debtQuote
-  if (typeof debtQuote.minOut !== 'bigint') {
-    debtQuote = { ...debtQuote, minOut: debtQuote.out }
+  let effectiveQuote = r.debtQuote
+  if (typeof effectiveQuote.minOut !== 'bigint') {
+    effectiveQuote = { ...effectiveQuote, minOut: effectiveQuote.out }
   }
-  debugMintPlan('quote.initial', { debtIn, out: debtQuote.out, minOut: debtQuote.minOut ?? 0n })
-  assertDebtSwapQuote(debtQuote, debtAsset, useNativeDebtPath)
+  debugMintPlan('quote.initial', { debtIn, out: effectiveQuote.out, minOut: effectiveQuote.minOut ?? 0n })
+  assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
 
   // 4) Final preview with proportionally adjusted debt flash loan amount
-  let totalCollateralInitial = userCollateralOut + debtQuote.out
-  let guaranteedOut = debtQuote.minOut
-  if (guaranteedOut <= 0n) throw new Error('Swap quote minOut must be > 0')
+  let totalCollateralInitial = userCollateralOut + effectiveQuote.out
+
+  // const proportionalCollateralIn = ideal.targetCollateral * totalCollateralInitial / ideal.targetCollateral
   let final = await previewFinal({ config, token, totalCollateral: totalCollateralInitial, chainId })
-
-  // // The debt received from the LT deposit is still less than the flash loan, so we should adjust the debt flash loan amount
-  // // down further
-  // if (final.requiredDebt < debtIn) {
-  //   neededFromDebtSwap = totalCollateralInitial - userCollateralOut
-  //   const r2 = await quoteDebtForMissingCollateral({
-  //     idealDebt: debtIn,
-  //     neededOut: neededFromDebtSwap,
-  //     inToken: inTokenForQuote,
-  //     outToken: collateralAsset,
-  //     quote: quoteDebtToCollateral,
-  //     slippageBps,
-  //   })
-
-  //   debtIn = r2.debtIn
-  //   debtQuote = r2.debtQuote
-  //   totalCollateralInitial = userCollateralOut + debtQuote.out
-  //   guaranteedOut = debtQuote.minOut ?? 0n
-
-  //   final = await previewFinal({ config, token, totalCollateral: totalCollateralInitial, chainId })
-  // }
-
   debugMintPlan('final.initial', {
     totalCollateral: totalCollateralInitial,
     requiredDebt: final.requiredDebt,
     shares: final.shares,
   })
 
-  let effectiveQuote = await quoteDebtToCollateral({
-    inToken: inTokenForQuote,
-    outToken: collateralAsset,
-    amountIn: debtIn,
-    intent: 'exactIn',
-  })
-  if (typeof effectiveQuote.minOut !== 'bigint') {
-    effectiveQuote = { ...effectiveQuote, minOut: effectiveQuote.out }
+  // If the debt received from the LT deposit is still less than the flash loan, we need to adjust the flash loan amount down further.
+  // We adjust it as low as possible wrt the slippage tolerance.
+  if (final.requiredDebt < debtIn) {
+    // So, we need to flash loan less debt such that the deposit of the user collateral + debt swap output gives enough debt to repay the debt
+    const adjustedUserCollateralOut = applySlippageFloor(userCollateralOut, slippageBps);
+    const adjustedIdeal = await previewIdeal({ config, token, userCollateralOut: adjustedUserCollateralOut, chainId })
+    final = await previewFinal({ config, token, totalCollateral: adjustedIdeal.targetCollateral, chainId })
+    debtIn = final.requiredDebt
+
+    effectiveQuote = await quoteDebtToCollateral({
+      inToken: inTokenForQuote,
+      outToken: collateralAsset,
+      amountIn: debtIn,
+      intent: 'exactIn',
+    })
   }
-  assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
-  final = await previewFinal({
-    config,
-    token,
-    totalCollateral: userCollateralOut + effectiveQuote.out,
-    chainId,
-  })
-  debugMintPlan('final.singlepass', {
-    flash: final.requiredDebt,
-    out: effectiveQuote.out,
-    minOut: typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : 0n,
-    requiredDebt: final.requiredDebt,
-    shares: final.shares,
-  })
 
   // Slippage is calculated wrt the ideal shares
-  console.log('ideal.idealShares', ideal.idealShares)
-  console.log('slippageBps', slippageBps)
   const minShares = applySlippageFloor(ideal.idealShares, slippageBps)
   // TODO: Do we throw an error here if minShares > final.shares, that is caught so that the ui displays a warning
   // that the tx will likely revert due to slippage, so they should increase slippage?
@@ -272,17 +230,16 @@ export async function quoteDebtForMissingCollateral(args: {
   inToken: Address
   outToken: Address
   quote: QuoteFn,
-  slippageBps: number
 }): Promise<{ debtIn: bigint; debtQuote: Quote }> {
-  const { idealDebt, neededOut, inToken, outToken, quote, slippageBps } = args
+  const { idealDebt, neededOut, inToken, outToken, quote } = args
   // Exact-in quote with manager-sized idealDebt
   let debtIn = idealDebt
   let debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
 
   // If the quote out is below the target, proportionally reduce once and re-quote.
   if (debtQuote.out < neededOut) {
-    // const adjusted = mulDivFloor(idealDebt, debtQuote.out, neededOut)
-    const adjusted = applySlippageFloor(debtQuote.out, slippageBps + 10)
+    const deltaPercentage = debtQuote.out * 10000n / neededOut;
+    const adjusted = debtIn * deltaPercentage / 10000n;
     if (adjusted > 0n && adjusted < debtIn) {
       debtIn = adjusted
       debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
