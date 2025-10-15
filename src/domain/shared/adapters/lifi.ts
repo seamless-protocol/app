@@ -201,6 +201,8 @@ function buildQuoteUrl(
   if (params.integrator) url.searchParams.set('integrator', params.integrator)
   url.searchParams.set('order', params.order)
   if (params.allowBridges) url.searchParams.set('allowBridges', params.allowBridges)
+  // Always skip simulation for faster responses
+  url.searchParams.set('skipSimulation', 'true')
   return url
 }
 
