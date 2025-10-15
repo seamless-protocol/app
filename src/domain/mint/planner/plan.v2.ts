@@ -9,10 +9,7 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
-import {
-  ETH_SENTINEL,
-  type SupportedChainId,
-} from '@/lib/contracts/addresses'
+import { ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
@@ -149,12 +146,21 @@ export async function planMintV2(params: {
   if (typeof effectiveQuote.minOut !== 'bigint') {
     effectiveQuote = { ...effectiveQuote, minOut: effectiveQuote.out }
   }
-  debugMintPlan('quote.initial', { debtIn, out: effectiveQuote.out, minOut: effectiveQuote.minOut ?? 0n })
+  debugMintPlan('quote.initial', {
+    debtIn,
+    out: effectiveQuote.out,
+    minOut: effectiveQuote.minOut ?? 0n,
+  })
   assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
 
   // 4) Final preview with proportionally adjusted debt flash loan amount
   const totalCollateralInitial = userCollateralOut + effectiveQuote.out
-  let final = await previewFinal({ config, token, totalCollateral: totalCollateralInitial, chainId })
+  let final = await previewFinal({
+    config,
+    token,
+    totalCollateral: totalCollateralInitial,
+    chainId,
+  })
   debugMintPlan('final.initial', {
     totalCollateral: totalCollateralInitial,
     requiredDebt: final.requiredDebt,
@@ -164,9 +170,19 @@ export async function planMintV2(params: {
   // If the debt received from the LT deposit is still less than the flash loan, we need to adjust the flash loan amount down further.
   // We adjust it as low as possible wrt the slippage tolerance.
   if (final.requiredDebt < debtIn) {
-    const adjustedUserCollateralOut = applySlippageFloor(userCollateralOut, slippageBps);
-    const adjustedIdeal = await previewIdeal({ config, token, userCollateralOut: adjustedUserCollateralOut, chainId })
-    final = await previewFinal({ config, token, totalCollateral: adjustedIdeal.targetCollateral, chainId })
+    const adjustedUserCollateralOut = applySlippageFloor(userCollateralOut, slippageBps)
+    const adjustedIdeal = await previewIdeal({
+      config,
+      token,
+      userCollateralOut: adjustedUserCollateralOut,
+      chainId,
+    })
+    final = await previewFinal({
+      config,
+      token,
+      totalCollateral: adjustedIdeal.targetCollateral,
+      chainId,
+    })
 
     debugMintPlan('final.maxSlippage', {
       totalCollateral: adjustedIdeal.targetCollateral,
@@ -232,7 +248,7 @@ export async function quoteDebtForMissingCollateral(args: {
   neededOut: bigint
   inToken: Address
   outToken: Address
-  quote: QuoteFn,
+  quote: QuoteFn
 }): Promise<{ debtIn: bigint; debtQuote: Quote }> {
   const { idealDebt, neededOut, inToken, outToken, quote } = args
   // Exact-in quote with manager-sized idealDebt
