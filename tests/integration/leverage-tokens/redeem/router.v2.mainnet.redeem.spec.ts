@@ -22,7 +22,7 @@ if (mode !== 'tenderly') {
 
 const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
-redeemSuite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet wstETH/ETH 2x)', () => {
+redeemSuite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet wstETH/ETH 25x)', () => {
   const SLIPPAGE_BPS = 50
 
   it('redeems all minted shares into collateral asset via LiFi', async () => {
