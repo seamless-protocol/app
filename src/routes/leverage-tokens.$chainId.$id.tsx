@@ -577,12 +577,12 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                   height={320}
                   className="border border-border bg-card"
                   yAxisFormatter={(value: number) => {
-                    const formatted = formatToSignificantDigits(value, 3)
+                    const formatted = formatToSignificantDigits(value, 4)
                     return `$${formatted}`
                   }}
                   tooltipFormatter={(value: number | string, name?: string) => {
                     const numValue = Number(value)
-                    const formatted = formatToSignificantDigits(numValue, 6)
+                    const formatted = formatToSignificantDigits(numValue, 8)
                     return [`$${formatted}`, name || 'Price']
                   }}
                 />
