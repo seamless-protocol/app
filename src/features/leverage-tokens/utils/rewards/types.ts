@@ -1,6 +1,26 @@
 import type { Address, PublicClient, WalletClient } from 'viem'
 
 /**
+ * Reward metadata interface for typed access to reward properties
+ */
+export interface RewardMetadata {
+  /** Protocol identifier */
+  protocol: string
+  /** Total amount ever earned */
+  totalAmount: string
+  /** Amount already claimed */
+  claimedAmount: string
+  /** Amount available to claim */
+  pendingAmount: string
+  /** Boolean for easy UI checks */
+  hasClaimable: boolean
+  /** Boolean for easy UI checks */
+  hasClaimed: boolean
+  /** Token price in USD */
+  tokenPrice?: number
+}
+
+/**
  * Base interface for reward claim data
  */
 export interface BaseRewardClaimData {
@@ -17,7 +37,7 @@ export interface BaseRewardClaimData {
   /** Proof data needed for claiming (provider-specific) */
   proof: Array<string>
   /** Additional metadata for the claim */
-  metadata?: Record<string, unknown>
+  metadata?: RewardMetadata
 }
 
 /**

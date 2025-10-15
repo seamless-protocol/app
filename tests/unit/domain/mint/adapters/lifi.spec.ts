@@ -33,7 +33,7 @@ describe('createLifiQuoteAdapter', () => {
       baseUrl: 'https://li.quest',
     })
     const res = await quote({ inToken: IN, outToken: OUT, amountIn: 123n })
-    expect(res.out).toBe(900n)
+    expect(res.out).toBe(1000n)
     expect(res.approvalTarget.toLowerCase()).toBe(ROUTER.toLowerCase())
     expect(res.calldata).toBe('0xdeadbeef')
 
@@ -67,5 +67,22 @@ describe('createLifiQuoteAdapter', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify(bad), { status: 200 })) as any
     const quote = createLifiQuoteAdapter({ router: ROUTER })
     await expect(quote({ inToken: IN, outToken: OUT, amountIn: 1n })).rejects.toThrow()
+  })
+
+  it('includes skipSimulation=true by default for performance', async () => {
+    const step = {
+      estimate: { toAmount: '1000', toAmountMin: '900', approvalAddress: ROUTER },
+      transactionRequest: { to: ROUTER, data: '0xdeadbeef' },
+    }
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(step), { status: 200 }))
+    global.fetch = fetchMock as any
+
+    const quote = createLifiQuoteAdapter({ router: ROUTER })
+    await quote({ inToken: IN, outToken: OUT, amountIn: 123n })
+
+    const url = new URL((fetchMock.mock.calls[0] as Array<any>)[0])
+    expect(url.searchParams.get('skipSimulation')).toBe('true')
   })
 })

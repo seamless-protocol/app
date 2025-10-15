@@ -41,7 +41,7 @@ export function usePortfolioRewards() {
         const humanReadableAmount = Number(rawAmount) / Number(divisor)
 
         // Get token price from metadata (if available) or use $1.00 as fallback
-        const tokenPrice = (reward.metadata as any)?.tokenPrice || 1.0
+        const tokenPrice = reward.metadata?.tokenPrice || 1.0
         const usdValue = humanReadableAmount * tokenPrice
 
         return total + usdValue
@@ -73,14 +73,14 @@ export function usePortfolioRewards() {
 
       const totalClaimedAmount = claimableRewards
         .reduce((total, reward) => {
-          const claimedAmount = (reward.metadata?.['claimedAmount'] as string) || '0'
+          const claimedAmount = reward.metadata?.claimedAmount || '0'
           return total + BigInt(claimedAmount)
         }, 0n)
         .toString()
 
       const totalEarnedAmount = claimableRewards
         .reduce((total, reward) => {
-          const totalAmount = (reward.metadata?.['totalAmount'] as string) || '0'
+          const totalAmount = reward.metadata?.totalAmount || '0'
           return total + BigInt(totalAmount)
         }, 0n)
         .toString()
@@ -91,11 +91,11 @@ export function usePortfolioRewards() {
 
       // Count rewards by type
       const claimableCount = claimableRewards.filter(
-        (reward) => reward.metadata?.['hasClaimable'] === true,
+        (reward) => reward.metadata?.hasClaimable === true,
       ).length
 
       const claimedCount = claimableRewards.filter(
-        (reward) => reward.metadata?.['hasClaimed'] === true,
+        (reward) => reward.metadata?.hasClaimed === true,
       ).length
 
       return {

@@ -7,9 +7,9 @@
  * V2 planner assumes `inputAsset === collateralAsset`.
  */
 import type { Address } from 'viem'
-import { encodeFunctionData, erc20Abi, getAddress, parseAbi, zeroAddress } from 'viem'
+import { encodeFunctionData, erc20Abi, getAddress, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
-import { ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
@@ -26,9 +26,6 @@ type EquityInInputAssetArg = bigint
 type RouterV2Call = { target: Address; data: `0x${string}`; value: bigint }
 type V2Calls = Array<RouterV2Call>
 type V2Call = RouterV2Call
-
-// Base WETH native path support
-const WETH_WITHDRAW_ABI = parseAbi(['function withdraw(uint256 wad)'])
 
 // No additional normalizers; use viem's getAddress where needed
 
@@ -131,8 +128,7 @@ export async function planMintV2(params: {
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
   // 3) Quote debt->collateral for the missing collateral
-  const useNativeDebtPath = false
-  const inTokenForQuote = useNativeDebtPath ? ETH_SENTINEL : debtAsset
+  const inTokenForQuote = debtAsset
   // Default to exact-in path for robustness across venues
   const r = await quoteDebtForMissingCollateral({
     idealDebt: ideal.idealDebt,
@@ -151,7 +147,7 @@ export async function planMintV2(params: {
     out: effectiveQuote.out,
     minOut: effectiveQuote.minOut ?? 0n,
   })
-  assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
+  assertDebtSwapQuote(effectiveQuote, debtAsset)
 
   // 4) Final preview with proportionally adjusted debt flash loan amount
   const totalCollateralInitial = userCollateralOut + effectiveQuote.out
@@ -210,7 +206,6 @@ export async function planMintV2(params: {
       debtAsset,
       debtQuote: effectiveQuote,
       debtIn,
-      useNative: useNativeDebtPath,
     }),
   ]
 
@@ -322,27 +317,8 @@ function buildDebtSwapCalls(args: {
   debtAsset: Address
   debtQuote: Quote
   debtIn: bigint
-  useNative: boolean
 }): Array<V2Call> {
-  const { debtAsset, debtQuote, debtIn, useNative } = args
-  if (useNative) {
-    return [
-      {
-        target: debtAsset,
-        data: encodeFunctionData({
-          abi: WETH_WITHDRAW_ABI,
-          functionName: 'withdraw',
-          args: [debtIn],
-        }),
-        value: 0n,
-      },
-      {
-        target: debtQuote.approvalTarget,
-        data: debtQuote.calldata,
-        value: debtIn,
-      },
-    ]
-  }
+  const { debtAsset, debtQuote, debtIn } = args
   // ERC20-in path: approve router for debt asset then perform swap
   return [
     {
@@ -362,25 +338,14 @@ function buildDebtSwapCalls(args: {
 function assertDebtSwapQuote(
   quote: Quote,
   debtAsset: Address,
-  useNativeDebtPath: boolean,
 ): asserts quote is Quote & { minOut: bigint } {
   if (typeof quote.minOut !== 'bigint') throw new Error('Swap quote missing minOut')
-  if (useNativeDebtPath) {
-    // Only error if adapter explicitly indicates non-native input
-    if (quote.wantsNativeIn === false) {
-      throw new Error(
-        'Adapter inconsistency: native path selected but quote does not want native in',
-      )
-    }
-  } else {
-    const approval = quote.approvalTarget
-    if (!approval) throw new Error('Missing approval target for ERC20 swap')
-    const normalizedApproval = getAddress(approval)
-    if (normalizedApproval === zeroAddress)
-      throw new Error('Missing approval target for ERC20 swap')
-    if (normalizedApproval === getAddress(debtAsset)) {
-      throw new Error('Approval target cannot equal input token')
-    }
+  const approval = quote.approvalTarget
+  if (!approval) throw new Error('Missing approval target for ERC20 swap')
+  const normalizedApproval = getAddress(approval)
+  if (normalizedApproval === zeroAddress) throw new Error('Missing approval target for ERC20 swap')
+  if (normalizedApproval === getAddress(debtAsset)) {
+    throw new Error('Approval target cannot equal input token')
   }
 }
 
@@ -420,5 +385,3 @@ function sanitizeBigints(obj: Record<string, unknown>): Record<string, unknown> 
   }
   return out
 }
-
-// Iterative refinement removed in favor of a single minOut-aware pass.

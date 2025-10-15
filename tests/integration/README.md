@@ -169,7 +169,7 @@ export TENDERLY_PROJECT=your_project
 export TENDERLY_ACCESS_KEY=your_access_key
 # LiFi key recommended to avoid 429s during mint
 export VITE_LIFI_API_KEY=your_lifi_api_key
-export VITE_LIFI_INTEGRATOR=seamless-protocol
+export VITE_LIFI_INTEGRATOR=seamless
 
 "# Run focused integration test (Tenderly JIT VNet, mainnet)"
 "# Requires TENDERLY_ACCESS_KEY, TENDERLY_ACCOUNT, and TENDERLY_PROJECT set"

@@ -83,14 +83,27 @@ export function PriceLineChart({
     if (value >= 1000) {
       return `$${(value / 1000).toFixed(1)}K`
     }
-    return `$${value.toFixed(3)}` // Show 3 decimal places for price data
+    return `$${value.toFixed(6)}` // Show 6 decimal places for price data
   }
 
   const defaultTooltipFormatter = (value: number | string, name?: string): [string, string] => {
     if (chartType === 'tvl') {
       return [`$${Number(value).toFixed(2)}M`, 'TVL']
     }
-    return [`$${Number(value).toFixed(3)}`, name || 'Price']
+    const numValue = Number(value)
+    if (numValue >= 1) {
+      return [
+        `$${numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`,
+        name || 'Price',
+      ]
+    } else if (numValue >= 0.01) {
+      return [`$${numValue.toFixed(6)}`, name || 'Price']
+    } else if (numValue >= 0.001) {
+      return [`$${numValue.toFixed(8)}`, name || 'Price']
+    } else if (numValue > 0) {
+      return [`$${numValue.toFixed(10)}`, name || 'Price']
+    }
+    return ['$0', name || 'Price']
   }
 
   const defaultLabelFormatter = (dateString: string) => {
