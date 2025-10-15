@@ -1,8 +1,17 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { createConfig } from 'wagmi'
 import { fallback, http } from 'viem'
 import type { Config } from 'wagmi'
 import { base, mainnet } from 'wagmi/chains'
 import { createLogger } from '@/lib/logger'
+import { connectorsForWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
+import {
+  rainbowWallet,
+  walletConnectWallet,
+  metaMaskWallet,
+  coinbaseWallet,
+  injectedWallet,
+  safeWallet,
+} from '@rainbow-me/rainbowkit/wallets'
 
 const logger = createLogger('wagmi-config')
 
@@ -13,6 +22,23 @@ if (!walletConnectProjectId) {
     'WalletConnect Project ID not found. Please add VITE_WALLETCONNECT_PROJECT_ID to your .env file',
   )
 }
+
+export const connectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Recommended',
+      wallets: [rainbowWallet, metaMaskWallet, coinbaseWallet],
+    },
+    {
+      groupName: 'Others',
+      wallets: [walletConnectWallet, injectedWallet, safeWallet],
+    },
+  ],
+  {
+    appName: 'Seamless Protocol',
+    projectId: walletConnectProjectId || 'YOUR_PROJECT_ID',
+  },
+)
 
 // Optional JSON map to direct chain RPCs in mock/test modes
 // Example: {"8453":"https://virtual.base...","1":"https://virtual.mainnet..."}
