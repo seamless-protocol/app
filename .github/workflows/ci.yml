@@ -134,7 +134,7 @@ jobs:
           cp tests/integration/.env.example tests/integration/.env
           echo "Integration test environment prepared"
 
-      - name: Run integration tests (Mainnet wstETH/WETH only, Tenderly static)
+      - name: Run integration tests (Mainnet wstETH/WETH 25x only, Tenderly Jit Vnet, LIFI)
         run: bun run test:integration:wsteth
         env:
           TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
