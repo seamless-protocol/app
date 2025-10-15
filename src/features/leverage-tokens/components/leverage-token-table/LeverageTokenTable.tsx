@@ -452,7 +452,10 @@ export function LeverageTokenTable({
                       <TableCell className="py-4 px-6 text-right">
                         {typeof token.tvlUsd === 'number' && Number.isFinite(token.tvlUsd) ? (
                           <span className="text-sm font-medium text-[var(--text-secondary)]">
-                            {formatCurrency(token.tvlUsd)}
+                            {formatCurrency(token.tvlUsd, {
+                              thousandDecimals: 2,
+                              millionDecimals: 2,
+                            })}
                           </span>
                         ) : (
                           <span className="text-sm text-[var(--text-muted)]">—</span>
