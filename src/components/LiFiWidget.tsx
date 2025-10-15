@@ -41,7 +41,7 @@ export function LiFiWidget() {
   // LI.FI Widget configuration with custom theme matching app design
   const widgetConfig: WidgetConfig = useMemo(
     () => ({
-      integrator: 'seamless-protocol',
+      integrator: 'seamless',
       variant: 'wide',
       // Keep LiFi in sync with app mode; do not let it drive mode
       appearance: resolvedTheme,

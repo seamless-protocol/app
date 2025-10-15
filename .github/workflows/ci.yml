@@ -91,7 +91,7 @@ jobs:
           TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
           TENDERLY_CHAIN_ID: 8453
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
-          VITE_LIFI_INTEGRATOR: seamless-protocol
+          VITE_LIFI_INTEGRATOR: seamless
       
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -137,7 +137,7 @@ jobs:
           TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
           TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
-          VITE_LIFI_INTEGRATOR: seamless-protocol
+          VITE_LIFI_INTEGRATOR: seamless
 
 
   build:
