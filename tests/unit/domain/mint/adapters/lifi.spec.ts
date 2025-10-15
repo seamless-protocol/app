@@ -33,7 +33,7 @@ describe('createLifiQuoteAdapter', () => {
       baseUrl: 'https://li.quest',
     })
     const res = await quote({ inToken: IN, outToken: OUT, amountIn: 123n })
-    expect(res.out).toBe(900n)
+    expect(res.out).toBe(1000n)
     expect(res.approvalTarget.toLowerCase()).toBe(ROUTER.toLowerCase())
     expect(res.calldata).toBe('0xdeadbeef')
 

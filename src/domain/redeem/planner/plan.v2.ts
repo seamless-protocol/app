@@ -95,7 +95,7 @@ export async function planRedeemV2(params: {
     ...(managerAddress ? { managerAddress } : {}),
   })
 
-  // Initial preview to understand the redemption
+  // Amount of collateral the sender would receive if there is 0 slippage
   const initialPreview = await readLeverageManagerV2PreviewRedeem(config, {
     args: [token, sharesToRedeem],
     chainId: chainId as SupportedChainId,
@@ -142,7 +142,7 @@ export async function planRedeemV2(params: {
 
   const requiredForDebt = sizing.required
   if (requiredForDebt > totalCollateralAvailable) {
-    throw new Error('Insufficient collateral to repay debt')
+    throw new Error('Required for debt is greater than total collateral available')
   }
 
   const padding = sizing.exactOut
@@ -152,6 +152,16 @@ export async function planRedeemV2(params: {
       : 0n
   const paddedCollateralForDebt = requiredForDebt + padding
   const remainingCollateral = totalCollateralAvailable - paddedCollateralForDebt
+
+  // Minimum amount of collateral the sender expects to receive
+  const minCollateralForSender = calculateMinCollateralForSender(remainingCollateral, slippageBps)
+
+  if (minCollateralForSender > remainingCollateral) {
+    throw new Error(
+      'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
+    )
+  }
+
   const { calls: swapCalls } = await buildCollateralToDebtSwapCalls({
     collateralAsset,
     debtAsset,
@@ -168,7 +178,7 @@ export async function planRedeemV2(params: {
   const wantsDebtOutput = payoutOverride ? payoutOverride === debtAddr : false
 
   const planDraft = {
-    minCollateralForSender: calculateMinCollateralForSender(remainingCollateral, slippageBps),
+    minCollateralForSender,
     expectedCollateral: remainingCollateral,
     expectedDebtPayout: 0n,
     payoutAsset: wantsDebtOutput ? debtAddr : collateralAddr,
@@ -294,13 +304,15 @@ async function calculateCollateralNeededForDebt(args: {
     }
 
     if (quote.out < debtToRepay && attempt === upperBound) {
-      throw new Error('Insufficient collateral to repay debt')
+      throw new Error('Collateral swap output is less than debt to repay; increase slippage')
     }
 
     const required = mulDivCeil(debtToRepay, attempt, quote.out)
     lastRequired = required
     if (required > upperBound) {
-      throw new Error('Insufficient collateral to repay debt')
+      throw new Error(
+        'Required collateral is greater than max collateral available; increase slippage',
+      )
     }
 
     // Stop if converged or oscillating between two adjacent values,

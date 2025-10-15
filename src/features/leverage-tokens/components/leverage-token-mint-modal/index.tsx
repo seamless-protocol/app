@@ -15,7 +15,7 @@ import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
-import { BASE_WETH, ETH_SENTINEL, getContractAddresses } from '../../../../lib/contracts/addresses'
+import { getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
@@ -169,7 +169,6 @@ export function LeverageTokenMintModal({
   // Derive expected tokens from preview data (no local state needed)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
-  const [isRefreshingRoute, setIsRefreshingRoute] = useState(false)
 
   // Hooks: form, preview, allowance, execution
   const currentSupplyFormatted = leverageTokenState
@@ -598,46 +597,6 @@ export function LeverageTokenMintModal({
         }
       }
 
-      // Pre-flight: protect user's preview floor (minOut) before submitting
-      try {
-        const plan = planPreview.plan
-        const quoteFn = quoteDebtToCollateral.quote
-        if (plan && quoteFn) {
-          const floor = plan.swapMinOut
-          const chainWeth = contractAddresses.tokens?.weth ?? BASE_WETH
-          const inToken =
-            plan.debtAsset.toLowerCase() === chainWeth.toLowerCase()
-              ? ETH_SENTINEL
-              : (plan.debtAsset as `0x${string}`)
-          const outToken = plan.collateralAsset as `0x${string}`
-          const amountIn = plan.flashLoanAmount ?? plan.expectedDebt
-          if (amountIn > 0n && floor > 0n) {
-            const fresh = await quoteFn({ inToken, outToken, amountIn, intent: 'exactIn' })
-            const minNow = typeof fresh.minOut === 'bigint' ? fresh.minOut : fresh.out
-            if (minNow < floor) {
-              toast.message('Refreshing quote…', {
-                description: 'Route moved below your guaranteed floor.',
-              })
-              // Refresh the plan/quote and keep user on Confirm
-              try {
-                setIsRefreshingRoute(true)
-                await planPreview.refetch?.()
-              } catch (_) {
-                // Non-fatal; user can retry
-              } finally {
-                setIsRefreshingRoute(false)
-              }
-              // Do not block; proceed with execution which re-plans with fresh quotes
-            }
-          }
-        }
-      } catch (preCheckErr) {
-        const msg = preCheckErr instanceof Error ? preCheckErr.message : 'Route pre-check failed.'
-        setError(msg)
-        toError()
-        return
-      }
-
       try {
         const p = planPreview.plan
         if (!p || !userAddress) throw new Error('Missing finalized plan or account')
@@ -787,7 +746,6 @@ export function LeverageTokenMintModal({
             onConfirm={handleConfirm}
             disabled={
               isCalculating ||
-              isRefreshingRoute ||
               (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
                 quoteDebtToCollateral.status !== 'ready') ||
               !planPreview.plan

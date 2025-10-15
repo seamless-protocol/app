@@ -89,9 +89,9 @@ describe('planMintV2 final clamp + re-quote', () => {
 
     // Re-quote must be called at least once with the clamped amount (120)
     expect(quotedForAmountIn.some((a) => a === 120n)).toBe(true)
-    // Native path: withdraw then payable swap with value equal to clamped debt (120)
+    // ERC20 path: approve then swap with value 0 (no native value needed)
     expect(plan.calls.length).toBe(2)
     expect(plan.calls[0]?.target).toBe(BASE_WETH)
-    expect(plan.calls[1]?.value).toBe(120n)
+    expect(plan.calls[1]?.value).toBe(0n)
   })
 })
