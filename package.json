@@ -16,7 +16,10 @@
     "test:unit:watch": "vitest watch tests/unit",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:integration": "bun scripts/run-tests.ts integration",
+    "test:integration": "bun run test:integration:wsteth",
+    "test:integration:wsteth": "bun run test:integration:wsteth:mint && bun run test:integration:wsteth:redeem",
+    "test:integration:wsteth:mint": "TEST_CHAIN=mainnet E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration -- tests/integration/leverage-tokens/mint/router.v2.mainnet.mint.spec.ts",
+    "test:integration:wsteth:redeem": "TEST_CHAIN=mainnet E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration -- tests/integration/leverage-tokens/redeem/router.v2.mainnet.redeem.spec.ts",
     "test:integration:raw": "vitest -c vitest.integration.config.ts --run tests/integration",
     "anvil:base": "bash ./scripts/anvil-base.sh",
     "test:e2e": "bun scripts/run-tests.ts e2e",
@@ -29,8 +32,7 @@
     "test:integration:tenderly": "bun scripts/run-tests.ts integration",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "wagmi": "wagmi generate",
-    "test:integration:wsteth": "TEST_CHAIN=mainnet E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x TENDERLY_CHAIN_ID=1 bun scripts/run-tests.ts integration -- tests/integration/leverage-tokens/redeem/router.v2.mainnet.redeem.spec.ts tests/integration/leverage-tokens/mint/router.v2.mainnet.mint.spec.ts"
+    "wagmi": "wagmi generate"
   },
   "dependencies": {
     "@lifi/wallet-management": "^3.17.3",
