@@ -63,10 +63,10 @@ describe('planMintV2 (native path, exact-in)', () => {
     expect(quoteDebtToCollateral).toHaveBeenCalled()
     // expectedTotalCollateral = 100 + 60
     expect(plan.expectedTotalCollateral).toBe(160n)
-    // Native path: first call withdraw(WETH), second is payable swap (value == debtIn == 120)
+    // ERC20 path: first call approve(WETH), second is swap (value == 0)
     expect(plan.calls.length).toBe(2)
     expect(plan.calls[0]?.target).toBe(BASE_WETH)
     expect(plan.calls[0]?.value).toBe(0n)
-    expect(plan.calls[1]?.value).toBe(120n)
+    expect(plan.calls[1]?.value).toBe(0n)
   })
 })
