@@ -129,7 +129,7 @@ export async function planRedeemV2(params: {
   }
 
   // Calculate how much collateral we need to swap to repay the debt
-  const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
+  const useNativeCollateralPath = false // getAddress(collateralAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeCollateralPath ? ETH_SENTINEL : collateralAsset
 
   const sizing = await calculateCollateralNeededForDebt({

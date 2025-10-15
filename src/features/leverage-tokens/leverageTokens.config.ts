@@ -401,7 +401,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
   },
   [LeverageTokenKey.WSTETH_ETH_2X_MAINNET]: {
-    isTestOnly: true,
+    // isTestOnly: true,
     address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
     name: 'wstETH / WETH 2x Leverage Token',
     symbol: 'WSTETH-ETH-2x',

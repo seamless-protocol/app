@@ -122,7 +122,7 @@ export async function planMintV2(params: {
   const { collateralAsset, debtAsset } = await getManagerAssets({ config, token, chainId })
   const normalizedInputAsset = getAddress(inputAsset)
   const normalizedCollateralAsset = getAddress(collateralAsset)
-  const normalizedDebtAsset = getAddress(debtAsset)
+  // const normalizedDebtAsset = getAddress(debtAsset)
   debugMintPlan('assets', { inputAsset, collateralAsset, debtAsset })
   if (normalizedInputAsset !== normalizedCollateralAsset) {
     throw new Error(
@@ -142,9 +142,9 @@ export async function planMintV2(params: {
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
   // 3) Quote debt->collateral for the missing collateral
-  const chainWeth = getContractAddresses(chainId).tokens?.weth ?? BASE_WETH
-  const normalizedWeth = getAddress(chainWeth)
-  const useNativeDebtPath = normalizedDebtAsset === normalizedWeth
+  // const chainWeth = getContractAddresses(chainId).tokens?.weth ?? BASE_WETH
+  // const normalizedWeth = getAddress(chainWeth)
+  const useNativeDebtPath = false // normalizedDebtAsset === normalizedWeth
   const inTokenForQuote = useNativeDebtPath ? ETH_SENTINEL : debtAsset
   // Default to exact-in path for robustness across venues
   const r = await quoteDebtForMissingCollateral({
