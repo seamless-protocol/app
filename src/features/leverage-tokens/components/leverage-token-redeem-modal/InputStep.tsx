@@ -274,7 +274,7 @@ export function InputStep({
             Redemption Amount
           </label>
           <div className="text-xs text-secondary-foreground">
-            Available:{' '}
+            Balance:{' '}
             {isLeverageTokenBalanceLoading ? (
               <Skeleton className="inline-block h-3 w-16" />
             ) : (
@@ -511,24 +511,6 @@ export function InputStep({
           </div>
         </div>
       </Card>
-
-      <div className="rounded-lg border border-border bg-card p-3">
-        <div className="flex items-center text-sm text-secondary-foreground">
-          <TrendingDown className="mr-2 h-4 w-4 text-[var(--state-warning-text)]" />
-          <div>
-            <p className="font-medium text-foreground">Redemption Fee</p>
-            <p className="text-xs mt-1">
-              {isRedemptionFeeLoading ? (
-                <Skeleton className="inline-block h-3 w-48" />
-              ) : redemptionFee ? (
-                `A ${redemptionFee} redemption fee applies to cover rebalancing costs.`
-              ) : (
-                'A redemption fee applies to cover rebalancing costs.'
-              )}
-            </p>
-          </div>
-        </div>
-      </div>
 
       {error && <Alert type="error" title="Error" description={error} />}
 
