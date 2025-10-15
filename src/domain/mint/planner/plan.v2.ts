@@ -20,7 +20,7 @@ import {
   readLeverageManagerV2PreviewDeposit,
   readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
-import { applySlippageFloor } from './math'
+import { applySlippageFloor, mulDivFloor } from './math'
 import type { Quote, QuoteFn } from './types'
 
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
@@ -123,13 +123,13 @@ export async function planMintV2(params: {
   }
 
   // 2) Ideal targets (router semantics)
-  let ideal = await previewIdeal({ config, token, userCollateralOut, chainId })
+  const ideal = await previewIdeal({ config, token, userCollateralOut, chainId })
   debugMintPlan('ideal', {
     userCollateralOut,
     idealDebt: ideal.idealDebt,
     targetCollateral: ideal.targetCollateral,
   })
-  let neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
+  const neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
   debugMintPlan('need.swap.out', { neededFromDebtSwap })
   if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
@@ -153,9 +153,7 @@ export async function planMintV2(params: {
   assertDebtSwapQuote(effectiveQuote, debtAsset, useNativeDebtPath)
 
   // 4) Final preview with proportionally adjusted debt flash loan amount
-  let totalCollateralInitial = userCollateralOut + effectiveQuote.out
-
-  // const proportionalCollateralIn = ideal.targetCollateral * totalCollateralInitial / ideal.targetCollateral
+  const totalCollateralInitial = userCollateralOut + effectiveQuote.out
   let final = await previewFinal({ config, token, totalCollateral: totalCollateralInitial, chainId })
   debugMintPlan('final.initial', {
     totalCollateral: totalCollateralInitial,
@@ -170,8 +168,14 @@ export async function planMintV2(params: {
     const adjustedUserCollateralOut = applySlippageFloor(userCollateralOut, slippageBps);
     const adjustedIdeal = await previewIdeal({ config, token, userCollateralOut: adjustedUserCollateralOut, chainId })
     final = await previewFinal({ config, token, totalCollateral: adjustedIdeal.targetCollateral, chainId })
-    debtIn = final.requiredDebt
 
+    debugMintPlan('final.maxSlippage', {
+      totalCollateral: adjustedIdeal.targetCollateral,
+      requiredDebt: final.requiredDebt,
+      shares: final.shares,
+    })
+
+    debtIn = final.requiredDebt
     effectiveQuote = await quoteDebtToCollateral({
       inToken: inTokenForQuote,
       outToken: collateralAsset,
@@ -238,8 +242,7 @@ export async function quoteDebtForMissingCollateral(args: {
 
   // If the quote out is below the target, proportionally reduce once and re-quote.
   if (debtQuote.out < neededOut) {
-    const deltaPercentage = debtQuote.out * 10000n / neededOut;
-    const adjusted = debtIn * deltaPercentage / 10000n;
+    const adjusted = mulDivFloor(debtIn, debtQuote.out, neededOut)
     if (adjusted > 0n && adjusted < debtIn) {
       debtIn = adjusted
       debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
