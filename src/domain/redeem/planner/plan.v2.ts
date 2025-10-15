@@ -9,7 +9,6 @@ import { encodeFunctionData, erc20Abi, getAddress, parseAbi } from 'viem'
 import type { Config } from 'wagmi'
 import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
-  readLeverageManagerV2ConvertToAssets,
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewRedeem,
@@ -97,16 +96,10 @@ export async function planRedeemV2(params: {
   })
 
   // Amount of collateral the sender would receive if there is 0 slippage
-  const [idealCollateralForSender, initialPreview] = await Promise.all([
-    readLeverageManagerV2ConvertToAssets(config, {
-      args: [token, sharesToRedeem],
-      chainId: chainId as SupportedChainId,
-    }),
-    readLeverageManagerV2PreviewRedeem(config, {
-      args: [token, sharesToRedeem],
-      chainId: chainId as SupportedChainId,
-    })
-  ])
+  const initialPreview = await readLeverageManagerV2PreviewRedeem(config, {
+    args: [token, sharesToRedeem],
+    chainId: chainId as SupportedChainId,
+  })
 
   const totalCollateralAvailable = initialPreview.collateral
   const debtToRepay = initialPreview.debt
@@ -149,7 +142,7 @@ export async function planRedeemV2(params: {
 
   const requiredForDebt = sizing.required
   if (requiredForDebt > totalCollateralAvailable) {
-    throw new Error('Insufficient collateral to repay debt')
+    throw new Error('Required for debt is greater than total collateral available')
   }
 
   const padding = sizing.exactOut
@@ -161,9 +154,13 @@ export async function planRedeemV2(params: {
   const remainingCollateral = totalCollateralAvailable - paddedCollateralForDebt
 
   // Minimum amount of collateral the sender expects to receive
-  const minCollateralForSender = calculateMinCollateralForSender(idealCollateralForSender, slippageBps)
-  // TODO: Do we throw an error here if minCollateralForSender > remainingCollateral, that is caught so that the ui displays a warning
-  // that the tx will likely revert due to slippage, so they should increase slippage?
+  const minCollateralForSender = calculateMinCollateralForSender(remainingCollateral, slippageBps)
+
+  if (minCollateralForSender > remainingCollateral) {
+    throw new Error(
+      'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
+    )
+  }
 
   const { calls: swapCalls } = await buildCollateralToDebtSwapCalls({
     collateralAsset,
@@ -307,13 +304,15 @@ async function calculateCollateralNeededForDebt(args: {
     }
 
     if (quote.out < debtToRepay && attempt === upperBound) {
-      throw new Error('Insufficient collateral to repay debt')
+      throw new Error('Collateral swap output is less than debt to repay; increase slippage')
     }
 
     const required = mulDivCeil(debtToRepay, attempt, quote.out)
     lastRequired = required
     if (required > upperBound) {
-      throw new Error('Insufficient collateral to repay debt')
+      throw new Error(
+        'Required collateral is greater than max collateral available; increase slippage',
+      )
     }
 
     // Stop if converged or oscillating between two adjacent values,
