@@ -87,8 +87,9 @@ function getTestCommand(
   switch (testType) {
     case 'e2e':
       return { cmd: 'bunx', args: ['playwright', 'test', ...extraArgs] }
-    case 'integration': // If explicit test files are provided, run only those instead of the entire directory. // Call Vitest directly to avoid script recursion when test:integration itself uses this runner
-    {
+
+    case 'integration': {
+      // If explicit test files are provided, run only those instead of the entire directory. // Call Vitest directly to avoid script recursion when test:integration itself uses this runner
       // Strip standalone '--' which is sometimes used by callers to separate args
       const cleaned = extraArgs.filter((a) => a !== '--')
       const hasExplicitTests = cleaned.some((a) => /tests\//.test(a) || /\.spec\.ts$/.test(a))

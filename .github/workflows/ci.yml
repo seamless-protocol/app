@@ -104,6 +104,13 @@ jobs:
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
+    env:
+      TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
+      TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
+      TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
+      TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
+      TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+      VITE_LIFI_INTEGRATOR: seamless
 
     steps:
       - name: Checkout code
