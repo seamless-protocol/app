@@ -55,17 +55,17 @@ export function PortfolioPerformanceChart({
   // Default formatters
   const defaultYAxisFormatter = (value: number) => {
     if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(0)}M`
+      return `${(value / 1000000).toFixed(1)}M`
     } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)}K`
+      return `${(value / 1000).toFixed(1)}K`
     } else if (value >= 1) {
-      return value.toFixed(0)
-    } else if (value >= 0.01) {
       return value.toFixed(2)
-    } else if (value >= 0.001) {
-      return value.toFixed(3)
-    } else if (value > 0) {
+    } else if (value >= 0.01) {
       return value.toFixed(4)
+    } else if (value >= 0.001) {
+      return value.toFixed(6)
+    } else if (value > 0) {
+      return value.toFixed(8)
     }
     return '0'
   }
@@ -73,13 +73,16 @@ export function PortfolioPerformanceChart({
   const defaultTooltipFormatter = (value: number | string, _name?: string): [string, string] => {
     const numValue = Number(value)
     if (numValue >= 1) {
-      return [`$${numValue.toLocaleString('en-US')}`, 'Portfolio Value']
+      return [
+        `$${numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`,
+        'Portfolio Value',
+      ]
     } else if (numValue >= 0.01) {
-      return [`$${numValue.toFixed(2)}`, 'Portfolio Value']
+      return [`$${numValue.toFixed(6)}`, 'Portfolio Value']
     } else if (numValue >= 0.001) {
-      return [`$${numValue.toFixed(3)}`, 'Portfolio Value']
+      return [`$${numValue.toFixed(8)}`, 'Portfolio Value']
     } else if (numValue > 0) {
-      return [`$${numValue.toFixed(4)}`, 'Portfolio Value']
+      return [`$${numValue.toFixed(10)}`, 'Portfolio Value']
     }
     return ['$0', 'Portfolio Value']
   }
