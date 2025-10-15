@@ -186,7 +186,7 @@ function buildQuoteUrl(
   url.searchParams.set('fromAddress', getAddress(params.fromAddress))
   url.searchParams.set('slippage', params.slippage)
   if (params.integrator) url.searchParams.set('integrator', params.integrator)
-  // url.searchParams.set('order', params.order)
+  url.searchParams.set('order', params.order)
   if (params.allowBridges) url.searchParams.set('allowBridges', params.allowBridges)
   return url
 }
