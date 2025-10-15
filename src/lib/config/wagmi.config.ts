@@ -1,4 +1,4 @@
-import { connectorsForWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { connectorsForWallets } from '@rainbow-me/rainbowkit'
 import {
   coinbaseWallet,
   injectedWallet,
@@ -8,7 +8,7 @@ import {
   walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets'
 import { fallback, http } from 'viem'
-import type { Config } from 'wagmi'
+import { type Config, createConfig } from 'wagmi'
 import { base, mainnet } from 'wagmi/chains'
 import { createLogger } from '@/lib/logger'
 
@@ -100,9 +100,8 @@ if (useTenderlyVNet) {
   logger.info('Tenderly VNet mode enabled', { baseRpc: baseCandidates[0] })
 }
 
-export const config = getDefaultConfig({
-  appName: 'Seamless Protocol',
-  projectId: walletConnectProjectId || 'YOUR_PROJECT_ID',
+export const config = createConfig({
+  connectors,
   chains: [base, mainnet],
   transports: {
     [base.id]: fallback(baseCandidates.map((u) => http(u))),
