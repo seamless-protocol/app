@@ -76,7 +76,9 @@ export function ConfirmStep({
           <div className="flex items-center justify-between">
             <span className="text-sm text-secondary-foreground">Receiving</span>
             <div className="flex items-center">
-              <span className="mr-2 font-medium text-foreground">{expectedTokens} tokens</span>
+              <span className="mr-2 font-medium text-foreground">
+                {expectedTokens} {leverageTokenConfig.symbol}
+              </span>
               <TrendingUp className="h-4 w-4 text-brand-purple" />
             </div>
           </div>
