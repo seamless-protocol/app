@@ -14,7 +14,7 @@ import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
-import { BASE_WETH, ETH_SENTINEL, getContractAddresses } from '../../../../lib/contracts/addresses'
+import { getContractAddresses } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
 import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
@@ -168,7 +168,6 @@ export function LeverageTokenMintModal({
   // Derive expected tokens from preview data (no local state needed)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
-  const [isRefreshingRoute, setIsRefreshingRoute] = useState(false)
 
   // Hooks: form, preview, allowance, execution
   const currentSupplyFormatted = leverageTokenState
@@ -735,7 +734,6 @@ export function LeverageTokenMintModal({
             onConfirm={handleConfirm}
             disabled={
               isCalculating ||
-              isRefreshingRoute ||
               (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
                 quoteDebtToCollateral.status !== 'ready') ||
               !planPreview.plan
