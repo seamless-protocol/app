@@ -74,16 +74,16 @@ function getTestCommand(
       return { cmd: 'bunx', args: ['playwright', 'test', ...extraArgs] }
     case 'integration':
       // Call Vitest directly to avoid script recursion when test:integration itself uses this runner
-      return {
-        cmd: 'bunx',
-        args: [
-          'vitest',
-          '-c',
-          'vitest.integration.config.ts',
-          '--run',
-          'tests/integration',
-          ...extraArgs,
-        ],
+      // If explicit test files are provided, run only those instead of the entire directory.
+      {
+        // Strip standalone '--' which is sometimes used by callers to separate args
+        const cleaned = extraArgs.filter((a) => a !== '--')
+        const hasExplicitTests = cleaned.some((a) => /tests\//.test(a) || /\.spec\.ts$/.test(a))
+        const baseArgs = ['vitest', '-c', 'vitest.integration.config.ts', '--run']
+        const args = hasExplicitTests
+          ? [...baseArgs, ...cleaned]
+          : [...baseArgs, 'tests/integration', ...cleaned]
+        return { cmd: 'bunx', args }
       }
     default:
       throw new Error(`Unknown test type: ${testType}`)
