@@ -12,7 +12,7 @@ export function LiFiSync({ config, children }: LiFiSyncProps) {
   const { chains } = useAvailableChains()
   // Pass the existing connectors from the config instead of empty array
   // This prevents LiFi from overriding RainbowKit's wallet configuration
-  useSyncWagmiConfig(config, connectors as any, chains)
+  useSyncWagmiConfig(config, connectors, chains)
 
   return <>{children}</>
 }

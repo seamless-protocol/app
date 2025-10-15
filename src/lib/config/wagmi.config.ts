@@ -1,17 +1,16 @@
-import { createConfig } from 'wagmi'
+import { connectorsForWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
+import {
+  coinbaseWallet,
+  injectedWallet,
+  metaMaskWallet,
+  rainbowWallet,
+  safeWallet,
+  walletConnectWallet,
+} from '@rainbow-me/rainbowkit/wallets'
 import { fallback, http } from 'viem'
 import type { Config } from 'wagmi'
 import { base, mainnet } from 'wagmi/chains'
 import { createLogger } from '@/lib/logger'
-import { connectorsForWallets, getDefaultConfig } from '@rainbow-me/rainbowkit'
-import {
-  rainbowWallet,
-  walletConnectWallet,
-  metaMaskWallet,
-  coinbaseWallet,
-  injectedWallet,
-  safeWallet,
-} from '@rainbow-me/rainbowkit/wallets'
 
 const logger = createLogger('wagmi-config')
 
