@@ -199,7 +199,7 @@ function buildQuoteUrl(
   url.searchParams.set('fromAddress', getAddress(params.fromAddress))
   url.searchParams.set('slippage', params.slippage)
   if (params.integrator) url.searchParams.set('integrator', params.integrator)
-  url.searchParams.set('order', params.order)
+  // url.searchParams.set('order', params.order)
   if (params.allowBridges) url.searchParams.set('allowBridges', params.allowBridges)
   // Always skip simulation for faster responses
   url.searchParams.set('skipSimulation', 'true')
@@ -216,7 +216,7 @@ function mapStepToQuote(step: Step, wantsNativeIn: boolean) {
   const expectedStr = step.estimate?.toAmount
   const minStr = step.estimate?.toAmountMin
   // Prefer minOut (toAmountMin) for safer defaults; fall back to toAmount
-  const out = minStr ? BigInt(minStr) : expectedStr ? BigInt(expectedStr) : 0n
+  const out = expectedStr ? BigInt(expectedStr) : minStr ? BigInt(minStr) : 0n
   const minOut = minStr ? BigInt(minStr) : out
   const maxIn = step.estimate?.fromAmount ? BigInt(step.estimate.fromAmount) : undefined
 
