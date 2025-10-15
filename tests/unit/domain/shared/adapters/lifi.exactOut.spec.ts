@@ -40,5 +40,6 @@ describe('LiFi adapter (exact-out URL)', () => {
     expect(url.pathname).toBe('/v1/quote/toAmount')
     expect(url.searchParams.get('toAmount')).toBe('10')
     expect(url.searchParams.get('fromAmount')).toBeNull()
+    expect(url.searchParams.get('skipSimulation')).toBe('true')
   })
 })
