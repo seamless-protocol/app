@@ -164,7 +164,6 @@ export async function planMintV2(params: {
   // If the debt received from the LT deposit is still less than the flash loan, we need to adjust the flash loan amount down further.
   // We adjust it as low as possible wrt the slippage tolerance.
   if (final.requiredDebt < debtIn) {
-    // So, we need to flash loan less debt such that the deposit of the user collateral + debt swap output gives enough debt to repay the debt
     const adjustedUserCollateralOut = applySlippageFloor(userCollateralOut, slippageBps);
     const adjustedIdeal = await previewIdeal({ config, token, userCollateralOut: adjustedUserCollateralOut, chainId })
     final = await previewFinal({ config, token, totalCollateral: adjustedIdeal.targetCollateral, chainId })
