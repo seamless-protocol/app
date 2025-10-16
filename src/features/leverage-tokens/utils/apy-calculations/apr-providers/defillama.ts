@@ -35,13 +35,8 @@ export class DefiLlamaAprProvider implements AprFetcher {
     const start = getNowMs()
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          Accept: 'application/json',
-          'User-Agent': 'Seamless Protocol Frontend',
-        },
-      })
+      // Use a "simple request" with no custom headers to avoid CORS preflight,
+      const response = await fetch(url, { method })
 
       const elapsed = elapsedMsSince(start)
 
