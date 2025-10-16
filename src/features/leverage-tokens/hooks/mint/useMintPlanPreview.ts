@@ -16,6 +16,7 @@ interface UseMintPlanPreviewParams {
   equityInCollateralAsset: bigint | undefined
   slippageBps: number
   chainId: number
+  enabled: boolean
   quote?: QuoteFn
   debounceMs?: number
   epsilonBps?: number
@@ -35,6 +36,7 @@ export function useMintPlanPreview({
   chainId,
   quote,
   debounceMs = 500,
+  enabled = true,
   epsilonBps,
   collateralUsdPrice,
   debtUsdPrice,
@@ -42,7 +44,8 @@ export function useMintPlanPreview({
   debtDecimals,
 }: UseMintPlanPreviewParams) {
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
-  const enabled = typeof debounced === 'bigint' && debounced > 0n && typeof quote === 'function'
+  const enabledQuery =
+    enabled && typeof debounced === 'bigint' && debounced > 0n && typeof quote === 'function'
 
   const keyParams = {
     chainId,
@@ -58,7 +61,7 @@ export function useMintPlanPreview({
       `slippage:${slippageBps}`,
       ...(typeof epsilonBps === 'number' ? [`epsilon:${epsilonBps}`] : []),
     ],
-    enabled,
+    enabled: enabledQuery,
     // Periodically refresh quotes while user is editing
     refetchInterval: enabled ? 30_000 : false,
     staleTime: 10_000,

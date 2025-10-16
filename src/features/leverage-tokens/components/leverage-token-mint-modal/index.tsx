@@ -212,6 +212,7 @@ export function LeverageTokenMintModal({
     debtUsdPrice,
     collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
     debtDecimals: leverageTokenConfig.debtAsset.decimals,
+    enabled: isOpen,
   })
 
   // USD estimates now derived inside useMintPlanPreview
