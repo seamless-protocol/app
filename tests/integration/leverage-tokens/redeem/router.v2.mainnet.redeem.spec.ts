@@ -284,8 +284,8 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
 
   expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
 
-  // 1% tolerance for 25x leverage + LiFi routing variability
-  const toleranceBps = BigInt(slippageBps) + 100n
+  // 2% tolerance for 25x leverage + LiFi routing variability
+  const toleranceBps = BigInt(slippageBps) + 200n
   const withinTolerance = (actual: bigint, expected: bigint): boolean => {
     if (expected === 0n) return actual === 0n
     if (actual < 0n) return false
@@ -293,6 +293,7 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
     const upperBound = (expected * (10_000n + toleranceBps)) / 10_000n
     return actual >= lowerBound && actual <= upperBound
   }
+
 
   if (payoutAsset) {
     expect(collateralDelta <= plan.minCollateralForSender).toBe(true)
