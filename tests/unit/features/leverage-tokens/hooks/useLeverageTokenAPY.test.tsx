@@ -191,6 +191,11 @@ describe('useLeverageTokenAPY', () => {
         rewardsAPR: 0,
         points: 0,
         totalAPY: 0,
+        raw: {
+          rawBorrowRate: 0,
+          rawStakingYield: 0,
+          rawRestakingYield: 0,
+        },
       })
 
       // Should not call external APIs
@@ -284,6 +289,11 @@ describe('useLeverageTokenAPY', () => {
         rewardsAPR: 0,
         points: 0,
         totalAPY: 0,
+        raw: {
+          rawBorrowRate: 0,
+          rawStakingYield: 0,
+          rawRestakingYield: 0,
+        },
       })
     })
   })
