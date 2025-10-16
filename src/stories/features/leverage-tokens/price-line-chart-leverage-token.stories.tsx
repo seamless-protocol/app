@@ -176,13 +176,13 @@ const LeverageTokenWrapper = () => {
       onLineVisibilityChange={handleLineVisibilityChange}
       title="Leverage Token Price History"
       subtitle="Token price vs underlying weETH asset"
-      yAxisLabel="Price (USD)"
+      yAxisLabel="Price (ETH)"
       height={400}
       timeframes={['1H', '1D', '1W', '1M', '3M', '1Y']}
       xAxisFormatter={(value: string | number) => new Date(value).toLocaleDateString()}
-      yAxisFormatter={(value: string | number) => `$${Number(value).toFixed(2)}`}
+      yAxisFormatter={(value: string | number) => Number(value).toFixed(4)}
       tooltipFormatter={(value: string | number, name: string | undefined) => [
-        `$${Number(value).toFixed(2)}`,
+        `${Number(value).toFixed(6)} ETH`,
         name || 'Price',
       ]}
     />
