@@ -132,7 +132,7 @@ export function LeverageTokenMobileCard({
 
             {/* Supply Cap Row */}
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[var(--text-secondary)]">Supply Cap Available</span>
+              <span className="text-sm text-[var(--text-secondary)]">Remaining Supply Cap</span>
               <SupplyCap
                 currentSupply={token.currentSupply ?? 0}
                 supplyCap={token.supplyCap ?? 0}

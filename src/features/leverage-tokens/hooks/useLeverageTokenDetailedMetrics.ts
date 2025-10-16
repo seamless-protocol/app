@@ -533,7 +533,7 @@ function transformDetailedMetricsData(
     ],
     'Lending Market': [
       {
-        label: 'Available Supply Cap',
+        label: 'Remaining Supply Cap',
         value: React.createElement(
           React.Fragment,
           null,
