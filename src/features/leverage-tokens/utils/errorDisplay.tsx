@@ -9,6 +9,7 @@ export interface ErrorDisplayConfig {
   message: string
   showRetry: boolean
   severity: ErrorSeverity
+  technicalDetails?: string
 }
 
 /**
@@ -22,7 +23,7 @@ export function getErrorDisplay(
   // Try to classify the error first
   let classifiedError: LeverageTokenError
   try {
-    classifiedError = classifyError({ message: error })
+    classifiedError = classifyError(error)
   } catch {
     classifiedError = { type: 'UNKNOWN', message: error }
   }
@@ -83,6 +84,17 @@ export function getErrorDisplay(
         severity: 'warning',
       }
 
+    case 'SLIPPAGE_EXCEEDED':
+      return {
+        icon: <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />,
+        title: 'Slippage Tolerance Exceeded',
+        message:
+          'The price moved beyond your slippage tolerance. Try increasing your slippage tolerance or retry the transaction.',
+        showRetry: true,
+        severity: 'warning',
+        technicalDetails: error,
+      }
+
     default:
       // For unknown errors, check if it's a user rejection by looking for common patterns
       if (
@@ -112,15 +124,19 @@ export function getErrorDisplay(
             'On-chain execution reverted. Try a smaller amount, increase slippage slightly, or retry shortly.',
           showRetry: true,
           severity: 'error',
+          technicalDetails: error,
         }
       }
 
       return {
         icon: <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />,
         title: defaultTitle,
-        message: error || 'Something went wrong with your transaction. Please try again.',
+        message:
+          error ||
+          'The transaction could not be completed. Try increasing your slippage tolerance or retry the transaction.',
         showRetry: true,
         severity: 'warning',
+        technicalDetails: error,
       }
   }
 }
