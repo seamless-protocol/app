@@ -93,7 +93,10 @@ export function LeverageTokenRedeemModal({
   const leverageManagerAddress = contractAddresses.leverageManagerV2
 
   // Fetch leverage token fees
-  const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(leverageTokenAddress)
+  const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(
+    leverageTokenAddress,
+    isOpen,
+  )
 
   // Get real wallet balance for leverage tokens
   const {
@@ -103,22 +106,22 @@ export function LeverageTokenRedeemModal({
   } = useTokenBalance({
     tokenAddress: leverageTokenAddress,
     userAddress: userAddress as `0x${string}`,
-    chainId: leverageTokenConfig.chainId,
-    enabled: Boolean(userAddress && isConnected),
+    chainId: leverageTokenConfig.chainId as SupportedChainId,
+    enabled: Boolean(userAddress && isConnected && isOpen),
   })
 
   const { refetch: refetchCollateralTokenBalance } = useTokenBalance({
     tokenAddress: leverageTokenConfig.collateralAsset.address,
     userAddress: userAddress as `0x${string}`,
-    chainId: leverageTokenConfig.chainId,
-    enabled: Boolean(userAddress && isConnected),
+    chainId: leverageTokenConfig.chainId as SupportedChainId,
+    enabled: Boolean(userAddress && isConnected && isOpen),
   })
 
   const { refetch: refetchDebtTokenBalance } = useTokenBalance({
     tokenAddress: leverageTokenConfig.debtAsset.address,
     userAddress: userAddress as `0x${string}`,
-    chainId: leverageTokenConfig.chainId,
-    enabled: Boolean(userAddress && isConnected),
+    chainId: leverageTokenConfig.chainId as SupportedChainId,
+    enabled: Boolean(userAddress && isConnected && isOpen),
   })
 
   // Get leverage token user position (includes USD value calculation)
@@ -127,6 +130,7 @@ export function LeverageTokenRedeemModal({
     chainIdOverride: leverageTokenConfig.chainId,
     debtAssetAddress: leverageTokenConfig.debtAsset.address,
     debtAssetDecimals: leverageTokenConfig.debtAsset.decimals,
+    enabled: isOpen,
   })
 
   const { data: userMetrics, isLoading: isUserMetricsLoading } = useLeverageTokenUserMetrics({
@@ -134,6 +138,7 @@ export function LeverageTokenRedeemModal({
     chainId: leverageTokenConfig.chainId,
     collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
     ...(userAddress ? { userAddress } : {}),
+    enabled: isOpen,
   })
 
   // Get USD prices for collateral and debt assets
@@ -141,7 +146,9 @@ export function LeverageTokenRedeemModal({
     chainId: leverageTokenConfig.chainId,
     addresses: [leverageTokenConfig.collateralAsset.address, leverageTokenConfig.debtAsset.address],
     enabled: Boolean(
-      leverageTokenConfig.collateralAsset.address && leverageTokenConfig.debtAsset.address,
+      leverageTokenConfig.collateralAsset.address &&
+        leverageTokenConfig.debtAsset.address &&
+        isOpen,
     ),
   })
 
@@ -390,6 +397,7 @@ export function LeverageTokenRedeemModal({
     ...(typeof form.amountRaw !== 'undefined' ? { amountRaw: form.amountRaw } : {}),
     decimals: leverageTokenConfig.decimals,
     chainId: leverageTokenConfig.chainId,
+    enabled: isOpen,
   })
 
   // Step configuration (static once modal is opened)
@@ -805,15 +813,16 @@ function useApprovalFlow(params: {
   amountRaw?: bigint
   decimals: number
   chainId: number
+  enabled: boolean
 }) {
-  const { tokenAddress, owner, spender, amountRaw, decimals, chainId } = params
+  const { tokenAddress, owner, spender, amountRaw, decimals, chainId, enabled } = params
 
   const { isLoading, needsApproval, amountFormatted } = useTokenAllowance({
     tokenAddress,
     ...(owner ? { owner } : {}),
     ...(spender ? { spender } : {}),
     chainId,
-    enabled: Boolean(owner && spender),
+    enabled: Boolean(owner && spender && enabled),
     ...(typeof amountRaw !== 'undefined' ? { amountRaw } : {}),
     decimals,
   })
@@ -824,7 +833,7 @@ function useApprovalFlow(params: {
     ...(amountFormatted ? { amount: amountFormatted } : {}),
     decimals,
     targetChainId: chainId,
-    enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
+    enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0 && enabled),
   })
 
   return {

@@ -13,7 +13,7 @@ export interface LeverageTokenFees {
   managementTreasuryFee: string
 }
 
-export function useLeverageTokenFees(tokenAddress?: Address) {
+export function useLeverageTokenFees(tokenAddress?: Address, enabled: boolean = true) {
   // Get the token config to determine the correct chain ID
   const tokenConfig = tokenAddress ? getLeverageTokenConfig(tokenAddress) : undefined
   const chainId = tokenConfig?.chainId
@@ -59,7 +59,7 @@ export function useLeverageTokenFees(tokenAddress?: Address) {
       },
     ],
     query: {
-      enabled: !!tokenAddress && !!managerAddress && !!chainId,
+      enabled: enabled && !!tokenAddress && !!managerAddress && !!chainId,
       staleTime: STALE_TIME.detailedMetrics,
     },
   })

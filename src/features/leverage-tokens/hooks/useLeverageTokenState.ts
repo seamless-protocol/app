@@ -12,7 +12,11 @@ export interface LeverageTokenStateData {
   equity: bigint
   collateralRatio: bigint
 }
-export function useLeverageTokenState(tokenAddress: Address, chainIdOverride?: number) {
+export function useLeverageTokenState(
+  tokenAddress: Address,
+  chainIdOverride?: number,
+  enabled: boolean = true,
+) {
   const walletChainId = useChainId()
   const chainId = chainIdOverride ?? walletChainId
   const contractAddresses = getContractAddresses(chainId)
@@ -40,7 +44,7 @@ export function useLeverageTokenState(tokenAddress: Address, chainIdOverride?: n
   const { data, isLoading, isError, error } = useReadContracts({
     contracts,
     query: {
-      enabled: contracts.length > 0,
+      enabled: enabled && contracts.length > 0,
       staleTime: STALE_TIME.supply,
       refetchInterval: 30_000,
     },
