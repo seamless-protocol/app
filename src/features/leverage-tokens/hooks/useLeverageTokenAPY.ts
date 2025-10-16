@@ -46,6 +46,11 @@ export function useLeverageTokenAPY({
           rewardsAPR: 0,
           points: 0,
           totalAPY: 0,
+          raw: {
+            rawBorrowRate: 0,
+            rawStakingYield: 0,
+            rawRestakingYield: 0,
+          },
         }
       }
 
@@ -63,6 +68,11 @@ export function useLeverageTokenAPY({
           rewardsAPR: 0,
           points: 0,
           totalAPY: 0,
+          raw: {
+            rawBorrowRate: 0,
+            rawStakingYield: 0,
+            rawRestakingYield: 0,
+          },
         }
       }
 
@@ -127,6 +137,11 @@ export function useLeverageTokenAPY({
           ? aprData.restakingAPR * targetLeverage
           : undefined) ?? 0
 
+      // Raw market rates without leverage adjustment (convert decimal to percentage)
+      const rawBorrowRate = borrowAPY ? borrowAPY * 100 : 0
+      const rawStakingYield = aprData.stakingAPR ?? 0
+      const rawRestakingYield = aprData.restakingAPR ?? 0
+
       // Borrow Rate = negative cost based on leverage (convert decimal to percentage)
       const borrowRate =
         (borrowAPY && targetLeverage ? borrowAPY * -100 * (targetLeverage - 1) : undefined) ?? 0
@@ -148,6 +163,11 @@ export function useLeverageTokenAPY({
         points,
         totalAPY,
         utilization,
+        raw: {
+          rawBorrowRate,
+          rawStakingYield,
+          rawRestakingYield,
+        },
       }
     },
     enabled: enabled && !!tokenAddress,
