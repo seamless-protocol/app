@@ -294,7 +294,6 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
     return actual >= lowerBound && actual <= upperBound
   }
 
-
   if (payoutAsset) {
     expect(collateralDelta <= plan.minCollateralForSender).toBe(true)
     expect(plan.expectedCollateral).toBe(0n)
