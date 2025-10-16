@@ -300,6 +300,11 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
     expect(withinTolerance(debtDelta, plan.payoutAmount)).toBe(true)
   } else {
     expect(collateralDelta > 0n).toBe(true)
+    console.log("🦄 ~ assertRedeemExecution ~ collateralDelta:", collateralDelta);
+    console.log("🦄 ~ assertRedeemExecution ~ plan.expectedCollateral:", plan.expectedCollateral);
+    console.log("🦄 ~ assertRedeemExecution ~ toleranceBps:", toleranceBps);
+    // log difference in percentage
+    console.log("🦄 ~ assertRedeemExecution ~ difference:", ((collateralDelta - plan.expectedCollateral) / plan.expectedCollateral) * 100n);
     expect(withinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
   }
 
