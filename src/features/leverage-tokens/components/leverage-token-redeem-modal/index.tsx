@@ -290,6 +290,7 @@ export function LeverageTokenRedeemModal({
     sharesToRedeem: form.amountRaw,
     slippageBps,
     chainId: leverageTokenConfig.chainId,
+    enabled: isOpen,
     ...(exec.quote ? { quote: exec.quote } : {}),
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
     ...(swapConfigKey ? { swapKey: swapConfigKey } : {}),
