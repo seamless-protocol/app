@@ -1,7 +1,7 @@
 import type { LeverageTokenKey, LeverageTokenSource } from '../../fixtures/addresses'
 
 export type ChainKey = 'base' | 'mainnet'
-export type ScenarioKey = 'leverage-mint'
+export type ScenarioKey = 'leverage-mint' | 'leverage-redeem'
 
 export interface ScenarioDefinition {
   key: ScenarioKey
@@ -22,6 +22,14 @@ const baseScenarios: Record<ScenarioKey, ScenarioDefinition> = {
     leverageTokenKeys: ['weeth-weth-17x'],
     defaultLeverageTokenKey: 'weeth-weth-17x',
   },
+  'leverage-redeem': {
+    key: 'leverage-redeem',
+    label: 'Base leverage redeem',
+    description: 'Exercises leverage token redeem flows on Base Tenderly VNets.',
+    leverageTokenSource: 'tenderly',
+    leverageTokenKeys: ['weeth-weth-17x'],
+    defaultLeverageTokenKey: 'weeth-weth-17x',
+  },
 }
 
 const mainnetScenarios: Record<ScenarioKey, ScenarioDefinition> = {
@@ -30,7 +38,16 @@ const mainnetScenarios: Record<ScenarioKey, ScenarioDefinition> = {
     label: 'Mainnet leverage mint',
     description:
       'Exercises leverage token mint flows on Mainnet Tenderly VNets for all available leverage tokens.',
-    leverageTokenSource: 'tenderly',
+    leverageTokenSource: 'prod',
+    leverageTokenKeys: ['wsteth-eth-25x'],
+    defaultLeverageTokenKey: 'wsteth-eth-25x',
+  },
+  'leverage-redeem': {
+    key: 'leverage-redeem',
+    label: 'Mainnet leverage redeem',
+    description:
+      'Exercises leverage token redeem flows on Mainnet Tenderly VNets using LiFi swaps.',
+    leverageTokenSource: 'prod',
     leverageTokenKeys: ['wsteth-eth-25x'],
     defaultLeverageTokenKey: 'wsteth-eth-25x',
   },
