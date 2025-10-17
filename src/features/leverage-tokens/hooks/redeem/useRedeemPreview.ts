@@ -21,12 +21,23 @@ export function useRedeemPreview(params: {
   sharesToRedeem: bigint | undefined
   debounceMs?: number
   chainId?: number
+  enabled?: boolean
 }) {
-  const { config, token, sharesToRedeem, debounceMs = 350, chainId } = params
+  const {
+    config,
+    token,
+    sharesToRedeem,
+    debounceMs = 350,
+    chainId,
+    enabled: enabledProp = true,
+  } = params
 
   // Local debounce of the raw bigint input so the query only runs after idle
   const debounced = useDebouncedBigint(sharesToRedeem, debounceMs)
-  const enabled = useMemo(() => typeof debounced === 'bigint' && debounced > 0n, [debounced])
+  const enabled = useMemo(
+    () => typeof debounced === 'bigint' && debounced > 0n && enabledProp,
+    [debounced, enabledProp],
+  )
 
   // Derive active chain id from wagmi config for multi-chain cache isolation
   const detectedChainId = chainId ?? getPublicClient(config)?.chain?.id

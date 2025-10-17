@@ -1,12 +1,14 @@
 import { waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useAccount, useChainId, useReadContracts } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 import * as useStateMod from '@/features/leverage-tokens/hooks/useLeverageTokenState'
 import { useLeverageTokenUserPosition } from '@/features/leverage-tokens/hooks/useLeverageTokenUserPosition'
+import * as useTokenBalanceMod from '@/lib/hooks/useTokenBalance'
 import * as pricesMod from '@/lib/prices/useUsdPrices'
 import { hookTestUtils, makeAddr } from '../../../../utils'
 
 vi.mock('@/features/leverage-tokens/hooks/useLeverageTokenState')
+vi.mock('@/lib/hooks/useTokenBalance')
 vi.mock('@/lib/prices/useUsdPrices')
 
 describe('useLeverageTokenUserPosition', () => {
@@ -38,13 +40,8 @@ describe('useLeverageTokenUserPosition', () => {
     })
 
     // Balance: 500e18 shares
-    ;(useReadContracts as any).mockReturnValue({
-      data: [
-        {
-          status: 'success',
-          result: 500n * 10n ** 18n,
-        },
-      ],
+    ;(useTokenBalanceMod as any).useTokenBalance.mockReturnValue({
+      balance: 500n * 10n ** 18n,
       isLoading: false,
       isError: false,
       error: undefined,
@@ -87,13 +84,8 @@ describe('useLeverageTokenUserPosition', () => {
       isError: false,
       error: undefined,
     })
-    ;(useReadContracts as any).mockReturnValue({
-      data: [
-        {
-          status: 'success',
-          result: 500n * 10n ** 18n,
-        },
-      ],
+    ;(useTokenBalanceMod as any).useTokenBalance.mockReturnValue({
+      balance: 500n * 10n ** 18n,
       isLoading: false,
       isError: false,
       error: undefined,

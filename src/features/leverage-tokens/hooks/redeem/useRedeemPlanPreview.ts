@@ -11,6 +11,7 @@ interface UseRedeemPlanPreviewParams {
   sharesToRedeem: bigint | undefined
   slippageBps: number
   chainId: number
+  enabled: boolean
   quote?: QuoteFn
   managerAddress?: Address
   swapKey?: string
@@ -27,9 +28,13 @@ export function useRedeemPlanPreview({
   managerAddress,
   swapKey,
   outputAsset,
+  enabled = true,
 }: UseRedeemPlanPreviewParams) {
-  const enabled =
-    typeof sharesToRedeem === 'bigint' && sharesToRedeem > 0n && typeof quote === 'function'
+  const enabledQuery =
+    enabled &&
+    typeof sharesToRedeem === 'bigint' &&
+    sharesToRedeem > 0n &&
+    typeof quote === 'function'
 
   const keyParams = {
     chainId,
@@ -43,7 +48,7 @@ export function useRedeemPlanPreview({
 
   const query = useQuery({
     queryKey: ltKeys.simulation.redeemPlanKey(keyParams),
-    enabled,
+    enabled: enabledQuery,
     staleTime: 0,
     refetchOnWindowFocus: false,
     retry: 1,

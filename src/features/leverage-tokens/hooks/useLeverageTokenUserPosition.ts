@@ -11,6 +11,7 @@ export interface UseLeverageTokenUserPositionParams {
   tokenDecimals?: number
   debtAssetAddress?: Address | undefined
   debtAssetDecimals?: number | undefined
+  enabled?: boolean
 }
 
 export interface LeverageTokenUserPositionData {
@@ -24,6 +25,7 @@ export function useLeverageTokenUserPosition({
   chainIdOverride,
   debtAssetAddress,
   debtAssetDecimals,
+  enabled = true,
 }: UseLeverageTokenUserPositionParams) {
   const { address: user, isConnected } = useAccount()
   const walletChainId = useChainId()
@@ -35,7 +37,7 @@ export function useLeverageTokenUserPosition({
     isLoading: isStateLoading,
     isError: isStateError,
     error: stateError,
-  } = useLeverageTokenState(tokenAddress as Address, chainId)
+  } = useLeverageTokenState(tokenAddress as Address, chainId, enabled)
 
   // 2) Read user balance (shares)
   const {
@@ -46,15 +48,15 @@ export function useLeverageTokenUserPosition({
   } = useTokenBalance({
     tokenAddress: tokenAddress as Address,
     userAddress: user as Address,
-    chainId,
-    enabled: Boolean(tokenAddress && user && isConnected),
+    chainId: chainId as import('@/lib/contracts/addresses').SupportedChainId,
+    enabled: Boolean(tokenAddress && user && isConnected && enabled),
   })
 
   // 3) USD price for debt asset
   const { data: usdPriceMap } = useUsdPrices({
     chainId,
     addresses: debtAssetAddress ? [debtAssetAddress] : [],
-    enabled: Boolean(debtAssetAddress),
+    enabled: Boolean(debtAssetAddress && enabled),
   })
   const debtUsd = debtAssetAddress ? usdPriceMap[debtAssetAddress.toLowerCase()] : undefined
 
