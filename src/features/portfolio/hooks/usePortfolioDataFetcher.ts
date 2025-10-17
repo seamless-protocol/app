@@ -12,9 +12,10 @@ import {
 } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   fetchAllLeverageTokenStateHistory,
+  fetchUserBalanceHistory,
   fetchUserPositions,
 } from '@/lib/graphql/fetchers/portfolio'
-import type { LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
+import type { BalanceChange, LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
 import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
 import type { Position } from '../components/active-positions'
 import type { PortfolioDataPoint } from '../components/portfolio-performance-chart'
@@ -511,6 +512,7 @@ export function usePortfolioWithTotalValue() {
 /**
  * Hook to get portfolio performance data with timeframe selection
  * Uses data from the usePortfolioDataFetcher hook to avoid duplicate API calls
+ * Fetches balance history to ensure accurate historical portfolio values
  */
 export function usePortfolioPerformance() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30D')
@@ -518,11 +520,69 @@ export function usePortfolioPerformance() {
   const { rawUserPositions, leverageTokenStates, usdPrices, isLoading, isError, error } =
     usePortfolioWithTotalValue()
 
-  // Generate performance data from the cached portfolio data
+  // Helper to convert timeframe to seconds
+  const getTimeframeSeconds = (timeframe: string): number => {
+    switch (timeframe) {
+      case '7D':
+        return 7 * 24 * 60 * 60
+      case '30D':
+        return 30 * 24 * 60 * 60
+      case '90D':
+        return 90 * 24 * 60 * 60
+      case '1Y':
+        return 365 * 24 * 60 * 60
+      default:
+        return 30 * 24 * 60 * 60
+    }
+  }
+
+  // Fetch balance history for the selected timeframe
+  const balanceHistoryQuery = useQuery({
+    queryKey: [...portfolioKeys.performance(selectedTimeframe, address), 'balance-history'],
+    queryFn: async (): Promise<Array<BalanceChange>> => {
+      if (!address || !rawUserPositions.length) {
+        return []
+      }
+
+      // Get all leverage token addresses
+      const tokenAddresses = rawUserPositions.map(
+        (position) => position.leverageToken.id.toLowerCase() as string,
+      )
+
+      // Calculate timeframe
+      const now = Date.now() / 1000
+      const fromTimestamp = now - getTimeframeSeconds(selectedTimeframe)
+
+      // Fetch balance history
+      const balanceChanges = await fetchUserBalanceHistory(
+        address,
+        tokenAddresses,
+        fromTimestamp,
+        now,
+      )
+
+      return balanceChanges
+    },
+    enabled: !!address && rawUserPositions.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 3,
+  })
+
+  // Generate performance data from the cached portfolio data and balance history
   const performanceData = useQuery({
-    queryKey: [...portfolioKeys.performance(selectedTimeframe, address), usdPrices],
+    queryKey: [
+      ...portfolioKeys.performance(selectedTimeframe, address),
+      usdPrices,
+      balanceHistoryQuery.data,
+    ],
     queryFn: async (): Promise<Array<PortfolioDataPoint>> => {
-      if (!rawUserPositions.length || !leverageTokenStates.size) {
+      if (
+        !rawUserPositions.length ||
+        !leverageTokenStates.size ||
+        !balanceHistoryQuery.data?.length
+      ) {
         return []
       }
 
@@ -535,10 +595,11 @@ export function usePortfolioPerformance() {
         return tokenConfig !== undefined
       })
 
-      // Generate portfolio performance data using the filtered positions and states
+      // Generate portfolio performance data using the filtered positions, states, and balance history
       const performanceData = generatePortfolioPerformanceData(
         filteredUserPositions,
         leverageTokenStates,
+        balanceHistoryQuery.data,
         selectedTimeframe as '7D' | '30D' | '90D' | '1Y',
         usdPrices,
       )
@@ -548,7 +609,9 @@ export function usePortfolioPerformance() {
     enabled:
       rawUserPositions.length > 0 &&
       leverageTokenStates.size > 0 &&
-      Object.keys(usdPrices).length > 0,
+      Object.keys(usdPrices).length > 0 &&
+      balanceHistoryQuery.isSuccess &&
+      (balanceHistoryQuery.data?.length ?? 0) > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes - performance data changes less frequently
     gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch on window focus
@@ -562,9 +625,9 @@ export function usePortfolioPerformance() {
     selectedTimeframe,
     setSelectedTimeframe,
     timeframes: ['7D', '30D', '90D', '1Y'],
-    isLoading: isLoading || performanceData.isLoading,
-    isError: isError || performanceData.isError,
-    error: error || performanceData.error,
+    isLoading: isLoading || performanceData.isLoading || balanceHistoryQuery.isLoading,
+    isError: isError || performanceData.isError || balanceHistoryQuery.isError,
+    error: error || performanceData.error || balanceHistoryQuery.error,
   }
 }
 

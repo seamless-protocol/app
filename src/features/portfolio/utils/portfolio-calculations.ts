@@ -1,22 +1,62 @@
 import { formatUnits } from 'viem'
-import type { LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
+import type { BalanceChange, LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
 import type { PortfolioDataPoint } from '../components/portfolio-performance-chart'
 
 /**
- * Calculate portfolio value at a specific timestamp
+ * Get the balance of a token at a specific timestamp from balance history
+ * Returns the most recent balance change before or at the target timestamp
+ */
+function _getBalanceAtTimestamp(
+  tokenAddress: string,
+  timestamp: number,
+  balanceChanges: Array<BalanceChange>,
+): bigint {
+  // Filter balance changes for this token
+  const tokenBalanceChanges = balanceChanges.filter(
+    (change) => change.position.leverageToken.id.toLowerCase() === tokenAddress.toLowerCase(),
+  )
+
+  if (tokenBalanceChanges.length === 0) {
+    return 0n
+  }
+
+  // Find the most recent balance change before or at the target timestamp
+  // Balance changes are already sorted by timestamp (ascending) from the query
+  let mostRecentBalance = 0n
+
+  for (const change of tokenBalanceChanges) {
+    // Subgraph timestamps are in microseconds, convert to seconds
+    const changeTimestamp = Number(change.timestamp) / 1000000
+
+    // If this change is after the target timestamp, we've gone too far
+    if (changeTimestamp > timestamp) {
+      break
+    }
+
+    // This change is before or at the target timestamp, use it
+    mostRecentBalance = BigInt(change.amount)
+  }
+
+  return mostRecentBalance
+}
+
+/**
+ * Calculate portfolio value at a specific timestamp using historical balances
  */
 function _calculatePortfolioValueAtTimestamp(
   timestamp: number,
   userPositions: Array<UserPosition>,
   leverageTokenStates: Map<string, Array<LeverageTokenState>>,
+  balanceChanges: Array<BalanceChange>,
   usdPrices: Record<string, number>,
 ): number {
   let totalValue = 0
 
   for (const position of userPositions) {
-    const balance = BigInt(position.balance)
+    // Get the historical balance at this timestamp
+    const balance = _getBalanceAtTimestamp(position.leverageToken.id, timestamp, balanceChanges)
 
-    // Skip zero balance positions (redeemed tokens)
+    // Skip zero balance positions
     if (balance === 0n) {
       continue
     }
@@ -183,11 +223,12 @@ export function calculatePortfolioMetrics(
 }
 
 /**
- * Generate portfolio performance data points from historical data
+ * Generate portfolio performance data points from historical data with balance history
  */
 export function generatePortfolioPerformanceData(
   userPositions: Array<UserPosition>,
   leverageTokenStates: Map<string, Array<LeverageTokenState>>,
+  balanceChanges: Array<BalanceChange>,
   timeframe: '7D' | '30D' | '90D' | '1Y',
   usdPrices: Record<string, number>,
 ): Array<PortfolioDataPoint> {
@@ -236,6 +277,7 @@ export function generatePortfolioPerformanceData(
         timestamp,
         userPositions,
         leverageTokenStates,
+        balanceChanges,
         usdPrices,
       )
 

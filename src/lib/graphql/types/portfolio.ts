@@ -54,3 +54,19 @@ export interface LeverageTokenStateHistoryResponse {
     stateHistory: Array<LeverageTokenState>
   } | null
 }
+
+export interface BalanceChange {
+  id: string
+  position: {
+    id: string
+    leverageToken: {
+      id: string
+    }
+  }
+  timestamp: string
+  amount: string
+}
+
+export interface BalanceHistoryResponse {
+  leverageTokenBalanceChanges: Array<BalanceChange>
+}

@@ -59,3 +59,37 @@ export const LEVERAGE_TOKEN_STATE_HISTORY_QUERY = `
     }
   }
 `
+
+// Query to get user's balance history across leverage tokens on a chain
+export const BALANCE_HISTORY_QUERY = `
+  query BalanceHistoryForUser(
+    $user: Bytes!
+    $tokens: [Bytes!]
+    $from: BigInt
+    $to: BigInt
+    $first: Int
+    $skip: Int
+  ) {
+    leverageTokenBalanceChanges(
+      where: {
+        position_: { user: $user, leverageToken_in: $tokens }
+        timestamp_gte: $from
+        timestamp_lte: $to
+      }
+      orderBy: timestamp
+      orderDirection: asc
+      first: $first
+      skip: $skip
+    ) {
+      id
+      position {
+        id
+        leverageToken {
+          id
+        }
+      }
+      timestamp
+      amount
+    }
+  }
+`
