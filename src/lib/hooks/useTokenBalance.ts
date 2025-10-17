@@ -33,7 +33,8 @@ export function useTokenBalance({
     args: [userAddress ?? zeroAddress],
     chainId,
     query: {
-      enabled: enabled && Boolean(tokenAddress && userAddress),
+      // Avoid fetching if user is zeroAddress; treat as zero balance
+      enabled: enabled && Boolean(tokenAddress && userAddress && userAddress !== zeroAddress),
       staleTime: STALE_TIME.supply,
       refetchInterval: 30_000,
       retry: false,

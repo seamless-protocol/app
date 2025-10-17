@@ -337,6 +337,30 @@ describe('useTokenBalance', () => {
       expect(result.current.balance).toBe(0n)
     })
 
+    it('should return 0 when userAddress is zeroAddress', () => {
+      ;(useReadContract as any).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+      })
+
+      const { result } = hookTestUtils.renderHookWithQuery(() =>
+        useTokenBalance({
+          tokenAddress,
+          userAddress: zeroAddress,
+          chainId,
+          enabled: true,
+        }),
+      )
+
+      const callArgs = (useReadContract as any).mock.calls[0]?.[0]
+      expect(callArgs?.args?.[0]).toBe(zeroAddress)
+      expect(callArgs?.query?.enabled).toBe(false)
+      expect(result.current.balance).toBe(0n)
+      expect(result.current.isError).toBe(false)
+    })
+
     it('should handle different chain IDs', () => {
       const mainnetChainId = 1
       ;(useReadContract as any).mockReturnValue({
