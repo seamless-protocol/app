@@ -1,10 +1,17 @@
+import type { Address } from 'viem'
 import { expect, test } from '@playwright/test'
 import { getLeverageTokenAddress, getLeverageTokenDefinition } from '../fixtures/addresses'
 import { publicClient, revertSnapshot, takeSnapshot } from '../shared/clients'
+import { topUpErc20 } from '../shared/funding'
 
 const TOKEN_KEY = 'wsteth-eth-25x'
 const leverageTokenDefinition = getLeverageTokenDefinition('prod', TOKEN_KEY)
 const leverageTokenAddress = getLeverageTokenAddress('prod', TOKEN_KEY)
+
+// Canonical mainnet wstETH address
+const MAINNET_WSTETH = '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address
+// Test account address (default Anvil/Tenderly account #0)
+const TEST_ACCOUNT = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as Address
 
 test.describe('Mainnet wstETH/ETH 25x mint (JIT + LiFi)', () => {
   let snapshotId: `0x${string}`
@@ -15,6 +22,10 @@ test.describe('Mainnet wstETH/ETH 25x mint (JIT + LiFi)', () => {
       throw new Error(
         'Mainnet wstETH/ETH 25x mint: Chain ID mismatch between leverage token definition and public client',
       )
+
+    // Fund test account with wstETH for minting
+    await topUpErc20(MAINNET_WSTETH, TEST_ACCOUNT, '1')
+
     snapshotId = await takeSnapshot()
   })
 
@@ -25,16 +36,44 @@ test.describe('Mainnet wstETH/ETH 25x mint (JIT + LiFi)', () => {
   test('mints wstETH/ETH 25x via modal using LiFi route', async ({ page }) => {
     test.setTimeout(120_000)
 
-    await page.goto('/#/leverage-tokens')
+    // Capture browser console logs
+    page.on('console', (msg) => {
+      if (msg.text().includes('[ConnectButtonTest]') || msg.text().includes('[features.ts]')) {
+        console.log(`[Browser Console] ${msg.text()}`)
+      }
+    })
+
+    await page.goto('/#/leverage-tokens', { waitUntil: 'domcontentloaded' })
+    await page.waitForLoadState('networkidle')
+
+    // Debug: Check what env vars and features the app sees
+    const debug = await page.evaluate(() => {
+      return {
+        VITE_TEST_MODE: (window as any).__VITE_TEST_MODE__,
+        features: (window as any).__FEATURES__,
+      }
+    })
+    console.log('[DEBUG] Browser state:', JSON.stringify(debug, null, 2))
+
+    // Debug: capture what the page looks like
+    await page.screenshot({ path: 'test-results/debug-before-connect.png', fullPage: true })
+
+    // Connect mock wallet - must be visible for test to proceed
     const connect = page.getByTestId('connect-mock')
-    if (await connect.isVisible()) {
-      await connect.click()
-      await expect(connect).toBeHidden({ timeout: 10_000 })
-    }
+    await expect(connect).toBeVisible({ timeout: 10_000 })
+    await connect.click()
+    await expect(connect).toBeHidden({ timeout: 10_000 })
 
     await page.goto(`/#/leverage-tokens/${leverageTokenDefinition.chainId}/${leverageTokenAddress}`)
 
-    const mintButton = page.getByRole('button', { name: 'Mint' })
+    // Wait for page to load and scroll to holdings card (use .last() due to duplicate renders)
+    await page.waitForLoadState('networkidle')
+    const holdingsCard = page.getByTestId('leverage-token-holdings-card').last()
+    await expect(holdingsCard).toBeVisible({ timeout: 10_000 })
+    await holdingsCard.scrollIntoViewIfNeeded()
+
+    // Find mint button (use .last() due to duplicate renders)
+    const mintButton = page.getByTestId('mint-button').last()
     await expect(mintButton).toBeVisible({ timeout: 15_000 })
     await mintButton.click()
 
