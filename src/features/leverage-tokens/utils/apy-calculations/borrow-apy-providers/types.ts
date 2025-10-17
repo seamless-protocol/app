@@ -9,6 +9,8 @@ export interface BaseBorrowApyData {
   borrowAPY: number
   /** Market utilization as a percentage (e.g., 85 for 85%) */
   utilization?: number
+  /** Description of the averaging period used for calculation (e.g., "24-hour average", "7-day average") */
+  averagingPeriod?: string
 }
 
 /**

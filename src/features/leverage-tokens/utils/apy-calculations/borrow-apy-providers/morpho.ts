@@ -98,14 +98,15 @@ export class MorphoBorrowApyProvider implements BorrowApyFetcher {
 
       const marketData = response.marketByUniqueKey
 
-      // Use 7-day average borrow APY for more stable rates
-      // This provides a more consistent representation of borrowing costs
-      const borrowAPY = marketData.state.weeklyBorrowApy
+      // Use 24-hour average borrow APY for current rates
+      // This provides a more current representation of borrowing costs
+      const borrowAPY = marketData.state.dailyBorrowApy
       const utilization = marketData.state.utilization
 
       const result: BaseBorrowApyData = {
         borrowAPY,
         utilization,
+        averagingPeriod: '24-hour average',
       }
 
       return result

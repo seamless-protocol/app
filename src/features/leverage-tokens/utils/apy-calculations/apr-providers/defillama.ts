@@ -16,7 +16,7 @@ interface DefiLlamaApiResponse {
 /**
  * DeFi Llama APR provider implementation
  * Fetches APR data from DeFi Llama API for various protocols
- * Uses 7-day average for more stable APR values
+ * Uses 24-hour average for more current APR values
  */
 export class DefiLlamaAprProvider implements AprFetcher {
   protocolId = 'defillama'
@@ -26,7 +26,7 @@ export class DefiLlamaAprProvider implements AprFetcher {
 
   /**
    * Fetch APR data from DeFi Llama API
-   * Calculates 7-day average for more stable values
+   * Calculates 24-hour average for current values
    */
   async fetchApr(): Promise<BaseAprData> {
     const url = `https://yields.llama.fi/chart/${this.id}`
@@ -74,7 +74,7 @@ export class DefiLlamaAprProvider implements AprFetcher {
 
       const data = responseData.data
 
-      // Calculate 7-day average APR by filtering to last 7 days from the most recent entry
+      // Calculate 24-hour average APR by filtering to last 24 hours from the most recent entry
       // Get the most recent entry to determine the cutoff date
       const mostRecentEntry = data[data.length - 1]
       if (!mostRecentEntry) {
@@ -89,23 +89,23 @@ export class DefiLlamaAprProvider implements AprFetcher {
         throw error
       }
 
-      // Calculate 7 days ago from the most recent entry (excluding current day)
+      // Calculate 24 hours ago from the most recent entry (excluding current moment)
       const mostRecentDate = new Date(mostRecentEntry.timestamp)
-      const sevenDaysAgo = new Date(mostRecentDate.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const oneDayAgo = new Date(mostRecentDate.getTime() - 24 * 60 * 60 * 1000)
 
-      // Filter data to only include entries from the last 7 days (excluding current day)
-      const last7DaysData = data.filter((item) => {
+      // Filter data to only include entries from the last 24 hours (excluding current moment)
+      const last24HoursData = data.filter((item) => {
         const itemDate = new Date(item.timestamp)
         return (
-          itemDate >= sevenDaysAgo &&
+          itemDate >= oneDayAgo &&
           itemDate < mostRecentDate &&
           item.apy != null &&
           !Number.isNaN(item.apy)
         )
       })
 
-      if (last7DaysData.length === 0) {
-        const error = new Error('No valid APR data found in the last 7 days')
+      if (last24HoursData.length === 0) {
+        const error = new Error('No valid APR data found in the last 24 hours')
         captureApiError({
           provider,
           method,
@@ -116,16 +116,17 @@ export class DefiLlamaAprProvider implements AprFetcher {
         throw error
       }
 
-      const validData = last7DaysData
+      const validData = last24HoursData
 
-      // Calculate average APR over the last 7 days
-      // This gives us a more stable APR value by smoothing out daily fluctuations
+      // Calculate average APR over the last 24 hours
+      // This gives us a current APR value based on the most recent day of data
       const averageAPR = validData.reduce((sum, item) => sum + item.apy, 0) / validData.length
 
       return {
         stakingAPR: averageAPR,
         restakingAPR: 0, // DeFi Llama doesn't provide restaking APR
         totalAPR: averageAPR,
+        averagingPeriod: '24-hour average',
       }
     } catch (error) {
       const elapsed = elapsedMsSince(start)

@@ -69,6 +69,7 @@ export class EtherFiAprProvider implements AprFetcher {
         totalAPR,
         stakingAPR: sevenDayApr,
         restakingAPR: sevenDayRestakingApr,
+        averagingPeriod: '7-day average',
         metadata: {
           raw,
           useRestakingApr: true,

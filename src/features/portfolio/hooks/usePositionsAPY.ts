@@ -112,6 +112,18 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
 
             const totalAPY = stakingYield + restakingYield + rewardsAPR + borrowRate
 
+            // Build metadata for averaging periods
+            const metadata: {
+              yieldAveragingPeriod?: string
+              borrowAveragingPeriod?: string
+            } = {}
+            if (aprData.averagingPeriod) {
+              metadata.yieldAveragingPeriod = aprData.averagingPeriod
+            }
+            if (borrowApyData.averagingPeriod) {
+              metadata.borrowAveragingPeriod = borrowApyData.averagingPeriod
+            }
+
             const apyBreakdown: APYBreakdownData = {
               stakingYield,
               restakingYield,
@@ -120,6 +132,7 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
               points,
               totalAPY,
               utilization,
+              ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
             }
 
             const tokenId = token.id || token.address || token.leverageTokenAddress

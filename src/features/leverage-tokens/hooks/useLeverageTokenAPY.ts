@@ -27,7 +27,7 @@ export function useLeverageTokenAPY({
   const config = useConfig()
   const queryKey =
     tokenAddress && leverageToken?.chainId
-      ? [...ltKeys.tokenOnChain(leverageToken.chainId, tokenAddress), 'apy']
+      ? [...ltKeys.tokenOnChain(leverageToken.chainId, tokenAddress), 'apy', 'v2'] // Added v2 to bust cache
       : []
 
   return useQuery({
@@ -114,10 +114,12 @@ export function useLeverageTokenAPY({
       const aprData =
         aprDataResult.status === 'fulfilled'
           ? aprDataResult.value
-          : { stakingAPR: 0, restakingAPR: 0, totalAPR: 0 }
+          : { stakingAPR: 0, restakingAPR: 0, totalAPR: 0, averagingPeriod: undefined }
 
       const borrowApyData =
-        borrowApyDataResult.status === 'fulfilled' ? borrowApyDataResult.value : { borrowAPY: 0 }
+        borrowApyDataResult.status === 'fulfilled'
+          ? borrowApyDataResult.value
+          : { borrowAPY: 0, utilization: undefined, averagingPeriod: undefined }
 
       const rewardsAPRData =
         rewardsAPRDataResult.status === 'fulfilled' ? rewardsAPRDataResult.value : { rewardsAPR: 0 }
@@ -155,6 +157,18 @@ export function useLeverageTokenAPY({
       // Calculate total net yield
       const totalAPY = stakingYield + restakingYield + rewardsAPR + borrowRate
 
+      // Build metadata object conditionally to satisfy exactOptionalPropertyTypes
+      const metadata: {
+        yieldAveragingPeriod?: string
+        borrowAveragingPeriod?: string
+      } = {}
+      if (aprData.averagingPeriod) {
+        metadata.yieldAveragingPeriod = aprData.averagingPeriod
+      }
+      if (borrowApyData.averagingPeriod) {
+        metadata.borrowAveragingPeriod = borrowApyData.averagingPeriod
+      }
+
       return {
         stakingYield,
         restakingYield,
@@ -168,10 +182,11 @@ export function useLeverageTokenAPY({
           rawStakingYield,
           rawRestakingYield,
         },
+        ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
       }
     },
     enabled: enabled && !!tokenAddress,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // TEMP: Set to 0 to force refetch for debugging
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: (failureCount, error) => {
       // Only retry on network errors, not on business logic errors
