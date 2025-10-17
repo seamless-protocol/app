@@ -171,6 +171,7 @@ export function LeverageTokenHoldingsCard({
                   </div>
                   <div className="flex-1 min-w-0">
                     <Button
+                      data-testid="redeem-button"
                       type="button"
                       onClick={handleRedeemClick}
                       variant="outline"

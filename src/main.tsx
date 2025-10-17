@@ -89,6 +89,20 @@ console.log('[app] Booting Seamless front-end', {
   mode: import.meta.env.MODE,
 })
 
+// Bypass LiFi's wagmi sync in test mode so connectors stay intact
+function LiFiWrapper({
+  config,
+  children,
+}: {
+  config: typeof prodConfig
+  children: React.ReactNode
+}) {
+  if (features.testMode) {
+    return <>{children}</>
+  }
+  return <LiFiSync config={config}>{children}</LiFiSync>
+}
+
 try {
   const root = createRoot(rootElement)
 
@@ -99,12 +113,12 @@ try {
         <ThemeProvider defaultTheme="dark">
           <WagmiProvider config={config}>
             <QueryClientProvider client={queryClient}>
-              <LiFiSync config={config}>
+              <LiFiWrapper config={config}>
                 <RainbowThemeWrapper>
                   <RouterProvider router={router} />
                   <ReactQueryDevtools initialIsOpen={false} />
                 </RainbowThemeWrapper>
-              </LiFiSync>
+              </LiFiWrapper>
             </QueryClientProvider>
           </WagmiProvider>
         </ThemeProvider>

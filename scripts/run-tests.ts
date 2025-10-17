@@ -325,11 +325,10 @@ async function runForChainOption(
           VITE_TEST_RPC_URL: rpcUrl,
           VITE_BASE_RPC_URL: rpcUrl,
           TENDERLY_ADMIN_RPC_URL: rpcUrl,
+          E2E_CHAIN_ID: vnetCfg.chainId,
         }
         const env = withTestDefaults(testType, envSeed, 'tenderly')
-        const focusArgs = scenarioOption
-          ? selectE2ESpecsArgs(testType, slug, scenarioOption)
-          : []
+        const focusArgs = scenarioOption ? selectE2ESpecsArgs(testType, slug, scenarioOption) : []
         const { cmd, args } = getTestCommand(testType, [...passThroughArgs, ...focusArgs])
         console.log(`=== 🚀 Running ${testType} tests [${label}] ===`)
         await runCommand(cmd, args, env)
@@ -413,6 +412,12 @@ function withTestDefaults(
 ): Record<string, string> {
   const isUiSuite = testType === 'e2e'
   const isChainAwareSuite = testType === 'e2e' || testType === 'integration'
+
+  // Enable mock wallet for E2E tests
+  if (isUiSuite && !env['VITE_TEST_MODE']) {
+    env['VITE_TEST_MODE'] = 'mock'
+    env['VITE_E2E'] = '1'
+  }
 
   if (isChainAwareSuite && !env['VITE_INCLUDE_TEST_TOKENS']) {
     const currentRpc = env['TEST_RPC_URL']
