@@ -69,12 +69,13 @@ describe('MerklRewardsAprProvider', () => {
         `https://api.merkl.xyz/v4/opportunities?identifier=${tokenAddress}&chainId=${chainId}`,
         expect.objectContaining({
           signal: expect.any(AbortSignal),
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
         }),
       )
+      // Ensure simple GET (no headers) to avoid preflight
+      {
+        const opts = (mockFetch.mock.calls[0] as Array<unknown>)[1] as Record<string, unknown>
+        expect(opts['headers']).toBeUndefined()
+      }
     })
 
     it('should sum APRs from multiple opportunities', async () => {
@@ -115,12 +116,12 @@ describe('MerklRewardsAprProvider', () => {
         `https://api.merkl.xyz/v4/opportunities?identifier=${tokenAddress}&chainId=8453`,
         expect.objectContaining({
           signal: expect.any(AbortSignal),
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
         }),
       )
+      {
+        const opts = (mockFetch.mock.calls[0] as Array<unknown>)[1] as Record<string, unknown>
+        expect(opts['headers']).toBeUndefined()
+      }
     })
 
     it('should fetch opportunities from all chains when no chain ID provided', async () => {
@@ -161,12 +162,12 @@ describe('MerklRewardsAprProvider', () => {
         `https://api.merkl.xyz/v4/opportunities?identifier=${tokenAddress}`,
         expect.objectContaining({
           signal: expect.any(AbortSignal),
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
         }),
       )
+      {
+        const opts = (mockFetch.mock.calls[0] as Array<unknown>)[1] as Record<string, unknown>
+        expect(opts['headers']).toBeUndefined()
+      }
     })
 
     it('should return default data when no opportunities found', async () => {

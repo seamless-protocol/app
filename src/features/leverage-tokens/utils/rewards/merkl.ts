@@ -220,12 +220,9 @@ export class MerklRewardClaimProvider implements RewardClaimFetcher {
 
       const url = `https://api.merkl.xyz/v4/users/${userAddress}/rewards?chainId=${chainIds.join(',')}`
 
+      // Use a "simple request" with no custom headers to avoid CORS preflight
       const response = await fetch(url, {
         signal: controller.signal,
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
       })
 
       clearTimeout(timeoutId)

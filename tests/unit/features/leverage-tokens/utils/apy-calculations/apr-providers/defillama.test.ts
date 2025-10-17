@@ -121,12 +121,11 @@ describe('DefiLlamaAprProvider', () => {
       `https://yields.llama.fi/chart/${protocolId}`,
       expect.objectContaining({
         method: 'GET',
-        headers: expect.objectContaining({
-          Accept: 'application/json',
-          'User-Agent': 'Seamless Protocol Frontend',
-        }),
       }),
     )
+    // Ensure we use a simple request (no custom headers) to avoid CORS preflight
+    const options = (mockFetch.mock.calls[0] as Array<unknown>)[1] as Record<string, unknown>
+    expect(options['headers']).toBeUndefined()
   })
 
   it('should handle API errors', async () => {
