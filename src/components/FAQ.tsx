@@ -47,15 +47,15 @@ export function FAQ({ title = 'Frequently Asked Questions', items, className = '
               <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full justify-between rounded-lg border border-border bg-accent p-4 text-left text-foreground transition-colors hover:bg-accent"
+                  className="h-auto w-full items-start justify-between whitespace-normal rounded-lg border border-border bg-accent p-4 text-left text-foreground transition-colors hover:bg-accent"
                 >
-                  <span className="pr-2 break-words text-left font-medium text-foreground">
+                  <span className="min-w-0 flex-1 pr-2 break-words text-left font-medium text-foreground">
                     {faq.question}
                   </span>
                   {openFAQs.includes(faq.id) ? (
-                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
                   ) : (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                   )}
                 </Button>
               </CollapsibleTrigger>
