@@ -55,7 +55,8 @@ const STATIC_ENDPOINTS: Record<
 }
 
 const DEFAULT_CHAIN: ChainKey = 'base'
-const DEFAULT_MODE: BackendMode = 'tenderly-static'
+// Default to Tenderly JIT VNets for tests; fall back handled by resolver
+const DEFAULT_MODE: BackendMode = 'tenderly-jit'
 const DEFAULT_ANVIL_RPC_URL = anvil.rpcUrls.default.http[0]
 
 const CHAIN_ALIAS_MAP: Record<string, ChainKey> = {

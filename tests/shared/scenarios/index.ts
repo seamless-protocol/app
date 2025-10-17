@@ -31,8 +31,8 @@ const mainnetScenarios: Record<ScenarioKey, ScenarioDefinition> = {
     description:
       'Exercises leverage token mint flows on Mainnet Tenderly VNets for all available leverage tokens.',
     leverageTokenSource: 'tenderly',
-    leverageTokenKeys: ['cbbtc-usdc-2x'],
-    defaultLeverageTokenKey: 'cbbtc-usdc-2x',
+    leverageTokenKeys: ['wsteth-eth-25x'],
+    defaultLeverageTokenKey: 'wsteth-eth-25x',
   },
 }
 

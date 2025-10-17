@@ -13,7 +13,7 @@ if (mode !== 'tenderly') {
 
 const mintSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
-mintSuite('Leverage Router V2 Mint (Tenderly VNet, Mainnet wstETH/ETH 2x)', () => {
+mintSuite('Leverage Router V2 Mint (Tenderly VNet, Mainnet wstETH/ETH 25x)', () => {
   const SLIPPAGE_BPS = 50
 
   it('mints shares successfully via LiFi debt->collateral swap', async () => {
@@ -34,6 +34,8 @@ mintSuite('Leverage Router V2 Mint (Tenderly VNet, Mainnet wstETH/ETH 2x)', () =
             ...(ADDR.uniswapV3 ? { uniswapV3: ADDR.uniswapV3 } : {}),
           },
         })
+
+        // Verify shares were minted successfully
         expect(res.sharesMinted > 0n).toBe(true)
       } finally {
         if (typeof prev === 'string') process.env['TEST_USE_LIFI'] = prev

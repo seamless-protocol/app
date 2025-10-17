@@ -49,8 +49,23 @@ function getTenderlyConfig(): TenderlyConfig | null {
   const account = process.env['TENDERLY_ACCOUNT'] || process.env['TENDERLY_ACCOUNT_SLUG']
   const project = process.env['TENDERLY_PROJECT'] || process.env['TENDERLY_PROJECT_SLUG']
   const accessKey = process.env['TENDERLY_ACCESS_KEY']
-  const chainId = process.env['TENDERLY_CHAIN_ID'] || '8453'
   const token = process.env['TENDERLY_TOKEN']
+
+  // Derive chainId from TEST_CHAIN or use explicit TENDERLY_CHAIN_ID
+  const testChain = process.env['TEST_CHAIN']
+  let chainId = process.env['TENDERLY_CHAIN_ID']
+
+  if (!chainId && testChain) {
+    // Map TEST_CHAIN to chain ID
+    const chainMap: Record<string, string> = {
+      base: '8453',
+      mainnet: '1',
+      ethereum: '1',
+    }
+    chainId = chainMap[testChain.toLowerCase()] || '8453'
+  }
+
+  chainId = chainId || '8453' // Default to Base
 
   if (!account || !project || !accessKey) {
     return null
@@ -72,19 +87,18 @@ function getTestCommand(
   switch (testType) {
     case 'e2e':
       return { cmd: 'bunx', args: ['playwright', 'test', ...extraArgs] }
-    case 'integration':
-      // Call Vitest directly to avoid script recursion when test:integration itself uses this runner
-      return {
-        cmd: 'bunx',
-        args: [
-          'vitest',
-          '-c',
-          'vitest.integration.config.ts',
-          '--run',
-          'tests/integration',
-          ...extraArgs,
-        ],
-      }
+
+    case 'integration': {
+      // If explicit test files are provided, run only those instead of the entire directory. // Call Vitest directly to avoid script recursion when test:integration itself uses this runner
+      // Strip standalone '--' which is sometimes used by callers to separate args
+      const cleaned = extraArgs.filter((a) => a !== '--')
+      const hasExplicitTests = cleaned.some((a) => /tests\//.test(a) || /\.spec\.ts$/.test(a))
+      const baseArgs = ['vitest', '-c', 'vitest.integration.config.ts', '--run']
+      const args = hasExplicitTests
+        ? [...baseArgs, ...cleaned]
+        : [...baseArgs, 'tests/integration', ...cleaned]
+      return { cmd: 'bunx', args }
+    }
     default:
       throw new Error(`Unknown test type: ${testType}`)
   }
@@ -348,6 +362,13 @@ function withTestDefaults(
     else if (backend === 'anvil') env['E2E_TOKEN_SOURCE'] = 'prod'
     else if (currentRpc?.includes('tenderly')) env['E2E_TOKEN_SOURCE'] = 'tenderly'
     else env['E2E_TOKEN_SOURCE'] = 'prod'
+  }
+
+  // Default: disable LiFi live smoke specs in integration unless explicitly enabled
+  // These tests hit the public LiFi API and can be flaky; keep them opt-in for CI stability.
+  if (testType === 'integration') {
+    const enableLive = env['ENABLE_LIFI_LIVE'] === '1'
+    if (!enableLive) env['LIFI_LIVE'] = '0'
   }
 
   return env

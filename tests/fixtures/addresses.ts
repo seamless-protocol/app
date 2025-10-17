@@ -60,7 +60,11 @@ export const MAINNET_TENDERLY_VNET_ADMIN_RPC =
   'https://virtual.mainnet.us-west.rpc.tenderly.co/da333276-fa7b-4f3b-a6b9-319102e4ec5d' as const
 
 export type LeverageTokenSource = 'tenderly' | 'prod'
-export type LeverageTokenKey = 'weeth-weth-17x' | 'cbbtc-usdc-2x' | 'wsteth-eth-2x'
+export type LeverageTokenKey =
+  | 'weeth-weth-17x'
+  | 'cbbtc-usdc-2x'
+  | 'wsteth-eth-2x'
+  | 'wsteth-eth-25x'
 
 export interface LeverageTokenDefinition {
   key: LeverageTokenKey
@@ -162,6 +166,21 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
       useLiFi: true,
     },
   },
+  'wsteth-eth-25x': {
+    key: 'wsteth-eth-25x',
+    address: '0x98c4E43e3Bde7B649E5aa2F88DE1658E8d3eD1bF' as Address,
+    label: 'wstETH / ETH 25x Leverage Token (Tenderly)',
+    chainId: mainnet.id,
+    collateralSymbol: 'wstETH',
+    debtSymbol: 'WETH',
+    multicallExecutor: MAINNET_TENDERLY_VNET_STACK.multicallExecutor,
+    rpcUrl: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
+    adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
+    swap: {
+      // Same-chain routing via LiFi, bridges disabled
+      useLiFi: true,
+    },
+  },
 }
 
 const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = {
@@ -185,6 +204,14 @@ const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = 
     key: 'wsteth-eth-2x',
     address: '0x10041DFFBE8fB54Ca4Dfa56F2286680EC98A37c3' as Address,
     label: 'wstETH / ETH 2x Leverage Token',
+    chainId: mainnet.id,
+    collateralSymbol: 'wstETH',
+    debtSymbol: 'WETH',
+  },
+  'wsteth-eth-25x': {
+    key: 'wsteth-eth-25x',
+    address: '0x98c4E43e3Bde7B649E5aa2F88DE1658E8d3eD1bF' as Address,
+    label: 'wstETH / ETH 25x Leverage Token',
     chainId: mainnet.id,
     collateralSymbol: 'wstETH',
     debtSymbol: 'WETH',
@@ -232,7 +259,12 @@ export const WEETH_WETH_17X_TENDERLY_TOKEN_ADDRESS =
   TENDERLY_LEVERAGE_TOKENS['weeth-weth-17x'].address
 
 export function isLeverageTokenKey(value: unknown): value is LeverageTokenKey {
-  return value === 'weeth-weth-17x' || value === 'cbbtc-usdc-2x' || value === 'wsteth-eth-2x'
+  return (
+    value === 'weeth-weth-17x' ||
+    value === 'cbbtc-usdc-2x' ||
+    value === 'wsteth-eth-2x' ||
+    value === 'wsteth-eth-25x'
+  )
 }
 
 export function getLeverageTokenAddress(

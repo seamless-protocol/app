@@ -385,5 +385,3 @@ function sanitizeBigints(obj: Record<string, unknown>): Record<string, unknown> 
   }
   return out
 }
-
-// Iterative refinement removed in favor of a single minOut-aware pass.
