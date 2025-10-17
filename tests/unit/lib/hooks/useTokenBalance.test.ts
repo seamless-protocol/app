@@ -1,6 +1,6 @@
+import { zeroAddress } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useReadContract } from 'wagmi'
-import { zeroAddress } from 'viem'
 import { useTokenBalance } from '@/lib/hooks/useTokenBalance'
 import { hookTestUtils, makeAddr } from '../../../utils'
 
