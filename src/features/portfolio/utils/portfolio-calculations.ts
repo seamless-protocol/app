@@ -40,13 +40,14 @@ function _calculatePortfolioValueAtTimestamp(
     // Use 18 decimals as fallback since we don't have access to token config here
     const positionValueInCollateralAsset = Number(formatUnits(positionValue, 18))
 
-    // Get collateral asset price in USD from CoinGecko (like old app)
+    // Get collateral asset price in USD
     const collateralAssetAddress =
       position.leverageToken.lendingAdapter.collateralAsset.toLowerCase()
     const collateralAssetPriceUsd = usdPrices[collateralAssetAddress]
     const positionValueInUSD = collateralAssetPriceUsd
       ? positionValueInCollateralAsset * collateralAssetPriceUsd
       : 0
+
     totalValue += positionValueInUSD
   }
 
@@ -75,11 +76,11 @@ function _findClosestStateByTimestamp(
     const state = sortedStates[mid]
     if (!state) break
 
-    const rawTimestamp = Number(state.timestamp)
-    const stateTimestamp = rawTimestamp > 4102444800 ? rawTimestamp / 1000000 : rawTimestamp
+    // Subgraph timestamps are in microseconds, convert to seconds
+    const stateTimestamp = Number(state.timestamp) / 1000000
 
     // Validate timestamp
-    if (Number.isNaN(stateTimestamp) || stateTimestamp <= 0 || stateTimestamp > 4102444800) {
+    if (Number.isNaN(stateTimestamp) || stateTimestamp <= 0) {
       continue // Skip invalid timestamps
     }
 
@@ -198,23 +199,15 @@ export function generatePortfolioPerformanceData(
     // Get all unique timestamps from all leverage tokens
     const allTimestamps = new Set<number>()
 
-    for (const [, states] of leverageTokenStates.entries()) {
+    for (const states of leverageTokenStates.values()) {
       for (const state of states) {
-        try {
-          // Subgraph timestamps are typically in seconds, not microseconds
-          // Let's check if we need to convert by looking at the timestamp value
-          const rawTimestamp = Number(state.timestamp)
+        // Subgraph timestamps are in microseconds, convert to seconds
+        const timestamp = Number(state.timestamp) / 1000000
 
-          // If timestamp is very large (> year 2100), it's likely in microseconds
-          // If timestamp is reasonable (< year 2100), it's likely in seconds
-          const timestamp = rawTimestamp > 4102444800 ? rawTimestamp / 1000000 : rawTimestamp
-
-          // Validate the timestamp is reasonable (not NaN, not too far in past/future)
-          if (!Number.isNaN(timestamp) && timestamp > 0 && timestamp < 4102444800) {
-            allTimestamps.add(timestamp)
-          } else {
-          }
-        } catch {}
+        // Validate the timestamp is reasonable (not NaN, not in the future)
+        if (!Number.isNaN(timestamp) && timestamp > 0 && timestamp <= Date.now() / 1000) {
+          allTimestamps.add(timestamp)
+        }
       }
     }
 
@@ -225,33 +218,20 @@ export function generatePortfolioPerformanceData(
       return []
     }
 
-    // Filter timestamps based on timeframe
-    const now = Date.now() / 1000 // Current timestamp in seconds
+    // Filter by timeframe
+    const now = Date.now() / 1000
     const timeframeSeconds = _getTimeframeSeconds(timeframe)
     const startTime = now - timeframeSeconds
-
     const filteredTimestamps = sortedTimestamps.filter((ts) => ts >= startTime)
 
     if (filteredTimestamps.length === 0) {
       return []
     }
 
-    // For 7D timeframe, we want one point per day for the last 7 days
-    // For other timeframes, we can sample more intelligently
-    let sampledTimestamps: Array<number>
-
-    if (timeframe === '7D') {
-      // For 7D, get the last 7 days of data (one per day)
-      sampledTimestamps = filteredTimestamps.slice(-7)
-    } else {
-      // For other timeframes, use the sampling logic
-      sampledTimestamps = _sampleTimestampsForTimeframe(filteredTimestamps, timeframe)
-    }
-
     // Generate data points
     const dataPoints: Array<PortfolioDataPoint> = []
 
-    for (const timestamp of sampledTimestamps) {
+    for (const timestamp of filteredTimestamps) {
       const portfolioValue = _calculatePortfolioValueAtTimestamp(
         timestamp,
         userPositions,
@@ -297,98 +277,6 @@ export function generatePortfolioPerformanceData(
 }
 
 /**
- * Sample timestamps to get evenly distributed data points for chart display
- */
-function _sampleTimestampsForTimeframe(
-  timestamps: Array<number>,
-  timeframe: '7D' | '30D' | '90D' | '1Y',
-): Array<number> {
-  if (timestamps.length <= 10) {
-    // If we have 10 or fewer timestamps, return all of them
-    return timestamps
-  }
-
-  // Determine sampling interval based on timeframe
-  let maxPoints: number
-  switch (timeframe) {
-    case '7D':
-      maxPoints = 7 // One point per day
-      break
-    case '30D':
-      maxPoints = 15 // Allow more points for 30D to show more data
-      break
-    case '90D':
-      maxPoints = 20 // Allow more points for 90D
-      break
-    case '1Y':
-      maxPoints = 24 // Allow more points for 1Y (2 per month)
-      break
-    default:
-      maxPoints = 15
-  }
-
-  if (timestamps.length <= maxPoints) {
-    return timestamps
-  }
-
-  // Group timestamps by day to avoid multiple points on the same day
-  const timestampsByDay = new Map<string, number>()
-
-  for (const timestamp of timestamps) {
-    const date = new Date(timestamp * 1000)
-
-    // Use UTC date to avoid timezone issues
-    const year = date.getUTCFullYear()
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(date.getUTCDate()).padStart(2, '0')
-    const dayKey = `${year}-${month}-${day}` // YYYY-MM-DD format in UTC
-
-    // Daily grouping logic - keeps latest timestamp for each day
-
-    // Keep the latest timestamp for each day
-    const existingTimestamp = timestampsByDay.get(dayKey)
-    if (!timestampsByDay.has(dayKey) || (existingTimestamp && existingTimestamp < timestamp)) {
-      timestampsByDay.set(dayKey, timestamp)
-    }
-  }
-
-  const uniqueDailyTimestamps = Array.from(timestampsByDay.values()).sort((a, b) => a - b)
-
-  // If we have a reasonable number of unique daily timestamps, return all of them
-  // This ensures we don't lose any data points unnecessarily
-  if (uniqueDailyTimestamps.length <= maxPoints) {
-    return uniqueDailyTimestamps
-  }
-
-  // Sample evenly distributed timestamps from the unique daily ones
-  const step = Math.floor(uniqueDailyTimestamps.length / maxPoints)
-  const sampled: Array<number> = []
-
-  // Always include the first timestamp
-  const firstTimestamp = uniqueDailyTimestamps[0]
-  if (firstTimestamp !== undefined) {
-    sampled.push(firstTimestamp)
-  }
-
-  // Sample evenly distributed points
-  for (let i = step; i < uniqueDailyTimestamps.length - 1; i += step) {
-    const timestamp = uniqueDailyTimestamps[i]
-    if (timestamp !== undefined) {
-      sampled.push(timestamp)
-    }
-    if (sampled.length >= maxPoints - 1) break // Leave room for the last timestamp
-  }
-
-  // Always include the last timestamp
-  const lastTimestamp = uniqueDailyTimestamps[uniqueDailyTimestamps.length - 1]
-  if (lastTimestamp !== undefined && sampled[sampled.length - 1] !== lastTimestamp) {
-    sampled.push(lastTimestamp)
-  }
-
-  return sampled
-}
-
-/**
  * Get timeframe in seconds
  */
 function _getTimeframeSeconds(timeframe: '7D' | '30D' | '90D' | '1Y'): number {
@@ -414,11 +302,6 @@ function _formatTimestampForChart(
   timeframe: '7D' | '30D' | '90D' | '1Y',
 ): string {
   const date = new Date(timestamp * 1000)
-
-  // Ensure the date is valid
-  if (Number.isNaN(date.getTime())) {
-    return 'Invalid Date'
-  }
 
   // Use UTC date formatting to avoid timezone issues
   const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })
