@@ -133,6 +133,11 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
               points,
               totalAPY,
               utilization,
+              raw: {
+                rawBorrowRate: borrowAPY ?? 0,
+                rawStakingYield: aprData.stakingAPR ? aprData.stakingAPR / 100 : 0,
+                rawRestakingYield: aprData.restakingAPR ? aprData.restakingAPR / 100 : 0,
+              },
               ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
             }
 
