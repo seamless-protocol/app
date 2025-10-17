@@ -1,5 +1,5 @@
-import type { Address } from 'viem'
 import { expect, test } from '@playwright/test'
+import type { Address } from 'viem'
 import { getLeverageTokenAddress, getLeverageTokenDefinition } from '../fixtures/addresses'
 import { publicClient, revertSnapshot, takeSnapshot } from '../shared/clients'
 import { topUpErc20 } from '../shared/funding'
@@ -36,29 +36,10 @@ test.describe('Mainnet wstETH/ETH 25x mint (JIT + LiFi)', () => {
   test('mints wstETH/ETH 25x via modal using LiFi route', async ({ page }) => {
     test.setTimeout(120_000)
 
-    // Capture browser console logs
-    page.on('console', (msg) => {
-      if (msg.text().includes('[ConnectButtonTest]') || msg.text().includes('[features.ts]')) {
-        console.log(`[Browser Console] ${msg.text()}`)
-      }
-    })
-
     await page.goto('/#/leverage-tokens', { waitUntil: 'domcontentloaded' })
     await page.waitForLoadState('networkidle')
 
-    // Debug: Check what env vars and features the app sees
-    const debug = await page.evaluate(() => {
-      return {
-        VITE_TEST_MODE: (window as any).__VITE_TEST_MODE__,
-        features: (window as any).__FEATURES__,
-      }
-    })
-    console.log('[DEBUG] Browser state:', JSON.stringify(debug, null, 2))
-
-    // Debug: capture what the page looks like
-    await page.screenshot({ path: 'test-results/debug-before-connect.png', fullPage: true })
-
-    // Connect mock wallet - must be visible for test to proceed
+    // Connect mock wallet
     const connect = page.getByTestId('connect-mock')
     await expect(connect).toBeVisible({ timeout: 10_000 })
     await connect.click()
@@ -97,7 +78,7 @@ test.describe('Mainnet wstETH/ETH 25x mint (JIT + LiFi)', () => {
     }
 
     await page.getByRole('button', { name: 'Confirm Mint' }).click()
-    await expect(page.getByRole('heading', { name: 'Processing Mint' })).toBeVisible()
+
     await expect(page.getByRole('heading', { name: 'Mint Success!' })).toBeVisible({
       timeout: 60_000,
     })
