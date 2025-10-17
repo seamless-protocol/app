@@ -1,3 +1,4 @@
+import type { AveragingPeriod } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/types'
 import { formatPercentage, formatPoints } from '@/lib/utils/formatting'
 import { cn } from './ui/utils'
 
@@ -17,8 +18,8 @@ export interface APYBreakdownData {
   }
   metadata?: {
     // Averaging periods for transparency
-    yieldAveragingPeriod?: string
-    borrowAveragingPeriod?: string
+    yieldAveragingPeriod?: AveragingPeriod
+    borrowAveragingPeriod?: AveragingPeriod
   }
 }
 
@@ -110,7 +111,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
                 {data.metadata.yieldAveragingPeriod &&
                 data.metadata.borrowAveragingPeriod &&
                 data.metadata.yieldAveragingPeriod === data.metadata.borrowAveragingPeriod ? (
-                  <p>Values are based on {data.metadata.yieldAveragingPeriod}</p>
+                  <p>Values based on {data.metadata.yieldAveragingPeriod}</p>
                 ) : (
                   <>
                     {data.metadata.yieldAveragingPeriod && (

@@ -3,6 +3,7 @@ import type { Address } from 'viem'
 import { useConfig } from 'wagmi'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
+import type { AveragingPeriod } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/types'
 import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { fetchAprForToken } from '../utils/apy-calculations/apr-providers'
 import { fetchBorrowApyForToken } from '../utils/apy-calculations/borrow-apy-providers'
@@ -159,8 +160,8 @@ export function useLeverageTokenAPY({
 
       // Build metadata object conditionally to satisfy exactOptionalPropertyTypes
       const metadata: {
-        yieldAveragingPeriod?: string
-        borrowAveragingPeriod?: string
+        yieldAveragingPeriod?: AveragingPeriod
+        borrowAveragingPeriod?: AveragingPeriod
       } = {}
       if (aprData.averagingPeriod) {
         metadata.yieldAveragingPeriod = aprData.averagingPeriod
@@ -186,7 +187,7 @@ export function useLeverageTokenAPY({
       }
     },
     enabled: enabled && !!tokenAddress,
-    staleTime: 0, // TEMP: Set to 0 to force refetch for debugging
+    staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: (failureCount, error) => {
       // Only retry on network errors, not on business logic errors

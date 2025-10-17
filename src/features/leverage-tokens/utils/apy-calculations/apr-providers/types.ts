@@ -1,4 +1,9 @@
 /**
+ * Averaging period types for APR calculations
+ */
+export type AveragingPeriod = '24-hour average' | '7-day average'
+
+/**
  * Common interface for APR data that all protocols must implement
  */
 export interface BaseAprData {
@@ -8,8 +13,8 @@ export interface BaseAprData {
   restakingAPR?: number
   /** Total combined APR */
   totalAPR: number
-  /** Description of the averaging period used for calculation (e.g., "24-hour average", "7-day average") */
-  averagingPeriod?: string
+  /** Description of the averaging period used for calculation */
+  averagingPeriod?: AveragingPeriod
 }
 
 /**
