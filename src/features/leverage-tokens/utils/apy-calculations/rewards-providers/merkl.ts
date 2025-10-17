@@ -99,12 +99,9 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
         ? `https://api.merkl.xyz/v4/opportunities?identifier=${tokenAddress}&chainId=${chainId}`
         : `https://api.merkl.xyz/v4/opportunities?identifier=${tokenAddress}`
 
+      // Use a "simple request" with no custom headers to avoid CORS preflight
       const response = await fetch(url, {
         signal: controller.signal,
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
       })
 
       clearTimeout(timeoutId)

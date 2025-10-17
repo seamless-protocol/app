@@ -10,6 +10,7 @@ interface UseLeverageTokenUserMetricsParams {
   chainId?: number
   collateralDecimals: number
   userAddress?: Address
+  enabled?: boolean
 }
 
 export interface LeverageTokenUserMetricsData {
@@ -23,11 +24,12 @@ export function useLeverageTokenUserMetrics({
   chainId,
   collateralDecimals,
   userAddress: overrideUserAddress,
+  enabled = true,
 }: UseLeverageTokenUserMetricsParams) {
   const { address: connectedAddress } = useAccount()
   const userAddress = overrideUserAddress ?? (connectedAddress as Address | undefined)
 
-  const shouldQuery = Boolean(tokenAddress && userAddress && typeof chainId === 'number')
+  const shouldQuery = Boolean(tokenAddress && userAddress && typeof chainId === 'number' && enabled)
 
   const queryKey = shouldQuery
     ? ([...ltKeys.user(tokenAddress as Address, userAddress as Address), 'metrics'] as const)

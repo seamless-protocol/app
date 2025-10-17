@@ -507,7 +507,7 @@ function transformDetailedMetricsData(
   if (utilizationData && utilizationData.utilization !== undefined) {
     utilizationValue = `${formatPercentage(utilizationData.utilization, { decimals: 2, showSign: false })}`
 
-    if (utilizationData.utilization >= 90) {
+    if (utilizationData.utilization >= 0.9) {
       utilizationColor = 'text-red-500' // Red when utilization is high (>= 90%)
       utilizationTooltip = 'Underlying lending market utilization is currently HIGH'
     } else {
@@ -533,7 +533,7 @@ function transformDetailedMetricsData(
     ],
     'Lending Market': [
       {
-        label: 'Available Supply Cap',
+        label: 'Remaining Supply Cap',
         value: React.createElement(
           React.Fragment,
           null,

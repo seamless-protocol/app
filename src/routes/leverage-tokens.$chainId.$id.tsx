@@ -160,10 +160,10 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
     // Detailed metrics with APY data
     // Prepare borrow rate data
     const getBorrowRateData = (apyData: APYBreakdownData | undefined, isLoading: boolean) => {
-      if (!apyData || isLoading) return undefined
+      if (!apyData || !apyData.raw || isLoading) return undefined
       return {
-        borrowRate: Math.abs(apyData.borrowRate),
-        baseYield: apyData.stakingYield + apyData.restakingYield,
+        borrowRate: apyData.raw.rawBorrowRate,
+        baseYield: apyData.raw.rawStakingYield + apyData.raw.rawRestakingYield,
       }
     }
 
@@ -578,13 +578,17 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                   className="border border-border bg-card"
                   yAxisFormatter={(value: number) => {
                     const formatted = formatToSignificantDigits(value, 4)
-                    return `$${formatted}`
+                    return formatted
                   }}
                   tooltipFormatter={(value: number | string, name?: string) => {
                     const numValue = Number(value)
                     const formatted = formatToSignificantDigits(numValue, 8)
-                    return [`$${formatted}`, name || 'Price']
+                    return [
+                      `${formatted} ${tokenConfig?.debtAsset?.symbol || 'ETH'}`,
+                      name || 'Price',
+                    ]
                   }}
+                  yAxisLabel={`Price (${tokenConfig?.debtAsset?.symbol || 'ETH'})`}
                 />
               )}
             </motion.div>

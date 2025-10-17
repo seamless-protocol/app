@@ -100,12 +100,16 @@ export function LeverageTokenMintModal({
   // manager address not needed for mint plan preview anymore
 
   // Fetch leverage token fees
-  const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(leverageTokenAddress)
+  const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(
+    leverageTokenAddress,
+    isOpen,
+  )
 
   // Fetch leverage token state (current supply)
   const { data: leverageTokenState } = useLeverageTokenState(
     leverageTokenAddress,
     leverageTokenConfig.chainId,
+    isOpen,
   )
 
   // Get real wallet balance for collateral asset
@@ -116,16 +120,16 @@ export function LeverageTokenMintModal({
   } = useTokenBalance({
     tokenAddress: leverageTokenConfig.collateralAsset.address,
     userAddress: userAddress as `0x${string}`,
-    chainId: leverageTokenConfig.chainId,
-    enabled: Boolean(userAddress && isConnected),
+    chainId: leverageTokenConfig.chainId as SupportedChainId,
+    enabled: Boolean(userAddress && isConnected && isOpen),
   })
 
   // Track user's leverage token balance for immediate holdings refresh after mint
   const { refetch: refetchLeverageTokenBalance } = useTokenBalance({
     tokenAddress: leverageTokenAddress,
     userAddress: userAddress as `0x${string}`,
-    chainId: leverageTokenConfig.chainId,
-    enabled: Boolean(userAddress && isConnected),
+    chainId: leverageTokenConfig.chainId as SupportedChainId,
+    enabled: Boolean(userAddress && isConnected && isOpen),
   })
 
   // Get USD prices for collateral and debt assets
@@ -133,7 +137,9 @@ export function LeverageTokenMintModal({
     chainId: leverageTokenConfig.chainId,
     addresses: [leverageTokenConfig.collateralAsset.address, leverageTokenConfig.debtAsset.address],
     enabled: Boolean(
-      leverageTokenConfig.collateralAsset.address && leverageTokenConfig.debtAsset.address,
+      leverageTokenConfig.collateralAsset.address &&
+        leverageTokenConfig.debtAsset.address &&
+        isOpen,
     ),
   })
 
@@ -212,6 +218,7 @@ export function LeverageTokenMintModal({
     debtUsdPrice,
     collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
     debtDecimals: leverageTokenConfig.debtAsset.decimals,
+    enabled: isOpen,
   })
 
   // USD estimates now derived inside useMintPlanPreview
@@ -316,6 +323,7 @@ export function LeverageTokenMintModal({
     ...(typeof form.amountRaw !== 'undefined' ? { amountRaw: form.amountRaw } : {}),
     decimals: leverageTokenConfig.collateralAsset.decimals,
     chainId: leverageTokenConfig.chainId,
+    enabled: isOpen,
   })
 
   const mintWrite = useMintWrite(
@@ -808,15 +816,16 @@ function useApprovalFlow(params: {
   amountRaw?: bigint
   decimals: number
   chainId: number
+  enabled: boolean
 }) {
-  const { tokenAddress, owner, spender, amountRaw, decimals, chainId } = params
+  const { tokenAddress, owner, spender, amountRaw, decimals, chainId, enabled } = params
 
   const { isLoading, needsApproval, amountFormatted } = useTokenAllowance({
     tokenAddress,
     ...(owner ? { owner } : {}),
     ...(spender ? { spender } : {}),
     chainId,
-    enabled: Boolean(owner && spender),
+    enabled: Boolean(owner && spender && enabled),
     ...(typeof amountRaw !== 'undefined' ? { amountRaw } : {}),
     decimals,
   })
@@ -827,7 +836,7 @@ function useApprovalFlow(params: {
     ...(amountFormatted ? { amount: amountFormatted } : {}),
     decimals,
     targetChainId: chainId,
-    enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
+    enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0 && enabled),
   })
 
   return {

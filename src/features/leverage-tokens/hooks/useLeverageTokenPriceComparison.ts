@@ -34,9 +34,9 @@ export function useLeverageTokenPriceComparison({
         return []
       }
 
-      // Get leverage token config to access leverage token decimals
+      // Get leverage token config to access debt asset decimals
       const tokenConfig = getLeverageTokenConfig(tokenAddress)
-      const leverageTokenDecimals = tokenConfig?.decimals || 18 // Fallback to 18 if not found
+      const debtAssetDecimals = tokenConfig?.debtAsset?.decimals || 18 // Fallback to 6 if not found
 
       const { stateHistory, lendingAdapter } = result.leverageToken
 
@@ -138,7 +138,7 @@ export function useLeverageTokenPriceComparison({
           // For leverage token, use exact match or null
           const leveragePt = filteredLeverageTokenData.find((pt) => pt.timestamp === ts)
           leverageTokenSeriesData.push(
-            leveragePt ? leveragePt.equityPerTokenInDebt / 10 ** leverageTokenDecimals : null,
+            leveragePt ? leveragePt.equityPerTokenInDebt / 10 ** debtAssetDecimals : null,
           )
         }
 

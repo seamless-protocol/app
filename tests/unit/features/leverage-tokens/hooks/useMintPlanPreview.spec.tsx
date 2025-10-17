@@ -66,6 +66,7 @@ describe('useMintPlanPreview', () => {
           slippageBps: 50,
           chainId: 1,
           debounceMs: 0,
+          enabled: true,
         }),
       { wrapper },
     )
@@ -103,6 +104,7 @@ describe('useMintPlanPreview', () => {
             approvalTarget: DUMMY_ADDR,
             calldata: '0x' as `0x${string}`,
           }),
+          enabled: true,
         }),
       { wrapper },
     )
@@ -140,6 +142,7 @@ describe('useMintPlanPreview', () => {
             approvalTarget: DUMMY_ADDR,
             calldata: '0x' as `0x${string}`,
           }),
+          enabled: true,
         }),
       { wrapper },
     )

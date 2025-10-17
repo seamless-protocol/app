@@ -1,13 +1,12 @@
-import type { Address } from 'viem'
-import { useReadContracts } from 'wagmi'
+import { type Address, erc20Abi, zeroAddress } from 'viem'
+import { useReadContract } from 'wagmi'
 import { STALE_TIME } from '@/features/leverage-tokens/utils/constants'
 import type { SupportedChainId } from '@/lib/contracts'
-import { leverageTokenAbi } from '@/lib/contracts'
 
 export interface UseTokenBalanceParams {
   tokenAddress?: Address
   userAddress?: Address
-  chainId: number
+  chainId: SupportedChainId
   enabled?: boolean
 }
 
@@ -22,38 +21,25 @@ export function useTokenBalance({
   enabled = true,
 }: UseTokenBalanceParams) {
   const {
-    data: balanceData,
+    data: balance,
     isLoading,
     isError,
     error,
     refetch,
-  } = useReadContracts({
-    contracts:
-      enabled && tokenAddress && userAddress
-        ? [
-            {
-              address: tokenAddress,
-              abi: leverageTokenAbi,
-              functionName: 'balanceOf' as const,
-              args: [userAddress],
-              chainId: chainId as SupportedChainId,
-            },
-          ]
-        : [],
+  } = useReadContract({
+    address: tokenAddress,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: [userAddress ?? zeroAddress],
+    chainId,
     query: {
-      enabled: enabled && Boolean(tokenAddress && userAddress),
+      // Avoid fetching if user is zeroAddress; treat as zero balance
+      enabled: enabled && Boolean(tokenAddress && userAddress && userAddress !== zeroAddress),
       staleTime: STALE_TIME.supply,
       refetchInterval: 30_000,
+      retry: false,
     },
   })
 
-  const balance = balanceData?.[0]?.status === 'success' ? (balanceData[0].result as bigint) : 0n
-
-  return {
-    balance,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  }
+  return { balance: balance ?? 0n, isLoading, isError, error, refetch }
 }

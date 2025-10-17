@@ -1,5 +1,6 @@
 import { Button } from '../../../../components/ui/button'
 import { getErrorDisplay } from '../../utils/errorDisplay'
+import { ErrorDetailsToggle } from '../shared/ErrorDetailsToggle'
 
 interface ErrorStepProps {
   error?: string
@@ -8,7 +9,7 @@ interface ErrorStepProps {
 }
 
 export function ErrorStep({ error, onRetry, onClose }: ErrorStepProps) {
-  const { icon, title, message, showRetry, severity } = getErrorDisplay(
+  const { icon, title, message, showRetry, severity, technicalDetails } = getErrorDisplay(
     error || '',
     'Transaction Failed',
   )
@@ -28,6 +29,8 @@ export function ErrorStep({ error, onRetry, onClose }: ErrorStepProps) {
         <h3 className="text-lg font-medium text-foreground mb-2">{title}</h3>
         <p className="text-secondary-foreground text-center max-w-sm">{message}</p>
       </div>
+
+      {technicalDetails && <ErrorDetailsToggle technicalDetails={technicalDetails} />}
 
       <div className="flex space-x-3">
         {showRetry && (

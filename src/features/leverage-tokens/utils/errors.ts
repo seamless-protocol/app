@@ -6,6 +6,7 @@ export type LeverageTokenError =
   | { type: 'REBALANCING_IN_PROGRESS'; estimatedCompletion?: number }
   | { type: 'INSUFFICIENT_LIQUIDITY'; available: bigint; required: bigint }
   | { type: 'INSUFFICIENT_BALANCE'; available: bigint; required: bigint }
+  | { type: 'SLIPPAGE_EXCEEDED'; expectedAmount: bigint; actualAmount: bigint }
   | { type: 'USER_REJECTED'; code: 4001 }
   | { type: 'CHAIN_MISMATCH'; expected: number; actual: number }
   | { type: 'UNKNOWN'; message: string; originalError?: unknown }
@@ -15,6 +16,12 @@ export type LeverageTokenError =
  * User errors (4001, 4902) should not be sent to Sentry
  */
 export function classifyError(e: unknown): LeverageTokenError {
+  // Handle string input directly
+  if (typeof e === 'string') {
+    const error = { message: e }
+    return classifyErrorFromObject(error)
+  }
+
   const error = e as {
     code?: number
     cause?: { code?: number }
@@ -25,6 +32,18 @@ export function classifyError(e: unknown): LeverageTokenError {
     message?: string
   }
 
+  return classifyErrorFromObject(error)
+}
+
+function classifyErrorFromObject(error: {
+  code?: number
+  cause?: { code?: number }
+  expectedChainId?: number
+  actualChainId?: number
+  reason?: string
+  data?: { message?: string }
+  message?: string
+}): LeverageTokenError {
   // User rejected transaction
   if (error?.code === 4001 || error?.cause?.code === 4001) {
     return { type: 'USER_REJECTED', code: 4001 }
@@ -75,13 +94,48 @@ export function classifyError(e: unknown): LeverageTokenError {
         required: 0n,
       }
     }
+
+    // Slippage-related errors
+    if (
+      reason?.includes('SlippageExceeded') ||
+      reason?.includes('SlippageToleranceExceeded') ||
+      reason?.includes('PriceImpactTooHigh') ||
+      reason?.includes('InsufficientOutputAmount') ||
+      reason?.includes('AmountOutMin')
+    ) {
+      return {
+        type: 'SLIPPAGE_EXCEEDED',
+        expectedAmount: 0n,
+        actualAmount: 0n,
+      }
+    }
+  }
+
+  // Check for slippage-related error signatures in the raw message
+  const rawMessage = error?.message || ''
+  if (
+    rawMessage.includes('0x5a046737') || // Common slippage signature
+    rawMessage.includes('0x76baadda') || // Another slippage signature
+    rawMessage.includes('SlippageExceeded') ||
+    rawMessage.includes('SlippageToleranceExceeded') ||
+    rawMessage.includes('PriceImpactTooHigh') ||
+    rawMessage.includes('InsufficientOutputAmount') ||
+    rawMessage.includes('AmountOutMin') ||
+    rawMessage.includes('slippage') ||
+    rawMessage.includes('Slippage')
+  ) {
+    return {
+      type: 'SLIPPAGE_EXCEEDED',
+      expectedAmount: 0n,
+      actualAmount: 0n,
+    }
   }
 
   // Default to unknown
   return {
     type: 'UNKNOWN',
     message: error?.message || 'An unknown error occurred',
-    originalError: e,
+    originalError: error,
   }
 }
 

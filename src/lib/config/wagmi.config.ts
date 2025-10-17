@@ -1,6 +1,14 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { connectorsForWallets } from '@rainbow-me/rainbowkit'
+import {
+  coinbaseWallet,
+  injectedWallet,
+  metaMaskWallet,
+  rainbowWallet,
+  safeWallet,
+  walletConnectWallet,
+} from '@rainbow-me/rainbowkit/wallets'
 import { fallback, http } from 'viem'
-import type { Config } from 'wagmi'
+import { type Config, createConfig } from 'wagmi'
 import { base, mainnet } from 'wagmi/chains'
 import { createLogger } from '@/lib/logger'
 
@@ -13,6 +21,23 @@ if (!walletConnectProjectId) {
     'WalletConnect Project ID not found. Please add VITE_WALLETCONNECT_PROJECT_ID to your .env file',
   )
 }
+
+export const connectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Recommended',
+      wallets: [rainbowWallet, metaMaskWallet, coinbaseWallet],
+    },
+    {
+      groupName: 'Others',
+      wallets: [walletConnectWallet, injectedWallet, safeWallet],
+    },
+  ],
+  {
+    appName: 'Seamless Protocol',
+    projectId: walletConnectProjectId || 'YOUR_PROJECT_ID',
+  },
+)
 
 // Optional JSON map to direct chain RPCs in mock/test modes
 // Example: {"8453":"https://virtual.base...","1":"https://virtual.mainnet..."}
@@ -75,9 +100,8 @@ if (useTenderlyVNet) {
   logger.info('Tenderly VNet mode enabled', { baseRpc: baseCandidates[0] })
 }
 
-export const config = getDefaultConfig({
-  appName: 'Seamless Protocol',
-  projectId: walletConnectProjectId || 'YOUR_PROJECT_ID',
+export const config = createConfig({
+  connectors,
   chains: [base, mainnet],
   transports: {
     [base.id]: fallback(baseCandidates.map((u) => http(u))),
