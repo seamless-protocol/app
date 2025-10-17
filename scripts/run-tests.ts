@@ -12,6 +12,7 @@ import { createVNet, deleteVNet } from './tenderly-vnet.ts'
 type TestType = 'e2e' | 'integration'
 
 type ChainSlug = 'base' | 'mainnet'
+type ScenarioKey = 'leverage-mint' | 'leverage-redeem'
 
 // Schema for the RPC URL map - handles both string URLs and objects with url property
 const RpcUrlMapSchema = z.record(
@@ -107,18 +108,20 @@ function getTestCommand(
 function parseArguments(): {
   testType: TestType
   chainOption?: string
+  scenarioOption?: ScenarioKey
   passThroughArgs: Array<string>
 } {
   const args = process.argv.slice(2)
   const rawType = args.shift() as TestType | undefined
   if (!rawType || !['e2e', 'integration'].includes(rawType)) {
     console.error(
-      'Usage: bun scripts/run-tests.ts [e2e|integration] [--chain <base|mainnet|all>] [extra args...]',
+      'Usage: bun scripts/run-tests.ts [e2e|integration] [--chain <base|mainnet|all>] [--scenario <leverage-mint|leverage-redeem>] [extra args...]',
     )
     process.exit(1)
   }
 
   let chainOption: string | undefined
+  let scenarioOption: ScenarioKey | undefined
   const passThroughArgs: Array<string> = []
 
   while (args.length > 0) {
@@ -132,6 +135,24 @@ function parseArguments(): {
       chainOption = value
     } else if (arg.startsWith('--chain=')) {
       chainOption = arg.split('=')[1]
+    } else if (arg === '--scenario') {
+      const value = args.shift()
+      if (!value) {
+        console.error('Missing value after --scenario')
+        process.exit(1)
+      }
+      if (value !== 'leverage-mint' && value !== 'leverage-redeem') {
+        console.error(`Unsupported scenario '${value}'. Use 'leverage-mint' or 'leverage-redeem'.`)
+        process.exit(1)
+      }
+      scenarioOption = value as ScenarioKey
+    } else if (arg.startsWith('--scenario=')) {
+      const value = arg.split('=')[1]
+      if (value !== 'leverage-mint' && value !== 'leverage-redeem') {
+        console.error(`Unsupported scenario '${value}'. Use 'leverage-mint' or 'leverage-redeem'.`)
+        process.exit(1)
+      }
+      scenarioOption = value as ScenarioKey
     } else {
       passThroughArgs.push(arg)
     }
@@ -140,6 +161,7 @@ function parseArguments(): {
   return {
     testType: rawType,
     ...(chainOption ? { chainOption } : {}),
+    ...(scenarioOption ? { scenarioOption } : {}),
     passThroughArgs,
   }
 }
@@ -194,10 +216,10 @@ async function runCommand(cmd: string, args: Array<string>, env: NodeJS.ProcessE
 }
 
 async function main() {
-  const { testType, chainOption, passThroughArgs } = parseArguments()
+  const { testType, chainOption, scenarioOption, passThroughArgs } = parseArguments()
 
   if (chainOption) {
-    await runForChainOption(chainOption, testType, passThroughArgs)
+    await runForChainOption(chainOption, testType, passThroughArgs, scenarioOption)
     return
   }
 
@@ -208,7 +230,11 @@ async function main() {
     const { cmd, args } = getTestCommand(testType, passThroughArgs)
     const env = withTestDefaults(
       testType,
-      { ...process.env, TEST_RPC_URL: explicitRpcUrl } as Record<string, string>,
+      {
+        ...process.env,
+        TEST_RPC_URL: explicitRpcUrl,
+        ...(scenarioOption ? { TEST_SCENARIO: scenarioOption } : {}),
+      } as Record<string, string>,
       'custom',
     )
     await runCommand(cmd, args, env)
@@ -224,7 +250,11 @@ async function main() {
     const { cmd, args } = getTestCommand(testType, passThroughArgs)
     const env = withTestDefaults(
       testType,
-      { ...process.env, TEST_RPC_URL: 'http://127.0.0.1:8545' } as Record<string, string>,
+      {
+        ...process.env,
+        TEST_RPC_URL: 'http://127.0.0.1:8545',
+        ...(scenarioOption ? { TEST_SCENARIO: scenarioOption } : {}),
+      } as Record<string, string>,
       'anvil',
     )
     await runCommand(cmd, args, env)
@@ -241,7 +271,11 @@ async function main() {
     const { cmd, args } = getTestCommand(testType, passThroughArgs)
     const env = withTestDefaults(
       testType,
-      { ...process.env, TEST_RPC_URL: rpcUrl } as Record<string, string>,
+      {
+        ...process.env,
+        TEST_RPC_URL: rpcUrl,
+        ...(scenarioOption ? { TEST_SCENARIO: scenarioOption } : {}),
+      } as Record<string, string>,
       'tenderly',
     )
     console.log(`🚀 Running ${testType} tests against Tenderly fork...`)
@@ -262,6 +296,7 @@ async function runForChainOption(
   chainOption: string,
   testType: TestType,
   passThroughArgs: Array<string>,
+  scenarioOption?: ScenarioKey,
 ) {
   const slugs: Array<ChainSlug> =
     chainOption === 'all'
@@ -269,64 +304,104 @@ async function runForChainOption(
       : ([chainOption] as Array<ChainSlug>)
 
   for (const slug of slugs) {
-    const backend = await resolveBackend({
-      chain: slug,
-      mode: 'tenderly-static',
-      scenario: 'leverage-mint',
-    })
-    const chainId = String(backend.canonicalChainId)
-    const mappedRpc = testRpcUrlMap[chainId]
-    const effectiveRpc = mappedRpc ?? backend.rpcUrl
+    const tenderlyCfg = getTenderlyConfig()
+    if (tenderlyCfg) {
+      const chainMap: Record<ChainSlug, string> = { base: '8453', mainnet: '1' }
+      const vnetCfg = { ...tenderlyCfg, chainId: chainMap[slug] }
+      console.log(`\n⏳ Creating Tenderly JIT VNet for ${slug}...`)
+      const { id, rpcUrl } = await createVNet(vnetCfg)
+      console.log(`✅ VNet created: ${id}`)
+      const label = `Run (${slug}, tenderly-jit)`
 
-    const label = `Run (${slug}, ${backend.mode})`
+      try {
+        const envSeed: Record<string, string> = {
+          ...Object.fromEntries(
+            Object.entries(process.env).filter(([_, value]) => value !== undefined),
+          ),
+          TEST_CHAIN: slug,
+          TEST_MODE: 'tenderly-jit',
+          TEST_SCENARIO: (scenarioOption ?? 'leverage-mint') as string,
+          TEST_RPC_URL: rpcUrl,
+          VITE_TEST_RPC_URL: rpcUrl,
+          VITE_BASE_RPC_URL: rpcUrl,
+          TENDERLY_ADMIN_RPC_URL: rpcUrl,
+        }
+        const env = withTestDefaults(testType, envSeed, 'tenderly')
+        const focusArgs = scenarioOption
+          ? selectE2ESpecsArgs(testType, slug, scenarioOption)
+          : []
+        const { cmd, args } = getTestCommand(testType, [...passThroughArgs, ...focusArgs])
+        console.log(`=== 🚀 Running ${testType} tests [${label}] ===`)
+        await runCommand(cmd, args, env)
+        console.log(`=== ✅ ${label} ===`)
+      } catch (error) {
+        console.error(`=== ❌ ${label} failed ===`)
+        throw error
+      } finally {
+        console.log('🧹 Deleting Tenderly VNet...')
+        await deleteVNet({ ...vnetCfg, id })
+        console.log('✅ VNet deleted')
+      }
+    } else {
+      const backend = await resolveBackend({
+        chain: slug,
+        mode: 'tenderly-static',
+        scenario: scenarioOption ?? 'leverage-mint',
+      })
+      const chainId = String(backend.canonicalChainId)
+      const mappedRpc = testRpcUrlMap[chainId]
+      const effectiveRpc = mappedRpc ?? backend.rpcUrl
 
-    console.log(`\n=== 🚀 Running ${testType} tests [${label}] ===`)
-    if (mappedRpc) {
-      console.log(`[run-tests] Overriding RPC for chain ${chainId}: ${mappedRpc}`)
-    }
+      const label = `Run (${slug}, ${backend.mode})`
 
-    const envSeed: Record<string, string> = {
-      ...Object.fromEntries(
-        Object.entries(process.env).filter(([_, value]) => value !== undefined),
-      ),
-      TEST_CHAIN: backend.chainKey,
-      TEST_MODE: backend.mode,
-      TEST_SCENARIO: backend.scenario.key,
-      TEST_RPC_URL: effectiveRpc,
-      VITE_TEST_RPC_URL: effectiveRpc,
-      VITE_BASE_RPC_URL: effectiveRpc,
-      TENDERLY_ADMIN_RPC_URL: backend.adminRpcUrl,
-      E2E_TOKEN_SOURCE: process.env['E2E_TOKEN_SOURCE'] ?? backend.scenario.leverageTokenSource,
-      // Respect an explicitly provided token key if present
-      E2E_LEVERAGE_TOKEN_KEY:
-        process.env['E2E_LEVERAGE_TOKEN_KEY'] ?? backend.scenario.defaultLeverageTokenKey,
-      ...(backend.contractOverrides
-        ? { VITE_CONTRACT_ADDRESS_OVERRIDES: JSON.stringify(backend.contractOverrides) }
-        : {}),
-    }
+      console.log(`\n=== 🚀 Running ${testType} tests [${label}] ===`)
+      if (mappedRpc) {
+        console.log(`[run-tests] Overriding RPC for chain ${chainId}: ${mappedRpc}`)
+      }
 
-    const overrideForChain = backend.contractOverrides?.[backend.canonicalChainId]
-    const canonicalAddresses = getContractAddresses(backend.canonicalChainId)
-    const executorAddress =
-      (overrideForChain?.multicallExecutor as string | undefined) ??
-      (canonicalAddresses.multicallExecutor as string | undefined)
-    if (executorAddress && !envSeed['VITE_MULTICALL_EXECUTOR_ADDRESS']) {
-      envSeed['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executorAddress
-    }
+      const envSeed: Record<string, string> = {
+        ...Object.fromEntries(
+          Object.entries(process.env).filter(([_, value]) => value !== undefined),
+        ),
+        TEST_CHAIN: backend.chainKey,
+        TEST_MODE: backend.mode,
+        TEST_SCENARIO: backend.scenario.key,
+        TEST_RPC_URL: effectiveRpc,
+        VITE_TEST_RPC_URL: effectiveRpc,
+        VITE_BASE_RPC_URL: effectiveRpc,
+        TENDERLY_ADMIN_RPC_URL: backend.adminRpcUrl,
+        E2E_TOKEN_SOURCE: process.env['E2E_TOKEN_SOURCE'] ?? backend.scenario.leverageTokenSource,
+        E2E_LEVERAGE_TOKEN_KEY:
+          process.env['E2E_LEVERAGE_TOKEN_KEY'] ?? backend.scenario.defaultLeverageTokenKey,
+        ...(backend.contractOverrides
+          ? { VITE_CONTRACT_ADDRESS_OVERRIDES: JSON.stringify(backend.contractOverrides) }
+          : {}),
+      }
 
-    const env = withTestDefaults(
-      testType,
-      envSeed,
-      backend.executionKind === 'anvil' ? 'anvil' : 'tenderly',
-    )
+      const overrideForChain = backend.contractOverrides?.[backend.canonicalChainId]
+      const canonicalAddresses = getContractAddresses(backend.canonicalChainId)
+      const executorAddress =
+        (overrideForChain?.multicallExecutor as string | undefined) ??
+        (canonicalAddresses.multicallExecutor as string | undefined)
+      if (executorAddress && !envSeed['VITE_MULTICALL_EXECUTOR_ADDRESS']) {
+        envSeed['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executorAddress
+      }
 
-    try {
-      const { cmd, args } = getTestCommand(testType, passThroughArgs)
-      await runCommand(cmd, args, env)
-      console.log(`=== ✅ ${label} ===`)
-    } catch (error) {
-      console.error(`=== ❌ ${label} failed ===`)
-      throw error
+      const env = withTestDefaults(
+        testType,
+        envSeed,
+        backend.executionKind === 'anvil' ? 'anvil' : 'tenderly',
+      )
+
+      try {
+        const focusArgs = scenarioOption ? selectE2ESpecsArgs(testType, slug, scenarioOption) : []
+        const { cmd, args } = getTestCommand(testType, [...passThroughArgs, ...focusArgs])
+        await runCommand(cmd, args, env)
+        console.log(`=== ✅ ${label} ===`)
+      } catch (error) {
+        console.error(`=== ❌ ${label} failed ===`)
+        throw error
+      }
     }
   }
 }
@@ -372,4 +447,22 @@ function withTestDefaults(
   }
 
   return env
+}
+
+function selectE2ESpecsArgs(
+  testType: TestType,
+  chain: ChainSlug,
+  scenario: ScenarioKey,
+): Array<string> {
+  if (testType !== 'e2e') return []
+  // Narrow the Playwright run to targeted specs when we know the intent.
+  if (chain === 'mainnet') {
+    if (scenario === 'leverage-mint') return ['tests/e2e/mainnet-wsteth-mint.spec.ts']
+    if (scenario === 'leverage-redeem') return ['tests/e2e/mainnet-wsteth-redeem.spec.ts']
+  }
+  if (chain === 'base') {
+    if (scenario === 'leverage-mint') return ['tests/e2e/leverage-token-mint.spec.ts']
+    if (scenario === 'leverage-redeem') return ['tests/e2e/leverage-token-redeem.spec.ts']
+  }
+  return []
 }

@@ -1,31 +1,16 @@
 import { expect, test } from '@playwright/test'
-import { erc20Abi, type Hash } from 'viem'
+import type { Hash } from 'viem'
 import { mainnet } from 'viem/chains'
 import type { Config } from 'wagmi'
 import { getLeverageTokenAddress, getLeverageTokenDefinition } from '../fixtures/addresses'
-import { account, publicClient, revertSnapshot, takeSnapshot } from '../shared/clients'
-import {
-  ensureRedeemSetup,
-  planRedeemTest,
-  type RedeemPlanningContext,
-} from '../shared/scenarios/redeem'
-import { wagmiConfig } from '../shared/wagmi'
+import { publicClient, revertSnapshot, takeSnapshot } from '../shared/clients'
+import { ensureRedeemSetup, planRedeemTest } from '../shared/scenarios/redeem'
 
-const MAINNET_CHAIN_ID = mainnet.id
-const TOKEN_KEY = 'wsteth-eth-2x'
-const leverageTokenDefinition = getLeverageTokenDefinition('tenderly', TOKEN_KEY)
-const leverageTokenAddress = getLeverageTokenAddress('tenderly', TOKEN_KEY)
-const SLIPPAGE_BPS = 50
+const TOKEN_KEY = 'wsteth-eth-25x'
+const leverageTokenDefinition = getLeverageTokenDefinition('prod', TOKEN_KEY)
+const leverageTokenAddress = getLeverageTokenAddress('prod', TOKEN_KEY)
 
-const redeemContext: RedeemPlanningContext = {
-  config: wagmiConfig as Config,
-  publicClient,
-  account,
-}
-
-test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== MAINNET_CHAIN_ID, 'Mainnet-only E2E suite')
-
-test.describe('Mainnet wstETH/ETH 2x redeem (JIT + LiFi)', () => {
+test.describe('Mainnet wstETH/ETH 25x redeem (JIT + LiFi)', () => {
   let baseSnapshot: Hash
   let sharesToRedeem: bigint
   let collateralAsset: `0x${string}`
@@ -33,7 +18,7 @@ test.describe('Mainnet wstETH/ETH 2x redeem (JIT + LiFi)', () => {
 
   test.beforeAll(async () => {
     const chainId = await publicClient.getChainId()
-    if (chainId !== MAINNET_CHAIN_ID) test.skip()
+    if (chainId !== leverageTokenDefinition.chainId) test.skip()
     baseSnapshot = await takeSnapshot()
   })
 
@@ -128,23 +113,3 @@ test.describe('Mainnet wstETH/ETH 2x redeem (JIT + LiFi)', () => {
     }
   })
 })
-
-async function readLeverageTokenBalance(): Promise<bigint> {
-  return await publicClient.readContract({
-    address: leverageTokenAddress,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: [account.address],
-  })
-}
-
-async function readErc20Balance(asset: `0x${string}`): Promise<bigint> {
-  return await publicClient.readContract({
-    address: asset,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: [account.address],
-  })
-}
-
-test.skip(Number(process.env['E2E_CHAIN_ID'] ?? '0') !== mainnet.id, 'Mainnet-only E2E suite')
