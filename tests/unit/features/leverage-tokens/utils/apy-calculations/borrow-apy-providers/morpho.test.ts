@@ -61,7 +61,7 @@ describe('MorphoBorrowApyProvider', () => {
             name: 'WETH',
           },
           state: {
-            weeklyBorrowApy: 0.0387, // 3.87% as decimal
+            dailyBorrowApy: 0.0387, // 3.87% as decimal
             utilization: 75.5, // 75.5% utilization
           },
         },
@@ -80,6 +80,7 @@ describe('MorphoBorrowApyProvider', () => {
       expect(result).toEqual({
         borrowAPY: 0.0387,
         utilization: 75.5,
+        averagingPeriod: '24-hour average',
       })
 
       // Verify contract calls
@@ -247,7 +248,7 @@ describe('MorphoBorrowApyProvider', () => {
             name: 'WETH',
           },
           state: {
-            weeklyBorrowApy: 0, // Zero borrow APY
+            dailyBorrowApy: 0, // Zero borrow APY
             utilization: 45.2, // 45.2% utilization
           },
         },
@@ -262,6 +263,7 @@ describe('MorphoBorrowApyProvider', () => {
       expect(result).toEqual({
         borrowAPY: 0,
         utilization: 45.2,
+        averagingPeriod: '24-hour average',
       })
     })
 
@@ -286,7 +288,7 @@ describe('MorphoBorrowApyProvider', () => {
             name: 'WETH',
           },
           state: {
-            weeklyBorrowApy: 0.5, // 50% borrow APY
+            dailyBorrowApy: 0.5, // 50% borrow APY
             utilization: 92.1, // 92.1% utilization
           },
         },
@@ -301,6 +303,7 @@ describe('MorphoBorrowApyProvider', () => {
       expect(result).toEqual({
         borrowAPY: 0.5,
         utilization: 92.1,
+        averagingPeriod: '24-hour average',
       })
     })
   })

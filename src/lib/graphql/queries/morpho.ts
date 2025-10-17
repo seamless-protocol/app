@@ -8,7 +8,7 @@ export const MORPHO_MARKET_BORROW_RATE_QUERY = `
         name
       }
       state {
-        weeklyBorrowApy
+        dailyBorrowApy
         utilization
       }
     }

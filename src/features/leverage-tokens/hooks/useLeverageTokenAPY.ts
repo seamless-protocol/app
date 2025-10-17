@@ -3,6 +3,7 @@ import type { Address } from 'viem'
 import { useConfig } from 'wagmi'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
+import type { AveragingPeriod } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/types'
 import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { fetchAprForToken } from '../utils/apy-calculations/apr-providers'
 import { fetchBorrowApyForToken } from '../utils/apy-calculations/borrow-apy-providers'
@@ -27,7 +28,7 @@ export function useLeverageTokenAPY({
   const config = useConfig()
   const queryKey =
     tokenAddress && leverageToken?.chainId
-      ? [...ltKeys.tokenOnChain(leverageToken.chainId, tokenAddress), 'apy']
+      ? [...ltKeys.tokenOnChain(leverageToken.chainId, tokenAddress), 'apy', 'v2'] // Added v2 to bust cache
       : []
 
   return useQuery({
@@ -114,10 +115,12 @@ export function useLeverageTokenAPY({
       const aprData =
         aprDataResult.status === 'fulfilled'
           ? aprDataResult.value
-          : { stakingAPR: 0, restakingAPR: 0, totalAPR: 0 }
+          : { stakingAPR: 0, restakingAPR: 0, totalAPR: 0, averagingPeriod: undefined }
 
       const borrowApyData =
-        borrowApyDataResult.status === 'fulfilled' ? borrowApyDataResult.value : { borrowAPY: 0 }
+        borrowApyDataResult.status === 'fulfilled'
+          ? borrowApyDataResult.value
+          : { borrowAPY: 0, utilization: undefined, averagingPeriod: undefined }
 
       const rewardsAPRData =
         rewardsAPRDataResult.status === 'fulfilled' ? rewardsAPRDataResult.value : { rewardsAPR: 0 }
@@ -155,6 +158,18 @@ export function useLeverageTokenAPY({
       // Calculate total net yield
       const totalAPY = stakingYield + restakingYield + rewardsAPR + borrowRate
 
+      // Build metadata object conditionally to satisfy exactOptionalPropertyTypes
+      const metadata: {
+        yieldAveragingPeriod?: AveragingPeriod
+        borrowAveragingPeriod?: AveragingPeriod
+      } = {}
+      if (aprData.averagingPeriod) {
+        metadata.yieldAveragingPeriod = aprData.averagingPeriod
+      }
+      if (borrowApyData.averagingPeriod) {
+        metadata.borrowAveragingPeriod = borrowApyData.averagingPeriod
+      }
+
       return {
         stakingYield,
         restakingYield,
@@ -168,6 +183,7 @@ export function useLeverageTokenAPY({
           rawStakingYield,
           rawRestakingYield,
         },
+        ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
       }
     },
     enabled: enabled && !!tokenAddress,

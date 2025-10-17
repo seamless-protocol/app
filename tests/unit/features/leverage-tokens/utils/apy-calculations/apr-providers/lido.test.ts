@@ -37,10 +37,12 @@ describe('LidoAprProvider', () => {
 
     const result = await provider.fetchApr()
 
+    // Should use the most recent entry: 2.63
     expect(result).toEqual({
-      stakingAPR: 2.592142857142857,
+      stakingAPR: 2.63,
       restakingAPR: 0,
-      totalAPR: 2.592142857142857,
+      totalAPR: 2.63,
+      averagingPeriod: '24-hour average',
     })
 
     expect(mockFetch).toHaveBeenCalledWith('https://eth-api.lido.fi/v1/protocol/steth/apr/sma')
@@ -135,8 +137,9 @@ describe('LidoAprProvider', () => {
 
     const result = await provider.fetchApr()
 
-    expect(result.stakingAPR).toBe(16.5)
-    expect(result.totalAPR).toBe(16.5)
+    // Should use the most recent entry: 18.5
+    expect(result.stakingAPR).toBe(18.5)
+    expect(result.totalAPR).toBe(18.5)
   })
 
   it('should handle decimal APR values', async () => {
@@ -168,8 +171,9 @@ describe('LidoAprProvider', () => {
 
     const result = await provider.fetchApr()
 
-    expect(result.stakingAPR).toBe(2.4)
-    expect(result.totalAPR).toBe(2.4)
+    // Should use the most recent entry: 2.8
+    expect(result.stakingAPR).toBe(2.8)
+    expect(result.totalAPR).toBe(2.8)
   })
 
   it('should have correct protocol properties', () => {

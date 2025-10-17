@@ -203,17 +203,19 @@ apyConfig: {
 - Only supports stETH tokens
 - No `id` field needed - automatically uses stETH
 - Fetches APR data from Lido's API: `https://eth-api.lido.fi/v1/protocol/steth/apr/sma`
+- Uses 24-hour average for current APR values
 
 **Ether.fi APR Provider:**
 - Supports weETH tokens
 - No `id` field needed - automatically uses weETH
 - Fetches APR data from Ether.fi's API
+- Uses 7-day average (based on API's `7_day_apr` field)
 
 **DeFi Llama APR Provider:**
 - Supports multiple protocols (stETH, Aave, etc.)
 - Requires `id` field to specify the protocol (e.g., `'747c1d2a-c668-4682-b9f9-296708a3dd90'` for stETH)
 - Fetches APR data from DeFi Llama's API: `https://yields.llama.fi/chart/{protocolId}`
-- Uses 7-day average for more stable APR values
+- Uses 24-hour average for current APR values
 
 ### Default Values
 

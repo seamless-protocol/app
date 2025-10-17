@@ -9,56 +9,29 @@ describe('DefiLlamaAprProvider', () => {
   const protocolId = '747c1d2a-c668-4682-b9f9-296708a3dd90'
   const provider = new DefiLlamaAprProvider(protocolId)
 
-  it('should fetch APR data successfully and calculate 7-day average', async () => {
-    // Create 10 days of data to test that we only use the last 7 days
+  it('should fetch APR data successfully and calculate 24-hour average', async () => {
+    // Create 3 days of data to test that we only use the last 24 hours
     const mockData = [
       {
-        timestamp: '2024-01-01T00:00:00Z',
+        timestamp: '2024-01-08T12:00:00Z',
         apy: 2.0,
         apyBase: 2.0,
         apyReward: null,
         il7d: null,
         apyBase7d: null,
         tvlUsd: 1000000,
-      }, // Should be ignored
+      }, // Should be ignored (older than 24h)
       {
-        timestamp: '2024-01-02T00:00:00Z',
-        apy: 2.1,
-        apyBase: 2.1,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      }, // Should be ignored
-      {
-        timestamp: '2024-01-03T00:00:00Z',
-        apy: 2.2,
-        apyBase: 2.2,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      }, // Should be ignored
-      {
-        timestamp: '2024-01-04T00:00:00.000Z',
+        timestamp: '2024-01-09T00:00:00Z',
         apy: 3.0,
         apyBase: 3.0,
         apyReward: null,
         il7d: null,
         apyBase7d: null,
         tvlUsd: 1000000,
-      }, // Last 7 days start here
+      }, // Last 24 hours start here
       {
-        timestamp: '2024-01-05T00:00:00.000Z',
-        apy: 3.1,
-        apyBase: 3.1,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-06T00:00:00.000Z',
+        timestamp: '2024-01-09T12:00:00Z',
         apy: 3.2,
         apyBase: 3.2,
         apyReward: null,
@@ -67,41 +40,14 @@ describe('DefiLlamaAprProvider', () => {
         tvlUsd: 1000000,
       },
       {
-        timestamp: '2024-01-07T00:00:00.000Z',
-        apy: 3.3,
-        apyBase: 3.3,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-08T00:00:00.000Z',
+        timestamp: '2024-01-10T00:00:00.000Z',
         apy: 3.4,
         apyBase: 3.4,
         apyReward: null,
         il7d: null,
         apyBase7d: null,
         tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-09T00:00:00.000Z',
-        apy: 3.5,
-        apyBase: 3.5,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-10T00:00:00.000Z',
-        apy: 3.6,
-        apyBase: 3.6,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
+      }, // Most recent (excluded from average)
     ]
 
     mockFetch.mockResolvedValueOnce({
@@ -111,11 +57,11 @@ describe('DefiLlamaAprProvider', () => {
 
     const result = await provider.fetchApr()
 
-    // Should average the last 7 days (excluding most recent): 3.0, 3.1, 3.2, 3.3, 3.4, 3.5 = 3.25
-    // Note: Currently getting 3.1, which suggests only 1 day is being used
+    // Should average the last 24 hours (excluding most recent): 3.0, 3.2 = 3.1
     expect(result.stakingAPR).toBeCloseTo(3.1, 4)
     expect(result.restakingAPR).toBe(0)
     expect(result.totalAPR).toBeCloseTo(3.1, 4)
+    expect(result.averagingPeriod).toBe('24-hour average')
 
     expect(mockFetch).toHaveBeenCalledWith(
       `https://yields.llama.fi/chart/${protocolId}`,
@@ -158,11 +104,11 @@ describe('DefiLlamaAprProvider', () => {
     await expect(provider.fetchApr()).rejects.toThrow('No valid APR data found')
   })
 
-  it('should calculate average correctly with fewer than 7 days of data', async () => {
-    // Test with only 3 days of data
+  it('should calculate average correctly with data within 24 hours', async () => {
+    // Test with only a few hours of data
     const mockData = [
       {
-        timestamp: '2024-01-01T00:00:00Z',
+        timestamp: '2024-01-02T20:00:00Z',
         apy: 3.0,
         apyBase: 3.0,
         apyReward: null,
@@ -171,7 +117,7 @@ describe('DefiLlamaAprProvider', () => {
         tvlUsd: 1000000,
       },
       {
-        timestamp: '2024-01-02T00:00:00Z',
+        timestamp: '2024-01-02T22:00:00Z',
         apy: 3.5,
         apyBase: 3.5,
         apyReward: null,
@@ -197,15 +143,15 @@ describe('DefiLlamaAprProvider', () => {
 
     const result = await provider.fetchApr()
 
-    // Should average the last 2 days (excluding most recent): (3.0 + 3.5) / 2 = 3.25
+    // Should average entries within last 24 hours (excluding most recent): (3.0 + 3.5) / 2 = 3.25
     expect(result.stakingAPR).toBe(3.25)
     expect(result.totalAPR).toBe(3.25)
   })
 
-  it('should handle mixed valid and invalid data in 7-day window', async () => {
+  it('should handle mixed valid and invalid data in 24-hour window', async () => {
     const mockData = [
       {
-        timestamp: '2024-01-01T00:00:00Z',
+        timestamp: '2024-01-06T12:00:00Z',
         apy: 3.0,
         apyBase: 3.0,
         apyReward: null,
@@ -214,7 +160,7 @@ describe('DefiLlamaAprProvider', () => {
         tvlUsd: 1000000,
       },
       {
-        timestamp: '2024-01-02T00:00:00Z',
+        timestamp: '2024-01-06T16:00:00Z',
         apy: null,
         apyBase: null,
         apyReward: null,
@@ -223,7 +169,7 @@ describe('DefiLlamaAprProvider', () => {
         tvlUsd: 1000000,
       }, // Invalid
       {
-        timestamp: '2024-01-03T00:00:00Z',
+        timestamp: '2024-01-06T18:00:00Z',
         apy: 3.5,
         apyBase: 3.5,
         apyReward: null,
@@ -232,7 +178,7 @@ describe('DefiLlamaAprProvider', () => {
         tvlUsd: 1000000,
       },
       {
-        timestamp: '2024-01-04T00:00:00Z',
+        timestamp: '2024-01-06T20:00:00Z',
         apy: Number.NaN,
         apyBase: Number.NaN,
         apyReward: null,
@@ -241,7 +187,7 @@ describe('DefiLlamaAprProvider', () => {
         tvlUsd: 1000000,
       }, // Invalid
       {
-        timestamp: '2024-01-05T00:00:00Z',
+        timestamp: '2024-01-06T22:00:00Z',
         apy: 4.0,
         apyBase: 4.0,
         apyReward: null,
@@ -250,7 +196,7 @@ describe('DefiLlamaAprProvider', () => {
         tvlUsd: 1000000,
       },
       {
-        timestamp: '2024-01-06T00:00:00Z',
+        timestamp: '2024-01-07T02:00:00Z',
         apy: 4.5,
         apyBase: 4.5,
         apyReward: null,
@@ -259,7 +205,7 @@ describe('DefiLlamaAprProvider', () => {
         tvlUsd: 1000000,
       },
       {
-        timestamp: '2024-01-07T00:00:00Z',
+        timestamp: '2024-01-07T12:00:00Z',
         apy: 5.0,
         apyBase: 5.0,
         apyReward: null,
@@ -276,7 +222,7 @@ describe('DefiLlamaAprProvider', () => {
 
     const result = await provider.fetchApr()
 
-    // Should average only valid data (excluding most recent): (3.0 + 3.5 + 4.0 + 4.5) / 4 = 3.75
+    // Should average only valid data within last 24 hours (excluding most recent): (3.0 + 3.5 + 4.0 + 4.5) / 4 = 3.75
     expect(result.stakingAPR).toBe(3.75)
     expect(result.totalAPR).toBe(3.75)
   })

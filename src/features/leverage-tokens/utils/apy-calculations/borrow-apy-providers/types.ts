@@ -1,5 +1,6 @@
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
+import type { AveragingPeriod } from '../apr-providers/types'
 
 /**
  * Common interface for borrow APY data that all protocols must implement
@@ -9,6 +10,8 @@ export interface BaseBorrowApyData {
   borrowAPY: number
   /** Market utilization as a percentage (e.g., 85 for 85%) */
   utilization?: number
+  /** Description of the averaging period used for calculation */
+  averagingPeriod?: AveragingPeriod
 }
 
 /**

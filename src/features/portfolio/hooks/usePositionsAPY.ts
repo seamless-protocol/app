@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useConfig } from 'wagmi'
+import type { AveragingPeriod } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/types'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('positions-apy')
@@ -112,6 +113,18 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
 
             const totalAPY = stakingYield + restakingYield + rewardsAPR + borrowRate
 
+            // Build metadata for averaging periods
+            const metadata: {
+              yieldAveragingPeriod?: AveragingPeriod
+              borrowAveragingPeriod?: AveragingPeriod
+            } = {}
+            if (aprData.averagingPeriod) {
+              metadata.yieldAveragingPeriod = aprData.averagingPeriod
+            }
+            if (borrowApyData.averagingPeriod) {
+              metadata.borrowAveragingPeriod = borrowApyData.averagingPeriod
+            }
+
             const apyBreakdown: APYBreakdownData = {
               stakingYield,
               restakingYield,
@@ -120,6 +133,7 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
               points,
               totalAPY,
               utilization,
+              ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
             }
 
             const tokenId = token.id || token.address || token.leverageTokenAddress

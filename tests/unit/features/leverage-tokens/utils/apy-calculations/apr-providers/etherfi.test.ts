@@ -44,6 +44,7 @@ describe('EtherFiAprProvider', () => {
         totalAPR: expect.closeTo(7.3, 10), // 5.2 + 2.1 (handle floating point precision)
         stakingAPR: 5.2,
         restakingAPR: 2.1,
+        averagingPeriod: '7-day average',
         metadata: {
           raw: mockApiResponse,
           useRestakingApr: true,
@@ -78,6 +79,7 @@ describe('EtherFiAprProvider', () => {
         totalAPR: 0,
         stakingAPR: 0,
         restakingAPR: 0,
+        averagingPeriod: '7-day average',
         metadata: {
           raw: mockApiResponse,
           useRestakingApr: true,
@@ -108,6 +110,7 @@ describe('EtherFiAprProvider', () => {
         totalAPR: expect.closeTo(75.8, 10), // 50.5 + 25.3 (handle floating point precision)
         stakingAPR: 50.5,
         restakingAPR: 25.3,
+        averagingPeriod: '7-day average',
         metadata: {
           raw: mockApiResponse,
           useRestakingApr: true,
@@ -138,6 +141,7 @@ describe('EtherFiAprProvider', () => {
         totalAPR: expect.closeTo(0.5, 10), // -1.5 + 2.0 (handle floating point precision)
         stakingAPR: -1.5,
         restakingAPR: 2.0,
+        averagingPeriod: '7-day average',
         metadata: {
           raw: mockApiResponse,
           useRestakingApr: true,
@@ -203,6 +207,7 @@ describe('EtherFiAprProvider', () => {
         totalAPR: NaN, // undefined + undefined = NaN
         stakingAPR: undefined,
         restakingAPR: undefined,
+        averagingPeriod: '7-day average',
         metadata: {
           raw: mockApiResponse,
           useRestakingApr: true,
@@ -233,6 +238,7 @@ describe('EtherFiAprProvider', () => {
         totalAPR: NaN, // 5.2 + undefined = NaN
         stakingAPR: 5.2,
         restakingAPR: undefined,
+        averagingPeriod: '7-day average',
         metadata: {
           raw: mockApiResponse,
           useRestakingApr: true,
