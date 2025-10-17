@@ -5,7 +5,7 @@ import { useAccount, useConfig, useWaitForTransactionReceipt } from 'wagmi'
 import { parseErc20ReceivedFromReceipt } from '@/features/leverage-tokens/utils/receipt'
 import { invalidatePortfolioQueries } from '@/features/portfolio/utils/invalidation'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
-import { captureTxError } from '@/lib/observability/sentry'
+import { captureSimulationError, captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
 import { useTokenAllowance } from '../../../../lib/hooks/useTokenAllowance'
@@ -295,6 +295,28 @@ export function LeverageTokenRedeemModal({
     ...(swapConfigKey ? { swapKey: swapConfigKey } : {}),
     outputAsset: selectedOutputAsset.address,
   })
+
+  // Capture plan preview errors (e.g., insufficient collateral to repay debt)
+  useEffect(() => {
+    if (!planPreview.error) return
+    captureSimulationError({
+      flow: 'redeem',
+      stage: 'plan',
+      chainId: leverageTokenConfig.chainId,
+      token: leverageTokenAddress,
+      outputAsset: selectedOutputAsset.address,
+      slippageBps,
+      amountIn: form.amount,
+      error: planPreview.error,
+    })
+  }, [
+    planPreview.error,
+    leverageTokenConfig.chainId,
+    leverageTokenAddress,
+    selectedOutputAsset.address,
+    slippageBps,
+    form.amount,
+  ])
 
   const quoteBlockingError = useMemo(() => {
     switch (exec.quoteStatus) {
@@ -824,6 +846,7 @@ function useApprovalFlow(params: {
     decimals,
     targetChainId: chainId,
     enabled: Boolean(spender && amountFormatted && Number(amountFormatted) > 0),
+    flow: 'redeem',
   })
 
   return {

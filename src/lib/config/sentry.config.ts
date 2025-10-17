@@ -111,6 +111,21 @@ export function initSentry() {
 
         if (endpointPath) promote('endpointPath', endpointPath)
 
+        // After promoting keys to tags, drop untagged raw viem contract errors
+        if (event.exception) {
+          const first = event.exception.values?.[0]
+          const type = (first?.type || '') as string
+          const hasFlow = 'flow' in tags || 'flow' in extra
+          // Always drop handled sentinel errors raised to control UI flow
+          if (type === 'HandledTxError') return null
+          if (
+            !hasFlow &&
+            (type === 'ContractFunctionExecutionError' || type === 'ContractFunctionRevertedError')
+          ) {
+            return null
+          }
+        }
+
         // Compute a deterministic fingerprint to stabilize grouping
         const t = tags as Record<string, string>
         const hasApiShape = Boolean(t['provider'] && t['method'] && t['endpointPath'])
