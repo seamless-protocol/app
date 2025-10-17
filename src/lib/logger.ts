@@ -25,7 +25,7 @@ class BaseLogger {
     try {
       if (typeof import.meta !== 'undefined') {
         const env = (import.meta as unknown as { env?: Record<string, unknown> }).env
-        mode = typeof env?.MODE === 'string' ? (env.MODE as string) : undefined
+        mode = typeof env?.['MODE'] === 'string' ? (env['MODE'] as string) : undefined
       }
     } catch {
       // ignore

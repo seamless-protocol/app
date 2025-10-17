@@ -50,10 +50,10 @@ try {
 } catch (error) {
   logger.error('Environment validation failed', {
     error,
-    environment: import.meta.env.MODE,
+    environment: import.meta.env['MODE'],
   })
   // In development, show the error in the UI
-  if (import.meta.env.MODE === 'development') {
+  if (import.meta.env['MODE'] === 'development') {
     const errorDiv = document.createElement('div')
     errorDiv.style.cssText = `
       position: fixed;
@@ -86,7 +86,7 @@ if (!rootElement) {
 
 console.log('[app] Booting Seamless front-end', {
   viteE2EFlag: import.meta.env['VITE_E2E'],
-  mode: import.meta.env.MODE,
+  mode: import.meta.env['MODE'],
 })
 
 // Bypass LiFi's wagmi sync in test mode so connectors stay intact
@@ -94,13 +94,14 @@ function LiFiWrapper({
   config,
   children,
 }: {
-  config: typeof prodConfig
+  config: typeof prodConfig | typeof testConfig
   children: React.ReactNode
 }) {
   if (features.testMode) {
     return <>{children}</>
   }
-  return <LiFiSync config={config}>{children}</LiFiSync>
+  // Type assertion is safe here because we only use LiFiSync in prod mode
+  return <LiFiSync config={config as typeof prodConfig}>{children}</LiFiSync>
 }
 
 try {
