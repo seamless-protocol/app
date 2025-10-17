@@ -159,7 +159,7 @@ export function LeverageTokenHoldingsCard({
                 <>
                   <div className="flex-1 min-w-0">
                     <Button
-                      data-test-id="mint-button"
+                      data-testid="mint-button"
                       type="button"
                       onClick={handleMintClick}
                       variant="gradient"
