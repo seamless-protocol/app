@@ -9,6 +9,12 @@ export interface APYBreakdownData {
   points: number
   totalAPY: number
   utilization?: number | undefined
+  raw?: {
+    // Raw market rates without leverage adjustment
+    rawBorrowRate: number
+    rawStakingYield: number
+    rawRestakingYield: number
+  }
 }
 
 interface APYBreakdownProps {
