@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useHistoricalUsdPricesMultiChain } from '@/lib/prices/useUsdPricesHistory'
+import { renderHook, waitFor } from '@testing-library/react'
 import type { PropsWithChildren } from 'react'
+import { describe, expect, it, vi } from 'vitest'
+import { useHistoricalUsdPricesMultiChain } from '@/lib/prices/useUsdPricesHistory'
 
 function Wrapper({ children }: PropsWithChildren) {
   const client = new QueryClient({
@@ -26,16 +26,18 @@ describe('useHistoricalUsdPricesMultiChain (stubbed CG)', () => {
       ],
     }
 
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation((input: RequestInfo | URL) => {
-      const url = typeof input === 'string' ? input : input.toString()
-      if (
-        url.includes(`/coins/${platform}/contract/${addr.toLowerCase()}/market_chart/range`) &&
-        url.includes('vs_currency=usd')
-      ) {
-        return Promise.resolve(new Response(JSON.stringify(json), { status: 200 })) as any
-      }
-      return Promise.resolve(new Response(JSON.stringify({}), { status: 200 })) as any
-    })
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation((input: RequestInfo | URL) => {
+        const url = typeof input === 'string' ? input : input.toString()
+        if (
+          url.includes(`/coins/${platform}/contract/${addr.toLowerCase()}/market_chart/range`) &&
+          url.includes('vs_currency=usd')
+        ) {
+          return Promise.resolve(new Response(JSON.stringify(json), { status: 200 })) as any
+        }
+        return Promise.resolve(new Response(JSON.stringify({}), { status: 200 })) as any
+      })
 
     const byChain = { 8453: [addr] }
 
@@ -64,4 +66,3 @@ describe('useHistoricalUsdPricesMultiChain (stubbed CG)', () => {
     fetchSpy.mockRestore()
   })
 })
-

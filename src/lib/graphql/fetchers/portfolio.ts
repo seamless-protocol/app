@@ -203,6 +203,23 @@ export async function fetchUserBalanceHistory(
 }
 
 /**
+ * Convenience wrapper that fetches [from, to] in-window changes and the single
+ * nearest-prior (< from) baseline event per token, then merges and sorts them.
+ */
+export async function fetchUserBalanceHistoryWithBaseline(
+  userAddress: string,
+  tokenAddresses: Array<string>,
+  fromTimestamp: number,
+  toTimestamp: number,
+): Promise<Array<BalanceChange>> {
+  const [inWindow, baseline] = await Promise.all([
+    fetchUserBalanceHistory(userAddress, tokenAddresses, fromTimestamp, toTimestamp),
+    fetchUserBalanceBaselineBeforeWindow(userAddress, tokenAddresses, fromTimestamp),
+  ])
+  return [...baseline, ...inWindow].sort((a, b) => Number(a.timestamp) - Number(b.timestamp))
+}
+
+/**
  * Fetch the most recent balance change BEFORE the window start for each token.
  * This provides a baseline so balances at the start of the timeframe are non-zero
  * when the user minted before the window and made no changes within it.

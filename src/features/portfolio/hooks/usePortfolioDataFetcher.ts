@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { type QueryClient, useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
@@ -10,21 +10,24 @@ import {
   getAllLeverageTokenConfigs,
   getLeverageTokenConfig,
 } from '@/features/leverage-tokens/leverageTokens.config'
-import {
-  fetchAllLeverageTokenStateHistory,
-  fetchUserBalanceBaselineBeforeWindow,
-  fetchUserBalanceHistory,
-  fetchUserPositions,
-} from '@/lib/graphql/fetchers/portfolio'
+import { fetchUserBalanceHistoryWithBaseline } from '@/lib/graphql/fetchers/portfolio'
 import type { BalanceChange, LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
-import { useHistoricalUsdPricesMultiChain } from '@/lib/prices/useUsdPricesHistory'
+import { fetchCoingeckoTokenUsdPricesRange } from '@/lib/prices/coingecko'
+import {
+  createUsdHistoryKey,
+  mapWithConcurrency as mapWithConcurrencyHistory,
+  usdHistoryQueryKey,
+  useHistoricalUsdPricesMultiChain,
+} from '@/lib/prices/useUsdPricesHistory'
 import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
+import { type FetchPortfolioDataResult, fetchPortfolioData } from '../api/fetchPortfolioData'
 import type { Position } from '../components/active-positions'
 import type { PortfolioDataPoint } from '../components/portfolio-performance-chart'
+import { buildCollateralAddressesByChain } from '../utils/addresses'
+import { computePerformancePointsFromCache } from '../utils/performance'
 import {
   calculatePortfolioMetrics,
   generatePortfolioPerformanceData,
-  groupStatesByToken,
 } from '../utils/portfolio-calculations'
 import { portfolioKeys } from '../utils/queryKeys'
 import { useTokensAPY } from './usePositionsAPY'
@@ -188,11 +191,7 @@ export function usePortfolioDataFetcher() {
 
   return useQuery({
     queryKey: portfolioKeys.data(address),
-    queryFn: async (): Promise<{
-      portfolioData: PortfolioData
-      rawUserPositions: Array<UserPosition> // Store raw subgraph positions for performance calculations
-      leverageTokenStates: Map<string, Array<LeverageTokenState>>
-    }> => {
+    queryFn: async () => {
       if (!address) {
         return {
           portfolioData: {
@@ -210,135 +209,10 @@ export function usePortfolioDataFetcher() {
           leverageTokenStates: new Map(),
         }
       }
-
       try {
-        // Fetch user positions from all supported chains (single API call)
-        const userPositionsResponse = await fetchUserPositions(address)
-
-        if (!userPositionsResponse.user?.positions?.length) {
-          // No positions found, return empty portfolio
-          return {
-            portfolioData: {
-              summary: {
-                totalValue: 0,
-                totalEarnings: 0,
-                activePositions: 0,
-                changeAmount: 0,
-                changePercent: 0,
-                averageAPY: 0,
-              },
-              positions: [],
-            },
-            rawUserPositions: [],
-            leverageTokenStates: new Map(),
-          }
-        }
-
-        const userPositions = userPositionsResponse.user.positions
-
-        // Convert subgraph positions to UI positions (without calculated values yet)
-        // Only include positions that have matching leverage token configs (filters out test tokens)
-        const positions = userPositions
-          .map((userPosition) => {
-            // Find the leverage token config by matching the address
-            const leverageTokenAddress = userPosition.leverageToken.id.toLowerCase()
-            const tokenConfig = getAllLeverageTokenConfigs().find(
-              (config) => config.address.toLowerCase() === leverageTokenAddress,
-            )
-
-            // Skip positions that don't have matching configs (test tokens, unknown tokens)
-            if (!tokenConfig) {
-              return null
-            }
-
-            const collateralAsset = tokenConfig.collateralAsset
-            const debtAsset = tokenConfig.debtAsset
-
-            return {
-              id: userPosition.id,
-              name:
-                tokenConfig?.name ||
-                `${collateralAsset.symbol} / ${debtAsset.symbol} Leverage Token`,
-              type: 'leverage-token' as const,
-              token: collateralAsset.symbol as 'USDC' | 'WETH' | 'weETH', // Use collateral asset as primary token
-              currentValue: {
-                amount: '0.00', // Will be calculated later
-                symbol: 'USD',
-                usdValue: '$0.00',
-              },
-              unrealizedGain: {
-                amount: '0.00', // Will be calculated later
-                symbol: 'USD',
-                percentage: '0.00%',
-              },
-              apy: '0.00%', // Will be calculated later
-              collateralAsset: {
-                symbol: collateralAsset.symbol,
-                name: collateralAsset.name,
-              },
-              debtAsset: {
-                symbol: debtAsset.symbol,
-                name: debtAsset.name,
-              },
-              leverageTokenAddress: userPosition.leverageToken.id,
-            }
-          })
-          .filter((pos): pos is NonNullable<typeof pos> => pos !== null)
-
-        // Fetch state history for all leverage tokens in parallel for better performance
-        const leverageTokenAddresses = positions.map((pos) => pos.leverageTokenAddress)
-
-        // Use Promise.allSettled to handle partial failures gracefully
-        const stateHistoryPromises = leverageTokenAddresses.map((tokenAddress) =>
-          fetchAllLeverageTokenStateHistory(tokenAddress),
-        )
-
-        const stateHistoryResults = await Promise.allSettled(stateHistoryPromises)
-        const allStates: Array<LeverageTokenState> = []
-
-        // Process results, including successful and failed requests
-        stateHistoryResults.forEach((result) => {
-          if (result.status === 'fulfilled') {
-            allStates.push(...result.value)
-          }
-        })
-
-        // Group states by token address
-        const groupedStates = groupStatesByToken(allStates)
-
-        // Get unique collateral asset addresses for price fetching (like old app)
-        const collateralAssetAddresses = new Set<string>()
-        userPositions.forEach((position) => {
-          if (position.leverageToken.lendingAdapter.collateralAsset) {
-            collateralAssetAddresses.add(
-              position.leverageToken.lendingAdapter.collateralAsset.toLowerCase(),
-            )
-          }
-        })
-
-        // For now, we'll calculate totalValue in the performance hook where we have USD prices
-        // This is a temporary solution - in the future we should fetch prices here too
-
-        const summary: PortfolioSummary = {
-          totalValue: 0, // Will be calculated in usePortfolioPerformance with USD prices
-          totalEarnings: 0, // Will be calculated in usePortfolioWithTotalValue
-          activePositions: positions.length,
-          changeAmount: 0, // Would need historical data
-          changePercent: 0, // Would need historical data
-          averageAPY: 0, // Would need to calculate from historical data
-        }
-
-        return {
-          portfolioData: {
-            summary,
-            positions,
-          },
-          rawUserPositions: userPositions, // Store raw positions for performance calculations
-          leverageTokenStates: groupedStates,
-        }
+        return await fetchPortfolioData(address)
       } catch (error) {
         logger.error('Error fetching portfolio data', { error, chainId: chainId ?? 0 })
-        // Re-throw the error so TanStack Query can handle retries
         throw error
       }
     },
@@ -372,33 +246,7 @@ export function usePortfolioWithTotalValue() {
   // Get unique collateral asset addresses grouped by chain ID
   const addressesByChain = useMemo(() => {
     if (!portfolioQueryData?.rawUserPositions.length) return {}
-
-    const chainMap = new Map<number, Set<string>>()
-
-    portfolioQueryData.rawUserPositions.forEach((position) => {
-      if (position.leverageToken.lendingAdapter.collateralAsset) {
-        // Get the chain ID from the leverage token config
-        const leverageTokenConfig = getLeverageTokenConfig(
-          position.leverageToken.id as `0x${string}`,
-        )
-        const chainId = leverageTokenConfig?.chainId || 1 // Fallback to Ethereum
-
-        if (!chainMap.has(chainId)) {
-          chainMap.set(chainId, new Set<string>())
-        }
-        chainMap
-          .get(chainId)
-          ?.add(position.leverageToken.lendingAdapter.collateralAsset.toLowerCase())
-      }
-    })
-
-    // Convert Map to Record for the hook
-    const result: Record<number, Array<string>> = {}
-    for (const [chainId, addresses] of chainMap.entries()) {
-      result[chainId] = Array.from(addresses)
-    }
-
-    return result
+    return buildCollateralAddressesByChain(portfolioQueryData.rawUserPositions)
   }, [portfolioQueryData?.rawUserPositions])
 
   // Fetch prices for all collateral assets across all chains
@@ -556,18 +404,8 @@ export function usePortfolioPerformance() {
       const now = nowSec
       const fromTimestamp = fromSec
 
-      // Fetch balance history within [from, now] and baseline events
-      const [balanceChangesInWindow, baselineEvents] = await Promise.all([
-        fetchUserBalanceHistory(address, tokenAddresses, fromTimestamp, now),
-        fetchUserBalanceBaselineBeforeWindow(address, tokenAddresses, fromTimestamp),
-      ])
-
-      // Merge and sort ascending by timestamp (subgraph returns microseconds as string)
-      const merged = [...baselineEvents, ...balanceChangesInWindow].sort(
-        (a, b) => Number(a.timestamp) - Number(b.timestamp),
-      )
-
-      return merged
+      // Fetch merged balance history + baseline
+      return fetchUserBalanceHistoryWithBaseline(address, tokenAddresses, fromTimestamp, now)
     },
     enabled: !!address && rawUserPositions.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -581,29 +419,7 @@ export function usePortfolioPerformance() {
   // grouped by their chainId (from leverage token configs).
   const addressesByChainForHistory = useMemo(() => {
     if (!rawUserPositions.length) return {}
-    const chainMap = new Map<number, Set<string>>()
-    rawUserPositions.forEach((position) => {
-      const cfg = getLeverageTokenConfig(position.leverageToken.id as `0x${string}`)
-      const chainId = cfg?.chainId
-      if (!chainId) {
-        logger.warn('Missing chainId for leverage token; skipping USD history for collateral', {
-          feature: 'portfolio',
-          method: 'addressesByChainForHistory',
-          token: position.leverageToken.id,
-        })
-        return
-      }
-      const addr = position.leverageToken.lendingAdapter.collateralAsset.toLowerCase()
-      let set = chainMap.get(chainId)
-      if (!set) {
-        set = new Set<string>()
-        chainMap.set(chainId, set)
-      }
-      set.add(addr)
-    })
-    const out: Record<number, Array<string>> = {}
-    for (const [chainId, set] of chainMap.entries()) out[chainId] = Array.from(set)
-    return out
+    return buildCollateralAddressesByChain(rawUserPositions)
   }, [rawUserPositions])
 
   // Fetch historical USD prices for the timeframe
@@ -616,11 +432,8 @@ export function usePortfolioPerformance() {
 
   // Generate performance data from the cached portfolio data and balance history
   const performanceData = useQuery({
-    queryKey: [
-      ...portfolioKeys.performance(selectedTimeframe, address),
-      usdPrices,
-      balanceHistoryQuery.data,
-    ],
+    // Deterministic key: depends only on timeframe + address
+    queryKey: portfolioKeys.performance(selectedTimeframe, address),
     queryFn: async (): Promise<Array<PortfolioDataPoint>> => {
       if (
         !rawUserPositions.length ||
@@ -684,9 +497,102 @@ export function usePortfolioPerformance() {
     selectedTimeframe,
     setSelectedTimeframe,
     timeframes: ['7D', '30D', '90D', '1Y'],
-    isLoading: isLoading || performanceData.isLoading || balanceHistoryQuery.isLoading,
+    // Avoid showing a loading state if we already have cached performance points
+    isLoading:
+      isLoading ||
+      ((performanceData.data?.length ?? 0) === 0 &&
+        (performanceData.isLoading || balanceHistoryQuery.isLoading)),
     isError: isError || performanceData.isError || balanceHistoryQuery.isError,
     error: error || performanceData.error || balanceHistoryQuery.error,
+  }
+}
+
+/**
+ * Programmatic prefetch for portfolio warmup. Use in MainLayout on wallet connect,
+ * or on Portfolio nav hover to prime the cache before route entry.
+ */
+export async function prefetchPortfolioWarmup(
+  queryClient: QueryClient,
+  params: { address: string; timeframe?: '7D' | '30D' | '90D' | '1Y'; concurrency?: number },
+) {
+  const { address, timeframe = '30D', concurrency = 5 } = params
+  if (!address) return
+
+  // 1) Prefetch core portfolio data and read from cache
+  await queryClient.prefetchQuery({
+    queryKey: portfolioKeys.data(address),
+    queryFn: () => fetchPortfolioData(address),
+    staleTime: 5 * 60 * 1000,
+  })
+  const ensured = queryClient.getQueryData<FetchPortfolioDataResult>(portfolioKeys.data(address))
+
+  const rawUserPositions = ensured?.rawUserPositions || []
+  if (rawUserPositions.length === 0) return
+
+  const nowSec = Math.floor(Date.now() / 1000)
+  const fromSec = (() => {
+    switch (timeframe) {
+      case '7D':
+        return nowSec - 7 * 24 * 60 * 60
+      case '30D':
+        return nowSec - 30 * 24 * 60 * 60
+      case '90D':
+        return nowSec - 90 * 24 * 60 * 60
+      case '1Y':
+        return nowSec - 365 * 24 * 60 * 60
+    }
+  })()
+
+  // 2) Prefetch balance history + baseline
+  const tokenAddresses = rawUserPositions.map((p) => p.leverageToken.id.toLowerCase())
+  await queryClient.prefetchQuery({
+    queryKey: [...portfolioKeys.performance(timeframe, address), 'balance-history'],
+    queryFn: () => fetchUserBalanceHistoryWithBaseline(address, tokenAddresses, fromSec, nowSec),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // 3) Prefetch historical USD ranges
+  const byChain = buildCollateralAddressesByChain(rawUserPositions)
+  if (Object.keys(byChain).length === 0) return
+
+  // normalize input for stable query key; returned value unused directly
+  createUsdHistoryKey(byChain, fromSec, nowSec)
+  await queryClient.prefetchQuery({
+    queryKey: usdHistoryQueryKey(byChain, fromSec, nowSec),
+    queryFn: async () => {
+      const out: Record<number, Record<string, Array<[number, number]>>> = {}
+      for (const [chainIdStr, addrs] of Object.entries(byChain)) {
+        const chainId = Number(chainIdStr)
+        const unique = [...new Set(addrs.map((a) => a.toLowerCase()))]
+        const results = await mapWithConcurrencyHistory(unique, concurrency, async (addr) => {
+          const series = await fetchCoingeckoTokenUsdPricesRange(chainId, addr, fromSec, nowSec)
+          return [addr, series] as const
+        })
+        out[chainId] = Object.fromEntries(results)
+      }
+      return out
+    },
+    staleTime: 60_000,
+  })
+
+  // 4) Compute performance points now and seed the cache for instant render
+  const balanceChanges = queryClient.getQueryData<Array<BalanceChange>>([
+    ...portfolioKeys.performance(timeframe, address),
+    'balance-history',
+  ])
+  const usdHistory = queryClient.getQueryData<
+    Record<number, Record<string, Array<[number, number]>>>
+  >(usdHistoryQueryKey(byChain, fromSec, nowSec))
+  if (balanceChanges && usdHistory) {
+    const points = computePerformancePointsFromCache({
+      rawUserPositions,
+      leverageTokenStates: ensured?.leverageTokenStates || new Map(),
+      balanceChanges,
+      timeframe,
+      usdHistory,
+    })
+
+    queryClient.setQueryData(portfolioKeys.performance(timeframe, address), points)
   }
 }
 

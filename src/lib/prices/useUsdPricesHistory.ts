@@ -107,6 +107,29 @@ function createKey(byChain: Record<number, Array<string>>, from: number, to: num
 }
 
 /**
+ * Create a stable query key from (byChain, from, to):
+ * Exported for prefetching outside of hooks.
+ */
+export function createUsdHistoryKey(
+  byChain: Record<number, Array<string>>,
+  from: number,
+  to: number,
+) {
+  return createKey(byChain, from, to)
+}
+
+/**
+ * Full query key helper for USD history range queries
+ */
+export function usdHistoryQueryKey(
+  byChain: Record<number, Array<string>>,
+  from: number,
+  to: number,
+) {
+  return ['usd-history', createKey(byChain, from, to)] as const
+}
+
+/**
  * Minimal concurrency-limited map.
  *
  * - Runs up to `limit` promises in flight at once.
@@ -116,7 +139,7 @@ function createKey(byChain: Record<number, Array<string>>, from: number, to: num
  * Useful for gently parallelizing many network requests (e.g., CoinGecko range
  * calls) without hammering the provider.
  */
-async function mapWithConcurrency<T, R>(
+export async function mapWithConcurrency<T, R>(
   items: Array<T>,
   limit: number,
   fn: (item: T, index: number) => Promise<R>,

@@ -27,9 +27,7 @@ import { features } from '@/lib/config/features'
 import { useGA } from '@/lib/config/ga4.config'
 import { formatNumber } from '@/lib/utils/formatting'
 
-export const Route = createFileRoute('/portfolio')({
-  component: PortfolioPage,
-})
+export const Route = createFileRoute('/portfolio')({ component: PortfolioPage })
 
 function PortfolioPage() {
   const { isConnected, address: userAddress } = useAccount()

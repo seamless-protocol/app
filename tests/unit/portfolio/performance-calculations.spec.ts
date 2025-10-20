@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { BalanceChange, LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
 import {
-  generatePortfolioPerformanceData,
   type GetUsdPriceAt,
+  generatePortfolioPerformanceData,
 } from '@/features/portfolio/utils/portfolio-calculations'
+import type { BalanceChange, LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
 
 function us(sec: number) {
   return String(sec * 1_000_000)
@@ -117,4 +117,3 @@ describe('generatePortfolioPerformanceData', () => {
     expect(ptAfter20?.value).toBe(210)
   })
 })
-
