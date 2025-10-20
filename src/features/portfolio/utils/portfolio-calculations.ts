@@ -232,8 +232,26 @@ export function calculatePortfolioMetrics(
 /**
  * Generate portfolio performance data points from historical data with balance history
  */
+/**
+ * Pure accessor for historical USD prices.
+ *
+ * - Implementations must perform an in-memory lookup (no network) for a given
+ *   `(chainId, collateralAddress, timestampSec)` and return the nearest-prior USD.
+ * - Return `undefined` when no historical price is available (the caller may fall back to spot).
+ */
 export type GetUsdPriceAt = (chainId: number, address: string, tsSec: number) => number | undefined
 
+/**
+ * Generate portfolio performance datapoints on a regular time grid for the selected timeframe.
+ *
+ * Inputs
+ * - `userPositions`, `leverageTokenStates`, `balanceChanges`: subgraph-derived data (with baseline
+ *   events included in `balanceChanges` for timestamp_lt).
+ * - `getUsdPriceAt`: nearest-prior USD accessor (pure; no network).
+ * - `collateralDecimalsByLeverageToken`: map of leverage token address → collateral decimals.
+ * - `chainIdByLeverageToken`: map of leverage token address → chainId (for historical pricing lookup).
+ * - `spotUsdPrices`: optional spot USD map used only as a fallback when historical USD is missing.
+ */
 export function generatePortfolioPerformanceData(
   userPositions: Array<UserPosition>,
   leverageTokenStates: Map<string, Array<LeverageTokenState>>,

@@ -65,6 +65,7 @@ export function useHistoricalUsdPricesMultiChain({
     },
   })
 
+  // Pure accessor: returns nearest-prior USD for (chainId, address, tsSec) from in-memory cache
   const getUsdPriceAt = useMemo(() => {
     return (chainId: number, address: string, tsSec: number): number | undefined => {
       const chainMap = query.data?.[chainId]
