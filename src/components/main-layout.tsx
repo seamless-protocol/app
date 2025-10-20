@@ -10,9 +10,9 @@ import {
   Vault,
   Vote,
 } from 'lucide-react'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useAccount } from 'wagmi'
-import { prefetchPortfolioWarmup } from '@/features/portfolio/hooks/usePortfolioDataFetcher'
+import { usePortfolioPrefetch } from '@/features/portfolio/hooks/usePrefetchPortfolio'
 import { features } from '@/lib/config/features'
 import { useGA } from '@/lib/config/ga4.config'
 import { useDeFiLlamaProtocolTVL } from '@/lib/defillama/useProtocolTVL'
@@ -123,12 +123,11 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const queryClient = useQueryClient()
-  const { address, isConnected } = useAccount()
-  const prefetchedRef = useRef<string | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
   const analytics = useGA()
+  useQueryClient() // initialize to ensure QueryClientProvider exists
+  const { address, isConnected } = useAccount()
   const {
     data: defillamaData,
     isLoading: isProtocolTvlLoading,
@@ -144,14 +143,12 @@ export function MainLayout({ children }: MainLayoutProps) {
     analytics.navigation(fromPage, currentPath)
   }, [location.pathname, analytics])
 
-  // Prefetch portfolio data on wallet connect (30D default)
-  useEffect(() => {
-    if (!isConnected || !address) return
-    if (prefetchedRef.current === address) return
-    prefetchedRef.current = address
-    // Fire-and-forget
-    prefetchPortfolioWarmup(queryClient, { address, timeframe: '30D' }).catch(() => {})
-  }, [isConnected, address, queryClient])
+  // Warm portfolio cache globally on wallet connect (30D default)
+  usePortfolioPrefetch({
+    address,
+    enabled: isConnected,
+    timeframe: '30D',
+  })
 
   const platformTVL = useMemo(() => {
     if (isProtocolTvlLoading) {
