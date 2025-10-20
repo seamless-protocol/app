@@ -13,10 +13,8 @@ type VaultStatCardsProps = {
 }
 
 export function VaultStatCards({ className }: VaultStatCardsProps) {
-  const { tvlUsd: hookTvlUsd, isLoading, isError } = useMorphoVaultsStats()
+  const { tvlUsd: vaultsTvlUsd, isLoading, isError } = useMorphoVaultsStats()
   const { maxNetApy, isLoading: apyLoading } = useMorphoVaultsMaxAPY()
-  const vaultsTvlUsd = hookTvlUsd
-  const maxApy = typeof maxNetApy === 'number' ? maxNetApy : undefined
 
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-2 gap-6', className)}>
@@ -93,12 +91,20 @@ export function VaultStatCards({ className }: VaultStatCardsProps) {
               </p>
 
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-4xl font-bold text-white tracking-tight">
-                  {typeof maxApy === 'number' && !apyLoading
-                    ? formatPercentage(maxApy, { decimals: 1, showSign: false })
-                    : '—'}
-                </span>
-                <span className="text-lg text-muted-foreground font-medium">APY</span>
+                {apyLoading ? (
+                  <div className="flex justify-center">
+                    <Skeleton className="h-10 w-24" />
+                  </div>
+                ) : (
+                  <>
+                    <span className="text-4xl font-bold text-white tracking-tight">
+                      {typeof maxNetApy === 'number'
+                        ? formatPercentage(maxNetApy, { decimals: 1, showSign: false })
+                        : '—'}
+                    </span>
+                    <span className="text-lg text-muted-foreground font-medium">APY</span>
+                  </>
+                )}
               </div>
 
               <div className="flex items-center justify-center pt-2">

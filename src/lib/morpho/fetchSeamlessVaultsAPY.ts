@@ -6,7 +6,7 @@ export const MORPHO_GQL = 'https://api.morpho.org/graphql'
 type VaultByAddress = {
   address?: string
   state?: {
-    weeklyNetApy?: number | null
+    dailyApy?: number | null
   } | null
 }
 
@@ -33,11 +33,11 @@ export async function getSeamlessVaultsMaxAPYFromMorpho(): Promise<number | unde
   const fields = entries
     .map(
       (e, i) =>
-        `v${i}: vaultByAddress(address: "${e.address}", chainId: ${e.chainId}) { address state { weeklyNetApy } }`,
+        `v${i}: vaultByAddress(address: "${e.address}", chainId: ${e.chainId}) { address state { dailyApy } }`,
     )
     .join('\n')
 
-  const query = `query SeamlessVaultsNetApy {\n${fields}\n}`
+  const query = `query SeamlessVaultsDailyApy {\n${fields}\n}`
 
   const start = Date.now()
   const res = await fetch(MORPHO_GQL, {
@@ -78,7 +78,7 @@ export async function getSeamlessVaultsMaxAPYFromMorpho(): Promise<number | unde
 
   const data = json.data ?? {}
   const max = Object.values(data).reduce<number | undefined>((acc, v) => {
-    const apy = v?.state?.weeklyNetApy ?? undefined
+    const apy = v?.state?.dailyApy ?? undefined
     if (typeof apy === 'number' && Number.isFinite(apy)) {
       return typeof acc === 'number' ? Math.max(acc, apy) : apy
     }
