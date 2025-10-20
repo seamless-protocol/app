@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion'
-import { Info, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
-import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
+import { ApyInfoTooltip } from '@/components/ApyInfoTooltip'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { cn } from '@/lib/utils/cn'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
@@ -23,7 +23,6 @@ import {
   TableRow,
   usePagination,
 } from '../../../../components/ui/table'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../../components/ui/tooltip'
 import type { LeverageTokenConfig } from '../../leverageTokens.config'
 import { LeverageBadge } from '../LeverageBadge'
 import { SupplyCap } from '../SupplyCap'
@@ -475,25 +474,15 @@ export function LeverageTokenTable({
                               {formatAPY(tokenApyData.totalAPY, 2)}
                             </span>
                           )}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                className="text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)]"
-                              >
-                                <Info className="h-3 w-3" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent className="p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
-                              <APYBreakdownTooltip
-                                token={token}
-                                compact
-                                {...(tokenApyData && { apyData: tokenApyData })}
-                                isLoading={apyLoading}
-                                isError={tokenApyError}
-                              />
-                            </TooltipContent>
-                          </Tooltip>
+                          <ApyInfoTooltip
+                            token={token}
+                            {...(tokenApyData && { apyData: tokenApyData })}
+                            isLoading={apyLoading}
+                            isError={tokenApyError}
+                            iconSize="sm"
+                            side="top"
+                            align="end"
+                          />
                         </div>
                       </TableCell>
 

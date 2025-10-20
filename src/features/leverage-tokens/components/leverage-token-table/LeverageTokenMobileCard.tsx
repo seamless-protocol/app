@@ -1,12 +1,10 @@
 import { motion } from 'framer-motion'
-import { Info } from 'lucide-react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
-import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
+import { ApyInfoTooltip } from '@/components/ApyInfoTooltip'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
 import { Card, CardContent } from '../../../../components/ui/card'
 import { Skeleton } from '../../../../components/ui/skeleton'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../../components/ui/tooltip'
 import { LeverageBadge } from '../LeverageBadge'
 import { SupplyCap } from '../SupplyCap'
 import type { LeverageToken } from './LeverageTokenTable'
@@ -84,30 +82,15 @@ export function LeverageTokenMobileCard({
                     {formatAPY(apyData.totalAPY, 2)}
                   </span>
                 )}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="text-[var(--text-muted)] transition-colors touch-manipulation !min-w-0 !min-h-0 hover:text-[var(--text-secondary)] active:text-[var(--text-secondary)]"
-                    >
-                      <Info className="h-3 w-3" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    className="z-50 p-0 text-sm border border-border bg-card"
-                    side="top"
-                    align="end"
-                    sideOffset={8}
-                  >
-                    <APYBreakdownTooltip
-                      token={token}
-                      compact
-                      {...(apyData && { apyData })}
-                      isLoading={isApyLoading ?? false}
-                      isError={isApyError ?? false}
-                    />
-                  </TooltipContent>
-                </Tooltip>
+                <ApyInfoTooltip
+                  token={token}
+                  {...(apyData && { apyData })}
+                  isLoading={isApyLoading ?? false}
+                  isError={isApyError ?? false}
+                  iconSize="lg"
+                  side="top"
+                  align="end"
+                />
               </div>
             </div>
 

@@ -108,19 +108,11 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
           (data.metadata.yieldAveragingPeriod || data.metadata.borrowAveragingPeriod) && (
             <div className="mt-3 border-t border-[var(--divider-line)] pt-3">
               <div className="text-xs text-[var(--text-muted)]">
-                {data.metadata.yieldAveragingPeriod &&
-                data.metadata.borrowAveragingPeriod &&
-                data.metadata.yieldAveragingPeriod === data.metadata.borrowAveragingPeriod ? (
-                  <p>Values based on {data.metadata.yieldAveragingPeriod}</p>
-                ) : (
-                  <>
-                    {data.metadata.yieldAveragingPeriod && (
-                      <p>Yield: {data.metadata.yieldAveragingPeriod}</p>
-                    )}
-                    {data.metadata.borrowAveragingPeriod && (
-                      <p>Borrow: {data.metadata.borrowAveragingPeriod}</p>
-                    )}
-                  </>
+                {data.metadata.yieldAveragingPeriod && (
+                  <p>Yield: {data.metadata.yieldAveragingPeriod}</p>
+                )}
+                {data.metadata.borrowAveragingPeriod && (
+                  <p>Borrow: {data.metadata.borrowAveragingPeriod}</p>
                 )}
               </div>
             </div>

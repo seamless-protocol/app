@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Zap } from 'lucide-react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
+import { ApyInfoTooltip } from '@/components/ApyInfoTooltip'
 import { formatAPY, formatPercentage } from '@/lib/utils/formatting'
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Card, CardContent } from '../../../components/ui/card'
@@ -61,7 +62,18 @@ export function FeaturedLeverageToken({
             {/* APY Row - show skeleton while loading; hide after load if zero */}
             {(isApyLoading || isApyError || (apyData && apyData.totalAPY !== 0)) && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-[var(--text-secondary)]">APY</span>
+                <div className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+                  <span>APY</span>
+                  <ApyInfoTooltip
+                    token={token}
+                    {...(apyData && { apyData })}
+                    isLoading={isApyLoading}
+                    isError={isApyError}
+                    iconSize="sm"
+                    side="top"
+                    align="end"
+                  />
+                </div>
                 {isApyError ? (
                   <span className="text-[var(--text-muted)] font-medium">N/A</span>
                 ) : isApyLoading || !apyData ? (
