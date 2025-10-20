@@ -86,21 +86,21 @@ export function FeaturedLeverageToken({
               </div>
             )}
 
-            {/* Reward APR Row - only show if not zero */}
-            {apyData && apyData.rewardsAPR !== 0 && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-[var(--text-secondary)]">Reward APR</span>
-                {isApyError ? (
-                  <span className="text-[var(--text-muted)] font-medium">N/A</span>
-                ) : isApyLoading || !apyData ? (
-                  <Skeleton className="h-4 w-16" />
-                ) : (
-                  <span className="text-[var(--accent-1)] font-medium">
-                    {formatPercentage(apyData.rewardsAPR, { decimals: 2 })}
-                  </span>
-                )}
-              </div>
-            )}
+            {/* Reward APR Row - always render for consistent card height */}
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-[var(--text-secondary)]">Reward APR</span>
+              {isApyError ? (
+                <span className="text-[var(--text-muted)] font-medium">N/A</span>
+              ) : isApyLoading || !apyData ? (
+                <Skeleton className="h-4 w-16" />
+              ) : apyData.rewardsAPR !== 0 ? (
+                <span className="text-[var(--accent-1)] font-medium">
+                  {formatPercentage(apyData.rewardsAPR, { decimals: 2 })}
+                </span>
+              ) : (
+                <span className="text-[var(--text-muted)] font-medium">—</span>
+              )}
+            </div>
 
             {/* Points Row - always render for consistent card height */}
             <div className="flex justify-between items-center">
