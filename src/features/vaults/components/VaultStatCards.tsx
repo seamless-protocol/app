@@ -3,36 +3,18 @@ import { GauntletLogo } from '@/components/icons/logos'
 import { MorphoLogo } from '@/components/icons/logos/morpho-logo'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useLeverageTokensTVLSubgraph } from '@/features/leverage-tokens/hooks/useLeverageTokensTVLSubgraph'
-import { useDeFiLlamaProtocolTVL } from '@/lib/defillama/useProtocolTVL'
+import { useMorphoVaultsStats } from '@/features/vaults/hooks/useMorphoVaultsStats'
 import { cn } from '@/lib/utils/cn'
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting'
 
 type VaultStatCardsProps = {
   className?: string
-  /** Optional override for TVL (USD). If omitted, uses DeFiLlama protocol TVL. */
-  tvlUsdOverride?: number
-  /** Optional override for max APY (decimal, e.g., 0.123 for 12.3%). */
-  maxApyOverride?: number
 }
 
-export function VaultStatCards({ className, tvlUsdOverride, maxApyOverride }: VaultStatCardsProps) {
-  const {
-    data: defillama,
-    isLoading: isTvlLoading,
-    isError: isTvlError,
-  } = useDeFiLlamaProtocolTVL()
-
-  const protocolTvlUsd = typeof tvlUsdOverride === 'number' ? tvlUsdOverride : defillama?.tvl
-  // Until we wire Morpho vault yield aggregation, present a sensible placeholder
-  const maxApy = typeof maxApyOverride === 'number' ? maxApyOverride : 0.123
-  // Leverage Tokens TVL via subgraph
-  const { tvlUsd: leverageTokensTvlUsd, isLoading: isLeverageTvlLoading } =
-    useLeverageTokensTVLSubgraph()
-  const vaultsTvlUsd =
-    typeof protocolTvlUsd === 'number' && typeof leverageTokensTvlUsd === 'number'
-      ? Math.max(protocolTvlUsd - leverageTokensTvlUsd, 0)
-      : undefined
+export function VaultStatCards({ className }: VaultStatCardsProps) {
+  const { tvlUsd: hookTvlUsd, maxNetApy, isLoading, isError } = useMorphoVaultsStats()
+  const vaultsTvlUsd = hookTvlUsd
+  const maxApy = typeof maxNetApy === 'number' ? maxNetApy : undefined
 
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-2 gap-6', className)}>
@@ -56,11 +38,11 @@ export function VaultStatCards({ className, tvlUsdOverride, maxApyOverride }: Va
                 Total Vault TVL
               </p>
 
-              {isTvlLoading || isLeverageTvlLoading ? (
+              {isLoading ? (
                 <div className="flex justify-center">
                   <Skeleton className="h-10 w-28" />
                 </div>
-              ) : isTvlError || typeof vaultsTvlUsd !== 'number' ? (
+              ) : isError || typeof vaultsTvlUsd !== 'number' ? (
                 <p className="text-4xl font-bold tracking-tight">—</p>
               ) : (
                 <p className="text-4xl font-bold text-white tracking-tight">
@@ -110,7 +92,9 @@ export function VaultStatCards({ className, tvlUsdOverride, maxApyOverride }: Va
 
               <div className="flex items-baseline justify-center gap-1">
                 <span className="text-4xl font-bold text-white tracking-tight">
-                  {formatPercentage(maxApy, { decimals: 1, showSign: false })}
+                  {typeof maxApy === 'number'
+                    ? formatPercentage(maxApy, { decimals: 1, showSign: false })
+                    : '—'}
                 </span>
                 <span className="text-lg text-muted-foreground font-medium">APY</span>
               </div>
