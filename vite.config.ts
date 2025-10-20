@@ -56,14 +56,8 @@ export default defineConfig(({ command, mode }) => ({
           router: ['@tanstack/react-router'],
           blockchain: ['wagmi', 'viem'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-          // Group heavy wallet kit dependencies into a dedicated chunk
-          wallet: [
-            '@rainbow-me/rainbowkit',
-            '@walletconnect/modal',
-            '@walletconnect/utils',
-            '@walletconnect/core',
-            'metamask-sdk',
-          ],
+          // Group wallet UI in a dedicated chunk; transitives included automatically
+          wallet: ['@rainbow-me/rainbowkit'],
           // Keep LiFi widget code isolated; we lazy-load it in the UI
           lifi: ['@lifi/widget', '@lifi/wallet-management'],
         },

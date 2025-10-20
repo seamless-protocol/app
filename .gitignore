@@ -63,8 +63,10 @@ src/routeTree.gen.ts
 .biome
 
 # Lockfiles
-bun.lockb
+# Keep lockfiles committed for reproducible builds in CI
+# bun.lock is required for deterministic resolution with Bun
 bun.lock
+bun.lockb
 package-lock.json
 *storybook.log
 
