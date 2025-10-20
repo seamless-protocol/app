@@ -12,6 +12,7 @@ import {
 } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   fetchAllLeverageTokenStateHistory,
+  fetchUserBalanceBaselineBeforeWindow,
   fetchUserBalanceHistory,
   fetchUserPositions,
 } from '@/lib/graphql/fetchers/portfolio'
@@ -553,15 +554,18 @@ export function usePortfolioPerformance() {
       const now = Date.now() / 1000
       const fromTimestamp = now - getTimeframeSeconds(selectedTimeframe)
 
-      // Fetch balance history
-      const balanceChanges = await fetchUserBalanceHistory(
-        address,
-        tokenAddresses,
-        fromTimestamp,
-        now,
+      // Fetch balance history within [from, now] and baseline events
+      const [balanceChangesInWindow, baselineEvents] = await Promise.all([
+        fetchUserBalanceHistory(address, tokenAddresses, fromTimestamp, now),
+        fetchUserBalanceBaselineBeforeWindow(address, tokenAddresses, fromTimestamp),
+      ])
+
+      // Merge and sort ascending by timestamp (subgraph returns microseconds as string)
+      const merged = [...baselineEvents, ...balanceChangesInWindow].sort(
+        (a, b) => Number(a.timestamp) - Number(b.timestamp),
       )
 
-      return balanceChanges
+      return merged
     },
     enabled: !!address && rawUserPositions.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes

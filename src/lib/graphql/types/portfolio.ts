@@ -55,6 +55,8 @@ export interface LeverageTokenStateHistoryResponse {
   } | null
 }
 
+// Note: `amount` here is the absolute balance after this change event (not a delta).
+// The most recent event at or before a timestamp yields the balance at that time.
 export interface BalanceChange {
   id: string
   position: {

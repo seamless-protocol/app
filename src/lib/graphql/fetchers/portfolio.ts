@@ -1,6 +1,7 @@
 import { createLogger } from '@/lib/logger'
 import {
   BALANCE_HISTORY_QUERY,
+  BALANCE_BASELINE_BEFORE_WINDOW_QUERY,
   LEVERAGE_TOKEN_STATE_HISTORY_QUERY,
   USER_POSITIONS_QUERY,
 } from '../queries/portfolio'
@@ -199,4 +200,78 @@ export async function fetchUserBalanceHistory(
   }
 
   return allBalanceChanges
+}
+
+/**
+ * Fetch the most recent balance change BEFORE the window start for each token.
+ * This provides a baseline so balances at the start of the timeframe are non-zero
+ * when the user minted before the window and made no changes within it.
+ *
+ * Returns at most one event per token per chain.
+ */
+export async function fetchUserBalanceBaselineBeforeWindow(
+  userAddress: string,
+  tokenAddresses: Array<string>,
+  fromTimestamp: number,
+  maxRecords: number = 10000,
+): Promise<Array<BalanceChange>> {
+  const supportedChains = getSupportedChainIds()
+  const allBaselineChanges: Array<BalanceChange> = []
+
+  // Convert seconds -> microseconds for subgraph
+  const fromMicroseconds = fromTimestamp * 1_000_000
+
+  for (const chainId of supportedChains) {
+    try {
+      const wanted = new Set(tokenAddresses.map((a) => a.toLowerCase()))
+      const foundPerToken = new Map<string, BalanceChange>()
+
+      let skip = 0
+      const batchSize = 1000
+
+      while (skip < maxRecords) {
+        const result = await graphqlRequest<BalanceHistoryResponse>(chainId, {
+          query: BALANCE_BASELINE_BEFORE_WINDOW_QUERY,
+          variables: {
+            user: userAddress.toLowerCase(),
+            tokens: tokenAddresses.map((a) => a.toLowerCase()),
+            from: fromMicroseconds.toString(),
+            first: batchSize,
+            skip,
+          },
+        })
+
+        const changes = result?.leverageTokenBalanceChanges || []
+        if (changes.length === 0) break
+
+        // Results come in desc order by timestamp. Record first occurrence per token.
+        for (const change of changes) {
+          const tokenAddr = change.position.leverageToken.id.toLowerCase()
+          if (!wanted.has(tokenAddr)) continue
+          if (!foundPerToken.has(tokenAddr)) {
+            foundPerToken.set(tokenAddr, change)
+          }
+        }
+
+        // If we've found a baseline for all requested tokens, stop.
+        if (foundPerToken.size >= wanted.size) break
+
+        if (changes.length < batchSize) break
+        skip += batchSize
+      }
+
+      for (const change of foundPerToken.values()) {
+        allBaselineChanges.push(change)
+      }
+    } catch (error) {
+      logger.warn('Failed to fetch baseline balance before window from chain', {
+        userAddress,
+        chainId,
+        error,
+      })
+      // Continue with other chains
+    }
+  }
+
+  return allBaselineChanges
 }

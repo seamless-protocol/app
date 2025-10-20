@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts'
 import { Button } from '../../../components/ui/button'
+import { Skeleton } from '../../../components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
 
 export interface PortfolioDataPoint {
@@ -26,6 +27,7 @@ export interface PortfolioPerformanceChartProps {
   className?: string
   title?: string
   height?: number
+  isLoading?: boolean
   gradientColors?: {
     start: string
     end: string
@@ -44,6 +46,7 @@ export function PortfolioPerformanceChart({
   className,
   title = 'Portfolio Performance',
   height = 256,
+  isLoading = false,
   gradientColors = { start: '#A16CFE', end: '#A16CFE' },
   strokeColor = '#A16CFE',
   yAxisLabel = 'Portfolio Value ($)',
@@ -115,7 +118,9 @@ export function PortfolioPerformanceChart({
       </CardHeader>
       <CardContent className="pt-0 px-6 pb-6">
         <div style={{ height: `${height}px` }} className="w-full">
-          {hasData ? (
+          {isLoading ? (
+            <Skeleton className="w-full h-full rounded" />
+          ) : hasData ? (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} style={{ cursor: 'default' }}>
                 <defs>

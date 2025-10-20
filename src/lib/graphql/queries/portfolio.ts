@@ -91,5 +91,39 @@ export const BALANCE_HISTORY_QUERY = `
       timestamp
       amount
     }
+}
+`
+
+// Query to get the most recent balance change before the start of the timeframe window
+// Used to create a baseline so balances at the start of the window are non-zero when
+// the user minted before the window and made no changes within it.
+export const BALANCE_BASELINE_BEFORE_WINDOW_QUERY = `
+  query BalanceBaselineBeforeWindow(
+    $user: Bytes!
+    $tokens: [Bytes!]
+    $from: BigInt
+    $first: Int
+    $skip: Int
+  ) {
+    leverageTokenBalanceChanges(
+      where: {
+        position_: { user: $user, leverageToken_in: $tokens }
+        timestamp_lt: $from
+      }
+      orderBy: timestamp
+      orderDirection: desc
+      first: $first
+      skip: $skip
+    ) {
+      id
+      position {
+        id
+        leverageToken {
+          id
+        }
+      }
+      timestamp
+      amount
+    }
   }
 `
