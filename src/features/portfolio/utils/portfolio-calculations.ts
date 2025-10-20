@@ -48,7 +48,10 @@ function _calculatePortfolioValueAtTimestamp(
   userPositions: Array<UserPosition>,
   leverageTokenStates: Map<string, Array<LeverageTokenState>>,
   balanceChanges: Array<BalanceChange>,
-  usdPrices: Record<string, number>,
+  getUsdPriceAt: (chainId: number, address: string, tsSec: number) => number | undefined,
+  collateralDecimalsByLeverageToken: Record<string, number>,
+  chainIdByLeverageToken: Record<string, number>,
+  spotUsdPrices?: Record<string, number>,
 ): number {
   let totalValue = 0
 
@@ -72,18 +75,22 @@ function _calculatePortfolioValueAtTimestamp(
       continue
     }
 
-    // Calculate position value: balance * equity per token (using collateral asset like old app)
+    // Calculate position value: balance * equity per token (using collateral asset)
     const equityPerToken = BigInt(closestState.equityPerTokenInCollateral)
     const positionValue = (balance * equityPerToken) / BigInt(1e18)
 
-    // The positionValue is in collateral asset units, convert from wei to collateral asset
-    // Use 18 decimals as fallback since we don't have access to token config here
-    const positionValueInCollateralAsset = Number(formatUnits(positionValue, 18))
+    // Convert to collateral asset units using actual decimals
+    const leverageTokenAddress = position.leverageToken.id.toLowerCase()
+    const collateralDecimals = collateralDecimalsByLeverageToken[leverageTokenAddress] ?? 18
+    const positionValueInCollateralAsset = Number(formatUnits(positionValue, collateralDecimals))
 
     // Get collateral asset price in USD
     const collateralAssetAddress =
       position.leverageToken.lendingAdapter.collateralAsset.toLowerCase()
-    const collateralAssetPriceUsd = usdPrices[collateralAssetAddress]
+    const chainId = chainIdByLeverageToken[leverageTokenAddress] ?? 1
+    const historicalUsd = getUsdPriceAt(chainId, collateralAssetAddress, timestamp)
+    const collateralAssetPriceUsd =
+      historicalUsd ?? (spotUsdPrices ? spotUsdPrices[collateralAssetAddress] : undefined)
     const positionValueInUSD = collateralAssetPriceUsd
       ? positionValueInCollateralAsset * collateralAssetPriceUsd
       : 0
@@ -225,12 +232,17 @@ export function calculatePortfolioMetrics(
 /**
  * Generate portfolio performance data points from historical data with balance history
  */
+export type GetUsdPriceAt = (chainId: number, address: string, tsSec: number) => number | undefined
+
 export function generatePortfolioPerformanceData(
   userPositions: Array<UserPosition>,
   leverageTokenStates: Map<string, Array<LeverageTokenState>>,
   balanceChanges: Array<BalanceChange>,
-  timeframe: '7D' | '30D' | '90D' | '1Y',
-  usdPrices: Record<string, number>,
+  timeframe: Timeframe,
+  getUsdPriceAt: GetUsdPriceAt,
+  collateralDecimalsByLeverageToken: Record<string, number>,
+  chainIdByLeverageToken: Record<string, number>,
+  spotUsdPrices?: Record<string, number>,
 ): Array<PortfolioDataPoint> {
   if (userPositions.length === 0 || leverageTokenStates.size === 0) {
     return []
@@ -241,7 +253,16 @@ export function generatePortfolioPerformanceData(
   if (timeline.length === 0) return []
 
   return timeline.map((ts) =>
-    _toPortfolioDataPoint(ts, userPositions, leverageTokenStates, balanceChanges, usdPrices),
+    _toPortfolioDataPoint(
+      ts,
+      userPositions,
+      leverageTokenStates,
+      balanceChanges,
+      getUsdPriceAt,
+      collateralDecimalsByLeverageToken,
+      chainIdByLeverageToken,
+      spotUsdPrices,
+    ),
   )
 }
 
@@ -266,14 +287,20 @@ function _toPortfolioDataPoint(
   userPositions: Array<UserPosition>,
   leverageTokenStates: Map<string, Array<LeverageTokenState>>,
   balanceChanges: Array<BalanceChange>,
-  usdPrices: Record<string, number>,
+  getUsdPriceAt: GetUsdPriceAt,
+  collateralDecimalsByLeverageToken: Record<string, number>,
+  chainIdByLeverageToken: Record<string, number>,
+  spotUsdPrices?: Record<string, number>,
 ): PortfolioDataPoint {
   const value = _calculatePortfolioValueAtTimestamp(
     timestamp,
     userPositions,
     leverageTokenStates,
     balanceChanges,
-    usdPrices,
+    getUsdPriceAt,
+    collateralDecimalsByLeverageToken,
+    chainIdByLeverageToken,
+    spotUsdPrices,
   )
 
   return {

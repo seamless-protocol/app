@@ -9,8 +9,8 @@ import {
   YAxis,
 } from 'recharts'
 import { Button } from '../../../components/ui/button'
-import { Skeleton } from '../../../components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
+import { Skeleton } from '../../../components/ui/skeleton'
 
 export interface PortfolioDataPoint {
   date: string
@@ -56,39 +56,13 @@ export function PortfolioPerformanceChart({
   const gradientId = useId()
 
   // Default formatters
-  const defaultYAxisFormatter = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}K`
-    } else if (value >= 1) {
-      return value.toFixed(2)
-    } else if (value >= 0.01) {
-      return value.toFixed(4)
-    } else if (value >= 0.001) {
-      return value.toFixed(6)
-    } else if (value > 0) {
-      return value.toFixed(8)
-    }
-    return '0'
-  }
+  const defaultYAxisFormatter = (value: number) =>
+    value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-  const defaultTooltipFormatter = (value: number | string, _name?: string): [string, string] => {
-    const numValue = Number(value)
-    if (numValue >= 1) {
-      return [
-        `$${numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`,
-        'Portfolio Value',
-      ]
-    } else if (numValue >= 0.01) {
-      return [`$${numValue.toFixed(6)}`, 'Portfolio Value']
-    } else if (numValue >= 0.001) {
-      return [`$${numValue.toFixed(8)}`, 'Portfolio Value']
-    } else if (numValue > 0) {
-      return [`$${numValue.toFixed(10)}`, 'Portfolio Value']
-    }
-    return ['$0', 'Portfolio Value']
-  }
+  const defaultTooltipFormatter = (value: number | string): [string, string] => [
+    `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    'Portfolio Value',
+  ]
 
   const formatCurrency = yAxisFormatter || defaultYAxisFormatter
   const formatTooltipValue = tooltipFormatter || defaultTooltipFormatter
@@ -132,7 +106,7 @@ export function PortfolioPerformanceChart({
                 <XAxis
                   dataKey="timestamp"
                   type="number"
-                  domain={["dataMin", "dataMax"]}
+                  domain={['dataMin', 'dataMax']}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'var(--text-secondary)', fontSize: 12, dy: 8 }}

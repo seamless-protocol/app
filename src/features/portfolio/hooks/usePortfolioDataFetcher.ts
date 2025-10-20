@@ -17,6 +17,7 @@ import {
   fetchUserPositions,
 } from '@/lib/graphql/fetchers/portfolio'
 import type { BalanceChange, LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
+import { useHistoricalUsdPricesMultiChain } from '@/lib/prices/useUsdPricesHistory'
 import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
 import type { Position } from '../components/active-positions'
 import type { PortfolioDataPoint } from '../components/portfolio-performance-chart'
@@ -521,21 +522,22 @@ export function usePortfolioPerformance() {
   const { rawUserPositions, leverageTokenStates, usdPrices, isLoading, isError, error } =
     usePortfolioWithTotalValue()
 
-  // Helper to convert timeframe to seconds
-  const getTimeframeSeconds = (timeframe: string): number => {
-    switch (timeframe) {
+  // Compute timeframe bounds
+  const nowSec = Math.floor(Date.now() / 1000)
+  const fromSec = useMemo(() => {
+    switch (selectedTimeframe) {
       case '7D':
-        return 7 * 24 * 60 * 60
+        return nowSec - 7 * 24 * 60 * 60
       case '30D':
-        return 30 * 24 * 60 * 60
+        return nowSec - 30 * 24 * 60 * 60
       case '90D':
-        return 90 * 24 * 60 * 60
+        return nowSec - 90 * 24 * 60 * 60
       case '1Y':
-        return 365 * 24 * 60 * 60
+        return nowSec - 365 * 24 * 60 * 60
       default:
-        return 30 * 24 * 60 * 60
+        return nowSec - 30 * 24 * 60 * 60
     }
-  }
+  }, [nowSec, selectedTimeframe])
 
   // Fetch balance history for the selected timeframe
   const balanceHistoryQuery = useQuery({
@@ -551,8 +553,8 @@ export function usePortfolioPerformance() {
       )
 
       // Calculate timeframe
-      const now = Date.now() / 1000
-      const fromTimestamp = now - getTimeframeSeconds(selectedTimeframe)
+      const now = nowSec
+      const fromTimestamp = fromSec
 
       // Fetch balance history within [from, now] and baseline events
       const [balanceChangesInWindow, baselineEvents] = await Promise.all([
@@ -572,6 +574,44 @@ export function usePortfolioPerformance() {
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
     retry: 3,
+  })
+
+  // Build addresses by chain for historical USD price fetching
+  // We fetch CoinGecko USD history for the COLLATERAL ERC-20 contract addresses,
+  // grouped by their chainId (from leverage token configs).
+  const addressesByChainForHistory = useMemo(() => {
+    if (!rawUserPositions.length) return {}
+    const chainMap = new Map<number, Set<string>>()
+    rawUserPositions.forEach((position) => {
+      const cfg = getLeverageTokenConfig(position.leverageToken.id as `0x${string}`)
+      const chainId = cfg?.chainId
+      if (!chainId) {
+        logger.warn('Missing chainId for leverage token; skipping USD history for collateral', {
+          feature: 'portfolio',
+          method: 'addressesByChainForHistory',
+          token: position.leverageToken.id,
+        })
+        return
+      }
+      const addr = position.leverageToken.lendingAdapter.collateralAsset.toLowerCase()
+      let set = chainMap.get(chainId)
+      if (!set) {
+        set = new Set<string>()
+        chainMap.set(chainId, set)
+      }
+      set.add(addr)
+    })
+    const out: Record<number, Array<string>> = {}
+    for (const [chainId, set] of chainMap.entries()) out[chainId] = Array.from(set)
+    return out
+  }, [rawUserPositions])
+
+  // Fetch historical USD prices for the timeframe
+  const { getUsdPriceAt } = useHistoricalUsdPricesMultiChain({
+    byChain: addressesByChainForHistory,
+    from: fromSec,
+    to: nowSec,
+    enabled: Object.keys(addressesByChainForHistory).length > 0,
   })
 
   // Generate performance data from the cached portfolio data and balance history
@@ -599,13 +639,30 @@ export function usePortfolioPerformance() {
         return tokenConfig !== undefined
       })
 
+      // Build decimals/chain maps for valuation
+      const collateralDecimalsByLeverageToken: Record<string, number> = {}
+      const chainIdByLeverageToken: Record<string, number> = {}
+      for (const pos of filteredUserPositions) {
+        const cfg = getLeverageTokenConfig(pos.leverageToken.id as `0x${string}`)
+        const key = pos.leverageToken.id.toLowerCase()
+        if (cfg?.collateralAsset?.decimals !== undefined) {
+          collateralDecimalsByLeverageToken[key] = cfg.collateralAsset.decimals
+        }
+        if (cfg?.chainId !== undefined) {
+          chainIdByLeverageToken[key] = cfg.chainId
+        }
+      }
+
       // Generate portfolio performance data using the filtered positions, states, and balance history
       const performanceData = generatePortfolioPerformanceData(
         filteredUserPositions,
         leverageTokenStates,
         balanceHistoryQuery.data,
         selectedTimeframe as '7D' | '30D' | '90D' | '1Y',
-        usdPrices,
+        (chainId, address, ts) => getUsdPriceAt(chainId, address, ts),
+        collateralDecimalsByLeverageToken,
+        chainIdByLeverageToken,
+        usdPrices, // spot fallback
       )
 
       return performanceData
@@ -613,7 +670,6 @@ export function usePortfolioPerformance() {
     enabled:
       rawUserPositions.length > 0 &&
       leverageTokenStates.size > 0 &&
-      Object.keys(usdPrices).length > 0 &&
       balanceHistoryQuery.isSuccess &&
       (balanceHistoryQuery.data?.length ?? 0) > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes - performance data changes less frequently

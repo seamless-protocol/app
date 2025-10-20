@@ -66,3 +66,56 @@ function normalizeBaseVariants(base: string): Array<string> {
   // prefer configured, then the alternate
   return [clean, hasApiV3 ? withoutApi : withApi]
 }
+
+/**
+ * Fetch historical USD price series for a specific ERC-20 contract over a time range.
+ * Returns an array of [timestampSec, priceUsd] sorted ascending.
+ */
+export async function fetchCoingeckoTokenUsdPricesRange(
+  chainId: number,
+  address: string,
+  fromSec: number,
+  toSec: number,
+): Promise<Array<[number, number]>> {
+  const platform = getCoingeckoPlatform(chainId)
+  const configured = getApiEndpoint('coingecko')
+  const bases = normalizeBaseVariants(configured)
+
+  // Normalize inputs
+  const addr = address.toLowerCase()
+  const from = Math.floor(fromSec)
+  const to = Math.floor(toSec)
+
+  // Optional CoinGecko Pro API key
+  const { getEnvVar } = await import('@/lib/env')
+  const proKey = getEnvVar('VITE_COINGECKO_API_KEY')
+
+  let lastErr: unknown
+  for (const baseUrl of bases) {
+    const url = new URL(`${baseUrl}/coins/${platform}/contract/${addr}/market_chart/range`)
+    url.searchParams.set('vs_currency', 'usd')
+    url.searchParams.set('from', String(from))
+    url.searchParams.set('to', String(to))
+
+    const res = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        ...(proKey ? { 'x-cg-pro-api-key': proKey } : {}),
+      },
+    })
+
+    if (res.ok) {
+      const json = (await res.json()) as { prices?: Array<[number, number]> }
+      const series = Array.isArray(json.prices) ? json.prices : []
+      // json.prices timestamps are in milliseconds
+      const out: Array<[number, number]> = series
+        .map(([ms, price]) => [Math.floor(ms / 1000), Number(price)] as [number, number])
+        .filter(([, p]) => Number.isFinite(p))
+        .sort((a, b) => a[0] - b[0])
+      return out
+    }
+    lastErr = new Error(`CoinGecko HTTP ${res.status}`)
+    if (res.status !== 404) break
+  }
+  throw lastErr instanceof Error ? lastErr : new Error('CoinGecko range request failed')
+}

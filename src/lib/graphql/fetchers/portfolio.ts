@@ -1,7 +1,7 @@
 import { createLogger } from '@/lib/logger'
 import {
-  BALANCE_HISTORY_QUERY,
   BALANCE_BASELINE_BEFORE_WINDOW_QUERY,
+  BALANCE_HISTORY_QUERY,
   LEVERAGE_TOKEN_STATE_HISTORY_QUERY,
   USER_POSITIONS_QUERY,
 } from '../queries/portfolio'
