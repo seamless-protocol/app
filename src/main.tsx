@@ -1,8 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { RouterProvider } from '@tanstack/react-router'
 import '@rainbow-me/rainbowkit/styles.css'
-import { StrictMode } from 'react'
+import { type LazyExoticComponent, lazy, StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { WagmiProvider } from 'wagmi'
 import { validateEnv } from './lib/env'
@@ -89,6 +88,15 @@ console.log('[app] Booting Seamless front-end', {
   mode: import.meta.env['MODE'],
 })
 
+// Load React Query Devtools only in development builds and keep it out of prod bundles
+type DevtoolsComponent = typeof import('@tanstack/react-query-devtools')['ReactQueryDevtools']
+let ReactQueryDevtoolsLazy: LazyExoticComponent<DevtoolsComponent> | null = null
+if (import.meta.env.MODE === 'development') {
+  ReactQueryDevtoolsLazy = lazy(() =>
+    import('@tanstack/react-query-devtools').then((m) => ({ default: m.ReactQueryDevtools })),
+  )
+}
+
 // Bypass LiFi's wagmi sync in test mode so connectors stay intact
 function LiFiWrapper({
   config,
@@ -117,7 +125,11 @@ try {
               <LiFiWrapper config={config}>
                 <RainbowThemeWrapper>
                   <RouterProvider router={router} />
-                  <ReactQueryDevtools initialIsOpen={false} />
+                  {ReactQueryDevtoolsLazy ? (
+                    <Suspense fallback={null}>
+                      <ReactQueryDevtoolsLazy initialIsOpen={false} />
+                    </Suspense>
+                  ) : null}
                 </RainbowThemeWrapper>
               </LiFiWrapper>
             </QueryClientProvider>
