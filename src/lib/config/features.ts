@@ -19,8 +19,38 @@ export const features = {
   seamStaking: import.meta.env['VITE_DISABLE_SEAM_STAKING'] !== 'true',
 
   // Testing
-  testMode: import.meta.env['VITE_TEST_MODE'] === 'mock',
+  // Enable test mode when explicitly set via VITE_TEST_MODE=mock
+  // or when running E2E (VITE_E2E=1) to ensure MockConnector is available.
+  testMode: (() => {
+    const mode = import.meta.env['VITE_TEST_MODE']
+    const e2e = import.meta.env['VITE_E2E']
+    const isMock = mode === 'mock'
+    const isE2E = e2e === '1'
+    const enabled = isMock || isE2E
+    console.log(
+      '[features.ts] VITE_TEST_MODE:',
+      JSON.stringify(mode),
+      'VITE_E2E:',
+      JSON.stringify(e2e),
+      '=> testMode:',
+      enabled,
+    )
+    return enabled
+  })(),
 } as const
+
+// Expose for debugging in E2E tests (typed)
+declare global {
+  interface Window {
+    __FEATURES__?: typeof features
+    __VITE_TEST_MODE__?: string
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.__FEATURES__ = features
+  window.__VITE_TEST_MODE__ = import.meta.env['VITE_TEST_MODE']
+}
 
 /**
  * Check if a feature is enabled
