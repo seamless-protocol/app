@@ -1,5 +1,5 @@
 import { useSyncWagmiConfig } from '@lifi/wallet-management'
-import { useAvailableChains } from '@lifi/widget'
+import type { ExtendedChain } from '@lifi/widget'
 import type { Config } from 'wagmi'
 import { connectors } from '@/lib/config/wagmi.config'
 
@@ -9,10 +9,12 @@ interface LiFiSyncProps {
 }
 
 export function LiFiSync({ config, children }: LiFiSyncProps) {
-  const { chains } = useAvailableChains()
-  // Pass the existing connectors from the config instead of empty array
-  // This prevents LiFi from overriding RainbowKit's wallet configuration
-  useSyncWagmiConfig(config, connectors, chains)
+  // IMPORTANT: Restrict chains to our app's supported set
+  // Passing LiFi's available chains here causes the wallet UI to expose many networks.
+  // We intentionally sync only the chains defined in our wagmi config (Base + Mainnet).
+  // Cast to a mutable array to satisfy differing type sources across dependencies
+  const supportedChains = [...config.chains] as unknown as Array<ExtendedChain>
+  useSyncWagmiConfig(config, connectors, supportedChains)
 
   return <>{children}</>
 }
