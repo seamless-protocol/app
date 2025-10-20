@@ -41,7 +41,6 @@ function VaultsPage() {
           </div>
         </div>
 
-        {/* Vault Stats */}
         <VaultStatCards />
 
         {/* CTA Card */}

@@ -20,7 +20,20 @@ export interface LogContext {
 class BaseLogger {
   // Treat any non-production mode or Vitest environment as local console logging
   private isLocal = (() => {
-    const isProd = import.meta.env.MODE === 'production'
+    // Safely detect environment in both Vite/browser and Node (Playwright/tests)
+    let mode: string | undefined
+    try {
+      if (typeof import.meta !== 'undefined') {
+        const env = (import.meta as unknown as { env?: Record<string, unknown> }).env
+        mode = typeof env?.['MODE'] === 'string' ? (env['MODE'] as string) : undefined
+      }
+    } catch {
+      // ignore
+    }
+    if (!mode && typeof process !== 'undefined') {
+      mode = process.env['NODE_ENV'] || process.env['MODE']
+    }
+    const isProd = mode === 'production'
     const isVitest =
       typeof import.meta !== 'undefined' && Boolean((import.meta as { vitest?: unknown }).vitest)
     return !isProd || isVitest

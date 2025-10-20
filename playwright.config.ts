@@ -41,7 +41,7 @@ export default defineConfig({
   expect: {
     timeout: 2_500,
   },
-  reporter: 'html',
+  reporter: 'list',
 
   // Global setup to start Anvil before tests (skipped when using non-Anvil backend)
   globalSetup: './tests/e2e/global-setup.ts',
@@ -104,7 +104,8 @@ process.env['VITE_LIFI_API_KEY'] ?? process.env['LIFI_API_KEY']!,
       E2E_CHAIN_ID: String(DEFAULT_CHAIN_ID),
       ...(INCLUDE_TEST_TOKENS ? { VITE_INCLUDE_TEST_TOKENS: 'true' } : {}),
     },
-    reuseExistingServer: !process.env['CI'],
+    // Always start a fresh dev server so env is applied deterministically
+    reuseExistingServer: false,
     timeout: 120_000, // Give Vite + plugins extra time in CI
     stdout: 'pipe',
     stderr: 'pipe',
