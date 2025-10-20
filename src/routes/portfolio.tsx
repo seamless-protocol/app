@@ -27,9 +27,7 @@ import { features } from '@/lib/config/features'
 import { useGA } from '@/lib/config/ga4.config'
 import { formatNumber } from '@/lib/utils/formatting'
 
-export const Route = createFileRoute('/portfolio')({
-  component: PortfolioPage,
-})
+export const Route = createFileRoute('/portfolio')({ component: PortfolioPage })
 
 function PortfolioPage() {
   const { isConnected, address: userAddress } = useAccount()
@@ -471,12 +469,8 @@ function PortfolioPage() {
               data={performanceData.data}
               selectedTimeframe={performanceData.selectedTimeframe}
               onTimeframeChange={performanceData.setSelectedTimeframe}
+              isLoading={performanceData.isLoading}
             />
-            {performanceData.isLoading && (
-              <div className="absolute inset-0 bg-[var(--overlay-backdrop)] backdrop-blur-sm flex items-center justify-center rounded-xl">
-                <div className="text-secondary-foreground">Loading chart data...</div>
-              </div>
-            )}
           </div>
         </motion.section>
 

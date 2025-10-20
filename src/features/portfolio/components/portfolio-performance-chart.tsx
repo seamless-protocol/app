@@ -10,6 +10,7 @@ import {
 } from 'recharts'
 import { Button } from '../../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
+import { Skeleton } from '../../../components/ui/skeleton'
 
 export interface PortfolioDataPoint {
   date: string
@@ -26,6 +27,7 @@ export interface PortfolioPerformanceChartProps {
   className?: string
   title?: string
   height?: number
+  isLoading?: boolean
   gradientColors?: {
     start: string
     end: string
@@ -44,6 +46,7 @@ export function PortfolioPerformanceChart({
   className,
   title = 'Portfolio Performance',
   height = 256,
+  isLoading = false,
   gradientColors = { start: '#A16CFE', end: '#A16CFE' },
   strokeColor = '#A16CFE',
   yAxisLabel = 'Portfolio Value ($)',
@@ -53,39 +56,13 @@ export function PortfolioPerformanceChart({
   const gradientId = useId()
 
   // Default formatters
-  const defaultYAxisFormatter = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}K`
-    } else if (value >= 1) {
-      return value.toFixed(2)
-    } else if (value >= 0.01) {
-      return value.toFixed(4)
-    } else if (value >= 0.001) {
-      return value.toFixed(6)
-    } else if (value > 0) {
-      return value.toFixed(8)
-    }
-    return '0'
-  }
+  const defaultYAxisFormatter = (value: number) =>
+    value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-  const defaultTooltipFormatter = (value: number | string, _name?: string): [string, string] => {
-    const numValue = Number(value)
-    if (numValue >= 1) {
-      return [
-        `$${numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`,
-        'Portfolio Value',
-      ]
-    } else if (numValue >= 0.01) {
-      return [`$${numValue.toFixed(6)}`, 'Portfolio Value']
-    } else if (numValue >= 0.001) {
-      return [`$${numValue.toFixed(8)}`, 'Portfolio Value']
-    } else if (numValue > 0) {
-      return [`$${numValue.toFixed(10)}`, 'Portfolio Value']
-    }
-    return ['$0', 'Portfolio Value']
-  }
+  const defaultTooltipFormatter = (value: number | string): [string, string] => [
+    `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    'Portfolio Value',
+  ]
 
   const formatCurrency = yAxisFormatter || defaultYAxisFormatter
   const formatTooltipValue = tooltipFormatter || defaultTooltipFormatter
@@ -115,7 +92,9 @@ export function PortfolioPerformanceChart({
       </CardHeader>
       <CardContent className="pt-0 px-6 pb-6">
         <div style={{ height: `${height}px` }} className="w-full">
-          {hasData ? (
+          {isLoading ? (
+            <Skeleton className="w-full h-full rounded" />
+          ) : hasData ? (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} style={{ cursor: 'default' }}>
                 <defs>
@@ -125,24 +104,20 @@ export function PortfolioPerformanceChart({
                   </linearGradient>
                 </defs>
                 <XAxis
-                  dataKey="date"
+                  dataKey="timestamp"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'var(--text-secondary)', fontSize: 12, dy: 8 }}
-                  tickFormatter={(dateString: string) => {
-                    const date = new Date(dateString)
-                    // Handle different timeframes with appropriate formatting
-                    if (selectedTimeframe === '1Y') {
-                      return date.toLocaleDateString('en-US', {
-                        month: 'short',
-                        year: 'numeric',
-                      })
-                    } else {
-                      return date.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })
-                    }
+                  tickFormatter={(ts: number) => {
+                    const date = new Date(ts * 1000)
+                    return date.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      timeZone: 'UTC',
+                    })
                   }}
                 />
                 <YAxis
@@ -170,6 +145,17 @@ export function PortfolioPerformanceChart({
                     color: 'var(--text-primary)',
                   }}
                   formatter={formatTooltipValue}
+                  labelFormatter={(label: string | number) => {
+                    const ts = Number(label)
+                    if (!Number.isFinite(ts)) return ''
+                    const date = new Date(ts * 1000)
+                    return date.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      timeZone: 'UTC',
+                    })
+                  }}
                 />
                 <Area
                   type="monotone"

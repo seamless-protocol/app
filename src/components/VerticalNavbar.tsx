@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { ChevronRight, Github, Menu } from 'lucide-react'
 import type * as React from 'react'
 import { useId, useRef, useState } from 'react'
+import { useAccount } from 'wagmi'
+import { prefetchPortfolioWarmup } from '@/features/portfolio/hooks/usePortfolioDataFetcher'
 import { prefetchMorphoVaultsMaxAPY } from '@/features/vaults/hooks/useMorphoVaultsAPY'
 import { prefetchMorphoVaultsStats } from '@/features/vaults/hooks/useMorphoVaultsStats'
 import { getRepoCommitUrl, getShortCommitHash } from '@/lib/config/buildInfo'
@@ -83,10 +85,12 @@ function NavigationItem({
   item,
   isActive,
   onClick,
+  userAddress,
 }: {
   item: NavigationItem
   isActive: boolean
   onClick: (options?: { externalUrl?: string }) => void
+  userAddress?: string | null | undefined
 }) {
   const Icon = item.icon
   const queryClient = useQueryClient()
@@ -109,6 +113,13 @@ function NavigationItem({
       // Fire-and-forget; errors are fine to ignore for prefetching
       prefetchMorphoVaultsMaxAPY(queryClient).catch(() => {})
       prefetchMorphoVaultsStats(queryClient).catch(() => {})
+    }
+    // Prefetch portfolio cache on Portfolio hover
+    if (item.id?.toLowerCase?.() === 'portfolio' && userAddress) {
+      prefetchedRef.current = true
+      prefetchPortfolioWarmup(queryClient, { address: userAddress, timeframe: '30D' }).catch(
+        () => {},
+      )
     }
   }
 
@@ -229,6 +240,7 @@ function NavbarContent({
   platformTVL,
   className,
   isMobile = false,
+  userAddress,
 }: {
   currentPage: string
   onPageChange: (pageId: string, options?: { externalUrl?: string }) => void
@@ -237,6 +249,7 @@ function NavbarContent({
   platformTVL: React.ReactNode
   className?: string
   isMobile?: boolean
+  userAddress?: string | null | undefined
 }) {
   return (
     <motion.nav
@@ -294,6 +307,7 @@ function NavbarContent({
               item={item}
               isActive={currentPage === item.id}
               onClick={(options) => onPageChange(item.id, options)}
+              userAddress={userAddress}
             />
           ))}
         </div>
@@ -379,6 +393,7 @@ export function VerticalNavbar({
   platformTVL,
   isMobile = false,
 }: NavbarProps) {
+  const { address } = useAccount()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const mobileNavDescriptionId = useId()
 
@@ -422,6 +437,7 @@ export function VerticalNavbar({
                 communitySection={communitySection}
                 platformTVL={platformTVL}
                 isMobile={true}
+                userAddress={address}
               />
             </div>
           </SheetContent>
@@ -439,6 +455,7 @@ export function VerticalNavbar({
       communitySection={communitySection}
       platformTVL={platformTVL}
       className="h-screen"
+      userAddress={address}
     />
   )
 }

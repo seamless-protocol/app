@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import {
   BarChart3,
@@ -10,6 +11,8 @@ import {
   Vote,
 } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
+import { useAccount } from 'wagmi'
+import { usePortfolioPrefetch } from '@/features/portfolio/hooks/usePrefetchPortfolio'
 import { features } from '@/lib/config/features'
 import { useGA } from '@/lib/config/ga4.config'
 import { useDeFiLlamaProtocolTVL } from '@/lib/defillama/useProtocolTVL'
@@ -123,6 +126,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const analytics = useGA()
+  useQueryClient() // initialize to ensure QueryClientProvider exists
+  const { address, isConnected } = useAccount()
   const {
     data: defillamaData,
     isLoading: isProtocolTvlLoading,
@@ -137,6 +142,13 @@ export function MainLayout({ children }: MainLayoutProps) {
     const fromPage = document.referrer ? new URL(document.referrer).pathname : 'direct'
     analytics.navigation(fromPage, currentPath)
   }, [location.pathname, analytics])
+
+  // Warm portfolio cache globally on wallet connect (30D default)
+  usePortfolioPrefetch({
+    address,
+    enabled: isConnected,
+    timeframe: '30D',
+  })
 
   const platformTVL = useMemo(() => {
     if (isProtocolTvlLoading) {

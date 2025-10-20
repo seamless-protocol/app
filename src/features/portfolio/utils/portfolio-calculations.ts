@@ -1,22 +1,65 @@
 import { formatUnits } from 'viem'
-import type { LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
+import type { BalanceChange, LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
 import type { PortfolioDataPoint } from '../components/portfolio-performance-chart'
 
 /**
- * Calculate portfolio value at a specific timestamp
+ * Get the balance of a token at a specific timestamp from balance history
+ * Returns the most recent balance change before or at the target timestamp
+ */
+function _getBalanceAtTimestamp(
+  tokenAddress: string,
+  timestamp: number,
+  balanceChanges: Array<BalanceChange>,
+): bigint {
+  // Filter balance changes for this token
+  const tokenBalanceChanges = balanceChanges.filter(
+    (change) => change.position.leverageToken.id.toLowerCase() === tokenAddress.toLowerCase(),
+  )
+
+  if (tokenBalanceChanges.length === 0) {
+    return 0n
+  }
+
+  // Find the most recent balance change before or at the target timestamp
+  // Balance changes are already sorted by timestamp (ascending) from the query
+  let mostRecentBalance = 0n
+
+  for (const change of tokenBalanceChanges) {
+    // Subgraph timestamps are in microseconds, convert to seconds
+    const changeTimestamp = Number(change.timestamp) / 1000000
+
+    // If this change is after the target timestamp, we've gone too far
+    if (changeTimestamp > timestamp) {
+      break
+    }
+
+    // This change is before or at the target timestamp, use it
+    mostRecentBalance = BigInt(change.amount)
+  }
+
+  return mostRecentBalance
+}
+
+/**
+ * Calculate portfolio value at a specific timestamp using historical balances
  */
 function _calculatePortfolioValueAtTimestamp(
   timestamp: number,
   userPositions: Array<UserPosition>,
   leverageTokenStates: Map<string, Array<LeverageTokenState>>,
-  usdPrices: Record<string, number>,
+  balanceChanges: Array<BalanceChange>,
+  getUsdPriceAt: (chainId: number, address: string, tsSec: number) => number | undefined,
+  collateralDecimalsByLeverageToken: Record<string, number>,
+  chainIdByLeverageToken: Record<string, number>,
+  spotUsdPrices?: Record<string, number>,
 ): number {
   let totalValue = 0
 
   for (const position of userPositions) {
-    const balance = BigInt(position.balance)
+    // Get the historical balance at this timestamp
+    const balance = _getBalanceAtTimestamp(position.leverageToken.id, timestamp, balanceChanges)
 
-    // Skip zero balance positions (redeemed tokens)
+    // Skip zero balance positions
     if (balance === 0n) {
       continue
     }
@@ -32,21 +75,26 @@ function _calculatePortfolioValueAtTimestamp(
       continue
     }
 
-    // Calculate position value: balance * equity per token (using collateral asset like old app)
+    // Calculate position value: balance * equity per token (using collateral asset)
     const equityPerToken = BigInt(closestState.equityPerTokenInCollateral)
     const positionValue = (balance * equityPerToken) / BigInt(1e18)
 
-    // The positionValue is in collateral asset units, convert from wei to collateral asset
-    // Use 18 decimals as fallback since we don't have access to token config here
-    const positionValueInCollateralAsset = Number(formatUnits(positionValue, 18))
+    // Convert to collateral asset units using actual decimals
+    const leverageTokenAddress = position.leverageToken.id.toLowerCase()
+    const collateralDecimals = collateralDecimalsByLeverageToken[leverageTokenAddress] ?? 18
+    const positionValueInCollateralAsset = Number(formatUnits(positionValue, collateralDecimals))
 
-    // Get collateral asset price in USD from CoinGecko (like old app)
+    // Get collateral asset price in USD
     const collateralAssetAddress =
       position.leverageToken.lendingAdapter.collateralAsset.toLowerCase()
-    const collateralAssetPriceUsd = usdPrices[collateralAssetAddress]
+    const chainId = chainIdByLeverageToken[leverageTokenAddress] ?? 1
+    const historicalUsd = getUsdPriceAt(chainId, collateralAssetAddress, timestamp)
+    const collateralAssetPriceUsd =
+      historicalUsd ?? (spotUsdPrices ? spotUsdPrices[collateralAssetAddress] : undefined)
     const positionValueInUSD = collateralAssetPriceUsd
       ? positionValueInCollateralAsset * collateralAssetPriceUsd
       : 0
+
     totalValue += positionValueInUSD
   }
 
@@ -75,11 +123,11 @@ function _findClosestStateByTimestamp(
     const state = sortedStates[mid]
     if (!state) break
 
-    const rawTimestamp = Number(state.timestamp)
-    const stateTimestamp = rawTimestamp > 4102444800 ? rawTimestamp / 1000000 : rawTimestamp
+    // Subgraph timestamps are in microseconds, convert to seconds
+    const stateTimestamp = Number(state.timestamp) / 1000000
 
     // Validate timestamp
-    if (Number.isNaN(stateTimestamp) || stateTimestamp <= 0 || stateTimestamp > 4102444800) {
+    if (Number.isNaN(stateTimestamp) || stateTimestamp <= 0) {
       continue // Skip invalid timestamps
     }
 
@@ -182,260 +230,118 @@ export function calculatePortfolioMetrics(
 }
 
 /**
- * Generate portfolio performance data points from historical data
+ * Generate portfolio performance data points from historical data with balance history
+ */
+/**
+ * Pure accessor for historical USD prices.
+ *
+ * - Implementations must perform an in-memory lookup (no network) for a given
+ *   `(chainId, collateralAddress, timestampSec)` and return the nearest-prior USD.
+ * - Return `undefined` when no historical price is available (the caller may fall back to spot).
+ */
+export type GetUsdPriceAt = (chainId: number, address: string, tsSec: number) => number | undefined
+
+/**
+ * Generate portfolio performance datapoints on a regular time grid for the selected timeframe.
+ *
+ * Inputs
+ * - `userPositions`, `leverageTokenStates`, `balanceChanges`: subgraph-derived data (with baseline
+ *   events included in `balanceChanges` for timestamp_lt).
+ * - `getUsdPriceAt`: nearest-prior USD accessor (pure; no network).
+ * - `collateralDecimalsByLeverageToken`: map of leverage token address → collateral decimals.
+ * - `chainIdByLeverageToken`: map of leverage token address → chainId (for historical pricing lookup).
+ * - `spotUsdPrices`: optional spot USD map used only as a fallback when historical USD is missing.
  */
 export function generatePortfolioPerformanceData(
   userPositions: Array<UserPosition>,
   leverageTokenStates: Map<string, Array<LeverageTokenState>>,
-  timeframe: '7D' | '30D' | '90D' | '1Y',
-  usdPrices: Record<string, number>,
+  balanceChanges: Array<BalanceChange>,
+  timeframe: Timeframe,
+  getUsdPriceAt: GetUsdPriceAt,
+  collateralDecimalsByLeverageToken: Record<string, number>,
+  chainIdByLeverageToken: Record<string, number>,
+  spotUsdPrices?: Record<string, number>,
 ): Array<PortfolioDataPoint> {
-  try {
-    if (userPositions.length === 0 || leverageTokenStates.size === 0) {
-      return []
-    }
-
-    // Get all unique timestamps from all leverage tokens
-    const allTimestamps = new Set<number>()
-
-    for (const [, states] of leverageTokenStates.entries()) {
-      for (const state of states) {
-        try {
-          // Subgraph timestamps are typically in seconds, not microseconds
-          // Let's check if we need to convert by looking at the timestamp value
-          const rawTimestamp = Number(state.timestamp)
-
-          // If timestamp is very large (> year 2100), it's likely in microseconds
-          // If timestamp is reasonable (< year 2100), it's likely in seconds
-          const timestamp = rawTimestamp > 4102444800 ? rawTimestamp / 1000000 : rawTimestamp
-
-          // Validate the timestamp is reasonable (not NaN, not too far in past/future)
-          if (!Number.isNaN(timestamp) && timestamp > 0 && timestamp < 4102444800) {
-            allTimestamps.add(timestamp)
-          } else {
-          }
-        } catch {}
-      }
-    }
-
-    // Convert to array and sort
-    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b)
-
-    if (sortedTimestamps.length === 0) {
-      return []
-    }
-
-    // Filter timestamps based on timeframe
-    const now = Date.now() / 1000 // Current timestamp in seconds
-    const timeframeSeconds = _getTimeframeSeconds(timeframe)
-    const startTime = now - timeframeSeconds
-
-    const filteredTimestamps = sortedTimestamps.filter((ts) => ts >= startTime)
-
-    if (filteredTimestamps.length === 0) {
-      return []
-    }
-
-    // For 7D timeframe, we want one point per day for the last 7 days
-    // For other timeframes, we can sample more intelligently
-    let sampledTimestamps: Array<number>
-
-    if (timeframe === '7D') {
-      // For 7D, get the last 7 days of data (one per day)
-      sampledTimestamps = filteredTimestamps.slice(-7)
-    } else {
-      // For other timeframes, use the sampling logic
-      sampledTimestamps = _sampleTimestampsForTimeframe(filteredTimestamps, timeframe)
-    }
-
-    // Generate data points
-    const dataPoints: Array<PortfolioDataPoint> = []
-
-    for (const timestamp of sampledTimestamps) {
-      const portfolioValue = _calculatePortfolioValueAtTimestamp(
-        timestamp,
-        userPositions,
-        leverageTokenStates,
-        usdPrices,
-      )
-
-      if (portfolioValue > 0) {
-        const formattedDate = _formatTimestampForChart(timestamp, timeframe)
-
-        // Check if we already have a data point for this formatted date
-        const existingDataPoint = dataPoints.find((dp) => dp.date === formattedDate)
-        if (existingDataPoint) {
-          // Keep the later timestamp
-          if (existingDataPoint.timestamp && timestamp > existingDataPoint.timestamp) {
-            // Replace the existing data point
-            const index = dataPoints.indexOf(existingDataPoint)
-            dataPoints[index] = {
-              date: formattedDate,
-              value: portfolioValue,
-              earnings: 0,
-              timestamp,
-            }
-          }
-          // If the new timestamp is earlier, skip it
-        } else {
-          dataPoints.push({
-            date: formattedDate,
-            value: portfolioValue,
-            earnings: 0, // Will be calculated separately if needed
-            timestamp, // Store original timestamp for sorting
-          })
-        }
-      }
-    }
-
-    // Sort by original timestamp ascending for chart display
-    return dataPoints.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
-  } catch (error) {
-    console.error('❌ [Portfolio Calculations] Error generating performance data:', error)
+  if (userPositions.length === 0 || leverageTokenStates.size === 0) {
     return []
   }
+
+  const nowSec = Math.floor(Date.now() / 1000)
+  const timeline = _buildTimeline(timeframe, nowSec)
+  if (timeline.length === 0) return []
+
+  return timeline.map((ts) =>
+    _toPortfolioDataPoint(
+      ts,
+      userPositions,
+      leverageTokenStates,
+      balanceChanges,
+      getUsdPriceAt,
+      collateralDecimalsByLeverageToken,
+      chainIdByLeverageToken,
+      spotUsdPrices,
+    ),
+  )
 }
 
 /**
- * Sample timestamps to get evenly distributed data points for chart display
+ * Build a regular, ascending timeline for the selected timeframe.
  */
-function _sampleTimestampsForTimeframe(
-  timestamps: Array<number>,
-  timeframe: '7D' | '30D' | '90D' | '1Y',
-): Array<number> {
-  if (timestamps.length <= 10) {
-    // If we have 10 or fewer timestamps, return all of them
-    return timestamps
+function _buildTimeline(timeframe: Timeframe, nowSec: number): Array<number> {
+  const startSec = nowSec - _getTimeframeSeconds(timeframe)
+  const stepSec = _getTimeStepSeconds(timeframe)
+
+  const out: Array<number> = [startSec]
+  for (let t = startSec + stepSec; t < nowSec; t += stepSec) out.push(t)
+  out.push(nowSec)
+  return out
+}
+
+/**
+ * Compute the portfolio value for a given timestamp and wrap into a data point.
+ */
+function _toPortfolioDataPoint(
+  timestamp: number,
+  userPositions: Array<UserPosition>,
+  leverageTokenStates: Map<string, Array<LeverageTokenState>>,
+  balanceChanges: Array<BalanceChange>,
+  getUsdPriceAt: GetUsdPriceAt,
+  collateralDecimalsByLeverageToken: Record<string, number>,
+  chainIdByLeverageToken: Record<string, number>,
+  spotUsdPrices?: Record<string, number>,
+): PortfolioDataPoint {
+  const value = _calculatePortfolioValueAtTimestamp(
+    timestamp,
+    userPositions,
+    leverageTokenStates,
+    balanceChanges,
+    getUsdPriceAt,
+    collateralDecimalsByLeverageToken,
+    chainIdByLeverageToken,
+    spotUsdPrices,
+  )
+
+  return {
+    date: new Date(timestamp * 1000).toISOString(),
+    value,
+    earnings: 0,
+    timestamp,
   }
-
-  // Determine sampling interval based on timeframe
-  let maxPoints: number
-  switch (timeframe) {
-    case '7D':
-      maxPoints = 7 // One point per day
-      break
-    case '30D':
-      maxPoints = 15 // Allow more points for 30D to show more data
-      break
-    case '90D':
-      maxPoints = 20 // Allow more points for 90D
-      break
-    case '1Y':
-      maxPoints = 24 // Allow more points for 1Y (2 per month)
-      break
-    default:
-      maxPoints = 15
-  }
-
-  if (timestamps.length <= maxPoints) {
-    return timestamps
-  }
-
-  // Group timestamps by day to avoid multiple points on the same day
-  const timestampsByDay = new Map<string, number>()
-
-  for (const timestamp of timestamps) {
-    const date = new Date(timestamp * 1000)
-
-    // Use UTC date to avoid timezone issues
-    const year = date.getUTCFullYear()
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(date.getUTCDate()).padStart(2, '0')
-    const dayKey = `${year}-${month}-${day}` // YYYY-MM-DD format in UTC
-
-    // Daily grouping logic - keeps latest timestamp for each day
-
-    // Keep the latest timestamp for each day
-    const existingTimestamp = timestampsByDay.get(dayKey)
-    if (!timestampsByDay.has(dayKey) || (existingTimestamp && existingTimestamp < timestamp)) {
-      timestampsByDay.set(dayKey, timestamp)
-    }
-  }
-
-  const uniqueDailyTimestamps = Array.from(timestampsByDay.values()).sort((a, b) => a - b)
-
-  // If we have a reasonable number of unique daily timestamps, return all of them
-  // This ensures we don't lose any data points unnecessarily
-  if (uniqueDailyTimestamps.length <= maxPoints) {
-    return uniqueDailyTimestamps
-  }
-
-  // Sample evenly distributed timestamps from the unique daily ones
-  const step = Math.floor(uniqueDailyTimestamps.length / maxPoints)
-  const sampled: Array<number> = []
-
-  // Always include the first timestamp
-  const firstTimestamp = uniqueDailyTimestamps[0]
-  if (firstTimestamp !== undefined) {
-    sampled.push(firstTimestamp)
-  }
-
-  // Sample evenly distributed points
-  for (let i = step; i < uniqueDailyTimestamps.length - 1; i += step) {
-    const timestamp = uniqueDailyTimestamps[i]
-    if (timestamp !== undefined) {
-      sampled.push(timestamp)
-    }
-    if (sampled.length >= maxPoints - 1) break // Leave room for the last timestamp
-  }
-
-  // Always include the last timestamp
-  const lastTimestamp = uniqueDailyTimestamps[uniqueDailyTimestamps.length - 1]
-  if (lastTimestamp !== undefined && sampled[sampled.length - 1] !== lastTimestamp) {
-    sampled.push(lastTimestamp)
-  }
-
-  return sampled
 }
 
 /**
  * Get timeframe in seconds
  */
-function _getTimeframeSeconds(timeframe: '7D' | '30D' | '90D' | '1Y'): number {
-  switch (timeframe) {
-    case '7D':
-      return 7 * 24 * 60 * 60
-    case '30D':
-      return 30 * 24 * 60 * 60
-    case '90D':
-      return 90 * 24 * 60 * 60
-    case '1Y':
-      return 365 * 24 * 60 * 60
-    default:
-      return 30 * 24 * 60 * 60
-  }
+function _getTimeframeSeconds(timeframe: Timeframe): number {
+  return TIMEFRAME_SECONDS[timeframe] ?? TIMEFRAME_SECONDS['30D']
 }
 
 /**
- * Format timestamp for chart display
+ * Choose a reasonable sampling interval for the chart timeline
+ * to keep the number of points small and rendering snappy.
  */
-function _formatTimestampForChart(
-  timestamp: number,
-  timeframe: '7D' | '30D' | '90D' | '1Y',
-): string {
-  const date = new Date(timestamp * 1000)
-
-  // Ensure the date is valid
-  if (Number.isNaN(date.getTime())) {
-    return 'Invalid Date'
-  }
-
-  // Use UTC date formatting to avoid timezone issues
-  const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })
-  const day = date.getUTCDate()
-  const year = date.getUTCFullYear()
-
-  switch (timeframe) {
-    case '7D':
-    case '30D':
-      return `${month} ${day}`
-    case '90D':
-      return `${month} ${day}`
-    case '1Y':
-      return `${month} ${year}`
-    default:
-      return `${month} ${day}`
-  }
+function _getTimeStepSeconds(timeframe: Timeframe): number {
+  return TIMEFRAME_STEP_SECONDS[timeframe] ?? TIMEFRAME_STEP_SECONDS['30D']
 }
 
 /**
@@ -460,4 +366,19 @@ export function groupStatesByToken(
   }
 
   return grouped
+}
+type Timeframe = '7D' | '30D' | '90D' | '1Y'
+
+const TIMEFRAME_SECONDS: Record<Timeframe, number> = {
+  '7D': 7 * 24 * 60 * 60,
+  '30D': 30 * 24 * 60 * 60,
+  '90D': 90 * 24 * 60 * 60,
+  '1Y': 365 * 24 * 60 * 60,
+}
+
+const TIMEFRAME_STEP_SECONDS: Record<Timeframe, number> = {
+  '7D': 24 * 60 * 60, // 1 day
+  '30D': 24 * 60 * 60, // 1 day
+  '90D': 24 * 60 * 60, // 1 day
+  '1Y': 7 * 24 * 60 * 60, // 1 week
 }
