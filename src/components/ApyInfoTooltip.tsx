@@ -33,15 +33,20 @@ export function ApyInfoTooltip({
   sideOffset = 8,
   stopPropagation = true,
 }: ApyInfoTooltipProps) {
-  const sizeClass = iconSize === 'lg' ? 'h-5 w-5' : iconSize === 'md' ? 'h-4 w-4' : 'h-3 w-3'
-
+  // Use responsive classes so mobile can be larger while desktop stays small
+  const iconClass =
+    iconSize === 'lg'
+      ? 'h-5 w-5 sm:h-3 sm:w-3'
+      : iconSize === 'md'
+        ? 'h-4 w-4 sm:h-3 sm:w-3'
+        : 'h-3 w-3'
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <button
           type="button"
           className={
-            'p-1 -m-1 rounded text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)] focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--divider-line)] ' +
+            'rounded text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)] focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--divider-line)] ' +
             (buttonClassName ?? '')
           }
           aria-label="APY details"
@@ -49,7 +54,7 @@ export function ApyInfoTooltip({
             if (stopPropagation) e.stopPropagation()
           }}
         >
-          <Info className={sizeClass} />
+          <Info className={iconClass} aria-hidden="true" />
         </button>
       </TooltipTrigger>
       <TooltipContent
