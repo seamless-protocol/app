@@ -7,11 +7,13 @@ import { toast } from 'sonner'
 import { useAccount, useConnectorClient } from 'wagmi'
 import { useTheme } from '@/components/theme-provider'
 import { useIdlePrefetch } from '@/hooks/useIdlePrefetch'
+import { Skeleton } from './ui/skeleton'
 
 export function LiFiWidget() {
   const { isConnected, address } = useAccount()
   const { data: client } = useConnectorClient()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isLoadingWidget, setIsLoadingWidget] = useState(false)
   const { theme } = useTheme()
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
@@ -34,15 +36,21 @@ export function LiFiWidget() {
     500,
   )
 
-  // Handle click when wallet is not connected
-  const handleSwapClick = () => {
+  // Handle click; preload LiFi chunk before opening the modal to avoid large fallback flash
+  const handleSwapClick = async () => {
     if (!isConnected || !client || !address) {
       toast.info('Please connect your wallet first', {
         description: 'You need to connect a wallet to use swap and bridge features',
       })
       return
     }
-    setIsModalOpen(true)
+    try {
+      setIsLoadingWidget(true)
+      await import('@lifi/widget')
+      setIsModalOpen(true)
+    } finally {
+      setIsLoadingWidget(false)
+    }
   }
 
   // LI.FI Widget configuration with custom theme matching app design
@@ -142,12 +150,16 @@ export function LiFiWidget() {
           onFocus={() => {
             import('@lifi/widget').catch(() => {})
           }}
+          disabled={isLoadingWidget}
+          aria-busy={isLoadingWidget}
           className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 has-[>svg]:px-2.5 text-muted-foreground hover:text-foreground transition-colors px-3 h-9 sm:h-10 border border-border hover:border-brand-purple bg-card hover:bg-accent"
           aria-label="Open swap and bridge interface (Alt+S)"
           title="Swap & Bridge"
         >
           <ArrowUpDown className="lucide lucide-arrow-up-down h-4 w-4 sm:mr-2" aria-hidden="true" />
-          <span className="hidden sm:inline font-medium">Swap/Bridge</span>
+          <span className="hidden sm:inline font-medium">
+            {isLoadingWidget ? 'Loading…' : 'Swap/Bridge'}
+          </span>
         </button>
       </motion.div>
     )
@@ -171,12 +183,16 @@ export function LiFiWidget() {
           onFocus={() => {
             import('@lifi/widget').catch(() => {})
           }}
+          disabled={isLoadingWidget}
+          aria-busy={isLoadingWidget}
           className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-md gap-1.5 has-[>svg]:px-2.5 text-muted-foreground hover:text-foreground transition-colors px-3 h-9 sm:h-10 border border-border hover:border-brand-purple bg-card hover:bg-accent"
           aria-label="Open swap and bridge interface (Alt+S)"
           title="Swap & Bridge"
         >
           <ArrowUpDown className="lucide lucide-arrow-up-down h-4 w-4 sm:mr-2" aria-hidden="true" />
-          <span className="hidden sm:inline font-medium">Swap/Bridge</span>
+          <span className="hidden sm:inline font-medium">
+            {isLoadingWidget ? 'Loading…' : 'Swap/Bridge'}
+          </span>
         </button>
       </motion.div>
 
@@ -210,7 +226,20 @@ export function LiFiWidget() {
 
               {/* Widget Container */}
               <div className="lifi-widget">
-                <Suspense fallback={<div className="h-[600px] w-[400px] sm:w-[520px]" />}>
+                <Suspense
+                  fallback={
+                    <div className="h-[520px] w-[360px] sm:w-[440px] flex items-center justify-center">
+                      <div className="w-full px-2">
+                        <div className="flex flex-col gap-3">
+                          <Skeleton className="h-[120px] w-full rounded-lg" />
+                          <Skeleton className="h-[120px] w-full rounded-lg" />
+                          <Skeleton className="h-[120px] w-full rounded-lg" />
+                        </div>
+                      </div>
+                      <span className="sr-only">Loading swap widget…</span>
+                    </div>
+                  }
+                >
                   <LiFiWidgetLazy integrator="seamless-protocol" config={widgetConfig} />
                 </Suspense>
               </div>
