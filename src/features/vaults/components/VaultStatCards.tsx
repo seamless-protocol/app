@@ -3,6 +3,7 @@ import { GauntletLogo } from '@/components/icons/logos'
 import { MorphoLogo } from '@/components/icons/logos/morpho-logo'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useMorphoVaultsMaxAPY } from '@/features/vaults/hooks/useMorphoVaultsAPY'
 import { useMorphoVaultsStats } from '@/features/vaults/hooks/useMorphoVaultsStats'
 import { cn } from '@/lib/utils/cn'
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting'
@@ -12,7 +13,8 @@ type VaultStatCardsProps = {
 }
 
 export function VaultStatCards({ className }: VaultStatCardsProps) {
-  const { tvlUsd: hookTvlUsd, maxNetApy, isLoading, isError } = useMorphoVaultsStats()
+  const { tvlUsd: hookTvlUsd, isLoading, isError } = useMorphoVaultsStats()
+  const { maxNetApy, isLoading: apyLoading } = useMorphoVaultsMaxAPY()
   const vaultsTvlUsd = hookTvlUsd
   const maxApy = typeof maxNetApy === 'number' ? maxNetApy : undefined
 
@@ -92,7 +94,7 @@ export function VaultStatCards({ className }: VaultStatCardsProps) {
 
               <div className="flex items-baseline justify-center gap-1">
                 <span className="text-4xl font-bold text-white tracking-tight">
-                  {typeof maxApy === 'number'
+                  {typeof maxApy === 'number' && !apyLoading
                     ? formatPercentage(maxApy, { decimals: 1, showSign: false })
                     : '—'}
                 </span>

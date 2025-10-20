@@ -2,7 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import type React from 'react'
 import { describe, expect, it } from 'vitest'
+import { WagmiProvider } from 'wagmi'
 import { useMorphoVaultsStats } from '@/features/vaults/hooks/useMorphoVaultsStats'
+import { config } from '@/lib/config/wagmi.config'
 
 function createWrapper() {
   const client = new QueryClient({
@@ -10,7 +12,9 @@ function createWrapper() {
   })
   // eslint-disable-next-line react/display-name
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    </WagmiProvider>
   )
 }
 

@@ -3,7 +3,8 @@ import { motion } from 'framer-motion'
 import { ChevronRight, Github, Menu } from 'lucide-react'
 import type * as React from 'react'
 import { useId, useRef, useState } from 'react'
-import { prefetchLeverageTokensTVL } from '@/features/leverage-tokens/hooks/useLeverageTokensTVLSubgraph'
+import { prefetchMorphoVaultsMaxAPY } from '@/features/vaults/hooks/useMorphoVaultsAPY'
+import { prefetchMorphoVaultsStats } from '@/features/vaults/hooks/useMorphoVaultsStats'
 import { getRepoCommitUrl, getShortCommitHash } from '@/lib/config/buildInfo'
 import { SeamlessLogo } from './icons'
 import { Badge } from './ui/badge'
@@ -102,11 +103,12 @@ function NavigationItem({
 
   const handleMouseEnter = () => {
     if (prefetchedRef.current) return
-    // Prefetch leverage token TVL when hovering the Vaults tab
+    // Prefetch Vaults stats/APY when hovering the Vaults tab
     if (item.id?.toLowerCase?.() === 'vaults') {
       prefetchedRef.current = true
       // Fire-and-forget; errors are fine to ignore for prefetching
-      prefetchLeverageTokensTVL(queryClient).catch(() => {})
+      prefetchMorphoVaultsMaxAPY(queryClient).catch(() => {})
+      prefetchMorphoVaultsStats(queryClient).catch(() => {})
     }
   }
 

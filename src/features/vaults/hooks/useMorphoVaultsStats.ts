@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { type QueryClient, useQuery } from '@tanstack/react-query'
 import { REFRESH_INTERVAL, STALE_TIME } from '@/features/vaults/utils/constants'
 import { vaultKeys } from '@/features/vaults/utils/queryKeys'
 import { getSeamlessVaultsTVL } from '@/lib/defillama/fetchSeamlessVaultsTVL'
@@ -21,11 +21,19 @@ export function useMorphoVaultsStats(opts?: { staleTimeMs?: number; refetchInter
     retryDelay: 2000,
     queryFn: async () => {
       const tvlUsd = await getSeamlessVaultsTVL()
-      return { tvlUsd, maxNetApy: undefined as number | undefined }
+      return { tvlUsd }
     },
   })
 
-  const tvlUsd = stats?.tvlUsd
-  const maxNetApy = stats?.maxNetApy
-  return { tvlUsd, maxNetApy, isLoading, isError }
+  return { tvlUsd: stats?.tvlUsd, isLoading, isError }
+}
+
+export async function prefetchMorphoVaultsStats(queryClient: QueryClient) {
+  await queryClient.prefetchQuery({
+    queryKey: vaultKeys.stats(),
+    queryFn: async () => {
+      const tvlUsd = await getSeamlessVaultsTVL()
+      return { tvlUsd }
+    },
+  })
 }
