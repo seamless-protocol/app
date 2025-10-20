@@ -1,8 +1,7 @@
 import { motion } from 'framer-motion'
 import { Zap } from 'lucide-react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
-import { ApyInfoTooltip } from '@/components/ApyInfoTooltip'
-import { formatAPY, formatPercentage } from '@/lib/utils/formatting'
+import { formatAPY, formatPercentage, formatPoints } from '@/lib/utils/formatting'
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Card, CardContent } from '../../../components/ui/card'
 import { Skeleton } from '../../../components/ui/skeleton'
@@ -59,68 +58,115 @@ export function FeaturedLeverageToken({
 
           {/* Stats Grid */}
           <div className="space-y-2">
-            {/* APY Row - show skeleton while loading; hide after load if zero */}
-            {(isApyLoading || isApyError || (apyData && apyData.totalAPY !== 0)) && (
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
-                  <span>APY</span>
-                  <ApyInfoTooltip
-                    token={token}
-                    {...(apyData && { apyData })}
-                    isLoading={isApyLoading}
-                    isError={isApyError}
-                    iconSize="sm"
-                    side="top"
-                    align="end"
-                  />
-                </div>
-                {isApyError ? (
-                  <span className="text-[var(--text-muted)] font-medium">N/A</span>
-                ) : isApyLoading || !apyData ? (
-                  <Skeleton className="h-4 w-16" />
-                ) : (
-                  <span className="text-[var(--state-success-text)] font-medium">
-                    {formatAPY(apyData.totalAPY, 2)}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Reward APR Row - always render for consistent card height */}
+            {/* APY summary row */}
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[var(--text-secondary)]">Reward APR</span>
+              <span className="text-sm text-[var(--text-secondary)]">APY</span>
               {isApyError ? (
                 <span className="text-[var(--text-muted)] font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
                 <Skeleton className="h-4 w-16" />
-              ) : apyData.rewardsAPR !== 0 ? (
-                <span className="text-[var(--accent-1)] font-medium">
-                  {formatPercentage(apyData.rewardsAPR, { decimals: 2 })}
-                </span>
               ) : (
-                <span className="text-[var(--text-muted)] font-medium">—</span>
+                <span className="text-[var(--state-success-text)] font-medium">
+                  {formatAPY(apyData.totalAPY, 2)}
+                </span>
               )}
             </div>
 
-            {/* Points Row - always render for consistent card height */}
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[var(--text-secondary)]">Points</span>
-              {isApyError ? (
-                <span className="text-[var(--text-muted)] font-medium">N/A</span>
-              ) : isApyLoading || !apyData ? (
-                <Skeleton className="h-4 w-16" />
-              ) : apyData.points !== 0 ? (
-                <span className="font-medium text-[var(--state-warning-text)]">
-                  {`${apyData.points.toLocaleString('en-US')} x`}
-                </span>
+            {/* Sub-APY breakdown (hierarchical, inline, fixed rows for consistent height) */}
+            <div className="space-y-1">
+              {isApyLoading || !apyData ? (
+                <>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Staking</span>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Restaking</span>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Borrow</span>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Rewards APR</span>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Points</span>
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                </>
+              ) : isApyError ? (
+                <>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Staking</span>
+                    <span className="text-[var(--text-muted)]">—</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Restaking</span>
+                    <span className="text-[var(--text-muted)]">—</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Borrow</span>
+                    <span className="text-[var(--text-muted)]">—</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Rewards APR</span>
+                    <span className="text-[var(--text-muted)]">—</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Points</span>
+                    <span className="text-[var(--text-muted)]">—</span>
+                  </div>
+                </>
               ) : (
-                <span className="text-[var(--text-muted)] font-medium">—</span>
+                <>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Staking</span>
+                    <span className="font-medium text-[var(--state-success-text)]">
+                      {apyData.stakingYield !== 0
+                        ? formatPercentage(apyData.stakingYield, { decimals: 2, showSign: true })
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Restaking</span>
+                    <span className="font-medium text-[var(--brand-primary)]">
+                      {apyData.restakingYield !== 0
+                        ? formatPercentage(apyData.restakingYield, { decimals: 2, showSign: true })
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Borrow</span>
+                    <span className="font-medium text-[var(--state-error-text)]">
+                      {apyData.borrowRate !== 0
+                        ? formatPercentage(apyData.borrowRate, { decimals: 2, showSign: true })
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Rewards APR</span>
+                    <span className="font-medium text-[var(--accent-1)]">
+                      {apyData.rewardsAPR !== 0
+                        ? formatPercentage(apyData.rewardsAPR, { decimals: 2, showSign: true })
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Points</span>
+                    <span className="font-medium text-[var(--state-warning-text)]">
+                      {apyData.points !== 0 ? formatPoints(apyData.points) : '—'}
+                    </span>
+                  </div>
+                </>
               )}
             </div>
 
-            {/* Leverage Row with Divider */}
+            {/* Target leverage under APY section */}
             <div className="flex justify-between items-center pt-2 border-t border-[var(--divider-line)]">
-              <span className="text-sm text-[var(--text-secondary)]">Leverage</span>
+              <span className="text-sm text-[var(--text-secondary)]">Target Leverage</span>
               <LeverageBadge leverage={token.leverageRatio} size="sm" />
             </div>
           </div>
