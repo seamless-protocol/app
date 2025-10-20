@@ -76,11 +76,26 @@ export function FeaturedLeverageToken({
             <div className="space-y-1">
               {isApyLoading || !apyData ? (
                 <>
-                  <Skeleton className="h-3 w-28" />
-                  <Skeleton className="h-3 w-24" />
-                  <Skeleton className="h-3 w-24" />
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className="h-3 w-16" />
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Staking</span>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Restaking</span>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Borrow</span>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Rewards APR</span>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Points</span>
+                    <Skeleton className="h-3 w-12" />
+                  </div>
                 </>
               ) : isApyError ? (
                 <>
