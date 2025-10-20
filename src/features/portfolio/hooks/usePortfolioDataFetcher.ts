@@ -620,7 +620,6 @@ export function usePortfolioPerformance() {
     gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnMount: false, // Don't refetch on mount since we depend on portfolio data
-    placeholderData: (previousData) => previousData, // Keep previous data while loading
     retry: false, // Don't retry performance calculations - they're derived from portfolio data
   })
 

@@ -232,121 +232,71 @@ export function generatePortfolioPerformanceData(
   timeframe: '7D' | '30D' | '90D' | '1Y',
   usdPrices: Record<string, number>,
 ): Array<PortfolioDataPoint> {
-  try {
-    if (userPositions.length === 0 || leverageTokenStates.size === 0) {
-      return []
-    }
-
-    // Build a regular time grid over the selected window (independent of token state timestamps)
-    const now = Math.floor(Date.now() / 1000)
-    const timeframeSeconds = _getTimeframeSeconds(timeframe)
-    const startTime = now - timeframeSeconds
-
-    const step = _getTimeStepSeconds(timeframe)
-    const timeline: Array<number> = []
-    // Ensure we include the exact window start
-    timeline.push(Math.floor(startTime))
-    // Fill intermediate steps
-    for (let t = Math.floor(startTime) + step; t < now; t += step) {
-      timeline.push(t)
-    }
-    // Ensure we include "now" as the final point
-    timeline.push(now)
-
-    if (timeline.length === 0) {
-      return []
-    }
-
-    // Generate data points
-    const dataPoints: Array<PortfolioDataPoint> = []
-
-    for (const timestamp of timeline) {
-      const portfolioValue = _calculatePortfolioValueAtTimestamp(
-        timestamp,
-        userPositions,
-        leverageTokenStates,
-        balanceChanges,
-        usdPrices,
-      )
-
-      dataPoints.push({
-        date: new Date(timestamp * 1000).toISOString(),
-        value: portfolioValue,
-        earnings: 0,
-        timestamp,
-      })
-    }
-
-    // Sort by original timestamp ascending for chart display
-    return dataPoints.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
-  } catch (error) {
-    console.error('❌ [Portfolio Calculations] Error generating performance data:', error)
+  if (userPositions.length === 0 || leverageTokenStates.size === 0) {
     return []
+  }
+
+  const nowSec = Math.floor(Date.now() / 1000)
+  const timeline = _buildTimeline(timeframe, nowSec)
+  if (timeline.length === 0) return []
+
+  return timeline.map((ts) =>
+    _toPortfolioDataPoint(ts, userPositions, leverageTokenStates, balanceChanges, usdPrices),
+  )
+}
+
+/**
+ * Build a regular, ascending timeline for the selected timeframe.
+ */
+function _buildTimeline(timeframe: Timeframe, nowSec: number): Array<number> {
+  const startSec = nowSec - _getTimeframeSeconds(timeframe)
+  const stepSec = _getTimeStepSeconds(timeframe)
+
+  const out: Array<number> = [startSec]
+  for (let t = startSec + stepSec; t < nowSec; t += stepSec) out.push(t)
+  out.push(nowSec)
+  return out
+}
+
+/**
+ * Compute the portfolio value for a given timestamp and wrap into a data point.
+ */
+function _toPortfolioDataPoint(
+  timestamp: number,
+  userPositions: Array<UserPosition>,
+  leverageTokenStates: Map<string, Array<LeverageTokenState>>,
+  balanceChanges: Array<BalanceChange>,
+  usdPrices: Record<string, number>,
+): PortfolioDataPoint {
+  const value = _calculatePortfolioValueAtTimestamp(
+    timestamp,
+    userPositions,
+    leverageTokenStates,
+    balanceChanges,
+    usdPrices,
+  )
+
+  return {
+    date: new Date(timestamp * 1000).toISOString(),
+    value,
+    earnings: 0,
+    timestamp,
   }
 }
 
 /**
  * Get timeframe in seconds
  */
-function _getTimeframeSeconds(timeframe: '7D' | '30D' | '90D' | '1Y'): number {
-  switch (timeframe) {
-    case '7D':
-      return 7 * 24 * 60 * 60
-    case '30D':
-      return 30 * 24 * 60 * 60
-    case '90D':
-      return 90 * 24 * 60 * 60
-    case '1Y':
-      return 365 * 24 * 60 * 60
-    default:
-      return 30 * 24 * 60 * 60
-  }
+function _getTimeframeSeconds(timeframe: Timeframe): number {
+  return TIMEFRAME_SECONDS[timeframe] ?? TIMEFRAME_SECONDS['30D']
 }
 
 /**
  * Choose a reasonable sampling interval for the chart timeline
  * to keep the number of points small and rendering snappy.
  */
-function _getTimeStepSeconds(timeframe: '7D' | '30D' | '90D' | '1Y'): number {
-  switch (timeframe) {
-    case '7D':
-      return 24 * 60 * 60 // 1 day
-    case '30D':
-      return 24 * 60 * 60 // 1 day
-    case '90D':
-      return 24 * 60 * 60 // 1 day
-    case '1Y':
-      return 7 * 24 * 60 * 60 // 1 week
-    default:
-      return 24 * 60 * 60
-  }
-}
-
-/**
- * Format timestamp for chart display
- */
-function _formatTimestampForChart(
-  timestamp: number,
-  timeframe: '7D' | '30D' | '90D' | '1Y',
-): string {
-  const date = new Date(timestamp * 1000)
-
-  // Use UTC date formatting to avoid timezone issues
-  const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })
-  const day = date.getUTCDate()
-  const year = date.getUTCFullYear()
-
-  switch (timeframe) {
-    case '7D':
-    case '30D':
-      return `${month} ${day}`
-    case '90D':
-      return `${month} ${day}`
-    case '1Y':
-      return `${month} ${year}`
-    default:
-      return `${month} ${day}`
-  }
+function _getTimeStepSeconds(timeframe: Timeframe): number {
+  return TIMEFRAME_STEP_SECONDS[timeframe] ?? TIMEFRAME_STEP_SECONDS['30D']
 }
 
 /**
@@ -371,4 +321,19 @@ export function groupStatesByToken(
   }
 
   return grouped
+}
+type Timeframe = '7D' | '30D' | '90D' | '1Y'
+
+const TIMEFRAME_SECONDS: Record<Timeframe, number> = {
+  '7D': 7 * 24 * 60 * 60,
+  '30D': 30 * 24 * 60 * 60,
+  '90D': 90 * 24 * 60 * 60,
+  '1Y': 365 * 24 * 60 * 60,
+}
+
+const TIMEFRAME_STEP_SECONDS: Record<Timeframe, number> = {
+  '7D': 24 * 60 * 60, // 1 day
+  '30D': 24 * 60 * 60, // 1 day
+  '90D': 24 * 60 * 60, // 1 day
+  '1Y': 7 * 24 * 60 * 60, // 1 week
 }
