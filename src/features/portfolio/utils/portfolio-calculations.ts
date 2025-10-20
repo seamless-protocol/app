@@ -237,42 +237,30 @@ export function generatePortfolioPerformanceData(
       return []
     }
 
-    // Get all unique timestamps from all leverage tokens
-    const allTimestamps = new Set<number>()
-
-    for (const states of leverageTokenStates.values()) {
-      for (const state of states) {
-        // Subgraph timestamps are in microseconds, convert to seconds
-        const timestamp = Number(state.timestamp) / 1000000
-
-        // Validate the timestamp is reasonable (not NaN, not in the future)
-        if (!Number.isNaN(timestamp) && timestamp > 0 && timestamp <= Date.now() / 1000) {
-          allTimestamps.add(timestamp)
-        }
-      }
-    }
-
-    // Convert to array and sort
-    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b)
-
-    if (sortedTimestamps.length === 0) {
-      return []
-    }
-
-    // Filter by timeframe
-    const now = Date.now() / 1000
+    // Build a regular time grid over the selected window (independent of token state timestamps)
+    const now = Math.floor(Date.now() / 1000)
     const timeframeSeconds = _getTimeframeSeconds(timeframe)
     const startTime = now - timeframeSeconds
-    const filteredTimestamps = sortedTimestamps.filter((ts) => ts >= startTime)
 
-    if (filteredTimestamps.length === 0) {
+    const step = _getTimeStepSeconds(timeframe)
+    const timeline: Array<number> = []
+    // Ensure we include the exact window start
+    timeline.push(Math.floor(startTime))
+    // Fill intermediate steps
+    for (let t = Math.floor(startTime) + step; t < now; t += step) {
+      timeline.push(t)
+    }
+    // Ensure we include "now" as the final point
+    timeline.push(now)
+
+    if (timeline.length === 0) {
       return []
     }
 
     // Generate data points
     const dataPoints: Array<PortfolioDataPoint> = []
 
-    for (const timestamp of filteredTimestamps) {
+    for (const timestamp of timeline) {
       const portfolioValue = _calculatePortfolioValueAtTimestamp(
         timestamp,
         userPositions,
@@ -281,33 +269,12 @@ export function generatePortfolioPerformanceData(
         usdPrices,
       )
 
-      if (portfolioValue > 0) {
-        const formattedDate = _formatTimestampForChart(timestamp, timeframe)
-
-        // Check if we already have a data point for this formatted date
-        const existingDataPoint = dataPoints.find((dp) => dp.date === formattedDate)
-        if (existingDataPoint) {
-          // Keep the later timestamp
-          if (existingDataPoint.timestamp && timestamp > existingDataPoint.timestamp) {
-            // Replace the existing data point
-            const index = dataPoints.indexOf(existingDataPoint)
-            dataPoints[index] = {
-              date: formattedDate,
-              value: portfolioValue,
-              earnings: 0,
-              timestamp,
-            }
-          }
-          // If the new timestamp is earlier, skip it
-        } else {
-          dataPoints.push({
-            date: formattedDate,
-            value: portfolioValue,
-            earnings: 0, // Will be calculated separately if needed
-            timestamp, // Store original timestamp for sorting
-          })
-        }
-      }
+      dataPoints.push({
+        date: new Date(timestamp * 1000).toISOString(),
+        value: portfolioValue,
+        earnings: 0,
+        timestamp,
+      })
     }
 
     // Sort by original timestamp ascending for chart display
@@ -333,6 +300,25 @@ function _getTimeframeSeconds(timeframe: '7D' | '30D' | '90D' | '1Y'): number {
       return 365 * 24 * 60 * 60
     default:
       return 30 * 24 * 60 * 60
+  }
+}
+
+/**
+ * Choose a reasonable sampling interval for the chart timeline
+ * to keep the number of points small and rendering snappy.
+ */
+function _getTimeStepSeconds(timeframe: '7D' | '30D' | '90D' | '1Y'): number {
+  switch (timeframe) {
+    case '7D':
+      return 24 * 60 * 60 // 1 day
+    case '30D':
+      return 24 * 60 * 60 // 1 day
+    case '90D':
+      return 24 * 60 * 60 // 1 day
+    case '1Y':
+      return 7 * 24 * 60 * 60 // 1 week
+    default:
+      return 24 * 60 * 60
   }
 }
 

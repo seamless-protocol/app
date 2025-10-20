@@ -130,24 +130,20 @@ export function PortfolioPerformanceChart({
                   </linearGradient>
                 </defs>
                 <XAxis
-                  dataKey="date"
+                  dataKey="timestamp"
+                  type="number"
+                  domain={["dataMin", "dataMax"]}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'var(--text-secondary)', fontSize: 12, dy: 8 }}
-                  tickFormatter={(dateString: string) => {
-                    const date = new Date(dateString)
-                    // Handle different timeframes with appropriate formatting
-                    if (selectedTimeframe === '1Y') {
-                      return date.toLocaleDateString('en-US', {
-                        month: 'short',
-                        year: 'numeric',
-                      })
-                    } else {
-                      return date.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })
-                    }
+                  tickFormatter={(ts: number) => {
+                    const date = new Date(ts * 1000)
+                    return date.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      timeZone: 'UTC',
+                    })
                   }}
                 />
                 <YAxis
@@ -175,6 +171,17 @@ export function PortfolioPerformanceChart({
                     color: 'var(--text-primary)',
                   }}
                   formatter={formatTooltipValue}
+                  labelFormatter={(label: string | number) => {
+                    const ts = Number(label)
+                    if (!Number.isFinite(ts)) return ''
+                    const date = new Date(ts * 1000)
+                    return date.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      timeZone: 'UTC',
+                    })
+                  }}
                 />
                 <Area
                   type="monotone"
