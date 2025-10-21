@@ -129,12 +129,12 @@ export function useLeverageTokenAPY({
       const utilization = borrowApyData.utilization
       const targetLeverage = leverageRatios.targetLeverage
 
-      // Staking Yield = Protocol APR * leverage (APR is already in percentage format)
+      // Staking Yield = Protocol APR * leverage (APR is in decimal format, e.g., 0.03 for 3%)
       const stakingYield =
         (aprData.stakingAPR && targetLeverage ? aprData.stakingAPR * targetLeverage : undefined) ??
         0
 
-      // Restaking Yield = Protocol restaking APR * leverage (APR is already in percentage format)
+      // Restaking Yield = Protocol restaking APR * leverage (APR is in decimal format, e.g., 0.03 for 3%)
       const restakingYield =
         (aprData.restakingAPR && targetLeverage
           ? aprData.restakingAPR * targetLeverage

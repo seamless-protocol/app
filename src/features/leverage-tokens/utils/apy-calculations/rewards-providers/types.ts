@@ -10,7 +10,7 @@ export interface RewardTokenApr {
   tokenSymbol: string
   /** Token decimals */
   tokenDecimals: number
-  /** APR for this specific reward token (as percentage, e.g., 5.5 for 5.5%) */
+  /** APR for this specific reward token (as decimal, e.g., 0.055 for 5.5%) */
   apr: number
 }
 
@@ -18,7 +18,7 @@ export interface RewardTokenApr {
  * Base interface for rewards APR data
  */
 export interface BaseRewardsAprData {
-  /** Total rewards APR (sum of all individual rewards) */
+  /** Total rewards APR (sum of all individual rewards, as decimal, e.g., 0.055 for 5.5%) */
   rewardsAPR: number
   /** Breakdown by individual reward tokens */
   rewardTokens?: Array<RewardTokenApr>

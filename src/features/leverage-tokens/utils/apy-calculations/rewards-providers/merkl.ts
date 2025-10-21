@@ -98,7 +98,8 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
       // Extract individual reward tokens and their APRs from rewardsRecord
       const rewardTokenMap = new Map<string, { symbol: string; decimals: number; apr: number }>()
 
-      // For each opportunity, extract reward tokens and assign the opportunity's APR to each token
+      // For each opportunity, extract reward tokens
+      // Since each campaign typically has one reward token, assign the opportunity's APR to each token
       for (const opportunity of opportunities) {
         const opportunityApr = this.extractAPRFromOpportunity(opportunity)
 
@@ -106,30 +107,21 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
           opportunity.rewardsRecord?.breakdowns &&
           opportunity.rewardsRecord.breakdowns.length > 0
         ) {
-          // If there are multiple reward tokens in this opportunity, distribute APR proportionally by value
-          const totalRewardValue = opportunity.rewardsRecord.breakdowns.reduce(
-            (sum, b) => sum + b.value,
-            0,
-          )
-
           for (const rewardBreakdown of opportunity.rewardsRecord.breakdowns) {
             const token = rewardBreakdown.token
             const tokenKey = token.address.toLowerCase()
 
-            // Calculate this token's proportion of the APR based on its reward value
-            const tokenAprContribution =
-              totalRewardValue > 0 ? (rewardBreakdown.value / totalRewardValue) * opportunityApr : 0
-
             const existingToken = rewardTokenMap.get(tokenKey)
 
             if (existingToken) {
-              // Sum APRs if this token appears in multiple opportunities
-              existingToken.apr += tokenAprContribution
+              // Sum APRs if this token appears in multiple opportunities/campaigns
+              existingToken.apr += opportunityApr
             } else {
+              // Use the opportunity's APR directly from Merkl
               rewardTokenMap.set(tokenKey, {
                 symbol: token.displaySymbol || token.symbol,
                 decimals: token.decimals,
-                apr: tokenAprContribution,
+                apr: opportunityApr,
               })
             }
           }
@@ -147,12 +139,12 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
         tokenAddress: address as Address,
         tokenSymbol: data.symbol,
         tokenDecimals: data.decimals,
-        apr: data.apr / 100, // Merkl returns APR as whole number (e.g., 91.82), convert to percentage for display
+        apr: data.apr / 100, // Merkl returns APR as whole number (e.g., 91.82), convert to decimal (e.g., 0.9182)
       }))
 
       // Build result with conditional rewardTokens (for exactOptionalPropertyTypes)
       const result: BaseRewardsAprData = {
-        // Divide by 100 to convert to percentage
+        // Divide by 100 to convert from whole number (e.g., 91.82) to decimal (e.g., 0.9182)
         rewardsAPR: totalAPR / 100,
       }
 
