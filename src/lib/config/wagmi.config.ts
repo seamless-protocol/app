@@ -66,6 +66,11 @@ const useTenderlyVNet =
 // Single Alchemy key for simplicity
 const alchemyKey = import.meta.env['VITE_ALCHEMY_API_KEY']
 
+// Helper to filter out falsy values AND empty strings
+function isValidRpcUrl(url: unknown): url is string {
+  return typeof url === 'string' && url.trim().length > 0
+}
+
 // Build ordered endpoint candidates per chain
 const baseCandidates = [
   // Test/VNet overrides (kept first when enabled)
@@ -80,7 +85,7 @@ const baseCandidates = [
   'https://base-rpc.publicnode.com',
   'https://base.meowrpc.com',
   'https://1rpc.io/base',
-].filter(Boolean) as Array<string>
+].filter(isValidRpcUrl)
 
 const mainnetCandidates = [
   // Map override (if provided)
@@ -93,7 +98,7 @@ const mainnetCandidates = [
   'https://eth.llamarpc.com',
   'https://cloudflare-eth.com',
   'https://1rpc.io/eth',
-].filter(Boolean) as Array<string>
+].filter(isValidRpcUrl)
 
 // Debug logging for Tenderly VNet mode
 if (useTenderlyVNet) {
