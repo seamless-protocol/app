@@ -20,6 +20,7 @@ describe('Rewards Providers', () => {
 
       expect(result).toEqual({
         rewardsAPR: 0,
+        rewardTokens: [],
       })
     })
 
@@ -30,6 +31,7 @@ describe('Rewards Providers', () => {
 
       expect(result).toEqual({
         rewardsAPR: 0,
+        rewardTokens: [],
       })
     })
 
@@ -49,6 +51,7 @@ describe('Rewards Providers', () => {
 
       expect(result).toEqual({
         rewardsAPR: 0,
+        rewardTokens: [],
       })
     })
 
@@ -59,6 +62,7 @@ describe('Rewards Providers', () => {
 
       expect(result).toEqual({
         rewardsAPR: 0,
+        rewardTokens: [],
       })
     })
 
@@ -69,6 +73,7 @@ describe('Rewards Providers', () => {
 
       expect(result).toEqual({
         rewardsAPR: 0,
+        rewardTokens: [],
       })
     })
   })
@@ -79,6 +84,7 @@ describe('Rewards Providers', () => {
 
       expect(result).toEqual({
         rewardsAPR: 0,
+        rewardTokens: [],
       })
     })
 
@@ -87,6 +93,7 @@ describe('Rewards Providers', () => {
 
       expect(result).toEqual({
         rewardsAPR: 0,
+        rewardTokens: [],
       })
     })
   })
@@ -97,6 +104,7 @@ describe('Rewards Providers', () => {
 
       expect(result).toEqual({
         rewardsAPR: 0,
+        rewardTokens: [],
       })
     })
 
@@ -110,6 +118,7 @@ describe('Rewards Providers', () => {
       results.forEach((result) => {
         expect(result).toEqual({
           rewardsAPR: 0,
+          rewardTokens: [],
         })
       })
     })
@@ -133,6 +142,7 @@ describe('Rewards Providers', () => {
         const result = await fetchRewardsAprForToken(tokenAddress, chainId)
         expect(result).toEqual({
           rewardsAPR: 0,
+          rewardTokens: [],
         })
       }
     })
