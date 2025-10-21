@@ -10,9 +10,10 @@ import {
   Vault,
   Vote,
 } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
+import { lazy, Suspense, useEffect, useMemo } from 'react'
 import { useAccount } from 'wagmi'
 import { usePortfolioPrefetch } from '@/features/portfolio/hooks/usePrefetchPortfolio'
+import { useIdlePrefetch } from '@/hooks/useIdlePrefetch'
 import { features } from '@/lib/config/features'
 import { useGA } from '@/lib/config/ga4.config'
 import { useDeFiLlamaProtocolTVL } from '@/lib/defillama/useProtocolTVL'
@@ -26,7 +27,10 @@ import { PageContainer } from './PageContainer'
 import { Skeleton } from './ui/skeleton'
 import { Toaster } from './ui/sonner'
 import { type NavigationItem, VerticalNavbar } from './VerticalNavbar'
-import { WalletConnectButton } from './WalletConnectButton'
+
+const WalletConnectButton = lazy(() =>
+  import('./WalletConnectButton').then((m) => ({ default: m.WalletConnectButton })),
+)
 
 // Navigation configuration that maps to existing routes
 const navigationItems = [
@@ -197,6 +201,9 @@ export function MainLayout({ children }: MainLayoutProps) {
     }
   }
 
+  // Prefetch wallet chunk on idle to reduce first-open latency
+  useIdlePrefetch(() => import('./WalletConnectButton'), 300)
+
   return (
     <div className="h-screen flex overflow-hidden">
       {/* Vertical Navbar - Desktop Only */}
@@ -244,7 +251,30 @@ export function MainLayout({ children }: MainLayoutProps) {
               {/* Actions */}
               <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
                 <LiFiWidget />
-                {features.testMode ? <ConnectButtonTest /> : <WalletConnectButton />}
+                {features.testMode ? (
+                  <ConnectButtonTest />
+                ) : (
+                  <Suspense
+                    fallback={
+                      <button
+                        type="button"
+                        onMouseEnter={() => {
+                          import('./WalletConnectButton').catch(() => {})
+                        }}
+                        onFocus={() => {
+                          import('./WalletConnectButton').catch(() => {})
+                        }}
+                        className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 rounded-md gap-1.5 has-[>svg]:px-2.5 h-9 px-3 sm:h-10 sm:px-4 cursor-pointer bg-cta-gradient text-[var(--cta-text)]"
+                        aria-label="Connect Wallet"
+                        title="Connect Wallet"
+                      >
+                        Connect
+                      </button>
+                    }
+                  >
+                    <WalletConnectButton />
+                  </Suspense>
+                )}
                 <ModeToggle />
               </div>
             </div>
