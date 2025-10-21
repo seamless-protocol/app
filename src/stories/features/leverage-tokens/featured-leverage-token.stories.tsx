@@ -138,14 +138,33 @@ export const Default: Story = {
     onTokenClick: (token) => console.log('Token clicked:', token),
     apyDataMap: new Map([
       [
-        '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c',
+        '0xCd5fE23C85820F7B08D4D8A6c35929B5d900B527',
         {
           totalAPY: 12.34,
           rewardsAPR: 4.56,
           points: 1250,
           borrowRate: -2.1,
           stakingYield: 8.78,
-          restakingYield: 0,
+          restakingYield: 1.2,
+          metadata: {
+            yieldAveragingPeriod: '7-day average' as const,
+            borrowAveragingPeriod: '24-hour average' as const,
+          },
+        },
+      ],
+      [
+        '0xa0b86a33e6441b8c4c8c8c8c8c8c8c8c8c8c8c8c',
+        {
+          totalAPY: 18.2,
+          rewardsAPR: 4.5,
+          points: 980,
+          borrowRate: -3.2,
+          stakingYield: 15.4,
+          restakingYield: 1.5,
+          metadata: {
+            yieldAveragingPeriod: '7-day average' as const,
+            borrowAveragingPeriod: '7-day average' as const,
+          },
         },
       ],
     ]),

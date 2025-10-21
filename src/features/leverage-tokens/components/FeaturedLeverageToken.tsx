@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion'
-import { Zap } from 'lucide-react'
+import { Info, Zap } from 'lucide-react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { formatAPY, formatPercentage, formatPoints } from '@/lib/utils/formatting'
 import { AssetDisplay } from '../../../components/ui/asset-display'
 import { Card, CardContent } from '../../../components/ui/card'
 import { Skeleton } from '../../../components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip'
 import { LeverageBadge } from './LeverageBadge'
 import type { LeverageToken } from './leverage-token-table'
 
@@ -60,7 +61,34 @@ export function FeaturedLeverageToken({
           <div className="space-y-2">
             {/* APY summary row */}
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[var(--text-secondary)]">APY</span>
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-[var(--text-secondary)]">APY</span>
+                {apyData?.metadata &&
+                  (apyData.metadata.yieldAveragingPeriod ||
+                    apyData.metadata.borrowAveragingPeriod) && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Info className="h-3 w-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs">
+                        <div className="text-xs text-[var(--text-muted)]">
+                          {apyData.metadata.yieldAveragingPeriod && (
+                            <p>Yield: {apyData.metadata.yieldAveragingPeriod}</p>
+                          )}
+                          {apyData.metadata.borrowAveragingPeriod && (
+                            <p>Borrow: {apyData.metadata.borrowAveragingPeriod}</p>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+              </div>
               {isApyError ? (
                 <span className="text-[var(--text-muted)] font-medium">N/A</span>
               ) : isApyLoading || !apyData ? (
