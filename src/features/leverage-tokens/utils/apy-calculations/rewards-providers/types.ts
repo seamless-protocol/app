@@ -1,10 +1,27 @@
 import type { Address } from 'viem'
 
 /**
+ * Individual reward token APR data
+ */
+export interface RewardTokenApr {
+  /** Token address */
+  tokenAddress: Address
+  /** Token symbol (e.g., 'SEAM', 'MORPHO') */
+  tokenSymbol: string
+  /** Token decimals */
+  tokenDecimals: number
+  /** APR for this specific reward token (as percentage, e.g., 5.5 for 5.5%) */
+  apr: number
+}
+
+/**
  * Base interface for rewards APR data
  */
 export interface BaseRewardsAprData {
+  /** Total rewards APR (sum of all individual rewards) */
   rewardsAPR: number
+  /** Breakdown by individual reward tokens */
+  rewardTokens?: Array<RewardTokenApr>
 }
 
 /**

@@ -7,19 +7,54 @@ import type { BaseRewardsAprData, RewardsAprFetcher } from './types'
 const logger = createLogger('merkl-rewards')
 
 // Types for Merkl API responses
-interface MerklOpportunity {
+interface MerklRewardToken {
   id: string
-  chainId: number // Chain ID for this opportunity
-  apr?: number // Merkl provides APR directly in opportunity data
-  campaigns?: Array<MerklCampaign>
-  tokenAddress?: string // The LT token address this opportunity is for
+  name: string
+  chainId: number
+  address: string
+  decimals: number
+  symbol: string
+  displaySymbol?: string
+  icon?: string
+  price?: number
 }
 
-interface MerklCampaign {
+interface MerklRewardBreakdown {
+  token: MerklRewardToken
+  amount: string
+  value: number
+  distributionType: string
+  campaignId?: string
+}
+
+interface MerklRewardsRecord {
+  total: number
+  timestamp: string
+  breakdowns: Array<MerklRewardBreakdown>
+}
+
+interface MerklAprBreakdown {
+  distributionType: string
+  identifier: string
+  type: string
+  value: number // APR value for this campaign
+  timestamp: string
+}
+
+interface MerklAprRecord {
+  cumulated: number
+  timestamp: string
+  breakdowns: Array<MerklAprBreakdown>
+}
+
+interface MerklOpportunity {
   id: string
-  apr?: number
-  rewardAmount?: string
-  duration?: number
+  chainId: number
+  identifier: string // The LT token address
+  name: string
+  apr?: number // Total APR
+  aprRecord?: MerklAprRecord
+  rewardsRecord?: MerklRewardsRecord
 }
 
 /**
@@ -45,6 +80,7 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
   /**
    * Fetch rewards APR for a given token address from Merkl
    * Queries all opportunities for the token and sums up APRs from all relevant opportunities
+   * Also extracts individual reward token breakdown
    */
   async fetchRewardsApr(tokenAddress: Address, chainId?: number): Promise<BaseRewardsAprData> {
     try {
@@ -55,6 +91,48 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
         logger.info('No opportunities found for token, returning default data', { tokenAddress })
         return {
           rewardsAPR: 0,
+          rewardTokens: [],
+        }
+      }
+
+      // Extract individual reward tokens and their APRs from rewardsRecord
+      const rewardTokenMap = new Map<string, { symbol: string; decimals: number; apr: number }>()
+
+      // For each opportunity, extract reward tokens and assign the opportunity's APR to each token
+      for (const opportunity of opportunities) {
+        const opportunityApr = this.extractAPRFromOpportunity(opportunity)
+
+        if (
+          opportunity.rewardsRecord?.breakdowns &&
+          opportunity.rewardsRecord.breakdowns.length > 0
+        ) {
+          // If there are multiple reward tokens in this opportunity, distribute APR proportionally by value
+          const totalRewardValue = opportunity.rewardsRecord.breakdowns.reduce(
+            (sum, b) => sum + b.value,
+            0,
+          )
+
+          for (const rewardBreakdown of opportunity.rewardsRecord.breakdowns) {
+            const token = rewardBreakdown.token
+            const tokenKey = token.address.toLowerCase()
+
+            // Calculate this token's proportion of the APR based on its reward value
+            const tokenAprContribution =
+              totalRewardValue > 0 ? (rewardBreakdown.value / totalRewardValue) * opportunityApr : 0
+
+            const existingToken = rewardTokenMap.get(tokenKey)
+
+            if (existingToken) {
+              // Sum APRs if this token appears in multiple opportunities
+              existingToken.apr += tokenAprContribution
+            } else {
+              rewardTokenMap.set(tokenKey, {
+                symbol: token.displaySymbol || token.symbol,
+                decimals: token.decimals,
+                apr: tokenAprContribution,
+              })
+            }
+          }
         }
       }
 
@@ -64,14 +142,28 @@ export class MerklRewardsAprProvider implements RewardsAprFetcher {
         return sum + apr
       }, 0)
 
+      // Convert reward token map to array
+      const rewardTokens = Array.from(rewardTokenMap.entries()).map(([address, data]) => ({
+        tokenAddress: address as Address,
+        tokenSymbol: data.symbol,
+        tokenDecimals: data.decimals,
+        apr: data.apr / 100, // Merkl returns APR as whole number (e.g., 91.82), convert to percentage for display
+      }))
+
+      // Build result with conditional rewardTokens (for exactOptionalPropertyTypes)
       const result: BaseRewardsAprData = {
         // Divide by 100 to convert to percentage
         rewardsAPR: totalAPR / 100,
       }
 
+      if (rewardTokens.length > 0) {
+        result.rewardTokens = rewardTokens
+      }
+
       logger.info('Successfully fetched rewards APR', {
         totalAPR,
         opportunitiesCount: opportunities.length,
+        rewardTokensCount: rewardTokens.length,
         tokenAddress,
       })
       return result

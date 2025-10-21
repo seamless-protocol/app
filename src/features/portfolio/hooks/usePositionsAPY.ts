@@ -107,6 +107,7 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
               (borrowAPY && targetLeverage ? borrowAPY * -1 * (targetLeverage - 1) : undefined) ?? 0
 
             const rewardsAPR = rewardsAPRData?.rewardsAPR ?? 0
+            const rewardTokens = rewardsAPRData?.rewardTokens
 
             // Points calculation - use pointsMultiplier from config if available, otherwise default to 0
             const points = tokenConfig.apyConfig?.pointsMultiplier ?? 0
@@ -125,6 +126,7 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
               metadata.borrowAveragingPeriod = borrowApyData.averagingPeriod
             }
 
+            // Build base APY breakdown
             const apyBreakdown: APYBreakdownData = {
               stakingYield,
               restakingYield,
@@ -139,6 +141,11 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
                 rawRestakingYield: aprData.restakingAPR ? aprData.restakingAPR / 100 : 0,
               },
               ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
+            }
+
+            // Add rewardTokens only if they exist (for exactOptionalPropertyTypes)
+            if (rewardTokens && rewardTokens.length > 0) {
+              apyBreakdown.rewardTokens = rewardTokens
             }
 
             const tokenId = token.id || token.address || token.leverageTokenAddress

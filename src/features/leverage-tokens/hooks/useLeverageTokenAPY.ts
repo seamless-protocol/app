@@ -28,7 +28,7 @@ export function useLeverageTokenAPY({
   const config = useConfig()
   const queryKey =
     tokenAddress && leverageToken?.chainId
-      ? [...ltKeys.tokenOnChain(leverageToken.chainId, tokenAddress), 'apy', 'v2'] // Added v2 to bust cache
+      ? [...ltKeys.tokenOnChain(leverageToken.chainId, tokenAddress), 'apy']
       : []
 
   return useQuery({
@@ -149,8 +149,9 @@ export function useLeverageTokenAPY({
       const borrowRate =
         (borrowAPY && targetLeverage ? borrowAPY * -100 * (targetLeverage - 1) : undefined) ?? 0
 
-      // Rewards APR from external sources (Fuul, etc.)
+      // Rewards APR from external sources (Merkl, etc.)
       const rewardsAPR = rewardsAPRData?.rewardsAPR ?? 0
+      const rewardTokens = rewardsAPRData?.rewardTokens
 
       // Points calculation
       const points = leverageToken.apyConfig?.pointsMultiplier ?? 0
@@ -170,7 +171,7 @@ export function useLeverageTokenAPY({
         metadata.borrowAveragingPeriod = borrowApyData.averagingPeriod
       }
 
-      return {
+      const result: APYBreakdownData = {
         stakingYield,
         restakingYield,
         borrowRate, // Already negative
@@ -185,6 +186,13 @@ export function useLeverageTokenAPY({
         },
         ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
       }
+
+      // Add rewardTokens only if they exist (for exactOptionalPropertyTypes)
+      if (rewardTokens && rewardTokens.length > 0) {
+        result.rewardTokens = rewardTokens
+      }
+
+      return result
     },
     enabled: enabled && !!tokenAddress,
     staleTime: 5 * 60 * 1000, // 5 minutes

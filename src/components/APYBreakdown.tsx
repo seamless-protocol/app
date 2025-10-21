@@ -1,5 +1,7 @@
 import type { AveragingPeriod } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/types'
+import type { RewardTokenApr } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers/types'
 import { formatPercentage, formatPoints } from '@/lib/utils/formatting'
+import { getTokenLogoComponent } from '@/lib/utils/token-logos'
 import { cn } from './ui/utils'
 
 export interface APYBreakdownData {
@@ -7,6 +9,7 @@ export interface APYBreakdownData {
   restakingYield: number
   borrowRate: number
   rewardsAPR: number
+  rewardTokens?: Array<RewardTokenApr>
   points: number
   totalAPY: number
   utilization?: number | undefined
@@ -75,15 +78,32 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
           </div>
         )}
 
-        {/* Rewards APR - only show if not zero */}
-        {data.rewardsAPR !== 0 && (
-          <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Rewards APR:</span>
-            <span className="font-medium text-[var(--accent-1)]">
-              {formatPercentage(data.rewardsAPR, { decimals: 2, showSign: true })}
-            </span>
-          </div>
-        )}
+        {/* Individual Reward Tokens - show breakdown if available */}
+        {data.rewardTokens && data.rewardTokens.length > 0
+          ? data.rewardTokens.map((rewardToken) => (
+              <div key={rewardToken.tokenAddress} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 flex-shrink-0">
+                    {getTokenLogoComponent(rewardToken.tokenSymbol)}
+                  </div>
+                  <span className="text-[var(--text-secondary)]">
+                    {rewardToken.tokenSymbol} APR:
+                  </span>
+                </div>
+                <span className="font-medium text-[var(--accent-1)]">
+                  {formatPercentage(rewardToken.apr, { decimals: 2, showSign: true })}
+                </span>
+              </div>
+            ))
+          : // Fallback: show total rewards APR if no breakdown available
+            data.rewardsAPR !== 0 && (
+              <div className="flex justify-between">
+                <span className="text-[var(--text-secondary)]">Rewards APR:</span>
+                <span className="font-medium text-[var(--accent-1)]">
+                  {formatPercentage(data.rewardsAPR, { decimals: 2, showSign: true })}
+                </span>
+              </div>
+            )}
 
         {/* Points - only show if not zero */}
         {data.points !== 0 && (
