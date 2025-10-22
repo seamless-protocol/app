@@ -121,101 +121,6 @@ export interface LeverageTokenConfig {
 
 // Leverage token configurations
 export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
-  [LeverageTokenKey.WEETH_WETH_17X_BASE_MAINNET]: {
-    address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
-    name: 'weETH / WETH 17x Leverage Token',
-    symbol: 'WEETH-WETH-17x',
-    description:
-      'weETH / WETH 17x Leverage Token that amplifies relative price movements between weETH and WETH on Base',
-    decimals: 18,
-    leverageRatio: 17,
-    chainId: 8453,
-    chainName: 'Base',
-    chainLogo: BaseLogo,
-    supplyCap: 150,
-    apyConfig: {
-      aprProvider: {
-        type: APR_PROVIDERS.ETHERFI,
-      },
-      pointsMultiplier: 34,
-    },
-    collateralAsset: {
-      symbol: 'weETH',
-      name: 'Wrapped Ether.fi ETH',
-      description:
-        "weETH is Ether.fi's wrapped, non-rebasing version of eETH. It represents ETH staked through Ether.fi's liquid restaking system and accumulates staking rewards over time, making its price increase relative to ETH as more rewards accrue.",
-      address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
-      decimals: 18,
-    },
-    debtAsset: {
-      symbol: 'WETH',
-      name: 'Wrapped Ether',
-      address: BASE_WETH,
-      decimals: 18,
-    },
-    swaps: {
-      // Use LiFi for same-chain routing (bridges are irrelevant for same-chain quotes)
-      debtToCollateral: {
-        type: 'lifi',
-      },
-      collateralToDebt: {
-        type: 'lifi',
-      },
-    },
-    planner: { epsilonBps: 10 },
-    relatedResources: {
-      additionalRewards: [
-        {
-          id: 'etherfi-points',
-          title: 'Ether.fi Points',
-          description: 'Track your points and rewards from weETH staking activity',
-          url: 'https://www.ether.fi/app/portfolio',
-          icon: EtherfiLogo,
-          badge: {
-            text: 'Rewards Program',
-            color: 'indigo' as const,
-          },
-        },
-        {
-          id: 'merkl-rewards',
-          title: 'Merkl Rewards',
-          description: 'Additional DeFi rewards and incentive tracking',
-          url: 'https://app.merkl.xyz/users/',
-          getUrl: ({ address }) =>
-            address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
-          icon: MerklLogo,
-          badge: {
-            text: 'Rewards Program',
-            color: 'purple' as const,
-          },
-        },
-      ],
-      underlyingPlatforms: [
-        {
-          id: 'morpho-lending',
-          title: 'Morpho Lending Market',
-          description: 'View the underlying lending market powering this Leverage Token',
-          url: 'https://app.morpho.org/base/market/0xb8fc70e82bc5bb53e773626fcc6a23f7eefa036918d7ef216ecfb1950a94a85e',
-          icon: MorphoLogo,
-          badge: {
-            text: 'Lending Market',
-            color: 'blue' as const,
-          },
-        },
-        {
-          id: 'etherfi-protocol',
-          title: 'Ether.fi Protocol',
-          description: 'Learn more about the weETH liquid staking token',
-          url: 'https://ether.fi/',
-          icon: EtherfiLogo,
-          badge: {
-            text: 'Protocol Info',
-            color: 'indigo' as const,
-          },
-        },
-      ],
-    },
-  },
   [LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]: {
     address: '0x98c4E43e3Bde7B649E5aa2F88DE1658E8d3eD1bF' as Address,
     name: 'wstETH / ETH 25x Leverage Token',
@@ -395,6 +300,101 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           badge: {
             text: 'Protocol Info',
             color: 'yellow' as const,
+          },
+        },
+      ],
+    },
+  },
+  [LeverageTokenKey.WEETH_WETH_17X_BASE_MAINNET]: {
+    address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
+    name: 'weETH / WETH 17x Leverage Token',
+    symbol: 'WEETH-WETH-17x',
+    description:
+      'weETH / WETH 17x Leverage Token that amplifies relative price movements between weETH and WETH on Base',
+    decimals: 18,
+    leverageRatio: 17,
+    chainId: 8453,
+    chainName: 'Base',
+    chainLogo: BaseLogo,
+    supplyCap: 150,
+    apyConfig: {
+      aprProvider: {
+        type: APR_PROVIDERS.ETHERFI,
+      },
+      pointsMultiplier: 34,
+    },
+    collateralAsset: {
+      symbol: 'weETH',
+      name: 'Wrapped Ether.fi ETH',
+      description:
+        "weETH is Ether.fi's wrapped, non-rebasing version of eETH. It represents ETH staked through Ether.fi's liquid restaking system and accumulates staking rewards over time, making its price increase relative to ETH as more rewards accrue.",
+      address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
+      decimals: 18,
+    },
+    debtAsset: {
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      address: BASE_WETH,
+      decimals: 18,
+    },
+    swaps: {
+      // Use LiFi for same-chain routing (bridges are irrelevant for same-chain quotes)
+      debtToCollateral: {
+        type: 'lifi',
+      },
+      collateralToDebt: {
+        type: 'lifi',
+      },
+    },
+    planner: { epsilonBps: 10 },
+    relatedResources: {
+      additionalRewards: [
+        {
+          id: 'etherfi-points',
+          title: 'Ether.fi Points',
+          description: 'Track your points and rewards from weETH staking activity',
+          url: 'https://www.ether.fi/app/portfolio',
+          icon: EtherfiLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'indigo' as const,
+          },
+        },
+        {
+          id: 'merkl-rewards',
+          title: 'Merkl Rewards',
+          description: 'Additional DeFi rewards and incentive tracking',
+          url: 'https://app.merkl.xyz/users/',
+          getUrl: ({ address }) =>
+            address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
+          icon: MerklLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'purple' as const,
+          },
+        },
+      ],
+      underlyingPlatforms: [
+        {
+          id: 'morpho-lending',
+          title: 'Morpho Lending Market',
+          description: 'View the underlying lending market powering this Leverage Token',
+          url: 'https://app.morpho.org/base/market/0xb8fc70e82bc5bb53e773626fcc6a23f7eefa036918d7ef216ecfb1950a94a85e',
+          icon: MorphoLogo,
+          badge: {
+            text: 'Lending Market',
+            color: 'blue' as const,
+          },
+        },
+        {
+          id: 'etherfi-protocol',
+          title: 'Ether.fi Protocol',
+          description: 'Learn more about the weETH liquid staking token',
+          url: 'https://ether.fi/',
+          icon: EtherfiLogo,
+          badge: {
+            text: 'Protocol Info',
+            color: 'indigo' as const,
           },
         },
       ],
