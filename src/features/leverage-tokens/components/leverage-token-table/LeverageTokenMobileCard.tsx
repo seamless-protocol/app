@@ -87,7 +87,7 @@ export function LeverageTokenMobileCard({
                   {...(apyData && { apyData })}
                   isLoading={isApyLoading ?? false}
                   isError={isApyError ?? false}
-                  iconSize="sm"
+                  iconSize="md"
                   side="top"
                   align="end"
                 />

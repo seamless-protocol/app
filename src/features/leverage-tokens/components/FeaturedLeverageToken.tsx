@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Info, Zap } from 'lucide-react'
+import { useState } from 'react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { formatAPY, formatPercentage, formatPoints } from '@/lib/utils/formatting'
 import { AssetDisplay } from '../../../components/ui/asset-display'
@@ -27,6 +28,8 @@ export function FeaturedLeverageToken({
   isApyLoading = false,
   isApyError = false,
 }: FeaturedLeverageTokenProps) {
+  const [tooltipOpen, setTooltipOpen] = useState(false)
+
   const handleClick = () => {
     onClick?.(token)
   }
@@ -157,14 +160,17 @@ export function FeaturedLeverageToken({
                 {apyData?.metadata &&
                   (apyData.metadata.yieldAveragingPeriod ||
                     apyData.metadata.borrowAveragingPeriod) && (
-                    <Tooltip>
+                    <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          className="inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
-                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-0 -m-2 sm:m-0"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setTooltipOpen((prev) => !prev)
+                          }}
                         >
-                          <Info className="h-3 w-3" />
+                          <Info className="h-4 w-4 sm:h-3 sm:w-3" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-xs">

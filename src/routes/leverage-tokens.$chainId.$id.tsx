@@ -85,6 +85,8 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
       weethPrice: true,
       leverageTokenPrice: true,
     })
+    const [mobileApyTooltipOpen, setMobileApyTooltipOpen] = useState(false)
+    const [desktopApyTooltipOpen, setDesktopApyTooltipOpen] = useState(false)
 
     const handleLineVisibilityChange = (lineKey: string) => {
       setVisibleLines((prev) => ({
@@ -376,13 +378,17 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                       <Skeleton className="h-4 w-20" />
                     )}
                   </Badge>
-                  <Tooltip>
+                  <Tooltip open={mobileApyTooltipOpen} onOpenChange={setMobileApyTooltipOpen}>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="text-[var(--text-muted)] transition-colors hover:text-secondary-foreground"
+                        className="inline-flex items-center justify-center text-[var(--text-muted)] transition-colors hover:text-secondary-foreground min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-0 -m-2 sm:m-0"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setMobileApyTooltipOpen((prev) => !prev)
+                        }}
                       >
-                        <Info className="h-3 w-3" />
+                        <Info className="h-5 w-5 sm:h-3 sm:w-3" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent className="p-0 text-sm border border-border bg-card">
@@ -460,13 +466,17 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                       <Skeleton className="h-4 w-20" />
                     )}
                   </Badge>
-                  <Tooltip>
+                  <Tooltip open={desktopApyTooltipOpen} onOpenChange={setDesktopApyTooltipOpen}>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="text-[var(--text-muted)] hover:text-secondary-foreground transition-colors"
+                        className="inline-flex items-center justify-center text-[var(--text-muted)] hover:text-secondary-foreground transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-0 -m-2 sm:m-0"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDesktopApyTooltipOpen((prev) => !prev)
+                        }}
                       >
-                        <Info className="h-3 w-3" />
+                        <Info className="h-5 w-5 sm:h-3 sm:w-3" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent className="p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]">
