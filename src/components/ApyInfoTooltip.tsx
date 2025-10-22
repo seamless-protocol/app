@@ -1,4 +1,5 @@
 import { Info } from 'lucide-react'
+import { useState } from 'react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -33,26 +34,34 @@ export function ApyInfoTooltip({
   sideOffset = 8,
   stopPropagation = true,
 }: ApyInfoTooltipProps) {
+  // Controlled state for mobile tap-to-toggle behavior
+  const [open, setOpen] = useState(false)
+
   // Use responsive classes so mobile can be larger while desktop stays small
   const iconClass =
     iconSize === 'lg'
-      ? 'h-5 w-5 sm:h-3 sm:w-3'
+      ? 'h-5 w-5 sm:h-4 sm:w-4'
       : iconSize === 'md'
-        ? 'h-4 w-4 sm:h-3 sm:w-3'
-        : 'h-3 w-3'
+        ? 'h-5 w-5 sm:h-3.5 sm:w-3.5'
+        : 'h-4 w-4 sm:h-3 sm:w-3'
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (stopPropagation) e.stopPropagation()
+    // Toggle on mobile, let hover work on desktop
+    setOpen((prev) => !prev)
+  }
+
   return (
-    <Tooltip>
+    <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger asChild>
         <button
           type="button"
           className={
-            'rounded text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)] focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--divider-line)] ' +
+            'inline-flex items-center justify-center rounded text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)] focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--divider-line)] min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-0 -m-2 sm:m-0 ' +
             (buttonClassName ?? '')
           }
           aria-label="APY details"
-          onClick={(e) => {
-            if (stopPropagation) e.stopPropagation()
-          }}
+          onClick={handleClick}
         >
           <Info className={iconClass} aria-hidden="true" />
         </button>

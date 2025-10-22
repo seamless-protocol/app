@@ -479,7 +479,7 @@ export function LeverageTokenTable({
                             {...(tokenApyData && { apyData: tokenApyData })}
                             isLoading={apyLoading}
                             isError={tokenApyError}
-                            iconSize="sm"
+                            iconSize="md"
                             side="top"
                             align="end"
                           />
