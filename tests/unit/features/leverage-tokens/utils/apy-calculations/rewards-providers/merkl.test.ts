@@ -179,7 +179,7 @@ describe('MerklRewardsAprProvider', () => {
       } as unknown as Response)
 
       const result = await provider.fetchRewardsApr(tokenAddress, chainId)
-      expect(result).toEqual({ rewardsAPR: 0 })
+      expect(result).toEqual({ rewardsAPR: 0, rewardTokens: [] })
     })
 
     it('should throw error when API returns 404 for opportunities', async () => {
