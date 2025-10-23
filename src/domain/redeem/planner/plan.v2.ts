@@ -152,6 +152,7 @@ export async function planRedeemV2(params: {
       : 0n
   const paddedCollateralForDebt = requiredForDebt + padding
   const remainingCollateral = totalCollateralAvailable - paddedCollateralForDebt
+  const excessDebt = sizing.preQuote?.out ? sizing.preQuote.out - debtToRepay : 0n
 
   // Minimum amount of collateral the sender expects to receive
   const minCollateralForSender = calculateMinCollateralForSender(remainingCollateral, slippageBps)
@@ -218,7 +219,7 @@ export async function planRedeemV2(params: {
     expectedDebt: debtToRepay,
     expectedTotalCollateral: totalCollateralAvailable,
     expectedExcessCollateral: remainingCollateral,
-    expectedDebtPayout: planDraft.expectedDebtPayout,
+    expectedDebtPayout: excessDebt,
     payoutAsset: planDraft.payoutAsset,
     payoutAmount: planDraft.payoutAmount,
     calls: planDraft.calls,
