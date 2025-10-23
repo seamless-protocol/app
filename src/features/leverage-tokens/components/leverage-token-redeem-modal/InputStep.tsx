@@ -515,12 +515,15 @@ export function InputStep({
                 parseFloat(expectedAmount) > 0 &&
                 selectedAssetPrice && (
                   <div className="text-xs text-secondary-foreground">
-                    ≈ $
-                    {(() => {
+                    ≈ ${(() => {
                       const mainAssetValue = parseFloat(expectedAmount) * selectedAssetPrice
-                      const debtAssetValue = expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && debtAssetPrice
-                        ? parseFloat(expectedDebtAmount) * debtAssetPrice
-                        : 0
+                      const debtAssetValue =
+                        expectedDebtAmount &&
+                        expectedDebtAmount !== '0' &&
+                        debtAssetSymbol &&
+                        debtAssetPrice
+                          ? parseFloat(expectedDebtAmount) * debtAssetPrice
+                          : 0
                       return (mainAssetValue + debtAssetValue).toLocaleString('en-US', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
