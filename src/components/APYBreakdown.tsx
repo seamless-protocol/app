@@ -87,7 +87,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
                     {getTokenLogoComponent(rewardToken.tokenSymbol)}
                   </div>
                   <span className="text-[var(--text-secondary)]">
-                    {rewardToken.tokenSymbol} APR:
+                    {rewardToken.tokenSymbol} APY:
                   </span>
                 </div>
                 <span className="font-medium text-[var(--accent-1)]">
@@ -98,7 +98,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
           : // Fallback: show total rewards APR if no breakdown available
             data.rewardsAPR !== 0 && (
               <div className="flex justify-between">
-                <span className="text-[var(--text-secondary)]">Rewards APR:</span>
+                <span className="text-[var(--text-secondary)]">Rewards APY:</span>
                 <span className="font-medium text-[var(--accent-1)]">
                   {formatPercentage(data.rewardsAPR, { decimals: 2, showSign: true })}
                 </span>
