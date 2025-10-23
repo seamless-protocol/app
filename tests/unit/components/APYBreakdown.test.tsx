@@ -19,7 +19,7 @@ describe('APYBreakdown', () => {
     expect(screen.getByText('Staking Yield:')).toBeInTheDocument()
     expect(screen.getByText('Restaking Yield:')).toBeInTheDocument()
     expect(screen.getByText('Borrow Rate:')).toBeInTheDocument()
-    expect(screen.getByText('Rewards APR:')).toBeInTheDocument()
+    expect(screen.getByText('Rewards APY:')).toBeInTheDocument()
     expect(screen.getByText('Points:')).toBeInTheDocument()
     expect(screen.getByText('Total APY:')).toBeInTheDocument()
   })
@@ -31,7 +31,7 @@ describe('APYBreakdown', () => {
     expect(screen.getByText('+520.00%')).toBeInTheDocument() // Staking Yield
     expect(screen.getByText('+210.00%')).toBeInTheDocument() // Restaking Yield
     expect(screen.getByText('-150.00%')).toBeInTheDocument() // Borrow Rate (negative)
-    expect(screen.getByText('+80.00%')).toBeInTheDocument() // Rewards APR
+    expect(screen.getByText('+80.00%')).toBeInTheDocument() // Rewards APY
     expect(screen.getByText('6 x')).toBeInTheDocument() // Points
     expect(screen.getByText('+660.00%')).toBeInTheDocument() // Total APY
   })

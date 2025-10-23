@@ -8,43 +8,43 @@ import type { BaseAprData } from './types'
 const logger = createLogger('apr-provider')
 
 /**
- * Available APR providers
+ * Available APY providers
  */
-export enum APR_PROVIDERS {
+export enum APY_PROVIDERS {
   ETHERFI = 'etherfi',
   LIDO = 'lido',
   DEFI_LLAMA = 'defillama',
 }
 
 /**
- * APR fetcher that routes to the appropriate APR provider based on config
+ * APY fetcher that routes to the appropriate APY provider based on config
  */
 export async function fetchAprForToken(
   tokenAddress: string,
   chainId: number,
 ): Promise<BaseAprData> {
-  // Get the leverage token config to determine APR provider
+  // Get the leverage token config to determine APY provider
   const config = getLeverageTokenConfig(tokenAddress as `0x${string}`, chainId)
-  const aprProvider = config?.apyConfig?.aprProvider?.type
+  const apyProvider = config?.apyConfig?.apyProvider?.type
 
   // Route to appropriate provider based on config
-  switch (aprProvider) {
-    case APR_PROVIDERS.LIDO: {
-      logger.info('Fetching APR using Lido', { chainId, tokenAddress })
+  switch (apyProvider) {
+    case APY_PROVIDERS.LIDO: {
+      logger.info('Fetching APY using Lido', { chainId, tokenAddress })
       const lidoProvider = new LidoAprProvider()
       return await lidoProvider.fetchApr()
     }
-    case APR_PROVIDERS.DEFI_LLAMA: {
-      const id = config?.apyConfig?.aprProvider?.id
+    case APY_PROVIDERS.DEFI_LLAMA: {
+      const id = config?.apyConfig?.apyProvider?.id
       if (!id) {
         throw new Error('DeFi Llama provider requires protocol ID')
       }
-      logger.info('Fetching APR using DeFi Llama', { chainId, tokenAddress, id })
+      logger.info('Fetching APY using DeFi Llama', { chainId, tokenAddress, id })
       const defillamaProvider = new DefiLlamaAprProvider(id)
       return await defillamaProvider.fetchApr()
     }
     default: {
-      logger.info('Fetching APR using Ether.fi', { chainId, tokenAddress })
+      logger.info('Fetching APY using Ether.fi', { chainId, tokenAddress })
       const etherfiProvider = new EtherFiAprProvider()
       return await etherfiProvider.fetchApr()
     }
