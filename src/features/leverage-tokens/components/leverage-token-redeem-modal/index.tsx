@@ -758,7 +758,6 @@ export function LeverageTokenRedeemModal({
           <ApproveStep
             selectedToken={selectedTokenView}
             amount={form.amount}
-            isApproving={!!isApprovingPending}
             chainId={leverageTokenConfig.chainId}
             transactionHash={approveHash as `0x${string}` | undefined}
             mode={approveHash ? 'onChain' : 'awaitingWallet'}

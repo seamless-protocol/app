@@ -13,7 +13,6 @@ interface Token {
 interface ApproveStepProps {
   selectedToken: Token
   amount: string
-  isApproving: boolean
   chainId?: number
   transactionHash?: `0x${string}` | undefined
   mode?: 'awaitingWallet' | 'onChain'
@@ -22,7 +21,6 @@ interface ApproveStepProps {
 export function ApproveStep({
   selectedToken,
   amount,
-  isApproving,
   chainId,
   transactionHash,
   mode = 'awaitingWallet',
