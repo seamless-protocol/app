@@ -13,7 +13,6 @@ interface Token {
 interface ApproveStepProps {
   selectedToken: Token
   amount: string
-  isApproving: boolean
   chainId?: number
   transactionHash?: `0x${string}` | undefined
   mode?: 'awaitingWallet' | 'onChain'
@@ -22,7 +21,6 @@ interface ApproveStepProps {
 export function ApproveStep({
   selectedToken,
   amount,
-  isApproving,
   chainId,
   transactionHash,
   mode = 'awaitingWallet',
@@ -48,13 +46,9 @@ export function ApproveStep({
       <Card variant="gradient" className="border border-border bg-card p-4">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Token</span>
-            <span className="text-foreground">{selectedToken.symbol}</span>
-          </div>
-          <div className="flex justify-between">
             <span className="text-secondary-foreground">Amount to approve</span>
             <span className="text-foreground">
-              {isApproving ? 'Max' : amount} {selectedToken.symbol}
+              {amount} {selectedToken.symbol}
             </span>
           </div>
           <div className="flex justify-between">

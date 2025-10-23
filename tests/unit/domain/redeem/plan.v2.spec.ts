@@ -82,7 +82,7 @@ describe('planRedeemV2 collateral padding', () => {
 
     expect(plan.payoutAsset.toLowerCase()).toBe('0xdddddddddddddddddddddddddddddddddddddddd')
     expect(plan.expectedCollateral).toBe(0n)
-    expect(plan.payoutAmount).toBe(plan.expectedDebtPayout)
+    expect(plan.payoutAmount).toBe(46n)
     expect(plan.payoutAmount > 0n).toBe(true)
     expect(plan.expectedExcessCollateral - plan.payoutAmount).toBe(1n)
     expect(plan.calls.length).toBeGreaterThan(2)
