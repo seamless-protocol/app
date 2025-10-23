@@ -10,8 +10,8 @@ import {
 } from '@/components/icons'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
-import { APY_PROVIDERS } from './utils/apy-calculations/apr-providers'
-import type { BORROW_APY_PROVIDERS } from './utils/apy-calculations/borrow-apy-providers'
+import { APR_PROVIDERS } from './utils/apy-calculations/apr-providers'
+import type { BORROW_APR_PROVIDERS } from './utils/apy-calculations/borrow-apy-providers'
 import type { REWARDS_PROVIDERS } from './utils/apy-calculations/rewards-providers'
 
 const BASE_UNISWAP_V2_ROUTER = '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' as Address
@@ -74,12 +74,12 @@ export interface LeverageTokenConfig {
 
   // APY configuration
   apyConfig?: {
-    apyProvider?: {
-      type: APY_PROVIDERS
+    aprProvider?: {
+      type: APR_PROVIDERS
       id?: string // Optional provider-specific identifier
     }
-    borrowApyProvider?: {
-      type: BORROW_APY_PROVIDERS
+    borrowAprProvider?: {
+      type: BORROW_APR_PROVIDERS
     }
     rewardsProvider?: {
       type: REWARDS_PROVIDERS
@@ -134,8 +134,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainLogo: EthereumLogo,
     supplyCap: 260,
     apyConfig: {
-      apyProvider: {
-        type: APY_PROVIDERS.DEFI_LLAMA,
+      aprProvider: {
+        type: APR_PROVIDERS.DEFI_LLAMA,
         id: '747c1d2a-c668-4682-b9f9-296708a3dd90',
       },
     },
@@ -220,8 +220,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainLogo: EthereumLogo,
     supplyCap: 480000,
     apyConfig: {
-      apyProvider: {
-        type: APY_PROVIDERS.DEFI_LLAMA,
+      aprProvider: {
+        type: APR_PROVIDERS.DEFI_LLAMA,
         id: '2ad8497d-c855-4840-85ad-cdc536b92ced',
       },
       pointsMultiplier: 6.75,
@@ -318,8 +318,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainLogo: BaseLogo,
     supplyCap: 150,
     apyConfig: {
-      apyProvider: {
-        type: APY_PROVIDERS.ETHERFI,
+      aprProvider: {
+        type: APR_PROVIDERS.ETHERFI,
       },
       pointsMultiplier: 34,
     },
@@ -414,8 +414,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainLogo: EthereumLogo,
     supplyCap: 200,
     apyConfig: {
-      apyProvider: {
-        type: APY_PROVIDERS.DEFI_LLAMA,
+      aprProvider: {
+        type: APR_PROVIDERS.DEFI_LLAMA,
         id: '747c1d2a-c668-4682-b9f9-296708a3dd90',
       },
     },
