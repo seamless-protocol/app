@@ -88,7 +88,7 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       inToken,
       outToken,
       amountIn,
-      ...(typeof amountOut === 'bigint' ? { amountOut } : {}),
+      ...(typeof amountOut === 'bigint' ? { amountOut: amountOut * (BPS_DENOMINATOR - BigInt(slippageBps)) / BPS_DENOMINATOR } : {}),
       ...(intent ? { intent } : {}),
       router,
       // The on-chain swap is executed inside the router flow. When a MulticallExecutor
