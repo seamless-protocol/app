@@ -48,13 +48,9 @@ export function ApproveStep({
       <Card variant="gradient" className="border border-border bg-card p-4">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Token</span>
-            <span className="text-foreground">{selectedToken.symbol}</span>
-          </div>
-          <div className="flex justify-between">
             <span className="text-secondary-foreground">Amount to approve</span>
             <span className="text-foreground">
-              {isApproving ? 'Max' : amount} {selectedToken.symbol}
+              {amount} {selectedToken.symbol}
             </span>
           </div>
           <div className="flex justify-between">

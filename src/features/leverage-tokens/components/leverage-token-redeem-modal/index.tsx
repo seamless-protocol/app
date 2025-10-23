@@ -799,6 +799,8 @@ export function LeverageTokenRedeemModal({
             }}
             mode={transactionHash ? 'onChain' : 'awaitingWallet'}
             transactionHash={transactionHash as `0x${string}` | undefined}
+            expectedDebtAmount={expectedDebtAmount}
+            debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
           />
         )
 
