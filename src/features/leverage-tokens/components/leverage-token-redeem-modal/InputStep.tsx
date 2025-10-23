@@ -89,6 +89,10 @@ interface InputStepProps {
 
   // Warning
   isBelowMinimum?: boolean | undefined
+  // Debt asset information
+  expectedDebtAmount?: string
+  debtAssetSymbol?: string
+  debtAssetPrice?: number | undefined
 }
 
 export function InputStep({
@@ -127,6 +131,9 @@ export function InputStep({
   redeemTokenFee,
   isRedeemTokenFeeLoading,
   isBelowMinimum,
+  expectedDebtAmount,
+  debtAssetSymbol,
+  debtAssetPrice,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const redeemAmountId = useId()
@@ -492,7 +499,15 @@ export function InputStep({
                     <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
                   </span>
                 ) : (
-                  `${expectedAmount} ${selectedAssetSymbol}`
+                  <>
+                    {expectedAmount} {selectedAssetSymbol}
+                    {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
+                      <>
+                        {' '}
+                        + {expectedDebtAmount} {debtAssetSymbol}
+                      </>
+                    )}
+                  </>
                 )}
               </div>
               {!isCalculating &&
@@ -501,10 +516,16 @@ export function InputStep({
                 selectedAssetPrice && (
                   <div className="text-xs text-secondary-foreground">
                     ≈ $
-                    {(parseFloat(expectedAmount) * selectedAssetPrice).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {(() => {
+                      const mainAssetValue = parseFloat(expectedAmount) * selectedAssetPrice
+                      const debtAssetValue = expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && debtAssetPrice
+                        ? parseFloat(expectedDebtAmount) * debtAssetPrice
+                        : 0
+                      return (mainAssetValue + debtAssetValue).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    })()}
                   </div>
                 )}
             </div>

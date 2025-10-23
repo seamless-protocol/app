@@ -29,6 +29,8 @@ interface ConfirmStepProps {
   isRedemptionFeeLoading?: boolean | undefined
   onConfirm: () => void
   disabled?: boolean
+  expectedDebtAmount?: string
+  debtAssetSymbol?: string
 }
 
 export function ConfirmStep({
@@ -41,6 +43,8 @@ export function ConfirmStep({
   isRedemptionFeeLoading,
   onConfirm,
   disabled = false,
+  expectedDebtAmount,
+  debtAssetSymbol,
 }: ConfirmStepProps) {
   // Get real-time gas estimation
   const {
@@ -83,6 +87,12 @@ export function ConfirmStep({
             <div className="flex items-center">
               <span className="mr-2 font-medium text-foreground">
                 {expectedAmount} {selectedAsset}
+                {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
+                  <>
+                    {' '}
+                    + {expectedDebtAmount} {debtAssetSymbol}
+                  </>
+                )}
               </span>
               <TrendingDown className="h-4 w-4 text-[var(--state-success-text)]" />
             </div>

@@ -350,6 +350,18 @@ export function LeverageTokenRedeemModal({
     leverageTokenConfig.debtAsset.decimals,
   ])
 
+  // Calculate debt asset amount that will be received
+  const expectedDebtAmount = useMemo(() => {
+    const plan = planPreview.plan
+    if (!plan || typeof plan.expectedDebtPayout !== 'bigint' || plan.expectedDebtPayout <= 0n)
+      return '0'
+    return formatTokenAmountFromBase(
+      plan.expectedDebtPayout,
+      leverageTokenConfig.debtAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [planPreview.plan, leverageTokenConfig.debtAsset.decimals])
+
   // Wait for receipt once we have a hash to derive actual received amount
   const receiptState = useWaitForTransactionReceipt({
     hash: (transactionHash || undefined) as `0x${string}` | undefined,
@@ -379,6 +391,28 @@ export function LeverageTokenRedeemModal({
     selectedOutputAsset.address,
     selectedOutputAsset.id,
     leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.decimals,
+  ])
+
+  // Parse actual debt amount received from logs
+  const actualDebtAmount = useMemo(() => {
+    const receipt = receiptState.data
+    if (!receipt || !userAddress) return undefined
+    const raw = parseErc20ReceivedFromReceipt({
+      receipt,
+      tokenAddress: leverageTokenConfig.debtAsset.address as `0x${string}`,
+      userAddress: userAddress as `0x${string}`,
+    })
+    if (typeof raw !== 'bigint') return undefined
+    return formatTokenAmountFromBase(
+      raw,
+      leverageTokenConfig.debtAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [
+    receiptState.data,
+    userAddress,
+    leverageTokenConfig.debtAsset.address,
     leverageTokenConfig.debtAsset.decimals,
   ])
 
@@ -713,6 +747,9 @@ export function LeverageTokenRedeemModal({
             redeemTokenFee={fees?.redeemTokenFee}
             isRedeemTokenFeeLoading={isFeesLoading}
             isBelowMinimum={isBelowMinimum()}
+            expectedDebtAmount={expectedDebtAmount}
+            debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
+            debtAssetPrice={debtUsdPrice}
           />
         )
 
@@ -745,6 +782,8 @@ export function LeverageTokenRedeemModal({
             isRedemptionFeeLoading={isFeesLoading}
             onConfirm={handleConfirm}
             disabled={isCalculating || exec.quoteStatus !== 'ready' || !planPreview.plan}
+            expectedDebtAmount={expectedDebtAmount}
+            debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
           />
         )
 
@@ -772,6 +811,8 @@ export function LeverageTokenRedeemModal({
             leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash ?? ('' as unknown as `0x${string}`)}
             onClose={handleClose}
+            actualDebtAmount={actualDebtAmount}
+            debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
           />
         )
 
