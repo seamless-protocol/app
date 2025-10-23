@@ -78,7 +78,7 @@ export function FeaturedLeverageToken({
                     <Skeleton className="h-3 w-16" />
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-[var(--text-muted)]">Rewards APY</span>
+                    <span className="text-[var(--text-muted)]">Rewards APR</span>
                     <Skeleton className="h-3 w-16" />
                   </div>
                   <div className="flex justify-between text-xs">
@@ -101,7 +101,7 @@ export function FeaturedLeverageToken({
                     <span className="text-[var(--text-muted)]">—</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-[var(--text-muted)]">Rewards APY</span>
+                    <span className="text-[var(--text-muted)]">Rewards APR</span>
                     <span className="text-[var(--text-muted)]">—</span>
                   </div>
                   <div className="flex justify-between text-xs">
@@ -136,7 +136,7 @@ export function FeaturedLeverageToken({
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-[var(--text-muted)]">Rewards APY</span>
+                    <span className="text-[var(--text-muted)]">Rewards APR</span>
                     <span className="font-medium text-[var(--accent-1)]">
                       {apyData.rewardsAPR !== 0
                         ? formatPercentage(apyData.rewardsAPR, { decimals: 2, showSign: true })

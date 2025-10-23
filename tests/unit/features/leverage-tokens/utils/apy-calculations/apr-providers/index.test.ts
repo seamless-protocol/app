@@ -238,7 +238,7 @@ describe('APR Providers', () => {
 
       await fetchAprForToken(supportedTokenAddress, chainId)
 
-      expect(consoleSpy).toHaveBeenCalledWith('[apr-provider] Fetching APY using Ether.fi', {
+      expect(consoleSpy).toHaveBeenCalledWith('[apr-provider] Fetching APR using Ether.fi', {
         chainId,
         tokenAddress: supportedTokenAddress,
       })
