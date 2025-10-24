@@ -127,7 +127,7 @@ export async function planRedeemV2(params: {
   const payoutOverride = params.outputAsset ? getAddress(params.outputAsset) : undefined
   const wantsDebtOutput = payoutOverride ? payoutOverride === debtAddr : false
 
-  const remainingCollateral = totalCollateralAvailable - collateralRequiredForSwap
+  let remainingCollateral = totalCollateralAvailable - collateralRequiredForSwap
   const planDraft = {
     minCollateralForSender,
     expectedCollateral: remainingCollateral,
@@ -162,6 +162,8 @@ export async function planRedeemV2(params: {
       planDraft.calls.push(...payoutCalls)
       planDraft.expectedDebtPayout = remainingDebt
       planDraft.payoutAmount = remainingDebt
+
+      remainingCollateral = 0n
     } else {
       planDraft.payoutAmount = 0n
     }
