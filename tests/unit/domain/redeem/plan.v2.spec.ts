@@ -20,7 +20,9 @@ vi.mock('@/lib/contracts/generated', () => ({
     borrowShares: 0n,
     borrowAssets: 0n,
   })),
-  readLeverageManagerV2GetLeverageTokenLendingAdapter: vi.fn(async () => '0x2222222222222222222222222222222222222222' as Address),
+  readLeverageManagerV2GetLeverageTokenLendingAdapter: vi.fn(
+    async () => '0x2222222222222222222222222222222222222222' as Address,
+  ),
 }))
 
 vi.mock('wagmi/actions', () => ({
@@ -33,7 +35,15 @@ import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
 
 const dummyQuoteTarget = '0x0000000000000000000000000000000000000aAa' as Address
 
-function createMockQuoteFunction({ outValue, minOutValue, maxInValue }: { outValue: bigint, minOutValue: bigint, maxInValue: bigint }) {
+function createMockQuoteFunction({
+  outValue,
+  minOutValue,
+  maxInValue,
+}: {
+  outValue: bigint
+  minOutValue: bigint
+  maxInValue: bigint
+}) {
   return async function mockQuote({ amountIn }: { amountIn: bigint }) {
     return {
       out: outValue,
@@ -76,25 +86,41 @@ describe('planRedeemV2', () => {
   })
 
   it('should revert if the debt output from the swap is below the required debt', async () => {
-    await expect(planRedeemV2({
-      config: {} as any,
-      token: '0x1111111111111111111111111111111111111111' as Address,
-      sharesToRedeem: 50n,
-      slippageBps: 50,
-      quoteCollateralToDebt: createMockQuoteFunction({ outValue: 0n, minOutValue: 0n, maxInValue: 50n }) as any,
-      chainId: 1,
-    })).rejects.toThrow('Try increasing slippage: swap of collateral to repay debt for the leveraged position is below the required debt.')
+    await expect(
+      planRedeemV2({
+        config: {} as any,
+        token: '0x1111111111111111111111111111111111111111' as Address,
+        sharesToRedeem: 50n,
+        slippageBps: 50,
+        quoteCollateralToDebt: createMockQuoteFunction({
+          outValue: 0n,
+          minOutValue: 0n,
+          maxInValue: 50n,
+        }) as any,
+        chainId: 1,
+      }),
+    ).rejects.toThrow(
+      'Try increasing slippage: swap of collateral to repay debt for the leveraged position is below the required debt.',
+    )
   })
 
   it('should revert if the collateral required for the swap is above the allowed amount wrt slippage', async () => {
-    await expect(planRedeemV2({
-      config: {} as any,
-      token: '0x1111111111111111111111111111111111111111' as Address,
-      sharesToRedeem: 50n,
-      slippageBps: 50,
-      quoteCollateralToDebt: createMockQuoteFunction({ outValue: 50n, minOutValue: 50n, maxInValue: 99n }) as any,
-      chainId: 1,
-    })).rejects.toThrow('Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received')
+    await expect(
+      planRedeemV2({
+        config: {} as any,
+        token: '0x1111111111111111111111111111111111111111' as Address,
+        sharesToRedeem: 50n,
+        slippageBps: 50,
+        quoteCollateralToDebt: createMockQuoteFunction({
+          outValue: 50n,
+          minOutValue: 50n,
+          maxInValue: 99n,
+        }) as any,
+        chainId: 1,
+      }),
+    ).rejects.toThrow(
+      'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
+    )
   })
 
   it('supports redeeming into the debt asset when requested', async () => {

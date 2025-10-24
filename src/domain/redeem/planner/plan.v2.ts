@@ -88,7 +88,14 @@ export async function planRedeemV2(params: {
     chainId,
   } = params
 
-  const { collateralAsset, debtAsset, totalCollateralAvailable, debtToRepay, minCollateralForSender, collateralAvailableForSwap } = await getSwapParamsForRedeem({
+  const {
+    collateralAsset,
+    debtAsset,
+    totalCollateralAvailable,
+    debtToRepay,
+    minCollateralForSender,
+    collateralAvailableForSwap,
+  } = await getSwapParamsForRedeem({
     config,
     token,
     sharesToRedeem,
@@ -119,7 +126,7 @@ export async function planRedeemV2(params: {
     collateralAsset,
     collateralAmount: collateralRequiredForSwap,
     useNativeCollateralPath,
-    quote
+    quote,
   })
 
   const collateralAddr = getAddress(collateralAsset)
@@ -242,7 +249,10 @@ async function getSwapParamsForRedeem(args: {
   const zeroSlippageCollateralForSender = totalCollateralAvailable - debtInCollateralAsset
 
   // Apply slippage to the amount of collateral the user would receive if there is 0 slippage on the swap from collateral -> debt wrt
-  const minCollateralForSender = calculateMinCollateralForSender(zeroSlippageCollateralForSender, slippageBps)
+  const minCollateralForSender = calculateMinCollateralForSender(
+    zeroSlippageCollateralForSender,
+    slippageBps,
+  )
 
   // We simply use the full amount at our disposal for the swap, considering allowed slippage
   const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
@@ -253,7 +263,7 @@ async function getSwapParamsForRedeem(args: {
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
-    collateralAvailableForSwap
+    collateralAvailableForSwap,
   }
 }
 
@@ -262,7 +272,7 @@ async function getCollateralToDebtQuote(args: {
   requiredDebt: bigint
   quoter: QuoteFn
   collateralAvailableForSwap: bigint
-  inTokenForQuote: Address,
+  inTokenForQuote: Address
   intent: 'exactOut' | 'exactIn'
 }): Promise<Quote> {
   const { debtAsset, requiredDebt, quoter, collateralAvailableForSwap, inTokenForQuote, intent } =
@@ -279,7 +289,9 @@ async function getCollateralToDebtQuote(args: {
   })
 
   if (quote.out < requiredDebt) {
-    throw new Error('Try increasing slippage: swap of collateral to repay debt for the leveraged position is below the required debt.')
+    throw new Error(
+      'Try increasing slippage: swap of collateral to repay debt for the leveraged position is below the required debt.',
+    )
   }
 
   return quote
@@ -291,12 +303,7 @@ async function buildCollateralToDebtSwapCalls(args: {
   useNativeCollateralPath: boolean
   quote: Quote
 }): Promise<{ calls: V2Calls }> {
-  const {
-    collateralAsset,
-    collateralAmount,
-    useNativeCollateralPath,
-    quote
-  } = args
+  const { collateralAsset, collateralAmount, useNativeCollateralPath, quote } = args
 
   if (collateralAmount <= 0n) {
     return { calls: [] }
