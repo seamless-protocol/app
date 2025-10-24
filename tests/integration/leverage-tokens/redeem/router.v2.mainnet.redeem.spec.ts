@@ -305,6 +305,7 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
   } else {
     // Collateral-out path: validate both primary collateral and any secondary debt payout
     expect(collateralDelta >= 0n).toBe(true)
+    expect(collateralDelta >= plan.minCollateralForSender).toBe(true)
     expect(withinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
 
     // Validate excess debt payout when planner expects it
