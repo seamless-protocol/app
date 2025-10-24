@@ -133,7 +133,6 @@ async function performRedeem(
   const {
     token,
     router,
-    manager,
     collateralAsset,
     sharesAfterMint,
     slippageBps,
@@ -161,7 +160,6 @@ async function performRedeem(
     slippageBps,
     quoteCollateralToDebt,
     chainId,
-    managerAddress: manager,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 
@@ -193,7 +191,6 @@ async function performRedeem(
     quoteCollateralToDebt,
     chainId,
     routerAddressV2: router,
-    managerAddressV2: manager,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 
