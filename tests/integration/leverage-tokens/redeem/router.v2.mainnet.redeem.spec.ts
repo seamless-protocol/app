@@ -244,8 +244,8 @@ function assertRedeemPlan(
   collateralAsset: Address,
   expectedPayout?: Address,
 ): void {
-  expect(plan.sharesToRedeem > 0n).toBe(true)
-  expect(plan.expectedDebt > 0n).toBe(true)
+  expect(plan.sharesToRedeem).toBeGreaterThan(0n)
+  expect(plan.expectedDebt).toBeGreaterThan(0n)
   expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
   const payoutAsset = plan.payoutAsset.toLowerCase()
@@ -261,9 +261,9 @@ function assertRedeemPlan(
   expect(hasApprovalOrWithdraw).toBe(true)
 
   if (expectedPayoutAsset === collateralAsset.toLowerCase()) {
-    expect(plan.expectedCollateral >= 0n).toBe(true)
+    expect(plan.expectedCollateral).toBeGreaterThanOrEqual(0n)
     // If planner anticipates a secondary debt payout, it must be non-negative
-    expect(plan.expectedDebtPayout >= 0n).toBe(true)
+    expect(plan.expectedDebtPayout).toBeGreaterThanOrEqual(0n)
   } else {
     // Debt-out path: no collateral expected in final payout
     expect(plan.expectedCollateral).toBe(0n)
