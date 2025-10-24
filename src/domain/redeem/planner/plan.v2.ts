@@ -163,12 +163,6 @@ export async function planRedeemV2(params: {
   // Minimum amount of collateral the sender expects to receive
   const minCollateralForSender = calculateMinCollateralForSender(remainingCollateral, slippageBps)
 
-  if (minCollateralForSender > remainingCollateral) {
-    throw new Error(
-      'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
-    )
-  }
-
   const { calls: swapCalls, expectedDebtOut } = await buildCollateralToDebtSwapCalls({
     collateralAsset,
     debtAsset,
