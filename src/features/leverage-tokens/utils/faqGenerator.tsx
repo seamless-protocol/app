@@ -223,7 +223,7 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
         <div className="space-y-2">
           <div>
             <a
-              href="https://docs.seamlessprotocol.org"
+              href="https://docs.seamlessprotocol.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[var(--link-normal)] hover:text-[var(--link-hover)] underline underline-offset-2 transition-colors"
