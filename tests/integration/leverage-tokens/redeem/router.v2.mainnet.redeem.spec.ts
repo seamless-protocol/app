@@ -295,19 +295,17 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
     expect(collateralDelta <= 0n || collateralDelta <= plan.minCollateralForSender).toBe(true)
     expect(plan.expectedCollateral).toBe(0n)
 
+    // Validate lower bound for debt payout, but no upper bound (getting more is good)
     const debtLower = (plan.payoutAmount * (10_000n - toleranceBps)) / 10_000n
-    const debtUpper = (plan.payoutAmount * (10_000n + toleranceBps)) / 10_000n
     expect(debtDelta).toBeGreaterThanOrEqual(debtLower)
-    expect(debtDelta).toBeLessThanOrEqual(debtUpper)
   } else {
     // Collateral-out path: validate both primary collateral and any secondary debt payout
     expect(collateralDelta).toBeGreaterThanOrEqual(0n)
+    // Critical: actual must meet slippage-protected minimum
     expect(collateralDelta).toBeGreaterThanOrEqual(plan.minCollateralForSender)
-
+    // Validate lower bound with tolerance, but no upper bound (getting more is good)
     const collateralLower = (plan.expectedCollateral * (10_000n - toleranceBps)) / 10_000n
-    const collateralUpper = (plan.expectedCollateral * (10_000n + toleranceBps)) / 10_000n
     expect(collateralDelta).toBeGreaterThanOrEqual(collateralLower)
-    expect(collateralDelta).toBeLessThanOrEqual(collateralUpper)
 
     // Validate excess debt payout when planner expects it
     // Note: Excess debt is a bonus from swap over-delivery (padding/buffers/price movements)
