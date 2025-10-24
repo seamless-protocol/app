@@ -362,6 +362,37 @@ describe('planRedeemV2 iterative sizing convergence', () => {
     expect(plan.expectedDebt).toBe(50n)
     expect(plan.calls.length).toBeGreaterThan(0)
   })
+
+  it('handles oscillating quotes gracefully by using last estimate with buffer', async () => {
+    let callCount = 0
+    const oscillatingQuote = (async (req: QuoteRequest) => {
+      if (req.intent === 'exactOut') throw new Error('no exact-out')
+      callCount++
+      // Return oscillating outputs that prevent convergence within tolerance
+      // but still make forward progress toward covering the debt
+      return {
+        out: 45n + BigInt(callCount), // 46n, 47n, 48n, 49n, 50n...
+        approvalTarget: dummyQuoteTarget,
+        calldata: '0xdead' as `0x${string}`,
+      }
+    }) satisfies QuoteFn
+
+    const plan = await planRedeemV2({
+      config: mockConfig,
+      token: '0x1111111111111111111111111111111111111111' as Address,
+      sharesToRedeem: 50n,
+      slippageBps: 50,
+      quoteCollateralToDebt: oscillatingQuote,
+      managerAddress: '0x2222222222222222222222222222222222222222' as Address,
+      chainId: 1,
+    })
+
+    // Should succeed using last estimate + buffer (pragmatic fallback)
+    expect(plan.expectedDebt).toBe(50n)
+    expect(plan.calls.length).toBeGreaterThan(0)
+    expect(plan.expectedCollateral).toBeLessThan(plan.expectedTotalCollateral)
+    expect(callCount).toBeGreaterThan(4) // Iterates multiple times without converging but succeeds
+  })
 })
 
 describe('planRedeemV2 no-debt early return', () => {
