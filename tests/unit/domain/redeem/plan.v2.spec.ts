@@ -44,7 +44,7 @@ function createMockQuoteFunction({
   minOutValue: bigint
   maxInValue: bigint
 }) {
-  return async function mockQuote({ amountIn }: { amountIn: bigint }) {
+  return async function mockQuote() {
     return {
       out: outValue,
       minOut: minOutValue,

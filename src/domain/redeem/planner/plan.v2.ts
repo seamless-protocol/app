@@ -7,6 +7,8 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
+import { getPublicClient } from 'wagmi/actions'
+import { lendingAdapterAbi } from '@/lib/contracts/abis/lendingAdapter'
 import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
@@ -16,8 +18,6 @@ import {
 } from '@/lib/contracts/generated'
 import { calculateMinCollateralForSender } from '../utils/slippage'
 import type { Quote, QuoteFn } from './types'
-import { lendingAdapterAbi } from '@/lib/contracts/abis/lendingAdapter'
-import { getPublicClient } from 'wagmi/actions'
 
 // Local structural types (avoid brittle codegen coupling)
 type TokenArg = Address
