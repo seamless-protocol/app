@@ -98,7 +98,8 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       fromAddress: (fromAddress ?? router) as Address,
       // Ensure aggregator sends output to the router so the repay leg has funds
       toAddress: router as Address,
-      slippage,
+      // For exact output quotes we set slippage to 0, since lifi will quote the output amount + slippage
+      slippage: intent === 'exactOut' ? '0' : slippage,
       ...(integrator ? { integrator } : {}),
       order,
       ...(allowBridges ? { allowBridges } : {}),

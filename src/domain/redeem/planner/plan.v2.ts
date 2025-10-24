@@ -84,7 +84,7 @@ export async function planRedeemV2(params: {
     token,
     sharesToRedeem,
     slippageBps,
-    quoteCollateralToDebt,
+    quoteCollateralToDebt: quoter,
     chainId,
   } = params
 
@@ -102,13 +102,14 @@ export async function planRedeemV2(params: {
   const quote = await getCollateralToDebtQuote({
     debtAsset,
     requiredDebt: debtToRepay,
-    quoteCollateralToDebt,
+    quoter,
     collateralAvailableForSwap,
     inTokenForQuote,
+    intent: 'exactIn',
   })
 
-  const remainingCollateral = totalCollateralAvailable - collateralAvailableForSwap
-  if (minCollateralForSender > remainingCollateral) {
+  const collateralRequiredForSwap = quote.maxIn ?? 0n
+  if (collateralAvailableForSwap < collateralRequiredForSwap) {
     throw new Error(
       'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
     )
@@ -116,7 +117,7 @@ export async function planRedeemV2(params: {
 
   const { calls: swapCalls } = await buildCollateralToDebtSwapCalls({
     collateralAsset,
-    collateralAmount: collateralAvailableForSwap,
+    collateralAmount: collateralRequiredForSwap,
     useNativeCollateralPath,
     quote
   })
@@ -126,6 +127,7 @@ export async function planRedeemV2(params: {
   const payoutOverride = params.outputAsset ? getAddress(params.outputAsset) : undefined
   const wantsDebtOutput = payoutOverride ? payoutOverride === debtAddr : false
 
+  const remainingCollateral = totalCollateralAvailable - collateralRequiredForSwap
   const planDraft = {
     minCollateralForSender,
     expectedCollateral: remainingCollateral,
@@ -143,9 +145,10 @@ export async function planRedeemV2(params: {
       const quoteWithFullDebtOutput = await getCollateralToDebtQuote({
         debtAsset,
         requiredDebt: debtToRepay,
-        quoteCollateralToDebt,
+        quoter,
         collateralAvailableForSwap: totalCollateralAvailable,
         inTokenForQuote,
+        intent: 'exactIn',
       })
       const { calls: payoutCalls } = await buildCollateralToDebtSwapCalls({
         collateralAsset,
@@ -248,30 +251,29 @@ async function getSwapParamsForRedeem(args: {
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
-    collateralAvailableForSwap,
-    zeroSlippageCollateralForSender,
+    collateralAvailableForSwap
   }
 }
 
 async function getCollateralToDebtQuote(args: {
   debtAsset: Address
   requiredDebt: bigint
-  quoteCollateralToDebt: QuoteFn
+  quoter: QuoteFn
   collateralAvailableForSwap: bigint
-  inTokenForQuote: Address
+  inTokenForQuote: Address,
+  intent: 'exactOut' | 'exactIn'
 }): Promise<Quote> {
-  const { debtAsset, requiredDebt, quoteCollateralToDebt, collateralAvailableForSwap, inTokenForQuote } =
+  const { debtAsset, requiredDebt, quoter, collateralAvailableForSwap, inTokenForQuote, intent } =
     args
 
   if (requiredDebt <= 0n) return { out: 0n, approvalTarget: zeroAddress, calldata: '0x' }
-  if (collateralAvailableForSwap <= 0n) {
-    throw new Error('No collateral available to repay debt')
-  }
 
-  const quote = await quoteCollateralToDebt({
+  const quote = await quoter({
     inToken: inTokenForQuote,
     outToken: debtAsset,
     amountIn: collateralAvailableForSwap,
+    amountOut: requiredDebt,
+    intent,
   })
 
   if (quote.out < requiredDebt) {
