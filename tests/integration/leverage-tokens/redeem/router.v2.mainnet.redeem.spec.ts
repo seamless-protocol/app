@@ -244,8 +244,8 @@ function assertRedeemPlan(
   collateralAsset: Address,
   expectedPayout?: Address,
 ): void {
-  expect(plan.sharesToRedeem > 0n).toBe(true)
-  expect(plan.expectedDebt > 0n).toBe(true)
+  expect(plan.sharesToRedeem).toBeGreaterThan(0n)
+  expect(plan.expectedDebt).toBeGreaterThan(0n)
   expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
   const payoutAsset = plan.payoutAsset.toLowerCase()
@@ -261,9 +261,12 @@ function assertRedeemPlan(
   expect(hasApprovalOrWithdraw).toBe(true)
 
   if (expectedPayoutAsset === collateralAsset.toLowerCase()) {
-    expect(plan.expectedCollateral >= 0n).toBe(true)
+    expect(plan.expectedCollateral).toBeGreaterThanOrEqual(0n)
+    // If planner anticipates a secondary debt payout, it must be non-negative
+    expect(plan.expectedDebtPayout).toBeGreaterThanOrEqual(0n)
   } else {
-    expect(plan.expectedDebtPayout >= 0n).toBe(true)
+    // Debt-out path: no collateral expected in final payout
+    expect(plan.expectedCollateral).toBe(0n)
   }
 
   expect(payoutAsset).toBe(expectedPayoutAsset)
@@ -284,23 +287,34 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
 
   expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
 
-  // 1% tolerance for 25x leverage + LiFi routing variability
-  const toleranceBps = BigInt(slippageBps) + 100n
-  const withinTolerance = (actual: bigint, expected: bigint): boolean => {
-    if (expected === 0n) return actual === 0n
-    if (actual < 0n) return false
-    const lowerBound = (expected * (10_000n - toleranceBps)) / 10_000n
-    const upperBound = (expected * (10_000n + toleranceBps)) / 10_000n
-    return actual >= lowerBound && actual <= upperBound
-  }
+  // Tighter tolerance (slippage + 25 bps) for redeem leg
+  const toleranceBps = BigInt(slippageBps) + 25n
 
   if (payoutAsset) {
-    expect(collateralDelta <= plan.minCollateralForSender).toBe(true)
+    // Debt-out path: no positive collateral returned, only spend bounded
+    expect(collateralDelta <= 0n || collateralDelta <= plan.minCollateralForSender).toBe(true)
     expect(plan.expectedCollateral).toBe(0n)
-    expect(withinTolerance(debtDelta, plan.payoutAmount)).toBe(true)
+
+    // Validate lower bound for debt payout, but no upper bound (getting more is good)
+    const debtLower = (plan.payoutAmount * (10_000n - toleranceBps)) / 10_000n
+    expect(debtDelta).toBeGreaterThanOrEqual(debtLower)
   } else {
-    expect(collateralDelta > 0n).toBe(true)
-    expect(withinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
+    // Collateral-out path: validate both primary collateral and any secondary debt payout
+    expect(collateralDelta).toBeGreaterThanOrEqual(0n)
+    // Critical: actual must meet slippage-protected minimum
+    expect(collateralDelta).toBeGreaterThanOrEqual(plan.minCollateralForSender)
+    // Validate lower bound with tolerance, but no upper bound (getting more is good)
+    const collateralLower = (plan.expectedCollateral * (10_000n - toleranceBps)) / 10_000n
+    expect(collateralDelta).toBeGreaterThanOrEqual(collateralLower)
+
+    // Validate excess debt payout when planner expects it
+    // Note: Excess debt is a bonus from swap over-delivery (padding/buffers/price movements)
+    // and is potentially volatile. We only assert positive when expected, not strict bounds.
+    if (plan.expectedDebtPayout > 0n) {
+      expect(debtDelta).toBeGreaterThan(0n)
+    } else {
+      expect(debtDelta).toBeGreaterThanOrEqual(0n)
+    }
   }
 
   expect(plan.payoutAsset.toLowerCase()).toBe((payoutAsset ?? collateralAsset).toLowerCase())
