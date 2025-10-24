@@ -9,7 +9,7 @@ import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
   MIN_REDEEM_AMOUNT_DISPLAY,
-  SLIPPAGE_PRESETS_PERCENT_DISPLAY,
+  SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM,
 } from '../../constants'
 
 type OutputAssetId = 'collateral' | 'debt'
@@ -355,7 +355,7 @@ export function InputStep({
             <div className="flex items-center justify-between">
               <div className="text-xs font-medium text-foreground">Slippage Tolerance</div>
               <div className="flex items-center space-x-2">
-                {SLIPPAGE_PRESETS_PERCENT_DISPLAY.map((value) => (
+                {SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM.map((value) => (
                   <Button
                     key={value}
                     variant={slippage === value ? 'default' : 'outline'}
