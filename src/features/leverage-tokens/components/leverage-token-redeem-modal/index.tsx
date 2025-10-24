@@ -789,7 +789,8 @@ export function LeverageTokenRedeemModal({
       case 'pending':
         return (
           <PendingStep
-            amount={form.amount}
+            expectedCollateralAmount={expectedAmount}
+            collateralSymbol={selectedOutputAsset.symbol}
             leverageTokenConfig={{
               symbol: leverageTokenConfig.symbol,
               name: leverageTokenConfig.name,
