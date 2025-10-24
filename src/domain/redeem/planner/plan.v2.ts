@@ -385,18 +385,6 @@ async function buildCollateralToDebtSwapCalls(args: {
     useNativeCollateralPath,
   } = args
 
-  if (collateralAmount <= 0n) {
-    return { calls: [], expectedDebtOut: 0n }
-  }
-
-  // If we have an exact-out preQuote, ensure we are swapping the exact
-  // amount it sized for. A mismatch indicates a logic error upstream.
-  if (args.preQuote && typeof args.preQuote.maxIn === 'bigint') {
-    if (args.preQuote.maxIn !== collateralAmount) {
-      throw new Error('preQuote amount mismatch: expected maxIn to equal collateralAmount')
-    }
-  }
-
   // Exact-out: reuse validated preQuote. Exact-in: quote final padded amount.
   const quote =
     args.preQuote ??
