@@ -46,6 +46,27 @@ const quoteWithFloor: QuoteFn = async ({ amountIn }) => {
 }
 
 describe('planRedeemV2 basic functionality', () => {
+  it('calculates minCollateralForSender correctly with slippage', async () => {
+    const plan = await planRedeemV2({
+      config: mockConfig,
+      token: '0x1111111111111111111111111111111111111111' as Address,
+      sharesToRedeem: 50n,
+      slippageBps: 100, // 1% slippage
+      quoteCollateralToDebt: quoteWithFloor,
+      managerAddress: '0x2222222222222222222222222222222222222222' as Address,
+      chainId: 1,
+    })
+
+    // Preview: 100n total collateral, 50n debt → net equity ideally 50n
+    // But we spend 53n (51n required + 1n padding + 1n buffer) for debt swap
+    // So remainingCollateral (ideal net to user) = 100n - 53n = 47n
+    // User says 1% slippage → willing to accept minimum = 47n * 9900 / 10000 = 46n (rounded down)
+    const expectedRemaining = 100n - 53n
+    const expectedMin = (expectedRemaining * 9900n) / 10000n
+    expect(plan.minCollateralForSender).toBe(expectedMin)
+    expect(plan.minCollateralForSender).toBeLessThanOrEqual(plan.expectedCollateral)
+  })
+
   it('pads collateral used for debt swaps to avoid rounding shortfalls', async () => {
     const plan = await planRedeemV2({
       config: mockConfig,
@@ -245,6 +266,101 @@ describe('planRedeemV2 sizing errors', () => {
         chainId: 1,
       }),
     ).rejects.toThrow('Required collateral is greater than max collateral available')
+  })
+})
+
+describe('planRedeemV2 iterative sizing convergence', () => {
+  it('converges when iterative sizing stabilizes', async () => {
+    let callCount = 0
+    const convergingQuote = (async (req: QuoteRequest) => {
+      if (req.intent === 'exactOut') throw new Error('no exact-out')
+      callCount++
+      // Simulate convergence: first call needs adjustment, second converges
+      if (callCount === 1) {
+        return {
+          out: 48n, // Less than debt, will iterate
+          approvalTarget: dummyQuoteTarget,
+          calldata: '0xaaaa' as `0x${string}`,
+        }
+      }
+      return {
+        out: 51n, // More than debt, converges
+        approvalTarget: dummyQuoteTarget,
+        calldata: '0xbbbb' as `0x${string}`,
+      }
+    }) satisfies QuoteFn
+
+    const plan = await planRedeemV2({
+      config: mockConfig,
+      token: '0x1111111111111111111111111111111111111111' as Address,
+      sharesToRedeem: 50n,
+      slippageBps: 50,
+      quoteCollateralToDebt: convergingQuote,
+      managerAddress: '0x2222222222222222222222222222222222222222' as Address,
+      chainId: 1,
+    })
+
+    expect(plan.expectedDebt).toBe(50n)
+    expect(callCount).toBeGreaterThan(1) // Proves iteration happened
+  })
+
+  it('handles exact-out fallback when maxIn exceeds available collateral', async () => {
+    const exactOutTooMuch = (async (req: QuoteRequest) => {
+      if (req.intent === 'exactOut') {
+        return {
+          maxIn: 200n, // More than 100n available collateral
+          out: 50n,
+          approvalTarget: dummyQuoteTarget,
+          calldata: '0xcccc' as `0x${string}`,
+        }
+      }
+      // Falls back to exact-in
+      return {
+        out: 50n,
+        approvalTarget: dummyQuoteTarget,
+        calldata: '0xdddd' as `0x${string}`,
+      }
+    }) satisfies QuoteFn
+
+    const plan = await planRedeemV2({
+      config: mockConfig,
+      token: '0x1111111111111111111111111111111111111111' as Address,
+      sharesToRedeem: 50n,
+      slippageBps: 50,
+      quoteCollateralToDebt: exactOutTooMuch,
+      managerAddress: '0x2222222222222222222222222222222222222222' as Address,
+      chainId: 1,
+    })
+
+    expect(plan.expectedDebt).toBe(50n)
+    // Should succeed via exact-in fallback
+  })
+
+  it('uses exact-out when maxIn is within available collateral', async () => {
+    const exactOutGood = (async (req: QuoteRequest) => {
+      if (req.intent === 'exactOut') {
+        return {
+          maxIn: 50n, // Within 100n available collateral
+          out: 50n,
+          approvalTarget: dummyQuoteTarget,
+          calldata: '0xeeee' as `0x${string}`,
+        }
+      }
+      throw new Error('Should use exact-out path')
+    }) satisfies QuoteFn
+
+    const plan = await planRedeemV2({
+      config: mockConfig,
+      token: '0x1111111111111111111111111111111111111111' as Address,
+      sharesToRedeem: 50n,
+      slippageBps: 50,
+      quoteCollateralToDebt: exactOutGood,
+      managerAddress: '0x2222222222222222222222222222222222222222' as Address,
+      chainId: 1,
+    })
+
+    expect(plan.expectedDebt).toBe(50n)
+    expect(plan.calls.length).toBeGreaterThan(0)
   })
 })
 
