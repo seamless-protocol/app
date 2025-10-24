@@ -262,8 +262,11 @@ function assertRedeemPlan(
 
   if (expectedPayoutAsset === collateralAsset.toLowerCase()) {
     expect(plan.expectedCollateral >= 0n).toBe(true)
-  } else {
+    // If planner anticipates a secondary debt payout, it must be non-negative
     expect(plan.expectedDebtPayout >= 0n).toBe(true)
+  } else {
+    // Debt-out path: no collateral expected in final payout
+    expect(plan.expectedCollateral).toBe(0n)
   }
 
   expect(payoutAsset).toBe(expectedPayoutAsset)
@@ -284,8 +287,8 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
 
   expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
 
-  // 1% tolerance for 25x leverage + LiFi routing variability
-  const toleranceBps = BigInt(slippageBps) + 100n
+  // Tighter tolerance (slippage + 25 bps) for redeem leg
+  const toleranceBps = BigInt(slippageBps) + 25n
   const withinTolerance = (actual: bigint, expected: bigint): boolean => {
     if (expected === 0n) return actual === 0n
     if (actual < 0n) return false
@@ -295,12 +298,23 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
   }
 
   if (payoutAsset) {
-    expect(collateralDelta <= plan.minCollateralForSender).toBe(true)
+    // Debt-out path: no positive collateral returned, only spend bounded
+    expect(collateralDelta <= 0n || collateralDelta <= plan.minCollateralForSender).toBe(true)
     expect(plan.expectedCollateral).toBe(0n)
     expect(withinTolerance(debtDelta, plan.payoutAmount)).toBe(true)
   } else {
-    expect(collateralDelta > 0n).toBe(true)
+    // Collateral-out path: validate both primary collateral and any secondary debt payout
+    expect(collateralDelta >= 0n).toBe(true)
     expect(withinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
+
+    // Validate excess debt payout when planner expects it
+    if (plan.expectedDebtPayout > 0n) {
+      expect(debtDelta > 0n).toBe(true)
+      expect(withinTolerance(debtDelta, plan.expectedDebtPayout)).toBe(true)
+    } else {
+      // No excess debt expected
+      expect(debtDelta >= 0n).toBe(true)
+    }
   }
 
   expect(plan.payoutAsset.toLowerCase()).toBe((payoutAsset ?? collateralAsset).toLowerCase())

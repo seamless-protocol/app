@@ -23,7 +23,19 @@ export default defineConfig({
     },
     mockReset: true,
     clearMocks: true,
-    restoreMocks: true
+    restoreMocks: true,
+    coverage: {
+      reporter: ['text', 'html', 'clover', 'json'],
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        'coverage/**',
+        '_figma/**',
+        'src/**/*.stories.*',
+        'src/stories/**',
+        '**/*.stories.*',
+      ],
+    },
   },
   resolve: {
     alias: {

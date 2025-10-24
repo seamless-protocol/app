@@ -52,7 +52,14 @@ export type RedeemPlanV2 = {
   expectedTotalCollateral: bigint
   /** Excess collateral (if more collateral is available than needed for debt repayment). */
   expectedExcessCollateral: bigint
-  /** Debt amount expected to be returned to the user (non-zero only when converting collateral to debt). */
+  /**
+   * Excess debt returned to user when the collateral→debt swap produces more
+   * debt than needed to repay the position. Can occur in both exact-in and
+   * exact-out quote paths due to padding, buffers, and market price movements.
+   *
+   * NOTE: Does not currently support outputAsset = debtAsset (converting remaining
+   * collateral to debt). That path exists in code but needs fixes in a separate PR.
+   */
   expectedDebtPayout: bigint
   /** Asset address the user will receive after all swaps (collateral or alternate). */
   payoutAsset: Address
@@ -152,7 +159,6 @@ export async function planRedeemV2(params: {
       : 0n
   const paddedCollateralForDebt = requiredForDebt + padding
   const remainingCollateral = totalCollateralAvailable - paddedCollateralForDebt
-  const excessDebt = sizing.preQuote?.out ? sizing.preQuote.out - debtToRepay : 0n
 
   // Minimum amount of collateral the sender expects to receive
   const minCollateralForSender = calculateMinCollateralForSender(remainingCollateral, slippageBps)
@@ -163,7 +169,7 @@ export async function planRedeemV2(params: {
     )
   }
 
-  const { calls: swapCalls } = await buildCollateralToDebtSwapCalls({
+  const { calls: swapCalls, expectedDebtOut } = await buildCollateralToDebtSwapCalls({
     collateralAsset,
     debtAsset,
     collateralAmount: paddedCollateralForDebt,
@@ -172,6 +178,9 @@ export async function planRedeemV2(params: {
     useNativeCollateralPath,
     ...(sizing.preQuote ? { preQuote: sizing.preQuote } : {}),
   })
+
+  // Calculate excess debt from actual swap output (works for both exact-in and exact-out)
+  const excessDebt = expectedDebtOut > debtToRepay ? expectedDebtOut - debtToRepay : 0n
 
   const collateralAddr = getAddress(collateralAsset)
   const debtAddr = getAddress(debtAsset)
@@ -271,8 +280,14 @@ async function calculateCollateralNeededForDebt(args: {
       intent: 'exactOut',
     })
     if (typeof qo.maxIn === 'bigint' && qo.maxIn > 0n) {
-      const required = qo.maxIn > maxCollateralAvailable ? maxCollateralAvailable : qo.maxIn
-      return { required, preQuote: qo, exactOut: true }
+      // Only take the exact-out path when the quoted max input fits within
+      // available collateral. Otherwise, fall back to iterative exact-in sizing.
+      if (qo.maxIn <= maxCollateralAvailable) {
+        return { required: qo.maxIn, preQuote: qo, exactOut: true }
+      }
+      // If exact-out would require more than available collateral, continue to
+      // iterative sizing so we can either size an exact-in swap or throw with a
+      // clear error if even the upper bound can't cover the debt under slippage.
     }
   } catch {
     // ignore and fallback to iterative sizing below
@@ -380,6 +395,15 @@ async function buildCollateralToDebtSwapCalls(args: {
     return { calls: [], expectedDebtOut: 0n }
   }
 
+  // If we have an exact-out preQuote, ensure we are swapping the exact
+  // amount it sized for. A mismatch indicates a logic error upstream.
+  if (args.preQuote && typeof args.preQuote.maxIn === 'bigint') {
+    if (args.preQuote.maxIn !== collateralAmount) {
+      throw new Error('preQuote amount mismatch: expected maxIn to equal collateralAmount')
+    }
+  }
+
+  // Exact-out: reuse validated preQuote. Exact-in: quote final padded amount.
   const quote =
     args.preQuote ??
     (await quoteCollateralToDebt({
