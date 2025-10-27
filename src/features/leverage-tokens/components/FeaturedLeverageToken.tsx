@@ -135,14 +135,29 @@ export function FeaturedLeverageToken({
                         : '—'}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-[var(--text-muted)]">Rewards APR</span>
-                    <span className="font-medium text-[var(--accent-1)]">
-                      {apyData.rewardsAPR !== 0
-                        ? formatPercentage(apyData.rewardsAPR, { decimals: 2, showSign: true })
-                        : '—'}
-                    </span>
-                  </div>
+                  {/* Individual Reward Tokens - show breakdown if available, otherwise show total */}
+                  {apyData.rewardTokens && apyData.rewardTokens.length > 0 ? (
+                    apyData.rewardTokens.map((rewardToken) => (
+                      <div key={rewardToken.tokenAddress} className="flex justify-between text-xs">
+                        <span className="text-[var(--text-muted)]">
+                          {rewardToken.tokenSymbol} APR
+                        </span>
+                        <span className="font-medium text-[var(--accent-1)]">
+                          {formatPercentage(rewardToken.apr, { decimals: 2, showSign: true })}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    // Always show rewards APR row for consistent height
+                    <div className="flex justify-between text-xs">
+                      <span className="text-[var(--text-muted)]">Rewards APR</span>
+                      <span className="font-medium text-[var(--accent-1)]">
+                        {apyData.rewardsAPR !== 0
+                          ? formatPercentage(apyData.rewardsAPR, { decimals: 2, showSign: true })
+                          : '—'}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-xs">
                     <span className="text-[var(--text-muted)]">Points</span>
                     <span className="font-medium text-[var(--state-warning-text)]">
