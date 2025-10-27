@@ -1,7 +1,11 @@
 import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
-import { createLifiQuoteAdapter, createUniswapV3QuoteAdapter } from '@/domain/shared/adapters'
+import {
+  createLifiQuoteAdapter,
+  createUniswapV3QuoteAdapter,
+  createVeloraQuoteAdapter,
+} from '@/domain/shared/adapters'
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
 import { getUniswapV3ChainConfig, getUniswapV3PoolConfig } from '@/lib/config/uniswapV3'
 import { BASE_WETH, getContractAddresses } from '@/lib/contracts/addresses'
@@ -52,6 +56,16 @@ export function createDebtToCollateralQuote({
     })
     console.info('[Mint][Quote] Using adapter: lifi')
     return { quote, adapterType: 'lifi' }
+  }
+
+  if (swap.type === 'velora') {
+    const quote = createVeloraQuoteAdapter({
+      chainId,
+      router: routerAddress,
+      slippageBps,
+      ...(effectiveFrom ? { fromAddress: effectiveFrom } : {}),
+    })
+    return { quote, adapterType: 'velora' }
   }
 
   const publicClient = getPublicClient(chainId)

@@ -2,7 +2,7 @@ import type { Address } from 'viem'
 import { getAddress } from 'viem'
 import { base } from 'viem/chains'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
+import { DEFAULT_SLIPPAGE_BPS, bpsToDecimalString } from './constants'
 import type { QuoteFn } from './types'
 
 export type LifiOrder = 'CHEAPEST' | 'FASTEST'
@@ -146,10 +146,6 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
 }
 
 // Internal helpers for clarity and testability
-function bpsToDecimalString(bps: number): string {
-  return (bps / Number(BPS_DENOMINATOR)).toString()
-}
-
 function buildHeaders(apiKey?: string): Record<string, string> {
   const headers: Record<string, string> = { 'content-type': 'application/json' }
   if (apiKey) headers['x-lifi-api-key'] = apiKey

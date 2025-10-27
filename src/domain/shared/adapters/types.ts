@@ -19,6 +19,15 @@ export type Quote = {
   approvalTarget: Address
   // Calldata to execute the swap on the aggregator/DEX
   calldata: Hex
+  // Velora-specific data for redeemWithVelora function
+  veloraData?: {
+    augustus: Address
+    offsets: {
+      exactAmount: bigint
+      limitAmount: bigint
+      quotedAmount: bigint
+    }
+  }
 }
 
 export type QuoteIntent = 'exactIn' | 'exactOut'

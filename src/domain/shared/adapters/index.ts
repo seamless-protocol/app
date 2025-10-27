@@ -9,3 +9,4 @@ export {
   createUniswapV3QuoteAdapter,
   type UniswapV3QuoteOptions,
 } from './uniswapV3'
+export { createVeloraQuoteAdapter, type VeloraAdapterOptions, type VeloraQuote } from './velora'

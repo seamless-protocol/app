@@ -21,7 +21,7 @@ redeemSuite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet wstETH/ETH 25x)',
   // May be related to CoinGecko price discrepancies or LiFi quote variations
   const SLIPPAGE_BPS = 250
 
-  it('redeems all minted shares into collateral asset via LiFi', async () => {
+  it('redeems all minted shares into collateral asset via Velora', async () => {
     const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
     assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
     assertRedeemExecution(result)
@@ -140,11 +140,11 @@ async function performRedeem(
   const sharesToRedeem = sharesAfterMint
   await approveIfNeeded(token, router, sharesToRedeem)
 
-  // Mirror production: use LiFi for the repay leg (same-chain, bridges disabled)
+  // Mirror production: use Velora for the repay leg (same-chain, bridges disabled)
   const { quote: quoteCollateralToDebt } = createCollateralToDebtQuote({
     chainId,
     routerAddress: router,
-    swap: { type: 'lifi', allowBridges: 'none' },
+    swap: { type: 'velora' },
     slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
   })
@@ -187,6 +187,7 @@ async function performRedeem(
     quoteCollateralToDebt,
     chainId,
     routerAddressV2: router,
+    adapterType: 'velora',
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 

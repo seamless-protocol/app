@@ -89,6 +89,7 @@ export function useRedeemExecution({
           ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
           ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
           ...(typeof outputAsset !== 'undefined' ? { outputAsset } : {}),
+          ...(swap ? { adapterType: swap.type } : {}),
         })
 
         setHash(result.hash)

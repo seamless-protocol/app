@@ -1,4 +1,5 @@
 import type { Address } from 'viem'
+import { getAddress } from 'viem'
 import {
   BaseLogo,
   EthereumLogo,
@@ -119,6 +120,43 @@ export interface LeverageTokenConfig {
   }
 }
 
+/**
+ * Get token decimals by address from leverage token configurations.
+ * Falls back to common token decimals if not found in config.
+ */
+export function getTokenDecimals(tokenAddress: Address): number {
+  // First, check if this token is a collateral or debt asset in any leverage token config
+  for (const config of Object.values(leverageTokenConfigs)) {
+    if (getAddress(config.collateralAsset.address) === getAddress(tokenAddress)) {
+      return config.collateralAsset.decimals
+    }
+    if (getAddress(config.debtAsset.address) === getAddress(tokenAddress)) {
+      return config.debtAsset.decimals
+    }
+  }
+
+  // Fallback to common token decimals mapping
+  const commonTokenDecimals: Record<string, number> = {
+    // Ethereum mainnet
+    '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': 6, // USDC
+    '0xdac17f958d2ee523a2206206994597c13d831ec7': 6, // USDT
+    '0x6b175474e89094c44da98b954eedeac495271d0f': 18, // DAI
+    '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599': 8, // WBTC
+    '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2': 18, // WETH
+    '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0': 18, // wstETH
+
+    // Base mainnet
+    '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913': 6, // USDC
+    '0x4200000000000000000000000000000000000006': 18, // WETH
+
+    // ETH (zero address)
+    '0x0000000000000000000000000000000000000000': 18, // ETH
+  }
+
+  const normalizedAddress = getAddress(tokenAddress)
+  return commonTokenDecimals[normalizedAddress] ?? 18 // Default to 18 if unknown
+}
+
 // Leverage token configurations
 export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   [LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]: {
@@ -155,12 +193,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'velora',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'velora',
       },
     },
     planner: { epsilonBps: 10 },
@@ -242,12 +278,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'velora',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'velora',
       },
     },
     planner: { epsilonBps: 10 },
@@ -338,12 +372,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       decimals: 18,
     },
     swaps: {
-      // Use LiFi for same-chain routing (bridges are irrelevant for same-chain quotes)
+      // Use Velora for same-chain routing (bridges are irrelevant for same-chain quotes)
       debtToCollateral: {
-        type: 'lifi',
+        type: 'velora',
       },
       collateralToDebt: {
-        type: 'lifi',
+        type: 'velora',
       },
     },
     planner: { epsilonBps: 10 },

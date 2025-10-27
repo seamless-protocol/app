@@ -29,6 +29,7 @@ export interface UseRedeemWithRouterParams {
   routerAddress?: Address
   managerAddress?: Address
   outputAsset?: Address
+  adapterType?: 'lifi' | 'uniswapV2' | 'uniswapV3' | 'velora'
 }
 
 /**
@@ -47,6 +48,7 @@ export function useRedeemWithRouter() {
       routerAddress,
       managerAddress,
       outputAsset,
+      adapterType,
     }) =>
       orchestrateRedeem({
         config,
@@ -59,6 +61,7 @@ export function useRedeemWithRouter() {
         ...(typeof routerAddress !== 'undefined' ? { routerAddressV2: routerAddress } : {}),
         ...(typeof managerAddress !== 'undefined' ? { managerAddressV2: managerAddress } : {}),
         ...(typeof outputAsset !== 'undefined' ? { outputAsset } : {}),
+        ...(typeof adapterType !== 'undefined' ? { adapterType } : {}),
       }),
   })
 }
