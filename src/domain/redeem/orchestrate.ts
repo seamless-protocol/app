@@ -10,6 +10,7 @@ import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
 import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeRedeemV2 } from './exec/execute.v2'
+import { executeRedeemWithVelora } from './exec/execute.velora'
 import { planRedeemV2 } from './planner/plan.v2'
 import type { QuoteFn } from './planner/types'
 import { DEFAULT_SLIPPAGE_BPS } from './utils/constants'
@@ -63,6 +64,8 @@ export async function orchestrateRedeem(params: {
   outputAsset?: Address
   /** Chain ID to execute the transaction on */
   chainId: number
+  /** Optional adapter type to determine execution path */
+  adapterType?: 'lifi' | 'uniswapV2' | 'uniswapV3' | 'velora'
 }): Promise<OrchestrateRedeemResult> {
   const {
     config,
@@ -73,6 +76,7 @@ export async function orchestrateRedeem(params: {
     quoteCollateralToDebt,
     outputAsset,
     chainId,
+    adapterType,
   } = params
 
   if (!quoteCollateralToDebt) throw new Error('quoteCollateralToDebt is required')
@@ -101,6 +105,74 @@ export async function orchestrateRedeem(params: {
     ...(outputAsset ? { outputAsset } : {}),
   })
 
+  // If adapter type is Velora, use Velora execution path
+  if (adapterType === 'velora') {
+    const veloraAdapterAddress = chainAddresses.veloraAdapter as Address | undefined
+    if (!veloraAdapterAddress) {
+      throw new Error(`Velora adapter address required on chain ${chainId}`)
+    }
+
+    // Get a real quote to extract Velora-specific data
+    const collateralAsset = (await config.publicClient.readContract({
+      address: token,
+      abi: [
+        {
+          inputs: [],
+          name: 'collateralAsset',
+          outputs: [{ internalType: 'address', name: '', type: 'address' }],
+          stateMutability: 'view',
+          type: 'function',
+        },
+      ],
+      functionName: 'collateralAsset',
+    })) as Address
+
+    const debtAsset = (await config.publicClient.readContract({
+      address: token,
+      abi: [
+        {
+          inputs: [],
+          name: 'debtAsset',
+          outputs: [{ internalType: 'address', name: '', type: 'address' }],
+          stateMutability: 'view',
+          type: 'function',
+        },
+      ],
+      functionName: 'debtAsset',
+    })) as Address
+
+    const veloraQuote = await quoteCollateralToDebt({
+      inToken: collateralAsset,
+      outToken: debtAsset,
+      amountIn: plan.collateralToSwap,
+    })
+
+    if (!veloraQuote.veloraData) {
+      throw new Error('Velora quote missing veloraData')
+    }
+
+    const tx = await executeRedeemWithVelora({
+      config,
+      token,
+      account,
+      sharesToRedeem: plan.sharesToRedeem,
+      minCollateralForSender: plan.minCollateralForSender,
+      veloraAdapter: veloraAdapterAddress,
+      augustus: veloraQuote.veloraData.augustus,
+      offsets: veloraQuote.veloraData.offsets,
+      swapData: veloraQuote.calldata,
+      routerAddress:
+        routerAddressV2 ||
+        (contractAddresses[chainId]?.leverageRouterV2 as Address | undefined) ||
+        (() => {
+          throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
+        })(),
+      chainId,
+    })
+    return { plan, ...tx }
+  }
+
+  // Default V2 execution path for non-Velora quotes
   const tx = await executeRedeemV2({
     config,
     token,
