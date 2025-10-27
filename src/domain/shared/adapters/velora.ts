@@ -152,8 +152,18 @@ function mapVeloraResponseToQuote(response: VeloraSwapResponse, wantsNativeIn: b
   const slippageMultiplier = (10000 - slippageBps) / 10000
   const minOut = BigInt(Math.floor(Number(expectedOut) * slippageMultiplier))
   
-  // Use expected amount as the "out" for consistency with other adapters
-  const out = expectedOut
+  // Log slippage calculation for debugging
+  console.log('[Velora Slippage Debug]', {
+    slippageBps,
+    slippagePercentage: `${(slippageBps / 100).toFixed(2)}%`,
+    outputFromAPI: expectedOut.toString(),
+    outputAfterManuallyApplyingSlippage: minOut.toString(),
+    difference: (expectedOut - minOut).toString(),
+  })
+  
+  // Use slippage-adjusted amount as "out" for realistic UI display
+  // This ensures users see what they'll actually receive (with slippage applied)
+  const out = minOut
 
   return {
     out,
@@ -166,9 +176,9 @@ function mapVeloraResponseToQuote(response: VeloraSwapResponse, wantsNativeIn: b
     veloraData: {
       augustus: getAddress(priceRoute.contractAddress),
       offsets: {
-        exactAmount: out,
-        limitAmount: out, // Use expected amount - Velora handles slippage internally
-        quotedAmount: out,
+        exactAmount: expectedOut, // Use API's expected amount
+        limitAmount: expectedOut, // Use API's expected amount - Velora handles slippage in calldata
+        quotedAmount: expectedOut, // Use API's expected amount
       },
     },
   }
