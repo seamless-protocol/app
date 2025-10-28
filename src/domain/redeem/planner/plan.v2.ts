@@ -8,13 +8,16 @@ import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import { getPublicClient } from 'wagmi/actions'
+import { lendingAdapterAbi } from '@/lib/contracts/abis/lendingAdapter'
 import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
+  readLeverageManagerV2GetLeverageTokenLendingAdapter,
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
 import { fetchCoingeckoTokenUsdPrices } from '@/lib/prices/coingecko'
+import { calculateMinCollateralForSender } from '../utils/slippage'
 import type { Quote, QuoteFn } from './types'
 
 // Local structural types (avoid brittle codegen coupling)
@@ -94,7 +97,6 @@ export async function planRedeemV2(params: {
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
-    collateralAvailableForSwap,
   } = await getSwapParamsForRedeem({
     config,
     token,
@@ -106,19 +108,29 @@ export async function planRedeemV2(params: {
   const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeCollateralPath ? ETH_SENTINEL : collateralAsset
 
+  // Calculate the exact amount of collateral needed for the debt swap
+  // We need to find the minimum collateral amount that will produce enough debt to repay
   const quote = await getCollateralToDebtQuote({
     debtAsset,
     requiredDebt: debtToRepay,
     quoter,
-    collateralAvailableForSwap,
+    collateralAvailableForSwap: totalCollateralAvailable, // Use all available for the quote
     inTokenForQuote,
-    intent: 'exactIn',
+    intent: 'exactOut', // Use exactOut to get the exact collateral needed
   })
 
   const collateralRequiredForSwap = quote.maxIn ?? 0n
-  if (collateralAvailableForSwap < collateralRequiredForSwap) {
+
+  // Ensure we have enough collateral for the swap
+  if (totalCollateralAvailable < collateralRequiredForSwap) {
+    throw new Error('Insufficient collateral available for debt repayment swap')
+  }
+
+  // Ensure we have enough collateral left for the user after the swap
+  const remainingCollateralAfterSwap = totalCollateralAvailable - collateralRequiredForSwap
+  if (remainingCollateralAfterSwap < minCollateralForSender) {
     throw new Error(
-      'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
+      'Try increasing slippage: swap of collateral to repay debt for the leveraged position is below the required debt.',
     )
   }
 
@@ -134,7 +146,7 @@ export async function planRedeemV2(params: {
   const payoutOverride = params.outputAsset ? getAddress(params.outputAsset) : undefined
   const wantsDebtOutput = payoutOverride ? payoutOverride === debtAddr : false
 
-  let remainingCollateral = totalCollateralAvailable - collateralRequiredForSwap
+  let remainingCollateral = remainingCollateralAfterSwap
   const planDraft = {
     minCollateralForSender,
     expectedCollateral: remainingCollateral,
@@ -241,11 +253,10 @@ async function getSwapParamsForRedeem(args: {
   totalCollateralAvailable: bigint
   debtToRepay: bigint
   minCollateralForSender: bigint
-  collateralAvailableForSwap: bigint
 }> {
   const { config, token, sharesToRedeem, slippageBps, chainId } = args
 
-  // TODO: Multicall these / pass in
+  // TODO: Multicall these
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
     args: [token],
     chainId: chainId as SupportedChainId,
@@ -258,6 +269,10 @@ async function getSwapParamsForRedeem(args: {
     args: [token, sharesToRedeem],
     chainId: chainId as SupportedChainId,
   })
+  const lendingAdapter = await readLeverageManagerV2GetLeverageTokenLendingAdapter(config, {
+    args: [token],
+    chainId: chainId as SupportedChainId,
+  })
 
   const totalCollateralAvailable = preview.collateral
   const debtToRepay = preview.debt
@@ -267,42 +282,21 @@ async function getSwapParamsForRedeem(args: {
     throw new Error('Public client unavailable for redeem plan')
   }
 
-  // TODO: Multicall these / pass in
-  const collateralAssetDecimals = await publicClient.readContract({
-    address: collateralAsset,
-    abi: erc20Abi,
-    functionName: 'decimals',
+  // Determine the amount of collateral the user would receive if there is 0 slippage on the swap from collateral -> debt wrt
+  // the market's underlying oracle price
+  const debtInCollateralAsset = await publicClient.readContract({
+    address: lendingAdapter,
+    abi: lendingAdapterAbi,
+    functionName: 'convertDebtToCollateralAsset',
+    args: [debtToRepay],
   })
-  const debtAssetDecimals = await publicClient.readContract({
-    address: debtAsset,
-    abi: erc20Abi,
-    functionName: 'decimals',
-  })
+  const zeroSlippageCollateralForSender = totalCollateralAvailable - debtInCollateralAsset
 
-  // Convert totalCollateralAvailable and debtToRepay to usd
-  const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
-
-  const totalCollateralAvailableInUsd =
-    (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) *
-    (Number(totalCollateralAvailable) / 10 ** Number(collateralAssetDecimals))
-
-  const debtToRepayInUsd =
-    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) *
-    (Number(debtToRepay) / 10 ** Number(debtAssetDecimals))
-
-  const zeroSlippageCollateralForSenderInUsd = totalCollateralAvailableInUsd - debtToRepayInUsd
-
-  const minCollateralForSender =
-    (BigInt(
-      Math.floor(
-        (zeroSlippageCollateralForSenderInUsd /
-          (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0)) *
-          10 ** Number(collateralAssetDecimals),
-      ),
-    ) *
-      (10000n - BigInt(slippageBps))) /
-    10000n
-  const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
+  // Apply slippage to the amount of collateral the user would receive if there is 0 slippage on the swap from collateral -> debt wrt
+  const minCollateralForSender = calculateMinCollateralForSender(
+    zeroSlippageCollateralForSender,
+    slippageBps,
+  )
 
   return {
     collateralAsset,
@@ -310,7 +304,6 @@ async function getSwapParamsForRedeem(args: {
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
-    collateralAvailableForSwap,
   }
 }
 
