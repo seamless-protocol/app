@@ -2,7 +2,7 @@ import type { Address } from 'viem'
 import { getAddress } from 'viem'
 import { base } from 'viem/chains'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import { DEFAULT_SLIPPAGE_BPS, bpsToDecimalString } from './constants'
+import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
 import type { QuoteFn } from './types'
 
 export type LifiOrder = 'CHEAPEST' | 'FASTEST'
