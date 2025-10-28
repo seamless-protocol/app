@@ -51,6 +51,8 @@ export type RedeemPlanV2 = {
   expectedCollateral: bigint
   /** Debt expected to be repaid during redemption. */
   expectedDebt: bigint
+  /** Quote used for collateral-to-debt swap. */
+  collateralToDebtQuote: Quote
   /** Total collateral available before debt repayment. */
   expectedTotalCollateral: bigint
   /** Excess collateral (if more collateral is available than needed for debt repayment). */
@@ -185,6 +187,7 @@ export async function planRedeemV2(params: {
     minCollateralForSender: planDraft.minCollateralForSender,
     expectedCollateral: planDraft.expectedCollateral,
     expectedDebt: debtToRepay,
+    collateralToDebtQuote: quote,
     expectedTotalCollateral: totalCollateralAvailable,
     expectedExcessCollateral: remainingCollateral,
     expectedDebtPayout: planDraft.expectedDebtPayout,

@@ -72,7 +72,7 @@ export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
     const response = responseData as VeloraSwapResponse
 
     const wantsNativeIn = inToken.toLowerCase() === ETH_SENTINEL.toLowerCase()
-    return mapVeloraResponseToQuote(response, wantsNativeIn, slippageBps)
+    return mapVeloraResponseToQuote(response, wantsNativeIn, slippage)
   }
 }
 
@@ -131,7 +131,7 @@ function buildQuoteUrl(
   return url
 }
 
-function mapVeloraResponseToQuote(response: VeloraSwapResponse, wantsNativeIn: boolean, slippageBps: number) {
+function mapVeloraResponseToQuote(response: VeloraSwapResponse, wantsNativeIn: boolean, slippage: string) {
   const { priceRoute, txParams } = response
 
   // Extract approval target from contract address
@@ -146,24 +146,16 @@ function mapVeloraResponseToQuote(response: VeloraSwapResponse, wantsNativeIn: b
   const expectedOut = BigInt(priceRoute.destAmount)
   const maxIn = BigInt(priceRoute.srcAmount)
   
-  // Calculate slippage-adjusted minimum output for user display
-  // Velora applies slippage internally in the transaction calldata,
-  // but the API response only shows the expected amount
+  // Calculate slippage-adjusted minimum amount
+	// TODO: ASK MARCO TO VALIDATE THIS
+  const slippageBps = Math.round(parseFloat(slippage) * 10000)
   const slippageMultiplier = (10000 - slippageBps) / 10000
   const minOut = BigInt(Math.floor(Number(expectedOut) * slippageMultiplier))
-  
-  // Log slippage calculation for debugging
-  console.log('[Velora Slippage Debug]', {
-    slippageBps,
-    slippagePercentage: `${(slippageBps / 100).toFixed(2)}%`,
-    outputFromAPI: expectedOut.toString(),
-    outputAfterManuallyApplyingSlippage: minOut.toString(),
-    difference: (expectedOut - minOut).toString(),
-  })
-  
-  // Use slippage-adjusted amount as "out" for realistic UI display
-  // This ensures users see what they'll actually receive (with slippage applied)
-  const out = minOut
+
+  // Velora API already handles slippage internally in the transaction calldata
+  // We use the API's expected amount for UI display and debt repayment
+  // The transaction calldata already contains slippage protection
+  const out = expectedOut
 
   return {
     out,
@@ -174,10 +166,10 @@ function mapVeloraResponseToQuote(response: VeloraSwapResponse, wantsNativeIn: b
     wantsNativeIn,
     // Store Velora-specific data for redeemWithVelora function
     veloraData: {
-      augustus: getAddress(priceRoute.contractAddress),
+      augustus: approvalTarget, // Use the contract address from the API response
       offsets: {
         exactAmount: expectedOut, // Use API's expected amount
-        limitAmount: expectedOut, // Use API's expected amount - Velora handles slippage in calldata
+        limitAmount: minOut, // Use slippage-adjusted minimum amount
         quotedAmount: expectedOut, // Use API's expected amount
       },
     },

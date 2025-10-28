@@ -112,40 +112,9 @@ export async function orchestrateRedeem(params: {
       throw new Error(`Velora adapter address required on chain ${chainId}`)
     }
 
-    // Get a real quote to extract Velora-specific data
-    const collateralAsset = (await config.publicClient.readContract({
-      address: token,
-      abi: [
-        {
-          inputs: [],
-          name: 'collateralAsset',
-          outputs: [{ internalType: 'address', name: '', type: 'address' }],
-          stateMutability: 'view',
-          type: 'function',
-        },
-      ],
-      functionName: 'collateralAsset',
-    })) as Address
 
-    const debtAsset = (await config.publicClient.readContract({
-      address: token,
-      abi: [
-        {
-          inputs: [],
-          name: 'debtAsset',
-          outputs: [{ internalType: 'address', name: '', type: 'address' }],
-          stateMutability: 'view',
-          type: 'function',
-        },
-      ],
-      functionName: 'debtAsset',
-    })) as Address
-
-    const veloraQuote = await quoteCollateralToDebt({
-      inToken: collateralAsset,
-      outToken: debtAsset,
-      amountIn: plan.collateralToSwap,
-    })
+    // Use the existing quote from the plan instead of creating a new one
+    const veloraQuote = plan.collateralToDebtQuote
 
     if (!veloraQuote.veloraData) {
       throw new Error('Velora quote missing veloraData')
