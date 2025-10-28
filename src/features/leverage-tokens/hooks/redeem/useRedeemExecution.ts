@@ -125,6 +125,7 @@ export function useRedeemExecution({
       publicClient,
       chainId,
       switchChainAsync,
+      swap,
     ],
   )
 
