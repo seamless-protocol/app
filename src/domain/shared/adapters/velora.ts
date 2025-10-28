@@ -38,7 +38,7 @@ export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
     router,
     fromAddress,
     slippageBps = DEFAULT_SLIPPAGE_BPS,
-    baseUrl = 'https://api.paraswap.io',
+    baseUrl = 'https://api.velora.xyz',
   } = opts
 
   const slippage = bpsToDecimalString(slippageBps)
@@ -131,7 +131,11 @@ function buildQuoteUrl(
   return url
 }
 
-function mapVeloraResponseToQuote(response: VeloraSwapResponse, wantsNativeIn: boolean, slippage: string) {
+function mapVeloraResponseToQuote(
+  response: VeloraSwapResponse,
+  wantsNativeIn: boolean,
+  slippage: string,
+) {
   const { priceRoute, txParams } = response
 
   // Extract approval target from contract address
@@ -145,9 +149,9 @@ function mapVeloraResponseToQuote(response: VeloraSwapResponse, wantsNativeIn: b
   // Extract amounts from price route (expected amounts)
   const expectedOut = BigInt(priceRoute.destAmount)
   const maxIn = BigInt(priceRoute.srcAmount)
-  
+
   // Calculate slippage-adjusted minimum amount
-	// TODO: ASK MARCO TO VALIDATE THIS
+  // TODO: ASK MARCO TO VALIDATE THIS
   const slippageBps = Math.round(parseFloat(slippage) * 10000)
   const slippageMultiplier = (10000 - slippageBps) / 10000
   const minOut = BigInt(Math.floor(Number(expectedOut) * slippageMultiplier))
@@ -168,9 +172,9 @@ function mapVeloraResponseToQuote(response: VeloraSwapResponse, wantsNativeIn: b
     veloraData: {
       augustus: approvalTarget, // Use the contract address from the API response
       offsets: {
-        exactAmount: expectedOut, // Use API's expected amount
-        limitAmount: minOut, // Use slippage-adjusted minimum amount
-        quotedAmount: expectedOut, // Use API's expected amount
+        exactAmount: 132n, // Byte position for output amount in calldata
+        limitAmount: 100n, // Byte position for max input amount in calldata
+        quotedAmount: 164n, // Byte position for quoted input amount in calldata
       },
     },
   }
@@ -187,9 +191,9 @@ export interface VeloraQuote {
   veloraData: {
     augustus: Address
     offsets: {
-      exactAmount: bigint
-      limitAmount: bigint
-      quotedAmount: bigint
+      exactAmount: bigint // Byte position for output amount in calldata
+      limitAmount: bigint // Byte position for max input amount in calldata
+      quotedAmount: bigint // Byte position for quoted input amount in calldata
     }
   }
 }

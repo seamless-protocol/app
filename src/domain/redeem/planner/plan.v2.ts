@@ -96,7 +96,6 @@ export async function planRedeemV2(params: {
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
-    collateralAvailableForSwap,
   } = await getSwapParamsForRedeem({
     config,
     token,
@@ -108,19 +107,29 @@ export async function planRedeemV2(params: {
   const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeCollateralPath ? ETH_SENTINEL : collateralAsset
 
+  // Calculate the exact amount of collateral needed for the debt swap
+  // We need to find the minimum collateral amount that will produce enough debt to repay
   const quote = await getCollateralToDebtQuote({
     debtAsset,
     requiredDebt: debtToRepay,
     quoter,
-    collateralAvailableForSwap,
+    collateralAvailableForSwap: totalCollateralAvailable, // Use all available for the quote
     inTokenForQuote,
-    intent: 'exactIn',
+    intent: 'exactOut', // Use exactOut to get the exact collateral needed
   })
 
   const collateralRequiredForSwap = quote.maxIn ?? 0n
-  if (collateralAvailableForSwap < collateralRequiredForSwap) {
+
+  // Ensure we have enough collateral for the swap
+  if (totalCollateralAvailable < collateralRequiredForSwap) {
+    throw new Error('Insufficient collateral available for debt repayment swap')
+  }
+
+  // Ensure we have enough collateral left for the user after the swap
+  const remainingCollateralAfterSwap = totalCollateralAvailable - collateralRequiredForSwap
+  if (remainingCollateralAfterSwap < minCollateralForSender) {
     throw new Error(
-      'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
+      'Try increasing slippage: swap of collateral to repay debt for the leveraged position is below the required debt.',
     )
   }
 
@@ -136,7 +145,7 @@ export async function planRedeemV2(params: {
   const payoutOverride = params.outputAsset ? getAddress(params.outputAsset) : undefined
   const wantsDebtOutput = payoutOverride ? payoutOverride === debtAddr : false
 
-  let remainingCollateral = totalCollateralAvailable - collateralRequiredForSwap
+  let remainingCollateral = remainingCollateralAfterSwap
   const planDraft = {
     minCollateralForSender,
     expectedCollateral: remainingCollateral,
@@ -211,7 +220,6 @@ async function getSwapParamsForRedeem(args: {
   totalCollateralAvailable: bigint
   debtToRepay: bigint
   minCollateralForSender: bigint
-  collateralAvailableForSwap: bigint
 }> {
   const { config, token, sharesToRedeem, slippageBps, chainId } = args
 
@@ -257,16 +265,12 @@ async function getSwapParamsForRedeem(args: {
     slippageBps,
   )
 
-  // We simply use the full amount at our disposal for the swap, considering allowed slippage
-  const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
-
   return {
     collateralAsset,
     debtAsset,
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
-    collateralAvailableForSwap,
   }
 }
 
