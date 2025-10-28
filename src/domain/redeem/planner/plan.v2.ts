@@ -104,32 +104,29 @@ export async function planRedeemV2(params: {
     chainId,
   })
 
+  // Calculate how much collateral we can use for the swap
+  // We need to reserve minCollateralForSender for the user
+  const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
+
   const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeCollateralPath ? ETH_SENTINEL : collateralAsset
 
-  // Calculate the exact amount of collateral needed for the debt swap
-  // We need to find the minimum collateral amount that will produce enough debt to repay
+  // Use exactOut intent to get the precise collateral amount needed for debt repayment
+  // This prevents Velora from using more collateral than necessary, which was causing
+  // CollateralSlippageTooHigh errors when the swap consumed all available collateral
   const quote = await getCollateralToDebtQuote({
     debtAsset,
     requiredDebt: debtToRepay,
     quoter,
-    collateralAvailableForSwap: totalCollateralAvailable, // Use all available for the quote
+    collateralAvailableForSwap,
     inTokenForQuote,
-    intent: 'exactOut', // Use exactOut to get the exact collateral needed
+    intent: 'exactOut',
   })
 
   const collateralRequiredForSwap = quote.maxIn ?? 0n
-
-  // Ensure we have enough collateral for the swap
-  if (totalCollateralAvailable < collateralRequiredForSwap) {
-    throw new Error('Insufficient collateral available for debt repayment swap')
-  }
-
-  // Ensure we have enough collateral left for the user after the swap
-  const remainingCollateralAfterSwap = totalCollateralAvailable - collateralRequiredForSwap
-  if (remainingCollateralAfterSwap < minCollateralForSender) {
+  if (collateralAvailableForSwap < collateralRequiredForSwap) {
     throw new Error(
-      'Try increasing slippage: swap of collateral to repay debt for the leveraged position is below the required debt.',
+      'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
     )
   }
 
@@ -145,7 +142,7 @@ export async function planRedeemV2(params: {
   const payoutOverride = params.outputAsset ? getAddress(params.outputAsset) : undefined
   const wantsDebtOutput = payoutOverride ? payoutOverride === debtAddr : false
 
-  let remainingCollateral = remainingCollateralAfterSwap
+  let remainingCollateral = totalCollateralAvailable - collateralRequiredForSwap
   const planDraft = {
     minCollateralForSender,
     expectedCollateral: remainingCollateral,
@@ -290,7 +287,7 @@ async function getCollateralToDebtQuote(args: {
   const quote = await quoter({
     inToken: inTokenForQuote,
     outToken: debtAsset,
-    amountIn: collateralAvailableForSwap,
+    amountIn: intent === 'exactOut' ? 0n : collateralAvailableForSwap,
     amountOut: requiredDebt,
     intent,
   })

@@ -112,7 +112,7 @@ export async function orchestrateRedeem(params: {
       throw new Error(`Velora adapter address required on chain ${chainId}`)
     }
 
-    // Use the existing quote from the plan instead of creating a new one
+    // Use the existing quote from the plan
     const veloraQuote = plan.collateralToDebtQuote
 
     if (!veloraQuote.veloraData) {

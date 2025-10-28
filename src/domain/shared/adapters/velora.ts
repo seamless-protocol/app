@@ -1,9 +1,9 @@
 import type { Address, Hex } from 'viem'
 import { getAddress } from 'viem'
 import { base } from 'viem/chains'
-import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import { getTokenDecimals } from '@/features/leverage-tokens/leverageTokens.config'
-import { DEFAULT_SLIPPAGE_BPS, bpsToDecimalString } from './constants'
+import { ETH_SENTINEL } from '@/lib/contracts/addresses'
+import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
 import type { QuoteFn } from './types'
 
 export interface VeloraAdapterOptions {
