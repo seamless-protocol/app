@@ -62,10 +62,26 @@ function createMockQuoteFunction({
   }
 }
 
-async function mockQuote({ amountIn }: { amountIn: bigint }) {
-  // Simulate ETH ($2000) -> USDC ($1.001) swap
-  // For every 1 wei of ETH, return ~2000 wei of USDC
-  const out = amountIn * 2000n
+async function mockQuote(args: {
+  amountIn: bigint
+  amountOut: bigint
+  intent: 'exactOut' | 'exactIn'
+}) {
+  const { amountIn, amountOut, intent } = args
+
+  // For exactOut, pretend the router needs 1 unit more collateral than the debt required
+  if (intent === 'exactOut') {
+    return {
+      out: amountOut,
+      minOut: amountOut,
+      maxIn: amountOut + 1n,
+      approvalTarget: dummyQuoteTarget,
+      calldata: '0x1234' as `0x${string}`,
+    }
+  }
+
+  // For exactIn, return 1 less unit than provided to simulate fees/slippage
+  const out = amountIn - 1n
   return {
     out,
     minOut: out,
