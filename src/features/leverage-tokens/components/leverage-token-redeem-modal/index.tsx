@@ -128,8 +128,11 @@ export function LeverageTokenRedeemModal({
   const { data: positionData, isLoading: isPositionLoading } = useLeverageTokenUserPosition({
     tokenAddress: leverageTokenAddress,
     chainIdOverride: leverageTokenConfig.chainId,
+    collateralAssetAddress: leverageTokenConfig.collateralAsset.address,
+    collateralAssetDecimals: leverageTokenConfig.collateralAsset.decimals,
     debtAssetAddress: leverageTokenConfig.debtAsset.address,
     debtAssetDecimals: leverageTokenConfig.debtAsset.decimals,
+    lendingAdapterAddress: leverageTokenConfig.lendingAdapter.address,
     enabled: isOpen,
   })
 

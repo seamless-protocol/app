@@ -123,8 +123,11 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
     const { data: userPosData, isLoading: isUserPosLoading } = useLeverageTokenUserPosition({
       tokenAddress: tokenAddress as `0x${string}`,
       chainIdOverride: chainId,
+      collateralAssetAddress: tokenConfig?.collateralAsset.address as `0x${string}` | undefined,
+      collateralAssetDecimals: tokenConfig?.collateralAsset.decimals,
       debtAssetAddress: tokenConfig?.debtAsset.address as `0x${string}` | undefined,
       debtAssetDecimals: tokenConfig?.debtAsset.decimals,
+      lendingAdapterAddress: tokenConfig?.lendingAdapter.address as `0x${string}` | undefined,
     })
 
     const {
