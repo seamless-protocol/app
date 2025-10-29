@@ -8,16 +8,14 @@ import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import { getPublicClient } from 'wagmi/actions'
-import { lendingAdapterAbi } from '@/lib/contracts/abis/lendingAdapter'
 import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
-  readLeverageManagerV2GetLeverageTokenLendingAdapter,
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
-import { calculateMinCollateralForSender } from '../utils/slippage'
 import type { Quote, QuoteFn } from './types'
+import { fetchCoingeckoTokenUsdPrices } from '@/lib/prices/coingecko'
 
 // Local structural types (avoid brittle codegen coupling)
 type TokenArg = Address
@@ -212,7 +210,7 @@ async function getSwapParamsForRedeem(args: {
 }> {
   const { config, token, sharesToRedeem, slippageBps, chainId } = args
 
-  // TODO: Multicall these
+  // TODO: Multicall these / pass in
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
     args: [token],
     chainId: chainId as SupportedChainId,
@@ -225,10 +223,6 @@ async function getSwapParamsForRedeem(args: {
     args: [token, sharesToRedeem],
     chainId: chainId as SupportedChainId,
   })
-  const lendingAdapter = await readLeverageManagerV2GetLeverageTokenLendingAdapter(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
 
   const totalCollateralAvailable = preview.collateral
   const debtToRepay = preview.debt
@@ -238,23 +232,28 @@ async function getSwapParamsForRedeem(args: {
     throw new Error('Public client unavailable for redeem plan')
   }
 
-  // Determine the amount of collateral the user would receive if there is 0 slippage on the swap from collateral -> debt wrt
-  // the market's underlying oracle price
-  const debtInCollateralAsset = await publicClient.readContract({
-    address: lendingAdapter,
-    abi: lendingAdapterAbi,
-    functionName: 'convertDebtToCollateralAsset',
-    args: [debtToRepay],
+  // TODO: Multicall these / pass in
+  const collateralAssetDecimals = await publicClient.readContract({
+    address: collateralAsset,
+    abi: erc20Abi,
+    functionName: 'decimals',
   })
-  const zeroSlippageCollateralForSender = totalCollateralAvailable - debtInCollateralAsset
+  const debtAssetDecimals = await publicClient.readContract({
+    address: debtAsset,
+    abi: erc20Abi,
+    functionName: 'decimals',
+  })
 
-  // Apply slippage to the amount of collateral the user would receive if there is 0 slippage on the swap from collateral -> debt wrt
-  const minCollateralForSender = calculateMinCollateralForSender(
-    zeroSlippageCollateralForSender,
-    slippageBps,
-  )
+  // Convert totalCollateralAvailable and debtToRepay to usd
+  const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
 
-  // We simply use the full amount at our disposal for the swap, considering allowed slippage
+  const totalCollateralAvailableInUsd = (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * (Number(totalCollateralAvailable) / 10 ** collateralAssetDecimals)
+
+  const debtToRepayInUsd = (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(debtToRepay) / 10 ** debtAssetDecimals)
+
+  const zeroSlippageCollateralForSenderInUsd = totalCollateralAvailableInUsd - debtToRepayInUsd
+
+  const minCollateralForSender = BigInt(Math.floor(zeroSlippageCollateralForSenderInUsd / (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * 10 ** collateralAssetDecimals)) * (10000n - BigInt(slippageBps)) / 10000n
   const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
 
   return {
