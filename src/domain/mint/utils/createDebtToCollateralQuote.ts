@@ -2,11 +2,13 @@ import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import {
+  createBalmyQuoteAdapter,
   createLifiQuoteAdapter,
   createPendleQuoteAdapter,
   createUniswapV3QuoteAdapter,
   createVeloraQuoteAdapter,
 } from '@/domain/shared/adapters'
+
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
 import { getUniswapV3ChainConfig, getUniswapV3PoolConfig } from '@/lib/config/uniswapV3'
 import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
@@ -46,6 +48,23 @@ export function createDebtToCollateralQuote({
     }
   })()
   const effectiveFrom = (fromAddress ?? defaultFrom) as Address | undefined
+
+  const publicClient = getPublicClient(chainId)
+  if (!publicClient) {
+    throw new Error('Public client unavailable for collateral quote')
+  }
+
+  if (swap.type === 'balmy') {
+    const quote = createBalmyQuoteAdapter({
+      chainId,
+      fromAddress: effectiveFrom ?? routerAddress,
+      toAddress: routerAddress,
+      slippageBps,
+      publicClient,
+    })
+    return { quote, adapterType: 'balmy' }
+  }
+
   if (swap.type === 'lifi') {
     const quote = createLifiQuoteAdapter({
       chainId,
@@ -75,10 +94,6 @@ export function createDebtToCollateralQuote({
       slippageBps,
     })
     return { quote, adapterType: 'pendle' }
-  }
-  const publicClient = getPublicClient(chainId)
-  if (!publicClient) {
-    throw new Error('Public client unavailable for debt swap quote')
   }
 
   if (swap.type === 'uniswapV2') {
