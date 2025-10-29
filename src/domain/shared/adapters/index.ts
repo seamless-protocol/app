@@ -1,3 +1,7 @@
+export {
+  type BalmyAdapterOptions,
+  createBalmyQuoteAdapter,
+} from './balmy'
 export { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
 export { createLifiQuoteAdapter, type LifiAdapterOptions, type LifiOrder } from './lifi'
 export type { Quote, QuoteFn } from './types'
