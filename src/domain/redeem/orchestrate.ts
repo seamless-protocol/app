@@ -173,7 +173,7 @@ export async function orchestrateRedeem(params: {
   return { plan, ...tx }
 }
 
-const getQuoteIntentForAdapter = (adapterType: string): 'exactOut' | 'exactIn' => {
+export const getQuoteIntentForAdapter = (adapterType: string): 'exactOut' | 'exactIn' => {
   switch (adapterType) {
     case 'velora':
       return 'exactOut'

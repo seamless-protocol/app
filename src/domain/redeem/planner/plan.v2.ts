@@ -17,7 +17,6 @@ import {
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
 import { calculateMinCollateralForSender } from '../utils/slippage'
-import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import type { Quote, QuoteFn } from './types'
 
 // Local structural types (avoid brittle codegen coupling)

@@ -161,6 +161,7 @@ async function performRedeem(
     quoteCollateralToDebt,
     chainId,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
+    intent: 'exactOut',
   })
 
   const collateralBalanceBefore = await publicClient.readContract({
@@ -191,7 +192,6 @@ async function performRedeem(
     quoteCollateralToDebt,
     chainId,
     routerAddressV2: router,
-    adapterType: 'velora',
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 

@@ -93,6 +93,7 @@ describe('planRedeemV2', () => {
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
       chainId: 1,
+      intent: 'exactOut',
     })
 
     expect(plan.expectedTotalCollateral).toBe(100n)
@@ -135,6 +136,7 @@ describe('planRedeemV2', () => {
           maxInValue: 99n,
         }) as any,
         chainId: 1,
+        intent: 'exactOut',
       }),
     ).rejects.toThrow(
       'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
@@ -150,6 +152,7 @@ describe('planRedeemV2', () => {
       quoteCollateralToDebt: mockQuote as any,
       outputAsset: '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
       chainId: 1,
+      intent: 'exactOut',
     })
 
     expect(plan.payoutAsset.toLowerCase()).toBe('0xdddddddddddddddddddddddddddddddddddddddd')
