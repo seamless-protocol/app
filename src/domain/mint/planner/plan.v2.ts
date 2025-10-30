@@ -228,8 +228,7 @@ export async function planMintV2(params: {
   const minEquityDepositedInCollateral = applySlippageFloor(equityInInputAsset, slippageBps)
   const minEquityDepositedInUsd = (usdPriceMap?.[inputAsset.toLowerCase()] ?? 0) * (Number(minEquityDepositedInCollateral) / 10 ** collateralAssetDecimals)
 
-  const { equityForDepositInCollateral, equityInUsd } = await getEquityForDepositInCollateral({
-    config,
+  const { equityInCollateral: sharesValueInCollateral, equityInUsd: sharesValueInUsd } = await calculateEquity({
     collateralAsset,
     debtAsset,
     collateralAssetDecimals,
@@ -240,11 +239,12 @@ export async function planMintV2(params: {
   })
   const excessDebtInUsd = (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(excessDebt) / 10 ** debtAssetDecimals)
 
-  if (minEquityDepositedInUsd > equityInUsd + excessDebtInUsd) {
+  // Slippage is wrt the coingecko usd prices of the LTs and debt received
+  if (minEquityDepositedInUsd > sharesValueInUsd + excessDebtInUsd) {
     throw new Error('Try increasing slippage: the transaction will likely revert due to slippage')
   }
 
-  const effectiveAllowedSlippage = Number((equityForDepositInCollateral - minEquityDepositedInCollateral) * 10000n / equityForDepositInCollateral)
+  const effectiveAllowedSlippage = Number((sharesValueInCollateral - minEquityDepositedInCollateral) * 10000n / sharesValueInCollateral)
   const minShares = applySlippageFloor(finalQuote.shares, effectiveAllowedSlippage)
 
   // Build calls based on the amount actually used for the swap
@@ -276,8 +276,7 @@ export async function planMintV2(params: {
   }
 }
 
-async function getEquityForDepositInCollateral(args: {
-  config: Config
+async function calculateEquity(args: {
   collateralAsset: Address
   debtAsset: Address
   collateralAssetDecimals: number
@@ -285,23 +284,18 @@ async function getEquityForDepositInCollateral(args: {
   collateralAdded: bigint
   debtBorrowed: bigint
   usdPriceMap: Record<string, number>
-}): Promise<{equityForDepositInCollateral: bigint, equityInUsd: number}> {
-  const { config, collateralAsset, debtAsset, collateralAssetDecimals, debtAssetDecimals, collateralAdded, debtBorrowed, usdPriceMap } = args
+}): Promise<{equityInCollateral: bigint, equityInUsd: number}> {
+  const { collateralAsset, debtAsset, collateralAssetDecimals, debtAssetDecimals, collateralAdded, debtBorrowed, usdPriceMap } = args
 
-  const publicClient = getPublicClient(config)
-  if (!publicClient) {
-    throw new Error('Public client unavailable for redeem plan')
-  }
+  const collateralInUsd = (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * (Number(collateralAdded) / 10 ** collateralAssetDecimals)
 
-  const collateralAddedInUsd = (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * (Number(collateralAdded) / 10 ** collateralAssetDecimals)
+  const debtInUsd = (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(debtBorrowed) / 10 ** debtAssetDecimals)
 
-  const debtBorrowedInUsd = (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(debtBorrowed) / 10 ** debtAssetDecimals)
+  const equityInUsd = collateralInUsd - debtInUsd
 
-  const equityInUsd = collateralAddedInUsd - debtBorrowedInUsd
+  const equityInCollateral = BigInt(Math.floor(equityInUsd / (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * 10 ** collateralAssetDecimals))
 
-  const equityForDepositInCollateral = BigInt(Math.floor(equityInUsd / (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * 10 ** collateralAssetDecimals))
-
-  return { equityForDepositInCollateral, equityInUsd }
+  return { equityInCollateral, equityInUsd }
 }
 
 // Helpers — defined below the main function for clarity

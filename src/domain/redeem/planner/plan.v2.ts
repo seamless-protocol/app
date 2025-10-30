@@ -195,6 +195,7 @@ export async function planRedeemV2(params: {
   const expectedDebtPayoutInUsd = (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(planDraft.expectedDebtPayout) / 10 ** debtAssetDecimals)
   const minCollateralForSenderInUsd = (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * (Number(planDraft.minCollateralForSender) / 10 ** collateralAssetDecimals)
 
+  // Slippage is wrt the coingecko usd prices of the received collateral and debt
   if (minCollateralForSenderInUsd > expectedCollateralInUsd + expectedDebtPayoutInUsd) {
     throw new Error('Try increasing slippage: the transaction will likely revert due to slippage')
   }
