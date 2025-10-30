@@ -408,7 +408,7 @@ async function runForChainOption(
     } else {
       const backend = await resolveBackend({
         chain: slug,
-        mode: 'tenderly-static',
+        mode: backendOption === 'anvil' ? 'anvil' : 'tenderly-static',
         scenario: scenarioOption ?? 'leverage-mint',
       })
       const chainId = String(backend.canonicalChainId)
