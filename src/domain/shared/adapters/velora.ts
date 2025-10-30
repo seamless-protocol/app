@@ -151,7 +151,7 @@ function mapVeloraResponseToQuote(
   const maxIn = BigInt(priceRoute.srcAmount)
 
   // Calculate slippage-adjusted minimum amount
-  // TODO: ASK MARCO TO VALIDATE THIS
+  // Note: This is not used but instead keep for the sake of consistency with other adapters
   const slippageBps = Math.round(parseFloat(slippage) * 10000)
   const slippageMultiplier = (10000 - slippageBps) / 10000
   const minOut = BigInt(Math.floor(Number(expectedOut) * slippageMultiplier))
@@ -172,6 +172,7 @@ function mapVeloraResponseToQuote(
     veloraData: {
       augustus: approvalTarget, // Use the contract address from the API response
       offsets: {
+        // Sourced from : https://github.com/seamless-protocol/leverage-tokens/blob/b19fa974a9e57f3c4382b4d503d7b48c5a080199/test/integration/1/LeverageRouter/RedeemWithVelora.t.sol#L14-L16
         exactAmount: 132n, // Byte position for output amount in calldata
         limitAmount: 100n, // Byte position for max input amount in calldata
         quotedAmount: 164n, // Byte position for quoted input amount in calldata

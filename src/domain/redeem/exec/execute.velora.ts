@@ -1,7 +1,7 @@
 /**
  * Executes a Leverage Token redeem using `redeemWithVelora`, powered by Wagmi actions.
  *
- * This function uses Velora's special redeem function that takes Velora-specific parameters
+ * This function uses seamless's special redeem function that takes Velora-specific parameters
  * including the veloraAdapter address, augustus address, offsets, and swapData.
  *
  * Invariants/behavior:
