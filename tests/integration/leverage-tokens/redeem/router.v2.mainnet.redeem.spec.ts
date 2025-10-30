@@ -8,17 +8,11 @@ import {
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
-import { ADDR, CHAIN_ID, mode } from '../../../shared/env'
+import { ADDR, CHAIN_ID } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
 import { approveIfNeeded } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
-
-if (mode !== 'tenderly') {
-  throw new Error(
-    'Redeem integration requires a Tenderly backend. Update test configuration to use Tenderly VNet.',
-  )
-}
 
 const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 

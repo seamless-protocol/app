@@ -75,11 +75,14 @@ async function fundErc20ViaWethDeposit(token: Address, to: Address, human: strin
 // Token addresses follow the detected chain configuration
 const USDC_ADDRESS = getAddress(ADDR.usdc)
 const weETH_ADDRESS = getAddress(ADDR.weeth)
+// wstETH on Mainnet
+const WSTETH_MAINNET = getAddress('0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0')
 
 // Rich holders for token funding via impersonation (Anvil only)
 const RICH_HOLDERS: Record<Address, Address | undefined> = {
   [USDC_ADDRESS]: '0x3304dd20f87a67ed649c3dF34aD6b19dFEC33877' as Address, // Coinbase custody wallet
   [weETH_ADDRESS]: '0xb26ff591F44b04E78de18f43B46f8b70C6676984' as Address, // Large weETH holder
+  [WSTETH_MAINNET]: '0x0B925eD163218f6662a35e0f0371Ac234f9E9371' as Address, // Aave v3 wstETH pool
 }
 
 async function fundErc20ViaImpersonation(token: Address, to: Address, human: string) {
