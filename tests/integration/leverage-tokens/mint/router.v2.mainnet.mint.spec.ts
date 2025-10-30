@@ -1,15 +1,9 @@
 import type { Address } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
-import { ADDR, CHAIN_ID, mode } from '../../../shared/env'
+import { ADDR, CHAIN_ID } from '../../../shared/env'
 import { executeSharedMint } from '../../../shared/mintHelpers'
 import { withFork } from '../../../shared/withFork'
-
-if (mode !== 'tenderly') {
-  throw new Error(
-    'Mint integration requires a Tenderly backend. Update test configuration to use Tenderly VNet.',
-  )
-}
 
 const mintSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 

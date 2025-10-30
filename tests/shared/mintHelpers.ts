@@ -18,7 +18,7 @@ import {
   simulateLeverageRouterV2Deposit,
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
-import { ADDR, CHAIN_ID, mode, RPC } from './env'
+import { ADDR, CHAIN_ID, RPC } from './env'
 import { readErc20Decimals } from './erc20'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
 
@@ -67,13 +67,6 @@ export async function executeSharedMint({
   addresses,
 }: MintSetupParams): Promise<MintOutcome> {
   const resolvedSlippageBps = Number(process.env['TEST_SLIPPAGE_BPS'] ?? slippageBps ?? 50)
-  if (mode !== 'tenderly') {
-    console.error('Shared mint helper requires Tenderly VNet. Configure TEST_RPC_URL.', {
-      mode,
-      rpc: RPC.primary,
-    })
-    throw new Error('TEST_RPC_URL missing or invalid for tenderly mode')
-  }
 
   const executor = ADDR.executor
   if (!executor) {

@@ -1,6 +1,6 @@
-# Integration Tests (Tenderly VNet or Anvil Fork)
+# Integration Tests (Anvil or Tenderly VNet)
 
-This directory contains integration tests that run against a Tenderly Virtual TestNet (default when configured) or a local Anvil fork of Base mainnet.
+This directory contains integration tests that run against a local Anvil fork (default) or Tenderly Virtual TestNet. **Anvil is now the recommended approach** due to Tenderly quota limits and better local development experience.
 
 ## Quick Start
 
@@ -14,25 +14,45 @@ foundryup
 
 ### Setup
 
-1. Configure environment:
+1. Configure environment (.env.local or .env):
    ```bash
-   cp .env.example .env
-   # Choose mode via env. Tenderly is used automatically when TENDERLY_RPC_URL is set.
-   # For Tenderly (default when set):
-   #   TENDERLY_RPC_URL=https://rpc.tenderly.co/fork/<your-fork-id>
-   #   TENDERLY_ADMIN_RPC_URL=https://rpc.tenderly.co/fork/<your-fork-id>  # optional, often same as RPC
-   # For Anvil (fallback when Tenderly is not configured):
-   #   ANVIL_BASE_FORK_URL=https://mainnet.base.org
+   # Required for Anvil mainnet fork
+   VITE_ALCHEMY_API_KEY=your_alchemy_key_here
+
+   # Optional: Tenderly credentials (for Tenderly backend)
+   TENDERLY_ACCOUNT=your_account
+   TENDERLY_PROJECT=your_project
+   TENDERLY_ACCESS_KEY=your_access_key
    ```
 
-2. When using Anvil, start the Base fork (in one terminal):
+2. **Option A: Using Anvil (Recommended)**
+
+   Start Anvil with Mainnet fork:
    ```bash
-   ANVIL_BASE_FORK_URL=https://mainnet.base.org bun run anvil:base
+   # Terminal 1: Start Anvil
+   bun run anvil:mainnet
+
+   # Terminal 2: Run tests
+   bun run test:integration:anvil
    ```
 
-3. Run integration tests (in another terminal):
+3. **Option B: Using Tenderly JIT VNet**
+
+   With Tenderly credentials configured:
    ```bash
-   bun run test:integration
+   bun run test:integration:wsteth
+   ```
+
+4. **Option C: Using test runner directly with --backend flag**
+   ```bash
+   # Explicit Anvil backend
+   bun scripts/run-tests.ts integration --backend=anvil
+
+   # Explicit Tenderly backend (requires credentials)
+   bun scripts/run-tests.ts integration --backend=tenderly
+
+   # Auto-detect (Tenderly if configured, Anvil fallback)
+   bun scripts/run-tests.ts integration --backend=auto
    ```
 
 ## Architecture
@@ -123,7 +143,7 @@ const RICH_HOLDERS: Record<Address, Address | undefined> = {
 
 ## CI/CD Setup
 
-For GitHub Actions, add this step before running tests:
+The CI workflow (`.github/workflows/ci.yml`) uses Anvil by default to avoid Tenderly quota limits:
 
 ```yaml
 - name: Install Foundry
@@ -131,20 +151,22 @@ For GitHub Actions, add this step before running tests:
   with:
     version: stable
 
-- name: Start Anvil Base Fork
+- name: Start Anvil (Mainnet fork)
   run: |
-    nohup anvil --fork-url "$ANVIL_BASE_FORK_URL" --port 8545 --block-time 0 --no-rate-limit > anvil.log 2>&1 &
-    for i in {1..60}; do nc -z 127.0.0.1 8545 && break || sleep 1; done
-
-- name: Run Integration Tests  
-  run: bun run test:integration
+    anvil --fork-url "https://eth-mainnet.g.alchemy.com/v2/${{ secrets.ALCHEMY_API_KEY }}" --chain-id 1 --port 8545 &
+    sleep 5
   env:
-    ANVIL_BASE_FORK_URL: https://mainnet.base.org
+    ANVIL_NO_MINING: false
+
+- name: Run integration tests
+  run: TEST_CHAIN=mainnet E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration --backend=anvil -- tests/integration/leverage-tokens
+  env:
+    VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
 ```
 
-## Tenderly vs Anvil
-
-Both modes share the same tests and helpers. Tenderly is preferred when configured; Anvil is provided for local/offline workflows and CI without secrets.
+**Required GitHub Secrets:**
+- `ALCHEMY_API_KEY` - For Anvil Mainnet fork
+- `VITE_LIFI_API_KEY` - For LiFi quote adapter (optional but recommended)
 
 ## Performance
 
