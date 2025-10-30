@@ -8,14 +8,13 @@ import {
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
-import { ADDR, CHAIN_ID, mode } from '../../../shared/env'
+import { ADDR, CHAIN_ID } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
 import { approveIfNeeded } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
 
-// TODO: Figure out why Velora redeem is failing with arithmetic underflow
-const redeemSuite = CHAIN_ID === mainnet.id ? describe.skip : describe.skip
+const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
 redeemSuite('Leverage Router V2 Redeem (Mainnet wstETH/ETH 25x)', () => {
   const SLIPPAGE_BPS = 150
