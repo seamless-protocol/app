@@ -13,7 +13,7 @@ const MAINNET_WSTETH = '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address
 // Test account address (default Anvil/Tenderly account #0)
 const TEST_ACCOUNT = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as Address
 
-test.describe('Mainnet wstETH/ETH 25x redeem (JIT + LiFi)', () => {
+test.describe('Mainnet wstETH/ETH 25x redeem', () => {
   let snapshotId: `0x${string}`
 
   test.beforeEach(async () => {
@@ -33,7 +33,7 @@ test.describe('Mainnet wstETH/ETH 25x redeem (JIT + LiFi)', () => {
     await revertSnapshot(snapshotId)
   })
 
-  test('redeems wstETH/ETH 25x via modal using LiFi route', async ({ page }) => {
+  test('redeems wstETH/ETH 25x via modal', async ({ page }) => {
     test.setTimeout(120_000)
 
     await page.goto('/#/leverage-tokens', { waitUntil: 'domcontentloaded' })
