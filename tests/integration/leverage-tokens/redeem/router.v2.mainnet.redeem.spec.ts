@@ -17,7 +17,8 @@ import { type WithForkCtx, withFork } from '../../../shared/withFork'
 const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
 redeemSuite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet wstETH/ETH 25x)', () => {
-  const SLIPPAGE_BPS = 50
+  // Higher slippage needed for Velora on Anvil due to quote variability
+  const SLIPPAGE_BPS = 150
 
   it('redeems all minted shares into collateral asset via Velora', async () => {
     const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
