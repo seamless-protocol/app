@@ -1,13 +1,12 @@
 import type { Address, Hex } from 'viem'
 import { getAddress } from 'viem'
-import { base } from 'viem/chains'
 import { getTokenDecimals } from '@/features/leverage-tokens/leverageTokens.config'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
-import type { QuoteFn } from './types'
+import type { QuoteRequest, VeloraQuote } from './types'
 
 export interface VeloraAdapterOptions {
-  chainId?: number
+  chainId: number
   router: Address
   /** Optional override for quote `fromAddress` (defaults to `router`). */
   fromAddress?: Address
@@ -32,9 +31,11 @@ type VeloraSwapResponse = {
  * Create a QuoteFn adapter backed by Velora's Market API.
  * Returns swap data and metadata needed for the redeemWithVelora contract function.
  */
-export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
+export function createVeloraQuoteAdapter(
+  opts: VeloraAdapterOptions,
+): (args: QuoteRequest) => Promise<VeloraQuote> {
   const {
-    chainId = base.id,
+    chainId,
     router,
     fromAddress,
     slippageBps = DEFAULT_SLIPPAGE_BPS,
@@ -178,23 +179,5 @@ function mapVeloraResponseToQuote(
         quotedAmount: 164n, // Byte position for quoted input amount in calldata
       },
     },
-  }
-}
-
-// Extended Quote type for Velora-specific data
-export interface VeloraQuote {
-  out: bigint
-  minOut?: bigint
-  maxIn?: bigint
-  wantsNativeIn?: boolean
-  approvalTarget: Address
-  calldata: Hex
-  veloraData: {
-    augustus: Address
-    offsets: {
-      exactAmount: bigint // Byte position for output amount in calldata
-      limitAmount: bigint // Byte position for max input amount in calldata
-      quotedAmount: bigint // Byte position for quoted input amount in calldata
-    }
   }
 }

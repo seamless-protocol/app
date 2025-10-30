@@ -4,7 +4,7 @@
 import type { Address, Hex } from 'viem'
 
 // Quote for external swaps (if needed during operations)
-export type Quote = {
+export type BaseQuote = {
   // Expected output (nice-weather) in outToken base units
   out: bigint
   // Guaranteed output after slippage in outToken base units
@@ -19,8 +19,12 @@ export type Quote = {
   approvalTarget: Address
   // Calldata to execute the swap on the aggregator/DEX
   calldata: Hex
+}
+
+// Velora-specific quote where veloraData is REQUIRED
+export type VeloraQuote = BaseQuote & {
   // Velora-specific data for redeemWithVelora function
-  veloraData?: {
+  veloraData: {
     augustus: Address
     offsets: {
       exactAmount: bigint
@@ -29,6 +33,8 @@ export type Quote = {
     }
   }
 }
+
+export type Quote = BaseQuote | VeloraQuote
 
 export type QuoteIntent = 'exactIn' | 'exactOut'
 

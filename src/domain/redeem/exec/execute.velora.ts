@@ -78,19 +78,7 @@ export async function executeRedeemWithVelora(params: {
     swapData,
   ] satisfies RedeemWithVeloraParams['args']
 
-  const skipSimulate =
-    (typeof process !== 'undefined' && process.env['TEST_SKIP_SIMULATE'] === '1') || false
-
   const chain = chainId as SupportedChainId
-
-  if (skipSimulate) {
-    const hash = await writeLeverageRouterV2RedeemWithVelora(config, {
-      account,
-      args,
-      chainId: chain,
-    })
-    return { hash }
-  }
 
   const { request } = await simulateLeverageRouterV2RedeemWithVelora(config, {
     // redeemWithVelora(token, shares, minCollateralForSender, veloraAdapter, augustus, offsets, swapData)
