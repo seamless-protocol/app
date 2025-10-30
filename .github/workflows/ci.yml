@@ -71,20 +71,21 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Install Foundry (for Anvil fallback)
+      - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: stable
 
-      - name: Run E2E tests (Mainnet wstETH/WETH 25x, Tenderly JIT VNet)
+      - name: Start Anvil (Mainnet fork)
+        run: |
+          anvil --fork-url "https://eth-mainnet.g.alchemy.com/v2/${{ secrets.VITE_ALCHEMY_API_KEY }}" --chain-id 1 --port 8545 &
+          sleep 5
+        env:
+          ANVIL_NO_MINING: false
+
+      - name: Run E2E tests (Mainnet wstETH/WETH 25x, Anvil)
         run: bun run test:e2e
         env:
-          TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_ACCOUNT }}
-          TENDERLY_ACCOUNT_SLUG: ${{ secrets.TENDERLY_ACCOUNT_SLUG }}
-          TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
-          TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
-          TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
-          TENDERLY_TOKEN: ${{ secrets.TENDERLY_TOKEN }}
           VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless
