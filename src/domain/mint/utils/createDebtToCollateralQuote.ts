@@ -50,6 +50,7 @@ export function createDebtToCollateralQuote({
       ...(swap.allowBridges ? { allowBridges: swap.allowBridges } : {}),
       ...(swap.order ? { order: swap.order } : {}),
     })
+    console.info('[Mint][Quote] Using adapter: lifi')
     return { quote, adapterType: 'lifi' }
   }
 
@@ -73,7 +74,7 @@ export function createDebtToCollateralQuote({
       wrappedNative,
       slippageBps,
     })
-
+    console.info('[Mint][Quote] Using adapter: uniswapV2')
     return { quote, adapterType: 'uniswapV2' }
   }
 
@@ -95,7 +96,7 @@ export function createDebtToCollateralQuote({
     slippageBps,
     ...(wrappedNative ? { wrappedNative } : {}),
   })
-
+  console.info('[Mint][Quote] Using adapter: uniswapV3')
   return { quote, adapterType: 'uniswapV3' }
 }
 
