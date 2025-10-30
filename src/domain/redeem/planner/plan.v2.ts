@@ -80,6 +80,8 @@ export async function planRedeemV2(params: {
   outputAsset?: Address
   /** Chain ID to execute the transaction on */
   chainId: number
+  /** Intent for collateral->debt quote */
+  intent: 'exactOut' | 'exactIn'
 }): Promise<RedeemPlanV2> {
   const {
     config,
@@ -88,6 +90,7 @@ export async function planRedeemV2(params: {
     slippageBps,
     quoteCollateralToDebt: quoter,
     chainId,
+    intent,
   } = params
 
   const {
@@ -96,6 +99,7 @@ export async function planRedeemV2(params: {
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
+    collateralAvailableForSwap,
   } = await getSwapParamsForRedeem({
     config,
     token,
@@ -104,23 +108,16 @@ export async function planRedeemV2(params: {
     chainId,
   })
 
-  // Calculate how much collateral we can use for the swap
-  // We need to reserve minCollateralForSender for the user
-  const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
-
   const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeCollateralPath ? ETH_SENTINEL : collateralAsset
 
-  // Use exactOut intent to get the precise collateral amount needed for debt repayment
-  // This prevents Velora from using more collateral than necessary, which was causing
-  // CollateralSlippageTooHigh errors when the swap consumed all available collateral
   const quote = await getCollateralToDebtQuote({
     debtAsset,
     requiredDebt: debtToRepay,
     quoter,
     collateralAvailableForSwap,
     inTokenForQuote,
-    intent: 'exactOut',
+    intent,
   })
 
   const collateralRequiredForSwap = quote.maxIn ?? 0n
@@ -217,6 +214,7 @@ async function getSwapParamsForRedeem(args: {
   totalCollateralAvailable: bigint
   debtToRepay: bigint
   minCollateralForSender: bigint
+  collateralAvailableForSwap: bigint
 }> {
   const { config, token, sharesToRedeem, slippageBps, chainId } = args
 
@@ -262,12 +260,16 @@ async function getSwapParamsForRedeem(args: {
     slippageBps,
   )
 
+  // We simply use the full amount at our disposal for the swap, considering allowed slippage
+  const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
+
   return {
     collateralAsset,
     debtAsset,
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
+    collateralAvailableForSwap,
   }
 }
 

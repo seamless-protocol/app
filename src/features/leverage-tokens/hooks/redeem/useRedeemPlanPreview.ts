@@ -4,6 +4,8 @@ import type { Config } from 'wagmi'
 import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
 import type { QuoteFn } from '@/domain/redeem/planner/types'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
+import { getQuoteIntentForAdapter } from '@/domain/redeem/orchestrate'
 
 interface UseRedeemPlanPreviewParams {
   config: Config
@@ -57,6 +59,8 @@ export function useRedeemPlanPreview({
         throw new Error('Redeem plan prerequisites missing')
       }
 
+      const intent = getQuoteIntentForAdapter(getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora')
+
       return planRedeemV2({
         config,
         token,
@@ -66,6 +70,7 @@ export function useRedeemPlanPreview({
         chainId,
         ...(managerAddress ? { managerAddress } : {}),
         ...(outputAsset ? { outputAsset } : {}),
+        intent,
       })
     },
   })

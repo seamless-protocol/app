@@ -1,7 +1,7 @@
 /**
  * Executes a Leverage Token redeem using `redeemWithVelora`, powered by Wagmi actions.
  *
- * This function uses Velora's special redeem function that takes Velora-specific parameters
+ * This function uses seamless's special redeem function that takes Velora-specific parameters
  * including the veloraAdapter address, augustus address, offsets, and swapData.
  *
  * Invariants/behavior:
@@ -78,19 +78,7 @@ export async function executeRedeemWithVelora(params: {
     swapData,
   ] satisfies RedeemWithVeloraParams['args']
 
-  const skipSimulate =
-    (typeof process !== 'undefined' && process.env['TEST_SKIP_SIMULATE'] === '1') || false
-
   const chain = chainId as SupportedChainId
-
-  if (skipSimulate) {
-    const hash = await writeLeverageRouterV2RedeemWithVelora(config, {
-      account,
-      args,
-      chainId: chain,
-    })
-    return { hash }
-  }
 
   const { request } = await simulateLeverageRouterV2RedeemWithVelora(config, {
     // redeemWithVelora(token, shares, minCollateralForSender, veloraAdapter, augustus, offsets, swapData)
