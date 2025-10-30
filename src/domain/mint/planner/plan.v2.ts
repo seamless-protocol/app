@@ -226,25 +226,31 @@ export async function planMintV2(params: {
 
   const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
   const minEquityDepositedInCollateral = applySlippageFloor(equityInInputAsset, slippageBps)
-  const minEquityDepositedInUsd = (usdPriceMap?.[inputAsset.toLowerCase()] ?? 0) * (Number(minEquityDepositedInCollateral) / 10 ** collateralAssetDecimals)
+  const minEquityDepositedInUsd =
+    (usdPriceMap?.[inputAsset.toLowerCase()] ?? 0) *
+    (Number(minEquityDepositedInCollateral) / 10 ** collateralAssetDecimals)
 
-  const { equityInCollateral: sharesValueInCollateral, equityInUsd: sharesValueInUsd } = await calculateEquity({
-    collateralAsset,
-    debtAsset,
-    collateralAssetDecimals,
-    debtAssetDecimals,
-    collateralAdded: finalQuote.requiredCollateral,
-    debtBorrowed: debtIn,
-    usdPriceMap,
-  })
-  const excessDebtInUsd = (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(excessDebt) / 10 ** debtAssetDecimals)
+  const { equityInCollateral: sharesValueInCollateral, equityInUsd: sharesValueInUsd } =
+    await calculateEquity({
+      collateralAsset,
+      debtAsset,
+      collateralAssetDecimals,
+      debtAssetDecimals,
+      collateralAdded: finalQuote.requiredCollateral,
+      debtBorrowed: debtIn,
+      usdPriceMap,
+    })
+  const excessDebtInUsd =
+    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(excessDebt) / 10 ** debtAssetDecimals)
 
   // Slippage is wrt the coingecko usd prices of the LTs and debt received
   if (minEquityDepositedInUsd > sharesValueInUsd + excessDebtInUsd) {
     throw new Error('Try increasing slippage: the transaction will likely revert due to slippage')
   }
 
-  const effectiveAllowedSlippage = Number((sharesValueInCollateral - minEquityDepositedInCollateral) * 10000n / sharesValueInCollateral)
+  const effectiveAllowedSlippage = Number(
+    ((sharesValueInCollateral - minEquityDepositedInCollateral) * 10000n) / sharesValueInCollateral,
+  )
   const minShares = applySlippageFloor(finalQuote.shares, effectiveAllowedSlippage)
 
   // Build calls based on the amount actually used for the swap
@@ -284,16 +290,32 @@ async function calculateEquity(args: {
   collateralAdded: bigint
   debtBorrowed: bigint
   usdPriceMap: Record<string, number>
-}): Promise<{equityInCollateral: bigint, equityInUsd: number}> {
-  const { collateralAsset, debtAsset, collateralAssetDecimals, debtAssetDecimals, collateralAdded, debtBorrowed, usdPriceMap } = args
+}): Promise<{ equityInCollateral: bigint; equityInUsd: number }> {
+  const {
+    collateralAsset,
+    debtAsset,
+    collateralAssetDecimals,
+    debtAssetDecimals,
+    collateralAdded,
+    debtBorrowed,
+    usdPriceMap,
+  } = args
 
-  const collateralInUsd = (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * (Number(collateralAdded) / 10 ** collateralAssetDecimals)
+  const collateralInUsd =
+    (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) *
+    (Number(collateralAdded) / 10 ** collateralAssetDecimals)
 
-  const debtInUsd = (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(debtBorrowed) / 10 ** debtAssetDecimals)
+  const debtInUsd =
+    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(debtBorrowed) / 10 ** debtAssetDecimals)
 
   const equityInUsd = collateralInUsd - debtInUsd
 
-  const equityInCollateral = BigInt(Math.floor(equityInUsd / (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * 10 ** collateralAssetDecimals))
+  const equityInCollateral = BigInt(
+    Math.floor(
+      (equityInUsd / (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0)) *
+        10 ** collateralAssetDecimals,
+    ),
+  )
 
   return { equityInCollateral, equityInUsd }
 }

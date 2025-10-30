@@ -53,12 +53,14 @@ export function useLeverageTokenUserPosition({
     isError: isCollateralError,
     error: collateralError,
   } = useReadContracts({
-    contracts: [{
-      address: lendingAdapterAddress,
-      abi: lendingAdapterAbi,
-      functionName: 'getCollateral' as const,
-      chainId: chainId as SupportedChainId,
-    }],
+    contracts: [
+      {
+        address: lendingAdapterAddress,
+        abi: lendingAdapterAbi,
+        functionName: 'getCollateral' as const,
+        chainId: chainId as SupportedChainId,
+      },
+    ],
   })
 
   // 2) Read user balance (shares)
@@ -77,15 +79,27 @@ export function useLeverageTokenUserPosition({
   // 3) USD price for collateral and debt assets
   const { data: usdPriceMap } = useUsdPrices({
     chainId,
-    addresses: collateralAssetAddress && debtAssetAddress ? [collateralAssetAddress, debtAssetAddress] : [],
+    addresses:
+      collateralAssetAddress && debtAssetAddress ? [collateralAssetAddress, debtAssetAddress] : [],
     enabled: Boolean(collateralAssetAddress && debtAssetAddress && enabled),
   })
 
-  const collateralPriceUsd = collateralAssetAddress ? usdPriceMap[collateralAssetAddress.toLowerCase()] : 0
+  const collateralPriceUsd = collateralAssetAddress
+    ? usdPriceMap[collateralAssetAddress.toLowerCase()]
+    : 0
   const debtPriceUsd = debtAssetAddress ? usdPriceMap[debtAssetAddress.toLowerCase()] : 0
 
   const data: LeverageTokenUserPositionData | undefined = useMemo(() => {
-    if (!stateData || !balance || !collateralData || !collateralPriceUsd || !debtPriceUsd || !collateralPriceUsd || !debtAssetDecimals || !collateralAssetDecimals) {
+    if (
+      !stateData ||
+      !balance ||
+      !collateralData ||
+      !collateralPriceUsd ||
+      !debtPriceUsd ||
+      !collateralPriceUsd ||
+      !debtAssetDecimals ||
+      !collateralAssetDecimals
+    ) {
       return undefined
     }
 
@@ -95,11 +109,16 @@ export function useLeverageTokenUserPosition({
     }
     const totalCollateral = collateralData[0]?.result
 
-    const collateralValueUsd = collateralPriceUsd && totalCollateral ? collateralPriceUsd * Number(totalCollateral) / 10 ** collateralAssetDecimals : 0
-    const debtValueUsd = debtPriceUsd * Number(debt) / 10 ** debtAssetDecimals
+    const collateralValueUsd =
+      collateralPriceUsd && totalCollateral
+        ? (collateralPriceUsd * Number(totalCollateral)) / 10 ** collateralAssetDecimals
+        : 0
+    const debtValueUsd = (debtPriceUsd * Number(debt)) / 10 ** debtAssetDecimals
 
     const equityValueUsd = collateralValueUsd - debtValueUsd
-    const equityValueInDebt = BigInt(Math.floor(equityValueUsd / debtPriceUsd * 10 ** debtAssetDecimals))
+    const equityValueInDebt = BigInt(
+      Math.floor((equityValueUsd / debtPriceUsd) * 10 ** debtAssetDecimals),
+    )
 
     const equityInDebtPerToken = (balance * equityValueInDebt) / totalSupply
 
@@ -110,7 +129,15 @@ export function useLeverageTokenUserPosition({
         ? (Number(equityInDebtPerToken) / 10 ** debtAssetDecimals) * debtPriceUsd
         : undefined
     return { balance, equityInDebt: equityInDebtPerToken, equityUsd }
-  }, [stateData, balance, collateralPriceUsd, debtPriceUsd, collateralAssetDecimals, debtAssetDecimals, collateralData])
+  }, [
+    stateData,
+    balance,
+    collateralPriceUsd,
+    debtPriceUsd,
+    collateralAssetDecimals,
+    debtAssetDecimals,
+    collateralData,
+  ])
 
   return {
     data,

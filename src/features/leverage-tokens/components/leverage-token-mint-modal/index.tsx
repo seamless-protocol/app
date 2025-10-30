@@ -9,7 +9,10 @@ import {
   useSwitchChain,
   useWaitForTransactionReceipt,
 } from 'wagmi'
-import { parseErc20ReceivedFromReceipt, parseMintedSharesFromReceipt } from '@/features/leverage-tokens/utils/receipt'
+import {
+  parseErc20ReceivedFromReceipt,
+  parseMintedSharesFromReceipt,
+} from '@/features/leverage-tokens/utils/receipt'
 import { invalidatePortfolioQueries } from '@/features/portfolio/utils/invalidation'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
@@ -462,17 +465,17 @@ export function LeverageTokenMintModal({
     return undefined
   }, [receiptState.data, userAddress, leverageTokenAddress, leverageTokenConfig.decimals])
 
-    // Calculate debt asset amount that will be received
-    const expectedExcessDebtAmount = useMemo(() => {
-      const plan = planPreview.plan
-      if (!plan || typeof plan.expectedExcessDebt !== 'bigint' || plan.expectedExcessDebt <= 0n)
-        return '0'
-      return formatTokenAmountFromBase(
-        plan.expectedExcessDebt,
-        leverageTokenConfig.debtAsset.decimals,
-        TOKEN_AMOUNT_DISPLAY_DECIMALS,
-      )
-    }, [planPreview.plan, leverageTokenConfig.debtAsset.decimals])
+  // Calculate debt asset amount that will be received
+  const expectedExcessDebtAmount = useMemo(() => {
+    const plan = planPreview.plan
+    if (!plan || typeof plan.expectedExcessDebt !== 'bigint' || plan.expectedExcessDebt <= 0n)
+      return '0'
+    return formatTokenAmountFromBase(
+      plan.expectedExcessDebt,
+      leverageTokenConfig.debtAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [planPreview.plan, leverageTokenConfig.debtAsset.decimals])
 
   // Receipt effect (after expectedTokens to satisfy dependency ordering)
   useEffect(() => {
