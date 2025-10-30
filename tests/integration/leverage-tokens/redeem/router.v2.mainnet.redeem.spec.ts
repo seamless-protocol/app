@@ -10,6 +10,7 @@ import {
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
 import type { LeverageTokenKey } from '../../../fixtures/addresses'
+import { createTestBalmySDK } from '../../../shared/clients'
 import { CHAIN_ID, getAddressesForToken } from '../../../shared/env'
 import { approveIfNeeded } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
@@ -194,6 +195,7 @@ async function performRedeem(
     swap: collateralToDebtConfig,
     slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
+    balmySDK: createTestBalmySDK(),
   })
 
   const intent = getQuoteIntentForAdapter(
