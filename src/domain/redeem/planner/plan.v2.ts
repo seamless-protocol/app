@@ -97,6 +97,7 @@ export async function planRedeemV2(params: {
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
+    collateralAvailableForSwap,
   } = await getSwapParamsForRedeem({
     config,
     token,
@@ -104,10 +105,6 @@ export async function planRedeemV2(params: {
     slippageBps,
     chainId,
   })
-
-  // Calculate how much collateral we can use for the swap
-  // We need to reserve minCollateralForSender for the user
-  const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
 
   const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeCollateralPath ? ETH_SENTINEL : collateralAsset
@@ -250,6 +247,7 @@ async function getSwapParamsForRedeem(args: {
   totalCollateralAvailable: bigint
   debtToRepay: bigint
   minCollateralForSender: bigint
+  collateralAvailableForSwap: bigint
 }> {
   const { config, token, sharesToRedeem, slippageBps, chainId } = args
 
@@ -295,12 +293,16 @@ async function getSwapParamsForRedeem(args: {
     slippageBps,
   )
 
+  // We simply use the full amount at our disposal for the swap, considering allowed slippage
+  const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
+
   return {
     collateralAsset,
     debtAsset,
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
+    collateralAvailableForSwap,
   }
 }
 
