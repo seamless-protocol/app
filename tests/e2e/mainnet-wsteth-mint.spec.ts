@@ -16,7 +16,15 @@ const TEST_ACCOUNT = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as Address
 test.describe('Mainnet wstETH/ETH 25x mint', () => {
   let snapshotId: `0x${string}`
 
-  test.beforeEach(async () => {
+  test.beforeEach(async ({ page }) => {
+    // Forward browser console to terminal
+    page.on('console', (message) => {
+      console.log(`[browser:${message.type()}] ${message.text()}`)
+    })
+    page.on('pageerror', (error) => {
+      console.error('[browser:pageerror]', error)
+    })
+
     const chainId = await publicClient.getChainId()
     if (chainId !== leverageTokenDefinition.chainId)
       throw new Error(
