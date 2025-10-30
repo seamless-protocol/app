@@ -29,7 +29,6 @@ interface PendingStepProps {
 }
 
 export function PendingStep({
-  selectedToken,
   amount,
   leverageTokenConfig,
   mode = 'awaitingWallet',

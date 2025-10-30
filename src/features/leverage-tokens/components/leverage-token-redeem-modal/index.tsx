@@ -130,7 +130,6 @@ export function LeverageTokenRedeemModal({
     collateralAssetDecimals: leverageTokenConfig.collateralAsset.decimals,
     debtAssetAddress: leverageTokenConfig.debtAsset.address,
     debtAssetDecimals: leverageTokenConfig.debtAsset.decimals,
-    lendingAdapterAddress: leverageTokenConfig.lendingAdapter.address,
     enabled: isOpen,
   })
 

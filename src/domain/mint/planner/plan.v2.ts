@@ -9,19 +9,18 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
+import { getPublicClient } from 'wagmi/actions'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewDeposit,
-  readLeverageManagerV2PreviewRedeem,
   readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
+import { fetchCoingeckoTokenUsdPrices } from '@/lib/prices/coingecko'
 import { applySlippageFloor, mulDivFloor } from './math'
 import type { Quote, QuoteFn } from './types'
-import { getPublicClient } from 'wagmi/actions'
-import { fetchCoingeckoTokenUsdPrices } from '@/lib/prices/coingecko'
 
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
 type TokenArg = Address
@@ -153,7 +152,7 @@ export async function planMintV2(params: {
   assertDebtSwapQuote(effectiveQuote, debtAsset)
 
   const totalCollateralInitial = userCollateralOut + effectiveQuote.out
-  let intermediateQuote = await previewFinal({
+  const intermediateQuote = await previewFinal({
     config,
     token,
     totalCollateral: totalCollateralInitial,
