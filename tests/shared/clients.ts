@@ -1,5 +1,13 @@
+import { buildSDK } from '@balmy/sdk'
 import type { Hash, Hex } from 'viem'
-import { createPublicClient, createTestClient, createWalletClient, http, publicActions } from 'viem'
+import {
+  createPublicClient,
+  createTestClient,
+  createWalletClient,
+  http,
+  publicActions,
+  zeroAddress,
+} from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import {
   ADDR,
@@ -160,4 +168,54 @@ export async function takeSnapshot(): Promise<Hash> {
 export async function revertSnapshot(id: Hash) {
   if (mode === 'anvil') return await testClient.revert({ id })
   await adminRequest('evm_revert', [id])
+}
+
+/**
+ * Create a BalmySDK instance for testing
+ *
+ * This function creates a BalmySDK instance configured for test environments.
+ * It uses the test public client and minimal configuration suitable for testing.
+ *
+ * @returns BalmySDK instance ready for use in tests
+ */
+export function createTestBalmySDK() {
+  return buildSDK({
+    quotes: {
+      defaultConfig: {
+        global: {
+          referrer: {
+            address: zeroAddress,
+            name: 'seamless-test',
+          },
+        },
+        custom: {
+          'li-fi': {
+            apiKey: import.meta.env['VITE_LIFI_API_KEY'] || undefined,
+          },
+        },
+      },
+      sourceList: { type: 'local' },
+    },
+    providers: {
+      source: {
+        type: 'custom',
+        instance: publicClient,
+      },
+    },
+    prices: {
+      source: {
+        type: 'prioritized',
+        sources: [
+          ...(import.meta.env['VITE_ALCHEMY_API_KEY'] !== ''
+            ? [
+                {
+                  type: 'alchemy',
+                  apiKey: import.meta.env['VITE_ALCHEMY_API_KEY'],
+                },
+              ]
+            : []),
+        ],
+      },
+    },
+  })
 }
