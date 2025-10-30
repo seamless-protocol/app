@@ -8,6 +8,7 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
+import type { VeloraQuote } from '@/domain/shared/adapters/types'
 import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeRedeemV2 } from './exec/execute.v2'
 import { executeRedeemWithVelora } from './exec/execute.velora'
@@ -112,12 +113,8 @@ export async function orchestrateRedeem(params: {
       throw new Error(`Velora adapter address required on chain ${chainId}`)
     }
 
-    // Use the existing quote from the plan
-    const veloraQuote = plan.collateralToDebtQuote
-
-    if (!veloraQuote.veloraData) {
-      throw new Error('Velora quote missing veloraData')
-    }
+    // Use the existing quote from the plan and ensure it's a VeloraQuote
+    const veloraQuote = plan.collateralToDebtQuote as VeloraQuote
 
     const tx = await executeRedeemWithVelora({
       config,
