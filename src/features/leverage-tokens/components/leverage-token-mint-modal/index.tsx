@@ -9,7 +9,10 @@ import {
   useSwitchChain,
   useWaitForTransactionReceipt,
 } from 'wagmi'
-import { parseMintedSharesFromReceipt } from '@/features/leverage-tokens/utils/receipt'
+import {
+  parseErc20ReceivedFromReceipt,
+  parseMintedSharesFromReceipt,
+} from '@/features/leverage-tokens/utils/receipt'
 import { invalidatePortfolioQueries } from '@/features/portfolio/utils/invalidation'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
@@ -283,6 +286,28 @@ export function LeverageTokenMintModal({
     slippageBps,
   ])
 
+  // Parse actual debt amount received from logs
+  const actualExcessDebtAmountReceived = useMemo(() => {
+    const receipt = receiptState.data
+    if (!receipt || !userAddress) return undefined
+    const raw = parseErc20ReceivedFromReceipt({
+      receipt,
+      tokenAddress: leverageTokenConfig.debtAsset.address as `0x${string}`,
+      userAddress: userAddress as `0x${string}`,
+    })
+    if (typeof raw !== 'bigint') return undefined
+    return formatTokenAmountFromBase(
+      raw,
+      leverageTokenConfig.debtAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [
+    receiptState.data,
+    userAddress,
+    leverageTokenConfig.debtAsset.address,
+    leverageTokenConfig.debtAsset.decimals,
+  ])
+
   // Impact warning on stable pairs (LST/WETH) if estimated or guaranteed falls below thresholds
   const impactWarning: string | undefined = useMemo(() => {
     if (expectedUsdOut === undefined || guaranteedUsdOut === undefined) return undefined
@@ -439,6 +464,18 @@ export function LeverageTokenMintModal({
     }
     return undefined
   }, [receiptState.data, userAddress, leverageTokenAddress, leverageTokenConfig.decimals])
+
+  // Calculate debt asset amount that will be received
+  const expectedExcessDebtAmount = useMemo(() => {
+    const plan = planPreview.plan
+    if (!plan || typeof plan.expectedExcessDebt !== 'bigint' || plan.expectedExcessDebt <= 0n)
+      return '0'
+    return formatTokenAmountFromBase(
+      plan.expectedExcessDebt,
+      leverageTokenConfig.debtAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [planPreview.plan, leverageTokenConfig.debtAsset.decimals])
 
   // Receipt effect (after expectedTokens to satisfy dependency ordering)
   useEffect(() => {
@@ -724,6 +761,9 @@ export function LeverageTokenMintModal({
             isMintTokenFeeLoading={isFeesLoading}
             isBelowMinimum={isBelowMinimum()}
             supplyCapExceeded={!form.supplyCapOk}
+            expectedDebtAmount={expectedExcessDebtAmount}
+            debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
+            debtAssetPrice={debtUsdPrice}
           />
         )
 
@@ -757,6 +797,8 @@ export function LeverageTokenMintModal({
                 quoteDebtToCollateral.status !== 'ready') ||
               !planPreview.plan
             }
+            expectedDebtAmount={expectedExcessDebtAmount}
+            debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
           />
         )
 
@@ -768,6 +810,8 @@ export function LeverageTokenMintModal({
             leverageTokenConfig={leverageTokenConfig}
             mode={transactionHash ? 'onChain' : 'awaitingWallet'}
             transactionHash={transactionHash}
+            expectedDebtAmount={expectedExcessDebtAmount}
+            debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
           />
         )
 
@@ -780,6 +824,8 @@ export function LeverageTokenMintModal({
             leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash ?? ''}
             onClose={handleClose}
+            actualDebtAmount={actualExcessDebtAmountReceived}
+            debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
           />
         )
 

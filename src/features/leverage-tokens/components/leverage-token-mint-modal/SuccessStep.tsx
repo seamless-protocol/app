@@ -18,6 +18,8 @@ interface SuccessStepProps {
   leverageTokenSymbol: string
   transactionHash: string
   onClose: () => void
+  actualDebtAmount?: string | undefined
+  debtAssetSymbol?: string
 }
 
 export function SuccessStep({
@@ -27,6 +29,8 @@ export function SuccessStep({
   leverageTokenSymbol,
   transactionHash,
   onClose,
+  actualDebtAmount,
+  debtAssetSymbol,
 }: SuccessStepProps) {
   const explorer = useExplorer()
   const txUrl = explorer.txUrl(transactionHash)
@@ -55,6 +59,12 @@ export function SuccessStep({
             <span className="text-secondary-foreground">Received</span>
             <span className="text-foreground">
               {expectedTokens} {leverageTokenSymbol}
+              {actualDebtAmount && actualDebtAmount !== '0' && debtAssetSymbol && (
+                <>
+                  {' '}
+                  + {actualDebtAmount} {debtAssetSymbol}
+                </>
+              )}
             </span>
           </div>
           <div className="flex items-center justify-between">
