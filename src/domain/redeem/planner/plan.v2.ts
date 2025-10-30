@@ -17,6 +17,7 @@ import {
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
 import { calculateMinCollateralForSender } from '../utils/slippage'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import type { Quote, QuoteFn } from './types'
 
 // Local structural types (avoid brittle codegen coupling)
@@ -80,6 +81,8 @@ export async function planRedeemV2(params: {
   outputAsset?: Address
   /** Chain ID to execute the transaction on */
   chainId: number
+  /** Intent for collateral->debt quote */
+  intent: 'exactOut' | 'exactIn'
 }): Promise<RedeemPlanV2> {
   const {
     config,
@@ -88,6 +91,7 @@ export async function planRedeemV2(params: {
     slippageBps,
     quoteCollateralToDebt: quoter,
     chainId,
+    intent,
   } = params
 
   const {
@@ -108,16 +112,13 @@ export async function planRedeemV2(params: {
   const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
   const inTokenForQuote = useNativeCollateralPath ? ETH_SENTINEL : collateralAsset
 
-  // Use exactOut intent to get the precise collateral amount needed for debt repayment
-  // This prevents Velora from using more collateral than necessary, which was causing
-  // CollateralSlippageTooHigh errors when the swap consumed all available collateral
   const quote = await getCollateralToDebtQuote({
     debtAsset,
     requiredDebt: debtToRepay,
     quoter,
     collateralAvailableForSwap,
     inTokenForQuote,
-    intent: 'exactOut',
+    intent,
   })
 
   const collateralRequiredForSwap = quote.maxIn ?? 0n
