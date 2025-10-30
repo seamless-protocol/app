@@ -83,6 +83,10 @@ interface InputStepProps {
   // Optional impact warning text
   impactWarning?: string
   supplyCapExceeded?: boolean | undefined
+  // Debt asset information
+  expectedDebtAmount?: string
+  debtAssetSymbol?: string
+  debtAssetPrice?: number | undefined
 }
 
 export function InputStep({
@@ -118,6 +122,9 @@ export function InputStep({
   breakdown,
   impactWarning,
   supplyCapExceeded,
+  expectedDebtAmount,
+  debtAssetSymbol,
+  debtAssetPrice,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const mintAmountId = useId()
@@ -417,18 +424,45 @@ export function InputStep({
                     <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
                   </span>
                 ) : (
-                  `${expectedTokens} ${leverageTokenConfig.symbol}`
+                  <>
+                    {expectedTokens} {leverageTokenConfig.symbol}
+                    {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
+                      <>
+                        {' '}
+                        + {expectedDebtAmount} {debtAssetSymbol}
+                      </>
+                    )}
+                  </>
                 )}
               </div>
               {!isCalculating &&
                 typeof expectedUsdOut === 'number' &&
                 Number.isFinite(expectedUsdOut) && (
                   <div className="text-xs text-secondary-foreground">
-                    ≈ $
+                    {/* ≈ $
                     {expectedUsdOut.toLocaleString('en-US', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
-                    })}
+                    })} */}
+                    {(() => {
+                      const mainAssetValue = expectedUsdOut
+                      const debtAssetValue =
+                        expectedDebtAmount &&
+                        expectedDebtAmount !== '0' &&
+                        debtAssetSymbol &&
+                        debtAssetPrice
+                          ? parseFloat(expectedDebtAmount) * debtAssetPrice
+                          : 0
+                      const mainAssetValueString = mainAssetValue.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                      const debtAssetValueString = debtAssetValue.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                      return `≈ $${mainAssetValueString} + $${debtAssetValueString} = $${mainAssetValue + debtAssetValue}`
+                    })()}
                   </div>
                 )}
               {!isCalculating &&

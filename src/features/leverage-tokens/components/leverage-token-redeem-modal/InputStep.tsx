@@ -41,14 +41,6 @@ interface LeverageTokenConfig {
   }
 }
 
-interface EarningsDisplay {
-  mintedDebt?: number
-  mintedCollateral?: number
-  mintedUsd?: number
-  earnedDebt?: number
-  earnedUsd?: number
-}
-
 interface InputStepProps {
   selectedToken: Token
   availableAssets: Array<Asset>
@@ -73,10 +65,6 @@ interface InputStepProps {
   expectedAmount: string
   selectedAssetSymbol: string
   selectedAssetPrice?: number
-  earnings: EarningsDisplay
-  debtSymbol: string
-  collateralSymbol: string
-  isUserMetricsLoading: boolean
   disabledAssets?: Array<OutputAssetId>
   canProceed: boolean
   needsApproval: boolean
@@ -115,10 +103,6 @@ export function InputStep({
   expectedAmount,
   selectedAssetSymbol,
   selectedAssetPrice,
-  earnings,
-  debtSymbol,
-  collateralSymbol,
-  isUserMetricsLoading,
   disabledAssets = [],
   canProceed,
   needsApproval,
@@ -149,53 +133,6 @@ export function InputStep({
     }
   }, [showAdvanced])
 
-  const formatAssetValue = (value: number, symbol: string) =>
-    `${value.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
-    })} ${symbol}`
-
-  const formatUsdValue = (value: number) =>
-    `${value < 0 ? '-' : ''}$${Math.abs(value).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`
-
-  const hasMintedDebt =
-    typeof earnings.mintedDebt === 'number' && Number.isFinite(earnings.mintedDebt)
-  const hasMintedCollateral =
-    typeof earnings.mintedCollateral === 'number' && Number.isFinite(earnings.mintedCollateral)
-  const hasMintedUsd = typeof earnings.mintedUsd === 'number' && Number.isFinite(earnings.mintedUsd)
-
-  const mintedPrimary = hasMintedDebt
-    ? formatAssetValue(earnings.mintedDebt as number, debtSymbol)
-    : hasMintedCollateral
-      ? formatAssetValue(earnings.mintedCollateral as number, collateralSymbol)
-      : undefined
-
-  const mintedUsd = hasMintedUsd ? formatUsdValue(earnings.mintedUsd as number) : undefined
-
-  const hasEarnedDebt =
-    typeof earnings.earnedDebt === 'number' && Number.isFinite(earnings.earnedDebt)
-  const hasEarnedUsd = typeof earnings.earnedUsd === 'number' && Number.isFinite(earnings.earnedUsd)
-
-  const earnedDebtValue = hasEarnedDebt ? (earnings.earnedDebt as number) : 0
-  const earnedDisplay = hasEarnedDebt
-    ? formatAssetValue(earnedDebtValue, debtSymbol)
-    : hasEarnedUsd
-      ? formatUsdValue(earnings.earnedUsd as number)
-      : undefined
-
-  const totalEarnedClass =
-    hasEarnedDebt || hasEarnedUsd
-      ? (hasEarnedDebt ? earnedDebtValue : (earnings.earnedUsd as number)) >= 0
-        ? 'text-[var(--state-success-text)]'
-        : 'text-[var(--state-error-text)]'
-      : 'text-muted-foreground'
-
-  const earnedUsd = hasEarnedUsd ? formatUsdValue(earnings.earnedUsd as number) : undefined
-  const showEarnedUsdSecondary = hasEarnedDebt && earnedUsd
-
   const balanceFloat = parseFloat(selectedToken.balance)
   const pricePerToken = balanceFloat > 0 ? selectedToken.price / balanceFloat : 0
 
@@ -216,65 +153,6 @@ export function InputStep({
 
   return (
     <div className="space-y-6">
-      <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
-        <h4 className="mb-3 text-sm font-medium text-foreground">Your Position</h4>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="block text-secondary-foreground">Leverage Tokens</span>
-            <span className="font-medium text-foreground">
-              {isLeverageTokenBalanceLoading ? (
-                <Skeleton className="inline-block h-4 w-16" />
-              ) : (
-                selectedToken.balance
-              )}
-            </span>
-          </div>
-          <div>
-            <span className="block text-secondary-foreground">Current Value</span>
-            <span className="font-medium text-foreground">
-              {isUsdPriceLoading ? (
-                <Skeleton className="inline-block h-4 w-20" />
-              ) : (
-                `$${selectedToken.price.toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`
-              )}
-            </span>
-          </div>
-          <div>
-            <span className="block text-secondary-foreground">Total Earned</span>
-            {isUserMetricsLoading ? (
-              <Skeleton className="inline-block h-4 w-20" />
-            ) : earnedDisplay ? (
-              <div className="flex items-center gap-2">
-                <span className={cn('font-medium', totalEarnedClass)}>{earnedDisplay}</span>
-                {showEarnedUsdSecondary ? (
-                  <span className="text-xs text-secondary-foreground">({earnedUsd})</span>
-                ) : null}
-              </div>
-            ) : (
-              <span className="font-medium text-muted-foreground">$N/A</span>
-            )}
-          </div>
-          <div>
-            <span className="block text-secondary-foreground">Originally Minted</span>
-            {isUserMetricsLoading ? (
-              <Skeleton className="inline-block h-4 w-20" />
-            ) : mintedPrimary ? (
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-foreground">{mintedPrimary}</span>
-                {mintedUsd ? (
-                  <span className="text-xs text-secondary-foreground">({mintedUsd})</span>
-                ) : null}
-              </div>
-            ) : (
-              <span className="font-medium text-muted-foreground">$N/A</span>
-            )}
-          </div>
-        </div>
-      </Card>
-
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <label htmlFor={redeemAmountId} className="text-sm font-medium text-foreground">

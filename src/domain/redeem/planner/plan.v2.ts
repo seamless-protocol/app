@@ -174,6 +174,31 @@ export async function planRedeemV2(params: {
     }
   }
 
+  const publicClient = getPublicClient(config)
+  if (!publicClient) {
+    throw new Error('Public client unavailable for mint plan')
+  }
+  // TODO: Multicall these / pass in
+  const collateralAssetDecimals = await publicClient.readContract({
+    address: collateralAsset,
+    abi: erc20Abi,
+    functionName: 'decimals',
+  })
+  const debtAssetDecimals = await publicClient.readContract({
+    address: debtAsset,
+    abi: erc20Abi,
+    functionName: 'decimals',
+  })
+
+  const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
+  const expectedCollateralInUsd = (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * (Number(planDraft.expectedCollateral) / 10 ** collateralAssetDecimals)
+  const expectedDebtPayoutInUsd = (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(planDraft.expectedDebtPayout) / 10 ** debtAssetDecimals)
+  const minCollateralForSenderInUsd = (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * (Number(planDraft.minCollateralForSender) / 10 ** collateralAssetDecimals)
+
+  if (minCollateralForSenderInUsd > expectedCollateralInUsd + expectedDebtPayoutInUsd) {
+    throw new Error('Try increasing slippage: the transaction will likely revert due to slippage')
+  }
+
   return {
     token,
     sharesToRedeem,

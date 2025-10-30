@@ -24,9 +24,7 @@ import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
 import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
-import { useLeverageTokenEarnings } from '../../hooks/useLeverageTokenEarnings'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
-import { useLeverageTokenUserMetrics } from '../../hooks/useLeverageTokenUserMetrics'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
@@ -133,14 +131,6 @@ export function LeverageTokenRedeemModal({
     debtAssetAddress: leverageTokenConfig.debtAsset.address,
     debtAssetDecimals: leverageTokenConfig.debtAsset.decimals,
     lendingAdapterAddress: leverageTokenConfig.lendingAdapter.address,
-    enabled: isOpen,
-  })
-
-  const { data: userMetrics, isLoading: isUserMetricsLoading } = useLeverageTokenUserMetrics({
-    tokenAddress: leverageTokenAddress,
-    chainId: leverageTokenConfig.chainId,
-    collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
-    ...(userAddress ? { userAddress } : {}),
     enabled: isOpen,
   })
 
@@ -470,18 +460,6 @@ export function LeverageTokenRedeemModal({
     }
   }, [selectedToken, leverageTokenBalanceFormatted, positionData?.equityUsd])
 
-  const earnings = useLeverageTokenEarnings({
-    ...(userMetrics ? { metrics: userMetrics } : {}),
-    ...(typeof positionData?.equityInDebt === 'bigint'
-      ? { equityDebt: positionData.equityInDebt }
-      : {}),
-    ...(typeof positionData?.equityUsd === 'number' ? { equityUsd: positionData.equityUsd } : {}),
-    collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
-    debtDecimals: leverageTokenConfig.debtAsset.decimals,
-    ...(typeof collateralUsdPrice === 'number' ? { collateralPrice: collateralUsdPrice } : {}),
-    ...(typeof debtUsdPrice === 'number' ? { debtPrice: debtUsdPrice } : {}),
-  })
-
   // Reset modal state when modal opens (like mint modal)
   const resetModal = useCallback(() => {
     toInput()
@@ -735,10 +713,6 @@ export function LeverageTokenRedeemModal({
             isApproving={!!isApprovingPending}
             expectedAmount={expectedAmount}
             selectedAssetPrice={selectedOutputAsset.price}
-            earnings={earnings}
-            debtSymbol={leverageTokenConfig.debtAsset.symbol}
-            collateralSymbol={leverageTokenConfig.collateralAsset.symbol}
-            isUserMetricsLoading={isUserMetricsLoading}
             canProceed={canProceed()}
             needsApproval={needsApproval()}
             isConnected={isConnected}

@@ -24,6 +24,8 @@ interface PendingStepProps {
   leverageTokenConfig: LeverageTokenConfig
   mode?: PendingMode
   transactionHash?: `0x${string}` | undefined
+  expectedDebtAmount?: string
+  debtAssetSymbol?: string
 }
 
 export function PendingStep({
@@ -32,6 +34,8 @@ export function PendingStep({
   leverageTokenConfig,
   mode = 'awaitingWallet',
   transactionHash,
+  expectedDebtAmount,
+  debtAssetSymbol,
 }: PendingStepProps) {
   return (
     <div className="space-y-6 text-center">
@@ -56,9 +60,15 @@ export function PendingStep({
       <Card variant="gradient" className="border border-border bg-card p-4">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Amount</span>
+          <span className="text-secondary-foreground">Minting</span>
             <span className="text-foreground">
-              {amount} {selectedToken.symbol}
+              {amount} {leverageTokenConfig.symbol}
+              {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
+                <>
+                  {' '}
+                  + {expectedDebtAmount} {debtAssetSymbol}
+                </>
+              )}
             </span>
           </div>
           <div className="flex justify-between">

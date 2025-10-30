@@ -15,10 +15,13 @@ import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewDeposit,
+  readLeverageManagerV2PreviewRedeem,
   readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
 import { applySlippageFloor, mulDivFloor } from './math'
 import type { Quote, QuoteFn } from './types'
+import { getPublicClient } from 'wagmi/actions'
+import { fetchCoingeckoTokenUsdPrices } from '@/lib/prices/coingecko'
 
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
 type TokenArg = Address
@@ -149,23 +152,24 @@ export async function planMintV2(params: {
   })
   assertDebtSwapQuote(effectiveQuote, debtAsset)
 
-  // 4) Final preview with proportionally adjusted debt flash loan amount
   const totalCollateralInitial = userCollateralOut + effectiveQuote.out
-  let final = await previewFinal({
+  let intermediateQuote = await previewFinal({
     config,
     token,
     totalCollateral: totalCollateralInitial,
     chainId,
   })
-  debugMintPlan('final.initial', {
+  debugMintPlan('quote.intermediateQuote', {
     totalCollateral: totalCollateralInitial,
-    requiredDebt: final.requiredDebt,
-    shares: final.shares,
+    requiredDebt: intermediateQuote.requiredDebt,
+    shares: intermediateQuote.shares,
   })
+
+  let finalQuote = intermediateQuote
 
   // If the debt received from the LT deposit is still less than the flash loan, we need to adjust the flash loan amount down further.
   // We adjust it as low as possible wrt the slippage tolerance.
-  if (final.requiredDebt < debtIn) {
+  if (intermediateQuote.requiredDebt < debtIn) {
     const adjustedUserCollateralOut = applySlippageFloor(userCollateralOut, slippageBps)
     const adjustedIdeal = await previewIdeal({
       config,
@@ -173,7 +177,7 @@ export async function planMintV2(params: {
       userCollateralOut: adjustedUserCollateralOut,
       chainId,
     })
-    final = await previewFinal({
+    const adjustedQuote = await previewFinal({
       config,
       token,
       totalCollateral: adjustedIdeal.targetCollateral,
@@ -182,23 +186,66 @@ export async function planMintV2(params: {
 
     debugMintPlan('final.maxSlippage', {
       totalCollateral: adjustedIdeal.targetCollateral,
-      requiredDebt: final.requiredDebt,
-      shares: final.shares,
+      requiredDebt: adjustedQuote.requiredDebt,
+      shares: adjustedQuote.shares,
     })
 
-    debtIn = final.requiredDebt
+    debtIn = adjustedQuote.requiredDebt
     effectiveQuote = await quoteDebtToCollateral({
       inToken: inTokenForQuote,
       outToken: collateralAsset,
       amountIn: debtIn,
       intent: 'exactIn',
     })
+
+    finalQuote = await previewFinal({
+      config,
+      token,
+      totalCollateral: userCollateralOut + effectiveQuote.out,
+      chainId,
+    })
   }
 
-  // Slippage is calculated wrt the ideal shares
-  const minShares = applySlippageFloor(ideal.idealShares, slippageBps)
-  // TODO: Do we throw an error here if minShares > final.shares, that is caught so that the ui displays a warning
-  // that the tx will likely revert due to slippage, so they should increase slippage?
+  const excessDebt = finalQuote.requiredDebt - debtIn
+
+  const publicClient = getPublicClient(config)
+  if (!publicClient) {
+    throw new Error('Public client unavailable for mint plan')
+  }
+  // TODO: Multicall these / pass in
+  const collateralAssetDecimals = await publicClient.readContract({
+    address: collateralAsset,
+    abi: erc20Abi,
+    functionName: 'decimals',
+  })
+  const debtAssetDecimals = await publicClient.readContract({
+    address: debtAsset,
+    abi: erc20Abi,
+    functionName: 'decimals',
+  })
+
+  const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
+  const minEquityDepositedInCollateral = applySlippageFloor(equityInInputAsset, slippageBps)
+  const minEquityDepositedInUsd = (usdPriceMap?.[inputAsset.toLowerCase()] ?? 0) * (Number(minEquityDepositedInCollateral) / 10 ** collateralAssetDecimals)
+
+  const { equityForDepositInCollateral, equityInUsd } = await getEquityForDepositInCollateral({
+    config,
+    collateralAsset,
+    debtAsset,
+    collateralAssetDecimals,
+    debtAssetDecimals,
+    collateralAdded: finalQuote.requiredCollateral,
+    debtBorrowed: debtIn,
+    usdPriceMap,
+  })
+  const excessDebtInUsd = (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(excessDebt) / 10 ** debtAssetDecimals)
+
+  if (minEquityDepositedInUsd > equityInUsd + excessDebtInUsd) {
+    throw new Error('Try increasing slippage: the transaction will likely revert due to slippage')
+  }
+
+  const effectiveAllowedSlippage = Number((equityForDepositInCollateral - minEquityDepositedInCollateral) * 10000n / equityForDepositInCollateral)
+  const minShares = applySlippageFloor(finalQuote.shares, effectiveAllowedSlippage)
 
   // Build calls based on the amount actually used for the swap
   const calls: V2Calls = [
@@ -216,10 +263,10 @@ export async function planMintV2(params: {
     debtAsset,
     flashLoanAmount: debtIn,
     minShares,
-    expectedShares: final.shares,
-    expectedDebt: final.requiredDebt,
+    expectedShares: finalQuote.shares,
+    expectedDebt: finalQuote.requiredDebt,
     expectedTotalCollateral: userCollateralOut + effectiveQuote.out,
-    expectedExcessDebt: 0n, // TODO: Do we need this?
+    expectedExcessDebt: excessDebt,
     worstCaseRequiredDebt: 0n, // TODO: Do we need this?
     worstCaseShares: 0n, // TODO: Do we need this?
     swapExpectedOut: effectiveQuote.out,
@@ -227,6 +274,34 @@ export async function planMintV2(params: {
       typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : effectiveQuote.out,
     calls,
   }
+}
+
+async function getEquityForDepositInCollateral(args: {
+  config: Config
+  collateralAsset: Address
+  debtAsset: Address
+  collateralAssetDecimals: number
+  debtAssetDecimals: number
+  collateralAdded: bigint
+  debtBorrowed: bigint
+  usdPriceMap: Record<string, number>
+}): Promise<{equityForDepositInCollateral: bigint, equityInUsd: number}> {
+  const { config, collateralAsset, debtAsset, collateralAssetDecimals, debtAssetDecimals, collateralAdded, debtBorrowed, usdPriceMap } = args
+
+  const publicClient = getPublicClient(config)
+  if (!publicClient) {
+    throw new Error('Public client unavailable for redeem plan')
+  }
+
+  const collateralAddedInUsd = (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * (Number(collateralAdded) / 10 ** collateralAssetDecimals)
+
+  const debtBorrowedInUsd = (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(debtBorrowed) / 10 ** debtAssetDecimals)
+
+  const equityInUsd = collateralAddedInUsd - debtBorrowedInUsd
+
+  const equityForDepositInCollateral = BigInt(Math.floor(equityInUsd / (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) * 10 ** collateralAssetDecimals))
+
+  return { equityForDepositInCollateral, equityInUsd }
 }
 
 // Helpers — defined below the main function for clarity
@@ -291,13 +366,13 @@ async function previewFinal(args: {
   token: Address
   totalCollateral: bigint
   chainId: number
-}): Promise<{ requiredDebt: bigint; shares: bigint }> {
+}): Promise<{ requiredDebt: bigint; shares: bigint; requiredCollateral: bigint }> {
   const { config, token, totalCollateral, chainId } = args
   const m = await readLeverageManagerV2PreviewDeposit(config, {
     args: [token, totalCollateral],
     chainId: chainId as SupportedChainId,
   })
-  return { requiredDebt: m.debt, shares: m.shares }
+  return { requiredDebt: m.debt, shares: m.shares, requiredCollateral: m.collateral }
 }
 
 async function getManagerAssets(args: { config: Config; token: TokenArg; chainId: number }) {
