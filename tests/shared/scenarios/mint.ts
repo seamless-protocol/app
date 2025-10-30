@@ -11,6 +11,7 @@ import {
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
 import type { LeverageTokenDefinition } from '../../fixtures/addresses'
+import { createTestBalmySDK } from '../clients'
 import { AVAILABLE_LEVERAGE_TOKENS, getAddressesForToken } from '../env'
 import { readErc20Decimals } from '../erc20'
 import { approveIfNeeded, seedUniswapV2PairLiquidity, topUpErc20, topUpNative } from '../funding'
@@ -340,6 +341,7 @@ function buildQuoteAdapter({
     slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
     fromAddress: executor,
+    balmySDK: createTestBalmySDK(),
   })
   return quote
 }

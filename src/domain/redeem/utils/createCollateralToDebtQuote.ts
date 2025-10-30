@@ -1,3 +1,4 @@
+import type { buildSDK } from '@balmy/sdk'
 import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import {
@@ -41,6 +42,7 @@ export interface CreateCollateralToDebtQuoteParams {
   getPublicClient: (chainId: number) => PublicClient | undefined
   /** Optional override for aggregator `fromAddress` (defaults handled by adapter). */
   fromAddress?: Address
+  balmySDK: ReturnType<typeof buildSDK>
 }
 
 export interface CreateCollateralToDebtQuoteResult {
@@ -55,6 +57,7 @@ export function createCollateralToDebtQuote({
   slippageBps,
   getPublicClient,
   fromAddress,
+  balmySDK,
 }: CreateCollateralToDebtQuoteParams): CreateCollateralToDebtQuoteResult {
   const publicClient = getPublicClient(chainId)
   if (!publicClient) {
@@ -67,7 +70,7 @@ export function createCollateralToDebtQuote({
       fromAddress: fromAddress ?? routerAddress,
       toAddress: routerAddress,
       slippageBps,
-      publicClient,
+      balmySDK,
     })
     return { quote, adapterType: 'balmy' }
   }

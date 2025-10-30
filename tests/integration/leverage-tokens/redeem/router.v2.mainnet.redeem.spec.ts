@@ -8,6 +8,7 @@ import {
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
+import { createTestBalmySDK } from '../../../shared/clients'
 import { ADDR, CHAIN_ID, mode } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
 import { approveIfNeeded } from '../../../shared/funding'
@@ -151,6 +152,7 @@ async function performRedeem(
     swap: { type: 'lifi', allowBridges: 'none' },
     slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
+    balmySDK: createTestBalmySDK(),
   })
 
   const plan = await planRedeemV2({

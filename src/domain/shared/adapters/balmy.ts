@@ -1,10 +1,10 @@
-import { buildSDK, type QuoteRequest } from '@balmy/sdk'
-import { type Address, getAddress, isAddressEqual, type PublicClient, zeroAddress } from 'viem'
+import type { buildSDK, QuoteRequest } from '@balmy/sdk'
+import { type Address, getAddress, isAddressEqual } from 'viem'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import type { QuoteFn } from './types'
 
 export interface BalmyAdapterOptions {
-  publicClient: PublicClient
+  balmySDK: ReturnType<typeof buildSDK>
   chainId: number
   fromAddress: Address
   toAddress: Address
@@ -12,52 +12,6 @@ export interface BalmyAdapterOptions {
 }
 
 export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
-  const balmySDK = buildSDK({
-    quotes: {
-      defaultConfig: {
-        global: {
-          referrer: {
-            address: zeroAddress,
-            name: 'seamless',
-          },
-        },
-        custom: {
-          'li-fi': {
-            apiKey: import.meta.env['VITE_LIFI_API_KEY'] || undefined,
-          },
-        },
-      },
-      sourceList: { type: 'local' },
-    },
-    providers: {
-      source: {
-        type: 'custom',
-        instance: opts.publicClient,
-      },
-    },
-    prices: {
-      source: {
-        type: 'prioritized',
-        sources: [
-          ...(import.meta.env['VITE_ALCHEMY_API_KEY'] !== ''
-            ? [
-                {
-                  type: 'alchemy',
-                  apiKey: import.meta.env['VITE_ALCHEMY_API_KEY'],
-                },
-              ]
-            : []),
-          {
-            type: 'coingecko',
-          },
-          {
-            type: 'defi-llama',
-          },
-        ],
-      },
-    },
-  })
-
   return async (args) => {
     const { inToken, outToken, amountIn, amountOut, intent } = args
 
@@ -85,7 +39,7 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       })
     }
 
-    const quote = await balmySDK.quoteService.getBestQuote({
+    const quote = await opts.balmySDK.quoteService.getBestQuote({
       request,
       config: { choose: { by: 'most-swapped', using: 'max sell/min buy amounts' } },
     })
@@ -96,7 +50,7 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       })
     }
 
-    const txs = balmySDK.quoteService.buildTxs({
+    const txs = opts.balmySDK.quoteService.buildTxs({
       quotes: {
         [quote.source.id]: quote,
       },

@@ -1,3 +1,4 @@
+import type { buildSDK } from '@balmy/sdk'
 import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
@@ -20,6 +21,7 @@ export interface CreateDebtToCollateralQuoteParams {
   slippageBps: number
   getPublicClient: (chainId: number) => PublicClient | undefined
   fromAddress?: Address
+  balmySDK: ReturnType<typeof buildSDK>
 }
 
 export interface CreateDebtToCollateralQuoteResult {
@@ -34,6 +36,7 @@ export function createDebtToCollateralQuote({
   slippageBps,
   getPublicClient,
   fromAddress,
+  balmySDK,
 }: CreateDebtToCollateralQuoteParams): CreateDebtToCollateralQuoteResult {
   // Default fromAddress to the chain's MulticallExecutor when not provided
   const defaultFrom = (() => {
@@ -57,7 +60,7 @@ export function createDebtToCollateralQuote({
       fromAddress: effectiveFrom ?? routerAddress,
       toAddress: routerAddress,
       slippageBps,
-      publicClient,
+      balmySDK,
     })
     return { quote, adapterType: 'balmy' }
   }
