@@ -70,7 +70,7 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     fromAddress,
     slippageBps = DEFAULT_SLIPPAGE_BPS,
     // Always use li.quest as documented by LiFi for /v1/quote
-    baseUrl = opts.baseUrl ?? 'https://li.quest',
+    baseUrl = opts.baseUrl ?? 'https://partner-seashell.li.quest',
     // Read from Vite env in browser; avoid referencing process.env in client bundles
     apiKey = opts.apiKey ?? readEnv('VITE_LIFI_API_KEY') ?? readEnv('LIFI_API_KEY'),
     order = 'CHEAPEST',
