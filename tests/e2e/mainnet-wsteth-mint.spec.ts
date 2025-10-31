@@ -62,7 +62,7 @@ test.describe('Mainnet wstETH/ETH 25x mint (JIT + LiFi)', () => {
     const amountInput = modal.getByLabel('Mint Amount')
     await amountInput.fill('0.1')
 
-    // TODO: Investigate why E2E requires 2.5% slippage (higher than prod 1.5%)
+    // TODO: Investigate why tests require 2.5% slippage (higher than prod default 0.5%)
     // May be related to CoinGecko price discrepancies or LiFi quote variations
     const advancedButton = modal.getByRole('button', { name: 'Advanced' })
     await advancedButton.click()

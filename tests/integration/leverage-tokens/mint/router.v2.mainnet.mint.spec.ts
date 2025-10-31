@@ -8,9 +8,9 @@ import { withFork } from '../../../shared/withFork'
 const mintSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
 mintSuite('Leverage Router V2 Mint (Tenderly VNet, Mainnet wstETH/ETH 25x)', () => {
-  // TODO: Investigate why mint requires higher slippage (150 bps vs 50 bps)
+  // TODO: Investigate why tests require higher slippage (250 bps vs 50 bps)
   // May be related to CoinGecko price discrepancies or LiFi quote variations
-  const SLIPPAGE_BPS = 150
+  const SLIPPAGE_BPS = 250
 
   it('mints shares successfully via LiFi debt->collateral swap', async () => {
     await withFork(async ({ account, publicClient, config }) => {

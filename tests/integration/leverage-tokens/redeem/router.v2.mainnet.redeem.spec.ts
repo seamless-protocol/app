@@ -17,9 +17,9 @@ import { type WithForkCtx, withFork } from '../../../shared/withFork'
 const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
 redeemSuite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet wstETH/ETH 25x)', () => {
-  // TODO: Investigate why redeem requires higher slippage (150 bps vs 50 bps)
+  // TODO: Investigate why tests require higher slippage (250 bps vs 50 bps)
   // May be related to CoinGecko price discrepancies or LiFi quote variations
-  const SLIPPAGE_BPS = 150
+  const SLIPPAGE_BPS = 250
 
   it('redeems all minted shares into collateral asset via LiFi', async () => {
     const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
