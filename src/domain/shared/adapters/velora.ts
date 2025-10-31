@@ -143,12 +143,21 @@ function mapVeloraResponseToQuote(
   const approvalTarget = priceRoute.contractAddress as Address
   if (!approvalTarget) throw new Error('Velora quote missing contract address')
 
-  // Log ParaSwap method for monitoring - offsets are method-specific
+  // Validate ParaSwap method - offsets are method-specific
+  const EXPECTED_METHOD = 'swapExactAmountOut'
   if (priceRoute.contractMethod) {
     console.log('[velora-adapter] ParaSwap method', {
       method: priceRoute.contractMethod,
-      note: 'Offsets are hardcoded for a specific method - validate if this changes',
+      expected: EXPECTED_METHOD,
+      note: 'Offsets are hardcoded for a specific method',
     })
+
+    if (priceRoute.contractMethod !== EXPECTED_METHOD) {
+      throw new Error(
+        `Velora returned unexpected ParaSwap method: ${priceRoute.contractMethod}. ` +
+          `Expected: ${EXPECTED_METHOD}. Hardcoded offsets will not work with this method.`,
+      )
+    }
   }
 
   // Extract swap data from transaction params
