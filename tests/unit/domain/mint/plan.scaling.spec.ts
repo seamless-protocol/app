@@ -34,6 +34,19 @@ vi.mock('@/lib/contracts/generated', () => ({
   readLeverageRouterV2PreviewDeposit: (_config: any, params: any) => routerPreview(params),
 }))
 
+vi.mock('wagmi/actions', () => ({
+  getPublicClient: vi.fn(() => ({
+    readContract: vi.fn(async () => 18n), // Mock decimals as 18
+  })),
+}))
+
+vi.mock('@/lib/prices/coingecko', () => ({
+  fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
+    [COLLATERAL.toLowerCase()]: 2000, // collateral (ETH)
+    [DEBT.toLowerCase()]: 1, // debt (USDC)
+  })),
+}))
+
 describe('planner scaling under underfill', () => {
   it('scales flash loan when quotedOut < neededFromSwap', async () => {
     // User brings 1.0 collateral

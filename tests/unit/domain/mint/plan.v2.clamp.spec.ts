@@ -13,10 +13,10 @@ vi.mock('@/lib/contracts/generated', async () => {
     readLeverageManagerV2PreviewDeposit: vi.fn(
       async (_config: any, params: { args: [Address, bigint] }) => {
         const userPlusSwap = params.args[1]
-        // Final preview returns lower previewed debt (120) to trigger clamp path
+        // Final preview returns lower previewed debt (120e18) to trigger clamp path
         return {
           collateral: userPlusSwap,
-          debt: 120n,
+          debt: 120n * 10n ** 18n,
           shares: userPlusSwap,
           tokenFee: 0n,
           treasuryFee: 0n,
@@ -28,20 +28,20 @@ vi.mock('@/lib/contracts/generated', async () => {
         const userCollateral = params.args[1]
         previewCall += 1
         if (previewCall === 1) {
-          // Ideal preview: requires +60 out of swaps, sizes idealDebt 150
+          // Ideal preview: requires +60e18 out of swaps, sizes idealDebt 150e18
           return {
-            collateral: userCollateral + 60n,
-            debt: 150n,
-            shares: userCollateral + 60n,
+            collateral: userCollateral + 60n * 10n ** 18n,
+            debt: 150n * 10n ** 18n,
+            shares: userCollateral + 60n * 10n ** 18n,
             tokenFee: 0n,
             treasuryFee: 0n,
           }
         }
-        // Final preview returns lower previewed debt (120) to trigger clamp path
+        // Final preview returns lower previewed debt (120e18) to trigger clamp path
         return {
-          collateral: userCollateral + 60n,
-          debt: 120n,
-          shares: userCollateral + 60n,
+          collateral: userCollateral + 60n * 10n ** 18n,
+          debt: 120n * 10n ** 18n,
+          shares: userCollateral + 60n * 10n ** 18n,
           tokenFee: 0n,
           treasuryFee: 0n,
         }
@@ -50,10 +50,23 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
+vi.mock('wagmi/actions', () => ({
+  getPublicClient: vi.fn(() => ({
+    readContract: vi.fn(async () => 18n), // Mock decimals as 18
+  })),
+}))
+
+vi.mock('@/lib/prices/coingecko', () => ({
+  fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
+    [COLLATERAL.toLowerCase()]: 1, // Use $1 for small test amounts
+    [BASE_WETH.toLowerCase()]: 1, // Use $1 for small test amounts
+  })),
+}))
+
 describe('planMintV2 final clamp + re-quote', () => {
   it('clamps when final previewed debt < sized flash loan and re-quotes once', async () => {
     const inputAsset = COLLATERAL
-    const equityInInputAsset = 100n
+    const equityInInputAsset = 100n * 10n ** 18n
 
     // Router previews are mocked above; no ManagerPort now
 
@@ -63,7 +76,7 @@ describe('planMintV2 final clamp + re-quote', () => {
         return {
           out: req.amountOut as bigint,
           minOut: req.amountOut as bigint,
-          maxIn: 140n, // sized larger than final previewed debt to trigger clamp
+          maxIn: 140n * 10n ** 18n, // sized larger than final previewed debt to trigger clamp
           approvalTarget: '0x9999999999999999999999999999999999999999' as Address,
           calldata: '0xdeadbeef' as `0x${string}`,
         }
@@ -71,7 +84,7 @@ describe('planMintV2 final clamp + re-quote', () => {
       // record amounts used in re-quote path
       quotedForAmountIn.push(req.amountIn as bigint)
       return {
-        out: (req.amountIn as bigint) - 5n, // arbitrary positive out
+        out: (req.amountIn as bigint) - 5n * 10n ** 18n, // arbitrary positive out
         approvalTarget: '0x9999999999999999999999999999999999999999' as Address,
         calldata: '0xfeedbeef' as `0x${string}`,
       }
@@ -82,13 +95,13 @@ describe('planMintV2 final clamp + re-quote', () => {
       token: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address,
       inputAsset,
       equityInInputAsset,
-      slippageBps: 50,
+      slippageBps: 500, // Increased for tiny test amounts
       quoteDebtToCollateral,
       chainId: 8453,
     })
 
-    // Re-quote must be called at least once with the clamped amount (120)
-    expect(quotedForAmountIn.some((a) => a === 120n)).toBe(true)
+    // Re-quote must be called at least once with the clamped amount (120e18)
+    expect(quotedForAmountIn.some((a) => a === 120n * 10n ** 18n)).toBe(true)
     // ERC20 path: approve then swap with value 0 (no native value needed)
     expect(plan.calls.length).toBe(2)
     expect(plan.calls[0]?.target).toBe(BASE_WETH)

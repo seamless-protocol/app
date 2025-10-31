@@ -35,6 +35,19 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
+vi.mock('wagmi/actions', () => ({
+  getPublicClient: vi.fn(() => ({
+    readContract: vi.fn(async () => 18n), // Mock decimals as 18
+  })),
+}))
+
+vi.mock('@/lib/prices/coingecko', () => ({
+  fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
+    '0xcccccccccccccccccccccccccccccccccccccccc': 2000, // collateral (ETH)
+    '0xdddddddddddddddddddddddddddddddddddddddd': 1, // debt (USDC)
+  })),
+}))
+
 describe('planMintV2', () => {
   const cfg = {} as any
   const token = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address
