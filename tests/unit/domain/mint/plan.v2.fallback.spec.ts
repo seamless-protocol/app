@@ -35,6 +35,19 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
+vi.mock('wagmi/actions', () => ({
+  getPublicClient: vi.fn(() => ({
+    readContract: vi.fn(async () => 18n), // Mock decimals as 18
+  })),
+}))
+
+vi.mock('@/lib/prices/coingecko', () => ({
+  fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
+    '0xcccccccccccccccccccccccccccccccccccccccc': 2000, // collateral (ETH)
+    '0x2222222222222222222222222222222222222222': 1, // debt (USDC)
+  })),
+}))
+
 describe('planMintV2 fallback exact-in sizing and non-native path', () => {
   it('falls back to exact-in refinement when exact-out lacks maxIn and uses approve + non-payable swap for ERC-20 debt', async () => {
     const inputAsset = COLLATERAL

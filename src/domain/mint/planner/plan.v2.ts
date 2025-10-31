@@ -227,7 +227,7 @@ export async function planMintV2(params: {
   const minEquityDepositedInCollateral = applySlippageFloor(equityInInputAsset, slippageBps)
   const minEquityDepositedInUsd =
     (usdPriceMap?.[inputAsset.toLowerCase()] ?? 0) *
-    (Number(minEquityDepositedInCollateral) / 10 ** collateralAssetDecimals)
+    (Number(minEquityDepositedInCollateral) / 10 ** Number(collateralAssetDecimals))
 
   const { equityInCollateral: sharesValueInCollateral, equityInUsd: sharesValueInUsd } =
     await calculateEquity({
@@ -240,7 +240,8 @@ export async function planMintV2(params: {
       usdPriceMap,
     })
   const excessDebtInUsd =
-    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(excessDebt) / 10 ** debtAssetDecimals)
+    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) *
+    (Number(excessDebt) / 10 ** Number(debtAssetDecimals))
 
   // Slippage is wrt the coingecko usd prices of the LTs and debt received
   if (minEquityDepositedInUsd > sharesValueInUsd + excessDebtInUsd) {
@@ -302,17 +303,18 @@ async function calculateEquity(args: {
 
   const collateralInUsd =
     (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) *
-    (Number(collateralAdded) / 10 ** collateralAssetDecimals)
+    (Number(collateralAdded) / 10 ** Number(collateralAssetDecimals))
 
   const debtInUsd =
-    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(debtBorrowed) / 10 ** debtAssetDecimals)
+    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) *
+    (Number(debtBorrowed) / 10 ** Number(debtAssetDecimals))
 
   const equityInUsd = collateralInUsd - debtInUsd
 
   const equityInCollateral = BigInt(
     Math.floor(
       (equityInUsd / (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0)) *
-        10 ** collateralAssetDecimals,
+        10 ** Number(collateralAssetDecimals),
     ),
   )
 

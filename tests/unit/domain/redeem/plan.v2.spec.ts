@@ -31,6 +31,13 @@ vi.mock('wagmi/actions', () => ({
   })),
 }))
 
+vi.mock('@/lib/prices/coingecko', () => ({
+  fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
+    '0xcccccccccccccccccccccccccccccccccccccccc': 2000, // collateral (ETH)
+    '0xdddddddddddddddddddddddddddddddddddddddd': 1.001, // debt (USDC)
+  })),
+}))
+
 import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
 
 const dummyQuoteTarget = '0x0000000000000000000000000000000000000aAa' as Address
@@ -56,7 +63,9 @@ function createMockQuoteFunction({
 }
 
 async function mockQuote({ amountIn }: { amountIn: bigint }) {
-  const out = amountIn - 1n
+  // Simulate ETH ($2000) -> USDC ($1.001) swap
+  // For every 1 wei of ETH, return ~2000 wei of USDC
+  const out = amountIn * 2000n
   return {
     out,
     minOut: out,
@@ -78,11 +87,11 @@ describe('planRedeemV2', () => {
     })
 
     expect(plan.expectedTotalCollateral).toBe(100n)
-    expect(plan.expectedCollateral).toBe(49n) // Mock quote returns 1 less than the amount in
+    expect(plan.expectedCollateral).toBe(98n) // Realistic swap: minimal collateral swapped for debt
     expect(plan.expectedDebt).toBe(50n)
-    expect(plan.expectedDebtPayout).toBe(0n)
+    expect(plan.expectedDebtPayout).toBe(3950n) // Excess debt from swap: 2 ETH -> ~4000 USDC, minus 50 debt
     expect(plan.payoutAsset.toLowerCase()).toBe('0xcccccccccccccccccccccccccccccccccccccccc')
-    expect(plan.payoutAmount).toBe(49n)
+    expect(plan.payoutAmount).toBe(98n)
   })
 
   it('should revert if the debt output from the swap is below the required debt', async () => {
@@ -136,8 +145,8 @@ describe('planRedeemV2', () => {
 
     expect(plan.payoutAsset.toLowerCase()).toBe('0xdddddddddddddddddddddddddddddddddddddddd')
     expect(plan.expectedCollateral).toBe(0n)
-    expect(plan.expectedDebtPayout).toBe(49n)
-    expect(plan.payoutAmount).toBe(49n) // Mock quote returns 1 less than the amount in
+    expect(plan.expectedDebtPayout).toBe(199950n) // Realistic: 100 ETH -> 200000 USDC, minus 50 debt = 199950
+    expect(plan.payoutAmount).toBe(199950n)
     expect(plan.payoutAmount > 0n).toBe(true)
     expect(plan.expectedExcessCollateral).toBe(0n) // Full debt output, no excess collateral
     expect(plan.calls.length).toBeGreaterThan(2)
