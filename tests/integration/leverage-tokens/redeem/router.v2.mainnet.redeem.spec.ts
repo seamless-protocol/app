@@ -17,9 +17,9 @@ import { type WithForkCtx, withFork } from '../../../shared/withFork'
 
 const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
-redeemSuite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet wstETH/ETH 25x)', () => {
+redeemSuite('Leverage Router V2 Redeem (Mainnet wstETH/ETH 25x)', () => {
   // TODO: Investigate why tests require higher slippage (250 bps vs 50 bps)
-  // May be related to CoinGecko price discrepancies or LiFi quote variations
+  // May be related to CoinGecko price discrepancies or Velora quote variations
   const SLIPPAGE_BPS = 250
 
   it('redeems all minted shares into collateral asset using production config', async () => {
@@ -83,22 +83,15 @@ type MintExecution = { sharesAfterMint: bigint }
 
 async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Promise<MintExecution> {
   const { account, config, publicClient } = ctx
-  const previousAdapter = process.env['TEST_USE_LIFI']
-  process.env['TEST_USE_LIFI'] = '1'
 
-  let mintOutcome: Awaited<ReturnType<typeof executeSharedMint>>
-  try {
-    mintOutcome = await executeSharedMint({
-      account,
-      publicClient,
-      config,
-      slippageBps: scenario.slippageBps,
-      chainIdOverride: mainnet.id,
-    })
-  } finally {
-    if (typeof previousAdapter === 'string') process.env['TEST_USE_LIFI'] = previousAdapter
-    else delete process.env['TEST_USE_LIFI']
-  }
+  // Use production config for mint (same as redeem)
+  const mintOutcome = await executeSharedMint({
+    account,
+    publicClient,
+    config,
+    slippageBps: scenario.slippageBps,
+    chainIdOverride: mainnet.id,
+  })
 
   const sharesAfterMint = await readLeverageTokenBalanceOf(config, {
     address: mintOutcome.token,
