@@ -89,6 +89,7 @@ jobs:
           VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless
+          VITE_COINGECKO_API_URL: ${{ secrets.VITE_COINGECKO_API_URL }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
