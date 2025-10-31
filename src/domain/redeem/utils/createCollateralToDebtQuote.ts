@@ -3,6 +3,7 @@ import { base } from 'viem/chains'
 import {
   createLifiQuoteAdapter,
   createUniswapV3QuoteAdapter,
+  createVeloraQuoteAdapter,
   type LifiOrder,
 } from '@/domain/shared/adapters'
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
@@ -27,6 +28,9 @@ export type CollateralToDebtSwapConfig =
       type: 'lifi'
       allowBridges?: string
       order?: LifiOrder
+    }
+  | {
+      type: 'velora'
     }
 
 export interface CreateCollateralToDebtQuoteParams {
@@ -62,6 +66,16 @@ export function createCollateralToDebtQuote({
       ...(swap.order ? { order: swap.order } : {}),
     })
     return { quote, adapterType: 'lifi' }
+  }
+
+  if (swap.type === 'velora') {
+    const quote = createVeloraQuoteAdapter({
+      chainId,
+      router: routerAddress,
+      slippageBps,
+      ...(fromAddress ? { fromAddress } : {}),
+    })
+    return { quote, adapterType: 'velora' }
   }
 
   const publicClient = getPublicClient(chainId)

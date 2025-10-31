@@ -8,8 +8,11 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
+import type { VeloraQuote } from '@/domain/shared/adapters/types'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeRedeemV2 } from './exec/execute.v2'
+import { executeRedeemWithVelora } from './exec/execute.velora'
 import { planRedeemV2 } from './planner/plan.v2'
 import type { QuoteFn } from './planner/types'
 import { DEFAULT_SLIPPAGE_BPS } from './utils/constants'
@@ -77,6 +80,18 @@ export async function orchestrateRedeem(params: {
 
   if (!quoteCollateralToDebt) throw new Error('quoteCollateralToDebt is required')
 
+  const adapterType =
+    getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora'
+
+  console.log('[redeem-orchestrate] Using swap adapter', {
+    token,
+    chainId,
+    adapterType,
+    source: getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type
+      ? 'production config'
+      : 'default (velora)',
+  })
+
   const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
   const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
   // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit/env overrides
@@ -90,6 +105,8 @@ export async function orchestrateRedeem(params: {
     (chainAddresses.leverageManagerV2 as Address | undefined) ||
     envManagerV2
 
+  const intent = getQuoteIntentForAdapter(adapterType)
+
   const plan = await planRedeemV2({
     config,
     token,
@@ -99,7 +116,38 @@ export async function orchestrateRedeem(params: {
     chainId,
     ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
     ...(outputAsset ? { outputAsset } : {}),
+    intent,
   })
+
+  if (adapterType === 'velora') {
+    const veloraAdapterAddress = chainAddresses.veloraAdapter as Address | undefined
+    if (!veloraAdapterAddress) {
+      throw new Error(`Velora adapter address required on chain ${chainId}`)
+    }
+
+    // Use the existing quote from the plan and ensure it's a VeloraQuote
+    const veloraQuote = plan.collateralToDebtQuote as VeloraQuote
+
+    const tx = await executeRedeemWithVelora({
+      config,
+      token,
+      account,
+      sharesToRedeem: plan.sharesToRedeem,
+      minCollateralForSender: plan.minCollateralForSender,
+      veloraAdapter: veloraAdapterAddress,
+      augustus: veloraQuote.veloraData.augustus,
+      offsets: veloraQuote.veloraData.offsets,
+      swapData: veloraQuote.calldata,
+      routerAddress:
+        routerAddressV2 ||
+        (contractAddresses[chainId]?.leverageRouterV2 as Address | undefined) ||
+        (() => {
+          throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
+        })(),
+      chainId,
+    })
+    return { plan, ...tx }
+  }
 
   const tx = await executeRedeemV2({
     config,
@@ -130,4 +178,13 @@ export async function orchestrateRedeem(params: {
     chainId,
   })
   return { plan, ...tx }
+}
+
+export const getQuoteIntentForAdapter = (adapterType: string): 'exactOut' | 'exactIn' => {
+  switch (adapterType) {
+    case 'velora':
+      return 'exactOut'
+    default:
+      return 'exactIn'
+  }
 }

@@ -49,6 +49,8 @@ export type RedeemPlanV2 = {
   expectedCollateral: bigint
   /** Debt expected to be repaid during redemption. */
   expectedDebt: bigint
+  /** Quote used for collateral-to-debt swap. */
+  collateralToDebtQuote: Quote
   /** Total collateral available before debt repayment. */
   expectedTotalCollateral: bigint
   /** Excess collateral (if more collateral is available than needed for debt repayment). */
@@ -76,6 +78,8 @@ export async function planRedeemV2(params: {
   outputAsset?: Address
   /** Chain ID to execute the transaction on */
   chainId: number
+  /** Intent for collateral->debt quote */
+  intent: 'exactOut' | 'exactIn'
 }): Promise<RedeemPlanV2> {
   const {
     config,
@@ -84,6 +88,7 @@ export async function planRedeemV2(params: {
     slippageBps,
     quoteCollateralToDebt: quoter,
     chainId,
+    intent,
   } = params
 
   const {
@@ -110,7 +115,7 @@ export async function planRedeemV2(params: {
     quoter,
     collateralAvailableForSwap,
     inTokenForQuote,
-    intent: 'exactIn',
+    intent,
   })
 
   const collateralRequiredForSwap = quote.maxIn ?? 0n
@@ -215,6 +220,7 @@ export async function planRedeemV2(params: {
     minCollateralForSender: planDraft.minCollateralForSender,
     expectedCollateral: planDraft.expectedCollateral,
     expectedDebt: debtToRepay,
+    collateralToDebtQuote: quote,
     expectedTotalCollateral: totalCollateralAvailable,
     expectedExcessCollateral: remainingCollateral,
     expectedDebtPayout: planDraft.expectedDebtPayout,
@@ -327,7 +333,7 @@ async function getCollateralToDebtQuote(args: {
   const quote = await quoter({
     inToken: inTokenForQuote,
     outToken: debtAsset,
-    amountIn: collateralAvailableForSwap,
+    amountIn: intent === 'exactOut' ? 0n : collateralAvailableForSwap,
     amountOut: requiredDebt,
     intent,
   })

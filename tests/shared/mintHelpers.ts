@@ -1,6 +1,7 @@
 import type { Address, PublicClient } from 'viem'
 import { parseUnits } from 'viem'
 import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
 import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import {
@@ -11,6 +12,7 @@ import {
   createUniswapV3QuoteAdapter,
   type UniswapV3QuoteOptions,
 } from '@/domain/shared/adapters/uniswapV3'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -103,24 +105,47 @@ export async function executeSharedMint({
 
   const quoteAdapterPreference = (process.env['TEST_QUOTE_ADAPTER'] ?? '').toLowerCase()
   const useLiFi = process.env['TEST_USE_LIFI'] === '1'
-  const uniswapV3Config = addresses?.uniswapV3 ?? ADDR.uniswapV3
-  const canUseV3 = Boolean(
-    uniswapV3Config?.quoter &&
-      uniswapV3Config?.router &&
-      uniswapV3Config?.pool &&
-      typeof uniswapV3Config?.fee === 'number',
-  )
 
-  const quoteDebtToCollateral = await resolveDebtToCollateralQuote({
-    preference: quoteAdapterPreference,
-    useLiFi,
-    canUseV3,
-    chainId,
-    router,
-    executor,
-    resolvedSlippageBps,
-    publicClient,
-  })
+  // Check if production config specifies a swap adapter
+  const tokenConfig = getLeverageTokenConfig(token, chainId)
+  const debtToCollateralConfig = tokenConfig?.swaps?.debtToCollateral
+
+  let quoteDebtToCollateral: QuoteFn
+
+  // Use production config if available and no test override
+  if (debtToCollateralConfig && !useLiFi && !quoteAdapterPreference) {
+    console.info('[SHARED MINT] Using production config', {
+      adapterType: debtToCollateralConfig.type,
+    })
+    const { quote } = createDebtToCollateralQuote({
+      chainId,
+      routerAddress: router,
+      swap: debtToCollateralConfig,
+      slippageBps: resolvedSlippageBps,
+      getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
+    })
+    quoteDebtToCollateral = quote
+  } else {
+    // Fall back to test helper logic
+    const uniswapV3Config = addresses?.uniswapV3 ?? ADDR.uniswapV3
+    const canUseV3 = Boolean(
+      uniswapV3Config?.quoter &&
+        uniswapV3Config?.router &&
+        uniswapV3Config?.pool &&
+        typeof uniswapV3Config?.fee === 'number',
+    )
+
+    quoteDebtToCollateral = await resolveDebtToCollateralQuote({
+      preference: quoteAdapterPreference,
+      useLiFi,
+      canUseV3,
+      chainId,
+      router,
+      executor,
+      resolvedSlippageBps,
+      publicClient,
+    })
+  }
 
   const sharesBefore = await readLeverageTokenBalanceOf(config, {
     address: token,

@@ -3,6 +3,7 @@ import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
 import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
 import { createCollateralToDebtQuote } from '@/domain/redeem/utils/createCollateralToDebtQuote'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -16,12 +17,12 @@ import { type WithForkCtx, withFork } from '../../../shared/withFork'
 
 const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
-redeemSuite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet wstETH/ETH 25x)', () => {
+redeemSuite('Leverage Router V2 Redeem (Mainnet wstETH/ETH 25x)', () => {
   // TODO: Investigate why tests require higher slippage (250 bps vs 50 bps)
-  // May be related to CoinGecko price discrepancies or LiFi quote variations
+  // Likely due to price discrepancies between CoinGecko (used for slippage calc) and on-chain oracles
   const SLIPPAGE_BPS = 250
 
-  it('redeems all minted shares into collateral asset via LiFi', async () => {
+  it('redeems all minted shares into collateral asset using production config', async () => {
     const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
     assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
     assertRedeemExecution(result)
@@ -82,22 +83,14 @@ type MintExecution = { sharesAfterMint: bigint }
 
 async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Promise<MintExecution> {
   const { account, config, publicClient } = ctx
-  const previousAdapter = process.env['TEST_USE_LIFI']
-  process.env['TEST_USE_LIFI'] = '1'
 
-  let mintOutcome: Awaited<ReturnType<typeof executeSharedMint>>
-  try {
-    mintOutcome = await executeSharedMint({
-      account,
-      publicClient,
-      config,
-      slippageBps: scenario.slippageBps,
-      chainIdOverride: mainnet.id,
-    })
-  } finally {
-    if (typeof previousAdapter === 'string') process.env['TEST_USE_LIFI'] = previousAdapter
-    else delete process.env['TEST_USE_LIFI']
-  }
+  const mintOutcome = await executeSharedMint({
+    account,
+    publicClient,
+    config,
+    slippageBps: scenario.slippageBps,
+    chainIdOverride: mainnet.id,
+  })
 
   const sharesAfterMint = await readLeverageTokenBalanceOf(config, {
     address: mintOutcome.token,
@@ -140,11 +133,17 @@ async function performRedeem(
   const sharesToRedeem = sharesAfterMint
   await approveIfNeeded(token, router, sharesToRedeem)
 
-  // Mirror production: use LiFi for the repay leg (same-chain, bridges disabled)
+  // Use production swap config for this token
+  const tokenConfig = getLeverageTokenConfig(token, chainId)
+  if (!tokenConfig) throw new Error(`No config found for token ${token} on chain ${chainId}`)
+
+  const collateralToDebtConfig = tokenConfig.swaps?.collateralToDebt
+  if (!collateralToDebtConfig) throw new Error(`No collateralToDebt swap config for token ${token}`)
+
   const { quote: quoteCollateralToDebt } = createCollateralToDebtQuote({
     chainId,
     routerAddress: router,
-    swap: { type: 'lifi', allowBridges: 'none' },
+    swap: collateralToDebtConfig,
     slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
   })
@@ -157,6 +156,7 @@ async function performRedeem(
     quoteCollateralToDebt,
     chainId,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
+    intent: 'exactOut',
   })
 
   const collateralBalanceBefore = await publicClient.readContract({

@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
+import { getQuoteIntentForAdapter } from '@/domain/redeem/orchestrate'
 import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
 import type { QuoteFn } from '@/domain/redeem/planner/types'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 
 interface UseRedeemPlanPreviewParams {
@@ -57,6 +59,10 @@ export function useRedeemPlanPreview({
         throw new Error('Redeem plan prerequisites missing')
       }
 
+      const intent = getQuoteIntentForAdapter(
+        getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora',
+      )
+
       return planRedeemV2({
         config,
         token,
@@ -66,6 +72,7 @@ export function useRedeemPlanPreview({
         chainId,
         ...(managerAddress ? { managerAddress } : {}),
         ...(outputAsset ? { outputAsset } : {}),
+        intent,
       })
     },
   })
