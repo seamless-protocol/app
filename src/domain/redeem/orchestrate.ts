@@ -8,7 +8,6 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
-import type { VeloraQuote } from '@/domain/shared/adapters/types'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeRedeemV2 } from './exec/execute.v2'
@@ -134,10 +133,8 @@ export async function orchestrateRedeem(params: {
       )
     }
 
-    // TypeScript now knows veloraData exists
-    const veloraQuote = quote as VeloraQuote & {
-      veloraData: NonNullable<VeloraQuote['veloraData']>
-    }
+    // Extract veloraData properties after validation
+    const { augustus, offsets } = quote.veloraData
 
     const tx = await executeRedeemWithVelora({
       config,
@@ -146,9 +143,9 @@ export async function orchestrateRedeem(params: {
       sharesToRedeem: plan.sharesToRedeem,
       minCollateralForSender: plan.minCollateralForSender,
       veloraAdapter: veloraAdapterAddress,
-      augustus: veloraQuote.veloraData.augustus,
-      offsets: veloraQuote.veloraData.offsets,
-      swapData: veloraQuote.calldata,
+      augustus,
+      offsets,
+      swapData: quote.calldata,
       routerAddress:
         routerAddressV2 ||
         (contractAddresses[chainId]?.leverageRouterV2 as Address | undefined) ||
@@ -191,6 +188,24 @@ export async function orchestrateRedeem(params: {
   return { plan, ...tx }
 }
 
+/**
+ * Determines the quote intent (exactIn vs exactOut) based on the adapter type for REDEEM operations.
+ *
+ * IMPORTANT: This is specific to redemptions. Mints use a different intent (exactIn).
+ *
+ * Why exactOut for Velora redeems:
+ * - Redeems use the `redeemWithVelora()` contract function which requires specific byte offsets
+ *   to read swap parameters from the calldata (augustus address, exactAmount, limitAmount, quotedAmount)
+ * - These offsets are only valid for ParaSwap BUY (exactOut) methods like swapExactAmountOut
+ * - SELL (exactIn) methods have different calldata structures, so offsets wouldn't work
+ * - See: https://github.com/seamless-protocol/leverage-tokens/blob/audit-fixes/test/integration/8453/LeverageRouter/RedeemWithVelora.t.sol#L19
+ *
+ * Why exactIn for other adapters:
+ * - LiFi, UniswapV2, UniswapV3 use the standard `redeemV2()` function which passes raw calldata through
+ * - No offsets needed, so we can use exactIn which is generally more responsive for quote APIs
+ *
+ * Note: Mints always use exactIn (even for Velora) because the `deposit()` function doesn't need offsets.
+ */
 export const getQuoteIntentForAdapter = (adapterType: string): 'exactOut' | 'exactIn' => {
   switch (adapterType) {
     case 'velora':
