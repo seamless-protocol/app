@@ -105,23 +105,27 @@ function getTestCommand(
   }
 }
 
+type BackendOption = 'tenderly' | 'anvil' | 'auto'
+
 function parseArguments(): {
   testType: TestType
   chainOption?: string
   scenarioOption?: ScenarioKey
+  backendOption?: BackendOption
   passThroughArgs: Array<string>
 } {
   const args = process.argv.slice(2)
   const rawType = args.shift() as TestType | undefined
   if (!rawType || !['e2e', 'integration'].includes(rawType)) {
     console.error(
-      'Usage: bun scripts/run-tests.ts [e2e|integration] [--chain <base|mainnet|all>] [--scenario <leverage-mint|leverage-redeem>] [extra args...]',
+      'Usage: bun scripts/run-tests.ts [e2e|integration] [--chain <base|mainnet|all>] [--scenario <leverage-mint|leverage-redeem>] [--backend <tenderly|anvil|auto>] [extra args...]',
     )
     process.exit(1)
   }
 
   let chainOption: string | undefined
   let scenarioOption: ScenarioKey | undefined
+  let backendOption: BackendOption | undefined
   const passThroughArgs: Array<string> = []
 
   while (args.length > 0) {
@@ -153,6 +157,24 @@ function parseArguments(): {
         process.exit(1)
       }
       scenarioOption = value as ScenarioKey
+    } else if (arg === '--backend') {
+      const value = args.shift()
+      if (!value) {
+        console.error('Missing value after --backend')
+        process.exit(1)
+      }
+      if (value !== 'tenderly' && value !== 'anvil' && value !== 'auto') {
+        console.error(`Unsupported backend '${value}'. Use 'tenderly', 'anvil', or 'auto'.`)
+        process.exit(1)
+      }
+      backendOption = value as BackendOption
+    } else if (arg.startsWith('--backend=')) {
+      const value = arg.split('=')[1]
+      if (value !== 'tenderly' && value !== 'anvil' && value !== 'auto') {
+        console.error(`Unsupported backend '${value}'. Use 'tenderly', 'anvil', or 'auto'.`)
+        process.exit(1)
+      }
+      backendOption = value as BackendOption
     } else {
       passThroughArgs.push(arg)
     }
@@ -162,6 +184,7 @@ function parseArguments(): {
     testType: rawType,
     ...(chainOption ? { chainOption } : {}),
     ...(scenarioOption ? { scenarioOption } : {}),
+    ...(backendOption ? { backendOption } : {}),
     passThroughArgs,
   }
 }
@@ -216,10 +239,10 @@ async function runCommand(cmd: string, args: Array<string>, env: NodeJS.ProcessE
 }
 
 async function main() {
-  const { testType, chainOption, scenarioOption, passThroughArgs } = parseArguments()
+  const { testType, chainOption, scenarioOption, backendOption, passThroughArgs } = parseArguments()
 
   if (chainOption) {
-    await runForChainOption(chainOption, testType, passThroughArgs, scenarioOption)
+    await runForChainOption(chainOption, testType, passThroughArgs, scenarioOption, backendOption)
     return
   }
 
@@ -241,8 +264,37 @@ async function main() {
     return
   }
 
+  // Handle explicit backend selection
+  if (backendOption === 'anvil') {
+    console.log("🔨 Using Anvil backend (make sure it's running on port 8545)")
+    const { cmd, args } = getTestCommand(testType, passThroughArgs)
+    const env = withTestDefaults(
+      testType,
+      {
+        ...process.env,
+        TEST_RPC_URL: 'http://127.0.0.1:8545',
+        TEST_MODE: 'anvil',
+        ...(scenarioOption ? { TEST_SCENARIO: scenarioOption } : {}),
+      } as Record<string, string>,
+      'anvil',
+    )
+    await runCommand(cmd, args, env)
+    return
+  }
+
   // Try to get Tenderly config
   const tenderlyConfig = getTenderlyConfig()
+
+  if (backendOption === 'tenderly') {
+    if (!tenderlyConfig) {
+      console.error('❌ Tenderly backend requested but configuration is missing.')
+      console.error(
+        '   Set TENDERLY_ACCOUNT, TENDERLY_PROJECT, and TENDERLY_ACCESS_KEY environment variables.',
+      )
+      process.exit(1)
+    }
+  }
+
   if (!tenderlyConfig) {
     console.log(
       "⚠️  No Tenderly configuration found. Falling back to Anvil (make sure it's running on port 8545)",
@@ -253,6 +305,7 @@ async function main() {
       {
         ...process.env,
         TEST_RPC_URL: 'http://127.0.0.1:8545',
+        TEST_MODE: 'anvil',
         ...(scenarioOption ? { TEST_SCENARIO: scenarioOption } : {}),
       } as Record<string, string>,
       'anvil',
@@ -297,6 +350,7 @@ async function runForChainOption(
   testType: TestType,
   passThroughArgs: Array<string>,
   scenarioOption?: ScenarioKey,
+  backendOption?: BackendOption,
 ) {
   const slugs: Array<ChainSlug> =
     chainOption === 'all'
@@ -305,7 +359,17 @@ async function runForChainOption(
 
   for (const slug of slugs) {
     const tenderlyCfg = getTenderlyConfig()
-    if (tenderlyCfg) {
+    const shouldUseTenderly = backendOption !== 'anvil' && tenderlyCfg
+
+    if (backendOption === 'tenderly' && !tenderlyCfg) {
+      console.error(`❌ Tenderly backend requested for ${slug} but configuration is missing.`)
+      console.error(
+        '   Set TENDERLY_ACCOUNT, TENDERLY_PROJECT, and TENDERLY_ACCESS_KEY environment variables.',
+      )
+      process.exit(1)
+    }
+
+    if (shouldUseTenderly && tenderlyCfg) {
       const chainMap: Record<ChainSlug, string> = { base: '8453', mainnet: '1' }
       const vnetCfg = { ...tenderlyCfg, chainId: chainMap[slug] }
       console.log(`\n⏳ Creating Tenderly JIT VNet for ${slug}...`)
@@ -344,7 +408,7 @@ async function runForChainOption(
     } else {
       const backend = await resolveBackend({
         chain: slug,
-        mode: 'tenderly-static',
+        mode: backendOption === 'anvil' ? 'anvil' : 'tenderly-static',
         scenario: scenarioOption ?? 'leverage-mint',
       })
       const chainId = String(backend.canonicalChainId)

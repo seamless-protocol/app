@@ -1,6 +1,8 @@
 import { BACKEND } from '../shared/env'
 
 async function globalSetup() {
+  console.info(`[Test][Backend] Using: ${BACKEND.mode}`)
+
   if (BACKEND.executionKind === 'tenderly') {
     console.log(`🚀 Using ${BACKEND.mode} backend (${BACKEND.rpcUrl}) — no local setup required`)
     return
