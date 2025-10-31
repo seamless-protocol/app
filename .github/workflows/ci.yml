@@ -138,6 +138,7 @@ jobs:
         env:
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless
+          VITE_COINGECKO_API_URL: ${{ secrets.VITE_COINGECKO_API_URL }}
 
 
   build:
