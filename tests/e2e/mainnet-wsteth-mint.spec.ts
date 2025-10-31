@@ -13,18 +13,10 @@ const MAINNET_WSTETH = '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address
 // Test account address (default Anvil/Tenderly account #0)
 const TEST_ACCOUNT = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as Address
 
-test.describe('Mainnet wstETH/ETH 25x mint', () => {
+test.describe('Mainnet wstETH/ETH 25x mint (JIT + LiFi)', () => {
   let snapshotId: `0x${string}`
 
-  test.beforeEach(async ({ page }) => {
-    // Forward browser console to terminal
-    page.on('console', (message) => {
-      console.log(`[browser:${message.type()}] ${message.text()}`)
-    })
-    page.on('pageerror', (error) => {
-      console.error('[browser:pageerror]', error)
-    })
-
+  test.beforeEach(async () => {
     const chainId = await publicClient.getChainId()
     if (chainId !== leverageTokenDefinition.chainId)
       throw new Error(
@@ -41,11 +33,10 @@ test.describe('Mainnet wstETH/ETH 25x mint', () => {
     await revertSnapshot(snapshotId)
   })
 
-  test('mints wstETH/ETH 25x via modal', async ({ page }) => {
+  test('mints wstETH/ETH 25x via modal using LiFi route', async ({ page }) => {
     test.setTimeout(120_000)
 
     await page.goto('/#/leverage-tokens', { waitUntil: 'domcontentloaded' })
-    await page.waitForLoadState('networkidle')
 
     // Connect mock wallet
     const connect = page.getByTestId('connect-mock')
@@ -56,7 +47,6 @@ test.describe('Mainnet wstETH/ETH 25x mint', () => {
     await page.goto(`/#/leverage-tokens/${leverageTokenDefinition.chainId}/${leverageTokenAddress}`)
 
     // Wait for page to load and scroll to holdings card (use .last() due to duplicate renders)
-    await page.waitForLoadState('networkidle')
     const holdingsCard = page.getByTestId('leverage-token-holdings-card').last()
     await expect(holdingsCard).toBeVisible({ timeout: 10_000 })
     await holdingsCard.scrollIntoViewIfNeeded()
@@ -71,6 +61,13 @@ test.describe('Mainnet wstETH/ETH 25x mint', () => {
 
     const amountInput = modal.getByLabel('Mint Amount')
     await amountInput.fill('0.1')
+
+    // Increase slippage tolerance to 1.5% (known requirement for wstETH in prod)
+    const advancedButton = modal.getByRole('button', { name: 'Advanced' })
+    await advancedButton.click()
+    const slippageInput = modal.getByPlaceholder('0.5')
+    await expect(slippageInput).toBeVisible({ timeout: 5_000 })
+    await slippageInput.fill('1.5')
 
     const primary = modal.getByRole('button', { name: /(Approve|Mint|Enter an amount)/i })
     await expect(primary).toBeVisible({ timeout: 20_000 })
