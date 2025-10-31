@@ -10,7 +10,7 @@ export interface MorphoMarketData {
     name: string
   }
   state: {
-    dailyBorrowApy: number
+    dailyBorrowApy: number | null
     utilization: number
   }
 }

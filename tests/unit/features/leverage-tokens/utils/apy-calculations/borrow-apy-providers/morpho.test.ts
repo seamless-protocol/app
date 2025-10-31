@@ -306,5 +306,155 @@ describe('MorphoBorrowApyProvider', () => {
         averagingPeriod: '24-hour average',
       })
     })
+
+    it('should reject null dailyBorrowApy', async () => {
+      const mockManagerAddress = '0x1234567890123456789012345678901234567890' as Address
+      const mockLendingAdapterAddress = '0x9876543210987654321098765432109876543210' as Address
+      const mockMarketId = '0xabcdef1234567890abcdef1234567890abcdef12'
+
+      const mockManagerResult = {
+        lendingAdapter: mockLendingAdapterAddress,
+        rebalanceAdapter: '0x1111111111111111111111111111111111111111' as Address,
+        mintTokenFee: 0n,
+        redeemTokenFee: 10n,
+      }
+
+      const mockGraphQLResponse = {
+        marketByUniqueKey: {
+          uniqueKey: mockMarketId,
+          id: 'market-id-123',
+          collateralAsset: {
+            address: '0x1234567890123456789012345678901234567890',
+            name: 'WETH',
+          },
+          state: {
+            dailyBorrowApy: null, // Null value from API
+            utilization: 75.5,
+          },
+        },
+      }
+
+      mockGetLeverageManagerAddress.mockReturnValue(mockManagerAddress)
+      mockReadContract.mockResolvedValueOnce(mockManagerResult).mockResolvedValueOnce(mockMarketId)
+      mockFetchMorphoMarketBorrowRate.mockResolvedValue(mockGraphQLResponse)
+
+      await expect(provider.fetchBorrowApy(tokenAddress, chainId, mockConfig)).rejects.toThrow(
+        'Morpho API returned null borrow APY',
+      )
+    })
+
+    it('should reject negative dailyBorrowApy', async () => {
+      const mockManagerAddress = '0x1234567890123456789012345678901234567890' as Address
+      const mockLendingAdapterAddress = '0x9876543210987654321098765432109876543210' as Address
+      const mockMarketId = '0xabcdef1234567890abcdef1234567890abcdef12'
+
+      const mockManagerResult = {
+        lendingAdapter: mockLendingAdapterAddress,
+        rebalanceAdapter: '0x1111111111111111111111111111111111111111' as Address,
+        mintTokenFee: 0n,
+        redeemTokenFee: 10n,
+      }
+
+      const mockGraphQLResponse = {
+        marketByUniqueKey: {
+          uniqueKey: mockMarketId,
+          id: 'market-id-123',
+          collateralAsset: {
+            address: '0x1234567890123456789012345678901234567890',
+            name: 'WETH',
+          },
+          state: {
+            dailyBorrowApy: -0.1, // Negative value
+            utilization: 75.5,
+          },
+        },
+      }
+
+      mockGetLeverageManagerAddress.mockReturnValue(mockManagerAddress)
+      mockReadContract.mockResolvedValueOnce(mockManagerResult).mockResolvedValueOnce(mockMarketId)
+      mockFetchMorphoMarketBorrowRate.mockResolvedValue(mockGraphQLResponse)
+
+      await expect(provider.fetchBorrowApy(tokenAddress, chainId, mockConfig)).rejects.toThrow(
+        'Invalid borrow APY from Morpho',
+      )
+    })
+
+    it('should reject NaN dailyBorrowApy', async () => {
+      const mockManagerAddress = '0x1234567890123456789012345678901234567890' as Address
+      const mockLendingAdapterAddress = '0x9876543210987654321098765432109876543210' as Address
+      const mockMarketId = '0xabcdef1234567890abcdef1234567890abcdef12'
+
+      const mockManagerResult = {
+        lendingAdapter: mockLendingAdapterAddress,
+        rebalanceAdapter: '0x1111111111111111111111111111111111111111' as Address,
+        mintTokenFee: 0n,
+        redeemTokenFee: 10n,
+      }
+
+      const mockGraphQLResponse = {
+        marketByUniqueKey: {
+          uniqueKey: mockMarketId,
+          id: 'market-id-123',
+          collateralAsset: {
+            address: '0x1234567890123456789012345678901234567890',
+            name: 'WETH',
+          },
+          state: {
+            dailyBorrowApy: Number.NaN, // NaN value
+            utilization: 75.5,
+          },
+        },
+      }
+
+      mockGetLeverageManagerAddress.mockReturnValue(mockManagerAddress)
+      mockReadContract.mockResolvedValueOnce(mockManagerResult).mockResolvedValueOnce(mockMarketId)
+      mockFetchMorphoMarketBorrowRate.mockResolvedValue(mockGraphQLResponse)
+
+      await expect(provider.fetchBorrowApy(tokenAddress, chainId, mockConfig)).rejects.toThrow(
+        'Invalid borrow APY from Morpho',
+      )
+    })
+
+    it('should allow extremely high dailyBorrowApy (>200%) with warning', async () => {
+      const mockManagerAddress = '0x1234567890123456789012345678901234567890' as Address
+      const mockLendingAdapterAddress = '0x9876543210987654321098765432109876543210' as Address
+      const mockMarketId = '0xabcdef1234567890abcdef1234567890abcdef12'
+
+      const mockManagerResult = {
+        lendingAdapter: mockLendingAdapterAddress,
+        rebalanceAdapter: '0x1111111111111111111111111111111111111111' as Address,
+        mintTokenFee: 0n,
+        redeemTokenFee: 10n,
+      }
+
+      const mockGraphQLResponse = {
+        marketByUniqueKey: {
+          uniqueKey: mockMarketId,
+          id: 'market-id-123',
+          collateralAsset: {
+            address: '0x1234567890123456789012345678901234567890',
+            name: 'WETH',
+          },
+          state: {
+            dailyBorrowApy: 2.5, // 250% - unusually high but allowed
+            utilization: 98.5,
+          },
+        },
+      }
+
+      mockGetLeverageManagerAddress.mockReturnValue(mockManagerAddress)
+      mockReadContract.mockResolvedValueOnce(mockManagerResult).mockResolvedValueOnce(mockMarketId)
+      mockFetchMorphoMarketBorrowRate.mockResolvedValue(mockGraphQLResponse)
+
+      const result = await provider.fetchBorrowApy(tokenAddress, chainId, mockConfig)
+
+      // Should succeed and return the high value
+      expect(result).toEqual({
+        borrowAPY: 2.5,
+        utilization: 98.5,
+        averagingPeriod: '24-hour average',
+      })
+      // Note: In real usage, this would log a warning, but we don't assert on logger calls here
+    })
   })
 })
