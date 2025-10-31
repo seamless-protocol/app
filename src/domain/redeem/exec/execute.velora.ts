@@ -8,7 +8,7 @@
  * - Sends a single transaction to redeem leverage tokens for collateral using Velora
  * - Does NOT perform ERC-20 approvals or wait for approvals — the UI is responsible for the Approve step.
  * - Accepts explicit chainId to support cross-chain scenarios (e.g., user on Base viewing Mainnet leverage token)
- *   This allows Wagmi to prompt chain switch if needed, ensuring transaction executes on correct chain.
+ *   This allows Wagmi to simulate the transaction properly using the correct chain.
  */
 
 import type { Address, Hash } from 'viem'
