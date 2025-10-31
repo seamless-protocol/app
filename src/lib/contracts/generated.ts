@@ -1,12 +1,15 @@
 import {
-  createReadContract,
-  createSimulateContract,
   createUseReadContract,
+  createUseWriteContract,
   createUseSimulateContract,
   createUseWatchContractEvent,
-  createUseWriteContract,
-  createWatchContractEvent,
+} from 'wagmi/codegen'
+
+import {
+  createReadContract,
   createWriteContract,
+  createSimulateContract,
+  createWatchContractEvent,
 } from 'wagmi/codegen'
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,7 +37,9 @@ export const leverageManagerV2Abi = [
   },
   {
     type: 'error',
-    inputs: [{ name: 'implementation', internalType: 'address', type: 'address' }],
+    inputs: [
+      { name: 'implementation', internalType: 'address', type: 'address' },
+    ],
     name: 'ERC1967InvalidImplementation',
   },
   { type: 'error', inputs: [], name: 'ERC1967NonPayable' },
@@ -110,7 +115,9 @@ export const leverageManagerV2Abi = [
   {
     type: 'event',
     anonymous: false,
-    inputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256', indexed: false }],
+    inputs: [
+      { name: 'fee', internalType: 'uint256', type: 'uint256', indexed: false },
+    ],
     name: 'DefaultManagementFeeAtCreationSet',
   },
   {
@@ -799,7 +806,9 @@ export const leverageManagerV2Abi = [
       },
     ],
     name: 'getLeverageTokenDebtAsset',
-    outputs: [{ name: 'debtAsset', internalType: 'contract IERC20', type: 'address' }],
+    outputs: [
+      { name: 'debtAsset', internalType: 'contract IERC20', type: 'address' },
+    ],
     stateMutability: 'view',
   },
   {
@@ -924,7 +933,9 @@ export const leverageManagerV2Abi = [
   },
   {
     type: 'function',
-    inputs: [{ name: 'action', internalType: 'enum ExternalAction', type: 'uint8' }],
+    inputs: [
+      { name: 'action', internalType: 'enum ExternalAction', type: 'uint8' },
+    ],
     name: 'getTreasuryActionFee',
     outputs: [{ name: 'fee', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
@@ -1401,7 +1412,9 @@ export const leverageRouterV2Abi = [
     type: 'function',
     inputs: [],
     name: 'leverageManager',
-    outputs: [{ name: '', internalType: 'contract ILeverageManager', type: 'address' }],
+    outputs: [
+      { name: '', internalType: 'contract ILeverageManager', type: 'address' },
+    ],
     stateMutability: 'view',
   },
   {
@@ -2325,7 +2338,9 @@ export const seamTokenAbi = [
   },
   {
     type: 'error',
-    inputs: [{ name: 'implementation', internalType: 'address', type: 'address' }],
+    inputs: [
+      { name: 'implementation', internalType: 'address', type: 'address' },
+    ],
     name: 'ERC1967InvalidImplementation',
   },
   { type: 'error', inputs: [], name: 'ERC1967NonPayable' },
@@ -2958,11 +2973,12 @@ export const useReadLeverageManagerV2 = /*#__PURE__*/ createUseReadContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2BaseRatio = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'BASE_RATIO',
-})
+export const useReadLeverageManagerV2BaseRatio =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'BASE_RATIO',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"DEFAULT_ADMIN_ROLE"`
@@ -2970,11 +2986,12 @@ export const useReadLeverageManagerV2BaseRatio = /*#__PURE__*/ createUseReadCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2DefaultAdminRole = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'DEFAULT_ADMIN_ROLE',
-})
+export const useReadLeverageManagerV2DefaultAdminRole =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'DEFAULT_ADMIN_ROLE',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"FEE_MANAGER_ROLE"`
@@ -2982,11 +2999,12 @@ export const useReadLeverageManagerV2DefaultAdminRole = /*#__PURE__*/ createUseR
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2FeeManagerRole = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'FEE_MANAGER_ROLE',
-})
+export const useReadLeverageManagerV2FeeManagerRole =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'FEE_MANAGER_ROLE',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"UPGRADER_ROLE"`
@@ -2994,11 +3012,12 @@ export const useReadLeverageManagerV2FeeManagerRole = /*#__PURE__*/ createUseRea
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2UpgraderRole = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'UPGRADER_ROLE',
-})
+export const useReadLeverageManagerV2UpgraderRole =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'UPGRADER_ROLE',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"UPGRADE_INTERFACE_VERSION"`
@@ -3006,11 +3025,12 @@ export const useReadLeverageManagerV2UpgraderRole = /*#__PURE__*/ createUseReadC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2UpgradeInterfaceVersion = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'UPGRADE_INTERFACE_VERSION',
-})
+export const useReadLeverageManagerV2UpgradeInterfaceVersion =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'UPGRADE_INTERFACE_VERSION',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertCollateralToDebt"`
@@ -3018,11 +3038,12 @@ export const useReadLeverageManagerV2UpgradeInterfaceVersion = /*#__PURE__*/ cre
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2ConvertCollateralToDebt = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertCollateralToDebt',
-})
+export const useReadLeverageManagerV2ConvertCollateralToDebt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertCollateralToDebt',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertCollateralToShares"`
@@ -3043,11 +3064,12 @@ export const useReadLeverageManagerV2ConvertCollateralToShares =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2ConvertDebtToCollateral = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertDebtToCollateral',
-})
+export const useReadLeverageManagerV2ConvertDebtToCollateral =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertDebtToCollateral',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertSharesToCollateral"`
@@ -3068,11 +3090,12 @@ export const useReadLeverageManagerV2ConvertSharesToCollateral =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2ConvertSharesToDebt = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertSharesToDebt',
-})
+export const useReadLeverageManagerV2ConvertSharesToDebt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertSharesToDebt',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertToAssets"`
@@ -3080,11 +3103,12 @@ export const useReadLeverageManagerV2ConvertSharesToDebt = /*#__PURE__*/ createU
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2ConvertToAssets = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertToAssets',
-})
+export const useReadLeverageManagerV2ConvertToAssets =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertToAssets',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertToShares"`
@@ -3092,11 +3116,12 @@ export const useReadLeverageManagerV2ConvertToAssets = /*#__PURE__*/ createUseRe
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2ConvertToShares = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertToShares',
-})
+export const useReadLeverageManagerV2ConvertToShares =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertToShares',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getDefaultManagementFeeAtCreation"`
@@ -3169,11 +3194,12 @@ export const useReadLeverageManagerV2GetLeverageTokenCollateralAsset =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2GetLeverageTokenConfig = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getLeverageTokenConfig',
-})
+export const useReadLeverageManagerV2GetLeverageTokenConfig =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getLeverageTokenConfig',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenDebtAsset"`
@@ -3194,11 +3220,12 @@ export const useReadLeverageManagerV2GetLeverageTokenDebtAsset =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2GetLeverageTokenFactory = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getLeverageTokenFactory',
-})
+export const useReadLeverageManagerV2GetLeverageTokenFactory =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getLeverageTokenFactory',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenInitialCollateralRatio"`
@@ -3245,11 +3272,12 @@ export const useReadLeverageManagerV2GetLeverageTokenRebalanceAdapter =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2GetLeverageTokenState = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getLeverageTokenState',
-})
+export const useReadLeverageManagerV2GetLeverageTokenState =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getLeverageTokenState',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getManagementFee"`
@@ -3257,11 +3285,12 @@ export const useReadLeverageManagerV2GetLeverageTokenState = /*#__PURE__*/ creat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2GetManagementFee = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getManagementFee',
-})
+export const useReadLeverageManagerV2GetManagementFee =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getManagementFee',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getRoleAdmin"`
@@ -3269,11 +3298,12 @@ export const useReadLeverageManagerV2GetManagementFee = /*#__PURE__*/ createUseR
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2GetRoleAdmin = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getRoleAdmin',
-})
+export const useReadLeverageManagerV2GetRoleAdmin =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getRoleAdmin',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getTreasury"`
@@ -3281,11 +3311,12 @@ export const useReadLeverageManagerV2GetRoleAdmin = /*#__PURE__*/ createUseReadC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2GetTreasury = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getTreasury',
-})
+export const useReadLeverageManagerV2GetTreasury =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getTreasury',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getTreasuryActionFee"`
@@ -3293,11 +3324,12 @@ export const useReadLeverageManagerV2GetTreasury = /*#__PURE__*/ createUseReadCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2GetTreasuryActionFee = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getTreasuryActionFee',
-})
+export const useReadLeverageManagerV2GetTreasuryActionFee =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getTreasuryActionFee',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"hasRole"`
@@ -3305,11 +3337,12 @@ export const useReadLeverageManagerV2GetTreasuryActionFee = /*#__PURE__*/ create
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2HasRole = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'hasRole',
-})
+export const useReadLeverageManagerV2HasRole =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'hasRole',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewDeposit"`
@@ -3317,11 +3350,12 @@ export const useReadLeverageManagerV2HasRole = /*#__PURE__*/ createUseReadContra
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2PreviewDeposit = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'previewDeposit',
-})
+export const useReadLeverageManagerV2PreviewDeposit =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'previewDeposit',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewMint"`
@@ -3329,11 +3363,12 @@ export const useReadLeverageManagerV2PreviewDeposit = /*#__PURE__*/ createUseRea
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2PreviewMint = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'previewMint',
-})
+export const useReadLeverageManagerV2PreviewMint =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'previewMint',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewRedeem"`
@@ -3341,11 +3376,12 @@ export const useReadLeverageManagerV2PreviewMint = /*#__PURE__*/ createUseReadCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2PreviewRedeem = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'previewRedeem',
-})
+export const useReadLeverageManagerV2PreviewRedeem =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'previewRedeem',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewWithdraw"`
@@ -3353,11 +3389,12 @@ export const useReadLeverageManagerV2PreviewRedeem = /*#__PURE__*/ createUseRead
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2PreviewWithdraw = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'previewWithdraw',
-})
+export const useReadLeverageManagerV2PreviewWithdraw =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'previewWithdraw',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"proxiableUUID"`
@@ -3365,11 +3402,12 @@ export const useReadLeverageManagerV2PreviewWithdraw = /*#__PURE__*/ createUseRe
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2ProxiableUuid = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'proxiableUUID',
-})
+export const useReadLeverageManagerV2ProxiableUuid =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'proxiableUUID',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"supportsInterface"`
@@ -3377,11 +3415,12 @@ export const useReadLeverageManagerV2ProxiableUuid = /*#__PURE__*/ createUseRead
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useReadLeverageManagerV2SupportsInterface = /*#__PURE__*/ createUseReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'supportsInterface',
-})
+export const useReadLeverageManagerV2SupportsInterface =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'supportsInterface',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__
@@ -3400,11 +3439,12 @@ export const useWriteLeverageManagerV2 = /*#__PURE__*/ createUseWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2ChargeManagementFee = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'chargeManagementFee',
-})
+export const useWriteLeverageManagerV2ChargeManagementFee =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'chargeManagementFee',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"createNewLeverageToken"`
@@ -3412,13 +3452,12 @@ export const useWriteLeverageManagerV2ChargeManagementFee = /*#__PURE__*/ create
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2CreateNewLeverageToken = /*#__PURE__*/ createUseWriteContract(
-  {
+export const useWriteLeverageManagerV2CreateNewLeverageToken =
+  /*#__PURE__*/ createUseWriteContract({
     abi: leverageManagerV2Abi,
     address: leverageManagerV2Address,
     functionName: 'createNewLeverageToken',
-  },
-)
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"deposit"`
@@ -3426,11 +3465,12 @@ export const useWriteLeverageManagerV2CreateNewLeverageToken = /*#__PURE__*/ cre
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2Deposit = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'deposit',
-})
+export const useWriteLeverageManagerV2Deposit =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'deposit',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"grantRole"`
@@ -3438,11 +3478,12 @@ export const useWriteLeverageManagerV2Deposit = /*#__PURE__*/ createUseWriteCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2GrantRole = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'grantRole',
-})
+export const useWriteLeverageManagerV2GrantRole =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'grantRole',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"initialize"`
@@ -3450,11 +3491,12 @@ export const useWriteLeverageManagerV2GrantRole = /*#__PURE__*/ createUseWriteCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2Initialize = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'initialize',
-})
+export const useWriteLeverageManagerV2Initialize =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"mint"`
@@ -3462,11 +3504,12 @@ export const useWriteLeverageManagerV2Initialize = /*#__PURE__*/ createUseWriteC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2Mint = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'mint',
-})
+export const useWriteLeverageManagerV2Mint =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'mint',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"rebalance"`
@@ -3474,11 +3517,12 @@ export const useWriteLeverageManagerV2Mint = /*#__PURE__*/ createUseWriteContrac
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2Rebalance = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'rebalance',
-})
+export const useWriteLeverageManagerV2Rebalance =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'rebalance',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"redeem"`
@@ -3486,11 +3530,12 @@ export const useWriteLeverageManagerV2Rebalance = /*#__PURE__*/ createUseWriteCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2Redeem = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'redeem',
-})
+export const useWriteLeverageManagerV2Redeem =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'redeem',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"renounceRole"`
@@ -3498,11 +3543,12 @@ export const useWriteLeverageManagerV2Redeem = /*#__PURE__*/ createUseWriteContr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2RenounceRole = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'renounceRole',
-})
+export const useWriteLeverageManagerV2RenounceRole =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'renounceRole',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"revokeRole"`
@@ -3510,11 +3556,12 @@ export const useWriteLeverageManagerV2RenounceRole = /*#__PURE__*/ createUseWrit
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2RevokeRole = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'revokeRole',
-})
+export const useWriteLeverageManagerV2RevokeRole =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'revokeRole',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
@@ -3535,11 +3582,12 @@ export const useWriteLeverageManagerV2SetDefaultManagementFeeAtCreation =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2SetManagementFee = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'setManagementFee',
-})
+export const useWriteLeverageManagerV2SetManagementFee =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'setManagementFee',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasury"`
@@ -3547,11 +3595,12 @@ export const useWriteLeverageManagerV2SetManagementFee = /*#__PURE__*/ createUse
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2SetTreasury = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'setTreasury',
-})
+export const useWriteLeverageManagerV2SetTreasury =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'setTreasury',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasuryActionFee"`
@@ -3559,11 +3608,12 @@ export const useWriteLeverageManagerV2SetTreasury = /*#__PURE__*/ createUseWrite
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2SetTreasuryActionFee = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'setTreasuryActionFee',
-})
+export const useWriteLeverageManagerV2SetTreasuryActionFee =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'setTreasuryActionFee',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"upgradeToAndCall"`
@@ -3571,11 +3621,12 @@ export const useWriteLeverageManagerV2SetTreasuryActionFee = /*#__PURE__*/ creat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'upgradeToAndCall',
-})
+export const useWriteLeverageManagerV2UpgradeToAndCall =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'upgradeToAndCall',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"withdraw"`
@@ -3583,11 +3634,12 @@ export const useWriteLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createUse
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWriteLeverageManagerV2Withdraw = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'withdraw',
-})
+export const useWriteLeverageManagerV2Withdraw =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'withdraw',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__
@@ -3595,10 +3647,11 @@ export const useWriteLeverageManagerV2Withdraw = /*#__PURE__*/ createUseWriteCon
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2 = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-})
+export const useSimulateLeverageManagerV2 =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"chargeManagementFee"`
@@ -3632,11 +3685,12 @@ export const useSimulateLeverageManagerV2CreateNewLeverageToken =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2Deposit = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'deposit',
-})
+export const useSimulateLeverageManagerV2Deposit =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'deposit',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"grantRole"`
@@ -3644,11 +3698,12 @@ export const useSimulateLeverageManagerV2Deposit = /*#__PURE__*/ createUseSimula
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2GrantRole = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'grantRole',
-})
+export const useSimulateLeverageManagerV2GrantRole =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'grantRole',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"initialize"`
@@ -3656,11 +3711,12 @@ export const useSimulateLeverageManagerV2GrantRole = /*#__PURE__*/ createUseSimu
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2Initialize = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'initialize',
-})
+export const useSimulateLeverageManagerV2Initialize =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"mint"`
@@ -3668,11 +3724,12 @@ export const useSimulateLeverageManagerV2Initialize = /*#__PURE__*/ createUseSim
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2Mint = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'mint',
-})
+export const useSimulateLeverageManagerV2Mint =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'mint',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"rebalance"`
@@ -3680,11 +3737,12 @@ export const useSimulateLeverageManagerV2Mint = /*#__PURE__*/ createUseSimulateC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2Rebalance = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'rebalance',
-})
+export const useSimulateLeverageManagerV2Rebalance =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'rebalance',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"redeem"`
@@ -3692,11 +3750,12 @@ export const useSimulateLeverageManagerV2Rebalance = /*#__PURE__*/ createUseSimu
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2Redeem = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'redeem',
-})
+export const useSimulateLeverageManagerV2Redeem =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'redeem',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"renounceRole"`
@@ -3704,11 +3763,12 @@ export const useSimulateLeverageManagerV2Redeem = /*#__PURE__*/ createUseSimulat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2RenounceRole = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'renounceRole',
-})
+export const useSimulateLeverageManagerV2RenounceRole =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'renounceRole',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"revokeRole"`
@@ -3716,11 +3776,12 @@ export const useSimulateLeverageManagerV2RenounceRole = /*#__PURE__*/ createUseS
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2RevokeRole = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'revokeRole',
-})
+export const useSimulateLeverageManagerV2RevokeRole =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'revokeRole',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
@@ -3741,13 +3802,12 @@ export const useSimulateLeverageManagerV2SetDefaultManagementFeeAtCreation =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2SetManagementFee = /*#__PURE__*/ createUseSimulateContract(
-  {
+export const useSimulateLeverageManagerV2SetManagementFee =
+  /*#__PURE__*/ createUseSimulateContract({
     abi: leverageManagerV2Abi,
     address: leverageManagerV2Address,
     functionName: 'setManagementFee',
-  },
-)
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasury"`
@@ -3755,11 +3815,12 @@ export const useSimulateLeverageManagerV2SetManagementFee = /*#__PURE__*/ create
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2SetTreasury = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'setTreasury',
-})
+export const useSimulateLeverageManagerV2SetTreasury =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'setTreasury',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasuryActionFee"`
@@ -3780,13 +3841,12 @@ export const useSimulateLeverageManagerV2SetTreasuryActionFee =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createUseSimulateContract(
-  {
+export const useSimulateLeverageManagerV2UpgradeToAndCall =
+  /*#__PURE__*/ createUseSimulateContract({
     abi: leverageManagerV2Abi,
     address: leverageManagerV2Address,
     functionName: 'upgradeToAndCall',
-  },
-)
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"withdraw"`
@@ -3794,11 +3854,12 @@ export const useSimulateLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ create
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useSimulateLeverageManagerV2Withdraw = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'withdraw',
-})
+export const useSimulateLeverageManagerV2Withdraw =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'withdraw',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__
@@ -3806,10 +3867,11 @@ export const useSimulateLeverageManagerV2Withdraw = /*#__PURE__*/ createUseSimul
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWatchLeverageManagerV2Event = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-})
+export const useWatchLeverageManagerV2Event =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"DefaultManagementFeeAtCreationSet"`
@@ -3830,11 +3892,12 @@ export const useWatchLeverageManagerV2DefaultManagementFeeAtCreationSetEvent =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWatchLeverageManagerV2InitializedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'Initialized',
-})
+export const useWatchLeverageManagerV2InitializedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'Initialized',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"LeverageManagerInitialized"`
@@ -3907,11 +3970,12 @@ export const useWatchLeverageManagerV2ManagementFeeSetEvent =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWatchLeverageManagerV2MintEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'Mint',
-})
+export const useWatchLeverageManagerV2MintEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'Mint',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Rebalance"`
@@ -3919,11 +3983,12 @@ export const useWatchLeverageManagerV2MintEvent = /*#__PURE__*/ createUseWatchCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWatchLeverageManagerV2RebalanceEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'Rebalance',
-})
+export const useWatchLeverageManagerV2RebalanceEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'Rebalance',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Redeem"`
@@ -3931,11 +3996,12 @@ export const useWatchLeverageManagerV2RebalanceEvent = /*#__PURE__*/ createUseWa
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWatchLeverageManagerV2RedeemEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'Redeem',
-})
+export const useWatchLeverageManagerV2RedeemEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'Redeem',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleAdminChanged"`
@@ -3956,11 +4022,12 @@ export const useWatchLeverageManagerV2RoleAdminChangedEvent =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWatchLeverageManagerV2RoleGrantedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'RoleGranted',
-})
+export const useWatchLeverageManagerV2RoleGrantedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'RoleGranted',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleRevoked"`
@@ -3968,11 +4035,12 @@ export const useWatchLeverageManagerV2RoleGrantedEvent = /*#__PURE__*/ createUse
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWatchLeverageManagerV2RoleRevokedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'RoleRevoked',
-})
+export const useWatchLeverageManagerV2RoleRevokedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'RoleRevoked',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"TreasuryActionFeeSet"`
@@ -3993,11 +4061,12 @@ export const useWatchLeverageManagerV2TreasuryActionFeeSetEvent =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWatchLeverageManagerV2TreasurySetEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'TreasurySet',
-})
+export const useWatchLeverageManagerV2TreasurySetEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'TreasurySet',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Upgraded"`
@@ -4005,11 +4074,12 @@ export const useWatchLeverageManagerV2TreasurySetEvent = /*#__PURE__*/ createUse
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const useWatchLeverageManagerV2UpgradedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'Upgraded',
-})
+export const useWatchLeverageManagerV2UpgradedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'Upgraded',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
@@ -4028,13 +4098,12 @@ export const useReadLeverageRouterV2 = /*#__PURE__*/ createUseReadContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useReadLeverageRouterV2ConvertEquityToCollateral = /*#__PURE__*/ createUseReadContract(
-  {
+export const useReadLeverageRouterV2ConvertEquityToCollateral =
+  /*#__PURE__*/ createUseReadContract({
     abi: leverageRouterV2Abi,
     address: leverageRouterV2Address,
     functionName: 'convertEquityToCollateral',
-  },
-)
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"leverageManager"`
@@ -4042,11 +4111,12 @@ export const useReadLeverageRouterV2ConvertEquityToCollateral = /*#__PURE__*/ cr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useReadLeverageRouterV2LeverageManager = /*#__PURE__*/ createUseReadContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'leverageManager',
-})
+export const useReadLeverageRouterV2LeverageManager =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'leverageManager',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"morpho"`
@@ -4054,11 +4124,12 @@ export const useReadLeverageRouterV2LeverageManager = /*#__PURE__*/ createUseRea
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useReadLeverageRouterV2Morpho = /*#__PURE__*/ createUseReadContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'morpho',
-})
+export const useReadLeverageRouterV2Morpho =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'morpho',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"previewDeposit"`
@@ -4066,11 +4137,12 @@ export const useReadLeverageRouterV2Morpho = /*#__PURE__*/ createUseReadContract
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useReadLeverageRouterV2PreviewDeposit = /*#__PURE__*/ createUseReadContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'previewDeposit',
-})
+export const useReadLeverageRouterV2PreviewDeposit =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'previewDeposit',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
@@ -4089,11 +4161,12 @@ export const useWriteLeverageRouterV2 = /*#__PURE__*/ createUseWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useWriteLeverageRouterV2Deposit = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'deposit',
-})
+export const useWriteLeverageRouterV2Deposit =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'deposit',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"onMorphoFlashLoan"`
@@ -4101,11 +4174,12 @@ export const useWriteLeverageRouterV2Deposit = /*#__PURE__*/ createUseWriteContr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useWriteLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'onMorphoFlashLoan',
-})
+export const useWriteLeverageRouterV2OnMorphoFlashLoan =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'onMorphoFlashLoan',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeem"`
@@ -4113,11 +4187,12 @@ export const useWriteLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ createUse
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useWriteLeverageRouterV2Redeem = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'redeem',
-})
+export const useWriteLeverageRouterV2Redeem =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'redeem',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeemWithVelora"`
@@ -4125,11 +4200,12 @@ export const useWriteLeverageRouterV2Redeem = /*#__PURE__*/ createUseWriteContra
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useWriteLeverageRouterV2RedeemWithVelora = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'redeemWithVelora',
-})
+export const useWriteLeverageRouterV2RedeemWithVelora =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'redeemWithVelora',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
@@ -4137,10 +4213,11 @@ export const useWriteLeverageRouterV2RedeemWithVelora = /*#__PURE__*/ createUseW
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useSimulateLeverageRouterV2 = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-})
+export const useSimulateLeverageRouterV2 =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"deposit"`
@@ -4148,11 +4225,12 @@ export const useSimulateLeverageRouterV2 = /*#__PURE__*/ createUseSimulateContra
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useSimulateLeverageRouterV2Deposit = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'deposit',
-})
+export const useSimulateLeverageRouterV2Deposit =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'deposit',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"onMorphoFlashLoan"`
@@ -4160,13 +4238,12 @@ export const useSimulateLeverageRouterV2Deposit = /*#__PURE__*/ createUseSimulat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useSimulateLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ createUseSimulateContract(
-  {
+export const useSimulateLeverageRouterV2OnMorphoFlashLoan =
+  /*#__PURE__*/ createUseSimulateContract({
     abi: leverageRouterV2Abi,
     address: leverageRouterV2Address,
     functionName: 'onMorphoFlashLoan',
-  },
-)
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeem"`
@@ -4174,11 +4251,12 @@ export const useSimulateLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ create
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useSimulateLeverageRouterV2Redeem = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'redeem',
-})
+export const useSimulateLeverageRouterV2Redeem =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'redeem',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeemWithVelora"`
@@ -4186,11 +4264,12 @@ export const useSimulateLeverageRouterV2Redeem = /*#__PURE__*/ createUseSimulate
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const useSimulateLeverageRouterV2RedeemWithVelora = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'redeemWithVelora',
-})
+export const useSimulateLeverageRouterV2RedeemWithVelora =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'redeemWithVelora',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__
@@ -4202,58 +4281,63 @@ export const useReadLeverageToken = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"DOMAIN_SEPARATOR"`
  */
-export const useReadLeverageTokenDomainSeparator = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'DOMAIN_SEPARATOR',
-})
+export const useReadLeverageTokenDomainSeparator =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenAbi,
+    functionName: 'DOMAIN_SEPARATOR',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"allowance"`
  */
-export const useReadLeverageTokenAllowance = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'allowance',
-})
+export const useReadLeverageTokenAllowance =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenAbi,
+    functionName: 'allowance',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"balanceOf"`
  */
-export const useReadLeverageTokenBalanceOf = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'balanceOf',
-})
+export const useReadLeverageTokenBalanceOf =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenAbi,
+    functionName: 'balanceOf',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"convertToAssets"`
  */
-export const useReadLeverageTokenConvertToAssets = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'convertToAssets',
-})
+export const useReadLeverageTokenConvertToAssets =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenAbi,
+    functionName: 'convertToAssets',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"convertToShares"`
  */
-export const useReadLeverageTokenConvertToShares = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'convertToShares',
-})
+export const useReadLeverageTokenConvertToShares =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenAbi,
+    functionName: 'convertToShares',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"decimals"`
  */
-export const useReadLeverageTokenDecimals = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'decimals',
-})
+export const useReadLeverageTokenDecimals = /*#__PURE__*/ createUseReadContract(
+  { abi: leverageTokenAbi, functionName: 'decimals' },
+)
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"eip712Domain"`
  */
-export const useReadLeverageTokenEip712Domain = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'eip712Domain',
-})
+export const useReadLeverageTokenEip712Domain =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenAbi,
+    functionName: 'eip712Domain',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"name"`
@@ -4290,10 +4374,11 @@ export const useReadLeverageTokenSymbol = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"totalSupply"`
  */
-export const useReadLeverageTokenTotalSupply = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'totalSupply',
-})
+export const useReadLeverageTokenTotalSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenAbi,
+    functionName: 'totalSupply',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__
@@ -4305,10 +4390,11 @@ export const useWriteLeverageToken = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"approve"`
  */
-export const useWriteLeverageTokenApprove = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenAbi,
-  functionName: 'approve',
-})
+export const useWriteLeverageTokenApprove =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenAbi,
+    functionName: 'approve',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"burn"`
@@ -4321,10 +4407,11 @@ export const useWriteLeverageTokenBurn = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"initialize"`
  */
-export const useWriteLeverageTokenInitialize = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenAbi,
-  functionName: 'initialize',
-})
+export const useWriteLeverageTokenInitialize =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenAbi,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"mint"`
@@ -4337,136 +4424,148 @@ export const useWriteLeverageTokenMint = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"permit"`
  */
-export const useWriteLeverageTokenPermit = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenAbi,
-  functionName: 'permit',
-})
+export const useWriteLeverageTokenPermit = /*#__PURE__*/ createUseWriteContract(
+  { abi: leverageTokenAbi, functionName: 'permit' },
+)
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"renounceOwnership"`
  */
-export const useWriteLeverageTokenRenounceOwnership = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenAbi,
-  functionName: 'renounceOwnership',
-})
+export const useWriteLeverageTokenRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenAbi,
+    functionName: 'renounceOwnership',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transfer"`
  */
-export const useWriteLeverageTokenTransfer = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenAbi,
-  functionName: 'transfer',
-})
+export const useWriteLeverageTokenTransfer =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenAbi,
+    functionName: 'transfer',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferFrom"`
  */
-export const useWriteLeverageTokenTransferFrom = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenAbi,
-  functionName: 'transferFrom',
-})
+export const useWriteLeverageTokenTransferFrom =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenAbi,
+    functionName: 'transferFrom',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferOwnership"`
  */
-export const useWriteLeverageTokenTransferOwnership = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenAbi,
-  functionName: 'transferOwnership',
-})
+export const useWriteLeverageTokenTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenAbi,
+    functionName: 'transferOwnership',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__
  */
-export const useSimulateLeverageToken = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenAbi,
-})
+export const useSimulateLeverageToken = /*#__PURE__*/ createUseSimulateContract(
+  { abi: leverageTokenAbi },
+)
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"approve"`
  */
-export const useSimulateLeverageTokenApprove = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'approve',
-})
+export const useSimulateLeverageTokenApprove =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'approve',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"burn"`
  */
-export const useSimulateLeverageTokenBurn = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'burn',
-})
+export const useSimulateLeverageTokenBurn =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'burn',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"initialize"`
  */
-export const useSimulateLeverageTokenInitialize = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'initialize',
-})
+export const useSimulateLeverageTokenInitialize =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"mint"`
  */
-export const useSimulateLeverageTokenMint = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'mint',
-})
+export const useSimulateLeverageTokenMint =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'mint',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"permit"`
  */
-export const useSimulateLeverageTokenPermit = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'permit',
-})
+export const useSimulateLeverageTokenPermit =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'permit',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"renounceOwnership"`
  */
-export const useSimulateLeverageTokenRenounceOwnership = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'renounceOwnership',
-})
+export const useSimulateLeverageTokenRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'renounceOwnership',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transfer"`
  */
-export const useSimulateLeverageTokenTransfer = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'transfer',
-})
+export const useSimulateLeverageTokenTransfer =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'transfer',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferFrom"`
  */
-export const useSimulateLeverageTokenTransferFrom = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'transferFrom',
-})
+export const useSimulateLeverageTokenTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'transferFrom',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferOwnership"`
  */
-export const useSimulateLeverageTokenTransferOwnership = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'transferOwnership',
-})
+export const useSimulateLeverageTokenTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'transferOwnership',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__
  */
-export const useWatchLeverageTokenEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageTokenAbi,
-})
+export const useWatchLeverageTokenEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({ abi: leverageTokenAbi })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"Approval"`
  */
-export const useWatchLeverageTokenApprovalEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageTokenAbi,
-  eventName: 'Approval',
-})
+export const useWatchLeverageTokenApprovalEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageTokenAbi,
+    eventName: 'Approval',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"EIP712DomainChanged"`
@@ -4480,10 +4579,11 @@ export const useWatchLeverageTokenEip712DomainChangedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"Initialized"`
  */
-export const useWatchLeverageTokenInitializedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageTokenAbi,
-  eventName: 'Initialized',
-})
+export const useWatchLeverageTokenInitializedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageTokenAbi,
+    eventName: 'Initialized',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"LeverageTokenInitialized"`
@@ -4506,10 +4606,11 @@ export const useWatchLeverageTokenOwnershipTransferredEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"Transfer"`
  */
-export const useWatchLeverageTokenTransferEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageTokenAbi,
-  eventName: 'Transfer',
-})
+export const useWatchLeverageTokenTransferEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageTokenAbi,
+    eventName: 'Transfer',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
@@ -4528,11 +4629,12 @@ export const useReadLeverageTokenFactory = /*#__PURE__*/ createUseReadContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryDomainSeparator = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'DOMAIN_SEPARATOR',
-})
+export const useReadLeverageTokenFactoryDomainSeparator =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'DOMAIN_SEPARATOR',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"allowance"`
@@ -4540,11 +4642,12 @@ export const useReadLeverageTokenFactoryDomainSeparator = /*#__PURE__*/ createUs
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryAllowance = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'allowance',
-})
+export const useReadLeverageTokenFactoryAllowance =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'allowance',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"balanceOf"`
@@ -4552,11 +4655,12 @@ export const useReadLeverageTokenFactoryAllowance = /*#__PURE__*/ createUseReadC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryBalanceOf = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'balanceOf',
-})
+export const useReadLeverageTokenFactoryBalanceOf =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'balanceOf',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"convertToAssets"`
@@ -4564,11 +4668,12 @@ export const useReadLeverageTokenFactoryBalanceOf = /*#__PURE__*/ createUseReadC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryConvertToAssets = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'convertToAssets',
-})
+export const useReadLeverageTokenFactoryConvertToAssets =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'convertToAssets',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"convertToShares"`
@@ -4576,11 +4681,12 @@ export const useReadLeverageTokenFactoryConvertToAssets = /*#__PURE__*/ createUs
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryConvertToShares = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'convertToShares',
-})
+export const useReadLeverageTokenFactoryConvertToShares =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'convertToShares',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"decimals"`
@@ -4588,11 +4694,12 @@ export const useReadLeverageTokenFactoryConvertToShares = /*#__PURE__*/ createUs
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryDecimals = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'decimals',
-})
+export const useReadLeverageTokenFactoryDecimals =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'decimals',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"eip712Domain"`
@@ -4600,11 +4707,12 @@ export const useReadLeverageTokenFactoryDecimals = /*#__PURE__*/ createUseReadCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryEip712Domain = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'eip712Domain',
-})
+export const useReadLeverageTokenFactoryEip712Domain =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'eip712Domain',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"name"`
@@ -4612,11 +4720,12 @@ export const useReadLeverageTokenFactoryEip712Domain = /*#__PURE__*/ createUseRe
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryName = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'name',
-})
+export const useReadLeverageTokenFactoryName =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'name',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"nonces"`
@@ -4624,11 +4733,12 @@ export const useReadLeverageTokenFactoryName = /*#__PURE__*/ createUseReadContra
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryNonces = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'nonces',
-})
+export const useReadLeverageTokenFactoryNonces =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'nonces',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"owner"`
@@ -4636,11 +4746,12 @@ export const useReadLeverageTokenFactoryNonces = /*#__PURE__*/ createUseReadCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryOwner = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'owner',
-})
+export const useReadLeverageTokenFactoryOwner =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'owner',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"symbol"`
@@ -4648,11 +4759,12 @@ export const useReadLeverageTokenFactoryOwner = /*#__PURE__*/ createUseReadContr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactorySymbol = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'symbol',
-})
+export const useReadLeverageTokenFactorySymbol =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'symbol',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"totalSupply"`
@@ -4660,11 +4772,12 @@ export const useReadLeverageTokenFactorySymbol = /*#__PURE__*/ createUseReadCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useReadLeverageTokenFactoryTotalSupply = /*#__PURE__*/ createUseReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'totalSupply',
-})
+export const useReadLeverageTokenFactoryTotalSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'totalSupply',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
@@ -4672,10 +4785,11 @@ export const useReadLeverageTokenFactoryTotalSupply = /*#__PURE__*/ createUseRea
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactory = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-})
+export const useWriteLeverageTokenFactory =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"approve"`
@@ -4683,11 +4797,12 @@ export const useWriteLeverageTokenFactory = /*#__PURE__*/ createUseWriteContract
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryApprove = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'approve',
-})
+export const useWriteLeverageTokenFactoryApprove =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'approve',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"burn"`
@@ -4695,11 +4810,12 @@ export const useWriteLeverageTokenFactoryApprove = /*#__PURE__*/ createUseWriteC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryBurn = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'burn',
-})
+export const useWriteLeverageTokenFactoryBurn =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'burn',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"initialize"`
@@ -4707,11 +4823,12 @@ export const useWriteLeverageTokenFactoryBurn = /*#__PURE__*/ createUseWriteCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryInitialize = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'initialize',
-})
+export const useWriteLeverageTokenFactoryInitialize =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"mint"`
@@ -4719,11 +4836,12 @@ export const useWriteLeverageTokenFactoryInitialize = /*#__PURE__*/ createUseWri
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryMint = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'mint',
-})
+export const useWriteLeverageTokenFactoryMint =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'mint',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"permit"`
@@ -4731,11 +4849,12 @@ export const useWriteLeverageTokenFactoryMint = /*#__PURE__*/ createUseWriteCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryPermit = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'permit',
-})
+export const useWriteLeverageTokenFactoryPermit =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'permit',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"renounceOwnership"`
@@ -4743,11 +4862,12 @@ export const useWriteLeverageTokenFactoryPermit = /*#__PURE__*/ createUseWriteCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryRenounceOwnership = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'renounceOwnership',
-})
+export const useWriteLeverageTokenFactoryRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'renounceOwnership',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transfer"`
@@ -4755,11 +4875,12 @@ export const useWriteLeverageTokenFactoryRenounceOwnership = /*#__PURE__*/ creat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryTransfer = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transfer',
-})
+export const useWriteLeverageTokenFactoryTransfer =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transfer',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transferFrom"`
@@ -4767,11 +4888,12 @@ export const useWriteLeverageTokenFactoryTransfer = /*#__PURE__*/ createUseWrite
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryTransferFrom = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transferFrom',
-})
+export const useWriteLeverageTokenFactoryTransferFrom =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transferFrom',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transferOwnership"`
@@ -4779,11 +4901,12 @@ export const useWriteLeverageTokenFactoryTransferFrom = /*#__PURE__*/ createUseW
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWriteLeverageTokenFactoryTransferOwnership = /*#__PURE__*/ createUseWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transferOwnership',
-})
+export const useWriteLeverageTokenFactoryTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transferOwnership',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
@@ -4791,10 +4914,11 @@ export const useWriteLeverageTokenFactoryTransferOwnership = /*#__PURE__*/ creat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactory = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-})
+export const useSimulateLeverageTokenFactory =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"approve"`
@@ -4802,11 +4926,12 @@ export const useSimulateLeverageTokenFactory = /*#__PURE__*/ createUseSimulateCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactoryApprove = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'approve',
-})
+export const useSimulateLeverageTokenFactoryApprove =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'approve',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"burn"`
@@ -4814,11 +4939,12 @@ export const useSimulateLeverageTokenFactoryApprove = /*#__PURE__*/ createUseSim
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactoryBurn = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'burn',
-})
+export const useSimulateLeverageTokenFactoryBurn =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'burn',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"initialize"`
@@ -4826,11 +4952,12 @@ export const useSimulateLeverageTokenFactoryBurn = /*#__PURE__*/ createUseSimula
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactoryInitialize = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'initialize',
-})
+export const useSimulateLeverageTokenFactoryInitialize =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"mint"`
@@ -4838,11 +4965,12 @@ export const useSimulateLeverageTokenFactoryInitialize = /*#__PURE__*/ createUse
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactoryMint = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'mint',
-})
+export const useSimulateLeverageTokenFactoryMint =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'mint',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"permit"`
@@ -4850,11 +4978,12 @@ export const useSimulateLeverageTokenFactoryMint = /*#__PURE__*/ createUseSimula
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactoryPermit = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'permit',
-})
+export const useSimulateLeverageTokenFactoryPermit =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'permit',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"renounceOwnership"`
@@ -4875,11 +5004,12 @@ export const useSimulateLeverageTokenFactoryRenounceOwnership =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactoryTransfer = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transfer',
-})
+export const useSimulateLeverageTokenFactoryTransfer =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transfer',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transferFrom"`
@@ -4887,11 +5017,12 @@ export const useSimulateLeverageTokenFactoryTransfer = /*#__PURE__*/ createUseSi
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useSimulateLeverageTokenFactoryTransferFrom = /*#__PURE__*/ createUseSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transferFrom',
-})
+export const useSimulateLeverageTokenFactoryTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transferFrom',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transferOwnership"`
@@ -4912,10 +5043,11 @@ export const useSimulateLeverageTokenFactoryTransferOwnership =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWatchLeverageTokenFactoryEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-})
+export const useWatchLeverageTokenFactoryEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `eventName` set to `"Approval"`
@@ -4923,11 +5055,12 @@ export const useWatchLeverageTokenFactoryEvent = /*#__PURE__*/ createUseWatchCon
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWatchLeverageTokenFactoryApprovalEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  eventName: 'Approval',
-})
+export const useWatchLeverageTokenFactoryApprovalEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    eventName: 'Approval',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `eventName` set to `"EIP712DomainChanged"`
@@ -4987,11 +5120,12 @@ export const useWatchLeverageTokenFactoryOwnershipTransferredEvent =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const useWatchLeverageTokenFactoryTransferEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  eventName: 'Transfer',
-})
+export const useWatchLeverageTokenFactoryTransferEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    eventName: 'Transfer',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__
@@ -5019,44 +5153,49 @@ export const useReadSeamTokenClockMode = /*#__PURE__*/ createUseReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenDefaultAdminRole = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'DEFAULT_ADMIN_ROLE',
-})
+export const useReadSeamTokenDefaultAdminRole =
+  /*#__PURE__*/ createUseReadContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'DEFAULT_ADMIN_ROLE',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"DOMAIN_SEPARATOR"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenDomainSeparator = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'DOMAIN_SEPARATOR',
-})
+export const useReadSeamTokenDomainSeparator =
+  /*#__PURE__*/ createUseReadContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'DOMAIN_SEPARATOR',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"UPGRADER_ROLE"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenUpgraderRole = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'UPGRADER_ROLE',
-})
+export const useReadSeamTokenUpgraderRole = /*#__PURE__*/ createUseReadContract(
+  {
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'UPGRADER_ROLE',
+  },
+)
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"UPGRADE_INTERFACE_VERSION"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenUpgradeInterfaceVersion = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'UPGRADE_INTERFACE_VERSION',
-})
+export const useReadSeamTokenUpgradeInterfaceVersion =
+  /*#__PURE__*/ createUseReadContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'UPGRADE_INTERFACE_VERSION',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"allowance"`
@@ -5129,44 +5268,51 @@ export const useReadSeamTokenDelegates = /*#__PURE__*/ createUseReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenEip712Domain = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'eip712Domain',
-})
+export const useReadSeamTokenEip712Domain = /*#__PURE__*/ createUseReadContract(
+  {
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'eip712Domain',
+  },
+)
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"getPastTotalSupply"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenGetPastTotalSupply = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'getPastTotalSupply',
-})
+export const useReadSeamTokenGetPastTotalSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'getPastTotalSupply',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"getPastVotes"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenGetPastVotes = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'getPastVotes',
-})
+export const useReadSeamTokenGetPastVotes = /*#__PURE__*/ createUseReadContract(
+  {
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'getPastVotes',
+  },
+)
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"getRoleAdmin"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenGetRoleAdmin = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'getRoleAdmin',
-})
+export const useReadSeamTokenGetRoleAdmin = /*#__PURE__*/ createUseReadContract(
+  {
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'getRoleAdmin',
+  },
+)
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"getVotes"`
@@ -5217,33 +5363,36 @@ export const useReadSeamTokenNonces = /*#__PURE__*/ createUseReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenNumCheckpoints = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'numCheckpoints',
-})
+export const useReadSeamTokenNumCheckpoints =
+  /*#__PURE__*/ createUseReadContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'numCheckpoints',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"proxiableUUID"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenProxiableUuid = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'proxiableUUID',
-})
+export const useReadSeamTokenProxiableUuid =
+  /*#__PURE__*/ createUseReadContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'proxiableUUID',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"supportsInterface"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useReadSeamTokenSupportsInterface = /*#__PURE__*/ createUseReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'supportsInterface',
-})
+export const useReadSeamTokenSupportsInterface =
+  /*#__PURE__*/ createUseReadContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'supportsInterface',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"symbol"`
@@ -5304,11 +5453,12 @@ export const useWriteSeamTokenDelegate = /*#__PURE__*/ createUseWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenDelegateBySig = /*#__PURE__*/ createUseWriteContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'delegateBySig',
-})
+export const useWriteSeamTokenDelegateBySig =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'delegateBySig',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"grantRole"`
@@ -5326,11 +5476,9 @@ export const useWriteSeamTokenGrantRole = /*#__PURE__*/ createUseWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenInitialize = /*#__PURE__*/ createUseWriteContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'initialize',
-})
+export const useWriteSeamTokenInitialize = /*#__PURE__*/ createUseWriteContract(
+  { abi: seamTokenAbi, address: seamTokenAddress, functionName: 'initialize' },
+)
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"permit"`
@@ -5348,22 +5496,21 @@ export const useWriteSeamTokenPermit = /*#__PURE__*/ createUseWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenRenounceRole = /*#__PURE__*/ createUseWriteContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'renounceRole',
-})
+export const useWriteSeamTokenRenounceRole =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'renounceRole',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"revokeRole"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenRevokeRole = /*#__PURE__*/ createUseWriteContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'revokeRole',
-})
+export const useWriteSeamTokenRevokeRole = /*#__PURE__*/ createUseWriteContract(
+  { abi: seamTokenAbi, address: seamTokenAddress, functionName: 'revokeRole' },
+)
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"transfer"`
@@ -5381,22 +5528,24 @@ export const useWriteSeamTokenTransfer = /*#__PURE__*/ createUseWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenTransferFrom = /*#__PURE__*/ createUseWriteContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'transferFrom',
-})
+export const useWriteSeamTokenTransferFrom =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'transferFrom',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"upgradeToAndCall"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWriteSeamTokenUpgradeToAndCall = /*#__PURE__*/ createUseWriteContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'upgradeToAndCall',
-})
+export const useWriteSeamTokenUpgradeToAndCall =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'upgradeToAndCall',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__
@@ -5413,243 +5562,261 @@ export const useSimulateSeamToken = /*#__PURE__*/ createUseSimulateContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenApprove = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'approve',
-})
+export const useSimulateSeamTokenApprove =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'approve',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"delegate"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenDelegate = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'delegate',
-})
+export const useSimulateSeamTokenDelegate =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'delegate',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"delegateBySig"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenDelegateBySig = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'delegateBySig',
-})
+export const useSimulateSeamTokenDelegateBySig =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'delegateBySig',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"grantRole"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenGrantRole = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'grantRole',
-})
+export const useSimulateSeamTokenGrantRole =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'grantRole',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"initialize"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenInitialize = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'initialize',
-})
+export const useSimulateSeamTokenInitialize =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"permit"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenPermit = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'permit',
-})
+export const useSimulateSeamTokenPermit =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'permit',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"renounceRole"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenRenounceRole = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'renounceRole',
-})
+export const useSimulateSeamTokenRenounceRole =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'renounceRole',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"revokeRole"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenRevokeRole = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'revokeRole',
-})
+export const useSimulateSeamTokenRevokeRole =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'revokeRole',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"transfer"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenTransfer = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'transfer',
-})
+export const useSimulateSeamTokenTransfer =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'transfer',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"transferFrom"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenTransferFrom = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'transferFrom',
-})
+export const useSimulateSeamTokenTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'transferFrom',
+  })
 
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"upgradeToAndCall"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useSimulateSeamTokenUpgradeToAndCall = /*#__PURE__*/ createUseSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'upgradeToAndCall',
-})
+export const useSimulateSeamTokenUpgradeToAndCall =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'upgradeToAndCall',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-})
+export const useWatchSeamTokenEvent = /*#__PURE__*/ createUseWatchContractEvent(
+  { abi: seamTokenAbi, address: seamTokenAddress },
+)
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Approval"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenApprovalEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'Approval',
-})
+export const useWatchSeamTokenApprovalEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'Approval',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"DelegateChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenDelegateChangedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'DelegateChanged',
-})
+export const useWatchSeamTokenDelegateChangedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'DelegateChanged',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"DelegateVotesChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenDelegateVotesChangedEvent = /*#__PURE__*/ createUseWatchContractEvent(
-  {
+export const useWatchSeamTokenDelegateVotesChangedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
     abi: seamTokenAbi,
     address: seamTokenAddress,
     eventName: 'DelegateVotesChanged',
-  },
-)
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"EIP712DomainChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenEip712DomainChangedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'EIP712DomainChanged',
-})
+export const useWatchSeamTokenEip712DomainChangedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'EIP712DomainChanged',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Initialized"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenInitializedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'Initialized',
-})
+export const useWatchSeamTokenInitializedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'Initialized',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"RoleAdminChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenRoleAdminChangedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'RoleAdminChanged',
-})
+export const useWatchSeamTokenRoleAdminChangedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'RoleAdminChanged',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"RoleGranted"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenRoleGrantedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'RoleGranted',
-})
+export const useWatchSeamTokenRoleGrantedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'RoleGranted',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"RoleRevoked"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenRoleRevokedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'RoleRevoked',
-})
+export const useWatchSeamTokenRoleRevokedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'RoleRevoked',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Transfer"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenTransferEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'Transfer',
-})
+export const useWatchSeamTokenTransferEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'Transfer',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Upgraded"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const useWatchSeamTokenUpgradedEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'Upgraded',
-})
+export const useWatchSeamTokenUpgradedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'Upgraded',
+  })
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
@@ -5684,11 +5851,12 @@ export const readLeverageManagerV2BaseRatio = /*#__PURE__*/ createReadContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2DefaultAdminRole = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'DEFAULT_ADMIN_ROLE',
-})
+export const readLeverageManagerV2DefaultAdminRole =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'DEFAULT_ADMIN_ROLE',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"FEE_MANAGER_ROLE"`
@@ -5696,11 +5864,12 @@ export const readLeverageManagerV2DefaultAdminRole = /*#__PURE__*/ createReadCon
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2FeeManagerRole = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'FEE_MANAGER_ROLE',
-})
+export const readLeverageManagerV2FeeManagerRole =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'FEE_MANAGER_ROLE',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"UPGRADER_ROLE"`
@@ -5708,11 +5877,12 @@ export const readLeverageManagerV2FeeManagerRole = /*#__PURE__*/ createReadContr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2UpgraderRole = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'UPGRADER_ROLE',
-})
+export const readLeverageManagerV2UpgraderRole =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'UPGRADER_ROLE',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"UPGRADE_INTERFACE_VERSION"`
@@ -5720,11 +5890,12 @@ export const readLeverageManagerV2UpgraderRole = /*#__PURE__*/ createReadContrac
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2UpgradeInterfaceVersion = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'UPGRADE_INTERFACE_VERSION',
-})
+export const readLeverageManagerV2UpgradeInterfaceVersion =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'UPGRADE_INTERFACE_VERSION',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertCollateralToDebt"`
@@ -5732,11 +5903,12 @@ export const readLeverageManagerV2UpgradeInterfaceVersion = /*#__PURE__*/ create
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2ConvertCollateralToDebt = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertCollateralToDebt',
-})
+export const readLeverageManagerV2ConvertCollateralToDebt =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertCollateralToDebt',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertCollateralToShares"`
@@ -5744,11 +5916,12 @@ export const readLeverageManagerV2ConvertCollateralToDebt = /*#__PURE__*/ create
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2ConvertCollateralToShares = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertCollateralToShares',
-})
+export const readLeverageManagerV2ConvertCollateralToShares =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertCollateralToShares',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertDebtToCollateral"`
@@ -5756,11 +5929,12 @@ export const readLeverageManagerV2ConvertCollateralToShares = /*#__PURE__*/ crea
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2ConvertDebtToCollateral = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertDebtToCollateral',
-})
+export const readLeverageManagerV2ConvertDebtToCollateral =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertDebtToCollateral',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertSharesToCollateral"`
@@ -5768,11 +5942,12 @@ export const readLeverageManagerV2ConvertDebtToCollateral = /*#__PURE__*/ create
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2ConvertSharesToCollateral = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertSharesToCollateral',
-})
+export const readLeverageManagerV2ConvertSharesToCollateral =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertSharesToCollateral',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertSharesToDebt"`
@@ -5780,11 +5955,12 @@ export const readLeverageManagerV2ConvertSharesToCollateral = /*#__PURE__*/ crea
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2ConvertSharesToDebt = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertSharesToDebt',
-})
+export const readLeverageManagerV2ConvertSharesToDebt =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertSharesToDebt',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertToAssets"`
@@ -5792,11 +5968,12 @@ export const readLeverageManagerV2ConvertSharesToDebt = /*#__PURE__*/ createRead
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2ConvertToAssets = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertToAssets',
-})
+export const readLeverageManagerV2ConvertToAssets =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertToAssets',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"convertToShares"`
@@ -5804,11 +5981,12 @@ export const readLeverageManagerV2ConvertToAssets = /*#__PURE__*/ createReadCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2ConvertToShares = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'convertToShares',
-})
+export const readLeverageManagerV2ConvertToShares =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'convertToShares',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getDefaultManagementFeeAtCreation"`
@@ -5829,11 +6007,12 @@ export const readLeverageManagerV2GetDefaultManagementFeeAtCreation =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetFeeAdjustedTotalSupply = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getFeeAdjustedTotalSupply',
-})
+export const readLeverageManagerV2GetFeeAdjustedTotalSupply =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getFeeAdjustedTotalSupply',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLastManagementFeeAccrualTimestamp"`
@@ -5854,11 +6033,12 @@ export const readLeverageManagerV2GetLastManagementFeeAccrualTimestamp =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetLeverageTokenActionFee = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getLeverageTokenActionFee',
-})
+export const readLeverageManagerV2GetLeverageTokenActionFee =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getLeverageTokenActionFee',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenCollateralAsset"`
@@ -5879,11 +6059,12 @@ export const readLeverageManagerV2GetLeverageTokenCollateralAsset =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetLeverageTokenConfig = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getLeverageTokenConfig',
-})
+export const readLeverageManagerV2GetLeverageTokenConfig =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getLeverageTokenConfig',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenDebtAsset"`
@@ -5891,11 +6072,12 @@ export const readLeverageManagerV2GetLeverageTokenConfig = /*#__PURE__*/ createR
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetLeverageTokenDebtAsset = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getLeverageTokenDebtAsset',
-})
+export const readLeverageManagerV2GetLeverageTokenDebtAsset =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getLeverageTokenDebtAsset',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenFactory"`
@@ -5903,11 +6085,12 @@ export const readLeverageManagerV2GetLeverageTokenDebtAsset = /*#__PURE__*/ crea
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetLeverageTokenFactory = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getLeverageTokenFactory',
-})
+export const readLeverageManagerV2GetLeverageTokenFactory =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getLeverageTokenFactory',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenInitialCollateralRatio"`
@@ -5928,13 +6111,12 @@ export const readLeverageManagerV2GetLeverageTokenInitialCollateralRatio =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetLeverageTokenLendingAdapter = /*#__PURE__*/ createReadContract(
-  {
+export const readLeverageManagerV2GetLeverageTokenLendingAdapter =
+  /*#__PURE__*/ createReadContract({
     abi: leverageManagerV2Abi,
     address: leverageManagerV2Address,
     functionName: 'getLeverageTokenLendingAdapter',
-  },
-)
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getLeverageTokenRebalanceAdapter"`
@@ -5955,11 +6137,12 @@ export const readLeverageManagerV2GetLeverageTokenRebalanceAdapter =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetLeverageTokenState = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getLeverageTokenState',
-})
+export const readLeverageManagerV2GetLeverageTokenState =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getLeverageTokenState',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getManagementFee"`
@@ -5967,11 +6150,12 @@ export const readLeverageManagerV2GetLeverageTokenState = /*#__PURE__*/ createRe
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetManagementFee = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getManagementFee',
-})
+export const readLeverageManagerV2GetManagementFee =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getManagementFee',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getRoleAdmin"`
@@ -5979,11 +6163,12 @@ export const readLeverageManagerV2GetManagementFee = /*#__PURE__*/ createReadCon
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetRoleAdmin = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getRoleAdmin',
-})
+export const readLeverageManagerV2GetRoleAdmin =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getRoleAdmin',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getTreasury"`
@@ -5991,11 +6176,12 @@ export const readLeverageManagerV2GetRoleAdmin = /*#__PURE__*/ createReadContrac
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetTreasury = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getTreasury',
-})
+export const readLeverageManagerV2GetTreasury =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getTreasury',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"getTreasuryActionFee"`
@@ -6003,11 +6189,12 @@ export const readLeverageManagerV2GetTreasury = /*#__PURE__*/ createReadContract
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2GetTreasuryActionFee = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'getTreasuryActionFee',
-})
+export const readLeverageManagerV2GetTreasuryActionFee =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'getTreasuryActionFee',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"hasRole"`
@@ -6027,11 +6214,12 @@ export const readLeverageManagerV2HasRole = /*#__PURE__*/ createReadContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2PreviewDeposit = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'previewDeposit',
-})
+export const readLeverageManagerV2PreviewDeposit =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'previewDeposit',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewMint"`
@@ -6039,11 +6227,12 @@ export const readLeverageManagerV2PreviewDeposit = /*#__PURE__*/ createReadContr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2PreviewMint = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'previewMint',
-})
+export const readLeverageManagerV2PreviewMint =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'previewMint',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewRedeem"`
@@ -6051,11 +6240,12 @@ export const readLeverageManagerV2PreviewMint = /*#__PURE__*/ createReadContract
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2PreviewRedeem = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'previewRedeem',
-})
+export const readLeverageManagerV2PreviewRedeem =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'previewRedeem',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"previewWithdraw"`
@@ -6063,11 +6253,12 @@ export const readLeverageManagerV2PreviewRedeem = /*#__PURE__*/ createReadContra
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2PreviewWithdraw = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'previewWithdraw',
-})
+export const readLeverageManagerV2PreviewWithdraw =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'previewWithdraw',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"proxiableUUID"`
@@ -6075,11 +6266,12 @@ export const readLeverageManagerV2PreviewWithdraw = /*#__PURE__*/ createReadCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2ProxiableUuid = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'proxiableUUID',
-})
+export const readLeverageManagerV2ProxiableUuid =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'proxiableUUID',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"supportsInterface"`
@@ -6087,11 +6279,12 @@ export const readLeverageManagerV2ProxiableUuid = /*#__PURE__*/ createReadContra
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const readLeverageManagerV2SupportsInterface = /*#__PURE__*/ createReadContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'supportsInterface',
-})
+export const readLeverageManagerV2SupportsInterface =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'supportsInterface',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__
@@ -6110,11 +6303,12 @@ export const writeLeverageManagerV2 = /*#__PURE__*/ createWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2ChargeManagementFee = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'chargeManagementFee',
-})
+export const writeLeverageManagerV2ChargeManagementFee =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'chargeManagementFee',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"createNewLeverageToken"`
@@ -6122,11 +6316,12 @@ export const writeLeverageManagerV2ChargeManagementFee = /*#__PURE__*/ createWri
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2CreateNewLeverageToken = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'createNewLeverageToken',
-})
+export const writeLeverageManagerV2CreateNewLeverageToken =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'createNewLeverageToken',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"deposit"`
@@ -6146,11 +6341,12 @@ export const writeLeverageManagerV2Deposit = /*#__PURE__*/ createWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2GrantRole = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'grantRole',
-})
+export const writeLeverageManagerV2GrantRole =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'grantRole',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"initialize"`
@@ -6158,11 +6354,12 @@ export const writeLeverageManagerV2GrantRole = /*#__PURE__*/ createWriteContract
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2Initialize = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'initialize',
-})
+export const writeLeverageManagerV2Initialize =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"mint"`
@@ -6182,11 +6379,12 @@ export const writeLeverageManagerV2Mint = /*#__PURE__*/ createWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2Rebalance = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'rebalance',
-})
+export const writeLeverageManagerV2Rebalance =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'rebalance',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"redeem"`
@@ -6206,11 +6404,12 @@ export const writeLeverageManagerV2Redeem = /*#__PURE__*/ createWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2RenounceRole = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'renounceRole',
-})
+export const writeLeverageManagerV2RenounceRole =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'renounceRole',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"revokeRole"`
@@ -6218,11 +6417,12 @@ export const writeLeverageManagerV2RenounceRole = /*#__PURE__*/ createWriteContr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2RevokeRole = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'revokeRole',
-})
+export const writeLeverageManagerV2RevokeRole =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'revokeRole',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
@@ -6243,11 +6443,12 @@ export const writeLeverageManagerV2SetDefaultManagementFeeAtCreation =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2SetManagementFee = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'setManagementFee',
-})
+export const writeLeverageManagerV2SetManagementFee =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'setManagementFee',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasury"`
@@ -6255,11 +6456,12 @@ export const writeLeverageManagerV2SetManagementFee = /*#__PURE__*/ createWriteC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2SetTreasury = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'setTreasury',
-})
+export const writeLeverageManagerV2SetTreasury =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'setTreasury',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasuryActionFee"`
@@ -6267,11 +6469,12 @@ export const writeLeverageManagerV2SetTreasury = /*#__PURE__*/ createWriteContra
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2SetTreasuryActionFee = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'setTreasuryActionFee',
-})
+export const writeLeverageManagerV2SetTreasuryActionFee =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'setTreasuryActionFee',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"upgradeToAndCall"`
@@ -6279,11 +6482,12 @@ export const writeLeverageManagerV2SetTreasuryActionFee = /*#__PURE__*/ createWr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'upgradeToAndCall',
-})
+export const writeLeverageManagerV2UpgradeToAndCall =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'upgradeToAndCall',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"withdraw"`
@@ -6291,11 +6495,13 @@ export const writeLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createWriteC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const writeLeverageManagerV2Withdraw = /*#__PURE__*/ createWriteContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'withdraw',
-})
+export const writeLeverageManagerV2Withdraw = /*#__PURE__*/ createWriteContract(
+  {
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'withdraw',
+  },
+)
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__
@@ -6314,11 +6520,12 @@ export const simulateLeverageManagerV2 = /*#__PURE__*/ createSimulateContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2ChargeManagementFee = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'chargeManagementFee',
-})
+export const simulateLeverageManagerV2ChargeManagementFee =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'chargeManagementFee',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"createNewLeverageToken"`
@@ -6326,13 +6533,12 @@ export const simulateLeverageManagerV2ChargeManagementFee = /*#__PURE__*/ create
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2CreateNewLeverageToken = /*#__PURE__*/ createSimulateContract(
-  {
+export const simulateLeverageManagerV2CreateNewLeverageToken =
+  /*#__PURE__*/ createSimulateContract({
     abi: leverageManagerV2Abi,
     address: leverageManagerV2Address,
     functionName: 'createNewLeverageToken',
-  },
-)
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"deposit"`
@@ -6340,11 +6546,12 @@ export const simulateLeverageManagerV2CreateNewLeverageToken = /*#__PURE__*/ cre
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2Deposit = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'deposit',
-})
+export const simulateLeverageManagerV2Deposit =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'deposit',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"grantRole"`
@@ -6352,11 +6559,12 @@ export const simulateLeverageManagerV2Deposit = /*#__PURE__*/ createSimulateCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2GrantRole = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'grantRole',
-})
+export const simulateLeverageManagerV2GrantRole =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'grantRole',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"initialize"`
@@ -6364,11 +6572,12 @@ export const simulateLeverageManagerV2GrantRole = /*#__PURE__*/ createSimulateCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2Initialize = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'initialize',
-})
+export const simulateLeverageManagerV2Initialize =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"mint"`
@@ -6376,11 +6585,12 @@ export const simulateLeverageManagerV2Initialize = /*#__PURE__*/ createSimulateC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2Mint = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'mint',
-})
+export const simulateLeverageManagerV2Mint =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'mint',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"rebalance"`
@@ -6388,11 +6598,12 @@ export const simulateLeverageManagerV2Mint = /*#__PURE__*/ createSimulateContrac
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2Rebalance = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'rebalance',
-})
+export const simulateLeverageManagerV2Rebalance =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'rebalance',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"redeem"`
@@ -6400,11 +6611,12 @@ export const simulateLeverageManagerV2Rebalance = /*#__PURE__*/ createSimulateCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2Redeem = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'redeem',
-})
+export const simulateLeverageManagerV2Redeem =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'redeem',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"renounceRole"`
@@ -6412,11 +6624,12 @@ export const simulateLeverageManagerV2Redeem = /*#__PURE__*/ createSimulateContr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2RenounceRole = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'renounceRole',
-})
+export const simulateLeverageManagerV2RenounceRole =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'renounceRole',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"revokeRole"`
@@ -6424,11 +6637,12 @@ export const simulateLeverageManagerV2RenounceRole = /*#__PURE__*/ createSimulat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2RevokeRole = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'revokeRole',
-})
+export const simulateLeverageManagerV2RevokeRole =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'revokeRole',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setDefaultManagementFeeAtCreation"`
@@ -6449,11 +6663,12 @@ export const simulateLeverageManagerV2SetDefaultManagementFeeAtCreation =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2SetManagementFee = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'setManagementFee',
-})
+export const simulateLeverageManagerV2SetManagementFee =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'setManagementFee',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasury"`
@@ -6461,11 +6676,12 @@ export const simulateLeverageManagerV2SetManagementFee = /*#__PURE__*/ createSim
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2SetTreasury = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'setTreasury',
-})
+export const simulateLeverageManagerV2SetTreasury =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'setTreasury',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"setTreasuryActionFee"`
@@ -6473,11 +6689,12 @@ export const simulateLeverageManagerV2SetTreasury = /*#__PURE__*/ createSimulate
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2SetTreasuryActionFee = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'setTreasuryActionFee',
-})
+export const simulateLeverageManagerV2SetTreasuryActionFee =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'setTreasuryActionFee',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"upgradeToAndCall"`
@@ -6485,11 +6702,12 @@ export const simulateLeverageManagerV2SetTreasuryActionFee = /*#__PURE__*/ creat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'upgradeToAndCall',
-})
+export const simulateLeverageManagerV2UpgradeToAndCall =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'upgradeToAndCall',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `functionName` set to `"withdraw"`
@@ -6497,11 +6715,12 @@ export const simulateLeverageManagerV2UpgradeToAndCall = /*#__PURE__*/ createSim
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const simulateLeverageManagerV2Withdraw = /*#__PURE__*/ createSimulateContract({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  functionName: 'withdraw',
-})
+export const simulateLeverageManagerV2Withdraw =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    functionName: 'withdraw',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__
@@ -6509,10 +6728,11 @@ export const simulateLeverageManagerV2Withdraw = /*#__PURE__*/ createSimulateCon
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2Event = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-})
+export const watchLeverageManagerV2Event =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"DefaultManagementFeeAtCreationSet"`
@@ -6533,11 +6753,12 @@ export const watchLeverageManagerV2DefaultManagementFeeAtCreationSetEvent =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2InitializedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'Initialized',
-})
+export const watchLeverageManagerV2InitializedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'Initialized',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"LeverageManagerInitialized"`
@@ -6597,11 +6818,12 @@ export const watchLeverageManagerV2ManagementFeeChargedEvent =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2ManagementFeeSetEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'ManagementFeeSet',
-})
+export const watchLeverageManagerV2ManagementFeeSetEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'ManagementFeeSet',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Mint"`
@@ -6609,11 +6831,12 @@ export const watchLeverageManagerV2ManagementFeeSetEvent = /*#__PURE__*/ createW
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2MintEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'Mint',
-})
+export const watchLeverageManagerV2MintEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'Mint',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Rebalance"`
@@ -6621,11 +6844,12 @@ export const watchLeverageManagerV2MintEvent = /*#__PURE__*/ createWatchContract
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2RebalanceEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'Rebalance',
-})
+export const watchLeverageManagerV2RebalanceEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'Rebalance',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Redeem"`
@@ -6633,11 +6857,12 @@ export const watchLeverageManagerV2RebalanceEvent = /*#__PURE__*/ createWatchCon
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2RedeemEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'Redeem',
-})
+export const watchLeverageManagerV2RedeemEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'Redeem',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleAdminChanged"`
@@ -6645,11 +6870,12 @@ export const watchLeverageManagerV2RedeemEvent = /*#__PURE__*/ createWatchContra
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2RoleAdminChangedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'RoleAdminChanged',
-})
+export const watchLeverageManagerV2RoleAdminChangedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'RoleAdminChanged',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleGranted"`
@@ -6657,11 +6883,12 @@ export const watchLeverageManagerV2RoleAdminChangedEvent = /*#__PURE__*/ createW
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2RoleGrantedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'RoleGranted',
-})
+export const watchLeverageManagerV2RoleGrantedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'RoleGranted',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"RoleRevoked"`
@@ -6669,11 +6896,12 @@ export const watchLeverageManagerV2RoleGrantedEvent = /*#__PURE__*/ createWatchC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2RoleRevokedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'RoleRevoked',
-})
+export const watchLeverageManagerV2RoleRevokedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'RoleRevoked',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"TreasuryActionFeeSet"`
@@ -6694,11 +6922,12 @@ export const watchLeverageManagerV2TreasuryActionFeeSetEvent =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2TreasurySetEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'TreasurySet',
-})
+export const watchLeverageManagerV2TreasurySetEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'TreasurySet',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageManagerV2Abi}__ and `eventName` set to `"Upgraded"`
@@ -6706,11 +6935,12 @@ export const watchLeverageManagerV2TreasurySetEvent = /*#__PURE__*/ createWatchC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x5C37EB148D4a261ACD101e2B997A0F163Fb3E351)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x38Ba21C6Bf31dF1b1798FCEd07B4e9b07C5ec3a8)
  */
-export const watchLeverageManagerV2UpgradedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageManagerV2Abi,
-  address: leverageManagerV2Address,
-  eventName: 'Upgraded',
-})
+export const watchLeverageManagerV2UpgradedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageManagerV2Abi,
+    address: leverageManagerV2Address,
+    eventName: 'Upgraded',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
@@ -6729,11 +6959,12 @@ export const readLeverageRouterV2 = /*#__PURE__*/ createReadContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const readLeverageRouterV2ConvertEquityToCollateral = /*#__PURE__*/ createReadContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'convertEquityToCollateral',
-})
+export const readLeverageRouterV2ConvertEquityToCollateral =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'convertEquityToCollateral',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"leverageManager"`
@@ -6741,11 +6972,12 @@ export const readLeverageRouterV2ConvertEquityToCollateral = /*#__PURE__*/ creat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const readLeverageRouterV2LeverageManager = /*#__PURE__*/ createReadContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'leverageManager',
-})
+export const readLeverageRouterV2LeverageManager =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'leverageManager',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"morpho"`
@@ -6765,11 +6997,12 @@ export const readLeverageRouterV2Morpho = /*#__PURE__*/ createReadContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const readLeverageRouterV2PreviewDeposit = /*#__PURE__*/ createReadContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'previewDeposit',
-})
+export const readLeverageRouterV2PreviewDeposit =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'previewDeposit',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
@@ -6800,11 +7033,12 @@ export const writeLeverageRouterV2Deposit = /*#__PURE__*/ createWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const writeLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ createWriteContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'onMorphoFlashLoan',
-})
+export const writeLeverageRouterV2OnMorphoFlashLoan =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'onMorphoFlashLoan',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeem"`
@@ -6824,11 +7058,12 @@ export const writeLeverageRouterV2Redeem = /*#__PURE__*/ createWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const writeLeverageRouterV2RedeemWithVelora = /*#__PURE__*/ createWriteContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'redeemWithVelora',
-})
+export const writeLeverageRouterV2RedeemWithVelora =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'redeemWithVelora',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__
@@ -6847,11 +7082,12 @@ export const simulateLeverageRouterV2 = /*#__PURE__*/ createSimulateContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const simulateLeverageRouterV2Deposit = /*#__PURE__*/ createSimulateContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'deposit',
-})
+export const simulateLeverageRouterV2Deposit =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'deposit',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"onMorphoFlashLoan"`
@@ -6859,11 +7095,12 @@ export const simulateLeverageRouterV2Deposit = /*#__PURE__*/ createSimulateContr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const simulateLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ createSimulateContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'onMorphoFlashLoan',
-})
+export const simulateLeverageRouterV2OnMorphoFlashLoan =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'onMorphoFlashLoan',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeem"`
@@ -6871,11 +7108,12 @@ export const simulateLeverageRouterV2OnMorphoFlashLoan = /*#__PURE__*/ createSim
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const simulateLeverageRouterV2Redeem = /*#__PURE__*/ createSimulateContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'redeem',
-})
+export const simulateLeverageRouterV2Redeem =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'redeem',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageRouterV2Abi}__ and `functionName` set to `"redeemWithVelora"`
@@ -6883,11 +7121,12 @@ export const simulateLeverageRouterV2Redeem = /*#__PURE__*/ createSimulateContra
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0x00c66934EBCa0F2A845812bC368B230F6da11A5C)
  */
-export const simulateLeverageRouterV2RedeemWithVelora = /*#__PURE__*/ createSimulateContract({
-  abi: leverageRouterV2Abi,
-  address: leverageRouterV2Address,
-  functionName: 'redeemWithVelora',
-})
+export const simulateLeverageRouterV2RedeemWithVelora =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageRouterV2Abi,
+    address: leverageRouterV2Address,
+    functionName: 'redeemWithVelora',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenAbi}__
@@ -6899,10 +7138,11 @@ export const readLeverageToken = /*#__PURE__*/ createReadContract({
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"DOMAIN_SEPARATOR"`
  */
-export const readLeverageTokenDomainSeparator = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'DOMAIN_SEPARATOR',
-})
+export const readLeverageTokenDomainSeparator =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenAbi,
+    functionName: 'DOMAIN_SEPARATOR',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"allowance"`
@@ -6923,18 +7163,20 @@ export const readLeverageTokenBalanceOf = /*#__PURE__*/ createReadContract({
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"convertToAssets"`
  */
-export const readLeverageTokenConvertToAssets = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'convertToAssets',
-})
+export const readLeverageTokenConvertToAssets =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenAbi,
+    functionName: 'convertToAssets',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"convertToShares"`
  */
-export const readLeverageTokenConvertToShares = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenAbi,
-  functionName: 'convertToShares',
-})
+export const readLeverageTokenConvertToShares =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenAbi,
+    functionName: 'convertToShares',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"decimals"`
@@ -7042,10 +7284,11 @@ export const writeLeverageTokenPermit = /*#__PURE__*/ createWriteContract({
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"renounceOwnership"`
  */
-export const writeLeverageTokenRenounceOwnership = /*#__PURE__*/ createWriteContract({
-  abi: leverageTokenAbi,
-  functionName: 'renounceOwnership',
-})
+export const writeLeverageTokenRenounceOwnership =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageTokenAbi,
+    functionName: 'renounceOwnership',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transfer"`
@@ -7058,18 +7301,18 @@ export const writeLeverageTokenTransfer = /*#__PURE__*/ createWriteContract({
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferFrom"`
  */
-export const writeLeverageTokenTransferFrom = /*#__PURE__*/ createWriteContract({
-  abi: leverageTokenAbi,
-  functionName: 'transferFrom',
-})
+export const writeLeverageTokenTransferFrom = /*#__PURE__*/ createWriteContract(
+  { abi: leverageTokenAbi, functionName: 'transferFrom' },
+)
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferOwnership"`
  */
-export const writeLeverageTokenTransferOwnership = /*#__PURE__*/ createWriteContract({
-  abi: leverageTokenAbi,
-  functionName: 'transferOwnership',
-})
+export const writeLeverageTokenTransferOwnership =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageTokenAbi,
+    functionName: 'transferOwnership',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenAbi}__
@@ -7081,10 +7324,11 @@ export const simulateLeverageToken = /*#__PURE__*/ createSimulateContract({
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"approve"`
  */
-export const simulateLeverageTokenApprove = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'approve',
-})
+export const simulateLeverageTokenApprove =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'approve',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"burn"`
@@ -7097,10 +7341,11 @@ export const simulateLeverageTokenBurn = /*#__PURE__*/ createSimulateContract({
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"initialize"`
  */
-export const simulateLeverageTokenInitialize = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'initialize',
-})
+export const simulateLeverageTokenInitialize =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"mint"`
@@ -7113,42 +7358,45 @@ export const simulateLeverageTokenMint = /*#__PURE__*/ createSimulateContract({
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"permit"`
  */
-export const simulateLeverageTokenPermit = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'permit',
-})
+export const simulateLeverageTokenPermit = /*#__PURE__*/ createSimulateContract(
+  { abi: leverageTokenAbi, functionName: 'permit' },
+)
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"renounceOwnership"`
  */
-export const simulateLeverageTokenRenounceOwnership = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'renounceOwnership',
-})
+export const simulateLeverageTokenRenounceOwnership =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'renounceOwnership',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transfer"`
  */
-export const simulateLeverageTokenTransfer = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'transfer',
-})
+export const simulateLeverageTokenTransfer =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'transfer',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferFrom"`
  */
-export const simulateLeverageTokenTransferFrom = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'transferFrom',
-})
+export const simulateLeverageTokenTransferFrom =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'transferFrom',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenAbi}__ and `functionName` set to `"transferOwnership"`
  */
-export const simulateLeverageTokenTransferOwnership = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenAbi,
-  functionName: 'transferOwnership',
-})
+export const simulateLeverageTokenTransferOwnership =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenAbi,
+    functionName: 'transferOwnership',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__
@@ -7160,26 +7408,29 @@ export const watchLeverageTokenEvent = /*#__PURE__*/ createWatchContractEvent({
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"Approval"`
  */
-export const watchLeverageTokenApprovalEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageTokenAbi,
-  eventName: 'Approval',
-})
+export const watchLeverageTokenApprovalEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageTokenAbi,
+    eventName: 'Approval',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"EIP712DomainChanged"`
  */
-export const watchLeverageTokenEip712DomainChangedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageTokenAbi,
-  eventName: 'EIP712DomainChanged',
-})
+export const watchLeverageTokenEip712DomainChangedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageTokenAbi,
+    eventName: 'EIP712DomainChanged',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"Initialized"`
  */
-export const watchLeverageTokenInitializedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageTokenAbi,
-  eventName: 'Initialized',
-})
+export const watchLeverageTokenInitializedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageTokenAbi,
+    eventName: 'Initialized',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"LeverageTokenInitialized"`
@@ -7193,18 +7444,20 @@ export const watchLeverageTokenLeverageTokenInitializedEvent =
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"OwnershipTransferred"`
  */
-export const watchLeverageTokenOwnershipTransferredEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageTokenAbi,
-  eventName: 'OwnershipTransferred',
-})
+export const watchLeverageTokenOwnershipTransferredEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageTokenAbi,
+    eventName: 'OwnershipTransferred',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenAbi}__ and `eventName` set to `"Transfer"`
  */
-export const watchLeverageTokenTransferEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageTokenAbi,
-  eventName: 'Transfer',
-})
+export const watchLeverageTokenTransferEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageTokenAbi,
+    eventName: 'Transfer',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
@@ -7223,11 +7476,12 @@ export const readLeverageTokenFactory = /*#__PURE__*/ createReadContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const readLeverageTokenFactoryDomainSeparator = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'DOMAIN_SEPARATOR',
-})
+export const readLeverageTokenFactoryDomainSeparator =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'DOMAIN_SEPARATOR',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"allowance"`
@@ -7235,11 +7489,12 @@ export const readLeverageTokenFactoryDomainSeparator = /*#__PURE__*/ createReadC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const readLeverageTokenFactoryAllowance = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'allowance',
-})
+export const readLeverageTokenFactoryAllowance =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'allowance',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"balanceOf"`
@@ -7247,11 +7502,12 @@ export const readLeverageTokenFactoryAllowance = /*#__PURE__*/ createReadContrac
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const readLeverageTokenFactoryBalanceOf = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'balanceOf',
-})
+export const readLeverageTokenFactoryBalanceOf =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'balanceOf',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"convertToAssets"`
@@ -7259,11 +7515,12 @@ export const readLeverageTokenFactoryBalanceOf = /*#__PURE__*/ createReadContrac
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const readLeverageTokenFactoryConvertToAssets = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'convertToAssets',
-})
+export const readLeverageTokenFactoryConvertToAssets =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'convertToAssets',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"convertToShares"`
@@ -7271,11 +7528,12 @@ export const readLeverageTokenFactoryConvertToAssets = /*#__PURE__*/ createReadC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const readLeverageTokenFactoryConvertToShares = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'convertToShares',
-})
+export const readLeverageTokenFactoryConvertToShares =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'convertToShares',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"decimals"`
@@ -7283,11 +7541,12 @@ export const readLeverageTokenFactoryConvertToShares = /*#__PURE__*/ createReadC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const readLeverageTokenFactoryDecimals = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'decimals',
-})
+export const readLeverageTokenFactoryDecimals =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'decimals',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"eip712Domain"`
@@ -7295,11 +7554,12 @@ export const readLeverageTokenFactoryDecimals = /*#__PURE__*/ createReadContract
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const readLeverageTokenFactoryEip712Domain = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'eip712Domain',
-})
+export const readLeverageTokenFactoryEip712Domain =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'eip712Domain',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"name"`
@@ -7355,11 +7615,12 @@ export const readLeverageTokenFactorySymbol = /*#__PURE__*/ createReadContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const readLeverageTokenFactoryTotalSupply = /*#__PURE__*/ createReadContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'totalSupply',
-})
+export const readLeverageTokenFactoryTotalSupply =
+  /*#__PURE__*/ createReadContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'totalSupply',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
@@ -7378,11 +7639,12 @@ export const writeLeverageTokenFactory = /*#__PURE__*/ createWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const writeLeverageTokenFactoryApprove = /*#__PURE__*/ createWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'approve',
-})
+export const writeLeverageTokenFactoryApprove =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'approve',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"burn"`
@@ -7402,11 +7664,12 @@ export const writeLeverageTokenFactoryBurn = /*#__PURE__*/ createWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const writeLeverageTokenFactoryInitialize = /*#__PURE__*/ createWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'initialize',
-})
+export const writeLeverageTokenFactoryInitialize =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"mint"`
@@ -7426,11 +7689,12 @@ export const writeLeverageTokenFactoryMint = /*#__PURE__*/ createWriteContract({
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const writeLeverageTokenFactoryPermit = /*#__PURE__*/ createWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'permit',
-})
+export const writeLeverageTokenFactoryPermit =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'permit',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"renounceOwnership"`
@@ -7438,11 +7702,12 @@ export const writeLeverageTokenFactoryPermit = /*#__PURE__*/ createWriteContract
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const writeLeverageTokenFactoryRenounceOwnership = /*#__PURE__*/ createWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'renounceOwnership',
-})
+export const writeLeverageTokenFactoryRenounceOwnership =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'renounceOwnership',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transfer"`
@@ -7450,11 +7715,12 @@ export const writeLeverageTokenFactoryRenounceOwnership = /*#__PURE__*/ createWr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const writeLeverageTokenFactoryTransfer = /*#__PURE__*/ createWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transfer',
-})
+export const writeLeverageTokenFactoryTransfer =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transfer',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transferFrom"`
@@ -7462,11 +7728,12 @@ export const writeLeverageTokenFactoryTransfer = /*#__PURE__*/ createWriteContra
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const writeLeverageTokenFactoryTransferFrom = /*#__PURE__*/ createWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transferFrom',
-})
+export const writeLeverageTokenFactoryTransferFrom =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transferFrom',
+  })
 
 /**
  * Wraps __{@link writeContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transferOwnership"`
@@ -7474,11 +7741,12 @@ export const writeLeverageTokenFactoryTransferFrom = /*#__PURE__*/ createWriteCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const writeLeverageTokenFactoryTransferOwnership = /*#__PURE__*/ createWriteContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transferOwnership',
-})
+export const writeLeverageTokenFactoryTransferOwnership =
+  /*#__PURE__*/ createWriteContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transferOwnership',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
@@ -7486,10 +7754,11 @@ export const writeLeverageTokenFactoryTransferOwnership = /*#__PURE__*/ createWr
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const simulateLeverageTokenFactory = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-})
+export const simulateLeverageTokenFactory =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"approve"`
@@ -7497,11 +7766,12 @@ export const simulateLeverageTokenFactory = /*#__PURE__*/ createSimulateContract
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const simulateLeverageTokenFactoryApprove = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'approve',
-})
+export const simulateLeverageTokenFactoryApprove =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'approve',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"burn"`
@@ -7509,11 +7779,12 @@ export const simulateLeverageTokenFactoryApprove = /*#__PURE__*/ createSimulateC
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const simulateLeverageTokenFactoryBurn = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'burn',
-})
+export const simulateLeverageTokenFactoryBurn =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'burn',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"initialize"`
@@ -7521,11 +7792,12 @@ export const simulateLeverageTokenFactoryBurn = /*#__PURE__*/ createSimulateCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const simulateLeverageTokenFactoryInitialize = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'initialize',
-})
+export const simulateLeverageTokenFactoryInitialize =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'initialize',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"mint"`
@@ -7533,11 +7805,12 @@ export const simulateLeverageTokenFactoryInitialize = /*#__PURE__*/ createSimula
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const simulateLeverageTokenFactoryMint = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'mint',
-})
+export const simulateLeverageTokenFactoryMint =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'mint',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"permit"`
@@ -7545,11 +7818,12 @@ export const simulateLeverageTokenFactoryMint = /*#__PURE__*/ createSimulateCont
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const simulateLeverageTokenFactoryPermit = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'permit',
-})
+export const simulateLeverageTokenFactoryPermit =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'permit',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"renounceOwnership"`
@@ -7557,11 +7831,12 @@ export const simulateLeverageTokenFactoryPermit = /*#__PURE__*/ createSimulateCo
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const simulateLeverageTokenFactoryRenounceOwnership = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'renounceOwnership',
-})
+export const simulateLeverageTokenFactoryRenounceOwnership =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'renounceOwnership',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transfer"`
@@ -7569,11 +7844,12 @@ export const simulateLeverageTokenFactoryRenounceOwnership = /*#__PURE__*/ creat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const simulateLeverageTokenFactoryTransfer = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transfer',
-})
+export const simulateLeverageTokenFactoryTransfer =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transfer',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transferFrom"`
@@ -7581,11 +7857,12 @@ export const simulateLeverageTokenFactoryTransfer = /*#__PURE__*/ createSimulate
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const simulateLeverageTokenFactoryTransferFrom = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transferFrom',
-})
+export const simulateLeverageTokenFactoryTransferFrom =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transferFrom',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `functionName` set to `"transferOwnership"`
@@ -7593,11 +7870,12 @@ export const simulateLeverageTokenFactoryTransferFrom = /*#__PURE__*/ createSimu
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const simulateLeverageTokenFactoryTransferOwnership = /*#__PURE__*/ createSimulateContract({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  functionName: 'transferOwnership',
-})
+export const simulateLeverageTokenFactoryTransferOwnership =
+  /*#__PURE__*/ createSimulateContract({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    functionName: 'transferOwnership',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenFactoryAbi}__
@@ -7605,10 +7883,11 @@ export const simulateLeverageTokenFactoryTransferOwnership = /*#__PURE__*/ creat
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const watchLeverageTokenFactoryEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-})
+export const watchLeverageTokenFactoryEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `eventName` set to `"Approval"`
@@ -7616,11 +7895,12 @@ export const watchLeverageTokenFactoryEvent = /*#__PURE__*/ createWatchContractE
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const watchLeverageTokenFactoryApprovalEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  eventName: 'Approval',
-})
+export const watchLeverageTokenFactoryApprovalEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    eventName: 'Approval',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `eventName` set to `"EIP712DomainChanged"`
@@ -7641,11 +7921,12 @@ export const watchLeverageTokenFactoryEip712DomainChangedEvent =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const watchLeverageTokenFactoryInitializedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  eventName: 'Initialized',
-})
+export const watchLeverageTokenFactoryInitializedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    eventName: 'Initialized',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link leverageTokenFactoryAbi}__ and `eventName` set to `"LeverageTokenInitialized"`
@@ -7679,11 +7960,12 @@ export const watchLeverageTokenFactoryOwnershipTransferredEvent =
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x603Da735780e6bC7D04f3FB85C26dccCd4Ff0a82)
  * - [__View Contract on Base Basescan__](https://basescan.org/address/0xE0b2e40EDeb53B96C923381509a25a615c1Abe57)
  */
-export const watchLeverageTokenFactoryTransferEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: leverageTokenFactoryAbi,
-  address: leverageTokenFactoryAddress,
-  eventName: 'Transfer',
-})
+export const watchLeverageTokenFactoryTransferEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: leverageTokenFactoryAbi,
+    address: leverageTokenFactoryAddress,
+    eventName: 'Transfer',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link seamTokenAbi}__
@@ -7744,11 +8026,12 @@ export const readSeamTokenUpgraderRole = /*#__PURE__*/ createReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const readSeamTokenUpgradeInterfaceVersion = /*#__PURE__*/ createReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'UPGRADE_INTERFACE_VERSION',
-})
+export const readSeamTokenUpgradeInterfaceVersion =
+  /*#__PURE__*/ createReadContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'UPGRADE_INTERFACE_VERSION',
+  })
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"allowance"`
@@ -7832,11 +8115,13 @@ export const readSeamTokenEip712Domain = /*#__PURE__*/ createReadContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const readSeamTokenGetPastTotalSupply = /*#__PURE__*/ createReadContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'getPastTotalSupply',
-})
+export const readSeamTokenGetPastTotalSupply = /*#__PURE__*/ createReadContract(
+  {
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'getPastTotalSupply',
+  },
+)
 
 /**
  * Wraps __{@link readContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"getPastVotes"`
@@ -8084,11 +8369,13 @@ export const writeSeamTokenTransferFrom = /*#__PURE__*/ createWriteContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const writeSeamTokenUpgradeToAndCall = /*#__PURE__*/ createWriteContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'upgradeToAndCall',
-})
+export const writeSeamTokenUpgradeToAndCall = /*#__PURE__*/ createWriteContract(
+  {
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'upgradeToAndCall',
+  },
+)
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link seamTokenAbi}__
@@ -8127,11 +8414,12 @@ export const simulateSeamTokenDelegate = /*#__PURE__*/ createSimulateContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const simulateSeamTokenDelegateBySig = /*#__PURE__*/ createSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'delegateBySig',
-})
+export const simulateSeamTokenDelegateBySig =
+  /*#__PURE__*/ createSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'delegateBySig',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"grantRole"`
@@ -8149,11 +8437,9 @@ export const simulateSeamTokenGrantRole = /*#__PURE__*/ createSimulateContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const simulateSeamTokenInitialize = /*#__PURE__*/ createSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'initialize',
-})
+export const simulateSeamTokenInitialize = /*#__PURE__*/ createSimulateContract(
+  { abi: seamTokenAbi, address: seamTokenAddress, functionName: 'initialize' },
+)
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"permit"`
@@ -8171,22 +8457,21 @@ export const simulateSeamTokenPermit = /*#__PURE__*/ createSimulateContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const simulateSeamTokenRenounceRole = /*#__PURE__*/ createSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'renounceRole',
-})
+export const simulateSeamTokenRenounceRole =
+  /*#__PURE__*/ createSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'renounceRole',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"revokeRole"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const simulateSeamTokenRevokeRole = /*#__PURE__*/ createSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'revokeRole',
-})
+export const simulateSeamTokenRevokeRole = /*#__PURE__*/ createSimulateContract(
+  { abi: seamTokenAbi, address: seamTokenAddress, functionName: 'revokeRole' },
+)
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"transfer"`
@@ -8204,22 +8489,24 @@ export const simulateSeamTokenTransfer = /*#__PURE__*/ createSimulateContract({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const simulateSeamTokenTransferFrom = /*#__PURE__*/ createSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'transferFrom',
-})
+export const simulateSeamTokenTransferFrom =
+  /*#__PURE__*/ createSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'transferFrom',
+  })
 
 /**
  * Wraps __{@link simulateContract}__ with `abi` set to __{@link seamTokenAbi}__ and `functionName` set to `"upgradeToAndCall"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const simulateSeamTokenUpgradeToAndCall = /*#__PURE__*/ createSimulateContract({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  functionName: 'upgradeToAndCall',
-})
+export const simulateSeamTokenUpgradeToAndCall =
+  /*#__PURE__*/ createSimulateContract({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    functionName: 'upgradeToAndCall',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__
@@ -8236,107 +8523,117 @@ export const watchSeamTokenEvent = /*#__PURE__*/ createWatchContractEvent({
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const watchSeamTokenApprovalEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'Approval',
-})
+export const watchSeamTokenApprovalEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'Approval',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"DelegateChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const watchSeamTokenDelegateChangedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'DelegateChanged',
-})
+export const watchSeamTokenDelegateChangedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'DelegateChanged',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"DelegateVotesChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const watchSeamTokenDelegateVotesChangedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'DelegateVotesChanged',
-})
+export const watchSeamTokenDelegateVotesChangedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'DelegateVotesChanged',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"EIP712DomainChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const watchSeamTokenEip712DomainChangedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'EIP712DomainChanged',
-})
+export const watchSeamTokenEip712DomainChangedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'EIP712DomainChanged',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Initialized"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const watchSeamTokenInitializedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'Initialized',
-})
+export const watchSeamTokenInitializedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'Initialized',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"RoleAdminChanged"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const watchSeamTokenRoleAdminChangedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'RoleAdminChanged',
-})
+export const watchSeamTokenRoleAdminChangedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'RoleAdminChanged',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"RoleGranted"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const watchSeamTokenRoleGrantedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'RoleGranted',
-})
+export const watchSeamTokenRoleGrantedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'RoleGranted',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"RoleRevoked"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const watchSeamTokenRoleRevokedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'RoleRevoked',
-})
+export const watchSeamTokenRoleRevokedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'RoleRevoked',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Transfer"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const watchSeamTokenTransferEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'Transfer',
-})
+export const watchSeamTokenTransferEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'Transfer',
+  })
 
 /**
  * Wraps __{@link watchContractEvent}__ with `abi` set to __{@link seamTokenAbi}__ and `eventName` set to `"Upgraded"`
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0x1C7a460413dD4e964f96D8dFC56E7223cE88CD85)
  */
-export const watchSeamTokenUpgradedEvent = /*#__PURE__*/ createWatchContractEvent({
-  abi: seamTokenAbi,
-  address: seamTokenAddress,
-  eventName: 'Upgraded',
-})
+export const watchSeamTokenUpgradedEvent =
+  /*#__PURE__*/ createWatchContractEvent({
+    abi: seamTokenAbi,
+    address: seamTokenAddress,
+    eventName: 'Upgraded',
+  })
