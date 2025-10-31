@@ -84,14 +84,24 @@ type MintExecution = { sharesAfterMint: bigint }
 async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Promise<MintExecution> {
   const { account, config, publicClient } = ctx
 
-  // Use production config for mint (same as redeem)
-  const mintOutcome = await executeSharedMint({
-    account,
-    publicClient,
-    config,
-    slippageBps: scenario.slippageBps,
-    chainIdOverride: mainnet.id,
-  })
+  // Use LiFi for mint setup (mint helper doesn't support Velora adapter yet)
+  // The redeem step will use production config (Velora)
+  const previousAdapter = process.env['TEST_USE_LIFI']
+  process.env['TEST_USE_LIFI'] = '1'
+
+  let mintOutcome: Awaited<ReturnType<typeof executeSharedMint>>
+  try {
+    mintOutcome = await executeSharedMint({
+      account,
+      publicClient,
+      config,
+      slippageBps: scenario.slippageBps,
+      chainIdOverride: mainnet.id,
+    })
+  } finally {
+    if (typeof previousAdapter === 'string') process.env['TEST_USE_LIFI'] = previousAdapter
+    else delete process.env['TEST_USE_LIFI']
+  }
 
   const sharesAfterMint = await readLeverageTokenBalanceOf(config, {
     address: mintOutcome.token,
