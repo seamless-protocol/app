@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
 import type { Address } from 'viem'
 import { useAccount, useChainId, useReadContracts } from 'wagmi'
+import { lendingAdapterAbi, type SupportedChainId } from '@/lib/contracts'
+import { useReadLeverageManagerV2GetLeverageTokenLendingAdapter } from '@/lib/contracts/generated'
 import { useTokenBalance } from '@/lib/hooks/useTokenBalance'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 import { useLeverageTokenState } from './useLeverageTokenState'
-import { lendingAdapterAbi, type SupportedChainId } from '@/lib/contracts'
 
 export interface UseLeverageTokenUserPositionParams {
   tokenAddress?: Address
@@ -14,7 +15,6 @@ export interface UseLeverageTokenUserPositionParams {
   collateralAssetDecimals?: number | undefined
   debtAssetAddress?: Address | undefined
   debtAssetDecimals?: number | undefined
-  lendingAdapterAddress?: Address | undefined
   enabled?: boolean
 }
 
@@ -31,7 +31,6 @@ export function useLeverageTokenUserPosition({
   collateralAssetDecimals,
   debtAssetAddress,
   debtAssetDecimals,
-  lendingAdapterAddress,
   enabled = true,
 }: UseLeverageTokenUserPositionParams) {
   const { address: user, isConnected } = useAccount()
@@ -45,6 +44,11 @@ export function useLeverageTokenUserPosition({
     isError: isStateError,
     error: stateError,
   } = useLeverageTokenState(tokenAddress as Address, chainId, enabled)
+
+  const { data: lendingAdapterAddress } = useReadLeverageManagerV2GetLeverageTokenLendingAdapter({
+    args: tokenAddress ? [tokenAddress] : undefined,
+    chainId: chainId as SupportedChainId,
+  })
 
   // Fetch collateral from lending adapter
   const {

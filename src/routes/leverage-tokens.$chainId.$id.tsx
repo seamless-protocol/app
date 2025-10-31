@@ -127,7 +127,6 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
       collateralAssetDecimals: tokenConfig?.collateralAsset.decimals,
       debtAssetAddress: tokenConfig?.debtAsset.address as `0x${string}` | undefined,
       debtAssetDecimals: tokenConfig?.debtAsset.decimals,
-      lendingAdapterAddress: tokenConfig?.lendingAdapter.address as `0x${string}` | undefined,
     })
 
     const {

@@ -101,9 +101,6 @@ export interface LeverageTokenConfig {
     address: Address
     decimals: number
   }
-  lendingAdapter: {
-    address: Address
-  }
 
   swaps?: {
     debtToCollateral?: SwapConfig
@@ -155,9 +152,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       name: 'Ether',
       address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
       decimals: 18,
-    },
-    lendingAdapter: {
-      address: '0xb224f589297A5A207e6069De5DaFD4b120129817' as Address,
     },
     swaps: {
       debtToCollateral: {
@@ -245,9 +239,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       name: 'USD Coin',
       address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Address,
       decimals: 6,
-    },
-    lendingAdapter: {
-      address: '0xe33Eaf6EE64f4B9353ff2ce3748FA05EEb9bd809' as Address,
     },
     swaps: {
       debtToCollateral: {
@@ -346,9 +337,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       address: BASE_WETH,
       decimals: 18,
     },
-    lendingAdapter: {
-      address: '0x9558B339Bb03246C44c57fCee184645DBfAb253F' as Address,
-    },
     swaps: {
       // Use LiFi for same-chain routing (bridges are irrelevant for same-chain quotes)
       debtToCollateral: {
@@ -444,9 +432,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' as Address,
       decimals: 18,
     },
-    lendingAdapter: {
-      address: '0xB22cd280b29e581e34423E86F65fd259F456D335' as Address,
-    },
     swaps: {
       debtToCollateral: {
         type: 'lifi',
@@ -489,9 +474,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       address: BASE_WETH,
       decimals: 18,
     },
-    lendingAdapter: {
-      address: '0x0000000000000000000000000000000000000000' as Address,
-    },
     swaps: {
       debtToCollateral: {
         type: 'uniswapV2',
@@ -528,9 +510,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       name: 'USD Coin',
       address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Address,
       decimals: 6,
-    },
-    lendingAdapter: {
-      address: '0x0000000000000000000000000000000000000000' as Address,
     },
     swaps: {
       debtToCollateral: {

@@ -14,8 +14,8 @@ import {
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
-import type { Quote, QuoteFn } from './types'
 import { fetchCoingeckoTokenUsdPrices } from '@/lib/prices/coingecko'
+import type { Quote, QuoteFn } from './types'
 
 // Local structural types (avoid brittle codegen coupling)
 type TokenArg = Address
