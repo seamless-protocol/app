@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import type { Address } from 'viem'
 import { useAccount, useChainId, useReadContracts } from 'wagmi'
+import { lendingAdapterAbi, type SupportedChainId } from '@/lib/contracts'
+import { useReadLeverageManagerV2GetLeverageTokenLendingAdapter } from '@/lib/contracts/generated'
 import { useTokenBalance } from '@/lib/hooks/useTokenBalance'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 import { useLeverageTokenState } from './useLeverageTokenState'
-import { lendingAdapterAbi, type SupportedChainId } from '@/lib/contracts'
-import { useReadLeverageManagerV2GetLeverageTokenLendingAdapter } from '@/lib/contracts/generated'
 
 export interface UseLeverageTokenUserPositionParams {
   tokenAddress?: Address
