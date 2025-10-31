@@ -63,7 +63,7 @@ test.describe('Mainnet wstETH/ETH 25x redeem (production config)', () => {
     await mintAmountInput.fill('0.1')
 
     // TODO: Investigate why tests require 2.5% slippage (higher than prod default 0.5%)
-    // May be related to CoinGecko price discrepancies or LiFi quote variations
+    // Likely due to price discrepancies between CoinGecko (used for slippage calc) and on-chain oracles
     const mintAdvancedButton = mintModal.getByRole('button', { name: 'Advanced' })
     await mintAdvancedButton.click()
     const mintSlippageInput = mintModal.getByPlaceholder('0.5')
@@ -104,7 +104,7 @@ test.describe('Mainnet wstETH/ETH 25x redeem (production config)', () => {
     await redeemModal.getByRole('button', { name: 'MAX' }).click()
 
     // TODO: Investigate why tests require 2.5% slippage (higher than prod default 0.5%)
-    // May be related to CoinGecko price discrepancies or LiFi quote variations
+    // Likely due to price discrepancies between CoinGecko (used for slippage calc) and on-chain oracles
     const redeemAdvancedButton = redeemModal.getByRole('button', { name: 'Advanced' })
     await redeemAdvancedButton.click()
     const redeemSlippageInput = redeemModal.getByPlaceholder('0.5')

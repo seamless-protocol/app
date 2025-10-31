@@ -19,7 +19,7 @@ const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
 redeemSuite('Leverage Router V2 Redeem (Mainnet wstETH/ETH 25x)', () => {
   // TODO: Investigate why tests require higher slippage (250 bps vs 50 bps)
-  // May be related to CoinGecko price discrepancies or Velora quote variations
+  // Likely due to price discrepancies between CoinGecko (used for slippage calc) and on-chain oracles
   const SLIPPAGE_BPS = 250
 
   it('redeems all minted shares into collateral asset using production config', async () => {
