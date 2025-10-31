@@ -53,6 +53,7 @@ jobs:
         VITE_DISABLE_AVAILABLE_REWARDS: ${{ vars.VITE_DISABLE_AVAILABLE_REWARDS }}
         VITE_DISABLE_SEAM_STAKING: ${{ vars.VITE_DISABLE_SEAM_STAKING }}
         VITE_LIFI_INTEGRATOR: seamless
+        VITE_LIFI_API_KEY: ${{ vars.VITE_LIFI_API_KEY }}
 
     - name: Install action dependencies
       run: |
