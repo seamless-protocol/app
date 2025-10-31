@@ -99,8 +99,40 @@ export class MorphoBorrowApyProvider implements BorrowApyFetcher {
       const marketData = response.marketByUniqueKey
 
       // Use 24-hour average borrow APY for current rates
-      // This provides a more current representation of borrowing costs
+      // Note: Zod validation in fetcher ensures this is number | null
       const borrowAPY = marketData.state.dailyBorrowApy
+
+      // Handle null explicitly (GraphQL schema allows nullable)
+      if (borrowAPY === null) {
+        logger.error('Null borrow APY from Morpho API', {
+          tokenAddress,
+          chainId,
+          marketId,
+        })
+        throw new Error('Morpho API returned null borrow APY')
+      }
+
+      // Hard rejections: NaN, negative
+      if (Number.isNaN(borrowAPY) || borrowAPY < 0) {
+        logger.error('Invalid borrow APY from Morpho API', {
+          tokenAddress,
+          chainId,
+          marketId,
+          borrowAPY,
+        })
+        throw new Error(`Invalid borrow APY from Morpho: ${borrowAPY}`)
+      }
+
+      // Soft warning for unusually high values (>200%) - log but allow
+      if (borrowAPY > 2.0) {
+        logger.warn('Unusually high borrow APY detected', {
+          tokenAddress,
+          chainId,
+          marketId,
+          borrowAPY,
+        })
+      }
+
       const utilization = marketData.state.utilization
 
       const result: BaseBorrowApyData = {

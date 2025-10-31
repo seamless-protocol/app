@@ -1,5 +1,28 @@
+import { z } from 'zod'
+import { createLogger } from '@/lib/logger'
 import { MORPHO_MARKET_BORROW_RATE_QUERY } from '../queries/morpho'
-import type { MorphoMarketBorrowRateResponse } from '../types/morpho'
+
+const logger = createLogger('morpho-fetcher')
+
+// Zod schema for runtime validation of Morpho GraphQL response
+const MorphoMarketStateSchema = z.object({
+  dailyBorrowApy: z.number().nullable(),
+  utilization: z.number(),
+})
+
+const MorphoMarketDataSchema = z.object({
+  uniqueKey: z.string(),
+  id: z.string(),
+  collateralAsset: z.object({
+    address: z.string(),
+    name: z.string(),
+  }),
+  state: MorphoMarketStateSchema,
+})
+
+const MorphoResponseSchema = z.object({
+  marketByUniqueKey: MorphoMarketDataSchema.nullable().optional(),
+})
 
 /**
  * Fetches Morpho market borrow rate data using GraphQL
@@ -7,7 +30,7 @@ import type { MorphoMarketBorrowRateResponse } from '../types/morpho'
 export async function fetchMorphoMarketBorrowRate(
   uniqueKey: string,
   chainId: number = 8453, // Default to Base
-): Promise<MorphoMarketBorrowRateResponse> {
+): Promise<z.infer<typeof MorphoResponseSchema>> {
   const MORPHO_GRAPHQL_ENDPOINT = 'https://api.morpho.org/graphql'
 
   const response = await fetch(MORPHO_GRAPHQL_ENDPOINT, {
@@ -33,5 +56,24 @@ export async function fetchMorphoMarketBorrowRate(
     )
   }
 
-  return result.data
+  // Validate response shape with Zod to catch bad data early
+  try {
+    const validated = MorphoResponseSchema.parse(result.data)
+    return validated
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      // Log validation error with response snippet for debugging
+      const responseSnippet = JSON.stringify(result.data).slice(0, 500)
+      logger.error('Morpho API response validation failed', {
+        uniqueKey,
+        chainId,
+        validationErrors: error.issues,
+        responseSnippet,
+      })
+      throw new Error(
+        `Invalid Morpho API response: ${error.issues.map((e: z.ZodIssue) => e.message).join(', ')}`,
+      )
+    }
+    throw error
+  }
 }
