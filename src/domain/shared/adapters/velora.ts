@@ -73,7 +73,7 @@ export function createVeloraQuoteAdapter(
     const response = responseData as VeloraSwapResponse
 
     const wantsNativeIn = inToken.toLowerCase() === ETH_SENTINEL.toLowerCase()
-    return mapVeloraResponseToQuote(response, wantsNativeIn, slippage)
+    return mapVeloraResponseToQuote(response, wantsNativeIn, slippage, intent ?? 'exactIn')
   }
 }
 
@@ -136,29 +136,13 @@ function mapVeloraResponseToQuote(
   response: VeloraSwapResponse,
   wantsNativeIn: boolean,
   slippage: string,
+  intent: 'exactIn' | 'exactOut',
 ) {
   const { priceRoute, txParams } = response
 
   // Extract approval target from contract address
   const approvalTarget = priceRoute.contractAddress as Address
   if (!approvalTarget) throw new Error('Velora quote missing contract address')
-
-  // Validate ParaSwap method - offsets are method-specific
-  const EXPECTED_METHOD = 'swapExactAmountOut'
-  if (priceRoute.contractMethod) {
-    console.log('[velora-adapter] ParaSwap method', {
-      method: priceRoute.contractMethod,
-      expected: EXPECTED_METHOD,
-      note: 'Offsets are hardcoded for a specific method',
-    })
-
-    if (priceRoute.contractMethod !== EXPECTED_METHOD) {
-      throw new Error(
-        `Velora returned unexpected ParaSwap method: ${priceRoute.contractMethod}. ` +
-          `Expected: ${EXPECTED_METHOD}. Hardcoded offsets will not work with this method.`,
-      )
-    }
-  }
 
   // Extract swap data from transaction params
   const swapData = txParams.data as Hex
@@ -179,31 +163,79 @@ function mapVeloraResponseToQuote(
   // The transaction calldata already contains slippage protection
   const out = expectedOut
 
-  return {
+  const baseQuote = {
     out,
     minOut,
     maxIn,
     approvalTarget: getAddress(approvalTarget),
     calldata: swapData,
     wantsNativeIn,
-    // Store Velora-specific data for redeemWithVelora function
-    veloraData: {
-      augustus: approvalTarget, // Use the contract address from the API response
-      offsets: {
-        // IMPORTANT: These offsets are specific to the ParaSwap method being used.
-        // Different methods (megaSwap, multiSwap, etc.) have different calldata structures.
-        //
-        // Current values are validated for ParaSwap Augustus V6.2 method used in testing:
-        // https://github.com/seamless-protocol/leverage-tokens/blob/audit-fixes/test/integration/8453/LeverageRouter/RedeemWithVelora.t.sol#L19
-        //
-        // TODO: Validate contractMethod from Velora API response matches expected method
-        // TODO: Consider dynamic offset lookup based on response.priceRoute.contractMethod
-        //
-        // Offsets represent byte positions in the swap calldata:
-        exactAmount: 132n, // Byte position for output amount in calldata
-        limitAmount: 100n, // Byte position for max input amount in calldata
-        quotedAmount: 164n, // Byte position for quoted input amount in calldata
-      },
-    },
   }
+
+  // Only validate method and add veloraData for exactOut (used by redeemWithVelora)
+  // For exactIn (used by regular deposit), just return calldata
+  if (intent === 'exactOut') {
+    // Validate ParaSwap method - offsets are specific to BUY (exactOut) methods
+    // See: https://developers.velora.xyz/api/velora-api/velora-market-api/master/api-v6.2
+    const SUPPORTED_METHODS = [
+      'swapExactAmountOut',
+      'swapExactAmountOutOnUniswapV2',
+      'swapExactAmountOutOnUniswapV3',
+      'swapExactAmountOutOnBalancerV2',
+    ]
+
+    if (priceRoute.contractMethod) {
+      const isSupported = SUPPORTED_METHODS.includes(priceRoute.contractMethod)
+      console.log('[velora-adapter] ParaSwap method', {
+        method: priceRoute.contractMethod,
+        intent,
+        supported: isSupported,
+        note: 'Offsets required for redeemWithVelora (BUY/exactOut methods only)',
+      })
+
+      if (!isSupported) {
+        throw new Error(
+          `Velora returned unsupported ParaSwap method for exactOut: ${priceRoute.contractMethod}. ` +
+            `Supported methods: ${SUPPORTED_METHODS.join(', ')}. ` +
+            `Hardcoded offsets (132n, 100n, 164n) are only valid for BUY (exactOut) operations. ` +
+            `SELL (exactIn) methods have different calldata structures.`,
+        )
+      }
+    }
+
+    // Return quote with veloraData for redeemWithVelora
+    return {
+      ...baseQuote,
+      // Store Velora-specific data for redeemWithVelora function
+      veloraData: {
+        augustus: approvalTarget, // Use the contract address from the API response
+        offsets: {
+          // IMPORTANT: These offsets are specific to BUY (exactOut) ParaSwap methods.
+          // They are used by the redeemWithVelora contract function to read specific
+          // byte positions in the swap calldata.
+          //
+          // Current values are validated for ParaSwap Augustus V6.2 BUY methods:
+          // https://github.com/seamless-protocol/leverage-tokens/blob/audit-fixes/test/integration/8453/LeverageRouter/RedeemWithVelora.t.sol#L19
+          //
+          // For regular deposit() operations (exactIn), these offsets are not needed
+          // as the contract just passes the calldata through to Velora/Augustus.
+          //
+          // Offsets represent byte positions in the swap calldata:
+          exactAmount: 132n, // Byte position for output amount in calldata
+          limitAmount: 100n, // Byte position for max input amount in calldata
+          quotedAmount: 164n, // Byte position for quoted input amount in calldata
+        },
+      },
+    }
+  }
+
+  // For exactIn (mints), just return base quote without veloraData
+  // The regular deposit() function doesn't need offsets
+  console.log('[velora-adapter] ParaSwap method', {
+    method: priceRoute.contractMethod,
+    intent,
+    note: 'No offsets needed for regular deposit() with exactIn',
+  })
+
+  return baseQuote
 }

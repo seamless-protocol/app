@@ -125,8 +125,19 @@ export async function orchestrateRedeem(params: {
       throw new Error(`Velora adapter address required on chain ${chainId}`)
     }
 
-    // Use the existing quote from the plan and ensure it's a VeloraQuote
-    const veloraQuote = plan.collateralToDebtQuote as VeloraQuote
+    // Validate that the quote has veloraData (required for redeemWithVelora)
+    const quote = plan.collateralToDebtQuote
+    if (!('veloraData' in quote) || !quote.veloraData) {
+      throw new Error(
+        'Velora quote missing veloraData. ' +
+          'This is required for redeemWithVelora and should always be present for exactOut (redeem) operations.',
+      )
+    }
+
+    // TypeScript now knows veloraData exists
+    const veloraQuote = quote as VeloraQuote & {
+      veloraData: NonNullable<VeloraQuote['veloraData']>
+    }
 
     const tx = await executeRedeemWithVelora({
       config,

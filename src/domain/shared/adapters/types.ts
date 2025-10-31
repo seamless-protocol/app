@@ -21,10 +21,12 @@ export type BaseQuote = {
   calldata: Hex
 }
 
-// Velora-specific quote where veloraData is REQUIRED
+// Velora-specific quote with optional veloraData
+// veloraData is ONLY required for exactOut quotes used by redeemWithVelora()
+// For exactIn quotes used by regular deposit(), veloraData is not needed
 export type VeloraQuote = BaseQuote & {
   // Velora-specific data for redeemWithVelora function
-  veloraData: {
+  veloraData?: {
     augustus: Address
     offsets: {
       exactAmount: bigint
