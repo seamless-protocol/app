@@ -284,7 +284,8 @@ async function getSwapParamsForRedeem(args: {
     (Number(totalCollateralAvailable) / 10 ** Number(collateralAssetDecimals))
 
   const debtToRepayInUsd =
-    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) * (Number(debtToRepay) / 10 ** Number(debtAssetDecimals))
+    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) *
+    (Number(debtToRepay) / 10 ** Number(debtAssetDecimals))
 
   const zeroSlippageCollateralForSenderInUsd = totalCollateralAvailableInUsd - debtToRepayInUsd
 
