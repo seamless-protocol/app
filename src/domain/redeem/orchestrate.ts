@@ -9,13 +9,13 @@
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
 import type { VeloraQuote } from '@/domain/shared/adapters/types'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeRedeemV2 } from './exec/execute.v2'
 import { executeRedeemWithVelora } from './exec/execute.velora'
 import { planRedeemV2 } from './planner/plan.v2'
 import type { QuoteFn } from './planner/types'
 import { DEFAULT_SLIPPAGE_BPS } from './utils/constants'
-import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 
 // Keep parameter types simple to avoid brittle codegen coupling
 type TokenArg = Address
@@ -110,7 +110,6 @@ export async function orchestrateRedeem(params: {
     intent,
   })
 
-  // If adapter type is Velora, use Velora execution path
   if (adapterType === 'velora') {
     const veloraAdapterAddress = chainAddresses.veloraAdapter as Address | undefined
     if (!veloraAdapterAddress) {
@@ -141,7 +140,6 @@ export async function orchestrateRedeem(params: {
     return { plan, ...tx }
   }
 
-  // Default V2 execution path for non-Velora quotes
   const tx = await executeRedeemV2({
     config,
     token,

@@ -124,6 +124,7 @@ describe('planRedeemV2', () => {
           maxInValue: 50n,
         }) as any,
         chainId: 1,
+        intent: 'exactOut',
       }),
     ).rejects.toThrow(
       'Try increasing slippage: swap of collateral to repay debt for the leveraged position is below the required debt.',

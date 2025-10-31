@@ -150,7 +150,7 @@ export async function planRedeemTest({
     quoteCollateralToDebt,
     chainId: scenario.chainId,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
-    intent: 'exactOut'
+    intent: 'exactOut',
   })
 
   return {
