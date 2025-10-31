@@ -143,6 +143,14 @@ function mapVeloraResponseToQuote(
   const approvalTarget = priceRoute.contractAddress as Address
   if (!approvalTarget) throw new Error('Velora quote missing contract address')
 
+  // Log ParaSwap method for monitoring - offsets are method-specific
+  if (priceRoute.contractMethod) {
+    console.log('[velora-adapter] ParaSwap method', {
+      method: priceRoute.contractMethod,
+      note: 'Offsets are hardcoded for a specific method - validate if this changes',
+    })
+  }
+
   // Extract swap data from transaction params
   const swapData = txParams.data as Hex
   if (!swapData) throw new Error('Velora quote missing transaction data')
@@ -173,7 +181,16 @@ function mapVeloraResponseToQuote(
     veloraData: {
       augustus: approvalTarget, // Use the contract address from the API response
       offsets: {
-        // Sourced from : https://github.com/seamless-protocol/leverage-tokens/blob/b19fa974a9e57f3c4382b4d503d7b48c5a080199/test/integration/1/LeverageRouter/RedeemWithVelora.t.sol#L14-L16
+        // IMPORTANT: These offsets are specific to the ParaSwap method being used.
+        // Different methods (megaSwap, multiSwap, etc.) have different calldata structures.
+        //
+        // Current values are validated for ParaSwap Augustus V6.2 method used in testing:
+        // https://github.com/seamless-protocol/leverage-tokens/blob/audit-fixes/test/integration/8453/LeverageRouter/RedeemWithVelora.t.sol#L19
+        //
+        // TODO: Validate contractMethod from Velora API response matches expected method
+        // TODO: Consider dynamic offset lookup based on response.priceRoute.contractMethod
+        //
+        // Offsets represent byte positions in the swap calldata:
         exactAmount: 132n, // Byte position for output amount in calldata
         limitAmount: 100n, // Byte position for max input amount in calldata
         quotedAmount: 164n, // Byte position for quoted input amount in calldata

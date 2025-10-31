@@ -3,6 +3,7 @@ import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
 import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
 import { createCollateralToDebtQuote } from '@/domain/redeem/utils/createCollateralToDebtQuote'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -21,7 +22,7 @@ redeemSuite('Leverage Router V2 Redeem (Tenderly VNet, Mainnet wstETH/ETH 25x)',
   // May be related to CoinGecko price discrepancies or LiFi quote variations
   const SLIPPAGE_BPS = 250
 
-  it('redeems all minted shares into collateral asset via Velora', async () => {
+  it('redeems all minted shares into collateral asset using production config', async () => {
     const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
     assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
     assertRedeemExecution(result)
@@ -140,11 +141,17 @@ async function performRedeem(
   const sharesToRedeem = sharesAfterMint
   await approveIfNeeded(token, router, sharesToRedeem)
 
-  // Mirror production: use Velora for the repay leg (same-chain, bridges disabled)
+  // Use production swap config for this token
+  const tokenConfig = getLeverageTokenConfig(token, chainId)
+  if (!tokenConfig) throw new Error(`No config found for token ${token} on chain ${chainId}`)
+
+  const collateralToDebtConfig = tokenConfig.swaps?.collateralToDebt
+  if (!collateralToDebtConfig) throw new Error(`No collateralToDebt swap config for token ${token}`)
+
   const { quote: quoteCollateralToDebt } = createCollateralToDebtQuote({
     chainId,
     routerAddress: router,
-    swap: { type: 'velora' },
+    swap: collateralToDebtConfig,
     slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
   })

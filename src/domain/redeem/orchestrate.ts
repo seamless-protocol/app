@@ -83,6 +83,15 @@ export async function orchestrateRedeem(params: {
   const adapterType =
     getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora'
 
+  console.log('[redeem-orchestrate] Using swap adapter', {
+    token,
+    chainId,
+    adapterType,
+    source: getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type
+      ? 'production config'
+      : 'default (velora)',
+  })
+
   const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
   const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
   // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit/env overrides
