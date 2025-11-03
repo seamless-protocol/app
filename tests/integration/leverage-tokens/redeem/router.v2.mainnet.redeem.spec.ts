@@ -96,7 +96,7 @@ async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Prom
     address: mintOutcome.token,
     args: [account.address],
   })
-  expect(sharesAfterMint > 0n).toBe(true)
+  expect(sharesAfterMint).toBeGreaterThan(0n)
   return { sharesAfterMint }
 }
 
@@ -237,8 +237,8 @@ function assertRedeemPlan(
   collateralAsset: Address,
   expectedPayout?: Address,
 ): void {
-  expect(plan.sharesToRedeem > 0n).toBe(true)
-  expect(plan.expectedDebt > 0n).toBe(true)
+  expect(plan.sharesToRedeem).toBeGreaterThan(0n)
+  expect(plan.expectedDebt).toBeGreaterThan(0n)
   expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
   const payoutAsset = plan.payoutAsset.toLowerCase()
@@ -254,9 +254,9 @@ function assertRedeemPlan(
   expect(hasApprovalOrWithdraw).toBe(true)
 
   if (expectedPayoutAsset === collateralAsset.toLowerCase()) {
-    expect(plan.expectedCollateral >= 0n).toBe(true)
+    expect(plan.expectedCollateral).toBeGreaterThanOrEqual(0n)
   } else {
-    expect(plan.expectedDebtPayout >= 0n).toBe(true)
+    expect(plan.expectedDebtPayout).toBeGreaterThanOrEqual(0n)
   }
 
   expect(payoutAsset).toBe(expectedPayoutAsset)
@@ -288,11 +288,11 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
   }
 
   if (payoutAsset) {
-    expect(collateralDelta <= plan.minCollateralForSender).toBe(true)
+    expect(collateralDelta).toBeLessThanOrEqual(plan.minCollateralForSender)
     expect(plan.expectedCollateral).toBe(0n)
     expect(withinTolerance(debtDelta, plan.payoutAmount)).toBe(true)
   } else {
-    expect(collateralDelta > 0n).toBe(true)
+    expect(collateralDelta).toBeGreaterThan(0n)
     expect(withinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
   }
 
