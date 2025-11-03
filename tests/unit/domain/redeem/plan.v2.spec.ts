@@ -25,6 +25,12 @@ vi.mock('@/lib/contracts/generated', () => ({
   ),
 }))
 
+// Import mocked functions for type-safe mocking
+import {
+  readLeverageManagerV2GetLeverageTokenCollateralAsset,
+  readLeverageManagerV2PreviewRedeem,
+} from '@/lib/contracts/generated'
+
 vi.mock('wagmi/actions', () => ({
   getPublicClient: vi.fn(() => ({
     readContract: vi.fn(async (args: any) => {
@@ -48,7 +54,12 @@ vi.mock('@/lib/prices/coingecko', () => ({
   })),
 }))
 
-import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
+import {
+  planRedeemV2,
+  type RedeemPlanV2,
+  validateRedeemPlan,
+} from '@/domain/redeem/planner/plan.v2'
+import { BASE_WETH } from '@/lib/contracts/addresses'
 
 const dummyQuoteTarget = '0x0000000000000000000000000000000000000aAa' as Address
 
@@ -200,5 +211,147 @@ describe('planRedeemV2', () => {
     expect(plan.payoutAmount).toBeGreaterThan(0n)
     expect(plan.expectedExcessCollateral).toBe(0n) // Full debt output, no excess collateral
     expect(plan.calls.length).toBeGreaterThan(2)
+  })
+
+  it('should handle native collateral (WETH) redemption', async () => {
+    // Override mock to return WETH as collateral
+    vi.mocked(readLeverageManagerV2GetLeverageTokenCollateralAsset).mockResolvedValueOnce(
+      BASE_WETH,
+    )
+
+    // Mock price for WETH
+    const { fetchCoingeckoTokenUsdPrices } = await import('@/lib/prices/coingecko')
+    vi.mocked(fetchCoingeckoTokenUsdPrices).mockResolvedValueOnce({
+      [BASE_WETH.toLowerCase()]: 2000, // WETH price
+      '0xdddddddddddddddddddddddddddddddddddddddd': 1.001, // debt (USDC)
+    })
+
+    const plan = await planRedeemV2({
+      config: {} as any,
+      token: '0x1111111111111111111111111111111111111111' as Address,
+      sharesToRedeem: 50n,
+      slippageBps: 50,
+      quoteCollateralToDebt: mockQuote as any,
+      chainId: 1,
+      intent: 'exactOut',
+    })
+
+    // Should have at least 2 calls: WETH withdraw + swap
+    expect(plan.calls.length).toBeGreaterThanOrEqual(2)
+
+    // First call should be WETH withdraw
+    const firstCall = plan.calls[0]
+    expect(firstCall?.target.toLowerCase()).toBe(BASE_WETH.toLowerCase())
+    // Withdraw function signature: 0x2e1a7d4d
+    expect(firstCall?.data.startsWith('0x2e1a7d4d')).toBe(true)
+    expect(firstCall?.value).toBe(0n)
+
+    // Second call should have value set (native ETH for swap)
+    const secondCall = plan.calls[1]
+    expect(secondCall?.value).toBeGreaterThan(0n)
+  })
+
+  it('should handle debt output when remaining collateral is zero', async () => {
+    // Create a scenario where all collateral is consumed
+    vi.mocked(readLeverageManagerV2PreviewRedeem).mockResolvedValueOnce({
+      collateral: 25126582278481012n, // Very small collateral (just enough for debt)
+      debt: 50000000n,
+      sharesRedeemed: 50n,
+      maxSharesRedeemable: 50n,
+      fee: 0n,
+      borrowShares: 0n,
+      borrowAssets: 0n,
+    })
+
+    const plan = await planRedeemV2({
+      config: {} as any,
+      token: '0x1111111111111111111111111111111111111111' as Address,
+      sharesToRedeem: 50n,
+      slippageBps: 50,
+      quoteCollateralToDebt: mockQuote as any,
+      outputAsset: '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
+      chainId: 1,
+      intent: 'exactOut',
+    })
+
+    // When converting to debt with zero remaining collateral
+    expect(plan.payoutAsset.toLowerCase()).toBe('0xdddddddddddddddddddddddddddddddddddddddd')
+    expect(plan.expectedCollateral).toBe(0n)
+    // Payout should be zero or minimal
+    expect(plan.payoutAmount).toBeLessThanOrEqual(1000000n) // <= 1 USDC
+  })
+})
+
+describe('validateRedeemPlan', () => {
+  const validPlan: RedeemPlanV2 = {
+    token: '0x1111111111111111111111111111111111111111' as Address,
+    sharesToRedeem: 1000000000000000000n,
+    collateralAsset: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as Address,
+    debtAsset: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' as Address,
+    slippageBps: 50,
+    minCollateralForSender: 900000000000000000n,
+    expectedCollateral: 950000000000000000n,
+    expectedDebt: 50000000n,
+    collateralToDebtQuote: {
+      out: 50000000n,
+      minOut: 49000000n,
+      maxIn: 100000000000000000n,
+      approvalTarget: '0xcccccccccccccccccccccccccccccccccccccccc' as Address,
+      calldata: '0x1234' as `0x${string}`,
+    },
+    expectedTotalCollateral: 1000000000000000000n,
+    expectedExcessCollateral: 50000000000000000n,
+    expectedDebtPayout: 0n,
+    payoutAsset: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as Address,
+    payoutAmount: 950000000000000000n,
+    calls: [],
+  }
+
+  it('should return true for valid plan', () => {
+    expect(validateRedeemPlan(validPlan)).toBe(true)
+  })
+
+  it('should return false if sharesToRedeem is zero', () => {
+    const invalidPlan = { ...validPlan, sharesToRedeem: 0n }
+    expect(validateRedeemPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if expectedCollateral is negative', () => {
+    const invalidPlan = { ...validPlan, expectedCollateral: -1n }
+    expect(validateRedeemPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if minCollateralForSender is negative', () => {
+    const invalidPlan = { ...validPlan, minCollateralForSender: -1n }
+    expect(validateRedeemPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if expectedDebtPayout is negative', () => {
+    const invalidPlan = { ...validPlan, expectedDebtPayout: -1n }
+    expect(validateRedeemPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if payoutAmount is negative', () => {
+    const invalidPlan = { ...validPlan, payoutAmount: -1n }
+    expect(validateRedeemPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if slippageBps is negative', () => {
+    const invalidPlan = { ...validPlan, slippageBps: -1 }
+    expect(validateRedeemPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if slippageBps exceeds 10000', () => {
+    const invalidPlan = { ...validPlan, slippageBps: 10001 }
+    expect(validateRedeemPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if minCollateralForSender exceeds expectedCollateral', () => {
+    const invalidPlan = {
+      ...validPlan,
+      minCollateralForSender: 1000000000000000000n,
+      expectedCollateral: 950000000000000000n,
+    }
+    expect(validateRedeemPlan(invalidPlan)).toBe(false)
   })
 })
