@@ -85,7 +85,7 @@ function PositionAPYDisplay({ position, isLoading }: { position: Position; isLoa
               position.leverageTokenAddress as `0x${string}`,
             )
             return tokenConfig ? (
-              <APYBreakdownTooltip token={tokenConfig} apyData={apyBreakdown} />
+              <APYBreakdownTooltip apyData={apyBreakdown} />
             ) : (
               <p>Annual Percentage Yield</p>
             )

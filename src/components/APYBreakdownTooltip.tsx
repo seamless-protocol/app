@@ -1,13 +1,10 @@
-import type { LeverageToken } from '@/features/leverage-tokens/components/leverage-token-table'
-import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import type { APYBreakdownData } from './APYBreakdown'
 import { APYBreakdown } from './APYBreakdown'
 import { Skeleton } from './ui/skeleton'
 import { cn } from './ui/utils'
 
 interface APYBreakdownTooltipProps {
-  token: LeverageToken
-  apyData?: APYBreakdownData
+  apyData?: APYBreakdownData | undefined
   isLoading?: boolean
   isError?: boolean
   compact?: boolean
@@ -15,33 +12,17 @@ interface APYBreakdownTooltipProps {
 }
 
 /**
- * APY Breakdown tooltip that uses the hook to fetch real yield data
+ * APY Breakdown tooltip - purely presentational component that displays APY data.
+ * All data fetching should be done by parent components to ensure consistency.
  */
 export function APYBreakdownTooltip({
-  token,
   apyData,
-  isLoading: preloadedIsLoading = false,
-  isError: preloadedIsError = false,
+  isLoading = false,
+  isError = false,
   compact = false,
   className,
 }: APYBreakdownTooltipProps) {
-  // Use preloaded data if provided, otherwise fetch on demand
-  const {
-    data: onDemandApyData,
-    isLoading: onDemandIsLoading,
-    isError: onDemandIsError,
-  } = useLeverageTokenAPY({
-    tokenAddress: token.address,
-    leverageToken: token,
-    enabled: !apyData, // Only fetch if no preloaded data provided
-  })
-
-  // Use preloaded data if provided, otherwise use on-demand data
-  const finalApyData = apyData || onDemandApyData
-  const finalIsLoading = apyData ? false : preloadedIsLoading || onDemandIsLoading
-  const finalIsError = apyData ? false : preloadedIsError || onDemandIsError
-
-  if (finalIsLoading) {
+  if (isLoading) {
     return (
       <div className="min-w-[240px] space-y-3 rounded-lg border border-border bg-card p-4">
         <div className="text-sm font-semibold text-foreground">APY Breakdown</div>
@@ -54,7 +35,7 @@ export function APYBreakdownTooltip({
     )
   }
 
-  if (finalIsError || !finalApyData) {
+  if (isError || !apyData) {
     return (
       <div className="min-w-[240px] space-y-2 rounded-lg border border-border bg-card p-4">
         <div className="text-sm font-semibold text-foreground">APY Breakdown</div>
@@ -65,7 +46,7 @@ export function APYBreakdownTooltip({
 
   return (
     <APYBreakdown
-      data={finalApyData}
+      data={apyData}
       compact={compact}
       className={cn('min-w-[240px] rounded-lg border border-border bg-card', className)}
     />

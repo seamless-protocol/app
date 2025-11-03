@@ -83,8 +83,7 @@ export function LeverageTokenMobileCard({
                   </span>
                 )}
                 <ApyInfoTooltip
-                  token={token}
-                  {...(apyData && { apyData })}
+                  apyData={apyData}
                   isLoading={isApyLoading ?? false}
                   isError={isApyError ?? false}
                   iconSize="md"

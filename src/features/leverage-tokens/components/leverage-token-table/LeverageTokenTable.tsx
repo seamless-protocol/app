@@ -475,8 +475,7 @@ export function LeverageTokenTable({
                             </span>
                           )}
                           <ApyInfoTooltip
-                            token={token}
-                            {...(tokenApyData && { apyData: tokenApyData })}
+                            apyData={tokenApyData}
                             isLoading={apyLoading}
                             isError={tokenApyError}
                             iconSize="md"
