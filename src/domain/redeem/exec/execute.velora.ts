@@ -19,9 +19,6 @@ import {
   writeLeverageRouterV2RedeemWithVelora,
 } from '@/lib/contracts/generated'
 
-// Infer call array type directly from generated action signature
-type RedeemWithVeloraParams = Parameters<typeof simulateLeverageRouterV2RedeemWithVelora>[1]
-
 /**
  * @param config Wagmi Config used to resolve active chain and contract addresses
  * @param token Leverage Token address to redeem
@@ -69,30 +66,22 @@ export async function executeRedeemWithVelora(params: {
 
   // No allowance handling here; UI should perform approvals beforehand
 
-  const args = [
-    token,
-    sharesToRedeem,
-    minCollateralForSender,
-    veloraAdapter,
-    augustus,
-    offsets,
-    swapData,
-  ] satisfies RedeemWithVeloraParams['args']
-
   const chain = chainId as SupportedChainId
 
   const { request } = await simulateLeverageRouterV2RedeemWithVelora(config, {
-    // redeemWithVelora(token, shares, minCollateralForSender, veloraAdapter, augustus, offsets, swapData)
-    args,
+    args: [
+      token,
+      sharesToRedeem,
+      minCollateralForSender,
+      veloraAdapter,
+      augustus,
+      offsets,
+      swapData,
+    ],
     account,
     chainId: chain,
   })
 
-  const hash = await writeLeverageRouterV2RedeemWithVelora(config, {
-    args: request.args,
-    account,
-    ...(request.value ? { value: request.value } : {}),
-    chainId: chain,
-  })
+  const hash = await writeLeverageRouterV2RedeemWithVelora(config, request)
   return { hash }
 }

@@ -120,13 +120,11 @@ export async function orchestrateRedeem(params: {
   })
 
   if (adapterType === 'velora') {
-    const veloraAdapterAddress = chainAddresses.veloraAdapter as Address | undefined
+    const veloraAdapterAddress = chainAddresses.veloraAdapter
     if (!veloraAdapterAddress) {
       throw new Error(`Velora adapter address required on chain ${chainId}`)
     }
 
-    // Extract veloraData properties from quote using type guard
-    // Velora adapter always includes veloraData for exactOut (redeem) quotes
     const quote = plan.collateralToDebtQuote
     if (!hasVeloraData(quote)) {
       throw new Error('Velora quote missing veloraData for exactOut operation')
@@ -145,7 +143,7 @@ export async function orchestrateRedeem(params: {
       swapData: quote.calldata,
       routerAddress:
         routerAddressV2 ||
-        (contractAddresses[chainId]?.leverageRouterV2 as Address | undefined) ||
+        contractAddresses[chainId]?.leverageRouterV2 ||
         (() => {
           throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
         })(),
