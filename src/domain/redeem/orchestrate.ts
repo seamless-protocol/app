@@ -8,7 +8,7 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
-import type { VeloraQuoteWithData } from '@/domain/shared/adapters/types'
+import { hasVeloraData } from '@/domain/shared/adapters/types'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeRedeemV2 } from './exec/execute.v2'
@@ -125,10 +125,12 @@ export async function orchestrateRedeem(params: {
       throw new Error(`Velora adapter address required on chain ${chainId}`)
     }
 
-    // Extract veloraData properties from quote
+    // Extract veloraData properties from quote using type guard
     // Velora adapter always includes veloraData for exactOut (redeem) quotes
-    // Type assertion is safe here since we're in the velora adapter branch
-    const quote = plan.collateralToDebtQuote as VeloraQuoteWithData
+    const quote = plan.collateralToDebtQuote
+    if (!hasVeloraData(quote)) {
+      throw new Error('Velora quote missing veloraData for exactOut operation')
+    }
     const { augustus, offsets } = quote.veloraData
 
     const tx = await executeRedeemWithVelora({
