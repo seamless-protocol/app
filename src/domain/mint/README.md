@@ -1,28 +1,22 @@
-Mint Domain — Planner, Ports, Executor
+Mint Domain — Planner
 
 Overview
 - Purpose: Plan leverage-token minting.
 - Current scope: A planner. Approvals handled in UI/hooks. Execution is performed directly via generated actions (simulate → write) in app hooks and tests.
-- Key files: `planner/plan.ts`, `ports/*`, `adapters/lifi.ts`, `utils/allowance.ts`.
+- Key files: `planner/plan.ts`, `utils/createDebtToCollateralQuote.ts`, `utils/allowance.ts`.
 
 Folder Structure
 - `planner/`: Planning and math
   - `plan.ts`: Build plan
   - `math.ts`: Slippage and math helpers
   - `types.ts`: Plan, Quote types
-- `ports/`: Chain read/write facades
-  - `managerPort.ts`: Manager previews
-  - `routerPort.v2.ts`: Router preview + invoke
-  - `index.ts`: Re-exports
-- (removed) `exec/`: Transaction senders. Execution is now done in-app via generated actions.
-- `adapters/`
-  - `lifi.ts`: Exact-input quote builder
-- `utils/`
+- `utils/`: Utilities and helpers
   - `constants.ts`: Defaults and BPS helpers
   - `allowance.ts`: Allowance utilities
-  - `previewMint.ts`: Local preview helper for tests
-- (removed) `orchestrate.ts`: In-app hooks call generated actions directly.
+  - `createDebtToCollateralQuote.ts`: Quote adapter factory for debt→collateral swaps
 - `index.ts`: Public entry for domain exports
+
+Note: Adapters are located in `domain/shared/adapters/` (shared across mint and redeem).
 
 Planner
 - File: `planner/plan.ts`.
@@ -32,22 +26,24 @@ Planner
 Execution
 - In-app: `useMintWrite` hook performs network switch → simulate → write using generated actions.
 
-Ports
-- Previews use `router.previewDeposit(token, userCollateral)` exclusively (equity-only semantics).
-- Router: `createRouterPortV2` previews and invokes `deposit` with encoded calls.
+Contract Interactions
+- Previews use `readLeverageRouterV2PreviewDeposit` from generated actions.
+- Router calls use `simulateLeverageRouterV2Deposit` and `writeLeverageRouterV2Deposit` from generated actions.
 
 Allowances
 - UI handles approvals via hooks. Domain helper `ensureAllowance` exists (`utils/allowance.ts`) with `resetThenMax` support (approve(0) then approve(max)).
 
 Quotes
-- Adapter: `adapters/lifi.ts` builds exact-input quotes returning `{ out, approvalTarget, calldata }`.
-- Note: We currently don’t enforce a `deadline` field on quotes; add if required by policy.
+- Adapters: Located in `domain/shared/adapters/` (lifi, uniswapV2, uniswapV3, velora).
+- Factory: `utils/createDebtToCollateralQuote.ts` creates quote adapters based on token configuration.
+- Quote adapters return `{ out, approvalTarget, calldata }`.
+- Note: We currently don't enforce a `deadline` field on quotes; add if required by policy.
 
 Orchestrator
-- Removed. Use `planMint` + generated actions directly.
+- Use `planMint` + generated actions directly.
 
 Testing
-- Unit: planner math/guards, ports, allowance helper, hooks.
+- Unit: planner math/guards, allowance helper, hooks.
 - Integration: `tests/integration/leverage-tokens/mint/router.v2.mint.spec.ts` (Tenderly VNet happy path). Run `bun run test:integration` with Tenderly env, or use `TEST_RPC_URL` for local fallback.
 
 Alignment with Planner Doc
@@ -62,4 +58,4 @@ Roadmap (high-value next steps)
 - Emit telemetry (scaled flag, reprice rate, excess debt).
 
 Rationale
-- Separate planning vs execution concerns; keep ABI-facing ports isolated; make adapters and small utils easily testable; simplify future expansion (conversion leg, shared planner).
+- Separate planning vs execution concerns; use generated actions directly for contract interactions; make adapters and small utils easily testable; simplify future expansion (conversion leg, shared planner).
