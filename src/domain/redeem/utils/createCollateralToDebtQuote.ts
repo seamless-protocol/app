@@ -15,6 +15,16 @@ import {
 import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 import type { QuoteFn } from '../planner/types'
 
+/** Supported adapter types for collateral-to-debt swaps */
+export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2'
+
+/**
+ * Validated ParaSwap methods for Velora exactOut operations.
+ * Contract has hardcoded byte offsets that only work with swapExactAmountOut.
+ * See: src/domain/shared/adapters/velora.ts for offset validation details.
+ */
+const VELORA_VALIDATED_EXACT_OUT_METHODS = ['swapExactAmountOut'] as const
+
 export type CollateralToDebtSwapConfig =
   | {
       type: 'uniswapV3'
@@ -45,7 +55,7 @@ export interface CreateCollateralToDebtQuoteParams {
 
 export interface CreateCollateralToDebtQuoteResult {
   quote: QuoteFn
-  adapterType: CollateralToDebtSwapConfig['type']
+  adapterType: SwapAdapterType
 }
 
 export function createCollateralToDebtQuote({
@@ -74,6 +84,8 @@ export function createCollateralToDebtQuote({
       router: routerAddress,
       slippageBps,
       ...(fromAddress ? { fromAddress } : {}),
+      // Restrict to validated methods for exactOut operations (redeem)
+      includeContractMethods: [...VELORA_VALIDATED_EXACT_OUT_METHODS],
     })
     return { quote, adapterType: 'velora' }
   }
