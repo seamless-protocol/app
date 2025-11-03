@@ -2,12 +2,12 @@ import type { Address, Hex } from 'viem'
 import { getAddress } from 'viem'
 import { z } from 'zod'
 import { getTokenDecimals } from '@/features/leverage-tokens/leverageTokens.config'
-import { ETH_SENTINEL } from '@/lib/contracts/addresses'
+import { ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
 import type { QuoteFn } from './types'
 
 export interface VeloraAdapterOptions {
-  chainId: number
+  chainId: SupportedChainId
   router: Address
   /** Optional override for quote `fromAddress` (defaults to `router`). */
   fromAddress?: Address

@@ -12,7 +12,7 @@ import {
   getUniswapV3PoolConfig,
   type UniswapV3PoolKey,
 } from '@/lib/config/uniswapV3'
-import { BASE_WETH, getContractAddresses } from '@/lib/contracts/addresses'
+import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 import type { QuoteFn } from '../planner/types'
 
 export type CollateralToDebtSwapConfig =
@@ -70,7 +70,7 @@ export function createCollateralToDebtQuote({
 
   if (swap.type === 'velora') {
     const quote = createVeloraQuoteAdapter({
-      chainId,
+      chainId: chainId as SupportedChainId,
       router: routerAddress,
       slippageBps,
       ...(fromAddress ? { fromAddress } : {}),
