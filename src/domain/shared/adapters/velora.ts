@@ -178,7 +178,7 @@ function buildQuoteUrl(
     url.searchParams.set('amount', params.amountIn.toString())
   }
 
-  // Add optional method filter (for testing)
+  // Restrict to specific ParaSwap methods if provided
   if (params.includeContractMethods && params.includeContractMethods.length > 0) {
     url.searchParams.set('includeContractMethods', params.includeContractMethods.join(','))
   }
