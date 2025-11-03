@@ -56,9 +56,12 @@ const veloraSuccessResponseSchema = z.object({
     contractMethod: z.string(),
   }),
   txParams: z.object({
-    data: z.string().refine((val) => val.startsWith('0x') && /^[a-fA-F0-9]*$/.test(val.slice(2)), {
-      message: 'data must be a valid hex string',
-    }),
+    data: z
+      .string()
+      .refine((val) => val.startsWith('0x') && /^[a-fA-F0-9]*$/.test(val.slice(2)), {
+        message: 'data must be a valid hex string',
+      })
+      .transform((val) => val as Hex),
   }),
 })
 
@@ -194,8 +197,8 @@ function mapVeloraResponseToQuote(
   // Extract approval target from contract address (already checksummed by zod schema)
   const approvalTarget = priceRoute.contractAddress
 
-  // Extract swap data from transaction params
-  const swapData = txParams.data as Hex // validated by zod schema
+  // Extract swap data from transaction params (validated and typed by zod schema)
+  const swapData = txParams.data
 
   // Extract amounts from price route (expected amounts)
   const expectedOut = BigInt(priceRoute.destAmount)
