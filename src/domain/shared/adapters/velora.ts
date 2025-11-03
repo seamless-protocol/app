@@ -13,6 +13,8 @@ export interface VeloraAdapterOptions {
   fromAddress?: Address
   slippageBps?: number
   baseUrl?: string
+  /** Optional filter to force specific ParaSwap contract methods (for testing). */
+  includeContractMethods?: Array<string>
 }
 
 // Velora API response validation schemas
@@ -81,6 +83,7 @@ export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
     fromAddress,
     slippageBps = DEFAULT_SLIPPAGE_BPS,
     baseUrl = 'https://api.velora.xyz',
+    includeContractMethods,
   } = opts
 
   const slippage = bpsToDecimalString(slippageBps)
@@ -97,6 +100,7 @@ export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
       fromAddress: (fromAddress ?? router) as Address,
       toAddress: router as Address,
       slippage,
+      ...(includeContractMethods ? { includeContractMethods } : {}),
     })
 
     const res = await fetch(url.toString(), { method: 'GET' })
@@ -129,6 +133,7 @@ function buildQuoteUrl(
     fromAddress: Address
     toAddress: Address
     slippage: string
+    includeContractMethods?: Array<string>
   },
 ): URL {
   const url = new URL('/swap', baseUrl)
@@ -168,6 +173,11 @@ function buildQuoteUrl(
     }
     url.searchParams.set('side', 'SELL')
     url.searchParams.set('amount', params.amountIn.toString())
+  }
+
+  // Add optional method filter (for testing)
+  if (params.includeContractMethods && params.includeContractMethods.length > 0) {
+    url.searchParams.set('includeContractMethods', params.includeContractMethods.join(','))
   }
 
   return url
@@ -225,12 +235,25 @@ function mapVeloraResponseToQuote(
   // Only validate method and add veloraData for exactOut (used by redeemWithVelora)
   if (intent === 'exactOut') {
     // Validate ParaSwap method - offsets are specific to BUY (exactOut) methods
-    // See: https://developers.velora.xyz/api/velora-api/velora-market-api/master/api-v6.2
+    // Velora API v6.2 documentation (all BUY methods): https://developers.velora.xyz/api/velora-api/velora-market-api/master/api-v6.2
+    //
+    // IMPORTANT: Only swapExactAmountOut has been validated with live API testing.
+    // Other methods (UniswapV2, UniswapV3, BalancerV2, RFQ, MakerPSM) use different calldata structures
+    // and the hardcoded offsets (132, 100, 164) extract incorrect values from their calldata.
+    //
+    // Live validation results (see tests/integration/domain/adapters/velora-offset-validation.spec.ts):
+    // ✅ swapExactAmountOut: All offsets extract correct values
+    // ❌ swapExactAmountOutOnUniswapV3: Offsets extract garbage data
+    // ❌ swapExactAmountOutOnUniswapV2: API returns 500 error (cannot test)
+    // ❌ swapExactAmountOutOnBalancerV2: API returns 500 error (cannot test)
+    //
+    // To add support for other methods:
+    // 1. Get real calldata samples from Velora API for that method
+    // 2. Derive correct byte offsets for exactAmount, limitAmount, quotedAmount
+    // 3. Validate with live API test using RUN_LIVE_VELORA_TESTS=true
+    // 4. Add method to allowlist below
     const SUPPORTED_METHODS = [
-      'swapExactAmountOut',
-      'swapExactAmountOutOnUniswapV2',
-      'swapExactAmountOutOnUniswapV3',
-      'swapExactAmountOutOnBalancerV2',
+      'swapExactAmountOut', // ✅ Validated - offsets: exactAmount=132, limitAmount=100, quotedAmount=164
     ]
 
     if (priceRoute.contractMethod) {
@@ -245,9 +268,9 @@ function mapVeloraResponseToQuote(
       if (!isSupported) {
         throw new Error(
           `Velora returned unsupported ParaSwap method for exactOut: ${priceRoute.contractMethod}. ` +
-            `Supported methods: ${SUPPORTED_METHODS.join(', ')}. ` +
-            `Hardcoded offsets (132n, 100n, 164n) are only valid for BUY (exactOut) operations. ` +
-            `SELL (exactIn) methods have different calldata structures.`,
+            `Only supported method: ${SUPPORTED_METHODS.join(', ')}. ` +
+            `Hardcoded offsets (132n, 100n, 164n) are only validated for swapExactAmountOut. ` +
+            `Other methods use different calldata structures where offsets extract incorrect values.`,
         )
       }
     }
@@ -259,20 +282,24 @@ function mapVeloraResponseToQuote(
       veloraData: {
         augustus: approvalTarget, // Use the contract address from the API response
         offsets: {
-          // IMPORTANT: These offsets are specific to BUY (exactOut) ParaSwap methods.
+          // IMPORTANT: These offsets are ONLY valid for swapExactAmountOut method.
           // They are used by the redeemWithVelora contract function to read specific
           // byte positions in the swap calldata.
           //
-          // Current values are validated for ParaSwap Augustus V6.2 BUY methods:
-          // https://github.com/seamless-protocol/leverage-tokens/blob/audit-fixes/test/integration/8453/LeverageRouter/RedeemWithVelora.t.sol#L19
+          // Validated method: swapExactAmountOut (ParaSwap Augustus V6.2)
+          // - See Solidity tests: https://github.com/seamless-protocol/leverage-tokens/blob/audit-fixes/test/integration/8453/LeverageRouter/RedeemWithVelora.t.sol#L19
+          // - See live API validation: tests/integration/domain/adapters/velora-offset-validation.spec.ts
+          //
+          // Other BUY methods (UniswapV2, UniswapV3, BalancerV2, RFQ, MakerPSM) use different
+          // calldata structures where these offsets extract incorrect values.
           //
           // For regular deposit() operations (exactIn), these offsets are not needed
           // as the contract just passes the calldata through to Velora/Augustus.
           //
-          // Offsets represent byte positions in the swap calldata:
-          exactAmount: 132n, // Byte position for output amount in calldata
-          limitAmount: 100n, // Byte position for max input amount in calldata
-          quotedAmount: 164n, // Byte position for quoted input amount in calldata
+          // Offsets represent byte positions in swapExactAmountOut calldata:
+          exactAmount: 132n, // Byte position for exact output amount
+          limitAmount: 100n, // Byte position for max input amount (with slippage)
+          quotedAmount: 164n, // Byte position for quoted input amount (base quote)
         },
       },
     }
