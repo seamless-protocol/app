@@ -8,6 +8,7 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
+import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { hasVeloraData } from '@/domain/shared/adapters/types'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
@@ -29,7 +30,7 @@ type SharesToRedeemArg = bigint
 // Result type for orchestrated redeems
 export type OrchestrateRedeemResult = {
   hash: Hash
-  plan: ReturnType<typeof planRedeemV2> extends Promise<infer P> ? P : never
+  plan: Awaited<ReturnType<typeof planRedeemV2>>
 }
 
 /**
@@ -82,8 +83,6 @@ export async function orchestrateRedeem(params: {
     chainId,
   } = params
 
-  if (!quoteCollateralToDebt) throw new Error('quoteCollateralToDebt is required')
-
   const adapterType =
     getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora'
 
@@ -91,14 +90,15 @@ export async function orchestrateRedeem(params: {
   const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
   // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit/env overrides
   const chainAddresses = getContractAddresses(chainId)
-  const routerAddressV2 =
-    params.routerAddressV2 ||
-    (chainAddresses.leverageRouterV2 as Address | undefined) ||
-    envRouterV2
+  const routerAddressV2 = params.routerAddressV2 || chainAddresses.leverageRouterV2 || envRouterV2
+  if (!routerAddressV2) {
+    throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
+  }
   const managerAddressV2 =
-    params.managerAddressV2 ||
-    (chainAddresses.leverageManagerV2 as Address | undefined) ||
-    envManagerV2
+    params.managerAddressV2 || chainAddresses.leverageManagerV2 || envManagerV2
+  if (!managerAddressV2) {
+    throw new Error(`LeverageManagerV2 address required on chain ${chainId}`)
+  }
 
   const intent = getQuoteIntentForAdapter(adapterType)
 
@@ -136,12 +136,7 @@ export async function orchestrateRedeem(params: {
       augustus,
       offsets,
       swapData: quote.calldata,
-      routerAddress:
-        routerAddressV2 ||
-        contractAddresses[chainId]?.leverageRouterV2 ||
-        (() => {
-          throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
-        })(),
+      routerAddress: routerAddressV2,
       chainId: chainId as SupportedChainId,
     })
     return { plan, ...tx }
@@ -196,7 +191,9 @@ export async function orchestrateRedeem(params: {
  *
  * Note: Mints always use exactIn (even for Velora) because the `deposit()` function doesn't need offsets.
  */
-export const getQuoteIntentForAdapter = (adapterType: string): 'exactOut' | 'exactIn' => {
+export const getQuoteIntentForAdapter = (
+  adapterType: CollateralToDebtSwapConfig['type'],
+): 'exactOut' | 'exactIn' => {
   switch (adapterType) {
     case 'velora':
       return 'exactOut'
