@@ -98,7 +98,7 @@ export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
       outToken,
       ...(typeof amountIn === 'bigint' ? { amountIn } : {}),
       ...(typeof amountOut === 'bigint' ? { amountOut } : {}),
-      ...(intent ? { intent } : {}),
+      intent,
       router,
       fromAddress: (fromAddress ?? router) as Address,
       toAddress: router as Address,
@@ -118,7 +118,7 @@ export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
     }
 
     const wantsNativeIn = inToken.toLowerCase() === ETH_SENTINEL.toLowerCase()
-    return mapVeloraResponseToQuote(response, wantsNativeIn, slippage, intent ?? 'exactIn')
+    return mapVeloraResponseToQuote(response, wantsNativeIn, slippage, intent)
   }
 }
 
@@ -279,7 +279,4 @@ function mapVeloraResponseToQuote(
       },
     }
   }
-
-  // Fallback return (should be unreachable due to early returns above)
-  return baseQuote
 }
