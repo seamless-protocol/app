@@ -54,6 +54,11 @@ export type MintOutcome = {
   manager: Address
   token: Address
   sharesMinted: bigint
+  minShares: bigint
+  expectedShares: bigint
+  expectedTotalCollateral: bigint
+  collateralBalanceBefore: bigint
+  collateralBalanceAfter: bigint
 }
 
 /**
@@ -152,6 +157,11 @@ export async function executeSharedMint({
     args: [account.address],
   })
 
+  const collateralBalanceBefore = await readLeverageTokenBalanceOf(config, {
+    address: collateralAsset,
+    args: [account.address],
+  })
+
   console.info('[SHARED MINT] Planning V2 mint')
   const plan = await planMintV2({
     config,
@@ -202,6 +212,11 @@ export async function executeSharedMint({
     throw new Error('Mint produced zero shares')
   }
 
+  const collateralBalanceAfter = await readLeverageTokenBalanceOf(config, {
+    address: collateralAsset,
+    args: [account.address],
+  })
+
   return {
     equityInInputAsset,
     collateralAsset,
@@ -210,6 +225,11 @@ export async function executeSharedMint({
     manager,
     token,
     sharesMinted: mintedShares,
+    minShares: plan.minShares,
+    expectedShares: plan.expectedShares,
+    expectedTotalCollateral: plan.expectedTotalCollateral,
+    collateralBalanceBefore,
+    collateralBalanceAfter,
   }
 }
 

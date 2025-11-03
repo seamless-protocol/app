@@ -29,8 +29,25 @@ mintSuite('Leverage Router V2 Mint (Mainnet wstETH/ETH 25x)', () => {
         },
       })
 
-      // Verify shares were minted successfully
-      expect(res.sharesMinted > 0n).toBe(true)
+      // 0.1% tolerance for Velora routing variability
+      const toleranceBps = 10n
+      const withinTolerance = (actual: bigint, expected: bigint): boolean => {
+        if (expected === 0n) return actual === 0n
+        if (actual < 0n) return false
+        const lowerBound = (expected * (10_000n - toleranceBps)) / 10_000n
+        const upperBound = (expected * (10_000n + toleranceBps)) / 10_000n
+        return actual >= lowerBound && actual <= upperBound
+      }
+
+      // Minted shares should be within 0.1% of expected shares
+      expect(withinTolerance(res.sharesMinted, res.expectedShares)).toBe(true)
+
+      // Sanity check: minted shares should meet minimum threshold
+      expect(res.sharesMinted).toBeGreaterThanOrEqual(res.minShares)
+
+      // Verify collateral spend equals equity funded
+      const collateralSpent = res.collateralBalanceBefore - res.collateralBalanceAfter
+      expect(collateralSpent).toBe(res.equityInInputAsset)
     })
   }, 120_000)
 })
