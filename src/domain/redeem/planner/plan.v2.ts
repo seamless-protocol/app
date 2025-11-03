@@ -49,6 +49,8 @@ export type RedeemPlanV2 = {
   expectedCollateral: bigint
   /** Debt expected to be repaid during redemption. */
   expectedDebt: bigint
+  /** Quote used for collateral-to-debt swap. */
+  collateralToDebtQuote: Quote
   /** Total collateral available before debt repayment. */
   expectedTotalCollateral: bigint
   /** Excess collateral (if more collateral is available than needed for debt repayment). */
@@ -76,6 +78,8 @@ export async function planRedeemV2(params: {
   outputAsset?: Address
   /** Chain ID to execute the transaction on */
   chainId: number
+  /** Intent for collateral->debt quote */
+  intent: 'exactOut' | 'exactIn'
 }): Promise<RedeemPlanV2> {
   const {
     config,
@@ -84,6 +88,7 @@ export async function planRedeemV2(params: {
     slippageBps,
     quoteCollateralToDebt: quoter,
     chainId,
+    intent,
   } = params
 
   const {
@@ -110,7 +115,7 @@ export async function planRedeemV2(params: {
     quoter,
     collateralAvailableForSwap,
     inTokenForQuote,
-    intent: 'exactIn',
+    intent,
   })
 
   const collateralRequiredForSwap = quote.maxIn ?? 0n
@@ -215,6 +220,7 @@ export async function planRedeemV2(params: {
     minCollateralForSender: planDraft.minCollateralForSender,
     expectedCollateral: planDraft.expectedCollateral,
     expectedDebt: debtToRepay,
+    collateralToDebtQuote: quote,
     expectedTotalCollateral: totalCollateralAvailable,
     expectedExcessCollateral: remainingCollateral,
     expectedDebtPayout: planDraft.expectedDebtPayout,
@@ -324,13 +330,24 @@ async function getCollateralToDebtQuote(args: {
 
   if (requiredDebt <= 0n) return { out: 0n, approvalTarget: zeroAddress, calldata: '0x' }
 
-  const quote = await quoter({
-    inToken: inTokenForQuote,
-    outToken: debtAsset,
-    amountIn: collateralAvailableForSwap,
-    amountOut: requiredDebt,
-    intent,
-  })
+  // Build type-safe quote request based on intent
+  const quote = await quoter(
+    intent === 'exactOut'
+      ? {
+          inToken: inTokenForQuote,
+          outToken: debtAsset,
+          intent: 'exactOut',
+          amountOut: requiredDebt,
+          // amountIn is optional for exactOut (used as reference if needed)
+        }
+      : {
+          inToken: inTokenForQuote,
+          outToken: debtAsset,
+          intent: 'exactIn',
+          amountIn: collateralAvailableForSwap,
+          amountOut: requiredDebt, // Optional, used for validation below
+        },
+  )
 
   if (quote.out < requiredDebt) {
     throw new Error(

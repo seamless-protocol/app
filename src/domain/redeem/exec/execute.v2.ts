@@ -4,7 +4,8 @@
  * Invariants/behavior:
  * - Sends a single transaction to redeem leverage tokens for collateral
  * - Does NOT perform ERC-20 approvals or wait for approvals — the UI is responsible for the Approve step.
- * - Contract addresses and active chain are inferred from the Wagmi config; no chainId parameter.
+ * - Accepts explicit chainId to support cross-chain scenarios (e.g., user on Base viewing Mainnet leverage token)
+ *   This allows Wagmi to simulate the transaction properly using the correct chain.
  */
 
 import type { Address, Hash } from 'viem'

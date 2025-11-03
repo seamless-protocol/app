@@ -2,7 +2,7 @@ import type { Address } from 'viem'
 import { getAddress } from 'viem'
 import { base } from 'viem/chains'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
+import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
 import type { QuoteFn } from './types'
 
 export type LifiOrder = 'CHEAPEST' | 'FASTEST'
@@ -87,7 +87,7 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       chainId,
       inToken,
       outToken,
-      amountIn,
+      ...(typeof amountIn === 'bigint' ? { amountIn } : {}),
       ...(typeof amountOut === 'bigint' ? { amountOut } : {}),
       ...(intent ? { intent } : {}),
       router,
@@ -146,10 +146,6 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
 }
 
 // Internal helpers for clarity and testability
-function bpsToDecimalString(bps: number): string {
-  return (bps / Number(BPS_DENOMINATOR)).toString()
-}
-
 function buildHeaders(apiKey?: string): Record<string, string> {
   const headers: Record<string, string> = { 'content-type': 'application/json' }
   if (apiKey) headers['x-lifi-api-key'] = apiKey
@@ -162,7 +158,7 @@ function buildQuoteUrl(
     chainId: number
     inToken: Address
     outToken: Address
-    amountIn: bigint
+    amountIn?: bigint
     amountOut?: bigint
     intent?: 'exactIn' | 'exactOut'
     router: Address
@@ -195,6 +191,9 @@ function buildQuoteUrl(
     }
     url.searchParams.set('toAmount', params.amountOut.toString())
   } else {
+    if (typeof params.amountIn !== 'bigint') {
+      throw new Error('LiFi exact-in quote requires amountIn')
+    }
     url.searchParams.set('fromAmount', params.amountIn.toString())
   }
   url.searchParams.set('fromAddress', getAddress(params.fromAddress))

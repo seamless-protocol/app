@@ -1,4 +1,5 @@
 import type { Address } from 'viem'
+import { getAddress } from 'viem'
 import {
   BaseLogo,
   EthereumLogo,
@@ -119,6 +120,23 @@ export interface LeverageTokenConfig {
   }
 }
 
+/**
+ * Get token decimals by address from leverage token configurations.
+ * Falls back to common token decimals if not found in config.
+ */
+export function getTokenDecimals(tokenAddress: Address): number {
+  // First, check if this token is a collateral or debt asset in any leverage token config
+  for (const config of Object.values(leverageTokenConfigs)) {
+    if (getAddress(config.collateralAsset.address) === getAddress(tokenAddress)) {
+      return config.collateralAsset.decimals
+    }
+    if (getAddress(config.debtAsset.address) === getAddress(tokenAddress)) {
+      return config.debtAsset.decimals
+    }
+  }
+  throw new Error(`Token decimals not found for address: ${tokenAddress}`)
+}
+
 // Leverage token configurations
 export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   [LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]: {
@@ -155,12 +173,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'velora',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'velora',
       },
     },
     planner: { epsilonBps: 10 },
@@ -242,12 +258,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'velora',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'velora',
       },
     },
     planner: { epsilonBps: 10 },
@@ -338,12 +352,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       decimals: 18,
     },
     swaps: {
-      // Use LiFi for same-chain routing (bridges are irrelevant for same-chain quotes)
+      // Use Velora for same-chain routing (bridges are irrelevant for same-chain quotes)
       debtToCollateral: {
-        type: 'lifi',
+        type: 'velora',
       },
       collateralToDebt: {
-        type: 'lifi',
+        type: 'velora',
       },
     },
     planner: { epsilonBps: 10 },

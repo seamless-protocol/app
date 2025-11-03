@@ -4,7 +4,7 @@
 import type { Address, Hex } from 'viem'
 
 // Quote for external swaps (if needed during operations)
-export type Quote = {
+export type BaseQuote = {
   // Expected output (nice-weather) in outToken base units
   out: bigint
   // Guaranteed output after slippage in outToken base units
@@ -21,16 +21,59 @@ export type Quote = {
   calldata: Hex
 }
 
-export type QuoteIntent = 'exactIn' | 'exactOut'
-
-export type QuoteRequest = {
-  inToken: Address
-  outToken: Address
-  amountIn: bigint
-  /** Optional desired output when requesting an exact-out quote. */
-  amountOut?: bigint
-  /** Optional intent flag to switch between exact-in and exact-out sizing. */
-  intent?: QuoteIntent
+// Velora-specific quote with required veloraData (used for exactOut)
+// veloraData is ONLY required for exactOut quotes used by redeemWithVelora()
+// For exactIn quotes used by regular deposit(), veloraData is not needed
+export type VeloraQuote = BaseQuote & {
+  veloraData: {
+    augustus: Address
+    offsets: {
+      exactAmount: bigint
+      limitAmount: bigint
+      quotedAmount: bigint
+    }
+  }
 }
 
+export type Quote = BaseQuote
+
+export type QuoteIntent = 'exactIn' | 'exactOut'
+
+// Base fields common to all quote requests
+type QuoteRequestBase = {
+  inToken: Address
+  outToken: Address
+}
+
+// Exact-in: specify input amount, get output amount
+// amountOut is optional and can be used for validation/reference
+type QuoteRequestExactIn = QuoteRequestBase & {
+  intent: 'exactIn'
+  amountIn: bigint
+  amountOut?: bigint
+}
+
+// Exact-out: specify desired output amount, pay variable input
+// amountIn is optional and can be used for reference
+type QuoteRequestExactOut = QuoteRequestBase & {
+  intent: 'exactOut'
+  amountOut: bigint
+  amountIn?: bigint
+}
+
+/**
+ * Discriminated union for quote requests.
+ * - exactIn: Requires amountIn, optional amountOut for validation
+ * - exactOut: Requires amountOut, optional amountIn for reference
+ */
+export type QuoteRequest = QuoteRequestExactIn | QuoteRequestExactOut
+
 export type QuoteFn = (args: QuoteRequest) => Promise<Quote>
+
+/**
+ * Type guard to check if a quote has veloraData (type narrowing helper).
+ * For exactOut quotes from Velora, veloraData is always present.
+ */
+export function hasVeloraData(quote: Quote): quote is VeloraQuote {
+  return 'veloraData' in quote && quote.veloraData !== undefined
+}

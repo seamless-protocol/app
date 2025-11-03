@@ -3,6 +3,7 @@ import { base } from 'viem/chains'
 import {
   createLifiQuoteAdapter,
   createUniswapV3QuoteAdapter,
+  createVeloraQuoteAdapter,
   type LifiOrder,
 } from '@/domain/shared/adapters'
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
@@ -11,8 +12,18 @@ import {
   getUniswapV3PoolConfig,
   type UniswapV3PoolKey,
 } from '@/lib/config/uniswapV3'
-import { BASE_WETH, getContractAddresses } from '@/lib/contracts/addresses'
+import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 import type { QuoteFn } from '../planner/types'
+
+/** Supported adapter types for collateral-to-debt swaps */
+export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2'
+
+/**
+ * Validated ParaSwap methods for Velora exactOut operations.
+ * Contract has hardcoded byte offsets that only work with swapExactAmountOut.
+ * See: src/domain/shared/adapters/velora.ts for offset validation details.
+ */
+const VELORA_VALIDATED_EXACT_OUT_METHODS = ['swapExactAmountOut'] as const
 
 export type CollateralToDebtSwapConfig =
   | {
@@ -28,6 +39,9 @@ export type CollateralToDebtSwapConfig =
       allowBridges?: string
       order?: LifiOrder
     }
+  | {
+      type: 'velora'
+    }
 
 export interface CreateCollateralToDebtQuoteParams {
   chainId: number
@@ -41,7 +55,7 @@ export interface CreateCollateralToDebtQuoteParams {
 
 export interface CreateCollateralToDebtQuoteResult {
   quote: QuoteFn
-  adapterType: CollateralToDebtSwapConfig['type']
+  adapterType: SwapAdapterType
 }
 
 export function createCollateralToDebtQuote({
@@ -62,6 +76,18 @@ export function createCollateralToDebtQuote({
       ...(swap.order ? { order: swap.order } : {}),
     })
     return { quote, adapterType: 'lifi' }
+  }
+
+  if (swap.type === 'velora') {
+    const quote = createVeloraQuoteAdapter({
+      chainId: chainId as SupportedChainId,
+      router: routerAddress,
+      slippageBps,
+      ...(fromAddress ? { fromAddress } : {}),
+      // Restrict to validated methods for exactOut operations (redeem)
+      includeContractMethods: [...VELORA_VALIDATED_EXACT_OUT_METHODS],
+    })
+    return { quote, adapterType: 'velora' }
   }
 
   const publicClient = getPublicClient(chainId)

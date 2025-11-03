@@ -13,7 +13,7 @@ const MAINNET_WSTETH = '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address
 // Test account address (default Anvil/Tenderly account #0)
 const TEST_ACCOUNT = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as Address
 
-test.describe('Mainnet wstETH/ETH 25x redeem (JIT + LiFi)', () => {
+test.describe('Mainnet wstETH/ETH 25x redeem (production config)', () => {
   let snapshotId: `0x${string}`
 
   test.beforeEach(async () => {
@@ -33,7 +33,7 @@ test.describe('Mainnet wstETH/ETH 25x redeem (JIT + LiFi)', () => {
     await revertSnapshot(snapshotId)
   })
 
-  test('redeems wstETH/ETH 25x via modal using LiFi route', async ({ page }) => {
+  test('redeems wstETH/ETH 25x via modal using production config', async ({ page }) => {
     test.setTimeout(120_000)
 
     await page.goto('/#/leverage-tokens', { waitUntil: 'domcontentloaded' })
@@ -63,7 +63,7 @@ test.describe('Mainnet wstETH/ETH 25x redeem (JIT + LiFi)', () => {
     await mintAmountInput.fill('0.1')
 
     // TODO: Investigate why tests require 2.5% slippage (higher than prod default 0.5%)
-    // May be related to CoinGecko price discrepancies or LiFi quote variations
+    // Likely due to price discrepancies between CoinGecko (used for slippage calc) and on-chain oracles
     const mintAdvancedButton = mintModal.getByRole('button', { name: 'Advanced' })
     await mintAdvancedButton.click()
     const mintSlippageInput = mintModal.getByPlaceholder('0.5')
@@ -104,7 +104,7 @@ test.describe('Mainnet wstETH/ETH 25x redeem (JIT + LiFi)', () => {
     await redeemModal.getByRole('button', { name: 'MAX' }).click()
 
     // TODO: Investigate why tests require 2.5% slippage (higher than prod default 0.5%)
-    // May be related to CoinGecko price discrepancies or LiFi quote variations
+    // Likely due to price discrepancies between CoinGecko (used for slippage calc) and on-chain oracles
     const redeemAdvancedButton = redeemModal.getByRole('button', { name: 'Advanced' })
     await redeemAdvancedButton.click()
     const redeemSlippageInput = redeemModal.getByPlaceholder('0.5')
