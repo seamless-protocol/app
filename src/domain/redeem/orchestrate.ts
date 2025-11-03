@@ -10,7 +10,11 @@ import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
 import { hasVeloraData } from '@/domain/shared/adapters/types'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
-import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
+import {
+  contractAddresses,
+  getContractAddresses,
+  type SupportedChainId,
+} from '@/lib/contracts/addresses'
 import { executeRedeemV2 } from './exec/execute.v2'
 import { executeRedeemWithVelora } from './exec/execute.velora'
 import { planRedeemV2 } from './planner/plan.v2'
@@ -83,15 +87,6 @@ export async function orchestrateRedeem(params: {
   const adapterType =
     getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora'
 
-  console.log('[redeem-orchestrate] Using swap adapter', {
-    token,
-    chainId,
-    adapterType,
-    source: getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type
-      ? 'production config'
-      : 'default (velora)',
-  })
-
   const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
   const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
   // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit/env overrides
@@ -147,7 +142,7 @@ export async function orchestrateRedeem(params: {
         (() => {
           throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
         })(),
-      chainId,
+      chainId: chainId as SupportedChainId,
     })
     return { plan, ...tx }
   }

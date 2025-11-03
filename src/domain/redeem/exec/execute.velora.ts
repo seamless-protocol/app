@@ -48,7 +48,7 @@ export async function executeRedeemWithVelora(params: {
   swapData: `0x${string}`
   /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
   routerAddress: Address
-  chainId: number
+  chainId: SupportedChainId
 }): Promise<{ hash: Hash }> {
   const {
     config,
@@ -66,8 +66,6 @@ export async function executeRedeemWithVelora(params: {
 
   // No allowance handling here; UI should perform approvals beforehand
 
-  const chain = chainId as SupportedChainId
-
   const { request } = await simulateLeverageRouterV2RedeemWithVelora(config, {
     args: [
       token,
@@ -79,7 +77,7 @@ export async function executeRedeemWithVelora(params: {
       swapData,
     ],
     account,
-    chainId: chain,
+    chainId,
   })
 
   const hash = await writeLeverageRouterV2RedeemWithVelora(config, request)
