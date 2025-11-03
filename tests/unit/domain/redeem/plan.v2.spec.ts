@@ -274,6 +274,126 @@ describe('planRedeemV2', () => {
     // Payout should be zero or minimal
     expect(plan.payoutAmount).toBeLessThanOrEqual(1000000n) // <= 1 USDC
   })
+
+  it('should handle zero-debt scenario (no swap needed)', async () => {
+    // Scenario: Position has no debt, so redemption just returns all collateral
+    vi.mocked(readLeverageManagerV2PreviewRedeem).mockResolvedValueOnce({
+      collateral: 100000000000000000000n, // 100 ETH
+      debt: 0n, // No debt to repay
+      shares: 50n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
+
+    const plan = await planRedeemV2({
+      config: {} as any,
+      token: '0x1111111111111111111111111111111111111111' as Address,
+      sharesToRedeem: 50n,
+      slippageBps: 50,
+      quoteCollateralToDebt: mockQuote as any,
+      chainId: 1,
+      intent: 'exactOut',
+    })
+
+    // With zero debt, no swap should occur
+    expect(plan.expectedDebt).toBe(0n)
+    expect(plan.expectedCollateral).toBe(100000000000000000000n) // Full collateral
+    expect(plan.expectedTotalCollateral).toBe(100000000000000000000n)
+    expect(plan.payoutAsset.toLowerCase()).toBe('0xcccccccccccccccccccccccccccccccccccccccc')
+    expect(plan.payoutAmount).toBe(100000000000000000000n)
+  })
+
+  it('should handle extreme slippage tolerance (90%)', async () => {
+    // Test with very high slippage (9000 bps = 90%)
+    const plan = await planRedeemV2({
+      config: {} as any,
+      token: '0x1111111111111111111111111111111111111111' as Address,
+      sharesToRedeem: 50n,
+      slippageBps: 9000, // 90% slippage tolerance
+      quoteCollateralToDebt: mockQuote as any,
+      chainId: 1,
+      intent: 'exactOut',
+    })
+
+    // With 90% slippage, minimum collateral should be 10% of expected
+    expect(plan.expectedCollateral).toBeGreaterThan(0n)
+    const minCollateral = plan.minCollateralForSender
+    const expectedCollateral = plan.expectedCollateral
+
+    // minCollateral should be approximately 10% of expectedCollateral
+    expect(minCollateral).toBeLessThanOrEqual((expectedCollateral * 11n) / 100n)
+    expect(minCollateral).toBeGreaterThanOrEqual((expectedCollateral * 9n) / 100n)
+  })
+
+  it('should reject unrealistic tiny collateral amounts', async () => {
+    // Test with minimal collateral that cannot cover swap costs
+    vi.mocked(readLeverageManagerV2PreviewRedeem).mockResolvedValueOnce({
+      collateral: 1000n, // Very small amount
+      debt: 1n, // 1 wei of debt
+      shares: 1n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
+
+    // Planner should reject this as the collateral is insufficient for the swap
+    await expect(
+      planRedeemV2({
+        config: {} as any,
+        token: '0x1111111111111111111111111111111111111111' as Address,
+        sharesToRedeem: 1n,
+        slippageBps: 50,
+        quoteCollateralToDebt: mockQuote as any,
+        chainId: 1,
+        intent: 'exactOut',
+      }),
+    ).rejects.toThrow(
+      'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
+    )
+  })
+
+  it('should handle small but realistic collateral amounts', async () => {
+    // Test with small amounts that are still realistic (0.001 ETH)
+    vi.mocked(readLeverageManagerV2PreviewRedeem).mockResolvedValueOnce({
+      collateral: 1000000000000000n, // 0.001 ETH (15 decimals)
+      debt: 500n, // 0.0005 USDC (6 decimals)
+      shares: 100n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
+
+    const plan = await planRedeemV2({
+      config: {} as any,
+      token: '0x1111111111111111111111111111111111111111' as Address,
+      sharesToRedeem: 100n,
+      slippageBps: 50,
+      quoteCollateralToDebt: mockQuote as any,
+      chainId: 1,
+      intent: 'exactOut',
+    })
+
+    // Should successfully plan with small but realistic amounts
+    expect(plan.sharesToRedeem).toBe(100n)
+    expect(plan.expectedTotalCollateral).toBe(1000000000000000n)
+    expect(plan.expectedCollateral).toBeGreaterThan(0n)
+  })
+
+  it('should reject when public client is unavailable', async () => {
+    // Mock getPublicClient to return undefined
+    const { getPublicClient } = await import('wagmi/actions')
+    vi.mocked(getPublicClient).mockReturnValueOnce(undefined as any)
+
+    await expect(
+      planRedeemV2({
+        config: {} as any,
+        token: '0x1111111111111111111111111111111111111111' as Address,
+        sharesToRedeem: 50n,
+        slippageBps: 50,
+        quoteCollateralToDebt: mockQuote as any,
+        chainId: 1,
+        intent: 'exactOut',
+      }),
+    ).rejects.toThrow('Public client unavailable for redeem plan')
+  })
 })
 
 describe('validateRedeemPlan', () => {
