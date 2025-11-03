@@ -77,6 +77,11 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
   const normalizedRouter = getAddress(router)
 
   return async ({ inToken, outToken, amountIn }) => {
+    // UniswapV2 only supports exactIn quotes
+    if (typeof amountIn !== 'bigint') {
+      throw new Error('UniswapV2 adapter requires amountIn (exactIn quotes only)')
+    }
+
     const isNativeIn = getAddress(inToken) === getAddress(ETH_SENTINEL)
     if (isNativeIn && !wrappedNative) {
       throw new Error(

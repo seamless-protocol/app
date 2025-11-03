@@ -87,7 +87,7 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       chainId,
       inToken,
       outToken,
-      amountIn,
+      ...(typeof amountIn === 'bigint' ? { amountIn } : {}),
       ...(typeof amountOut === 'bigint' ? { amountOut } : {}),
       ...(intent ? { intent } : {}),
       router,
@@ -158,7 +158,7 @@ function buildQuoteUrl(
     chainId: number
     inToken: Address
     outToken: Address
-    amountIn: bigint
+    amountIn?: bigint
     amountOut?: bigint
     intent?: 'exactIn' | 'exactOut'
     router: Address
@@ -191,6 +191,9 @@ function buildQuoteUrl(
     }
     url.searchParams.set('toAmount', params.amountOut.toString())
   } else {
+    if (typeof params.amountIn !== 'bigint') {
+      throw new Error('LiFi exact-in quote requires amountIn')
+    }
     url.searchParams.set('fromAmount', params.amountIn.toString())
   }
   url.searchParams.set('fromAddress', getAddress(params.fromAddress))

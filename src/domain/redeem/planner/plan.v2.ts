@@ -330,13 +330,24 @@ async function getCollateralToDebtQuote(args: {
 
   if (requiredDebt <= 0n) return { out: 0n, approvalTarget: zeroAddress, calldata: '0x' }
 
-  const quote = await quoter({
-    inToken: inTokenForQuote,
-    outToken: debtAsset,
-    amountIn: intent === 'exactOut' ? 0n : collateralAvailableForSwap,
-    amountOut: requiredDebt,
-    intent,
-  })
+  // Build type-safe quote request based on intent
+  const quote = await quoter(
+    intent === 'exactOut'
+      ? {
+          inToken: inTokenForQuote,
+          outToken: debtAsset,
+          intent: 'exactOut',
+          amountOut: requiredDebt,
+          // amountIn is optional for exactOut (used as reference if needed)
+        }
+      : {
+          inToken: inTokenForQuote,
+          outToken: debtAsset,
+          intent: 'exactIn',
+          amountIn: collateralAvailableForSwap,
+          amountOut: requiredDebt, // Optional, used for validation below
+        },
+  )
 
   if (quote.out < requiredDebt) {
     throw new Error(

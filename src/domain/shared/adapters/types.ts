@@ -40,14 +40,33 @@ export type Quote = BaseQuote | VeloraQuote
 
 export type QuoteIntent = 'exactIn' | 'exactOut'
 
-export type QuoteRequest = {
+// Base fields common to all quote requests
+type QuoteRequestBase = {
   inToken: Address
   outToken: Address
-  amountIn: bigint
-  /** Optional desired output when requesting an exact-out quote. */
-  amountOut?: bigint
-  /** Optional intent flag to switch between exact-in and exact-out sizing. */
-  intent?: QuoteIntent
 }
+
+// Exact-in: specify input amount, get output amount
+// amountOut is optional and can be used for validation/reference
+type QuoteRequestExactIn = QuoteRequestBase & {
+  intent: 'exactIn'
+  amountIn: bigint
+  amountOut?: bigint
+}
+
+// Exact-out: specify desired output amount, pay variable input
+// amountIn is optional and can be used for reference
+type QuoteRequestExactOut = QuoteRequestBase & {
+  intent: 'exactOut'
+  amountOut: bigint
+  amountIn?: bigint
+}
+
+/**
+ * Discriminated union for quote requests.
+ * - exactIn: Requires amountIn, optional amountOut for validation
+ * - exactOut: Requires amountOut, optional amountIn for reference
+ */
+export type QuoteRequest = QuoteRequestExactIn | QuoteRequestExactOut
 
 export type QuoteFn = (args: QuoteRequest) => Promise<Quote>

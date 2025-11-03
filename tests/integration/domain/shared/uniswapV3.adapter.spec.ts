@@ -112,7 +112,7 @@ describeIfV3('Uniswap v3 adapter (Tenderly)', () => {
   it('quotes exact input swaps', async () => {
     const { token0, token1 } = await getPoolTokens()
     const adapter = createUniswapV3QuoteAdapter(options)
-    const quote = await adapter({ inToken: token0, outToken: token1, amountIn })
+    const quote = await adapter({ inToken: token0, outToken: token1, amountIn, intent: 'exactIn' })
 
     expect(quote.out > 0n).toBe(true)
     expect(quote.approvalTarget).toEqual(options.router)
@@ -128,7 +128,7 @@ describeIfV3('Uniswap v3 adapter (Tenderly)', () => {
     const quote = await adapter({
       inToken: token0,
       outToken: token1,
-      amountIn: targetOut,
+      amountOut: targetOut,
       intent: 'exactOut',
     })
 

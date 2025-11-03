@@ -54,6 +54,7 @@ describeOrSkip('LiFi adapter live smoke', () => {
         inToken: target.inToken,
         outToken: target.outToken,
         amountIn: target.amountIn ?? parseUnits('0.5', 18),
+        intent: 'exactIn',
       })
 
       expect(res.calldata.startsWith('0x')).toBe(true)

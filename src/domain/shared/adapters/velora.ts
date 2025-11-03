@@ -49,7 +49,7 @@ export function createVeloraQuoteAdapter(
       chainId,
       inToken,
       outToken,
-      amountIn,
+      ...(typeof amountIn === 'bigint' ? { amountIn } : {}),
       ...(typeof amountOut === 'bigint' ? { amountOut } : {}),
       ...(intent ? { intent } : {}),
       router,
@@ -84,7 +84,7 @@ function buildQuoteUrl(
     chainId: number
     inToken: Address
     outToken: Address
-    amountIn: bigint
+    amountIn?: bigint
     amountOut?: bigint
     intent?: 'exactIn' | 'exactOut'
     router: Address
@@ -125,6 +125,9 @@ function buildQuoteUrl(
     url.searchParams.set('side', 'BUY')
     url.searchParams.set('amount', params.amountOut.toString())
   } else {
+    if (typeof params.amountIn !== 'bigint') {
+      throw new Error('Velora exact-in quote requires amountIn')
+    }
     url.searchParams.set('side', 'SELL')
     url.searchParams.set('amount', params.amountIn.toString())
   }
@@ -172,8 +175,18 @@ function mapVeloraResponseToQuote(
     wantsNativeIn,
   }
 
+  // For mint (exactIn), offsets are not used and ParaSwap returns SELL methods.
+  // We accept these unconditionally and pass the calldata through to deposit().
+  if (intent === 'exactIn') {
+    console.log('[velora-adapter] ParaSwap method', {
+      method: response.priceRoute?.contractMethod,
+      intent,
+      note: 'No offsets needed for regular deposit() with exactIn',
+    })
+    return baseQuote
+  }
+
   // Only validate method and add veloraData for exactOut (used by redeemWithVelora)
-  // For exactIn (used by regular deposit), just return calldata
   if (intent === 'exactOut') {
     // Validate ParaSwap method - offsets are specific to BUY (exactOut) methods
     // See: https://developers.velora.xyz/api/velora-api/velora-market-api/master/api-v6.2
@@ -229,13 +242,6 @@ function mapVeloraResponseToQuote(
     }
   }
 
-  // For exactIn (mints), just return base quote without veloraData
-  // The regular deposit() function doesn't need offsets
-  console.log('[velora-adapter] ParaSwap method', {
-    method: priceRoute.contractMethod,
-    intent,
-    note: 'No offsets needed for regular deposit() with exactIn',
-  })
-
+  // Fallback return (should be unreachable due to early returns above)
   return baseQuote
 }
