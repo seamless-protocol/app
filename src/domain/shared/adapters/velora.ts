@@ -1,5 +1,6 @@
 import type { Address, Hex } from 'viem'
 import { getAddress } from 'viem'
+import { z } from 'zod'
 import { getTokenDecimals } from '@/features/leverage-tokens/leverageTokens.config'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
@@ -14,18 +15,59 @@ export interface VeloraAdapterOptions {
   baseUrl?: string
 }
 
+// Velora API response validation schemas
+const veloraSuccessResponseSchema = z.object({
+  priceRoute: z.object({
+    srcAmount: z.string().refine(
+      (val) => {
+        try {
+          BigInt(val)
+          return true
+        } catch {
+          return false
+        }
+      },
+      { message: 'srcAmount must be a valid BigInt string' },
+    ),
+    destAmount: z.string().refine(
+      (val) => {
+        try {
+          BigInt(val)
+          return true
+        } catch {
+          return false
+        }
+      },
+      { message: 'destAmount must be a valid BigInt string' },
+    ),
+    contractAddress: z.string().transform((val, ctx) => {
+      try {
+        return getAddress(val)
+      } catch {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'contractAddress must be a valid Ethereum address',
+        })
+        return z.NEVER
+      }
+    }),
+    contractMethod: z.string(),
+  }),
+  txParams: z.object({
+    data: z.string().refine((val) => val.startsWith('0x') && /^[a-fA-F0-9]*$/.test(val.slice(2)), {
+      message: 'data must be a valid hex string',
+    }),
+  }),
+})
+
+const veloraErrorResponseSchema = z.object({
+  error: z.string(),
+})
+
+const veloraResponseSchema = z.union([veloraSuccessResponseSchema, veloraErrorResponseSchema])
+
 // Velora API response types - only fields we actually use
-type VeloraSwapResponse = {
-  priceRoute: {
-    srcAmount: string
-    destAmount: string
-    contractAddress: string
-    contractMethod: string
-  }
-  txParams: {
-    data: string
-  }
-}
+type VeloraSwapResponse = z.infer<typeof veloraSuccessResponseSchema>
 
 /**
  * Create a QuoteFn adapter backed by Velora's Market API.
@@ -60,16 +102,13 @@ export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
     const res = await fetch(url.toString(), { method: 'GET' })
     if (!res.ok) throw new Error(`Velora quote failed: ${res.status} ${res.statusText}`)
 
-    const responseData = await res.json()
+    const response = veloraResponseSchema.parse(await res.json())
 
     // Check for Velora API errors in the response body
-    if (responseData.error) {
-      const errorMessage = responseData.error
-      console.error('Velora error from API', { errorMessage })
-      throw new Error(`Velora quote failed: ${errorMessage}`)
+    if ('error' in response) {
+      console.error('Velora error from API', { errorMessage: response.error })
+      throw new Error(`Velora quote failed: ${response.error}`)
     }
-
-    const response = responseData as VeloraSwapResponse
 
     const wantsNativeIn = inToken.toLowerCase() === ETH_SENTINEL.toLowerCase()
     return mapVeloraResponseToQuote(response, wantsNativeIn, slippage, intent ?? 'exactIn')
@@ -142,13 +181,11 @@ function mapVeloraResponseToQuote(
 ) {
   const { priceRoute, txParams } = response
 
-  // Extract approval target from contract address
-  const approvalTarget = priceRoute.contractAddress as Address
-  if (!approvalTarget) throw new Error('Velora quote missing contract address')
+  // Extract approval target from contract address (already checksummed by zod schema)
+  const approvalTarget = priceRoute.contractAddress
 
   // Extract swap data from transaction params
-  const swapData = txParams.data as Hex
-  if (!swapData) throw new Error('Velora quote missing transaction data')
+  const swapData = txParams.data as Hex // validated by zod schema
 
   // Extract amounts from price route (expected amounts)
   const expectedOut = BigInt(priceRoute.destAmount)
