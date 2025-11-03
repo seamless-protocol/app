@@ -1,3 +1,3 @@
-export type { MintPlanV2 } from './planner/plan.v2'
+export type { MintPlan } from './planner/plan'
 export * from './planner/types'
 export { ensureAllowance } from './utils/allowance'

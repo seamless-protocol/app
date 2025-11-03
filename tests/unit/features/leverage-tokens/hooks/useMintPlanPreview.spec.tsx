@@ -6,8 +6,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
 
 // Mock the planner to avoid on-chain reads
-vi.mock('@/domain/mint/planner/plan.v2', () => ({
-  planMintV2: vi.fn(async () => {
+vi.mock('@/domain/mint/planner/plan', () => ({
+  planMint: vi.fn(async () => {
     return {
       inputAsset: '0x0000000000000000000000000000000000000001' as Address,
       equityInInputAsset: 10n,

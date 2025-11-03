@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { planMint } from '@/domain/mint/planner/plan'
 
 vi.mock('@/lib/contracts/generated', async () => {
   return {
@@ -48,7 +48,7 @@ vi.mock('@/lib/prices/coingecko', () => ({
   })),
 }))
 
-describe('planMintV2', () => {
+describe('planMint', () => {
   const cfg = {} as any
   const token = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address
 
@@ -71,7 +71,7 @@ describe('planMintV2', () => {
       }
     })
 
-    const plan = await planMintV2({
+    const plan = await planMint({
       config: cfg,
       token,
       inputAsset,

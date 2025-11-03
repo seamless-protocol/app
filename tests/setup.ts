@@ -392,8 +392,8 @@ vi.mock('@/domain/redeem/utils/createCollateralToDebtQuote', () => ({
   createCollateralToDebtQuote: vi.fn(),
 }))
 
-vi.mock('@/domain/redeem/planner/plan.v2', () => ({
-  planRedeemV2: vi.fn(),
+vi.mock('@/domain/redeem/planner/plan', () => ({
+  planRedeem: vi.fn(),
 }))
 
 // Mock leverage token config

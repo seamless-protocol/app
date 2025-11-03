@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { planMint } from '@/domain/mint/planner/plan'
 
 const BASE_WETH = '0x4200000000000000000000000000000000000006' as Address
 const COLLATERAL = '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address
@@ -49,7 +49,7 @@ vi.mock('@/lib/prices/coingecko', () => ({
   })),
 }))
 
-describe('planMintV2 (native path, exact-in)', () => {
+describe('planMint (native path, exact-in)', () => {
   it('uses exact-in quote and emits native path calls (withdraw + payable swap)', async () => {
     const inputAsset = '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address
     const equityInInputAsset = 100n * 10n ** 18n
@@ -64,7 +64,7 @@ describe('planMintV2 (native path, exact-in)', () => {
       }
     })
 
-    const plan = await planMintV2({
+    const plan = await planMint({
       config: {} as any,
       token: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address,
       inputAsset,

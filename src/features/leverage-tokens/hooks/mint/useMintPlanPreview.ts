@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Address } from 'viem'
 import { formatUnits } from 'viem'
 import type { Config } from 'wagmi'
-import type { MintPlanV2 } from '@/domain/mint/planner/plan.v2'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import type { MintPlan } from '@/domain/mint/planner/plan'
+import { planMint } from '@/domain/mint/planner/plan'
 import type { QuoteFn } from '@/domain/mint/planner/types'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
@@ -55,7 +55,7 @@ export function useMintPlanPreview({
     ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
   }
 
-  const query = useQuery<MintPlanV2, Error>({
+  const query = useQuery<MintPlan, Error>({
     queryKey: [
       ...ltKeys.simulation.mintKey(keyParams),
       `slippage:${slippageBps}`,
@@ -69,7 +69,7 @@ export function useMintPlanPreview({
     retry: 1,
     queryFn: async () => {
       // Inputs guaranteed by `enabled`
-      return planMintV2({
+      return planMint({
         config,
         token,
         inputAsset,

@@ -2,7 +2,7 @@
  * Orchestrator for leverage token redemption.
  *
  * Responsibilities:
- * - Plan V2 flow (collateral->debt swap for debt repayment) and execute
+ * - Plan flow (collateral->debt swap for debt repayment) and execute
  * - Return transaction details and plan information
  */
 
@@ -16,9 +16,9 @@ import {
   getContractAddresses,
   type SupportedChainId,
 } from '@/lib/contracts/addresses'
-import { executeRedeemV2 } from './exec/execute.v2'
+import { executeRedeem } from './exec/execute'
 import { executeRedeemWithVelora } from './exec/execute.velora'
-import { planRedeemV2 } from './planner/plan.v2'
+import { planRedeem } from './planner/plan'
 import type { QuoteFn } from './planner/types'
 import { DEFAULT_SLIPPAGE_BPS } from './utils/constants'
 
@@ -30,7 +30,7 @@ type SharesToRedeemArg = bigint
 // Result type for orchestrated redeems
 export type OrchestrateRedeemResult = {
   hash: Hash
-  plan: Awaited<ReturnType<typeof planRedeemV2>>
+  plan: Awaited<ReturnType<typeof planRedeem>>
 }
 
 /**
@@ -64,9 +64,9 @@ export async function orchestrateRedeem(params: {
   sharesToRedeem: SharesToRedeemArg
   slippageBps?: number
   quoteCollateralToDebt: QuoteFn
-  /** Optional overrides for V2 when using VNet/custom deployments */
-  routerAddressV2?: Address
-  managerAddressV2?: Address
+  /** Optional overrides when using VNet/custom deployments */
+  routerAddress?: Address
+  managerAddress?: Address
   /** Optional override for the desired payout asset (defaults to collateral). */
   outputAsset?: Address
   /** Chain ID to execute the transaction on */
@@ -86,30 +86,29 @@ export async function orchestrateRedeem(params: {
   const adapterType =
     getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora'
 
-  const envRouterV2 = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
-  const envManagerV2 = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
+  const envRouter = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
+  const envManager = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
   // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit/env overrides
   const chainAddresses = getContractAddresses(chainId)
-  const routerAddressV2 = params.routerAddressV2 || chainAddresses.leverageRouterV2 || envRouterV2
-  if (!routerAddressV2) {
+  const routerAddress = params.routerAddress || chainAddresses.leverageRouterV2 || envRouter
+  if (!routerAddress) {
     throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
   }
-  const managerAddressV2 =
-    params.managerAddressV2 || chainAddresses.leverageManagerV2 || envManagerV2
-  if (!managerAddressV2) {
+  const managerAddress = params.managerAddress || chainAddresses.leverageManagerV2 || envManager
+  if (!managerAddress) {
     throw new Error(`LeverageManagerV2 address required on chain ${chainId}`)
   }
 
   const intent = getQuoteIntentForAdapter(adapterType)
 
-  const plan = await planRedeemV2({
+  const plan = await planRedeem({
     config,
     token,
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
     chainId,
-    ...(managerAddressV2 ? { managerAddress: managerAddressV2 } : {}),
+    ...(managerAddress ? { managerAddress } : {}),
     ...(outputAsset ? { outputAsset } : {}),
     intent,
   })
@@ -136,13 +135,13 @@ export async function orchestrateRedeem(params: {
       augustus,
       offsets,
       swapData: quote.calldata,
-      routerAddress: routerAddressV2,
+      routerAddress: routerAddress,
       chainId: chainId as SupportedChainId,
     })
     return { plan, ...tx }
   }
 
-  const tx = await executeRedeemV2({
+  const tx = await executeRedeem({
     config,
     token,
     account,
@@ -163,7 +162,7 @@ export async function orchestrateRedeem(params: {
       })(),
     swapCalls: plan.calls,
     routerAddress:
-      routerAddressV2 ||
+      routerAddress ||
       (contractAddresses[chainId]?.leverageRouterV2 as Address | undefined) ||
       (() => {
         throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
@@ -186,7 +185,7 @@ export async function orchestrateRedeem(params: {
  * - See: https://github.com/seamless-protocol/leverage-tokens/blob/audit-fixes/test/integration/8453/LeverageRouter/RedeemWithVelora.t.sol#L19
  *
  * Why exactIn for other adapters:
- * - LiFi, UniswapV2, UniswapV3 use the standard `redeemV2()` function which passes raw calldata through
+ * - LiFi, UniswapV2, UniswapV3 use the standard `redeem()` function which passes raw calldata through
  * - No offsets needed, so we can use exactIn which is generally more responsive for quote APIs
  *
  * Note: Mints always use exactIn (even for Velora) because the `deposit()` function doesn't need offsets.

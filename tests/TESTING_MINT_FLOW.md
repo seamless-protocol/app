@@ -54,7 +54,7 @@ Notes:
   - Uses injected `simulateContract` and `writeContract` when provided.
 - math helpers (applySlippageFloor, mulDivFloor)
   - Boundary cases: zero, large values, rounding direction.
-- planMintV2
+- planMint
   - Input == collateral: no input conversion calls; uses user equity directly.
   - Input != collateral without quote: throws “no converter”.
   - Debt swap sizing: re-quote path when initial `quote.out < neededFromDebtSwap`.
@@ -119,7 +119,7 @@ Use admin RPC (Tenderly) to set balances, snapshots, and revert between tests.
 
 - Unit
   - `tests/unit/mint/math.unit.test.ts`
-  - `tests/unit/mint/plan.v2.unit.test.ts`
+  - `tests/unit/mint/plan.v2.unit.test.ts` (note: filename kept for historical reference)
   - `tests/unit/hooks/useMintPreview.spec.tsx`
 - Integration (Tenderly VNet)
   - `tests/integration/leverage-tokens/mint/router.v2.mint.spec.ts`

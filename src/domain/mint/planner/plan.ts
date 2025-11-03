@@ -1,10 +1,10 @@
 /**
- * Planner for V2 single-tx mint.
+ * Planner for single-tx mint.
  *
  * Builds the debt->collateral swap sized from router/manager previews, then
  * re-previews the manager state with total collateral to ensure repayability.
  * Note: input-asset->collateral conversions are not handled here; the current
- * V2 planner assumes `inputAsset === collateralAsset`.
+ * planner assumes `inputAsset === collateralAsset`.
  */
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, zeroAddress } from 'viem'
@@ -25,9 +25,9 @@ import type { Quote, QuoteFn } from './types'
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
 type TokenArg = Address
 type EquityInInputAssetArg = bigint
-type RouterV2Call = { target: Address; data: `0x${string}`; value: bigint }
-type V2Calls = Array<RouterV2Call>
-type V2Call = RouterV2Call
+type RouterCall = { target: Address; data: `0x${string}`; value: bigint }
+type Calls = Array<RouterCall>
+type Call = RouterCall
 
 // No additional normalizers; use viem's getAddress where needed
 
@@ -38,7 +38,7 @@ type V2Call = RouterV2Call
  * are used to size swaps and to provide UI expectations. "minShares" is a
  * slippage-adjusted floor used for the on-chain mint call.
  */
-export type MintPlanV2 = {
+export type MintPlan = {
   /** User-selected input asset (can differ from collateral). */
   inputAsset: Address
   /** Equity amount denominated in the input asset. */
@@ -67,15 +67,15 @@ export type MintPlanV2 = {
   swapExpectedOut: bigint
   swapMinOut: bigint
   /**
-   * Encoded router calls (approve + swap) to be submitted to V2 `mintWithCalls`.
+   * Encoded router calls (approve + swap) to be submitted to `mintWithCalls`.
    * The sequence includes the debt->collateral swap plus an ERC-20 approve when
    * the debt asset is not the wrapped native token. Input->collateral conversions
    * are out of scope for this planner.
    */
-  calls: V2Calls
+  calls: Calls
 }
 
-export async function planMintV2(params: {
+export async function planMint(params: {
   config: Config
   token: TokenArg
   inputAsset: Address
@@ -86,7 +86,7 @@ export async function planMintV2(params: {
   chainId: SupportedChainId
   /** Optional per-pair epsilon (bps) for single-pass clamp */
   epsilonBps?: number
-}): Promise<MintPlanV2> {
+}): Promise<MintPlan> {
   const {
     config,
     token,
@@ -113,9 +113,7 @@ export async function planMintV2(params: {
   const normalizedCollateralAsset = getAddress(collateralAsset)
   debugMintPlan('assets', { inputAsset, collateralAsset, debtAsset })
   if (normalizedInputAsset !== normalizedCollateralAsset) {
-    throw new Error(
-      'Router v2 requires collateral-only input (inputAsset must equal collateralAsset)',
-    )
+    throw new Error('Router requires collateral-only input (inputAsset must equal collateralAsset)')
   }
 
   // 2) Ideal targets (router semantics)
@@ -254,7 +252,7 @@ export async function planMintV2(params: {
   const minShares = applySlippageFloor(finalQuote.shares, effectiveAllowedSlippage)
 
   // Build calls based on the amount actually used for the swap
-  const calls: V2Calls = [
+  const calls: Calls = [
     ...buildDebtSwapCalls({
       debtAsset,
       debtQuote: effectiveQuote,
@@ -409,7 +407,7 @@ function buildDebtSwapCalls(args: {
   debtAsset: Address
   debtQuote: Quote
   debtIn: bigint
-}): Array<V2Call> {
+}): Array<Call> {
   const { debtAsset, debtQuote, debtIn } = args
   // ERC20-in path: approve router for debt asset then perform swap
   return [

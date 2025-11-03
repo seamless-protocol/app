@@ -1,7 +1,7 @@
 import { type Address, erc20Abi, parseUnits } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
-import { orchestrateRedeem, planRedeemV2 } from '@/domain/redeem'
+import { orchestrateRedeem, planRedeem } from '@/domain/redeem'
 import { createCollateralToDebtQuote } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
@@ -101,7 +101,7 @@ async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Prom
 }
 
 type RedeemExecutionResult = {
-  plan: Awaited<ReturnType<typeof planRedeemV2>>
+  plan: Awaited<ReturnType<typeof planRedeem>>
   redeemHash: `0x${string}`
   collateralDelta: bigint
   debtDelta: bigint
@@ -148,7 +148,7 @@ async function performRedeem(
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
   })
 
-  const plan = await planRedeemV2({
+  const plan = await planRedeem({
     config,
     token,
     sharesToRedeem,
@@ -186,7 +186,7 @@ async function performRedeem(
     slippageBps,
     quoteCollateralToDebt,
     chainId,
-    routerAddressV2: router,
+    routerAddress: router,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 
@@ -233,7 +233,7 @@ async function performRedeem(
 }
 
 function assertRedeemPlan(
-  plan: Awaited<ReturnType<typeof planRedeemV2>>,
+  plan: Awaited<ReturnType<typeof planRedeem>>,
   collateralAsset: Address,
   expectedPayout?: Address,
 ): void {

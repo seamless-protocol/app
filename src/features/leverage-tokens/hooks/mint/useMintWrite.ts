@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
-import type { MintPlanV2 } from '@/domain/mint/planner/plan.v2'
+import type { MintPlan } from '@/domain/mint/planner/plan'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
@@ -15,7 +15,7 @@ type Args = {
   account: Address
   token: Address
   plan: Pick<
-    MintPlanV2,
+    MintPlan,
     | 'inputAsset'
     | 'equityInInputAsset'
     | 'minShares'

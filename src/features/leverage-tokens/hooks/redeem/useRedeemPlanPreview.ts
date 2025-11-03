@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
 import { getQuoteIntentForAdapter } from '@/domain/redeem/orchestrate'
-import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
+import { planRedeem } from '@/domain/redeem/planner/plan'
 import type { QuoteFn } from '@/domain/redeem/planner/types'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
@@ -63,7 +63,7 @@ export function useRedeemPlanPreview({
         getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora',
       )
 
-      return planRedeemV2({
+      return planRedeem({
         config,
         token,
         sharesToRedeem,

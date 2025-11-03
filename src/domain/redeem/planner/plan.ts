@@ -1,5 +1,5 @@
 /**
- * Planner for V2 redeem operations.
+ * Planner for redeem operations.
  *
  * Builds the collateral->debt swap needed to repay debt during redemption, then
  * calculates the remaining collateral to return to the user with slippage protection.
@@ -20,8 +20,8 @@ import type { Quote, QuoteFn } from './types'
 // Local structural types (avoid brittle codegen coupling)
 type TokenArg = Address
 type SharesToRedeemArg = bigint
-type RouterV2Call = { target: Address; data: `0x${string}`; value: bigint }
-type V2Calls = Array<RouterV2Call>
+type RouterCall = { target: Address; data: `0x${string}`; value: bigint }
+type Calls = Array<RouterCall>
 
 const WETH_WITHDRAW_ABI = parseAbi(['function withdraw(uint256 wad)'])
 
@@ -32,7 +32,7 @@ const WETH_WITHDRAW_ABI = parseAbi(['function withdraw(uint256 wad)'])
  * are used to size swaps and to provide UI expectations. "minCollateralForSender" is a
  * slippage-adjusted floor used for the on-chain redeem call.
  */
-export type RedeemPlanV2 = {
+export type RedeemPlan = {
   /** Leverage token being redeemed. */
   token: Address
   /** Number of leverage token shares to redeem. */
@@ -62,13 +62,13 @@ export type RedeemPlanV2 = {
   /** Final expected amount of `payoutAsset` returned to the user. */
   payoutAmount: bigint
   /**
-   * Encoded router calls (approve + swap) to be submitted to V2 `redeem`.
+   * Encoded router calls (approve + swap) to be submitted to `redeem`.
    * The sequence includes the collateral->debt swap needed for debt repayment.
    */
-  calls: V2Calls
+  calls: Calls
 }
 
-export async function planRedeemV2(params: {
+export async function planRedeem(params: {
   config: Config
   token: TokenArg
   sharesToRedeem: SharesToRedeemArg
@@ -80,7 +80,7 @@ export async function planRedeemV2(params: {
   chainId: number
   /** Intent for collateral->debt quote */
   intent: 'exactOut' | 'exactIn'
-}): Promise<RedeemPlanV2> {
+}): Promise<RedeemPlan> {
   const {
     config,
     token,
@@ -144,7 +144,7 @@ export async function planRedeemV2(params: {
     expectedDebtPayout: quote.out - debtToRepay,
     payoutAsset: wantsDebtOutput ? debtAddr : collateralAddr,
     payoutAmount: remainingCollateral,
-    calls: [...swapCalls] as V2Calls,
+    calls: [...swapCalls] as Calls,
   }
 
   if (wantsDebtOutput) {
@@ -363,14 +363,14 @@ async function buildCollateralToDebtSwapCalls(args: {
   collateralAmount: bigint
   useNativeCollateralPath: boolean
   quote: Quote
-}): Promise<{ calls: V2Calls }> {
+}): Promise<{ calls: Calls }> {
   const { collateralAsset, collateralAmount, useNativeCollateralPath, quote } = args
 
   if (collateralAmount <= 0n) {
     return { calls: [] }
   }
 
-  const calls: V2Calls = []
+  const calls: Calls = []
 
   if (useNativeCollateralPath) {
     calls.push({
@@ -406,7 +406,7 @@ async function buildCollateralToDebtSwapCalls(args: {
 /**
  * Validate a redeem plan to ensure it's safe to execute.
  */
-export function validateRedeemPlan(plan: RedeemPlanV2): boolean {
+export function validateRedeemPlan(plan: RedeemPlan): boolean {
   if (plan.sharesToRedeem <= 0n) return false
   if (plan.expectedCollateral < 0n) return false
   if (plan.minCollateralForSender < 0n) return false

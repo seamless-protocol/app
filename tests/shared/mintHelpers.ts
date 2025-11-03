@@ -1,6 +1,6 @@
 import type { Address, PublicClient } from 'viem'
 import { parseUnits } from 'viem'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { planMint } from '@/domain/mint/planner/plan'
 import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
 import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
@@ -162,8 +162,8 @@ export async function executeSharedMint({
     args: [account.address],
   })
 
-  console.info('[SHARED MINT] Planning V2 mint')
-  const plan = await planMintV2({
+  console.info('[SHARED MINT] Planning mint')
+  const plan = await planMint({
     config,
     token,
     inputAsset: collateralAsset,

@@ -1,7 +1,7 @@
 import type { Address } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { planMint } from '@/domain/mint/planner/plan'
 
 const DUMMY_CONFIG = {} as unknown as Config
 const TOKEN = '0x0000000000000000000000000000000000000001' as Address
@@ -76,7 +76,7 @@ describe('planner scaling under underfill', () => {
       }
     }
 
-    const plan = await planMintV2({
+    const plan = await planMint({
       config: DUMMY_CONFIG,
       token: TOKEN,
       inputAsset: COLLATERAL,
