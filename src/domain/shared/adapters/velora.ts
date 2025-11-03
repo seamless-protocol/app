@@ -236,7 +236,7 @@ function mapVeloraResponseToQuote(
   }
 
   // Only validate method and add veloraData for exactOut (used by redeemWithVelora)
-  if (intent === 'exactOut') {
+  else {
     // Validate ParaSwap method matches the only validated method for our hardcoded offsets
     // Only swapExactAmountOut has been validated with live API testing (see tests/integration/domain/adapters/velora-offset-validation.spec.ts)
     // Other ParaSwap BUY methods use different calldata structures where offsets (132, 100, 164) extract incorrect values
