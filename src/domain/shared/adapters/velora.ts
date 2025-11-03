@@ -13,7 +13,7 @@ export interface VeloraAdapterOptions {
   fromAddress?: Address
   slippageBps?: number
   baseUrl?: string
-  /** Optional filter to force specific ParaSwap contract methods (for testing). */
+  /** Optional list of ParaSwap contract methods to restrict quotes to. Useful for testing specific methods. */
   includeContractMethods?: Array<string>
 }
 
@@ -234,45 +234,17 @@ function mapVeloraResponseToQuote(
 
   // Only validate method and add veloraData for exactOut (used by redeemWithVelora)
   if (intent === 'exactOut') {
-    // Validate ParaSwap method - offsets are specific to BUY (exactOut) methods
-    // Velora API v6.2 documentation (all BUY methods): https://developers.velora.xyz/api/velora-api/velora-market-api/master/api-v6.2
-    //
-    // IMPORTANT: Only swapExactAmountOut has been validated with live API testing.
-    // Other methods (UniswapV2, UniswapV3, BalancerV2, RFQ, MakerPSM) use different calldata structures
-    // and the hardcoded offsets (132, 100, 164) extract incorrect values from their calldata.
-    //
-    // Live validation results (see tests/integration/domain/adapters/velora-offset-validation.spec.ts):
-    // ✅ swapExactAmountOut: All offsets extract correct values
-    // ❌ swapExactAmountOutOnUniswapV3: Offsets extract garbage data
-    // ❌ swapExactAmountOutOnUniswapV2: API returns 500 error (cannot test)
-    // ❌ swapExactAmountOutOnBalancerV2: API returns 500 error (cannot test)
-    //
-    // To add support for other methods:
-    // 1. Get real calldata samples from Velora API for that method
-    // 2. Derive correct byte offsets for exactAmount, limitAmount, quotedAmount
-    // 3. Validate with live API test using RUN_LIVE_VELORA_TESTS=true
-    // 4. Add method to allowlist below
-    const SUPPORTED_METHODS = [
-      'swapExactAmountOut', // ✅ Validated - offsets: exactAmount=132, limitAmount=100, quotedAmount=164
-    ]
+    // Validate ParaSwap method matches the only validated method for our hardcoded offsets
+    // Only swapExactAmountOut has been validated with live API testing (see tests/integration/domain/adapters/velora-offset-validation.spec.ts)
+    // Other ParaSwap BUY methods use different calldata structures where offsets (132, 100, 164) extract incorrect values
+    // Velora API docs: https://developers.velora.xyz/api/velora-api/velora-market-api/master/api-v6.2
+    const SUPPORTED_METHOD = 'swapExactAmountOut'
 
-    if (priceRoute.contractMethod) {
-      const isSupported = SUPPORTED_METHODS.includes(priceRoute.contractMethod)
-      console.log('[velora-adapter] ParaSwap method', {
-        method: priceRoute.contractMethod,
-        intent,
-        supported: isSupported,
-        note: 'Offsets required for redeemWithVelora (BUY/exactOut methods only)',
-      })
-
-      if (!isSupported) {
-        throw new Error(
-          `Velora returned unsupported ParaSwap method for exactOut: ${priceRoute.contractMethod}. ` +
-            `Only supported method: ${SUPPORTED_METHODS.join(', ')}. ` +
-            `Hardcoded offsets (132n, 100n, 164n) are only validated for swapExactAmountOut. ` +
-            `Other methods use different calldata structures where offsets extract incorrect values.`,
-        )
-      }
+    if (priceRoute.contractMethod !== SUPPORTED_METHOD) {
+      throw new Error(
+        `Velora returned unsupported ParaSwap method: ${priceRoute.contractMethod}. ` +
+          `Only ${SUPPORTED_METHOD} is validated. Hardcoded offsets only work with this method's calldata structure.`,
+      )
     }
 
     // Return quote with veloraData for redeemWithVelora
