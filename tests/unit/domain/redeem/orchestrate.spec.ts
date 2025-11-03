@@ -35,8 +35,8 @@ vi.mock('@/lib/contracts/addresses', () => ({
 import { executeRedeemV2 } from '@/domain/redeem/exec/execute.v2'
 import { executeRedeemWithVelora } from '@/domain/redeem/exec/execute.velora'
 import { getQuoteIntentForAdapter, orchestrateRedeem } from '@/domain/redeem/orchestrate'
-import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
 import type { RedeemPlanV2 } from '@/domain/redeem/planner/plan.v2'
+import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
 import type { VeloraQuote } from '@/domain/shared/adapters/types'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { getContractAddresses } from '@/lib/contracts/addresses'
@@ -465,7 +465,7 @@ describe('orchestrateRedeem', () => {
 
   describe('Default Adapter Fallback', () => {
     it('should default to velora when adapter type not configured', async () => {
-      vi.mocked(getLeverageTokenConfig).mockReturnValue(null)
+      vi.mocked(getLeverageTokenConfig).mockReturnValue(undefined)
       vi.mocked(planRedeemV2).mockResolvedValue({
         ...mockPlan,
         collateralToDebtQuote: mockVeloraQuote,

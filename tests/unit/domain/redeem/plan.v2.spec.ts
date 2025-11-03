@@ -14,11 +14,9 @@ vi.mock('@/lib/contracts/generated', () => ({
   readLeverageManagerV2PreviewRedeem: vi.fn(async () => ({
     collateral: 100000000000000000000n, // 100 ETH (18 decimals)
     debt: 50000000n, // 50 USDC (6 decimals)
-    sharesRedeemed: 50n,
-    maxSharesRedeemable: 50n,
-    fee: 0n,
-    borrowShares: 0n,
-    borrowAssets: 0n,
+    shares: 50n,
+    tokenFee: 0n,
+    treasuryFee: 0n,
   })),
   readLeverageManagerV2GetLeverageTokenLendingAdapter: vi.fn(
     async () => '0x2222222222222222222222222222222222222222' as Address,
@@ -215,9 +213,7 @@ describe('planRedeemV2', () => {
 
   it('should handle native collateral (WETH) redemption', async () => {
     // Override mock to return WETH as collateral
-    vi.mocked(readLeverageManagerV2GetLeverageTokenCollateralAsset).mockResolvedValueOnce(
-      BASE_WETH,
-    )
+    vi.mocked(readLeverageManagerV2GetLeverageTokenCollateralAsset).mockResolvedValueOnce(BASE_WETH)
 
     // Mock price for WETH
     const { fetchCoingeckoTokenUsdPrices } = await import('@/lib/prices/coingecko')
@@ -256,11 +252,9 @@ describe('planRedeemV2', () => {
     vi.mocked(readLeverageManagerV2PreviewRedeem).mockResolvedValueOnce({
       collateral: 25126582278481012n, // Very small collateral (just enough for debt)
       debt: 50000000n,
-      sharesRedeemed: 50n,
-      maxSharesRedeemable: 50n,
-      fee: 0n,
-      borrowShares: 0n,
-      borrowAssets: 0n,
+      shares: 50n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
     })
 
     const plan = await planRedeemV2({
