@@ -46,7 +46,6 @@ export async function executeRedeemWithVelora(params: {
     quotedAmount: bigint
   }
   swapData: `0x${string}`
-  /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
   routerAddress: Address
   chainId: SupportedChainId
 }): Promise<{ hash: Hash }> {
