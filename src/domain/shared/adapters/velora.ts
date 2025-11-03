@@ -3,7 +3,7 @@ import { getAddress } from 'viem'
 import { getTokenDecimals } from '@/features/leverage-tokens/leverageTokens.config'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
-import type { QuoteRequest, VeloraQuote } from './types'
+import type { QuoteFn } from './types'
 
 export interface VeloraAdapterOptions {
   chainId: number
@@ -30,10 +30,9 @@ type VeloraSwapResponse = {
 /**
  * Create a QuoteFn adapter backed by Velora's Market API.
  * Returns swap data and metadata needed for the redeemWithVelora contract function.
+ * For exactOut quotes, veloraData is always present and can be accessed via type narrowing.
  */
-export function createVeloraQuoteAdapter(
-  opts: VeloraAdapterOptions,
-): (args: QuoteRequest) => Promise<VeloraQuote> {
+export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
   const {
     chainId,
     router,

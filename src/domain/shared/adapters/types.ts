@@ -36,6 +36,18 @@ export type VeloraQuote = BaseQuote & {
   }
 }
 
+// Type representing Velora quote with required veloraData (used for exactOut)
+export type VeloraQuoteWithData = BaseQuote & {
+  veloraData: {
+    augustus: Address
+    offsets: {
+      exactAmount: bigint
+      limitAmount: bigint
+      quotedAmount: bigint
+    }
+  }
+}
+
 export type Quote = BaseQuote | VeloraQuote
 
 export type QuoteIntent = 'exactIn' | 'exactOut'
@@ -70,3 +82,11 @@ type QuoteRequestExactOut = QuoteRequestBase & {
 export type QuoteRequest = QuoteRequestExactIn | QuoteRequestExactOut
 
 export type QuoteFn = (args: QuoteRequest) => Promise<Quote>
+
+/**
+ * Type guard to check if a quote has veloraData (type narrowing helper).
+ * For exactOut quotes from Velora, veloraData is always present.
+ */
+export function hasVeloraData(quote: Quote): quote is VeloraQuoteWithData {
+  return 'veloraData' in quote && quote.veloraData !== undefined
+}
