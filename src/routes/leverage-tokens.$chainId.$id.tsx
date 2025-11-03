@@ -395,8 +395,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                     </TooltipTrigger>
                     <TooltipContent className="p-0 text-sm border border-border bg-card">
                       <APYBreakdownTooltip
-                        token={tokenConfig}
-                        {...(apyData && { apyData })}
+                        apyData={apyData}
                         isLoading={isApyLoading ?? false}
                         isError={isApyError ?? false}
                         compact
@@ -483,8 +482,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                     </TooltipTrigger>
                     <TooltipContent className="p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] border border-[var(--divider-line)]">
                       <APYBreakdownTooltip
-                        token={tokenConfig}
-                        {...(apyData && { apyData })}
+                        apyData={apyData}
                         isLoading={isApyLoading ?? false}
                         isError={isApyError ?? false}
                         compact

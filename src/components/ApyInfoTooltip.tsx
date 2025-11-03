@@ -3,12 +3,10 @@ import { useState } from 'react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import type { LeverageToken } from '@/features/leverage-tokens/components/leverage-token-table'
 
 type IconSize = 'sm' | 'md' | 'lg'
 
 interface ApyInfoTooltipProps {
-  token: LeverageToken
   apyData?: APYBreakdownData | undefined
   isLoading?: boolean
   isError?: boolean
@@ -22,7 +20,6 @@ interface ApyInfoTooltipProps {
 }
 
 export function ApyInfoTooltip({
-  token,
   apyData,
   isLoading = false,
   isError = false,
@@ -72,13 +69,7 @@ export function ApyInfoTooltip({
         align={align}
         sideOffset={sideOffset}
       >
-        <APYBreakdownTooltip
-          token={token}
-          compact
-          {...(apyData && { apyData })}
-          isLoading={isLoading}
-          isError={isError}
-        />
+        <APYBreakdownTooltip compact apyData={apyData} isLoading={isLoading} isError={isError} />
       </TooltipContent>
     </Tooltip>
   )
