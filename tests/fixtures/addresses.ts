@@ -65,6 +65,7 @@ export type LeverageTokenKey =
   | 'cbbtc-usdc-2x'
   | 'wsteth-eth-2x'
   | 'wsteth-eth-25x'
+  | 'rlp-usdc-6.75x'
 
 export interface LeverageTokenDefinition {
   key: LeverageTokenKey
@@ -181,6 +182,20 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
       useLiFi: true,
     },
   },
+  'rlp-usdc-6.75x': {
+    key: 'rlp-usdc-6.75x',
+    address: '0x0000000000000000000000000000000000000000' as Address,
+    label: 'RLP / USDC 6.75x Leverage Token (Tenderly)',
+    chainId: mainnet.id,
+    collateralSymbol: 'RLP',
+    debtSymbol: 'USDC',
+    multicallExecutor: MAINNET_TENDERLY_VNET_STACK.multicallExecutor,
+    rpcUrl: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
+    adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
+    swap: {
+      useLiFi: true,
+    },
+  },
 }
 
 const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = {
@@ -215,6 +230,14 @@ const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = 
     chainId: mainnet.id,
     collateralSymbol: 'wstETH',
     debtSymbol: 'WETH',
+  },
+  'rlp-usdc-6.75x': {
+    key: 'rlp-usdc-6.75x',
+    address: '0x6426811fF283Fa7c78F0BC5D71858c2f79c0Fc3d' as Address,
+    label: 'RLP / USDC 6.75x Leverage Token',
+    chainId: mainnet.id,
+    collateralSymbol: 'RLP',
+    debtSymbol: 'USDC',
   },
 }
 
@@ -263,7 +286,8 @@ export function isLeverageTokenKey(value: unknown): value is LeverageTokenKey {
     value === 'weeth-weth-17x' ||
     value === 'cbbtc-usdc-2x' ||
     value === 'wsteth-eth-2x' ||
-    value === 'wsteth-eth-25x'
+    value === 'wsteth-eth-25x' ||
+    value === 'rlp-usdc-6.75x'
   )
 }
 

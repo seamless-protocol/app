@@ -85,9 +85,14 @@ const RICH_HOLDERS: Record<Address, Address | undefined> = {
   [WSTETH_MAINNET]: '0x0B925eD163218f6662a35e0f0371Ac234f9E9371' as Address, // Aave v3 wstETH pool
 }
 
-async function fundErc20ViaImpersonation(token: Address, to: Address, human: string) {
+async function fundErc20ViaImpersonation(
+  token: Address,
+  to: Address,
+  human: string,
+  richHolder?: Address,
+) {
   if (mode === 'tenderly') return false
-  const holder = RICH_HOLDERS[getAddress(token)]
+  const holder = richHolder ?? RICH_HOLDERS[getAddress(token)]
   if (!holder) return false
   await testClient.setBalance({ address: holder, value: parseUnits('1', 18) })
   await testClient.impersonateAccount({ address: holder })
@@ -108,10 +113,10 @@ async function fundErc20ViaImpersonation(token: Address, to: Address, human: str
   return true
 }
 
-export async function topUpErc20(token: Address, to: Address, human: string) {
+export async function topUpErc20(token: Address, to: Address, human: string, richHolder?: Address) {
   if (await fundErc20ViaWethDeposit(token, to, human)) return
   if (mode === 'tenderly') return await setErc20Balance(token, to, human)
-  if (await fundErc20ViaImpersonation(token, to, human)) return
+  if (await fundErc20ViaImpersonation(token, to, human, richHolder)) return
   throw new Error('ERC-20 funding failed: no viable strategy for this token')
 }
 
