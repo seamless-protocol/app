@@ -34,8 +34,8 @@ export default defineConfig({
   forbidOnly: !!process.env['CI'],
   // Fail fast in CI to avoid long timeouts stacking up
   maxFailures: process.env['CI'] ? 1 : 0,
-  retries: process.env['CI'] ? 0 : 0,
-  workers: process.env['CI'] ? 1 : 1,
+  retries: 0,
+  workers: 1,  // Sequential execution to avoid funding conflicts in shared Anvil state
   // Keep tests short by default; individual expects can override
   timeout: 45_000,
   expect: {

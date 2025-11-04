@@ -83,7 +83,7 @@ jobs:
         env:
           ANVIL_NO_MINING: false
 
-      - name: Run E2E tests (Mainnet wstETH/WETH 25x, Anvil)
+      - name: Run E2E tests (Mainnet tokens, Anvil)
         run: bun run test:e2e
         env:
           VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
@@ -134,7 +134,7 @@ jobs:
         env:
           ANVIL_NO_MINING: false
 
-      - name: Run integration tests (Mainnet wstETH/WETH 25x, Anvil)
+      - name: Run integration tests (Mainnet tokens, Anvil)
         run: TEST_CHAIN=mainnet E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration --backend=anvil -- tests/integration/leverage-tokens
         env:
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}

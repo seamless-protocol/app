@@ -30,6 +30,7 @@ export type MintSetupParams = {
   config: Parameters<typeof readLeverageTokenBalanceOf>[0]
   slippageBps?: number
   chainIdOverride?: number
+  richHolderAddress?: Address
   // Optional: override addresses to ensure we mint the same token
   // that the calling scenario is planning to redeem.
   addresses?: {
@@ -71,6 +72,7 @@ export async function executeSharedMint({
   config,
   slippageBps = 50,
   chainIdOverride,
+  richHolderAddress,
   addresses,
 }: MintSetupParams): Promise<MintOutcome> {
   const resolvedSlippageBps = Number(process.env['TEST_SLIPPAGE_BPS'] ?? slippageBps ?? 50)
@@ -105,7 +107,7 @@ export async function executeSharedMint({
     equityInInputAsset: equityInInputAsset.toString(),
   })
   await topUpNative(account.address, '1')
-  await topUpErc20(collateralAsset, account.address, '25')
+  await topUpErc20(collateralAsset, account.address, '25', richHolderAddress)
   await approveIfNeeded(collateralAsset, router, equityInInputAsset)
 
   const quoteAdapterPreference = (process.env['TEST_QUOTE_ADAPTER'] ?? '').toLowerCase()

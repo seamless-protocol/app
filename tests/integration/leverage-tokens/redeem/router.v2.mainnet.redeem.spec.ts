@@ -9,24 +9,32 @@ import {
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
-import { ADDR, CHAIN_ID } from '../../../shared/env'
+import type { LeverageTokenKey } from '../../../fixtures/addresses'
+import { CHAIN_ID, getAddressesForToken } from '../../../shared/env'
 import { readErc20Decimals } from '../../../shared/erc20'
 import { approveIfNeeded } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
+import { MAINNET_TOKEN_CONFIGS } from '../mainnet-tokens.config'
 
 const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
-redeemSuite('Leverage Router V2 Redeem (Mainnet wstETH/ETH 25x)', () => {
-  // TODO: Investigate why tests require higher slippage (250 bps vs 50 bps)
-  // Likely due to price discrepancies between CoinGecko (used for slippage calc) and on-chain oracles
-  const SLIPPAGE_BPS = 250
-
-  it('redeems all minted shares into collateral asset using production config', async () => {
-    const result = await runRedeemTest({ slippageBps: SLIPPAGE_BPS })
-    assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
-    assertRedeemExecution(result)
-  }, 120_000)
+// TODO: Investigate why tests require higher slippage (250-500 bps vs 50 bps)
+// Likely due to price discrepancies between CoinGecko (used for slippage calc) and on-chain oracles
+describe.each(MAINNET_TOKEN_CONFIGS)('Leverage Router V2 Redeem (Mainnet $label)', (config) => {
+  redeemSuite(`${config.label}`, () => {
+    it('redeems all minted shares into collateral asset using production config', async () => {
+      const result = await runRedeemTest({
+        tokenKey: config.key,
+        slippageBps: config.slippageBps,
+        toleranceBps: config.toleranceBps,
+        fundingAmount: config.fundingAmount,
+        richHolderAddress: config.richHolderAddress,
+      })
+      assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
+      assertRedeemExecution(result)
+    }, 30_000)
+  })
 })
 
 type RedeemScenario = {
@@ -37,12 +45,32 @@ type RedeemScenario = {
   debtAsset: Address
   equityInInputAsset: bigint
   slippageBps: number
+  toleranceBps: number
+  richHolderAddress: Address
   chainId: number
 }
 
-async function runRedeemTest({ slippageBps }: { slippageBps: number }) {
+async function runRedeemTest({
+  tokenKey,
+  slippageBps,
+  toleranceBps,
+  fundingAmount,
+  richHolderAddress,
+}: {
+  tokenKey: LeverageTokenKey
+  slippageBps: number
+  toleranceBps: number
+  fundingAmount: string
+  richHolderAddress: Address
+}) {
   return withFork(async (ctx) => {
-    const scenario = await prepareRedeemScenario(ctx, slippageBps)
+    const scenario = await prepareRedeemScenario(ctx, {
+      tokenKey,
+      slippageBps,
+      fundingAmount,
+      toleranceBps,
+      richHolderAddress,
+    })
     const mintOutcome = await executeMintPath(ctx, scenario)
     return performRedeem(ctx, { ...scenario, ...mintOutcome })
   })
@@ -50,12 +78,20 @@ async function runRedeemTest({ slippageBps }: { slippageBps: number }) {
 
 async function prepareRedeemScenario(
   ctx: WithForkCtx,
-  slippageBps: number,
+  params: {
+    tokenKey: LeverageTokenKey
+    slippageBps: number
+    fundingAmount: string
+    toleranceBps: number
+    richHolderAddress: Address
+  },
 ): Promise<RedeemScenario> {
   const { config } = ctx
-  const token: Address = ADDR.leverageToken
-  const manager: Address = (ADDR.managerV2 ?? ADDR.manager) as Address
-  const router: Address = (ADDR.routerV2 ?? ADDR.router) as Address
+  const addresses = getAddressesForToken(params.tokenKey, 'prod')
+
+  const token: Address = addresses.leverageToken
+  const manager: Address = (addresses.managerV2 ?? addresses.manager) as Address
+  const router: Address = (addresses.routerV2 ?? addresses.router) as Address
 
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
     args: [token],
@@ -65,7 +101,7 @@ async function prepareRedeemScenario(
   })
 
   const decimals = await readErc20Decimals(config, collateralAsset)
-  const equityInInputAsset = parseUnits('10', decimals)
+  const equityInInputAsset = parseUnits(params.fundingAmount, decimals)
 
   return {
     token,
@@ -74,7 +110,9 @@ async function prepareRedeemScenario(
     collateralAsset,
     debtAsset,
     equityInInputAsset,
-    slippageBps,
+    slippageBps: params.slippageBps,
+    toleranceBps: params.toleranceBps,
+    richHolderAddress: params.richHolderAddress,
     chainId: mainnet.id,
   }
 }
@@ -89,7 +127,13 @@ async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Prom
     publicClient,
     config,
     slippageBps: scenario.slippageBps,
+    richHolderAddress: scenario.richHolderAddress,
     chainIdOverride: mainnet.id,
+    addresses: {
+      token: scenario.token,
+      manager: scenario.manager,
+      router: scenario.router,
+    },
   })
 
   const sharesAfterMint = await readLeverageTokenBalanceOf(config, {
@@ -109,6 +153,7 @@ type RedeemExecutionResult = {
   sharesAfter: bigint
   sharesToRedeem: bigint
   slippageBps: number
+  toleranceBps: number
   payoutAsset: Address | undefined
   collateralAsset: Address
   debtAsset: Address
@@ -225,10 +270,11 @@ async function performRedeem(
     sharesBefore: sharesBeforeRedeem,
     sharesAfter: sharesAfterRedeem,
     sharesToRedeem,
-    slippageBps,
+    slippageBps: scenario.slippageBps,
+    toleranceBps: scenario.toleranceBps,
     payoutAsset,
-    collateralAsset,
-    debtAsset,
+    collateralAsset: scenario.collateralAsset,
+    debtAsset: scenario.debtAsset,
   }
 }
 
@@ -270,20 +316,20 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
     sharesBefore,
     sharesAfter,
     sharesToRedeem,
-    slippageBps,
+    toleranceBps,
     payoutAsset,
     collateralAsset,
   } = result
 
   expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
 
-  // 1% tolerance for 25x leverage + LiFi routing variability
-  const toleranceBps = BigInt(slippageBps) + 100n
+  // Add extra tolerance for LiFi routing variability
+  const effectiveToleranceBps = BigInt(toleranceBps) + 100n
   const withinTolerance = (actual: bigint, expected: bigint): boolean => {
     if (expected === 0n) return actual === 0n
     if (actual < 0n) return false
-    const lowerBound = (expected * (10_000n - toleranceBps)) / 10_000n
-    const upperBound = (expected * (10_000n + toleranceBps)) / 10_000n
+    const lowerBound = (expected * (10_000n - effectiveToleranceBps)) / 10_000n
+    const upperBound = (expected * (10_000n + effectiveToleranceBps)) / 10_000n
     return actual >= lowerBound && actual <= upperBound
   }
 
