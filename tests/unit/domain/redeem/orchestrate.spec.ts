@@ -36,7 +36,6 @@ import { executeRedeem } from '@/domain/redeem/exec/execute'
 import { executeRedeemWithVelora } from '@/domain/redeem/exec/execute.velora'
 import { getQuoteIntentForAdapter, orchestrateRedeem } from '@/domain/redeem/orchestrate'
 import type { RedeemPlan } from '@/domain/redeem/planner/plan'
-import { planRedeem } from '@/domain/redeem/planner/plan'
 import type { VeloraQuote } from '@/domain/shared/adapters/types'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { getContractAddresses } from '@/lib/contracts/addresses'
@@ -105,6 +104,11 @@ describe('orchestrateRedeem', () => {
   })
 
   describe('Velora Execution Path', () => {
+    const mockVeloraPlan: RedeemPlan = {
+      ...mockPlan,
+      collateralToDebtQuote: mockVeloraQuote,
+    }
+
     beforeEach(() => {
       vi.mocked(getLeverageTokenConfig).mockReturnValue({
         swaps: {
@@ -114,11 +118,6 @@ describe('orchestrateRedeem', () => {
         },
       } as any)
 
-      vi.mocked(planRedeem).mockResolvedValue({
-        ...mockPlan,
-        collateralToDebtQuote: mockVeloraQuote,
-      })
-
       vi.mocked(executeRedeemWithVelora).mockResolvedValue({ hash: MOCK_HASH })
     })
 
@@ -127,7 +126,7 @@ describe('orchestrateRedeem', () => {
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        plan: mockPlan,
+        plan: mockVeloraPlan,
         chainId: base.id,
       })
 
@@ -142,7 +141,7 @@ describe('orchestrateRedeem', () => {
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        plan: mockPlan,
+        plan: mockVeloraPlan,
         chainId: base.id,
       })
 
@@ -165,22 +164,6 @@ describe('orchestrateRedeem', () => {
       })
     })
 
-    it('should pass exactOut intent to planner for Velora', async () => {
-      await orchestrateRedeem({
-        config: MOCK_CONFIG,
-        account: ACCOUNT,
-        token: TOKEN,
-        plan: mockPlan,
-        chainId: base.id,
-      })
-
-      expect(planRedeem).toHaveBeenCalledWith(
-        expect.objectContaining({
-          intent: 'exactOut',
-        }),
-      )
-    })
-
     it('should throw if Velora adapter address missing', async () => {
       vi.mocked(getContractAddresses).mockReturnValue({
         leverageRouterV2: ROUTER_V2,
@@ -194,25 +177,20 @@ describe('orchestrateRedeem', () => {
           config: MOCK_CONFIG,
           account: ACCOUNT,
           token: TOKEN,
-          plan: mockPlan,
+          plan: mockVeloraPlan,
           chainId: base.id,
         }),
       ).rejects.toThrow(`Velora adapter address required on chain ${base.id}`)
     })
 
     it('should throw if Velora quote missing veloraData', async () => {
-      // Plan returns quote without veloraData
-      vi.mocked(planRedeem).mockResolvedValue({
-        ...mockPlan,
-        collateralToDebtQuote: mockStandardQuote, // No veloraData
-      })
-
+      // Pass plan with standard quote (no veloraData)
       await expect(
         orchestrateRedeem({
           config: MOCK_CONFIG,
           account: ACCOUNT,
           token: TOKEN,
-          plan: mockPlan,
+          plan: mockPlan, // mockPlan has standard quote without veloraData
           chainId: base.id,
         }),
       ).rejects.toThrow('Velora quote missing veloraData for exactOut operation')
@@ -221,7 +199,6 @@ describe('orchestrateRedeem', () => {
 
   describe('Standard V2 Execution Path', () => {
     beforeEach(() => {
-      vi.mocked(planRedeem).mockResolvedValue(mockPlan)
       vi.mocked(executeRedeem).mockResolvedValue({ hash: MOCK_HASH })
     })
 
@@ -269,30 +246,6 @@ describe('orchestrateRedeem', () => {
       expect(executeRedeemWithVelora).not.toHaveBeenCalled()
     })
 
-    it('should pass exactIn intent to planner for non-Velora adapters', async () => {
-      vi.mocked(getLeverageTokenConfig).mockReturnValue({
-        swaps: {
-          collateralToDebt: {
-            type: 'lifi',
-          },
-        },
-      } as any)
-
-      await orchestrateRedeem({
-        config: MOCK_CONFIG,
-        account: ACCOUNT,
-        token: TOKEN,
-        plan: mockPlan,
-        chainId: base.id,
-      })
-
-      expect(planRedeem).toHaveBeenCalledWith(
-        expect.objectContaining({
-          intent: 'exactIn',
-        }),
-      )
-    })
-
     it('should pass correct parameters to executeRedeem', async () => {
       vi.mocked(getLeverageTokenConfig).mockReturnValue({
         swaps: {
@@ -333,7 +286,6 @@ describe('orchestrateRedeem', () => {
           },
         },
       } as any)
-      vi.mocked(planRedeem).mockResolvedValue(mockPlan)
     })
 
     it('should throw if router address missing', async () => {
@@ -353,24 +305,6 @@ describe('orchestrateRedeem', () => {
         }),
       ).rejects.toThrow(`LeverageRouterV2 address required on chain ${base.id}`)
     })
-
-    it('should throw if manager address missing', async () => {
-      vi.mocked(getContractAddresses).mockReturnValue({
-        leverageRouterV2: ROUTER_V2,
-        multicallExecutor: MULTICALL_EXECUTOR,
-        // leverageManagerV2 missing
-      } as any)
-
-      await expect(
-        orchestrateRedeem({
-          config: MOCK_CONFIG,
-          account: ACCOUNT,
-          token: TOKEN,
-          plan: mockPlan,
-          chainId: base.id,
-        }),
-      ).rejects.toThrow(`LeverageManagerV2 address required on chain ${base.id}`)
-    })
   })
 
   describe('Configuration Overrides', () => {
@@ -382,7 +316,6 @@ describe('orchestrateRedeem', () => {
           },
         },
       } as any)
-      vi.mocked(planRedeem).mockResolvedValue(mockPlan)
       vi.mocked(executeRedeem).mockResolvedValue({ hash: MOCK_HASH })
     })
 
@@ -404,40 +337,23 @@ describe('orchestrateRedeem', () => {
         }),
       )
     })
-
-    it('should pass outputAsset to planner', async () => {
-      const OUTPUT_ASSET: Address = '0xcccccccccccccccccccccccccccccccccccccccc'
-
-      await orchestrateRedeem({
-        config: MOCK_CONFIG,
-        account: ACCOUNT,
-        token: TOKEN,
-        plan: mockPlan,
-        chainId: base.id,
-      })
-
-      expect(planRedeem).toHaveBeenCalledWith(
-        expect.objectContaining({
-          outputAsset: OUTPUT_ASSET,
-        }),
-      )
-    })
   })
 
   describe('Default Adapter Fallback', () => {
+    const mockVeloraPlan: RedeemPlan = {
+      ...mockPlan,
+      collateralToDebtQuote: mockVeloraQuote,
+    }
+
     it('should default to velora when adapter type not configured', async () => {
       vi.mocked(getLeverageTokenConfig).mockReturnValue(undefined)
-      vi.mocked(planRedeem).mockResolvedValue({
-        ...mockPlan,
-        collateralToDebtQuote: mockVeloraQuote,
-      })
       vi.mocked(executeRedeemWithVelora).mockResolvedValue({ hash: MOCK_HASH })
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        plan: mockPlan,
+        plan: mockVeloraPlan,
         chainId: base.id,
       })
 
