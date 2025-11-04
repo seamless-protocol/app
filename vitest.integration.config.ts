@@ -9,8 +9,8 @@ export default defineConfig({
     environment: 'jsdom',
     // No global setup that mocks modules — integration uses real modules
     globals: true,
-    // Tenderly static VNets cannot handle concurrent snapshots across workers.
-    // Force Vitest to run integration files sequentially so mint/redeem suites don't collide.
+    // Anvil can't properly isolate nonces when test files run in parallel with same account
+    // Keep sequential execution to avoid nonce conflicts and state interference
     fileParallelism: false,
     include: [
       'tests/integration/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
