@@ -9,11 +9,7 @@
 import { useMutation } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import { useConfig } from 'wagmi'
-import {
-  type OrchestrateRedeemResult,
-  orchestrateRedeem,
-  type RedeemPlan,
-} from '@/domain/redeem'
+import { type OrchestrateRedeemResult, orchestrateRedeem, type RedeemPlan } from '@/domain/redeem'
 
 type Gen = typeof import('@/lib/contracts/generated')
 

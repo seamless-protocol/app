@@ -123,7 +123,6 @@ describe('orchestrateRedeem', () => {
     })
 
     it('should orchestrate redeem with Velora adapter', async () => {
-
       const result = await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
@@ -139,7 +138,6 @@ describe('orchestrateRedeem', () => {
     })
 
     it('should pass veloraData to executeRedeemWithVelora', async () => {
-
       await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
@@ -168,7 +166,6 @@ describe('orchestrateRedeem', () => {
     })
 
     it('should pass exactOut intent to planner for Velora', async () => {
-
       await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
@@ -192,14 +189,13 @@ describe('orchestrateRedeem', () => {
         // veloraAdapter missing
       } as any)
 
-
       await expect(
         orchestrateRedeem({
           config: MOCK_CONFIG,
           account: ACCOUNT,
           token: TOKEN,
           plan: mockPlan,
-        chainId: base.id,
+          chainId: base.id,
         }),
       ).rejects.toThrow(`Velora adapter address required on chain ${base.id}`)
     })
@@ -211,14 +207,13 @@ describe('orchestrateRedeem', () => {
         collateralToDebtQuote: mockStandardQuote, // No veloraData
       })
 
-
       await expect(
         orchestrateRedeem({
           config: MOCK_CONFIG,
           account: ACCOUNT,
           token: TOKEN,
           plan: mockPlan,
-        chainId: base.id,
+          chainId: base.id,
         }),
       ).rejects.toThrow('Velora quote missing veloraData for exactOut operation')
     })
@@ -238,7 +233,6 @@ describe('orchestrateRedeem', () => {
           },
         },
       } as any)
-
 
       const result = await orchestrateRedeem({
         config: MOCK_CONFIG,
@@ -262,7 +256,6 @@ describe('orchestrateRedeem', () => {
         },
       } as any)
 
-
       const result = await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
@@ -284,7 +277,6 @@ describe('orchestrateRedeem', () => {
           },
         },
       } as any)
-
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
@@ -309,7 +301,6 @@ describe('orchestrateRedeem', () => {
           },
         },
       } as any)
-
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
@@ -352,14 +343,13 @@ describe('orchestrateRedeem', () => {
         // leverageRouterV2 missing
       } as any)
 
-
       await expect(
         orchestrateRedeem({
           config: MOCK_CONFIG,
           account: ACCOUNT,
           token: TOKEN,
           plan: mockPlan,
-        chainId: base.id,
+          chainId: base.id,
         }),
       ).rejects.toThrow(`LeverageRouterV2 address required on chain ${base.id}`)
     })
@@ -371,14 +361,13 @@ describe('orchestrateRedeem', () => {
         // leverageManagerV2 missing
       } as any)
 
-
       await expect(
         orchestrateRedeem({
           config: MOCK_CONFIG,
           account: ACCOUNT,
           token: TOKEN,
           plan: mockPlan,
-        chainId: base.id,
+          chainId: base.id,
         }),
       ).rejects.toThrow(`LeverageManagerV2 address required on chain ${base.id}`)
     })
@@ -443,7 +432,6 @@ describe('orchestrateRedeem', () => {
         collateralToDebtQuote: mockVeloraQuote,
       })
       vi.mocked(executeRedeemWithVelora).mockResolvedValue({ hash: MOCK_HASH })
-
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
