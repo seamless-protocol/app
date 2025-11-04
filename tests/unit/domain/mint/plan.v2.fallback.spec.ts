@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { planMint } from '@/domain/mint/planner/plan'
 
 const COLLATERAL = '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address
 
@@ -48,7 +48,7 @@ vi.mock('@/lib/prices/coingecko', () => ({
   })),
 }))
 
-describe('planMintV2 fallback exact-in sizing and non-native path', () => {
+describe('planMint fallback exact-in sizing and non-native path', () => {
   it('falls back to exact-in refinement when exact-out lacks maxIn and uses approve + non-payable swap for ERC-20 debt', async () => {
     const inputAsset = COLLATERAL
     const equityInInputAsset = 100n
@@ -71,7 +71,7 @@ describe('planMintV2 fallback exact-in sizing and non-native path', () => {
       }
     })
 
-    const plan = await planMintV2({
+    const plan = await planMint({
       config: {} as any,
       token: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address,
       inputAsset,

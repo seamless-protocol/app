@@ -1,5 +1,5 @@
 import { type Address, erc20Abi, getAddress, type Hash, type PublicClient, parseUnits } from 'viem'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { planMint } from '@/domain/mint/planner/plan'
 import {
   createDebtToCollateralQuote,
   type DebtToCollateralSwapConfig,
@@ -30,7 +30,7 @@ export type MintTestParams = {
 }
 
 export type MintExecutionResult = {
-  orchestration: { hash: Hash; plan: Awaited<ReturnType<typeof planMintV2>> }
+  orchestration: { hash: Hash; plan: Awaited<ReturnType<typeof planMint>> }
   mintedShares: bigint
   /** User collateral actually spent during mint (balanceBefore - balanceAfter) */
   collateralDelta?: bigint
@@ -40,7 +40,7 @@ export type MintExecutionResult = {
 }
 
 export type MintPlanResult = {
-  plan: Awaited<ReturnType<typeof planMintV2>>
+  plan: Awaited<ReturnType<typeof planMint>>
   collateralAsset: Address
   debtAsset: Address
   equityInInputAsset: bigint
@@ -73,7 +73,7 @@ export async function planMintTest({
     ensureLiquidity: false,
   })
 
-  const plan = await planMintV2({
+  const plan = await planMint({
     config: ctx.config,
     token: setup.token,
     inputAsset: setup.collateralAsset,
@@ -150,7 +150,7 @@ async function runMintScenario({
   })) as bigint
 
   // Plan + simulate + write (no orchestrator)
-  const plan = await planMintV2({
+  const plan = await planMint({
     config,
     token: setup.token,
     inputAsset: setup.collateralAsset,

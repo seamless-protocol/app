@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { planMint } from '@/domain/mint/planner/plan'
 
 const BASE_WETH = '0x4200000000000000000000000000000000000006' as Address
 const COLLATERAL = '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address
@@ -63,7 +63,7 @@ vi.mock('@/lib/prices/coingecko', () => ({
   })),
 }))
 
-describe('planMintV2 final clamp + re-quote', () => {
+describe('planMint final clamp + re-quote', () => {
   it('clamps when final previewed debt < sized flash loan and re-quotes once', async () => {
     const inputAsset = COLLATERAL
     const equityInInputAsset = 100n * 10n ** 18n
@@ -90,7 +90,7 @@ describe('planMintV2 final clamp + re-quote', () => {
       }
     })
 
-    const plan = await planMintV2({
+    const plan = await planMint({
       config: {} as any,
       token: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address,
       inputAsset,

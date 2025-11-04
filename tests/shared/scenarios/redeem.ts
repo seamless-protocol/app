@@ -1,5 +1,5 @@
 import { type Address, getAddress, type PublicClient } from 'viem'
-import { planRedeemV2 } from '@/domain/redeem'
+import { planRedeem } from '@/domain/redeem'
 import {
   type CollateralToDebtSwapConfig,
   createCollateralToDebtQuote,
@@ -33,7 +33,7 @@ export type RedeemScenarioConfig = {
 }
 
 export type RedeemPlanResult = {
-  plan: Awaited<ReturnType<typeof planRedeemV2>>
+  plan: Awaited<ReturnType<typeof planRedeem>>
   collateralAsset: Address
   debtAsset: Address
   payoutAsset?: Address
@@ -142,7 +142,7 @@ export async function planRedeemTest({
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
   })
 
-  const plan = await planRedeemV2({
+  const plan = await planRedeem({
     config: ctx.config,
     token: scenario.token,
     sharesToRedeem,

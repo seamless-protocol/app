@@ -2,7 +2,7 @@ import type { Address } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 
 // Unmock the function we want to test
-vi.unmock('@/domain/redeem/planner/plan.v2')
+vi.unmock('@/domain/redeem/planner/plan')
 
 vi.mock('@/lib/contracts/generated', () => ({
   readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(
@@ -52,11 +52,7 @@ vi.mock('@/lib/prices/coingecko', () => ({
   })),
 }))
 
-import {
-  planRedeemV2,
-  type RedeemPlanV2,
-  validateRedeemPlan,
-} from '@/domain/redeem/planner/plan.v2'
+import { planRedeem, type RedeemPlan, validateRedeemPlan } from '@/domain/redeem/planner/plan'
 import { BASE_WETH } from '@/lib/contracts/addresses'
 
 const dummyQuoteTarget = '0x0000000000000000000000000000000000000aAa' as Address
@@ -126,9 +122,9 @@ async function mockQuote(args: {
   }
 }
 
-describe('planRedeemV2', () => {
+describe('planRedeem', () => {
   it('should plan a redeem', async () => {
-    const plan = await planRedeemV2({
+    const plan = await planRedeem({
       config: {} as any,
       token: '0x1111111111111111111111111111111111111111' as Address,
       sharesToRedeem: 50n,
@@ -150,7 +146,7 @@ describe('planRedeemV2', () => {
 
   it('should revert if the debt output from the swap is below the required debt', async () => {
     await expect(
-      planRedeemV2({
+      planRedeem({
         config: {} as any,
         token: '0x1111111111111111111111111111111111111111' as Address,
         sharesToRedeem: 50n,
@@ -170,7 +166,7 @@ describe('planRedeemV2', () => {
 
   it('should revert if the collateral required for the swap is above the allowed amount wrt slippage', async () => {
     await expect(
-      planRedeemV2({
+      planRedeem({
         config: {} as any,
         token: '0x1111111111111111111111111111111111111111' as Address,
         sharesToRedeem: 50n,
@@ -189,7 +185,7 @@ describe('planRedeemV2', () => {
   })
 
   it('supports redeeming into the debt asset when requested', async () => {
-    const plan = await planRedeemV2({
+    const plan = await planRedeem({
       config: {} as any,
       token: '0x1111111111111111111111111111111111111111' as Address,
       sharesToRedeem: 50n,
@@ -222,7 +218,7 @@ describe('planRedeemV2', () => {
       '0xdddddddddddddddddddddddddddddddddddddddd': 1.001, // debt (USDC)
     })
 
-    const plan = await planRedeemV2({
+    const plan = await planRedeem({
       config: {} as any,
       token: '0x1111111111111111111111111111111111111111' as Address,
       sharesToRedeem: 50n,
@@ -257,7 +253,7 @@ describe('planRedeemV2', () => {
       treasuryFee: 0n,
     })
 
-    const plan = await planRedeemV2({
+    const plan = await planRedeem({
       config: {} as any,
       token: '0x1111111111111111111111111111111111111111' as Address,
       sharesToRedeem: 50n,
@@ -285,7 +281,7 @@ describe('planRedeemV2', () => {
       treasuryFee: 0n,
     })
 
-    const plan = await planRedeemV2({
+    const plan = await planRedeem({
       config: {} as any,
       token: '0x1111111111111111111111111111111111111111' as Address,
       sharesToRedeem: 50n,
@@ -305,7 +301,7 @@ describe('planRedeemV2', () => {
 
   it('should handle extreme slippage tolerance (90%)', async () => {
     // Test with very high slippage (9000 bps = 90%)
-    const plan = await planRedeemV2({
+    const plan = await planRedeem({
       config: {} as any,
       token: '0x1111111111111111111111111111111111111111' as Address,
       sharesToRedeem: 50n,
@@ -337,7 +333,7 @@ describe('planRedeemV2', () => {
 
     // Planner should reject this as the collateral is insufficient for the swap
     await expect(
-      planRedeemV2({
+      planRedeem({
         config: {} as any,
         token: '0x1111111111111111111111111111111111111111' as Address,
         sharesToRedeem: 1n,
@@ -361,7 +357,7 @@ describe('planRedeemV2', () => {
       treasuryFee: 0n,
     })
 
-    const plan = await planRedeemV2({
+    const plan = await planRedeem({
       config: {} as any,
       token: '0x1111111111111111111111111111111111111111' as Address,
       sharesToRedeem: 100n,
@@ -383,7 +379,7 @@ describe('planRedeemV2', () => {
     vi.mocked(getPublicClient).mockReturnValueOnce(undefined as any)
 
     await expect(
-      planRedeemV2({
+      planRedeem({
         config: {} as any,
         token: '0x1111111111111111111111111111111111111111' as Address,
         sharesToRedeem: 50n,
@@ -397,7 +393,7 @@ describe('planRedeemV2', () => {
 })
 
 describe('validateRedeemPlan', () => {
-  const validPlan: RedeemPlanV2 = {
+  const validPlan: RedeemPlan = {
     token: '0x1111111111111111111111111111111111111111' as Address,
     sharesToRedeem: 1000000000000000000n,
     collateralAsset: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as Address,

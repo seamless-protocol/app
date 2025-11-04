@@ -11,16 +11,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
 
 // Mock all dependencies
-vi.mock('@/domain/redeem/exec/execute.v2', () => ({
-  executeRedeemV2: vi.fn(),
+vi.mock('@/domain/redeem/exec/execute', () => ({
+  executeRedeem: vi.fn(),
 }))
 
 vi.mock('@/domain/redeem/exec/execute.velora', () => ({
   executeRedeemWithVelora: vi.fn(),
 }))
 
-vi.mock('@/domain/redeem/planner/plan.v2', () => ({
-  planRedeemV2: vi.fn(),
+vi.mock('@/domain/redeem/planner/plan', () => ({
+  planRedeem: vi.fn(),
 }))
 
 vi.mock('@/features/leverage-tokens/leverageTokens.config', () => ({
@@ -32,11 +32,11 @@ vi.mock('@/lib/contracts/addresses', () => ({
 }))
 
 // Import mocked functions
-import { executeRedeemV2 } from '@/domain/redeem/exec/execute.v2'
+import { executeRedeem } from '@/domain/redeem/exec/execute'
 import { executeRedeemWithVelora } from '@/domain/redeem/exec/execute.velora'
 import { getQuoteIntentForAdapter, orchestrateRedeem } from '@/domain/redeem/orchestrate'
-import type { RedeemPlanV2 } from '@/domain/redeem/planner/plan.v2'
-import { planRedeemV2 } from '@/domain/redeem/planner/plan.v2'
+import type { RedeemPlan } from '@/domain/redeem/planner/plan'
+import { planRedeem } from '@/domain/redeem/planner/plan'
 import type { VeloraQuote } from '@/domain/shared/adapters/types'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { getContractAddresses } from '@/lib/contracts/addresses'
@@ -74,7 +74,7 @@ describe('orchestrateRedeem', () => {
     },
   }
 
-  const mockPlan: RedeemPlanV2 = {
+  const mockPlan: RedeemPlan = {
     token: TOKEN,
     sharesToRedeem: SHARES_TO_REDEEM,
     collateralAsset: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as Address,
@@ -114,7 +114,7 @@ describe('orchestrateRedeem', () => {
         },
       } as any)
 
-      vi.mocked(planRedeemV2).mockResolvedValue({
+      vi.mocked(planRedeem).mockResolvedValue({
         ...mockPlan,
         collateralToDebtQuote: mockVeloraQuote,
       })
@@ -138,7 +138,7 @@ describe('orchestrateRedeem', () => {
       expect(result.hash).toBe(MOCK_HASH)
       expect(result.plan.collateralToDebtQuote).toEqual(mockVeloraQuote)
       expect(executeRedeemWithVelora).toHaveBeenCalledTimes(1)
-      expect(executeRedeemV2).not.toHaveBeenCalled()
+      expect(executeRedeem).not.toHaveBeenCalled()
     })
 
     it('should pass veloraData to executeRedeemWithVelora', async () => {
@@ -184,7 +184,7 @@ describe('orchestrateRedeem', () => {
         chainId: base.id,
       })
 
-      expect(planRedeemV2).toHaveBeenCalledWith(
+      expect(planRedeem).toHaveBeenCalledWith(
         expect.objectContaining({
           intent: 'exactOut',
         }),
@@ -215,7 +215,7 @@ describe('orchestrateRedeem', () => {
 
     it('should throw if Velora quote missing veloraData', async () => {
       // Plan returns quote without veloraData
-      vi.mocked(planRedeemV2).mockResolvedValue({
+      vi.mocked(planRedeem).mockResolvedValue({
         ...mockPlan,
         collateralToDebtQuote: mockStandardQuote, // No veloraData
       })
@@ -237,8 +237,8 @@ describe('orchestrateRedeem', () => {
 
   describe('Standard V2 Execution Path', () => {
     beforeEach(() => {
-      vi.mocked(planRedeemV2).mockResolvedValue(mockPlan)
-      vi.mocked(executeRedeemV2).mockResolvedValue({ hash: MOCK_HASH })
+      vi.mocked(planRedeem).mockResolvedValue(mockPlan)
+      vi.mocked(executeRedeem).mockResolvedValue({ hash: MOCK_HASH })
     })
 
     it('should orchestrate redeem with lifi adapter', async () => {
@@ -262,7 +262,7 @@ describe('orchestrateRedeem', () => {
       })
 
       expect(result.hash).toBe(MOCK_HASH)
-      expect(executeRedeemV2).toHaveBeenCalledTimes(1)
+      expect(executeRedeem).toHaveBeenCalledTimes(1)
       expect(executeRedeemWithVelora).not.toHaveBeenCalled()
     })
 
@@ -287,7 +287,7 @@ describe('orchestrateRedeem', () => {
       })
 
       expect(result.hash).toBe(MOCK_HASH)
-      expect(executeRedeemV2).toHaveBeenCalledTimes(1)
+      expect(executeRedeem).toHaveBeenCalledTimes(1)
       expect(executeRedeemWithVelora).not.toHaveBeenCalled()
     })
 
@@ -311,14 +311,14 @@ describe('orchestrateRedeem', () => {
         chainId: base.id,
       })
 
-      expect(planRedeemV2).toHaveBeenCalledWith(
+      expect(planRedeem).toHaveBeenCalledWith(
         expect.objectContaining({
           intent: 'exactIn',
         }),
       )
     })
 
-    it('should pass correct parameters to executeRedeemV2', async () => {
+    it('should pass correct parameters to executeRedeem', async () => {
       vi.mocked(getLeverageTokenConfig).mockReturnValue({
         swaps: {
           collateralToDebt: {
@@ -338,7 +338,7 @@ describe('orchestrateRedeem', () => {
         chainId: base.id,
       })
 
-      expect(executeRedeemV2).toHaveBeenCalledWith({
+      expect(executeRedeem).toHaveBeenCalledWith({
         config: MOCK_CONFIG,
         token: TOKEN,
         account: ACCOUNT,
@@ -361,7 +361,7 @@ describe('orchestrateRedeem', () => {
           },
         },
       } as any)
-      vi.mocked(planRedeemV2).mockResolvedValue(mockPlan)
+      vi.mocked(planRedeem).mockResolvedValue(mockPlan)
     })
 
     it('should throw if router address missing', async () => {
@@ -416,8 +416,8 @@ describe('orchestrateRedeem', () => {
           },
         },
       } as any)
-      vi.mocked(planRedeemV2).mockResolvedValue(mockPlan)
-      vi.mocked(executeRedeemV2).mockResolvedValue({ hash: MOCK_HASH })
+      vi.mocked(planRedeem).mockResolvedValue(mockPlan)
+      vi.mocked(executeRedeem).mockResolvedValue({ hash: MOCK_HASH })
     })
 
     it('should use explicit router address override', async () => {
@@ -430,11 +430,11 @@ describe('orchestrateRedeem', () => {
         token: TOKEN,
         sharesToRedeem: SHARES_TO_REDEEM,
         quoteCollateralToDebt: mockQuoter,
-        routerAddressV2: CUSTOM_ROUTER,
+        routerAddress: CUSTOM_ROUTER,
         chainId: base.id,
       })
 
-      expect(executeRedeemV2).toHaveBeenCalledWith(
+      expect(executeRedeem).toHaveBeenCalledWith(
         expect.objectContaining({
           routerAddress: CUSTOM_ROUTER,
         }),
@@ -455,7 +455,7 @@ describe('orchestrateRedeem', () => {
         chainId: base.id,
       })
 
-      expect(planRedeemV2).toHaveBeenCalledWith(
+      expect(planRedeem).toHaveBeenCalledWith(
         expect.objectContaining({
           outputAsset: OUTPUT_ASSET,
         }),
@@ -466,7 +466,7 @@ describe('orchestrateRedeem', () => {
   describe('Default Adapter Fallback', () => {
     it('should default to velora when adapter type not configured', async () => {
       vi.mocked(getLeverageTokenConfig).mockReturnValue(undefined)
-      vi.mocked(planRedeemV2).mockResolvedValue({
+      vi.mocked(planRedeem).mockResolvedValue({
         ...mockPlan,
         collateralToDebtQuote: mockVeloraQuote,
       })
@@ -485,7 +485,7 @@ describe('orchestrateRedeem', () => {
 
       // Should use Velora path
       expect(executeRedeemWithVelora).toHaveBeenCalledTimes(1)
-      expect(executeRedeemV2).not.toHaveBeenCalled()
+      expect(executeRedeem).not.toHaveBeenCalled()
     })
   })
 })

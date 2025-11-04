@@ -1,5 +1,5 @@
 /**
- * Unit tests for executeRedeemV2
+ * Unit tests for executeRedeem
  *
  * Tests the standard V2 redeem execution function that calls
  * simulateLeverageRouterV2Redeem and writeLeverageRouterV2Redeem
@@ -9,7 +9,7 @@ import type { Address, Hash } from 'viem'
 import { base } from 'viem/chains'
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
-import { executeRedeemV2 } from '@/domain/redeem/exec/execute.v2'
+import { executeRedeem } from '@/domain/redeem/exec/execute'
 
 // Mock the generated contract functions
 vi.mock('@/lib/contracts/generated', () => ({
@@ -30,7 +30,7 @@ type V2Call = {
   data: `0x${string}`
 }
 
-describe('executeRedeemV2', () => {
+describe('executeRedeem', () => {
   // Test addresses and values
   const MOCK_CONFIG = {} as Config
   const LEVERAGE_TOKEN: Address = '0x1234567890123456789012345678901234567890'
@@ -72,7 +72,7 @@ describe('executeRedeemV2', () => {
       } as never)
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      const result = await executeRedeemV2({
+      const result = await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,
@@ -101,7 +101,7 @@ describe('executeRedeemV2', () => {
       } as never)
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      await executeRedeemV2({
+      await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,
@@ -135,7 +135,7 @@ describe('executeRedeemV2', () => {
       } as never)
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      await executeRedeemV2({
+      await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,
@@ -170,7 +170,7 @@ describe('executeRedeemV2', () => {
       } as never)
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      await executeRedeemV2({
+      await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,
@@ -197,7 +197,7 @@ describe('executeRedeemV2', () => {
 
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      const result = await executeRedeemV2({
+      const result = await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,
@@ -219,7 +219,7 @@ describe('executeRedeemV2', () => {
 
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      await executeRedeemV2({
+      await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,
@@ -255,7 +255,7 @@ describe('executeRedeemV2', () => {
       } as never)
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      await executeRedeemV2({
+      await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,
@@ -297,7 +297,7 @@ describe('executeRedeemV2', () => {
       } as never)
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      await executeRedeemV2({
+      await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,
@@ -338,7 +338,7 @@ describe('executeRedeemV2', () => {
       } as never)
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      await executeRedeemV2({
+      await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,
@@ -365,7 +365,7 @@ describe('executeRedeemV2', () => {
       vi.mocked(simulateLeverageRouterV2Redeem).mockRejectedValueOnce(simulationError)
 
       await expect(
-        executeRedeemV2({
+        executeRedeem({
           config: MOCK_CONFIG,
           token: LEVERAGE_TOKEN,
           account: USER_ACCOUNT,
@@ -398,7 +398,7 @@ describe('executeRedeemV2', () => {
       vi.mocked(writeLeverageRouterV2Redeem).mockRejectedValueOnce(writeError)
 
       await expect(
-        executeRedeemV2({
+        executeRedeem({
           config: MOCK_CONFIG,
           token: LEVERAGE_TOKEN,
           account: USER_ACCOUNT,
@@ -419,7 +419,7 @@ describe('executeRedeemV2', () => {
       vi.mocked(writeLeverageRouterV2Redeem).mockRejectedValueOnce(writeError)
 
       await expect(
-        executeRedeemV2({
+        executeRedeem({
           config: MOCK_CONFIG,
           token: LEVERAGE_TOKEN,
           account: USER_ACCOUNT,
@@ -438,7 +438,7 @@ describe('executeRedeemV2', () => {
       vi.mocked(simulateLeverageRouterV2Redeem).mockRejectedValueOnce(revertError)
 
       await expect(
-        executeRedeemV2({
+        executeRedeem({
           config: MOCK_CONFIG,
           token: LEVERAGE_TOKEN,
           account: USER_ACCOUNT,
@@ -468,7 +468,7 @@ describe('executeRedeemV2', () => {
       } as never)
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      const result = await executeRedeemV2({
+      const result = await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,
@@ -499,7 +499,7 @@ describe('executeRedeemV2', () => {
       } as never)
       vi.mocked(writeLeverageRouterV2Redeem).mockResolvedValueOnce(MOCK_HASH)
 
-      const result = await executeRedeemV2({
+      const result = await executeRedeem({
         config: MOCK_CONFIG,
         token: LEVERAGE_TOKEN,
         account: USER_ACCOUNT,

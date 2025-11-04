@@ -18,7 +18,7 @@ import {
 
 // Infer call array type directly from generated action signature
 type RedeemParams = Parameters<typeof simulateLeverageRouterV2Redeem>[1]
-type V2Calls = RedeemParams['args'][4]
+type Calls = RedeemParams['args'][4]
 
 /**
  * @param config Wagmi Config used to resolve active chain and contract addresses
@@ -26,19 +26,19 @@ type V2Calls = RedeemParams['args'][4]
  * @param account User address performing the redeem
  * @param sharesToRedeem Number of leverage token shares to redeem
  * @param minCollateralForSender Minimum collateral amount expected (with slippage protection)
- * @param multicallExecutor Multicall executor address for V2 calls
+ * @param multicallExecutor Multicall executor address for calls
  * @param swapCalls Array of calls for any necessary swaps during redemption
  * @param routerAddress Explicit LeverageRouterV2 address (required for VNet/custom deployments)
  * @param chainId Chain ID to execute the transaction on
  */
-export async function executeRedeemV2(params: {
+export async function executeRedeem(params: {
   config: Config
   token: Address
   account: Address
   sharesToRedeem: bigint
   minCollateralForSender: bigint
   multicallExecutor: Address
-  swapCalls: V2Calls
+  swapCalls: Calls
   /** Explicit LeverageRouterV2 address (required for VNet/custom deployments) */
   routerAddress: Address
   chainId: number

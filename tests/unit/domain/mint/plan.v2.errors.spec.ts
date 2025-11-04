@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { planMint } from '@/domain/mint/planner/plan'
 
 vi.mock('@/lib/contracts/generated', async () => {
   return {
@@ -24,10 +24,10 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
-describe('planMintV2 error branches', () => {
+describe('planMint error branches', () => {
   it('throws when input != collateral', async () => {
     await expect(
-      planMintV2({
+      planMint({
         config: {} as any,
         token: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address,
         inputAsset: '0x9999999999999999999999999999999999999999' as Address,
@@ -46,7 +46,7 @@ describe('planMintV2 error branches', () => {
   it('throws when preview indicates no debt swap needed', async () => {
     const inputAsset = '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address
     await expect(
-      planMintV2({
+      planMint({
         config: {} as any,
         token: '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address,
         inputAsset,

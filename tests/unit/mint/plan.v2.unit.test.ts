@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
-import { planMintV2 } from '@/domain/mint/planner/plan.v2'
+import { planMint } from '@/domain/mint/planner/plan'
 
 vi.mock('@/lib/contracts/generated', async () => {
   return {
@@ -26,13 +26,13 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
-describe('planMintV2 validations', () => {
+describe('planMint validations', () => {
   const cfg = {} as any
   const token = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address
 
   it('throws when input != collateral (initial scope is collateral-only)', async () => {
     await expect(
-      planMintV2({
+      planMint({
         config: cfg,
         token,
         inputAsset: '0x9999999999999999999999999999999999999999' as Address,
