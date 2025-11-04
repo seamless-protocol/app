@@ -41,7 +41,7 @@ export const MAINNET_TOKEN_CONFIGS: Array<MainnetTokenTestConfig> = [
   {
     key: 'rlp-usdc-6.75x',
     label: 'RLP/USDC 6.75x',
-    slippageBps: 500,
+    slippageBps: 2000, // 20% - Velora quotes vary significantly on Anvil
     toleranceBps: 10,
     fundingAmount: '500',
     richHolderAddress: '0x234C908E749961d0329a0eD5916d55a99d1aD06c' as Address, // Large RLP holder

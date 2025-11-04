@@ -33,7 +33,7 @@ describe.each(MAINNET_TOKEN_CONFIGS)('Leverage Router V2 Redeem (Mainnet $label)
       })
       assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
       assertRedeemExecution(result)
-    }, 120_000)
+    }, 30_000)
   })
 })
 
