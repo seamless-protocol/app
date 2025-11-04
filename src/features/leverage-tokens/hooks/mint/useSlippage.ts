@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from '@/domain/mint/utils/constants'
+import { DEFAULT_SLIPPAGE_BPS } from '@/domain/mint/utils/constants'
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage'
 
 export function useSlippage(initial: string = '0.5') {
@@ -9,9 +9,17 @@ export function useSlippage(initial: string = '0.5') {
     // Accept common user inputs like "2" or "2%"; trim whitespace and a trailing % sign
     const raw = (slippage ?? '0') as unknown as string
     const normalized = typeof raw === 'string' ? raw.trim().replace(/%$/, '') : String(raw)
-    const pct = Number(normalized || '0')
-    if (!Number.isFinite(pct) || pct < 0) return DEFAULT_SLIPPAGE_BPS
-    return Math.min(Number(BPS_DENOMINATOR), Math.max(0, Math.round(pct * 100)))
+    // Compute BPS by parsing at most two fractional digits without floating math
+    const [intPartRaw = '0', fracRaw = ''] = normalized.split('.')
+    const intDigits = intPartRaw.replace(/[^0-9-]/g, '') || '0'
+    const intPart = Number.parseInt(intDigits, 10) || 0
+    const fracTwo = `${fracRaw.replace(/[^0-9]/g, '')}00`.slice(0, 2)
+    const fracPart = Number.parseInt(fracTwo || '0', 10) || 0
+    let bps = intPart * 100 + fracPart
+    if (!Number.isFinite(bps) || bps < 0) bps = DEFAULT_SLIPPAGE_BPS
+    const BPS_MAX = 10000 // 100% in basis points
+    if (bps > BPS_MAX) bps = BPS_MAX
+    return bps
   }, [slippage])
 
   return { slippage, setSlippage, slippageBps }

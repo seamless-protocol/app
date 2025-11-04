@@ -8,68 +8,66 @@ export function useRedeemForm(params: {
 }) {
   const { leverageTokenDecimals, leverageTokenBalanceFormatted } = params
 
-  // Form state
   const [amount, setAmount] = useState('')
 
-  // Handle amount input changes
   const onAmountChange = useCallback((value: string) => {
     if (value === '' || /^\d*\.?\d*$/.test(value)) setAmount(value)
   }, [])
 
-  // Handle percentage shortcuts (MAX uses exact balance; others floor in base units)
   const onPercent = useCallback(
     (pct: number, tokenBalance: string) => {
       const n = Math.max(0, Math.min(100, pct))
       try {
         const balanceRaw = parseUnits(tokenBalance || '0', leverageTokenDecimals)
         if (n === 100) {
-          // Use exact wallet balance string for MAX
           setAmount(tokenBalance)
           return
         }
-        // Floor via integer math in base units
         const amountRaw = (balanceRaw * BigInt(n)) / 100n
         const asUnits = formatUnits(amountRaw, leverageTokenDecimals)
         const [intPart, fracPart = ''] = asUnits.split('.')
         const formatted = `${intPart}.${fracPart.slice(0, 6).padEnd(6, '0')}`
         setAmount(formatted)
       } catch {
-        // Fallback to float math (legacy behavior)
-        const balance = parseFloat(tokenBalance)
-        const next = ((balance * n) / 100).toFixed(6)
-        setAmount(next)
+        setAmount('0')
       }
     },
     [leverageTokenDecimals],
   )
 
-  // Validation helpers
   const amountRaw = useMemo(() => {
-    const n = Number(amount)
-    if (!amount || !Number.isFinite(n) || n <= 0) return undefined
+    if (!amount || amount.trim() === '') return undefined
     try {
-      return parseUnits(amount, leverageTokenDecimals)
+      const v = parseUnits(amount, leverageTokenDecimals)
+      return v > 0n ? v : undefined
     } catch {
       return undefined
     }
   }, [amount, leverageTokenDecimals])
 
-  const isAmountValid = useMemo(() => {
-    const n = Number(amount || '0')
-    return Number.isFinite(n) && n > 0
-  }, [amount])
+  const isAmountValid = useMemo(() => typeof amountRaw === 'bigint' && amountRaw > 0n, [amountRaw])
 
   const hasBalance = useMemo(() => {
-    const inputAmount = parseFloat(amount)
-    const balance = parseFloat(leverageTokenBalanceFormatted)
-    return Number.isFinite(inputAmount) && inputAmount <= balance + 1e-12
-  }, [amount, leverageTokenBalanceFormatted])
+    try {
+      if (!amount || amount.trim() === '') return false
+      const balanceRaw = parseUnits(leverageTokenBalanceFormatted || '0', leverageTokenDecimals)
+      const amtRaw = parseUnits(amount, leverageTokenDecimals)
+      return amtRaw <= balanceRaw
+    } catch {
+      return false
+    }
+  }, [amount, leverageTokenBalanceFormatted, leverageTokenDecimals])
 
   const minAmountOk = useMemo(() => {
-    const inputAmount = parseFloat(amount)
-    const minRedeem = parseFloat(MIN_REDEEM_AMOUNT_DISPLAY)
-    return Number.isFinite(inputAmount) && inputAmount >= minRedeem
-  }, [amount])
+    try {
+      if (!amount || amount.trim() === '') return false
+      const minRaw = parseUnits(MIN_REDEEM_AMOUNT_DISPLAY, leverageTokenDecimals)
+      const amtRaw = parseUnits(amount, leverageTokenDecimals)
+      return amtRaw >= minRaw
+    } catch {
+      return false
+    }
+  }, [amount, leverageTokenDecimals])
 
   return {
     amount,
