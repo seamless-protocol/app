@@ -23,17 +23,21 @@ const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 // Likely due to price discrepancies between CoinGecko (used for slippage calc) and on-chain oracles
 describe.each(MAINNET_TOKEN_CONFIGS)('Leverage Router V2 Redeem (Mainnet $label)', (config) => {
   redeemSuite(`${config.label}`, () => {
-    it('redeems all minted shares into collateral asset using production config', async () => {
-      const result = await runRedeemTest({
+    it(
+      'redeems all minted shares into collateral asset using production config',
+      async () => {
+        const result = await runRedeemTest({
         tokenKey: config.key,
         slippageBps: config.slippageBps,
         toleranceBps: config.toleranceBps,
         fundingAmount: config.fundingAmount,
         richHolderAddress: config.richHolderAddress,
-      })
-      assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
-      assertRedeemExecution(result)
-    }, 30_000)
+        })
+        assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
+        assertRedeemExecution(result)
+      },
+      60_000,
+    )
   })
 })
 
