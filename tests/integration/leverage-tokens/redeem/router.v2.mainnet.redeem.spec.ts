@@ -227,12 +227,9 @@ async function performRedeem(
     config,
     account: account.address,
     token,
-    sharesToRedeem,
-    slippageBps,
-    quoteCollateralToDebt,
+    plan,
     chainId,
     routerAddress: router,
-    ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 
   const redeemReceipt = await publicClient.waitForTransactionReceipt({ hash: redeemTx.hash })

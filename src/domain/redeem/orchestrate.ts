@@ -18,100 +18,63 @@ import {
 } from '@/lib/contracts/addresses'
 import { executeRedeem } from './exec/execute'
 import { executeRedeemWithVelora } from './exec/execute.velora'
-import { planRedeem } from './planner/plan'
-import type { QuoteFn } from './planner/types'
-import { DEFAULT_SLIPPAGE_BPS } from './utils/constants'
+import type { RedeemPlan } from './planner/plan'
 
 // Keep parameter types simple to avoid brittle codegen coupling
 type TokenArg = Address
 type AccountArg = Address
-type SharesToRedeemArg = bigint
 
 // Result type for orchestrated redeems
 export type OrchestrateRedeemResult = {
   hash: Hash
-  plan: Awaited<ReturnType<typeof planRedeem>>
+  plan: RedeemPlan
 }
 
 /**
  * Orchestrates a leverage-token redeem.
  *
  * Behavior
- * - Plans the redeem (swapping collateral->debt for debt repayment), then executes.
+ * - Executes a pre-computed redeem plan.
+ * - Caller must provide the plan from planRedeem().
  *
- * Requirements
- * - Requires a `quoteCollateralToDebt` function for debt repayment swaps.
+ * CRITICAL: Plan must be computed in the same UI flow that calls this function.
+ * This ensures preview values match execution (see redeem-modal-plan-preview.md).
  *
  * Parameters
  * @param params.config Wagmi `Config` used by generated actions for chain/account wiring.
  * @param params.account EOA that signs and submits transactions (hex address string).
  * @param params.token Leverage token tuple argument as required by generated actions.
- * @param params.sharesToRedeem Number of leverage token shares to redeem.
- * @param params.slippageBps Optional slippage tolerance in basis points (default 50 = 0.50%).
- * @param params.quoteCollateralToDebt Required. Quotes amount of debt received for a given collateral amount.
+ * @param params.plan Pre-computed redeem plan from planRedeem().
  *
  * Returns
  * - `{ hash, plan }` with transaction hash and execution plan.
  *
  * Throws
- * - If `quoteCollateralToDebt` is not provided.
  * - If redemption fails due to insufficient collateral or other constraints.
  */
 export async function orchestrateRedeem(params: {
   config: Config
   account: AccountArg
   token: TokenArg
-  sharesToRedeem: SharesToRedeemArg
-  slippageBps?: number
-  quoteCollateralToDebt: QuoteFn
+  plan: RedeemPlan
   /** Optional overrides when using VNet/custom deployments */
   routerAddress?: Address
   managerAddress?: Address
-  /** Optional override for the desired payout asset (defaults to collateral). */
-  outputAsset?: Address
   /** Chain ID to execute the transaction on */
   chainId: number
 }): Promise<OrchestrateRedeemResult> {
-  const {
-    config,
-    account,
-    token,
-    sharesToRedeem,
-    slippageBps = DEFAULT_SLIPPAGE_BPS,
-    quoteCollateralToDebt,
-    outputAsset,
-    chainId,
-  } = params
+  const { config, account, token, plan, chainId } = params
 
   const adapterType =
     getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora'
 
   const envRouter = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
-  const envManager = import.meta.env['VITE_MANAGER_V2_ADDRESS'] as Address | undefined
   // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit/env overrides
   const chainAddresses = getContractAddresses(chainId)
   const routerAddress = params.routerAddress || chainAddresses.leverageRouterV2 || envRouter
   if (!routerAddress) {
     throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
   }
-  const managerAddress = params.managerAddress || chainAddresses.leverageManagerV2 || envManager
-  if (!managerAddress) {
-    throw new Error(`LeverageManagerV2 address required on chain ${chainId}`)
-  }
-
-  const intent = getQuoteIntentForAdapter(adapterType)
-
-  const plan = await planRedeem({
-    config,
-    token,
-    sharesToRedeem,
-    slippageBps,
-    quoteCollateralToDebt,
-    chainId,
-    ...(managerAddress ? { managerAddress } : {}),
-    ...(outputAsset ? { outputAsset } : {}),
-    intent,
-  })
 
   if (adapterType === 'velora') {
     const veloraAdapterAddress = chainAddresses.veloraAdapter

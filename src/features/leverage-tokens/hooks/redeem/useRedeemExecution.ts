@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import type { Address } from 'viem'
 import { useChainId, usePublicClient, useSwitchChain } from 'wagmi'
 import type { OrchestrateRedeemResult } from '@/domain/redeem'
+import type { RedeemPlan } from '@/domain/redeem/planner/plan'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { useRedeemWithRouter } from '../useRedeemWithRouter'
@@ -17,7 +18,6 @@ interface UseRedeemExecutionParams {
   routerAddress?: Address
   managerAddress?: Address
   swap?: CollateralToDebtSwapConfig
-  outputAsset?: Address
 }
 
 export function useRedeemExecution({
@@ -28,7 +28,6 @@ export function useRedeemExecution({
   routerAddress,
   managerAddress,
   swap,
-  outputAsset,
 }: UseRedeemExecutionParams) {
   const { switchChainAsync } = useSwitchChain()
   const activeChainId = useChainId()
@@ -60,13 +59,8 @@ export function useRedeemExecution({
   const effectiveCanSubmit = canSubmit && quoteReady
 
   const redeem = useCallback(
-    async (sharesToRedeem: bigint): Promise<OrchestrateRedeemResult> => {
+    async (plan: RedeemPlan): Promise<OrchestrateRedeemResult> => {
       if (!account) throw new Error('No account')
-      if (requiresQuote && quoteStatus !== 'ready') {
-        const baseError =
-          quoteError?.message || 'Unable to initialize swap quote for router v2 redeem.'
-        throw new Error(baseError)
-      }
 
       setStatus('submitting')
       setError(undefined)
@@ -75,21 +69,13 @@ export function useRedeemExecution({
           await switchChainAsync({ chainId })
         }
 
-        if (!quote) {
-          throw new Error('Quote is required for V2 redeem')
-        }
-
         const result = await redeemWithRouter.mutateAsync({
           token,
           account,
-          sharesToRedeem,
-          slippageBps,
+          plan,
           chainId,
-          quoteCollateralToDebt: quote,
           ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
           ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
-          ...(typeof outputAsset !== 'undefined' ? { outputAsset } : {}),
-          ...(swap ? { adapterType: swap.type } : {}),
         })
 
         setHash(result.hash)
@@ -114,18 +100,12 @@ export function useRedeemExecution({
       account,
       activeChainId,
       managerAddress,
-      quote,
-      quoteError?.message,
-      quoteStatus,
       redeemWithRouter,
       routerAddress,
-      slippageBps,
-      outputAsset,
       token,
       publicClient,
       chainId,
       switchChainAsync,
-      swap,
     ],
   )
 

@@ -123,15 +123,12 @@ describe('orchestrateRedeem', () => {
     })
 
     it('should orchestrate redeem with Velora adapter', async () => {
-      const mockQuoter = vi.fn()
 
       const result = await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        sharesToRedeem: SHARES_TO_REDEEM,
-        slippageBps: 50,
-        quoteCollateralToDebt: mockQuoter,
+        plan: mockPlan,
         chainId: base.id,
       })
 
@@ -142,14 +139,12 @@ describe('orchestrateRedeem', () => {
     })
 
     it('should pass veloraData to executeRedeemWithVelora', async () => {
-      const mockQuoter = vi.fn()
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        sharesToRedeem: SHARES_TO_REDEEM,
-        quoteCollateralToDebt: mockQuoter,
+        plan: mockPlan,
         chainId: base.id,
       })
 
@@ -173,14 +168,12 @@ describe('orchestrateRedeem', () => {
     })
 
     it('should pass exactOut intent to planner for Velora', async () => {
-      const mockQuoter = vi.fn()
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        sharesToRedeem: SHARES_TO_REDEEM,
-        quoteCollateralToDebt: mockQuoter,
+        plan: mockPlan,
         chainId: base.id,
       })
 
@@ -199,16 +192,14 @@ describe('orchestrateRedeem', () => {
         // veloraAdapter missing
       } as any)
 
-      const mockQuoter = vi.fn()
 
       await expect(
         orchestrateRedeem({
           config: MOCK_CONFIG,
           account: ACCOUNT,
           token: TOKEN,
-          sharesToRedeem: SHARES_TO_REDEEM,
-          quoteCollateralToDebt: mockQuoter,
-          chainId: base.id,
+          plan: mockPlan,
+        chainId: base.id,
         }),
       ).rejects.toThrow(`Velora adapter address required on chain ${base.id}`)
     })
@@ -220,16 +211,14 @@ describe('orchestrateRedeem', () => {
         collateralToDebtQuote: mockStandardQuote, // No veloraData
       })
 
-      const mockQuoter = vi.fn()
 
       await expect(
         orchestrateRedeem({
           config: MOCK_CONFIG,
           account: ACCOUNT,
           token: TOKEN,
-          sharesToRedeem: SHARES_TO_REDEEM,
-          quoteCollateralToDebt: mockQuoter,
-          chainId: base.id,
+          plan: mockPlan,
+        chainId: base.id,
         }),
       ).rejects.toThrow('Velora quote missing veloraData for exactOut operation')
     })
@@ -250,14 +239,12 @@ describe('orchestrateRedeem', () => {
         },
       } as any)
 
-      const mockQuoter = vi.fn()
 
       const result = await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        sharesToRedeem: SHARES_TO_REDEEM,
-        quoteCollateralToDebt: mockQuoter,
+        plan: mockPlan,
         chainId: base.id,
       })
 
@@ -275,14 +262,12 @@ describe('orchestrateRedeem', () => {
         },
       } as any)
 
-      const mockQuoter = vi.fn()
 
       const result = await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        sharesToRedeem: SHARES_TO_REDEEM,
-        quoteCollateralToDebt: mockQuoter,
+        plan: mockPlan,
         chainId: base.id,
       })
 
@@ -300,14 +285,12 @@ describe('orchestrateRedeem', () => {
         },
       } as any)
 
-      const mockQuoter = vi.fn()
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        sharesToRedeem: SHARES_TO_REDEEM,
-        quoteCollateralToDebt: mockQuoter,
+        plan: mockPlan,
         chainId: base.id,
       })
 
@@ -327,14 +310,12 @@ describe('orchestrateRedeem', () => {
         },
       } as any)
 
-      const mockQuoter = vi.fn()
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        sharesToRedeem: SHARES_TO_REDEEM,
-        quoteCollateralToDebt: mockQuoter,
+        plan: mockPlan,
         chainId: base.id,
       })
 
@@ -371,16 +352,14 @@ describe('orchestrateRedeem', () => {
         // leverageRouterV2 missing
       } as any)
 
-      const mockQuoter = vi.fn()
 
       await expect(
         orchestrateRedeem({
           config: MOCK_CONFIG,
           account: ACCOUNT,
           token: TOKEN,
-          sharesToRedeem: SHARES_TO_REDEEM,
-          quoteCollateralToDebt: mockQuoter,
-          chainId: base.id,
+          plan: mockPlan,
+        chainId: base.id,
         }),
       ).rejects.toThrow(`LeverageRouterV2 address required on chain ${base.id}`)
     })
@@ -392,16 +371,14 @@ describe('orchestrateRedeem', () => {
         // leverageManagerV2 missing
       } as any)
 
-      const mockQuoter = vi.fn()
 
       await expect(
         orchestrateRedeem({
           config: MOCK_CONFIG,
           account: ACCOUNT,
           token: TOKEN,
-          sharesToRedeem: SHARES_TO_REDEEM,
-          quoteCollateralToDebt: mockQuoter,
-          chainId: base.id,
+          plan: mockPlan,
+        chainId: base.id,
         }),
       ).rejects.toThrow(`LeverageManagerV2 address required on chain ${base.id}`)
     })
@@ -422,14 +399,12 @@ describe('orchestrateRedeem', () => {
 
     it('should use explicit router address override', async () => {
       const CUSTOM_ROUTER: Address = '0x9999999999999999999999999999999999999999'
-      const mockQuoter = vi.fn()
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        sharesToRedeem: SHARES_TO_REDEEM,
-        quoteCollateralToDebt: mockQuoter,
+        plan: mockPlan,
         routerAddress: CUSTOM_ROUTER,
         chainId: base.id,
       })
@@ -443,15 +418,12 @@ describe('orchestrateRedeem', () => {
 
     it('should pass outputAsset to planner', async () => {
       const OUTPUT_ASSET: Address = '0xcccccccccccccccccccccccccccccccccccccccc'
-      const mockQuoter = vi.fn()
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        sharesToRedeem: SHARES_TO_REDEEM,
-        quoteCollateralToDebt: mockQuoter,
-        outputAsset: OUTPUT_ASSET,
+        plan: mockPlan,
         chainId: base.id,
       })
 
@@ -472,14 +444,12 @@ describe('orchestrateRedeem', () => {
       })
       vi.mocked(executeRedeemWithVelora).mockResolvedValue({ hash: MOCK_HASH })
 
-      const mockQuoter = vi.fn()
 
       await orchestrateRedeem({
         config: MOCK_CONFIG,
         account: ACCOUNT,
         token: TOKEN,
-        sharesToRedeem: SHARES_TO_REDEEM,
-        quoteCollateralToDebt: mockQuoter,
+        plan: mockPlan,
         chainId: base.id,
       })
 
