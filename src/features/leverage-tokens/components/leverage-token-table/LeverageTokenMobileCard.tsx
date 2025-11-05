@@ -78,7 +78,13 @@ export function LeverageTokenMobileCard({
                 ) : isApyLoading || !apyData ? (
                   <Skeleton variant="pulse" className="h-4 w-16" />
                 ) : (
-                  <span className="text-sm font-medium text-[var(--state-success-text)]">
+                  <span
+                    className={`text-sm font-medium ${
+                      apyData.totalAPY < 0
+                        ? 'text-[var(--state-error-text)]'
+                        : 'text-[var(--state-success-text)]'
+                    }`}
+                  >
                     {formatAPY(apyData.totalAPY, 2)}
                   </span>
                 )}

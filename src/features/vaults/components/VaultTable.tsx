@@ -185,12 +185,21 @@ export function VaultTable({ strategies, onStrategyClick, className }: VaultTabl
                     </TableCell>
                     <TableCell className="py-4 px-6 text-right">
                       <div className="flex flex-col items-end space-y-1">
-                        <span className="text-green-400 font-medium text-sm">
+                        <span
+                          className={`font-medium text-sm ${
+                            strategy.apy < 0 ? 'text-red-400' : 'text-green-400'
+                          }`}
+                        >
                           {strategy.apy.toFixed(2)}%
                         </span>
                         {strategy.performance7d && (
-                          <span className="text-xs text-green-400">
-                            +{strategy.performance7d.toFixed(1)}% 7d
+                          <span
+                            className={`text-xs ${
+                              strategy.performance7d < 0 ? 'text-red-400' : 'text-green-400'
+                            }`}
+                          >
+                            {strategy.performance7d >= 0 ? '+' : ''}
+                            {strategy.performance7d.toFixed(1)}% 7d
                           </span>
                         )}
                       </div>
