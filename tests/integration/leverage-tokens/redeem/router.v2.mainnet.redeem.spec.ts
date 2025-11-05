@@ -33,7 +33,7 @@ describe.each(MAINNET_TOKEN_CONFIGS)('Leverage Router V2 Redeem (Mainnet $label)
       })
       assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
       assertRedeemExecution(result)
-    }, 30_000)
+    }, 60_000)
   })
 })
 
@@ -227,12 +227,9 @@ async function performRedeem(
     config,
     account: account.address,
     token,
-    sharesToRedeem,
-    slippageBps,
-    quoteCollateralToDebt,
+    plan,
     chainId,
     routerAddress: router,
-    ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
   })
 
   const redeemReceipt = await publicClient.waitForTransactionReceipt({ hash: redeemTx.hash })

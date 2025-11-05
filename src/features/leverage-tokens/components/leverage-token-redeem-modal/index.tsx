@@ -245,7 +245,6 @@ export function LeverageTokenRedeemModal({
     ...(leverageTokenConfig.swaps?.collateralToDebt
       ? { swap: leverageTokenConfig.swaps.collateralToDebt }
       : {}),
-    outputAsset: selectedOutputAsset.address,
   })
 
   // Mirror exec.hash only while pending to avoid reviving stale hashes on reopen
@@ -294,6 +293,11 @@ export function LeverageTokenRedeemModal({
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
     ...(swapConfigKey ? { swapKey: swapConfigKey } : {}),
     outputAsset: selectedOutputAsset.address,
+    // USD calculation parameters (both prices/decimals needed for expectedCollateral + expectedDebtPayout)
+    collateralUsdPrice,
+    debtUsdPrice,
+    collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
+    debtDecimals: leverageTokenConfig.debtAsset.decimals,
   })
 
   const quoteBlockingError = useMemo(() => {
@@ -549,7 +553,13 @@ export function LeverageTokenRedeemModal({
 
   // Handle redemption confirmation
   const handleConfirm = async () => {
-    if (!form.amountRaw) return
+    const plan = planPreview.plan
+    if (!plan) {
+      setError('Plan not ready. Please try again.')
+      toError()
+      return
+    }
+
     if (!exec.canSubmit || typeof expectedPayoutRaw !== 'bigint') {
       setError(
         redeemBlockingError || 'Redeem configuration is not ready. Please try again shortly.',
@@ -564,7 +574,7 @@ export function LeverageTokenRedeemModal({
 
       // Transition UI and initiate redeem without awaiting receipt
       toPending()
-      void exec.redeem(form.amountRaw)
+      void exec.redeem(plan)
     } catch (error) {
       // Track redeem transaction error
       const errorMessage =

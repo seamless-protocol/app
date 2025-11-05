@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import type { Address } from 'viem'
+import { formatUnits } from 'viem'
 import type { Config } from 'wagmi'
 import { getQuoteIntentForAdapter } from '@/domain/redeem/orchestrate'
 import { planRedeem } from '@/domain/redeem/planner/plan'
@@ -18,6 +20,11 @@ interface UseRedeemPlanPreviewParams {
   managerAddress?: Address
   swapKey?: string
   outputAsset?: Address
+  // For derived USD estimates (optional; omit to skip)
+  collateralUsdPrice?: number | undefined
+  debtUsdPrice?: number | undefined
+  collateralDecimals?: number | undefined
+  debtDecimals?: number | undefined
 }
 
 export function useRedeemPlanPreview({
@@ -31,6 +38,10 @@ export function useRedeemPlanPreview({
   swapKey,
   outputAsset,
   enabled = true,
+  collateralUsdPrice,
+  debtUsdPrice,
+  collateralDecimals,
+  debtDecimals,
 }: UseRedeemPlanPreviewParams) {
   const enabledQuery =
     enabled &&
@@ -77,8 +88,49 @@ export function useRedeemPlanPreview({
     },
   })
 
+  // Derived USD estimate from the plan (expected outcome)
+  // Total value = expectedCollateral + expectedDebtPayout (mirrors planner logic)
+  const expectedUsdOut = useMemo(() => {
+    const plan = query.data
+    if (!plan) return undefined
+    if (typeof collateralUsdPrice !== 'number' || typeof debtUsdPrice !== 'number') return undefined
+    if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') return undefined
+    try {
+      const collateralAmount = Number(formatUnits(plan.expectedCollateral, collateralDecimals))
+      const debtPayoutAmount = Number(formatUnits(plan.expectedDebtPayout, debtDecimals))
+      if (!Number.isFinite(collateralAmount) || !Number.isFinite(debtPayoutAmount)) return undefined
+      const usd = collateralAmount * collateralUsdPrice + debtPayoutAmount * debtUsdPrice
+      return Number.isFinite(usd) ? Math.max(usd, 0) : undefined
+    } catch {
+      return undefined
+    }
+  }, [query.data, collateralUsdPrice, debtUsdPrice, collateralDecimals, debtDecimals])
+
+  // Derived USD estimate (worst-case guarantee based on minCollateralForSender)
+  // Worst case = minCollateral + expectedDebtPayout (debt payout is relatively stable)
+  const guaranteedUsdOut = useMemo(() => {
+    const plan = query.data
+    if (!plan) return undefined
+    if (typeof collateralUsdPrice !== 'number' || typeof debtUsdPrice !== 'number') return undefined
+    if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') return undefined
+    try {
+      const minCollateralAmount = Number(
+        formatUnits(plan.minCollateralForSender, collateralDecimals),
+      )
+      const debtPayoutAmount = Number(formatUnits(plan.expectedDebtPayout, debtDecimals))
+      if (!Number.isFinite(minCollateralAmount) || !Number.isFinite(debtPayoutAmount))
+        return undefined
+      const usd = minCollateralAmount * collateralUsdPrice + debtPayoutAmount * debtUsdPrice
+      return Number.isFinite(usd) ? Math.max(usd, 0) : undefined
+    } catch {
+      return undefined
+    }
+  }, [query.data, collateralUsdPrice, debtUsdPrice, collateralDecimals, debtDecimals])
+
   return {
     plan: query.data,
+    expectedUsdOut,
+    guaranteedUsdOut,
     isLoading: query.isPending || query.isFetching,
     error: query.error,
   }
