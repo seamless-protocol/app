@@ -61,9 +61,11 @@ function formatToSignificantDigits(num: number, digits: number): string {
 export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
   component: () => {
     const { chainId: routeChainId, id: tokenAddress } = useParams({ strict: false })
+    // Parse chainId from route parameter
+    const chainId = parseInt(routeChainId || CHAIN_IDS.BASE.toString(), 10)
     const { isConnected, address: userAddress } = useAccount()
     const navigate = useNavigate()
-    const explorer = useExplorer()
+    const explorer = useExplorer(chainId)
     const analytics = useGA()
 
     // Track page view when component mounts
@@ -94,9 +96,6 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
         [lineKey]: !prev[lineKey as keyof typeof prev],
       }))
     }
-
-    // Parse chainId from route parameter
-    const chainId = parseInt(routeChainId || CHAIN_IDS.BASE.toString(), 10)
 
     // Get leverage token config (used for decimals, addresses, etc.)
     const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`, chainId)

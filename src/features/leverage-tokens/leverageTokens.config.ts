@@ -393,7 +393,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           id: 'morpho-lending',
           title: 'Morpho Lending Market',
           description: 'View the underlying lending market powering this Leverage Token',
-          url: 'https://app.morpho.org/base/market/0xb8fc70e82bc5bb53e773626fcc6a23f7eefa036918d7ef216ecfb1950a94a85e',
+          url: 'https://app.morpho.org/base/market/0xfd0895ba253889c243bf59bc4b96fd1e06d68631241383947b04d1c293a0cfea',
           icon: MorphoLogo,
           badge: {
             text: 'Lending Market',
