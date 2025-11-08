@@ -173,10 +173,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'velora',
+        type: 'lifi',
+        allowBridges: 'none',
       },
       collateralToDebt: {
-        type: 'velora',
+        type: 'lifi',
+        allowBridges: 'none',
       },
     },
     planner: { epsilonBps: 10 },
@@ -258,10 +260,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'velora',
+        type: 'lifi',
+        allowBridges: 'none',
       },
       collateralToDebt: {
-        type: 'velora',
+        type: 'lifi',
+        allowBridges: 'none',
       },
     },
     planner: { epsilonBps: 10 },
@@ -352,12 +356,13 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       decimals: 18,
     },
     swaps: {
-      // Use Velora for same-chain routing (bridges are irrelevant for same-chain quotes)
       debtToCollateral: {
-        type: 'velora',
+        type: 'lifi',
+        allowBridges: 'none',
       },
       collateralToDebt: {
-        type: 'velora',
+        type: 'lifi',
+        allowBridges: 'none',
       },
     },
     planner: { epsilonBps: 10 },
