@@ -205,7 +205,7 @@ export async function planMint(params: {
 
   const excessDebt = finalQuote.requiredDebt - debtIn
 
-  const publicClient = getPublicClient(config)
+  const publicClient = getPublicClient(config, { chainId })
   if (!publicClient) {
     throw new Error('Public client unavailable for mint plan')
   }

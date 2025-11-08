@@ -334,7 +334,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainId: 8453,
     chainName: 'Base',
     chainLogo: BaseLogo,
-    supplyCap: 150,
+    supplyCap: 200,
     apyConfig: {
       aprProvider: {
         type: APR_PROVIDERS.ETHERFI,
