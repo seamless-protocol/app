@@ -7,8 +7,8 @@ import {
   LidoLogo,
   MerklLogo,
   MorphoLogo,
+  PendleLogo,
   ResolvLogo,
-  PendleLogo
 } from '@/components/icons'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
@@ -326,6 +326,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
   },
   [LeverageTokenKey.PT_RLP_4DEC2025_USDC_2X_ETHEREUM_MAINNET]: {
+    isTestOnly: true,
     address: '0x0E5eB844bc0A29c9B949137bbb13327f86809779' as Address,
     name: 'PT-RLP-4DEC2025 / USDC 2x Leverage Token',
     symbol: 'PT-RLP-4DEC2025-USDC-2x',

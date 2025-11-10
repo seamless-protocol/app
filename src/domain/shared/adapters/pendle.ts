@@ -2,6 +2,7 @@ import type { Address, Hex } from 'viem'
 import { getAddress, isAddressEqual } from 'viem'
 import { z } from 'zod'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
+import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
 import type { QuoteFn } from './types'
 
@@ -47,7 +48,10 @@ const pendleSuccessResponseSchema = z.object({
           .transform((val) => val as Hex),
         to: z.string().transform((val) => getAddress(val)),
         from: z.string().transform((val) => getAddress(val)),
-        value: z.string().transform((val) => BigInt(val)).optional(),
+        value: z
+          .string()
+          .transform((val) => BigInt(val))
+          .optional(),
       }),
       outputs: z.array(
         z.object({
@@ -146,18 +150,22 @@ function buildQuoteUrl(
   return url
 }
 
-function mapPendleResponseToQuote(response: PendleSwapResponse, outToken: Address, inToken: Address) {
-    if (response.routes.length === 0) throw new Error('Pendle quote returned no routes')
-    const route = response.routes[0]
-    if (!route) throw new Error('Pendle quote returned no route')
+function mapPendleResponseToQuote(
+  response: PendleSwapResponse,
+  outToken: Address,
+  inToken: Address,
+) {
+  if (response.routes.length === 0) throw new Error('Pendle quote returned no routes')
+  const route = response.routes[0]
+  if (!route) throw new Error('Pendle quote returned no route')
 
   // Find the output token that matches the outToken (from the call context)
   // route.tokensOut is an array of { token: Address, amount: string }
-  const outTokenInfo = route.outputs.find(t => isAddressEqual(t.token, outToken))
+  const outTokenInfo = route.outputs.find((t) => isAddressEqual(t.token, outToken))
   if (!outTokenInfo) throw new Error('Pendle quote missing output token')
   const outAmount = BigInt(outTokenInfo.amount)
 
-  const inTokenInfo = response.inputs.find(t => isAddressEqual(t.token, inToken))
+  const inTokenInfo = response.inputs.find((t) => isAddressEqual(t.token, inToken))
   if (!inTokenInfo) throw new Error('Pendle quote missing input token')
   const inAmount = BigInt(inTokenInfo.amount)
 
@@ -167,6 +175,6 @@ function mapPendleResponseToQuote(response: PendleSwapResponse, outToken: Addres
     maxIn: inAmount,
     approvalTarget: route.tx.to,
     calldata: route.tx.data,
+    wantsNativeIn: isAddressEqual(inToken, ETH_SENTINEL),
   }
 }
-

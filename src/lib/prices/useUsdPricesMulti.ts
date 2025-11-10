@@ -34,8 +34,6 @@ export function useUsdPricesMultiChain({
         }),
       )
 
-      console.log('results', results)
-
       const out: Record<number, Record<string, number>> = {}
       for (const [chainId, map] of results) {
         out[chainId] = map

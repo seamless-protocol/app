@@ -1,6 +1,7 @@
 import type { SVGProps } from 'react'
 import { useId } from 'react'
 
+// TODO(wes): update this logo to be square
 export function PendleLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
   const logoId = useId()
   const titleId = useId()
