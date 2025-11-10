@@ -2,14 +2,6 @@ import { ExternalLink, Loader2 } from 'lucide-react'
 import { getTxExplorerInfo } from '@/lib/utils/block-explorer'
 import { Card } from '../../../../components/ui/card'
 
-interface Token {
-  symbol: string
-  name: string
-  balance: string
-  price: number
-  logo?: string
-}
-
 interface LeverageTokenConfig {
   symbol: string
   name: string
@@ -19,9 +11,7 @@ interface LeverageTokenConfig {
 type PendingMode = 'awaitingWallet' | 'onChain'
 
 interface PendingStepProps {
-  selectedToken: Token
-  amount: string
-  expectedTokens?: string
+  expectedTokens: string
   leverageTokenConfig: LeverageTokenConfig
   mode?: PendingMode
   transactionHash?: `0x${string}` | undefined
@@ -30,7 +20,6 @@ interface PendingStepProps {
 }
 
 export function PendingStep({
-  amount,
   expectedTokens,
   leverageTokenConfig,
   mode = 'awaitingWallet',
@@ -63,7 +52,7 @@ export function PendingStep({
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Minting</span>
             <span className="text-foreground">
-              {expectedTokens ?? amount} {leverageTokenConfig.symbol}
+              {expectedTokens} {leverageTokenConfig.symbol}
               {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
                 <>
                   {' '}

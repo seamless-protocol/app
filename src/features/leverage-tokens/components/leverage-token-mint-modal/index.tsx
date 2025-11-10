@@ -805,8 +805,6 @@ export function LeverageTokenMintModal({
       case 'pending':
         return (
           <PendingStep
-            selectedToken={selectedTokenView}
-            amount={form.amount}
             expectedTokens={actualMintedTokens ?? expectedTokens}
             leverageTokenConfig={leverageTokenConfig}
             mode={transactionHash ? 'onChain' : 'awaitingWallet'}
