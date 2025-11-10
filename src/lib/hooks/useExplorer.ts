@@ -1,4 +1,4 @@
-import { useAccount } from 'wagmi'
+import { useAccount, useChains } from 'wagmi'
 import {
   getAddressExplorerUrl,
   getBlockExplorerName,
@@ -10,9 +10,18 @@ function stripTrailingSlash(input?: string): string | undefined {
   return input?.replace(/\/+$/, '')
 }
 
-export const useExplorer = () => {
-  const { chain } = useAccount()
-  const chainId = (chain as { id?: number } | undefined)?.id ?? 1
+export const useExplorer = (chainId?: number) => {
+  let { chain } = useAccount()
+  const chains = useChains()
+
+  if (chainId !== undefined) {
+    chain = chains.find((c) => c.id === chainId)
+    if (!chain) {
+      throw new Error(`Chain ${chainId} not found`)
+    }
+  } else {
+    chainId = chain?.id ?? 1
+  }
 
   // Prefer wagmi chain metadata when available
   const base = stripTrailingSlash(chain?.blockExplorers?.default?.url)

@@ -470,7 +470,13 @@ export function LeverageTokenTable({
                           ) : apyLoading || !tokenApyData ? (
                             <Skeleton variant="pulse" className="h-6 w-20" />
                           ) : (
-                            <span className="text-sm font-medium text-[var(--state-success-text)]">
+                            <span
+                              className={`text-sm font-medium ${
+                                tokenApyData.totalAPY < 0
+                                  ? 'text-[var(--state-error-text)]'
+                                  : 'text-[var(--state-success-text)]'
+                              }`}
+                            >
                               {formatAPY(tokenApyData.totalAPY, 2)}
                             </span>
                           )}

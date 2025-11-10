@@ -179,7 +179,7 @@ export async function planRedeem(params: {
     }
   }
 
-  const publicClient = getPublicClient(config)
+  const publicClient = getPublicClient(config, { chainId })
   if (!publicClient) {
     throw new Error('Public client unavailable for mint plan')
   }
@@ -268,7 +268,7 @@ async function getSwapParamsForRedeem(args: {
   const totalCollateralAvailable = preview.collateral
   const debtToRepay = preview.debt
 
-  const publicClient = getPublicClient(config)
+  const publicClient = getPublicClient(config, { chainId })
   if (!publicClient) {
     throw new Error('Public client unavailable for redeem plan')
   }

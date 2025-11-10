@@ -61,9 +61,11 @@ function formatToSignificantDigits(num: number, digits: number): string {
 export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
   component: () => {
     const { chainId: routeChainId, id: tokenAddress } = useParams({ strict: false })
+    // Parse chainId from route parameter
+    const chainId = parseInt(routeChainId || CHAIN_IDS.BASE.toString(), 10)
     const { isConnected, address: userAddress } = useAccount()
     const navigate = useNavigate()
-    const explorer = useExplorer()
+    const explorer = useExplorer(chainId)
     const analytics = useGA()
 
     // Track page view when component mounts
@@ -94,9 +96,6 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
         [lineKey]: !prev[lineKey as keyof typeof prev],
       }))
     }
-
-    // Parse chainId from route parameter
-    const chainId = parseInt(routeChainId || CHAIN_IDS.BASE.toString(), 10)
 
     // Get leverage token config (used for decimals, addresses, etc.)
     const tokenConfig = getLeverageTokenConfig(tokenAddress as `0x${string}`, chainId)
@@ -373,7 +372,12 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
 
                 {/* APY Badge - Mobile */}
                 <div className="flex items-center space-x-1">
-                  <Badge variant="success" className="text-sm">
+                  <Badge
+                    variant={
+                      apyData?.totalAPY !== undefined && apyData.totalAPY < 0 ? 'error' : 'success'
+                    }
+                    className="text-sm"
+                  >
                     {apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
@@ -460,7 +464,13 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                   {tokenConfig.name}
                 </h1>
                 <div className="flex items-center space-x-1">
-                  <Badge className="border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]">
+                  <Badge
+                    className={
+                      apyData?.totalAPY !== undefined && apyData.totalAPY < 0
+                        ? 'border-[color-mix(in_srgb,var(--state-error-text)_25%,transparent)] bg-[var(--state-error-bg)] text-[var(--state-error-text)]'
+                        : 'border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]'
+                    }
+                  >
                     {apyData?.totalAPY ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (

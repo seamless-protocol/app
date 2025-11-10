@@ -25,5 +25,5 @@ export function getShortCommitHash(): string | undefined {
 export function getRepoCommitUrl(): string {
   const base = 'https://github.com/seamless-protocol/app'
   const hash = getCommitHash()
-  return hash ? `${base}/commit/${hash}` : base
+  return hash ? `${base}/tree/${hash}` : base
 }

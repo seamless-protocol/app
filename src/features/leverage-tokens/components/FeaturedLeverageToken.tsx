@@ -206,7 +206,13 @@ export function FeaturedLeverageToken({
               ) : isApyLoading || !apyData ? (
                 <Skeleton className="h-4 w-16" />
               ) : (
-                <span className="text-[var(--state-success-text)] font-medium">
+                <span
+                  className={`font-medium ${
+                    apyData.totalAPY < 0
+                      ? 'text-[var(--state-error-text)]'
+                      : 'text-[var(--state-success-text)]'
+                  }`}
+                >
                   {formatAPY(apyData.totalAPY, 2)}
                 </span>
               )}
