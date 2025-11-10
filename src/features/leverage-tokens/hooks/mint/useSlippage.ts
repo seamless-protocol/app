@@ -9,6 +9,11 @@ export function useSlippage(initial: string = '0.5') {
     // Accept common user inputs like "2" or "2%"; trim whitespace and a trailing % sign
     const raw = (slippage ?? '0') as unknown as string
     const normalized = typeof raw === 'string' ? raw.trim().replace(/%$/, '') : String(raw)
+    // Empty string is valid and means 0 slippage
+    if (normalized === '') return 0
+    // Validate: normalized must be parseable as a valid number
+    const testParse = Number.parseFloat(normalized)
+    if (!Number.isFinite(testParse)) return DEFAULT_SLIPPAGE_BPS
     // Compute BPS by parsing at most two fractional digits without floating math
     const [intPartRaw = '0', fracRaw = ''] = normalized.split('.')
     const intDigits = intPartRaw.replace(/[^0-9-]/g, '') || '0'
