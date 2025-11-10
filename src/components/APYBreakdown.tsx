@@ -117,7 +117,13 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
         <div className="mt-3 border-t border-[var(--divider-line)] pt-3">
           <div className="flex justify-between font-semibold">
             <span className="text-[var(--text-primary)]">Total APY:</span>
-            <span className="text-[var(--state-success-text)]">
+            <span
+              className={
+                data.totalAPY < 0
+                  ? 'text-[var(--state-error-text)]'
+                  : 'text-[var(--state-success-text)]'
+              }
+            >
               {formatPercentage(data.totalAPY, { decimals: 2, showSign: true })}
             </span>
           </div>
