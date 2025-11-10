@@ -21,6 +21,7 @@ type PendingMode = 'awaitingWallet' | 'onChain'
 interface PendingStepProps {
   selectedToken: Token
   amount: string
+  expectedTokens?: string
   leverageTokenConfig: LeverageTokenConfig
   mode?: PendingMode
   transactionHash?: `0x${string}` | undefined
@@ -30,6 +31,7 @@ interface PendingStepProps {
 
 export function PendingStep({
   amount,
+  expectedTokens,
   leverageTokenConfig,
   mode = 'awaitingWallet',
   transactionHash,
@@ -61,7 +63,7 @@ export function PendingStep({
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Minting</span>
             <span className="text-foreground">
-              {amount} {leverageTokenConfig.symbol}
+              {expectedTokens ?? amount} {leverageTokenConfig.symbol}
               {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
                 <>
                   {' '}
