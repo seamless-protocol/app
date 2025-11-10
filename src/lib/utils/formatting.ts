@@ -142,8 +142,9 @@ export function formatNumber(
 }
 
 /**
- * Format a token amount from base units (bigint) to a fixed-decimal string.
+ * Format a token amount from base units (bigint) to a fixed-decimal string with rounding.
  * Caller chooses display precision; defaults to 6.
+ * Uses string-based rounding to preserve precision from formatUnits without Number conversion.
  */
 export function formatTokenAmountFromBase(
   value: bigint | undefined,
@@ -151,6 +152,52 @@ export function formatTokenAmountFromBase(
   displayDecimals: number = 6,
 ): string {
   if (typeof value !== 'bigint') return '0'
-  const n = Number(formatUnits(value, decimals))
-  return Number.isFinite(n) ? n.toFixed(displayDecimals) : '0'
+
+  // Use formatUnits directly without Number conversion to preserve precision
+  const formatted = formatUnits(value, decimals)
+
+  // Find decimal point to split integer and fractional parts
+  const dotIndex = formatted.indexOf('.')
+
+  if (dotIndex === -1) {
+    // No decimal point, whole number
+    if (displayDecimals === 0) {
+      return formatted
+    }
+    return `${formatted}.${'0'.repeat(displayDecimals)}`
+  }
+
+  let integerPart = formatted.slice(0, dotIndex)
+  const decimalPart = formatted.slice(dotIndex + 1)
+
+  if (displayDecimals === 0) {
+    // Round to integer: check first decimal digit
+    const firstDecimal = decimalPart[0]
+    if (firstDecimal && Number.parseInt(firstDecimal, 10) >= 5) {
+      return (BigInt(integerPart) + 1n).toString()
+    }
+    return integerPart
+  }
+
+  // Get the decimals we want to keep
+  let resultDecimals = decimalPart.slice(0, displayDecimals)
+
+  // Check if we need to round up (look at the next digit after our cutoff)
+  const nextDigit = decimalPart[displayDecimals]
+  if (nextDigit && Number.parseInt(nextDigit, 10) >= 5) {
+    // Use BigInt for exact arithmetic on long fractional parts
+    const incremented = (BigInt(resultDecimals || '0') + 1n).toString()
+
+    // If increment produced an extra digit, carry into the integer part
+    if (incremented.length > displayDecimals) {
+      integerPart = (BigInt(integerPart) + 1n).toString()
+      resultDecimals = '0'.repeat(displayDecimals)
+    } else {
+      resultDecimals = incremented.padStart(displayDecimals, '0')
+    }
+  }
+
+  // Pad with zeros if needed
+  resultDecimals = resultDecimals.padEnd(displayDecimals, '0')
+  return `${integerPart}.${resultDecimals}`
 }
