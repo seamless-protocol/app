@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
-  USD_DECIMALS,
   parseUsdPrice,
   toScaledUsd,
+  USD_DECIMALS,
   usdAdd,
   usdDiffFloor,
-  usdToString,
   usdToFixedString,
+  usdToString,
 } from '@/domain/shared/prices'
 
 describe('USD precision utilities', () => {
