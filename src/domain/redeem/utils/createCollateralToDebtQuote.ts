@@ -2,6 +2,7 @@ import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import {
   createLifiQuoteAdapter,
+  createPendleQuoteAdapter,
   createUniswapV3QuoteAdapter,
   createVeloraQuoteAdapter,
   type LifiOrder,
@@ -16,7 +17,7 @@ import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/co
 import type { QuoteFn } from '../planner/types'
 
 /** Supported adapter types for collateral-to-debt swaps */
-export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2'
+export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2' | 'pendle'
 
 /**
  * Validated ParaSwap methods for Velora exactOut operations.
@@ -41,6 +42,9 @@ export type CollateralToDebtSwapConfig =
     }
   | {
       type: 'velora'
+    }
+  | {
+      type: 'pendle'
     }
 
 export interface CreateCollateralToDebtQuoteParams {
@@ -90,6 +94,14 @@ export function createCollateralToDebtQuote({
     return { quote, adapterType: 'velora' }
   }
 
+  if (swap.type === 'pendle') {
+    const quote = createPendleQuoteAdapter({
+      chainId: chainId as SupportedChainId,
+      router: routerAddress,
+      slippageBps,
+    })
+    return { quote, adapterType: 'pendle' }
+  }
   const publicClient = getPublicClient(chainId)
   if (!publicClient) {
     throw new Error('Public client unavailable for collateral quote')

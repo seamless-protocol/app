@@ -8,6 +8,7 @@ import {
   MerklLogo,
   MorphoLogo,
   ResolvLogo,
+  PendleLogo
 } from '@/components/icons'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
@@ -25,6 +26,7 @@ export enum LeverageTokenKey {
   WEETH_WETH_17X_BASE_MAINNET = 'weeth-weth-17x-base-mainnet',
   WSTETH_ETH_25X_ETHEREUM_MAINNET = 'wsteth-eth-25x-ethereum-mainnet',
   RLP_USDC_6_75X_ETHEREUM_MAINNET = 'rlp-usdc-6.75x-ethereum-mainnet',
+  PT_RLP_4DEC2025_USDC_2X_ETHEREUM_MAINNET = 'pt-rlp-4dec2025-usdc-2x-ethereum-mainnet',
   // Add more token keys here as they are added
   // ANOTHER_TOKEN = 'another-token',
 }
@@ -318,6 +320,101 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           badge: {
             text: 'Protocol Info',
             color: 'yellow' as const,
+          },
+        },
+      ],
+    },
+  },
+  [LeverageTokenKey.PT_RLP_4DEC2025_USDC_2X_ETHEREUM_MAINNET]: {
+    address: '0x0E5eB844bc0A29c9B949137bbb13327f86809779' as Address,
+    name: 'PT-RLP-4DEC2025 / USDC 2x Leverage Token',
+    symbol: 'PT-RLP-4DEC2025-USDC-2x',
+    description:
+      'PT-RLP-4DEC2025 / USDC 2x Leverage Token that amplifies relative price movements between PT-RLP-4DEC2025 and USDC',
+    decimals: 18,
+    leverageRatio: 2,
+    chainId: 1,
+    chainName: 'Ethereum',
+    chainLogo: EthereumLogo,
+    supplyCap: 1000000,
+    apyConfig: {
+      aprProvider: {
+        type: APR_PROVIDERS.DEFI_LLAMA,
+        id: '4fa9f597-3907-48b7-b89d-5beb820e9f03',
+      },
+    },
+    collateralAsset: {
+      symbol: 'PT-RLP-4DEC2025',
+      name: 'PT-RLP-4DEC2025',
+      description:
+        "PT-RLP-4DEC2025 is the Pendle Principal Token (PT) representation of Resolv's RLP, a junior-tranche insurance token. This tokenized form entitles holders to the underlying RLP at maturity, allowing users to gain exposure to RLP's excess yield from Resolv's delta-neutral strategy until December 4, 2025. RLP captures profit from staking ETH and shorting ETH perpetuals, and as a junior tranche, absorbs losses first and receives a larger share of profits, helping to protect USR's peg.",
+      address: '0x3A70F0C696dcB3A4aB3833cD9726397dD61AC85e' as Address,
+      decimals: 6,
+    },
+    debtAsset: {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Address,
+      decimals: 6,
+    },
+    swaps: {
+      debtToCollateral: {
+        type: 'pendle',
+      },
+      collateralToDebt: {
+        type: 'pendle',
+      },
+    },
+    planner: { epsilonBps: 10 },
+    relatedResources: {
+      additionalRewards: [
+        {
+          id: 'merkl-rewards',
+          title: 'Merkl Rewards',
+          description: 'Additional DeFi rewards and incentive tracking',
+          // Default goes to dashboard; if connected, deep-link to user page
+          url: 'https://app.merkl.xyz/users/',
+          getUrl: ({ address }) =>
+            address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
+          icon: MerklLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'purple' as const,
+          },
+        },
+      ],
+      underlyingPlatforms: [
+        {
+          id: 'morpho-lending',
+          title: 'Morpho Lending Market',
+          description: 'View the underlying lending market powering this Leverage Token',
+          url: 'https://app.morpho.org/ethereum/market/0xa02ad0cf521ba5e5b20d1bcb98043eb091807e2b3bf26df5aad1ad154a3b8d45',
+          icon: MorphoLogo,
+          badge: {
+            text: 'Lending Market',
+            color: 'blue' as const,
+          },
+        },
+        {
+          id: 'resolv',
+          title: 'Resolv',
+          description: 'Resolv',
+          url: 'https://resolv.xyz/',
+          icon: ResolvLogo,
+          badge: {
+            text: 'Protocol Info',
+            color: 'yellow' as const,
+          },
+        },
+        {
+          id: 'pendle',
+          title: 'Pendle',
+          description: 'Pendle',
+          url: 'https://pendle.finance/',
+          icon: PendleLogo,
+          badge: {
+            text: 'Protocol Info',
+            color: 'green' as const,
           },
         },
       ],

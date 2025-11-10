@@ -4,6 +4,7 @@
 
 // Default API endpoints
 export const API_ENDPOINTS = {
+  pendle: 'https://api-v2.pendle.finance',
   morpho: 'https://api.morpho.org',
   seamlessSubgraph: 'https://api.thegraph.com/subgraphs/name/seamless/seamless-v2',
   fuul: 'https://api.fuul.xyz',
@@ -13,6 +14,7 @@ export const API_ENDPOINTS = {
 
 // Explicit mapping of API keys to environment variable names
 export const API_ENV_OVERRIDE_MAP: Record<keyof typeof API_ENDPOINTS, string> = {
+  pendle: 'VITE_PENDLE_API_URL',
   morpho: 'VITE_MORPHO_API_URL',
   seamlessSubgraph: 'VITE_SEAMLESS_SUBGRAPH_URL',
   fuul: 'VITE_FUUL_API_URL',

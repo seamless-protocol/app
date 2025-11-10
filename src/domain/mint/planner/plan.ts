@@ -19,7 +19,7 @@ import {
   readLeverageManagerV2PreviewDeposit,
   readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
-import { fetchCoingeckoTokenUsdPrices } from '@/lib/prices/coingecko'
+import { fetchTokenUsdPrices } from '@/lib/prices/fetchUsdPrices'
 import { applySlippageFloor, mulDivFloor } from './math'
 import type { Quote, QuoteFn } from './types'
 
@@ -222,7 +222,18 @@ export async function planMint(params: {
     functionName: 'decimals',
   })
 
-  const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
+  const usdPriceMap = await fetchTokenUsdPrices(chainId, [collateralAsset, debtAsset])
+  const collateralPriceUsd = usdPriceMap?.[collateralAsset.toLowerCase()]
+  const debtPriceUsd = usdPriceMap?.[debtAsset.toLowerCase()]
+
+  if (!collateralPriceUsd) {
+    throw new Error('Missing price for collateral asset')
+  }
+
+  if (!debtPriceUsd) {
+    throw new Error('Missing price for debt asset')
+  }
+
   const minEquityDepositedInCollateral = applySlippageFloor(equityInInputAsset, slippageBps)
 
   const priceColl = parseUnits(String(usdPriceMap?.[inputAsset.toLowerCase()] ?? 0), USD_DECIMALS)

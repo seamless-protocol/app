@@ -15,7 +15,7 @@ import {
   readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
-import { fetchCoingeckoTokenUsdPrices } from '@/lib/prices/coingecko'
+import { fetchTokenUsdPrices } from '@/lib/prices/fetchUsdPrices'
 import type { Quote, QuoteFn } from './types'
 
 // Local structural types (avoid brittle codegen coupling)
@@ -285,7 +285,7 @@ async function getSwapParamsForRedeem(args: {
     functionName: 'decimals',
   })
 
-  const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
+  const usdPriceMap = await fetchTokenUsdPrices(chainId, [collateralAsset, debtAsset])
   const priceColl = parseUnits(
     String(usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0),
     USD_DECIMALS,
