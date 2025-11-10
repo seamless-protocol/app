@@ -8,6 +8,7 @@ import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi, parseUnits, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import { getPublicClient } from 'wagmi/actions'
+import { USD_DECIMALS } from '@/domain/shared/prices'
 import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
@@ -196,7 +197,6 @@ export async function planRedeem(params: {
   })
 
   const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
-  const USD_DECIMALS = 8
   const priceColl2 = parseUnits(
     String(usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0),
     USD_DECIMALS,
@@ -286,7 +286,6 @@ async function getSwapParamsForRedeem(args: {
   })
 
   const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
-  const USD_DECIMALS = 8
   const priceColl = parseUnits(
     String(usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0),
     USD_DECIMALS,

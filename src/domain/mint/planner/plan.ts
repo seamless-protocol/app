@@ -10,6 +10,7 @@ import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseUnits, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import { getPublicClient } from 'wagmi/actions'
+import { USD_DECIMALS } from '@/domain/shared/prices'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads
@@ -224,7 +225,6 @@ export async function planMint(params: {
   const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
   const minEquityDepositedInCollateral = applySlippageFloor(equityInInputAsset, slippageBps)
 
-  const USD_DECIMALS = 8
   const priceColl = parseUnits(String(usdPriceMap?.[inputAsset.toLowerCase()] ?? 0), USD_DECIMALS)
   const priceDebt = parseUnits(String(usdPriceMap?.[debtAsset.toLowerCase()] ?? 0), USD_DECIMALS)
   const collScale = 10n ** BigInt(collateralAssetDecimals)
