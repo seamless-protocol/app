@@ -318,6 +318,19 @@ vi.mock('@/features/leverage-tokens/utils/queryKeys', () => ({
               params.outputAsset ? `output:${params.outputAsset}` : 'output:default',
             ],
     },
+    mutations: {
+      mintWrite: (params: { chainId: number; addr: string; account: string; planSig: string }) => [
+        'leverage-tokens',
+        'chain',
+        params.chainId,
+        'token',
+        params.addr,
+        'mutate',
+        'mint',
+        params.account,
+        params.planSig,
+      ],
+    },
     external: {
       borrowApy: (addr: string) => ['leverage-tokens', 'external', 'borrow-apy', addr],
       rewardsApr: (addr: string) => ['leverage-tokens', 'external', 'rewards-apr', addr],
