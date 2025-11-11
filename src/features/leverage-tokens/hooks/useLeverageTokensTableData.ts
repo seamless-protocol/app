@@ -224,16 +224,6 @@ export function useLeverageTokensTableData() {
       const tvl = Number(formatUnits(collateral, cfg.collateralAsset.decimals))
       const currentSupply = Number(formatUnits(totalSupply, cfg.decimals ?? 18))
 
-      console.log('tvl', tvl)
-      console.log('currentSupply', currentSupply)
-      console.log('collateral', collateral)
-      console.log('totalSupply', totalSupply)
-      console.log('collateralRes', collateralRes)
-      console.log('config', cfg)
-      console.log('usdPricesByChain', usdPricesByChain)
-      console.log('cfg.chainId', cfg.chainId)
-      console.log('cfg.collateralAsset.address', cfg.collateralAsset.address)
-
       // Calculate USD values using collateral asset price
       const collateralPriceUsd =
         usdPricesByChain[cfg.chainId]?.[cfg.collateralAsset.address.toLowerCase()]

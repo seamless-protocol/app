@@ -196,7 +196,7 @@ export async function planRedeem(params: {
     functionName: 'decimals',
   })
 
-  const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
+  const usdPriceMap = await fetchTokenUsdPrices(chainId, [collateralAsset, debtAsset])
   const priceColl2 = parseUnits(
     String(usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0),
     USD_DECIMALS,
