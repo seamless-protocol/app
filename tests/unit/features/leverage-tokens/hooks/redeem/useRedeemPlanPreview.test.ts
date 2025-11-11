@@ -5,8 +5,8 @@ import type { Config } from 'wagmi'
 import { getQuoteIntentForAdapter } from '@/domain/redeem/orchestrate'
 import { planRedeem } from '@/domain/redeem/planner/plan'
 import type { QuoteFn } from '@/domain/redeem/planner/types'
-import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { useRedeemPlanPreview } from '@/features/leverage-tokens/hooks/redeem/useRedeemPlanPreview'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { hookTestUtils, makeAddr, mockSetup } from '../../../../../utils.tsx'
 
 // Mock dependencies
@@ -447,4 +447,3 @@ describe('useRedeemPlanPreview', () => {
     })
   })
 })
-

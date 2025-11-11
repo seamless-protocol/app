@@ -1,12 +1,12 @@
+import { waitFor } from '@testing-library/react'
 import type { Address, Hash } from 'viem'
 import { UserRejectedRequestError } from 'viem'
 import { base } from 'viem/chains'
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
-import { waitFor } from '@testing-library/react'
+import { useChainId, usePublicClient, useSwitchChain } from 'wagmi'
+import { useCollateralToDebtQuote } from '@/features/leverage-tokens/hooks/redeem/useCollateralToDebtQuote'
 import { useRedeemExecution } from '@/features/leverage-tokens/hooks/redeem/useRedeemExecution'
 import { useRedeemWithRouter } from '@/features/leverage-tokens/hooks/useRedeemWithRouter'
-import { useCollateralToDebtQuote } from '@/features/leverage-tokens/hooks/redeem/useCollateralToDebtQuote'
-import { useSwitchChain, useChainId, usePublicClient } from 'wagmi'
 import { hookTestUtils, makeAddr, makeTxnHash, mockSetup } from '../../../../../utils.tsx'
 
 // Mock dependencies
@@ -571,4 +571,3 @@ describe('useRedeemExecution', () => {
     })
   })
 })
-
