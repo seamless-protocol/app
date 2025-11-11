@@ -9,8 +9,6 @@ import type { QuoteFn } from './types'
 export interface PendleAdapterOptions {
   chainId: SupportedChainId
   router: Address
-  /** Optional override for quote `fromAddress` (defaults to `router`). */
-  fromAddress?: Address
   slippageBps?: number
   baseUrl?: string
 }
