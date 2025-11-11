@@ -109,8 +109,6 @@ export function createPendleQuoteAdapter(opts: PendleAdapterOptions): QuoteFn {
 
     const response = pendleResponseSchema.parse(await res.json())
 
-    console.log('Pendle response', response)
-
     // Check for Pendle API errors in the response body
     if ('error' in response) {
       console.error('Pendle error from API', { errorMessage: response.error })

@@ -349,8 +349,15 @@ function resolveDebtSwapConfig({
 }: {
   tokenDefinition: LeverageTokenDefinition
 }): DebtToCollateralSwapConfig {
-  if (tokenDefinition.swap?.useLiFi ?? process.env['TEST_USE_LIFI'] === '1') {
+  if (
+    tokenDefinition.swap?.type === 'lifi' ||
+    (tokenDefinition.swap?.type === undefined && process.env['TEST_USE_LIFI'] === '1')
+  ) {
     return { type: 'lifi', allowBridges: 'none' }
+  }
+
+  if (tokenDefinition.swap?.type === 'pendle') {
+    return { type: 'pendle' }
   }
 
   const v3Config = tokenDefinition.swap?.uniswapV3
