@@ -13,11 +13,14 @@ export interface PendleAdapterOptions {
   fromAddress?: Address
   slippageBps?: number
   baseUrl?: string
-  /** Optional list of ParaSwap contract methods to restrict quotes to. Useful for testing specific methods. */
-  includeContractMethods?: Array<string>
 }
 
 // Pendle API response validation schemas
+const pendleErrorResponseSchema = z.object({
+  message: z.string(),
+  statusCode: z.number(),
+})
+
 const pendleSuccessResponseSchema = z.object({
   action: z.string(),
   inputs: z.array(
@@ -67,16 +70,10 @@ const pendleSuccessResponseSchema = z.object({
   ),
 })
 
-const pendleResponseSchema = z.union([pendleSuccessResponseSchema])
+const pendleResponseSchema = pendleSuccessResponseSchema
 
-// Velora API response types - only fields we actually use
 type PendleSwapResponse = z.infer<typeof pendleSuccessResponseSchema>
 
-/**
- * Create a QuoteFn adapter backed by Velora's Market API.
- * Returns swap data and metadata needed for the redeemWithVelora contract function.
- * For exactOut quotes, veloraData is always present and can be accessed via type narrowing.
- */
 export function createPendleQuoteAdapter(opts: PendleAdapterOptions): QuoteFn {
   const {
     chainId,
@@ -105,15 +102,24 @@ export function createPendleQuoteAdapter(opts: PendleAdapterOptions): QuoteFn {
     })
 
     const res = await fetch(url.toString(), { method: 'GET' })
-    if (!res.ok) throw new Error(`Pendle quote failed: ${res.status} ${res.statusText}`)
+
+    if (!res.ok) {
+      // Try to parse error response body
+      let errorMessage: string | undefined
+      try {
+        const responseBody = await res.json()
+        const errorData = pendleErrorResponseSchema.safeParse(responseBody)
+        if (errorData.success) {
+          errorMessage = errorData.data.message
+        }
+      } catch {
+        // Response body cannot be parsed so ignore it
+      }
+
+      throw new Error(`Pendle quote failed: ${errorMessage ?? `${res.status} ${res.statusText}`}`)
+    }
 
     const response = pendleResponseSchema.parse(await res.json())
-
-    // Check for Pendle API errors in the response body
-    if ('error' in response) {
-      console.error('Pendle error from API', { errorMessage: response.error })
-      throw new Error(`Pendle quote failed: ${response.error}`)
-    }
 
     return mapPendleResponseToQuote(response, outToken, inToken)
   }

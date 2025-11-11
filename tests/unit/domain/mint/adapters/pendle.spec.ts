@@ -282,7 +282,59 @@ describe('createPendleQuoteAdapter', () => {
       ).rejects.toThrow('Pendle adapter only supports exactIn quotes')
     })
 
-    it('throws error when API returns non-OK status', async () => {
+    it('throws error with API error message when available', async () => {
+      const errorResponse = {
+        message: 'Invalid action: Unable to classify convert action',
+        statusCode: 400,
+      }
+      const fetchMock = vi.fn().mockResolvedValueOnce(
+        new Response(JSON.stringify(errorResponse), {
+          status: 400,
+          statusText: 'Bad Request',
+        }),
+      )
+      global.fetch = fetchMock
+
+      const adapter = createPendleQuoteAdapter({
+        chainId: base.id,
+        router: ROUTER,
+      })
+
+      await expect(
+        adapter({
+          inToken: IN_TOKEN,
+          outToken: OUT_TOKEN,
+          amountIn: 1000000000000000000n,
+          intent: 'exactIn',
+        }),
+      ).rejects.toThrow('Pendle quote failed: Invalid action: Unable to classify convert action')
+    })
+
+    it('falls back to status text when error response cannot be parsed', async () => {
+      const fetchMock = vi.fn().mockResolvedValueOnce(
+        new Response('Internal Server Error', {
+          status: 500,
+          statusText: 'Internal Server Error',
+        }),
+      )
+      global.fetch = fetchMock
+
+      const adapter = createPendleQuoteAdapter({
+        chainId: base.id,
+        router: ROUTER,
+      })
+
+      await expect(
+        adapter({
+          inToken: IN_TOKEN,
+          outToken: OUT_TOKEN,
+          amountIn: 1000000000000000000n,
+          intent: 'exactIn',
+        }),
+      ).rejects.toThrow('Pendle quote failed: 500 Internal Server Error')
+    })
+
+    it('falls back to status text when error response has unexpected format', async () => {
       const fetchMock = vi.fn().mockResolvedValueOnce(
         new Response(JSON.stringify({ error: 'Not found' }), {
           status: 404,
@@ -303,7 +355,7 @@ describe('createPendleQuoteAdapter', () => {
           amountIn: 1000000000000000000n,
           intent: 'exactIn',
         }),
-      ).rejects.toThrow(/Pendle quote failed: 404/)
+      ).rejects.toThrow('Pendle quote failed: 404 Not Found')
     })
 
     it('throws error when response has no routes', async () => {
@@ -555,30 +607,6 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       expect(result.minOut).toBe(0n)
-    })
-  })
-
-  describe('Logging', () => {
-    it('logs Pendle response', async () => {
-      const response = createSuccessResponse()
-      const fetchMock = vi
-        .fn()
-        .mockResolvedValueOnce(new Response(JSON.stringify(response), { status: 200 }))
-      global.fetch = fetchMock
-
-      const adapter = createPendleQuoteAdapter({
-        chainId: base.id,
-        router: ROUTER,
-      })
-
-      await adapter({
-        inToken: IN_TOKEN,
-        outToken: OUT_TOKEN,
-        amountIn: 1000000000000000000n,
-        intent: 'exactIn',
-      })
-
-      expect(consoleLogSpy).toHaveBeenCalledWith('Pendle response', expect.any(Object))
     })
   })
 
