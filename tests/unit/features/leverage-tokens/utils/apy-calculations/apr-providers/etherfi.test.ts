@@ -269,6 +269,30 @@ describe('EtherFiAprProvider', () => {
       expect((result as any).metadata.useRestakingApr).toBe(true)
     })
 
+    it('should handle response.text() failure when response is not ok', async () => {
+      const mockResponse = {
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: vi.fn().mockRejectedValue(new Error('Failed to read text')),
+      }
+
+      mockFetch.mockResolvedValue(mockResponse)
+
+      await expect(provider.fetchApr()).rejects.toThrow(
+        'Failed to fetch EtherFi data (status 500): Internal Server Error',
+      )
+    })
+
+    it('should handle non-Error exceptions', async () => {
+      const nonErrorException = 'String error'
+      mockFetch.mockRejectedValue(nonErrorException)
+
+      await expect(provider.fetchApr()).rejects.toThrow(
+        'Failed to fetch EtherFi APR data: Unknown error',
+      )
+    })
+
     it('should log debug information', async () => {
       const mockApiResponse = {
         '7_day_apr': 5.2,
