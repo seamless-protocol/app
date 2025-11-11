@@ -234,12 +234,58 @@ describe('MerklRewardsAprProvider', () => {
       await expect(provider.fetchRewardsApr(tokenAddress, chainId)).rejects.toThrow('Invalid JSON')
     })
 
-    it('should handle network errors', async () => {
+    it('should handle response.text() failure when response is not ok', async () => {
       const provider = new MerklRewardsAprProvider()
 
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        text: async () => {
+          throw new Error('Failed to read response text')
+        },
+      } as unknown as Response)
 
-      await expect(provider.fetchRewardsApr(tokenAddress, chainId)).rejects.toThrow('Network error')
+      await expect(provider.fetchRewardsApr(tokenAddress, chainId)).rejects.toThrow(
+        'HTTP error! status: 500',
+      )
+    })
+
+    it('should handle non-array response without opportunities property', async () => {
+      const provider = new MerklRewardsAprProvider()
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [] }), // Non-array response without opportunities
+      } as unknown as Response)
+
+      const result = await provider.fetchRewardsApr(tokenAddress, chainId)
+
+      expect(result).toEqual({
+        rewardsAPR: 0,
+        rewardTokens: [],
+      })
+    })
+
+    it('should handle non-Error exceptions in fetchOpportunitiesByToken', async () => {
+      const provider = new MerklRewardsAprProvider()
+
+      mockFetch.mockRejectedValueOnce('String error') // Non-Error exception
+
+      await expect(provider.fetchRewardsApr(tokenAddress, chainId)).rejects.toBe('String error')
+    })
+
+    it('should handle non-Error exceptions in fetchRewardsApr catch block', async () => {
+      const provider = new MerklRewardsAprProvider()
+
+      // Mock fetchOpportunitiesByToken to throw a non-Error
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => {
+          throw 'String error' // Non-Error exception
+        },
+      } as unknown as Response)
+
+      await expect(provider.fetchRewardsApr(tokenAddress, chainId)).rejects.toBe('String error')
     })
 
     it('should handle opportunity with missing APR', async () => {

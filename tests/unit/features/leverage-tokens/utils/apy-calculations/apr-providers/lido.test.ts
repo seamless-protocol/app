@@ -180,4 +180,70 @@ describe('LidoAprProvider', () => {
     expect(provider.protocolId).toBe('lido')
     expect(provider.protocolName).toBe('Lido')
   })
+
+  it('should handle empty aprs array', async () => {
+    const mockData = {
+      data: {
+        aprs: [],
+        smaApr: 0,
+      },
+      meta: {
+        symbol: 'stETH',
+        address: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
+        chainId: 1,
+      },
+    }
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(mockData),
+    })
+
+    await expect(provider.fetchApr()).rejects.toThrow('Insufficient APR data')
+  })
+
+  it('should handle undefined APR in most recent entry', async () => {
+    const mockData = {
+      data: {
+        aprs: [{ timeUnix: 1759407791, apr: 2.575 }, { timeUnix: 1759494179 }],
+        smaApr: 3.25,
+      },
+      meta: {
+        symbol: 'stETH',
+        address: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
+        chainId: 1,
+      },
+    }
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(mockData),
+    })
+
+    await expect(provider.fetchApr()).rejects.toThrow('Invalid APR data in most recent entry')
+  })
+
+  it('should handle response.text() failure when response is not ok', async () => {
+    const mockResponse = {
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+      text: vi.fn().mockRejectedValue(new Error('Failed to read text')),
+    }
+
+    mockFetch.mockResolvedValueOnce(mockResponse)
+
+    await expect(provider.fetchApr()).rejects.toThrow(
+      'Failed to fetch Lido data (status 500): Internal Server Error',
+    )
+  })
+
+  it('should handle non-Error exceptions', async () => {
+    const nonErrorException = 'String error'
+    mockFetch.mockRejectedValueOnce(nonErrorException)
+
+    await expect(provider.fetchApr()).rejects.toThrow(
+      'Failed to fetch Lido APR data: Unknown error',
+    )
+  })
 })

@@ -1,10 +1,53 @@
 import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Unmock the rewards providers for this test
-vi.unmock('@/features/leverage-tokens/utils/apy-calculations/rewards-providers')
+// Mock the providers
+vi.mock('@/features/leverage-tokens/utils/apy-calculations/rewards-providers/merkl')
 
+// Mock leverage token config
+vi.mock('@/features/leverage-tokens/leverageTokens.config', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/features/leverage-tokens/leverageTokens.config')>()
+  return {
+    ...actual,
+    getLeverageTokenConfig: vi.fn(),
+  }
+})
+
+// Mock apr-providers to avoid dependency issues
+vi.mock(
+  '@/features/leverage-tokens/utils/apy-calculations/apr-providers',
+  async (importOriginal) => {
+    const actual = await importOriginal()
+    return actual
+  },
+)
+
+// Mock the module to avoid global mock conflicts
+vi.mock(
+  '@/features/leverage-tokens/utils/apy-calculations/rewards-providers',
+  async (importOriginal) => {
+    const actual = await importOriginal()
+    return actual
+  },
+)
+
+import type { Mock } from 'vitest'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { fetchRewardsAprForToken } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
+import { MerklRewardsAprProvider } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers/merkl'
+
+const mockGetLeverageTokenConfig = getLeverageTokenConfig as Mock
+
+// Mock the provider
+vi.mocked(MerklRewardsAprProvider).mockImplementation(
+  () =>
+    ({
+      protocolId: 'merkl',
+      protocolName: 'Merkl',
+      fetchRewardsApr: vi.fn(),
+    }) as any,
+)
 
 describe('Rewards Providers', () => {
   const tokenAddress = '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address
@@ -12,139 +55,215 @@ describe('Rewards Providers', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Reset provider mock
+    vi.mocked(MerklRewardsAprProvider).mockImplementation(
+      () =>
+        ({
+          protocolId: 'merkl',
+          protocolName: 'Merkl',
+          fetchRewardsApr: vi.fn(),
+        }) as any,
+    )
+    // Default to null config (will default to Merkl)
+    mockGetLeverageTokenConfig.mockReset()
+    mockGetLeverageTokenConfig.mockReturnValue(null)
   })
 
   describe('fetchRewardsAprForToken', () => {
-    it('should be mocked and return default data', async () => {
+    it('should route to Merkl provider when config is null', async () => {
+      const mockAprData = {
+        rewardsAPR: 0.05,
+        rewardTokens: [],
+      }
+
+      mockGetLeverageTokenConfig.mockReturnValue(null)
+
+      const mockProviderInstance = {
+        protocolId: 'merkl',
+        protocolName: 'Merkl',
+        fetchRewardsApr: vi.fn().mockResolvedValue(mockAprData),
+      }
+
+      vi.mocked(MerklRewardsAprProvider).mockImplementation(() => mockProviderInstance as any)
+
       const result = await fetchRewardsAprForToken(tokenAddress, chainId)
 
-      expect(result).toEqual({
-        rewardsAPR: 0,
-        rewardTokens: [],
-      })
+      expect(result).toEqual(mockAprData)
+      expect(MerklRewardsAprProvider).toHaveBeenCalledTimes(1)
+      expect(mockProviderInstance.fetchRewardsApr).toHaveBeenCalledWith(tokenAddress)
     })
 
-    it('should handle different token addresses', async () => {
+    it('should route to Merkl provider when config exists but apyConfig is missing', async () => {
+      const mockAprData = {
+        rewardsAPR: 0.05,
+        rewardTokens: [],
+      }
+
+      mockGetLeverageTokenConfig.mockReturnValue({
+        address: tokenAddress,
+        chainId,
+        // apyConfig is missing
+      })
+
+      const mockProviderInstance = {
+        protocolId: 'merkl',
+        protocolName: 'Merkl',
+        fetchRewardsApr: vi.fn().mockResolvedValue(mockAprData),
+      }
+
+      vi.mocked(MerklRewardsAprProvider).mockImplementation(() => mockProviderInstance as any)
+
+      const result = await fetchRewardsAprForToken(tokenAddress, chainId)
+
+      expect(result).toEqual(mockAprData)
+      expect(MerklRewardsAprProvider).toHaveBeenCalledTimes(1)
+      expect(mockProviderInstance.fetchRewardsApr).toHaveBeenCalledWith(tokenAddress)
+    })
+
+    it('should route to Merkl provider when apyConfig exists but rewardsProvider is missing', async () => {
+      const mockAprData = {
+        rewardsAPR: 0.05,
+        rewardTokens: [],
+      }
+
+      mockGetLeverageTokenConfig.mockReturnValue({
+        apyConfig: {
+          // rewardsProvider is missing
+        },
+      })
+
+      const mockProviderInstance = {
+        protocolId: 'merkl',
+        protocolName: 'Merkl',
+        fetchRewardsApr: vi.fn().mockResolvedValue(mockAprData),
+      }
+
+      vi.mocked(MerklRewardsAprProvider).mockImplementation(() => mockProviderInstance as any)
+
+      const result = await fetchRewardsAprForToken(tokenAddress, chainId)
+
+      expect(result).toEqual(mockAprData)
+      expect(MerklRewardsAprProvider).toHaveBeenCalledTimes(1)
+      expect(mockProviderInstance.fetchRewardsApr).toHaveBeenCalledWith(tokenAddress)
+    })
+
+    it('should route to Merkl provider when rewardsProvider exists but type is missing', async () => {
+      const mockAprData = {
+        rewardsAPR: 0.05,
+        rewardTokens: [],
+      }
+
+      mockGetLeverageTokenConfig.mockReturnValue({
+        apyConfig: {
+          rewardsProvider: {
+            // type is missing
+          },
+        },
+      })
+
+      const mockProviderInstance = {
+        protocolId: 'merkl',
+        protocolName: 'Merkl',
+        fetchRewardsApr: vi.fn().mockResolvedValue(mockAprData),
+      }
+
+      vi.mocked(MerklRewardsAprProvider).mockImplementation(() => mockProviderInstance as any)
+
+      const result = await fetchRewardsAprForToken(tokenAddress, chainId)
+
+      expect(result).toEqual(mockAprData)
+      expect(MerklRewardsAprProvider).toHaveBeenCalledTimes(1)
+      expect(mockProviderInstance.fetchRewardsApr).toHaveBeenCalledWith(tokenAddress)
+    })
+
+    it('should route to Merkl provider for any token address', async () => {
       const differentTokenAddress = '0x1234567890123456789012345678901234567890' as Address
+      const mockAprData = {
+        rewardsAPR: 0.05,
+        rewardTokens: [],
+      }
+
+      mockGetLeverageTokenConfig.mockReturnValue(null)
+
+      const mockProviderInstance = {
+        protocolId: 'merkl',
+        protocolName: 'Merkl',
+        fetchRewardsApr: vi.fn().mockResolvedValue(mockAprData),
+      }
+
+      vi.mocked(MerklRewardsAprProvider).mockImplementation(() => mockProviderInstance as any)
 
       const result = await fetchRewardsAprForToken(differentTokenAddress, chainId)
 
-      expect(result).toEqual({
-        rewardsAPR: 0,
-        rewardTokens: [],
-      })
+      expect(result).toEqual(mockAprData)
+      expect(MerklRewardsAprProvider).toHaveBeenCalledTimes(1)
+      expect(mockProviderInstance.fetchRewardsApr).toHaveBeenCalledWith(differentTokenAddress)
     })
 
-    it('should work for Ethereum chain ID', async () => {
-      const ethereumChainId = 1 // Ethereum
+    it('should work for different chain IDs', async () => {
+      const ethereumChainId = 1
+      const mockAprData = {
+        rewardsAPR: 0.05,
+        rewardTokens: [],
+      }
+
+      mockGetLeverageTokenConfig.mockReturnValue(null)
+
+      const mockProviderInstance = {
+        protocolId: 'merkl',
+        protocolName: 'Merkl',
+        fetchRewardsApr: vi.fn().mockResolvedValue(mockAprData),
+      }
+
+      vi.mocked(MerklRewardsAprProvider).mockImplementation(() => mockProviderInstance as any)
 
       const result = await fetchRewardsAprForToken(tokenAddress, ethereumChainId)
 
-      // Should return actual rewards APR data from Merkl provider
-      expect(result).toHaveProperty('rewardsAPR')
+      expect(result).toEqual(mockAprData)
+      expect(MerklRewardsAprProvider).toHaveBeenCalledTimes(1)
+      expect(mockProviderInstance.fetchRewardsApr).toHaveBeenCalledWith(tokenAddress)
     })
 
-    it('should work for unsupported chain ID 2', async () => {
-      const unsupportedChainId = 137 // Polygon
+    it('should propagate provider errors', async () => {
+      const providerError = new Error('Provider fetch failed')
 
-      const result = await fetchRewardsAprForToken(tokenAddress, unsupportedChainId)
+      mockGetLeverageTokenConfig.mockReturnValue(null)
 
-      expect(result).toEqual({
-        rewardsAPR: 0,
-        rewardTokens: [],
-      })
-    })
+      const mockProviderInstance = {
+        protocolId: 'merkl',
+        protocolName: 'Merkl',
+        fetchRewardsApr: vi.fn().mockRejectedValue(providerError),
+      }
 
-    it('should handle case where chain ID is 0', async () => {
-      const chainIdZero = 0
+      vi.mocked(MerklRewardsAprProvider).mockImplementation(() => mockProviderInstance as any)
 
-      const result = await fetchRewardsAprForToken(tokenAddress, chainIdZero)
-
-      expect(result).toEqual({
-        rewardsAPR: 0,
-        rewardTokens: [],
-      })
-    })
-
-    it('should handle negative chain ID', async () => {
-      const negativeChainId = -1
-
-      const result = await fetchRewardsAprForToken(tokenAddress, negativeChainId)
-
-      expect(result).toEqual({
-        rewardsAPR: 0,
-        rewardTokens: [],
-      })
-    })
-  })
-
-  describe('fetchRewardsAprForToken', () => {
-    it('should be a wrapper around fetchRewardsAprForToken', async () => {
-      const result = await fetchRewardsAprForToken(tokenAddress, chainId)
-
-      expect(result).toEqual({
-        rewardsAPR: 0,
-        rewardTokens: [],
-      })
-    })
-
-    it('should pass through all parameters correctly', async () => {
-      const result = await fetchRewardsAprForToken(tokenAddress, chainId)
-
-      expect(result).toEqual({
-        rewardsAPR: 0,
-        rewardTokens: [],
-      })
-    })
-  })
-
-  describe('provider selection logic', () => {
-    it('should handle Base chain configuration', async () => {
-      const result = await fetchRewardsAprForToken(tokenAddress, chainId)
-
-      expect(result).toEqual({
-        rewardsAPR: 0,
-        rewardTokens: [],
-      })
-    })
-
-    it('should handle multiple concurrent requests', async () => {
-      const requests = Array.from({ length: 5 }, (_, i) =>
-        fetchRewardsAprForToken(`0x${i.toString().padStart(40, '0')}` as Address, chainId),
+      await expect(fetchRewardsAprForToken(tokenAddress, chainId)).rejects.toThrow(
+        'Provider fetch failed',
       )
-
-      const results = await Promise.all(requests)
-
-      results.forEach((result) => {
-        expect(result).toEqual({
-          rewardsAPR: 0,
-          rewardTokens: [],
-        })
-      })
     })
-  })
 
-  describe('future extensibility', () => {
-    it('should be easy to add new chain support', async () => {
-      // This test documents the expected behavior when new chains are added
-      // Currently both Base (8453) and Ethereum (1) are supported
-      const supportedChains = [8453, 1] // Base and Ethereum
-      const unsupportedChains = [137, 56, 42161] // Polygon, BSC, Arbitrum
-
-      // Test supported chains
-      for (const chainId of supportedChains) {
-        const result = await fetchRewardsAprForToken(tokenAddress, chainId)
-        expect(result).toHaveProperty('rewardsAPR')
+    it('should create new provider instance for each call', async () => {
+      const mockAprData = {
+        rewardsAPR: 0.05,
+        rewardTokens: [],
       }
 
-      // Test unsupported chains - should work but return default data
-      for (const chainId of unsupportedChains) {
-        const result = await fetchRewardsAprForToken(tokenAddress, chainId)
-        expect(result).toEqual({
-          rewardsAPR: 0,
-          rewardTokens: [],
-        })
+      mockGetLeverageTokenConfig.mockReturnValue(null)
+
+      const mockProviderInstance = {
+        protocolId: 'merkl',
+        protocolName: 'Merkl',
+        fetchRewardsApr: vi.fn().mockResolvedValue(mockAprData),
       }
+
+      vi.mocked(MerklRewardsAprProvider).mockImplementation(() => mockProviderInstance as any)
+
+      // Call multiple times
+      await fetchRewardsAprForToken(tokenAddress, chainId)
+      await fetchRewardsAprForToken(tokenAddress, chainId)
+
+      // Should create new instance each time
+      expect(MerklRewardsAprProvider).toHaveBeenCalledTimes(2)
     })
   })
 })

@@ -226,4 +226,76 @@ describe('DefiLlamaAprProvider', () => {
     expect(result.stakingAPR).toBe(3.75)
     expect(result.totalAPR).toBe(3.75)
   })
+
+  it('should handle non-success status', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ status: 'error', data: [] }),
+    })
+
+    await expect(provider.fetchApr()).rejects.toThrow(
+      'DeFi Llama API returned empty or invalid data',
+    )
+  })
+
+  it('should handle missing mostRecentEntry', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ status: 'success', data: [] }),
+    })
+
+    // Empty data array triggers "empty or invalid data" error before checking mostRecentEntry
+    await expect(provider.fetchApr()).rejects.toThrow(
+      'DeFi Llama API returned empty or invalid data',
+    )
+  })
+
+  it('should handle no valid data in last 24 hours', async () => {
+    // Data older than 24 hours
+    const mockData = [
+      {
+        timestamp: '2024-01-01T00:00:00Z',
+        apy: 3.0,
+        apyBase: 3.0,
+        apyReward: null,
+        il7d: null,
+        apyBase7d: null,
+        tvlUsd: 1000000,
+      },
+      {
+        timestamp: '2024-01-02T00:00:00Z',
+        apy: null, // Invalid
+        apyBase: null,
+        apyReward: null,
+        il7d: null,
+        apyBase7d: null,
+        tvlUsd: 1000000,
+      },
+      {
+        timestamp: '2024-01-10T00:00:00Z',
+        apy: Number.NaN, // Invalid
+        apyBase: Number.NaN,
+        apyReward: null,
+        il7d: null,
+        apyBase7d: null,
+        tvlUsd: 1000000,
+      },
+    ]
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ status: 'success', data: mockData }),
+    })
+
+    await expect(provider.fetchApr()).rejects.toThrow(
+      'No valid APR data found in the last 24 hours',
+    )
+  })
+
+  it('should handle non-Error exceptions', async () => {
+    const nonErrorException = 'String error'
+    mockFetch.mockRejectedValueOnce(nonErrorException)
+
+    await expect(provider.fetchApr()).rejects.toThrow('Unknown error fetching DeFi Llama APR data')
+  })
 })

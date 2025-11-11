@@ -280,8 +280,8 @@ describe('useMintPlanPreview', () => {
       })
 
       // Expected: (2 * 2000) - (1 * 1000) = 4000 - 1000 = 3000
-      // Scaled to 8 decimals: 3000 * 100_000_000 = 300_000_000_000n
-      expect(result.current.expectedUsdOutScaled).toBe(300_000_000_000n)
+      // Scaled to 8 decimals: 3000 * 10^8 = 300000000000n
+      expect(result.current.expectedUsdOutScaled).toBe(300000000000n)
     })
 
     it('should calculate guaranteedUsdOut using worst-case values', async () => {
@@ -316,8 +316,8 @@ describe('useMintPlanPreview', () => {
       })
 
       // Worst case: (1 + 0.9) * 2000 - (1.5 * 1000) = 3800 - 1500 = 2300
-      // Scaled to 8 decimals: 2300 * 100_000_000 = 230_000_000_000n
-      expect(result.current.guaranteedUsdOutScaled).toBe(230_000_000_000n)
+      // Scaled to 8 decimals: 2300 * 10^8 = 230000000000n
+      expect(result.current.guaranteedUsdOutScaled).toBe(230000000000n)
     })
 
     it('should return undefined for USD calculations when prices or decimals are missing', async () => {
@@ -397,7 +397,7 @@ describe('useMintPlanPreview', () => {
       })
 
       // Would be negative: (1 * 1000) - (2 * 2000) = 1000 - 4000 = -3000
-      // Should be clamped to 0
+      // Should be clamped to 0 (usdDiffFloor returns 0 for negative)
       expect(result.current.expectedUsdOutScaled).toBe(0n)
     })
   })
