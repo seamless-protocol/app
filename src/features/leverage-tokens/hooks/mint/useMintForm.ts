@@ -20,42 +20,48 @@ export function useMintForm(params: {
   const [amount, setAmount] = useState('')
 
   const amountRaw = useMemo(() => {
-    const n = Number(amount)
-    if (!amount || !Number.isFinite(n) || n <= 0) return undefined
+    if (!amount || amount.trim() === '') return undefined
     try {
-      return parseUnits(amount, decimals)
+      const v = parseUnits(amount, decimals)
+      return v > 0n ? v : undefined
     } catch {
       return undefined
     }
   }, [amount, decimals])
 
-  const walletBalanceNum = useMemo(
-    () => Number(walletBalanceFormatted || '0'),
-    [walletBalanceFormatted],
-  )
-  const minAmountNum = useMemo(() => Number(minAmountFormatted || '0'), [minAmountFormatted])
+  const walletBalanceRaw = useMemo(() => {
+    try {
+      return parseUnits(walletBalanceFormatted || '0', decimals)
+    } catch {
+      return 0n
+    }
+  }, [walletBalanceFormatted, decimals])
 
-  const isAmountValid = useMemo(() => {
-    const n = Number(amount || '0')
-    return Number.isFinite(n) && n > 0
-  }, [amount])
+  const minAmountRaw = useMemo(() => {
+    try {
+      return parseUnits(minAmountFormatted || '0', decimals)
+    } catch {
+      return 0n
+    }
+  }, [minAmountFormatted, decimals])
+
+  const isAmountValid = useMemo(() => typeof amountRaw === 'bigint' && amountRaw > 0n, [amountRaw])
 
   const hasBalance = useMemo(() => {
-    if (!amount || amount === '') return false
-    const n = Number(amount)
-    return Number.isFinite(n) && n > 0 && n <= walletBalanceNum + 1e-12
-  }, [amount, walletBalanceNum])
+    if (typeof amountRaw !== 'bigint') return false
+    return amountRaw > 0n && amountRaw <= walletBalanceRaw
+  }, [amountRaw, walletBalanceRaw])
 
   const minAmountOk = useMemo(() => {
-    const n = Number(amount || '0')
-    return Number.isFinite(n) && n >= minAmountNum
-  }, [amount, minAmountNum])
+    if (typeof amountRaw !== 'bigint') return false
+    return amountRaw >= minAmountRaw
+  }, [amountRaw, minAmountRaw])
 
   const supplyCapOk = useMemo(() => {
-    if (!supplyCap) return true // No cap defined
-    if (typeof currentSupply !== 'number') return true // No current supply data available
-    const n = Number(amount || '0')
-    if (!Number.isFinite(n) || n <= 0) return true // Invalid amount, let other validations handle it
+    if (!supplyCap) return true
+    if (typeof currentSupply !== 'number') return true
+    const n = typeof amount === 'string' && amount.trim() !== '' ? parseFloat(amount) : NaN
+    if (!Number.isFinite(n) || n <= 0) return true
     return currentSupply + n <= supplyCap
   }, [amount, currentSupply, supplyCap])
 
@@ -69,22 +75,21 @@ export function useMintForm(params: {
       try {
         const walletRaw = parseUnits(walletBalanceFormatted || '0', decimals)
         if (n === 100) {
-          // For MAX, show the exact wallet balance (match redeem behavior)
           setAmount(walletBalanceFormatted)
         } else {
-          // For other percentages, floor in base units and format to display precision
-          const amountRaw = (walletRaw * BigInt(n)) / 100n
-          const asUnits = formatUnits(amountRaw, decimals)
+          const nextRaw = (walletRaw * BigInt(n)) / 100n
+          const asUnits = formatUnits(nextRaw, decimals)
           const [intPart, fracPart = ''] = asUnits.split('.')
-          const formatted = `${intPart}.${fracPart.slice(0, TOKEN_AMOUNT_DISPLAY_DECIMALS).padEnd(TOKEN_AMOUNT_DISPLAY_DECIMALS, '0')}`
+          const formatted = `${intPart}.${fracPart
+            .slice(0, TOKEN_AMOUNT_DISPLAY_DECIMALS)
+            .padEnd(TOKEN_AMOUNT_DISPLAY_DECIMALS, '0')}`
           setAmount(formatted)
         }
       } catch {
-        const next = ((walletBalanceNum * n) / 100).toFixed(TOKEN_AMOUNT_DISPLAY_DECIMALS)
-        setAmount(next)
+        setAmount('0')
       }
     },
-    [decimals, walletBalanceFormatted, walletBalanceNum],
+    [decimals, walletBalanceFormatted],
   )
   return {
     amount,

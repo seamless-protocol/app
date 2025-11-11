@@ -5,9 +5,10 @@
  * calculates the remaining collateral to return to the user with slippage protection.
  */
 import type { Address } from 'viem'
-import { encodeFunctionData, erc20Abi, getAddress, parseAbi, zeroAddress } from 'viem'
+import { encodeFunctionData, erc20Abi, getAddress, parseAbi, parseUnits, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import { getPublicClient } from 'wagmi/actions'
+import { USD_DECIMALS } from '@/domain/shared/prices'
 import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
@@ -196,18 +197,20 @@ export async function planRedeem(params: {
   })
 
   const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
-  const expectedCollateralInUsd =
-    (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) *
-    (Number(planDraft.expectedCollateral) / 10 ** Number(collateralAssetDecimals))
-  const expectedDebtPayoutInUsd =
-    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) *
-    (Number(planDraft.expectedDebtPayout) / 10 ** Number(debtAssetDecimals))
-  const minCollateralForSenderInUsd =
-    (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) *
-    (Number(planDraft.minCollateralForSender) / 10 ** Number(collateralAssetDecimals))
+  const priceColl2 = parseUnits(
+    String(usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0),
+    USD_DECIMALS,
+  )
+  const priceDebt2 = parseUnits(String(usdPriceMap?.[debtAsset.toLowerCase()] ?? 0), USD_DECIMALS)
+  const collScale2 = 10n ** BigInt(collateralAssetDecimals)
+  const debtScale2 = 10n ** BigInt(debtAssetDecimals)
+  const expectedCollateralUsdScaled = (planDraft.expectedCollateral * priceColl2) / collScale2
+  const expectedDebtPayoutUsdScaled = (planDraft.expectedDebtPayout * priceDebt2) / debtScale2
+  const minCollateralForSenderUsdScaled =
+    (planDraft.minCollateralForSender * priceColl2) / collScale2
 
   // Slippage is wrt the coingecko usd prices of the received collateral and debt
-  if (minCollateralForSenderInUsd > expectedCollateralInUsd + expectedDebtPayoutInUsd) {
+  if (minCollateralForSenderUsdScaled > expectedCollateralUsdScaled + expectedDebtPayoutUsdScaled) {
     throw new Error('Try increasing slippage: the transaction will likely revert due to slippage')
   }
 
@@ -282,29 +285,26 @@ async function getSwapParamsForRedeem(args: {
     functionName: 'decimals',
   })
 
-  // Convert totalCollateralAvailable and debtToRepay to usd
   const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
+  const priceColl = parseUnits(
+    String(usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0),
+    USD_DECIMALS,
+  )
+  const priceDebt = parseUnits(String(usdPriceMap?.[debtAsset.toLowerCase()] ?? 0), USD_DECIMALS)
+  const collScale = 10n ** BigInt(collateralAssetDecimals)
+  const debtScale = 10n ** BigInt(debtAssetDecimals)
 
-  const totalCollateralAvailableInUsd =
-    (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) *
-    (Number(totalCollateralAvailable) / 10 ** Number(collateralAssetDecimals))
+  const totalCollateralUsdScaled = (totalCollateralAvailable * priceColl) / collScale
+  const debtToRepayUsdScaled = (debtToRepay * priceDebt) / debtScale
+  const zeroSlippageCollateralForSenderUsdScaled =
+    totalCollateralUsdScaled > debtToRepayUsdScaled
+      ? totalCollateralUsdScaled - debtToRepayUsdScaled
+      : 0n
 
-  const debtToRepayInUsd =
-    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) *
-    (Number(debtToRepay) / 10 ** Number(debtAssetDecimals))
-
-  const zeroSlippageCollateralForSenderInUsd = totalCollateralAvailableInUsd - debtToRepayInUsd
-
+  const zeroSlipCollateralForSenderRaw =
+    priceColl > 0n ? (zeroSlippageCollateralForSenderUsdScaled * collScale) / priceColl : 0n
   const minCollateralForSender =
-    (BigInt(
-      Math.floor(
-        (zeroSlippageCollateralForSenderInUsd /
-          (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0)) *
-          10 ** Number(collateralAssetDecimals),
-      ),
-    ) *
-      (10000n - BigInt(slippageBps))) /
-    10000n
+    (zeroSlipCollateralForSenderRaw * (10000n - BigInt(slippageBps))) / 10000n
   const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
 
   return {

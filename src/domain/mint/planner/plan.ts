@@ -7,9 +7,10 @@
  * planner assumes `inputAsset === collateralAsset`.
  */
 import type { Address } from 'viem'
-import { encodeFunctionData, erc20Abi, getAddress, zeroAddress } from 'viem'
+import { encodeFunctionData, erc20Abi, getAddress, parseUnits, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import { getPublicClient } from 'wagmi/actions'
+import { USD_DECIMALS } from '@/domain/shared/prices'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads
@@ -223,29 +224,22 @@ export async function planMint(params: {
 
   const usdPriceMap = await fetchCoingeckoTokenUsdPrices(chainId, [collateralAsset, debtAsset])
   const minEquityDepositedInCollateral = applySlippageFloor(equityInInputAsset, slippageBps)
-  const minEquityDepositedInUsd =
-    (usdPriceMap?.[inputAsset.toLowerCase()] ?? 0) *
-    (Number(minEquityDepositedInCollateral) / 10 ** Number(collateralAssetDecimals))
 
-  const { equityInCollateral: sharesValueInCollateral, equityInUsd: sharesValueInUsd } =
-    await calculateEquity({
-      collateralAsset,
-      debtAsset,
-      collateralAssetDecimals,
-      debtAssetDecimals,
-      collateralAdded: finalQuote.requiredCollateral,
-      debtBorrowed: debtIn,
-      usdPriceMap,
-    })
-  const excessDebtInUsd =
-    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) *
-    (Number(excessDebt) / 10 ** Number(debtAssetDecimals))
+  const priceColl = parseUnits(String(usdPriceMap?.[inputAsset.toLowerCase()] ?? 0), USD_DECIMALS)
+  const priceDebt = parseUnits(String(usdPriceMap?.[debtAsset.toLowerCase()] ?? 0), USD_DECIMALS)
+  const collScale = 10n ** BigInt(collateralAssetDecimals)
+  const debtScale = 10n ** BigInt(debtAssetDecimals)
 
-  // Slippage is wrt the coingecko usd prices of the LTs and debt received
-  if (minEquityDepositedInUsd > sharesValueInUsd + excessDebtInUsd) {
+  const minEquityDepositedInUsdScaled = (minEquityDepositedInCollateral * priceColl) / collScale
+  const sharesValueInUsdScaled =
+    (finalQuote.requiredCollateral * priceColl) / collScale - (debtIn * priceDebt) / debtScale
+  const excessDebtInUsdScaled = (excessDebt * priceDebt) / debtScale
+
+  if (minEquityDepositedInUsdScaled > sharesValueInUsdScaled + excessDebtInUsdScaled) {
     throw new Error('Try increasing slippage: the transaction will likely revert due to slippage')
   }
 
+  const sharesValueInCollateral = finalQuote.shares
   const effectiveAllowedSlippage = Number(
     ((sharesValueInCollateral - minEquityDepositedInCollateral) * 10000n) / sharesValueInCollateral,
   )
@@ -278,45 +272,6 @@ export async function planMint(params: {
       typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : effectiveQuote.out,
     calls,
   }
-}
-
-async function calculateEquity(args: {
-  collateralAsset: Address
-  debtAsset: Address
-  collateralAssetDecimals: number
-  debtAssetDecimals: number
-  collateralAdded: bigint
-  debtBorrowed: bigint
-  usdPriceMap: Record<string, number>
-}): Promise<{ equityInCollateral: bigint; equityInUsd: number }> {
-  const {
-    collateralAsset,
-    debtAsset,
-    collateralAssetDecimals,
-    debtAssetDecimals,
-    collateralAdded,
-    debtBorrowed,
-    usdPriceMap,
-  } = args
-
-  const collateralInUsd =
-    (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0) *
-    (Number(collateralAdded) / 10 ** Number(collateralAssetDecimals))
-
-  const debtInUsd =
-    (usdPriceMap?.[debtAsset.toLowerCase()] ?? 0) *
-    (Number(debtBorrowed) / 10 ** Number(debtAssetDecimals))
-
-  const equityInUsd = collateralInUsd - debtInUsd
-
-  const equityInCollateral = BigInt(
-    Math.floor(
-      (equityInUsd / (usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0)) *
-        10 ** Number(collateralAssetDecimals),
-    ),
-  )
-
-  return { equityInCollateral, equityInUsd }
 }
 
 // Helpers — defined below the main function for clarity

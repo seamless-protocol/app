@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Address } from 'viem'
-import { formatUnits } from 'viem'
 import type { Config } from 'wagmi'
 import type { MintPlan } from '@/domain/mint/planner/plan'
 import { planMint } from '@/domain/mint/planner/plan'
 import type { QuoteFn } from '@/domain/mint/planner/types'
+import { parseUsdPrice, toScaledUsd, usdDiffFloor, usdToFixedString } from '@/domain/shared/prices'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 
@@ -83,35 +83,39 @@ export function useMintPlanPreview({
   })
 
   // Derived USD estimates from the plan (nice-weather and worst-case)
-  const expectedUsdOut = useMemo(() => {
+  const expectedUsdOutScaled = useMemo(() => {
     const plan = query.data
     if (!plan) return undefined
     if (typeof collateralUsdPrice !== 'number' || typeof debtUsdPrice !== 'number') return undefined
     if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') return undefined
     try {
-      const totalCollateral = Number(formatUnits(plan.expectedTotalCollateral, collateralDecimals))
-      const totalDebt = Number(formatUnits(plan.expectedDebt, debtDecimals))
-      if (!Number.isFinite(totalCollateral) || !Number.isFinite(totalDebt)) return undefined
-      const usd = totalCollateral * collateralUsdPrice - totalDebt * debtUsdPrice
-      return Number.isFinite(usd) ? Math.max(usd, 0) : undefined
+      const priceColl = parseUsdPrice(collateralUsdPrice)
+      const priceDebt = parseUsdPrice(debtUsdPrice)
+      const usdFromCollateral = toScaledUsd(
+        plan.expectedTotalCollateral,
+        collateralDecimals,
+        priceColl,
+      )
+      const usdFromDebt = toScaledUsd(plan.expectedDebt, debtDecimals, priceDebt)
+      return usdDiffFloor(usdFromCollateral, usdFromDebt)
     } catch {
       return undefined
     }
   }, [query.data, collateralUsdPrice, debtUsdPrice, collateralDecimals, debtDecimals])
 
-  const guaranteedUsdOut = useMemo(() => {
+  const guaranteedUsdOutScaled = useMemo(() => {
     const plan = query.data
     if (!plan) return undefined
     if (typeof collateralUsdPrice !== 'number' || typeof debtUsdPrice !== 'number') return undefined
     if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') return undefined
     try {
-      const worstCollateral = Number(
-        formatUnits((plan.equityInInputAsset ?? 0n) + (plan.swapMinOut ?? 0n), collateralDecimals),
-      )
-      const worstDebt = Number(formatUnits(plan.worstCaseRequiredDebt ?? 0n, debtDecimals))
-      if (!Number.isFinite(worstCollateral) || !Number.isFinite(worstDebt)) return undefined
-      const usd = worstCollateral * collateralUsdPrice - worstDebt * debtUsdPrice
-      return Number.isFinite(usd) ? Math.max(usd, 0) : undefined
+      const priceColl = parseUsdPrice(collateralUsdPrice)
+      const priceDebt = parseUsdPrice(debtUsdPrice)
+      const worstCollRaw = (plan.equityInInputAsset ?? 0n) + (plan.swapMinOut ?? 0n)
+      const worstDebtRaw = plan.worstCaseRequiredDebt ?? 0n
+      const usdFromCollateral = toScaledUsd(worstCollRaw, collateralDecimals, priceColl)
+      const usdFromDebt = toScaledUsd(worstDebtRaw, debtDecimals, priceDebt)
+      return usdDiffFloor(usdFromCollateral, usdFromDebt)
     } catch {
       return undefined
     }
@@ -119,8 +123,16 @@ export function useMintPlanPreview({
 
   return {
     plan: query.data,
-    expectedUsdOut,
-    guaranteedUsdOut,
+    expectedUsdOutScaled,
+    guaranteedUsdOutScaled,
+    expectedUsdOutStr:
+      typeof expectedUsdOutScaled === 'bigint'
+        ? usdToFixedString(expectedUsdOutScaled, 2)
+        : undefined,
+    guaranteedUsdOutStr:
+      typeof guaranteedUsdOutScaled === 'bigint'
+        ? usdToFixedString(guaranteedUsdOutScaled, 2)
+        : undefined,
     // Only show loading when the query is actually fetching and inputs are valid
     isLoading: enabled && query.isFetching,
     error: query.error,

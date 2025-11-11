@@ -74,10 +74,13 @@ interface InputStepProps {
 
   // Warning
   isBelowMinimum?: boolean | undefined
-  // Estimated USD value of expected shares (optional)
-  expectedUsdOut?: number | undefined
-  // Guaranteed (minOut-aware) USD value floor (optional)
-  guaranteedUsdOut?: number | undefined
+  // Estimated USD value of expected shares (as fixed string)
+  expectedUsdOutStr?: string | undefined
+  // Guaranteed (minOut-aware) USD value floor (as fixed string)
+  guaranteedUsdOutStr?: string | undefined
+  // Optional USD value of expected debt and their sum (as fixed strings)
+  expectedDebtUsdOutStr?: string | undefined
+  totalUsdOutStr?: string | undefined
   // Optional route/safety breakdown lines
   breakdown?: Array<{ label: string; value: string }>
   // Optional impact warning text
@@ -86,7 +89,6 @@ interface InputStepProps {
   // Debt asset information
   expectedDebtAmount?: string
   debtAssetSymbol?: string
-  debtAssetPrice?: number | undefined
 }
 
 export function InputStep({
@@ -117,14 +119,15 @@ export function InputStep({
   mintTokenFee,
   isMintTokenFeeLoading,
   isBelowMinimum,
-  expectedUsdOut,
-  guaranteedUsdOut,
+  expectedUsdOutStr,
+  guaranteedUsdOutStr,
+  expectedDebtUsdOutStr,
+  totalUsdOutStr,
   breakdown,
   impactWarning,
   supplyCapExceeded,
   expectedDebtAmount,
   debtAssetSymbol,
-  debtAssetPrice,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const mintAmountId = useId()
@@ -435,47 +438,18 @@ export function InputStep({
                   </>
                 )}
               </div>
-              {!isCalculating &&
-                typeof expectedUsdOut === 'number' &&
-                Number.isFinite(expectedUsdOut) && (
-                  <div className="text-xs text-secondary-foreground">
-                    {/* ≈ $
-                    {expectedUsdOut.toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })} */}
-                    {(() => {
-                      const mainAssetValue = expectedUsdOut
-                      const debtAssetValue =
-                        expectedDebtAmount &&
-                        expectedDebtAmount !== '0' &&
-                        debtAssetSymbol &&
-                        debtAssetPrice
-                          ? parseFloat(expectedDebtAmount) * debtAssetPrice
-                          : 0
-                      const mainAssetValueString = mainAssetValue.toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                      const debtAssetValueString = debtAssetValue.toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                      return `≈ $${mainAssetValueString} + $${debtAssetValueString} = $${mainAssetValue + debtAssetValue}`
-                    })()}
-                  </div>
-                )}
-              {!isCalculating &&
-                typeof guaranteedUsdOut === 'number' &&
-                Number.isFinite(guaranteedUsdOut) && (
-                  <div className="text-xs text-secondary-foreground">
-                    Guaranteed ≥ $
-                    {guaranteedUsdOut.toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </div>
-                )}
+              {!isCalculating && expectedUsdOutStr && (
+                <div className="text-xs text-secondary-foreground">
+                  {expectedDebtUsdOutStr && totalUsdOutStr
+                    ? `≈ $${expectedUsdOutStr} + $${expectedDebtUsdOutStr} = $${totalUsdOutStr}`
+                    : `≈ $${expectedUsdOutStr}`}
+                </div>
+              )}
+              {!isCalculating && guaranteedUsdOutStr && (
+                <div className="text-xs text-secondary-foreground">
+                  Guaranteed ≥ ${`$${guaranteedUsdOutStr}`}
+                </div>
+              )}
             </div>
           </div>
 
