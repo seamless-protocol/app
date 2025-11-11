@@ -280,7 +280,8 @@ describe('useMintPlanPreview', () => {
       })
 
       // Expected: (2 * 2000) - (1 * 1000) = 4000 - 1000 = 3000
-      expect(result.current.expectedUsdOut).toBe(3000)
+      // Scaled to 8 decimals: 3000 * 10^8 = 300000000000n
+      expect(result.current.expectedUsdOutScaled).toBe(300000000000n)
     })
 
     it('should calculate guaranteedUsdOut using worst-case values', async () => {
@@ -315,7 +316,8 @@ describe('useMintPlanPreview', () => {
       })
 
       // Worst case: (1 + 0.9) * 2000 - (1.5 * 1000) = 3800 - 1500 = 2300
-      expect(result.current.guaranteedUsdOut).toBe(2300)
+      // Scaled to 8 decimals: 2300 * 10^8 = 230000000000n
+      expect(result.current.guaranteedUsdOutScaled).toBe(230000000000n)
     })
 
     it('should return undefined for USD calculations when prices or decimals are missing', async () => {
@@ -337,8 +339,8 @@ describe('useMintPlanPreview', () => {
         expect(resultNoPrices.current.plan).toBeDefined()
       })
 
-      expect(resultNoPrices.current.expectedUsdOut).toBeUndefined()
-      expect(resultNoPrices.current.guaranteedUsdOut).toBeUndefined()
+      expect(resultNoPrices.current.expectedUsdOutScaled).toBeUndefined()
+      expect(resultNoPrices.current.guaranteedUsdOutScaled).toBeUndefined()
 
       const { result: resultNoDecimals } = hookTestUtils.renderHookWithQuery(() =>
         useMintPlanPreview({
@@ -360,8 +362,8 @@ describe('useMintPlanPreview', () => {
         expect(resultNoDecimals.current.plan).toBeDefined()
       })
 
-      expect(resultNoDecimals.current.expectedUsdOut).toBeUndefined()
-      expect(resultNoDecimals.current.guaranteedUsdOut).toBeUndefined()
+      expect(resultNoDecimals.current.expectedUsdOutScaled).toBeUndefined()
+      expect(resultNoDecimals.current.guaranteedUsdOutScaled).toBeUndefined()
     })
 
     it('should clamp USD calculations to zero when negative', async () => {
@@ -395,8 +397,8 @@ describe('useMintPlanPreview', () => {
       })
 
       // Would be negative: (1 * 1000) - (2 * 2000) = 1000 - 4000 = -3000
-      // Should be clamped to 0
-      expect(result.current.expectedUsdOut).toBe(0)
+      // Should be clamped to 0 (usdDiffFloor returns 0 for negative)
+      expect(result.current.expectedUsdOutScaled).toBe(0n)
     })
   })
 
