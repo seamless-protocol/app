@@ -171,7 +171,7 @@ function mapPendleResponseToQuote(
 
   return {
     out: outAmount,
-    minOut: outAmount, // TODO: see if Pendle includes splippage or not here
+    minOut: 0n, // Not used
     maxIn: inAmount,
     approvalTarget: route.tx.to,
     calldata: route.tx.data,
