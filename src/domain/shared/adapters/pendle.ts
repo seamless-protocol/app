@@ -14,6 +14,7 @@ export interface PendleAdapterOptions {
 }
 
 // Pendle API response validation schemas
+// Docs: https://api-v2.pendle.finance/core/docs
 const pendleErrorResponseSchema = z.object({
   message: z.string(),
   statusCode: z.number(),
