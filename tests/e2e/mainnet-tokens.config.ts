@@ -48,4 +48,13 @@ export const MAINNET_E2E_TOKEN_CONFIGS: Array<MainnetE2ETokenTestConfig> = [
     fundingAmount: '500',
     richHolderAddress: '0x234C908E749961d0329a0eD5916d55a99d1aD06c' as Address, // Large RLP holder
   },
+  {
+    key: 'pt-rlp-4dec2025-usdc-2x',
+    label: 'PT-RLP-4DEC2025/USDC 2x',
+    slippagePercent: '2',
+    mintAmount: '100',
+    collateralAddress: '0x3A70F0C696dcB3A4aB3833cD9726397dD61AC85e' as Address, // Mainnet PT-RLP-4DEC2025
+    fundingAmount: '200',
+    richHolderAddress: '0x774a9d67975c2bd5aa52dd89873a2be0c607f888' as Address, // Pendle PT-RLP holder
+  },
 ]

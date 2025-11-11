@@ -210,8 +210,11 @@ function resolveRedeemSwapConfig({
   addresses: ReturnType<typeof getAddressesForToken>
 }): CollateralToDebtSwapConfig {
   const swap = tokenDefinition.swap
-  if (swap?.useLiFi ?? process.env['TEST_USE_LIFI'] === '1') {
+  if (swap?.type === 'lifi' || (swap?.type === undefined && process.env['TEST_USE_LIFI'] === '1')) {
     return { type: 'lifi', allowBridges: 'none' }
+  }
+  if (swap?.type === 'pendle') {
+    return { type: 'pendle' }
   }
 
   if (swap?.uniswapV2Router) {

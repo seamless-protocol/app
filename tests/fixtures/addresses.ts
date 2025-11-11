@@ -66,6 +66,7 @@ export type LeverageTokenKey =
   | 'wsteth-eth-2x'
   | 'wsteth-eth-25x'
   | 'rlp-usdc-6.75x'
+  | 'pt-rlp-4dec2025-usdc-2x'
 
 export interface LeverageTokenDefinition {
   key: LeverageTokenKey
@@ -84,7 +85,7 @@ export interface LeverageTokenDefinition {
   adminRpcUrl?: string
   swap?: {
     uniswapV2Router?: Address
-    useLiFi?: boolean
+    type?: 'lifi' | 'velora' | 'pendle' | 'uniswapV2' | 'uniswapV3'
     uniswapV3?: {
       pool?: Address
       poolKey?: UniswapV3PoolKey
@@ -164,7 +165,7 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
     adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
     swap: {
       // Prefer LiFi for production-like routing policy (bridges disabled)
-      useLiFi: true,
+      type: 'lifi',
     },
   },
   'wsteth-eth-25x': {
@@ -179,12 +180,12 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
     adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
     swap: {
       // Same-chain routing via LiFi, bridges disabled
-      useLiFi: true,
+      type: 'lifi',
     },
   },
   'rlp-usdc-6.75x': {
     key: 'rlp-usdc-6.75x',
-    address: '0x0000000000000000000000000000000000000000' as Address,
+    address: '0x6426811fF283Fa7c78F0BC5D71858c2f79c0Fc3d' as Address,
     label: 'RLP / USDC 6.75x Leverage Token (Tenderly)',
     chainId: mainnet.id,
     collateralSymbol: 'RLP',
@@ -193,7 +194,21 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
     rpcUrl: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
     adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
     swap: {
-      useLiFi: true,
+      type: 'lifi',
+    },
+  },
+  'pt-rlp-4dec2025-usdc-2x': {
+    key: 'pt-rlp-4dec2025-usdc-2x',
+    address: '0x0E5eB844bc0A29c9B949137bbb13327f86809779' as Address,
+    label: 'PT-RLP (Dec 2025) / USDC 2x Leverage Token (Tenderly)',
+    chainId: mainnet.id,
+    collateralSymbol: 'PT-RLP',
+    debtSymbol: 'USDC',
+    multicallExecutor: MAINNET_TENDERLY_VNET_STACK.multicallExecutor,
+    rpcUrl: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
+    adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
+    swap: {
+      type: 'pendle',
     },
   },
 }
@@ -237,6 +252,14 @@ const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = 
     label: 'RLP / USDC 6.75x Leverage Token',
     chainId: mainnet.id,
     collateralSymbol: 'RLP',
+    debtSymbol: 'USDC',
+  },
+  'pt-rlp-4dec2025-usdc-2x': {
+    key: 'pt-rlp-4dec2025-usdc-2x',
+    address: '0x0E5eB844bc0A29c9B949137bbb13327f86809779' as Address,
+    label: 'PT-RLP (Dec 2025) / USDC 2x Leverage Token',
+    chainId: mainnet.id,
+    collateralSymbol: 'PT-RLP',
     debtSymbol: 'USDC',
   },
 }
@@ -287,7 +310,8 @@ export function isLeverageTokenKey(value: unknown): value is LeverageTokenKey {
     value === 'cbbtc-usdc-2x' ||
     value === 'wsteth-eth-2x' ||
     value === 'wsteth-eth-25x' ||
-    value === 'rlp-usdc-6.75x'
+    value === 'rlp-usdc-6.75x' ||
+    value === 'pt-rlp-4dec2025-usdc-2x'
   )
 }
 
