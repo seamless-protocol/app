@@ -66,14 +66,6 @@ describe('useMintPlanPreview', () => {
         `amt:${params.amount.toString()}`,
       ],
     }
-    ;(ltKeys as any).managerAssets = (chainId: number, addr: Address) => [
-      'leverage-tokens',
-      'chain',
-      chainId,
-      'token',
-      addr,
-      'manager-assets',
-    ]
     const wrapper = createWrapper()
     const { result } = renderHook(
       () =>
@@ -106,14 +98,6 @@ describe('useMintPlanPreview', () => {
         `amt:${params.amount.toString()}`,
       ],
     }
-    ;(ltKeys as any).managerAssets = (chainId: number, addr: Address) => [
-      'leverage-tokens',
-      'chain',
-      chainId,
-      'token',
-      addr,
-      'manager-assets',
-    ]
     const wrapper = createWrapper()
     const { result } = renderHook(
       () =>
@@ -154,14 +138,6 @@ describe('useMintPlanPreview', () => {
         `amt:${params.amount.toString()}`,
       ],
     }
-    ;(ltKeys as any).managerAssets = (chainId: number, addr: Address) => [
-      'leverage-tokens',
-      'chain',
-      chainId,
-      'token',
-      addr,
-      'manager-assets',
-    ]
     const wrapper = createWrapper()
     const { result } = renderHook(
       () =>

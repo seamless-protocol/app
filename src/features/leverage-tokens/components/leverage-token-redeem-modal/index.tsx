@@ -91,7 +91,6 @@ export function LeverageTokenRedeemModal({
   const leverageRouterAddress = contractAddresses.leverageRouterV2
   const leverageManagerAddress = contractAddresses.leverageManagerV2
 
-  // Fetch leverage token assets using shared hook
   const {
     collateralAsset,
     debtAsset,

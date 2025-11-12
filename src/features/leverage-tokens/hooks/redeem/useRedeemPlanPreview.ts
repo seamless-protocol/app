@@ -149,8 +149,7 @@ export function useRedeemPlanPreview({
       typeof guaranteedUsdOutScaled === 'bigint'
         ? usdToFixedString(guaranteedUsdOutScaled, 2)
         : undefined,
-    // Only show loading when the query is actually fetching and inputs are valid
-    isLoading: enabled && (query.isPending || query.isFetching),
+    isLoading: query.isPending || query.isFetching,
     error: query.error,
   }
 }

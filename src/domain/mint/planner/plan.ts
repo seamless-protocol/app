@@ -83,9 +83,9 @@ export async function planMint(params: {
   quoteDebtToCollateral: QuoteFn
   /** Chain ID to execute the transaction on */
   chainId: SupportedChainId
-  /** Token's collateral asset (fetched by caller) */
+  /** Collateral asset address */
   collateralAsset: Address
-  /** Token's debt asset (fetched by caller) */
+  /** Debt asset address */
   debtAsset: Address
   /** Optional per-pair epsilon (bps) for single-pass clamp */
   epsilonBps?: number

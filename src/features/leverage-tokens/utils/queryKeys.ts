@@ -26,8 +26,6 @@ export const ltKeys = {
   metadata: (addr: Address) => [...ltKeys.token(addr), 'metadata'] as const,
   detailedMetrics: (addr: Address) => [...ltKeys.token(addr), 'detailed-metrics'] as const,
   apy: (addr: Address) => [...ltKeys.token(addr), 'apy'] as const,
-  managerAssets: (chainId: number, addr: Address) =>
-    [...ltKeys.tokenOnChain(chainId, addr), 'manager-assets'] as const,
   simulation: {
     mint: (addr: Address, amount: bigint) =>
       [...ltKeys.token(addr), 'simulate', 'mint', amount.toString()] as const,

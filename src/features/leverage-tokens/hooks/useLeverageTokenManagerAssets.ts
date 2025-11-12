@@ -40,6 +40,7 @@ export function useLeverageTokenManagerAssets({
     ],
     query: {
       enabled: enabled && !!managerAddress,
+      // Assets for a leverage token never change - cache forever
       staleTime: Number.POSITIVE_INFINITY,
     },
   })

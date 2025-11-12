@@ -103,7 +103,6 @@ export function LeverageTokenMintModal({
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
   const leverageRouterAddress = contractAddresses.leverageRouterV2
 
-  // Fetch leverage token assets using shared hook
   const {
     collateralAsset,
     debtAsset,
