@@ -23,6 +23,17 @@ vi.mock('@/domain/mint/planner/plan', () => ({
   }),
 }))
 
+// Mock the asset manager hook
+vi.mock('@/features/leverage-tokens/hooks/useLeverageTokenManagerAssets', () => ({
+  useLeverageTokenManagerAssets: vi.fn(() => ({
+    collateralAsset: '0x0000000000000000000000000000000000000002' as Address,
+    debtAsset: '0x0000000000000000000000000000000000000003' as Address,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}))
+
 // Import after mocks
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
@@ -55,6 +66,14 @@ describe('useMintPlanPreview', () => {
         `amt:${params.amount.toString()}`,
       ],
     }
+    ;(ltKeys as any).managerAssets = (chainId: number, addr: Address) => [
+      'leverage-tokens',
+      'chain',
+      chainId,
+      'token',
+      addr,
+      'manager-assets',
+    ]
     const wrapper = createWrapper()
     const { result } = renderHook(
       () =>
@@ -85,6 +104,14 @@ describe('useMintPlanPreview', () => {
         `amt:${params.amount.toString()}`,
       ],
     }
+    ;(ltKeys as any).managerAssets = (chainId: number, addr: Address) => [
+      'leverage-tokens',
+      'chain',
+      chainId,
+      'token',
+      addr,
+      'manager-assets',
+    ]
     const wrapper = createWrapper()
     const { result } = renderHook(
       () =>
@@ -123,6 +150,14 @@ describe('useMintPlanPreview', () => {
         `amt:${params.amount.toString()}`,
       ],
     }
+    ;(ltKeys as any).managerAssets = (chainId: number, addr: Address) => [
+      'leverage-tokens',
+      'chain',
+      chainId,
+      'token',
+      addr,
+      'manager-assets',
+    ]
     const wrapper = createWrapper()
     const { result } = renderHook(
       () =>

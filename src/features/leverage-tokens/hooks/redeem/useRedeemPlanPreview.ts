@@ -8,6 +8,8 @@ import type { QuoteFn } from '@/domain/redeem/planner/types'
 import { parseUsdPrice, toScaledUsd, usdAdd, usdToFixedString } from '@/domain/shared/prices'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
+import { useLeverageTokenManagerAssets } from '../useLeverageTokenManagerAssets'
 
 interface UseRedeemPlanPreviewParams {
   config: Config
@@ -43,11 +45,24 @@ export function useRedeemPlanPreview({
   collateralDecimals,
   debtDecimals,
 }: UseRedeemPlanPreviewParams) {
+  // Fetch leverage token assets using shared hook
+  const {
+    collateralAsset,
+    debtAsset,
+    isLoading: assetsLoading,
+  } = useLeverageTokenManagerAssets({
+    token,
+    chainId: chainId as SupportedChainId,
+    enabled,
+  })
+
   const enabledQuery =
     enabled &&
     typeof sharesToRedeem === 'bigint' &&
     sharesToRedeem > 0n &&
-    typeof quote === 'function'
+    typeof quote === 'function' &&
+    !!collateralAsset &&
+    !!debtAsset
 
   const keyParams = {
     chainId,
@@ -66,8 +81,9 @@ export function useRedeemPlanPreview({
     refetchOnWindowFocus: false,
     retry: 1,
     queryFn: async () => {
-      if (!enabled || !quote || typeof sharesToRedeem !== 'bigint') {
-        throw new Error('Redeem plan prerequisites missing')
+      // Inputs guaranteed by `enabledQuery`
+      if (!collateralAsset || !debtAsset) {
+        throw new Error('Leverage token assets not loaded')
       }
 
       const intent = getQuoteIntentForAdapter(
@@ -77,10 +93,12 @@ export function useRedeemPlanPreview({
       return planRedeem({
         config,
         token,
-        sharesToRedeem,
+        sharesToRedeem: sharesToRedeem as bigint,
         slippageBps,
-        quoteCollateralToDebt: quote,
+        quoteCollateralToDebt: quote as QuoteFn,
         chainId,
+        collateralAsset,
+        debtAsset,
         ...(managerAddress ? { managerAddress } : {}),
         ...(outputAsset ? { outputAsset } : {}),
         intent,
@@ -140,7 +158,8 @@ export function useRedeemPlanPreview({
       typeof guaranteedUsdOutScaled === 'bigint'
         ? usdToFixedString(guaranteedUsdOutScaled, 2)
         : undefined,
-    isLoading: query.isPending || query.isFetching,
+    // Only show loading when the query is actually fetching and inputs are valid
+    isLoading: enabled && (assetsLoading || query.isPending || query.isFetching),
     error: query.error,
   }
 }

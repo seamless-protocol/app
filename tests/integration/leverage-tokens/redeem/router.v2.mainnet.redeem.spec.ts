@@ -203,6 +203,8 @@ async function performRedeem(
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
+    collateralAsset,
+    debtAsset,
     chainId,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
     intent,

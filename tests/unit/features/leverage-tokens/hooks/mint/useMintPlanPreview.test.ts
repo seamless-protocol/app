@@ -12,6 +12,17 @@ vi.mock('@/domain/mint/planner/plan', () => ({
   planMint: vi.fn(),
 }))
 
+// Mock the asset manager hook
+vi.mock('@/features/leverage-tokens/hooks/useLeverageTokenManagerAssets', () => ({
+  useLeverageTokenManagerAssets: vi.fn(() => ({
+    collateralAsset: makeAddr('collateral'),
+    debtAsset: makeAddr('debt'),
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}))
+
 const mockPlanMint = planMint as Mock
 
 describe('useMintPlanPreview', () => {
@@ -168,6 +179,8 @@ describe('useMintPlanPreview', () => {
         slippageBps: 75,
         quoteDebtToCollateral: mockQuote,
         chainId: CHAIN_ID,
+        collateralAsset: makeAddr('collateral'),
+        debtAsset: makeAddr('debt'),
       })
     })
 
@@ -194,6 +207,8 @@ describe('useMintPlanPreview', () => {
       expect(mockPlanMint).toHaveBeenCalledWith(
         expect.objectContaining({
           epsilonBps: 10,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
         }),
       )
     })
@@ -243,6 +258,8 @@ describe('useMintPlanPreview', () => {
       expect(mockPlanMint).toHaveBeenCalledWith(
         expect.objectContaining({
           equityInInputAsset: 3000000000000000000n,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
         }),
       )
     })

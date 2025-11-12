@@ -148,6 +148,8 @@ export async function planRedeemTest({
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
+    collateralAsset: scenario.collateralAsset,
+    debtAsset: scenario.debtAsset,
     chainId: scenario.chainId,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
     intent: 'exactOut',

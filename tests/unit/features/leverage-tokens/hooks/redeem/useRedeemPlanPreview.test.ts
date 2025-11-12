@@ -22,6 +22,16 @@ vi.mock('@/features/leverage-tokens/leverageTokens.config', () => ({
   getLeverageTokenConfig: vi.fn(),
 }))
 
+vi.mock('@/features/leverage-tokens/hooks/useLeverageTokenManagerAssets', () => ({
+  useLeverageTokenManagerAssets: vi.fn(() => ({
+    collateralAsset: makeAddr('collateral'),
+    debtAsset: makeAddr('debt'),
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}))
+
 const mockPlanRedeem = planRedeem as Mock
 const mockGetQuoteIntentForAdapter = getQuoteIntentForAdapter as Mock
 const mockGetLeverageTokenConfig = getLeverageTokenConfig as Mock
@@ -211,6 +221,8 @@ describe('useRedeemPlanPreview', () => {
         slippageBps: 75,
         quoteCollateralToDebt: mockQuote,
         chainId: CHAIN_ID,
+        collateralAsset: makeAddr('collateral'),
+        debtAsset: makeAddr('debt'),
         intent: 'exactOut',
       })
     })
@@ -239,6 +251,8 @@ describe('useRedeemPlanPreview', () => {
 
       expect(mockPlanRedeem).toHaveBeenCalledWith(
         expect.objectContaining({
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           managerAddress,
           outputAsset,
         }),
@@ -274,6 +288,8 @@ describe('useRedeemPlanPreview', () => {
       expect(mockGetQuoteIntentForAdapter).toHaveBeenCalledWith('lifi')
       expect(mockPlanRedeem).toHaveBeenCalledWith(
         expect.objectContaining({
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           intent: 'exactIn',
         }),
       )

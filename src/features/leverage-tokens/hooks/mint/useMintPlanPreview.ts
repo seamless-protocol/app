@@ -2,15 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
-import { readContracts } from 'wagmi/actions'
 import type { MintPlan } from '@/domain/mint/planner/plan'
 import { planMint } from '@/domain/mint/planner/plan'
 import type { QuoteFn } from '@/domain/mint/planner/types'
 import { parseUsdPrice, toScaledUsd, usdDiffFloor, usdToFixedString } from '@/domain/shared/prices'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
-import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
-import { leverageManagerV2Abi } from '@/lib/contracts/generated'
+import { useLeverageTokenManagerAssets } from '../useLeverageTokenManagerAssets'
 
 interface UseMintPlanPreviewParams {
   config: Config
@@ -47,8 +45,24 @@ export function useMintPlanPreview({
   debtDecimals,
 }: UseMintPlanPreviewParams) {
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
+
+  const {
+    collateralAsset,
+    debtAsset,
+    isLoading: assetsLoading,
+  } = useLeverageTokenManagerAssets({
+    token,
+    chainId: chainId as SupportedChainId,
+    enabled,
+  })
+
   const enabledQuery =
-    enabled && typeof debounced === 'bigint' && debounced > 0n && typeof quote === 'function'
+    enabled &&
+    typeof debounced === 'bigint' &&
+    debounced > 0n &&
+    typeof quote === 'function' &&
+    !!collateralAsset &&
+    !!debtAsset
 
   const keyParams = {
     chainId,
@@ -71,34 +85,10 @@ export function useMintPlanPreview({
     refetchOnWindowFocus: true,
     retry: 1,
     queryFn: async () => {
-      // Inputs guaranteed by `enabled`
-      // Fetch token assets from leverage manager using multicall for efficiency
-      const managerAddress = getLeverageManagerAddress(chainId as SupportedChainId)
-      if (!managerAddress) {
-        throw new Error(`No leverage manager address found for chain ${chainId}`)
+      // Inputs guaranteed by `enabledQuery`
+      if (!collateralAsset || !debtAsset) {
+        throw new Error('Leverage token assets not loaded')
       }
-
-      const results = await readContracts(config, {
-        contracts: [
-          {
-            address: managerAddress,
-            abi: leverageManagerV2Abi,
-            functionName: 'getLeverageTokenCollateralAsset',
-            args: [token],
-            chainId: chainId as SupportedChainId,
-          },
-          {
-            address: managerAddress,
-            abi: leverageManagerV2Abi,
-            functionName: 'getLeverageTokenDebtAsset',
-            args: [token],
-            chainId: chainId as SupportedChainId,
-          },
-        ],
-      })
-
-      const collateralAsset = results[0]?.result as Address
-      const debtAsset = results[1]?.result as Address
 
       return planMint({
         config,
@@ -167,7 +157,7 @@ export function useMintPlanPreview({
         ? usdToFixedString(guaranteedUsdOutScaled, 2)
         : undefined,
     // Only show loading when the query is actually fetching and inputs are valid
-    isLoading: enabled && query.isFetching,
+    isLoading: enabled && (assetsLoading || query.isFetching),
     error: query.error,
     refetch: query.refetch,
   }

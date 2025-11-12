@@ -10,11 +10,7 @@ import type { Config } from 'wagmi'
 import { getPublicClient } from 'wagmi/actions'
 import { USD_DECIMALS } from '@/domain/shared/prices'
 import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
-import {
-  readLeverageManagerV2GetLeverageTokenCollateralAsset,
-  readLeverageManagerV2GetLeverageTokenDebtAsset,
-  readLeverageManagerV2PreviewRedeem,
-} from '@/lib/contracts/generated'
+import { readLeverageManagerV2PreviewRedeem } from '@/lib/contracts/generated'
 import { fetchTokenUsdPrices } from '@/lib/prices/fetchUsdPrices'
 import type { Quote, QuoteFn } from './types'
 
@@ -75,6 +71,10 @@ export async function planRedeem(params: {
   sharesToRedeem: SharesToRedeemArg
   slippageBps: number
   quoteCollateralToDebt: QuoteFn
+  /** Collateral asset address for the leverage token */
+  collateralAsset: Address
+  /** Debt asset address for the leverage token */
+  debtAsset: Address
   /** Optional explicit output asset for user payout (defaults to collateral). */
   outputAsset?: Address
   /** Chain ID to execute the transaction on */
@@ -88,13 +88,13 @@ export async function planRedeem(params: {
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt: quoter,
+    collateralAsset,
+    debtAsset,
     chainId,
     intent,
   } = params
 
   const {
-    collateralAsset,
-    debtAsset,
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
@@ -104,6 +104,8 @@ export async function planRedeem(params: {
     token,
     sharesToRedeem,
     slippageBps,
+    collateralAsset,
+    debtAsset,
     chainId,
   })
 
@@ -240,26 +242,16 @@ async function getSwapParamsForRedeem(args: {
   token: TokenArg
   sharesToRedeem: SharesToRedeemArg
   slippageBps: number
-  chainId: number
-}): Promise<{
   collateralAsset: Address
   debtAsset: Address
+  chainId: number
+}): Promise<{
   totalCollateralAvailable: bigint
   debtToRepay: bigint
   minCollateralForSender: bigint
   collateralAvailableForSwap: bigint
 }> {
-  const { config, token, sharesToRedeem, slippageBps, chainId } = args
-
-  // TODO: Multicall these / pass in
-  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
-  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
+  const { config, token, sharesToRedeem, slippageBps, collateralAsset, debtAsset, chainId } = args
   const preview = await readLeverageManagerV2PreviewRedeem(config, {
     args: [token, sharesToRedeem],
     chainId: chainId as SupportedChainId,
@@ -308,8 +300,6 @@ async function getSwapParamsForRedeem(args: {
   const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
 
   return {
-    collateralAsset,
-    debtAsset,
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,

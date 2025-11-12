@@ -56,6 +56,8 @@ import { planRedeem, type RedeemPlan, validateRedeemPlan } from '@/domain/redeem
 import { BASE_WETH } from '@/lib/contracts/addresses'
 
 const dummyQuoteTarget = '0x0000000000000000000000000000000000000aAa' as Address
+const mockCollateralAsset = '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC' as Address
+const mockDebtAsset = '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address
 
 function createMockQuoteFunction({
   outValue,
@@ -130,6 +132,8 @@ describe('planRedeem', () => {
       sharesToRedeem: 50n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
+      collateralAsset: mockCollateralAsset,
+      debtAsset: mockDebtAsset,
       chainId: 1,
       intent: 'exactOut',
     })
@@ -156,6 +160,8 @@ describe('planRedeem', () => {
           minOutValue: 0n,
           maxInValue: 100000000000000000n, // 0.1 ETH
         }) as any,
+        collateralAsset: mockCollateralAsset,
+        debtAsset: mockDebtAsset,
         chainId: 1,
         intent: 'exactOut',
       }),
@@ -176,6 +182,8 @@ describe('planRedeem', () => {
           minOutValue: 50000000n,
           maxInValue: 1000000000000000000n, // 1 ETH (more than available ~0.525 ETH)
         }) as any,
+        collateralAsset: mockCollateralAsset,
+        debtAsset: mockDebtAsset,
         chainId: 1,
         intent: 'exactOut',
       }),
@@ -191,6 +199,8 @@ describe('planRedeem', () => {
       sharesToRedeem: 50n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
+      collateralAsset: mockCollateralAsset,
+      debtAsset: mockDebtAsset,
       outputAsset: '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
       chainId: 1,
       intent: 'exactOut',
@@ -224,6 +234,8 @@ describe('planRedeem', () => {
       sharesToRedeem: 50n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
+      collateralAsset: BASE_WETH, // Use BASE_WETH for native collateral test
+      debtAsset: mockDebtAsset,
       chainId: 1,
       intent: 'exactOut',
     })
@@ -259,6 +271,8 @@ describe('planRedeem', () => {
       sharesToRedeem: 50n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
+      collateralAsset: mockCollateralAsset,
+      debtAsset: mockDebtAsset,
       outputAsset: '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
       chainId: 1,
       intent: 'exactOut',
@@ -287,6 +301,8 @@ describe('planRedeem', () => {
       sharesToRedeem: 50n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
+      collateralAsset: mockCollateralAsset,
+      debtAsset: mockDebtAsset,
       chainId: 1,
       intent: 'exactOut',
     })
@@ -307,6 +323,8 @@ describe('planRedeem', () => {
       sharesToRedeem: 50n,
       slippageBps: 9000, // 90% slippage tolerance
       quoteCollateralToDebt: mockQuote as any,
+      collateralAsset: mockCollateralAsset,
+      debtAsset: mockDebtAsset,
       chainId: 1,
       intent: 'exactOut',
     })
@@ -339,6 +357,8 @@ describe('planRedeem', () => {
         sharesToRedeem: 1n,
         slippageBps: 50,
         quoteCollateralToDebt: mockQuote as any,
+        collateralAsset: mockCollateralAsset,
+        debtAsset: mockDebtAsset,
         chainId: 1,
         intent: 'exactOut',
       }),
@@ -363,6 +383,8 @@ describe('planRedeem', () => {
       sharesToRedeem: 100n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
+      collateralAsset: mockCollateralAsset,
+      debtAsset: mockDebtAsset,
       chainId: 1,
       intent: 'exactOut',
     })
@@ -385,6 +407,8 @@ describe('planRedeem', () => {
         sharesToRedeem: 50n,
         slippageBps: 50,
         quoteCollateralToDebt: mockQuote as any,
+        collateralAsset: mockCollateralAsset,
+        debtAsset: mockDebtAsset,
         chainId: 1,
         intent: 'exactOut',
       }),
