@@ -55,6 +55,6 @@ export const MAINNET_E2E_TOKEN_CONFIGS: Array<MainnetE2ETokenTestConfig> = [
     mintAmount: '100',
     collateralAddress: '0x3A70F0C696dcB3A4aB3833cD9726397dD61AC85e' as Address, // Mainnet PT-RLP-4DEC2025
     fundingAmount: '200',
-    richHolderAddress: '0x774a9d67975c2bd5aa52dd89873a2be0c607f888' as Address, // Pendle PT-RLP holder
+    richHolderAddress: '0x3ee8A025fB8CF12A0a6c6027FD40caaBbbd8E2fb' as Address, // Pendle PT-RLP holder (EOA)
   },
 ]
