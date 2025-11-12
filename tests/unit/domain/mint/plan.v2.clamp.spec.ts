@@ -98,6 +98,8 @@ describe('planMint final clamp + re-quote', () => {
       slippageBps: 500, // Increased for tiny test amounts
       quoteDebtToCollateral,
       chainId: 8453,
+      collateralAsset: COLLATERAL,
+      debtAsset: BASE_WETH,
     })
 
     // Re-quote must be called at least once with the clamped amount (120e18)

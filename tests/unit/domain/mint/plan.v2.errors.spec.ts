@@ -39,6 +39,8 @@ describe('planMint error branches', () => {
           calldata: '0x' as `0x${string}`,
         }),
         chainId: 8453,
+        collateralAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
+        debtAsset: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
       }),
     ).rejects.toThrowError(/collateral-only/i)
   })
@@ -58,6 +60,8 @@ describe('planMint error branches', () => {
           calldata: '0x' as `0x${string}`,
         }),
         chainId: 8453,
+        collateralAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
+        debtAsset: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
       }),
     ).rejects.toThrowError(/no debt swap needed/i)
   })

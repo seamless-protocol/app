@@ -79,6 +79,8 @@ describe('planMint fallback exact-in sizing and non-native path', () => {
       slippageBps: 50,
       quoteDebtToCollateral,
       chainId: 8453,
+      collateralAsset: COLLATERAL,
+      debtAsset: '0x2222222222222222222222222222222222222222' as Address,
     })
 
     expect(calls).toBeGreaterThan(1)

@@ -173,6 +173,8 @@ export async function executeSharedMint({
     slippageBps: resolvedSlippageBps,
     quoteDebtToCollateral,
     chainId: chainId as any,
+    collateralAsset,
+    debtAsset,
   })
 
   console.info('[SHARED MINT PLAN]', {

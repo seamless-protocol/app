@@ -72,6 +72,8 @@ describe('planMint (native path, exact-in)', () => {
       slippageBps: 50, // Reduced to allow USD validation to pass
       quoteDebtToCollateral,
       chainId: 8453,
+      collateralAsset: COLLATERAL,
+      debtAsset: BASE_WETH,
     })
 
     expect(quoteDebtToCollateral).toHaveBeenCalled()

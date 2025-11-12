@@ -44,6 +44,8 @@ describe('planMint validations', () => {
           calldata: '0x',
         }),
         chainId: 8453,
+        collateralAsset: '0x1111111111111111111111111111111111111111' as Address,
+        debtAsset: '0x2222222222222222222222222222222222222222' as Address,
       }),
     ).rejects.toThrowError(/collateral-only/i)
   })

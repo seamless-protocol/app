@@ -14,8 +14,6 @@ import { USD_DECIMALS } from '@/domain/shared/prices'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads
-  readLeverageManagerV2GetLeverageTokenCollateralAsset,
-  readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewDeposit,
   readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
@@ -85,6 +83,10 @@ export async function planMint(params: {
   quoteDebtToCollateral: QuoteFn
   /** Chain ID to execute the transaction on */
   chainId: SupportedChainId
+  /** Token's collateral asset (fetched by caller) */
+  collateralAsset: Address
+  /** Token's debt asset (fetched by caller) */
+  debtAsset: Address
   /** Optional per-pair epsilon (bps) for single-pass clamp */
   epsilonBps?: number
 }): Promise<MintPlan> {
@@ -96,6 +98,8 @@ export async function planMint(params: {
     slippageBps,
     quoteDebtToCollateral,
     chainId,
+    collateralAsset,
+    debtAsset,
     epsilonBps,
   } = params
 
@@ -107,9 +111,8 @@ export async function planMint(params: {
     throw new Error('epsilonBps out of range (0-100)')
   }
 
-  // 1) Resolve manager assets first, enforce collateral-only input, then preview ideal
+  // 1) Enforce collateral-only input, then preview ideal
   const userCollateralOut = equityInInputAsset
-  const { collateralAsset, debtAsset } = await getManagerAssets({ config, token, chainId })
   const normalizedInputAsset = getAddress(inputAsset)
   const normalizedCollateralAsset = getAddress(collateralAsset)
   debugMintPlan('assets', { inputAsset, collateralAsset, debtAsset })
@@ -354,19 +357,6 @@ async function previewFinal(args: {
     chainId: chainId as SupportedChainId,
   })
   return { requiredDebt: m.debt, shares: m.shares, requiredCollateral: m.collateral }
-}
-
-async function getManagerAssets(args: { config: Config; token: TokenArg; chainId: number }) {
-  const { config, token, chainId } = args
-  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
-  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
-  return { collateralAsset, debtAsset }
 }
 
 function buildDebtSwapCalls(args: {

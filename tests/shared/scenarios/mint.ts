@@ -81,6 +81,8 @@ export async function planMintTest({
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
     chainId: tokenDefinition.chainId as SupportedChainId,
+    collateralAsset: setup.collateralAsset,
+    debtAsset: setup.debtAsset,
   })
 
   return {
@@ -158,6 +160,8 @@ async function runMintScenario({
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
     chainId: tokenDefinition.chainId as SupportedChainId,
+    collateralAsset: setup.collateralAsset,
+    debtAsset: setup.debtAsset,
   })
 
   const { simulateLeverageRouterV2Deposit, writeLeverageRouterV2Deposit } = await import(

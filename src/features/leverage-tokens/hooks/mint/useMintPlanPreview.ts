@@ -2,12 +2,15 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
+import { readContracts } from 'wagmi/actions'
 import type { MintPlan } from '@/domain/mint/planner/plan'
 import { planMint } from '@/domain/mint/planner/plan'
 import type { QuoteFn } from '@/domain/mint/planner/types'
 import { parseUsdPrice, toScaledUsd, usdDiffFloor, usdToFixedString } from '@/domain/shared/prices'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
+import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
+import { leverageManagerV2Abi } from '@/lib/contracts/generated'
 
 interface UseMintPlanPreviewParams {
   config: Config
@@ -69,6 +72,34 @@ export function useMintPlanPreview({
     retry: 1,
     queryFn: async () => {
       // Inputs guaranteed by `enabled`
+      // Fetch token assets from leverage manager using multicall for efficiency
+      const managerAddress = getLeverageManagerAddress(chainId as SupportedChainId)
+      if (!managerAddress) {
+        throw new Error(`No leverage manager address found for chain ${chainId}`)
+      }
+
+      const results = await readContracts(config, {
+        contracts: [
+          {
+            address: managerAddress,
+            abi: leverageManagerV2Abi,
+            functionName: 'getLeverageTokenCollateralAsset',
+            args: [token],
+            chainId: chainId as SupportedChainId,
+          },
+          {
+            address: managerAddress,
+            abi: leverageManagerV2Abi,
+            functionName: 'getLeverageTokenDebtAsset',
+            args: [token],
+            chainId: chainId as SupportedChainId,
+          },
+        ],
+      })
+
+      const collateralAsset = results[0]?.result as Address
+      const debtAsset = results[1]?.result as Address
+
       return planMint({
         config,
         token,
@@ -77,6 +108,8 @@ export function useMintPlanPreview({
         slippageBps,
         quoteDebtToCollateral: quote as QuoteFn,
         chainId: chainId as SupportedChainId,
+        collateralAsset,
+        debtAsset,
         ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
       })
     },

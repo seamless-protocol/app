@@ -84,6 +84,8 @@ describe('planner scaling under underfill', () => {
       slippageBps: 50,
       quoteDebtToCollateral: quoteDebtToCollateral as any,
       chainId: 8453,
+      collateralAsset: COLLATERAL,
+      debtAsset: DEBT,
     })
 
     expect(plan.expectedTotalCollateral).toBe(1_994_020_891_474_923_263n)
