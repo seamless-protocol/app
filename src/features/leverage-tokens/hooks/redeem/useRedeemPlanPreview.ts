@@ -8,8 +8,6 @@ import type { QuoteFn } from '@/domain/redeem/planner/types'
 import { parseUsdPrice, toScaledUsd, usdAdd, usdToFixedString } from '@/domain/shared/prices'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
-import type { SupportedChainId } from '@/lib/contracts/addresses'
-import { useLeverageTokenManagerAssets } from '../useLeverageTokenManagerAssets'
 
 interface UseRedeemPlanPreviewParams {
   config: Config
@@ -18,6 +16,8 @@ interface UseRedeemPlanPreviewParams {
   slippageBps: number
   chainId: number
   enabled: boolean
+  collateralAsset: Address | undefined
+  debtAsset: Address | undefined
   quote?: QuoteFn
   managerAddress?: Address
   swapKey?: string
@@ -40,22 +40,13 @@ export function useRedeemPlanPreview({
   swapKey,
   outputAsset,
   enabled = true,
+  collateralAsset,
+  debtAsset,
   collateralUsdPrice,
   debtUsdPrice,
   collateralDecimals,
   debtDecimals,
 }: UseRedeemPlanPreviewParams) {
-  // Fetch leverage token assets using shared hook
-  const {
-    collateralAsset,
-    debtAsset,
-    isLoading: assetsLoading,
-  } = useLeverageTokenManagerAssets({
-    token,
-    chainId: chainId as SupportedChainId,
-    enabled,
-  })
-
   const enabledQuery =
     enabled &&
     typeof sharesToRedeem === 'bigint' &&
@@ -159,7 +150,7 @@ export function useRedeemPlanPreview({
         ? usdToFixedString(guaranteedUsdOutScaled, 2)
         : undefined,
     // Only show loading when the query is actually fetching and inputs are valid
-    isLoading: enabled && (assetsLoading || query.isPending || query.isFetching),
+    isLoading: enabled && (query.isPending || query.isFetching),
     error: query.error,
   }
 }

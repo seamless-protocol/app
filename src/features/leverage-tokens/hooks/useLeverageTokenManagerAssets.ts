@@ -1,6 +1,5 @@
 import type { Address } from 'viem'
 import { useReadContracts } from 'wagmi'
-import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
 import { leverageManagerV2Abi } from '@/lib/contracts/generated'
@@ -21,8 +20,6 @@ export function useLeverageTokenManagerAssets({
   enabled = true,
 }: UseLeverageTokenManagerAssetsParams) {
   const managerAddress = getLeverageManagerAddress(chainId)
-  const tokenConfig = getLeverageTokenConfig(token, chainId)
-  const tokenName = tokenConfig?.name ?? token
 
   const { data, isLoading, error, refetch } = useReadContracts({
     contracts: [

@@ -8,7 +8,6 @@ import type { QuoteFn } from '@/domain/mint/planner/types'
 import { parseUsdPrice, toScaledUsd, usdDiffFloor, usdToFixedString } from '@/domain/shared/prices'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
-import { useLeverageTokenManagerAssets } from '../useLeverageTokenManagerAssets'
 
 interface UseMintPlanPreviewParams {
   config: Config
@@ -18,6 +17,8 @@ interface UseMintPlanPreviewParams {
   slippageBps: number
   chainId: number
   enabled: boolean
+  collateralAsset: Address | undefined
+  debtAsset: Address | undefined
   quote?: QuoteFn
   debounceMs?: number
   epsilonBps?: number
@@ -35,9 +36,11 @@ export function useMintPlanPreview({
   equityInCollateralAsset,
   slippageBps,
   chainId,
+  enabled = true,
+  collateralAsset,
+  debtAsset,
   quote,
   debounceMs = 500,
-  enabled = true,
   epsilonBps,
   collateralUsdPrice,
   debtUsdPrice,
@@ -45,16 +48,6 @@ export function useMintPlanPreview({
   debtDecimals,
 }: UseMintPlanPreviewParams) {
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
-
-  const {
-    collateralAsset,
-    debtAsset,
-    isLoading: assetsLoading,
-  } = useLeverageTokenManagerAssets({
-    token,
-    chainId: chainId as SupportedChainId,
-    enabled,
-  })
 
   const enabledQuery =
     enabled &&
@@ -157,7 +150,7 @@ export function useMintPlanPreview({
         ? usdToFixedString(guaranteedUsdOutScaled, 2)
         : undefined,
     // Only show loading when the query is actually fetching and inputs are valid
-    isLoading: enabled && (assetsLoading || query.isFetching),
+    isLoading: enabled && query.isFetching,
     error: query.error,
     refetch: query.refetch,
   }

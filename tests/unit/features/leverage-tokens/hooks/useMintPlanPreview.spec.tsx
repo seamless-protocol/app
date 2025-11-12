@@ -84,6 +84,8 @@ describe('useMintPlanPreview', () => {
           equityInCollateralAsset: undefined,
           slippageBps: 50,
           chainId: 1,
+          collateralAsset: '0x0000000000000000000000000000000000000002' as Address,
+          debtAsset: '0x0000000000000000000000000000000000000003' as Address,
           debounceMs: 0,
           enabled: true,
         }),
@@ -122,6 +124,8 @@ describe('useMintPlanPreview', () => {
           equityInCollateralAsset: 0n,
           slippageBps: 50,
           chainId: 1,
+          collateralAsset: '0x0000000000000000000000000000000000000002' as Address,
+          debtAsset: '0x0000000000000000000000000000000000000003' as Address,
           debounceMs: 0,
           quote: async () => ({
             inToken: DUMMY_ADDR,
@@ -168,6 +172,8 @@ describe('useMintPlanPreview', () => {
           equityInCollateralAsset: 10n,
           slippageBps: 50,
           chainId: 1,
+          collateralAsset: '0x0000000000000000000000000000000000000002' as Address,
+          debtAsset: '0x0000000000000000000000000000000000000003' as Address,
           debounceMs: 0,
           quote: async () => ({
             inToken: DUMMY_ADDR,
