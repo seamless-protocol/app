@@ -1,7 +1,7 @@
 import { type Address, erc20Abi, parseUnits } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
-import { orchestrateRedeem, planRedeem } from '@/domain/redeem'
+import { getQuoteIntentForAdapter, orchestrateRedeem, planRedeem } from '@/domain/redeem'
 import { createCollateralToDebtQuote } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
@@ -193,6 +193,10 @@ async function performRedeem(
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
   })
 
+  const intent = getQuoteIntentForAdapter(
+    getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora',
+  )
+
   const plan = await planRedeem({
     config,
     token,
@@ -201,7 +205,7 @@ async function performRedeem(
     quoteCollateralToDebt,
     chainId,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
-    intent: 'exactOut',
+    intent,
   })
 
   const collateralBalanceBefore = await publicClient.readContract({

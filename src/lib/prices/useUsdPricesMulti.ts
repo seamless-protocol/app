@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchCoingeckoTokenUsdPrices } from './coingecko'
+import { fetchTokenUsdPrices } from './fetchUsdPrices'
 
 export interface UseUsdPricesMultiParams {
   byChain: Record<number, Array<string>>
@@ -29,7 +29,7 @@ export function useUsdPricesMultiChain({
       const results = await Promise.all(
         entries.map(async ([chainIdStr, addrs]) => {
           const chainId = Number(chainIdStr)
-          const map = await fetchCoingeckoTokenUsdPrices(chainId, addrs)
+          const map = await fetchTokenUsdPrices(chainId, addrs)
           return [chainId, map] as const
         }),
       )

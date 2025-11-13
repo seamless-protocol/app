@@ -3,6 +3,7 @@ import { base } from 'viem/chains'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import {
   createLifiQuoteAdapter,
+  createPendleQuoteAdapter,
   createUniswapV3QuoteAdapter,
   createVeloraQuoteAdapter,
 } from '@/domain/shared/adapters'
@@ -68,6 +69,14 @@ export function createDebtToCollateralQuote({
     return { quote, adapterType: 'velora' }
   }
 
+  if (swap.type === 'pendle') {
+    const quote = createPendleQuoteAdapter({
+      chainId: chainId as SupportedChainId,
+      router: routerAddress,
+      slippageBps,
+    })
+    return { quote, adapterType: 'pendle' }
+  }
   const publicClient = getPublicClient(chainId)
   if (!publicClient) {
     throw new Error('Public client unavailable for debt swap quote')

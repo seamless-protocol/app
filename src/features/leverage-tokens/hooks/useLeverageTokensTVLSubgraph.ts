@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 import { fetchLeverageTokenStateHistory } from '@/lib/graphql/fetchers/portfolio'
-import { fetchCoingeckoTokenUsdPrices } from '@/lib/prices/coingecko'
+import { fetchTokenUsdPrices } from '@/lib/prices/fetchUsdPrices'
 import { useUsdPricesMultiChain } from '@/lib/prices/useUsdPricesMulti'
 
 export interface LeverageTokensTVLResult {
@@ -126,7 +126,7 @@ export async function prefetchLeverageTokensTVL(queryClient: QueryClient) {
       const results = await Promise.all(
         entries.map(async ([chainIdStr, addrs]) => {
           const chainId = Number(chainIdStr)
-          const map = await fetchCoingeckoTokenUsdPrices(chainId, addrs)
+          const map = await fetchTokenUsdPrices(chainId, addrs)
           return [chainId, map] as const
         }),
       )
@@ -153,7 +153,7 @@ export async function prefetchLeverageTokensTVL(queryClient: QueryClient) {
           const res = await Promise.all(
             entries.map(async ([chainIdStr, addrs]) => {
               const chainId = Number(chainIdStr)
-              const map = await fetchCoingeckoTokenUsdPrices(chainId, addrs)
+              const map = await fetchTokenUsdPrices(chainId, addrs)
               return [chainId, map] as const
             }),
           )

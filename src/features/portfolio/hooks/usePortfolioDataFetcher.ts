@@ -253,6 +253,8 @@ export function usePortfolioWithTotalValue() {
   const { data: usdPricesByChain = {} } = useUsdPricesMultiChain({
     byChain: addressesByChain,
     enabled: Object.keys(addressesByChain).length > 0,
+    staleTimeMs: 15 * 60 * 1000,
+    refetchIntervalMs: 15 * 60 * 1000,
   })
 
   // Flatten the multi-chain prices into a single map for backward compatibility

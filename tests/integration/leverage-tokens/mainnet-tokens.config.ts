@@ -46,4 +46,12 @@ export const MAINNET_TOKEN_CONFIGS: Array<MainnetTokenTestConfig> = [
     fundingAmount: '500',
     richHolderAddress: '0x234C908E749961d0329a0eD5916d55a99d1aD06c' as Address, // Large RLP holder
   },
+  {
+    key: 'pt-rlp-4dec2025-usdc-2x',
+    label: 'PT-RLP-4DEC2025/USDC 2x',
+    slippageBps: 200,
+    toleranceBps: 10,
+    fundingAmount: '200',
+    richHolderAddress: '0x3ee8A025fB8CF12A0a6c6027FD40caaBbbd8E2fb' as Address, // Pendle PT-RLP holder (EOA)
+  },
 ]

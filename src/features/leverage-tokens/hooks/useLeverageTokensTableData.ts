@@ -176,6 +176,8 @@ export function useLeverageTokensTableData() {
   const { data: usdPricesByChain = {} } = useUsdPricesMultiChain({
     byChain: addressesByChain,
     enabled: Object.keys(addressesByChain).length > 0,
+    staleTimeMs: 15 * 60 * 1000,
+    refetchIntervalMs: 15 * 60 * 1000,
   })
 
   const tokens: Array<LeverageToken> = useMemo(() => {
