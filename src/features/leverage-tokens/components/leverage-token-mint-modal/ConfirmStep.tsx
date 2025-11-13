@@ -29,6 +29,8 @@ interface ConfirmStepProps {
   disabled?: boolean
   expectedDebtAmount?: string
   debtAssetSymbol?: string
+  error?: string
+  isRefreshingQuote?: boolean
 }
 
 export function ConfirmStep({
@@ -40,6 +42,8 @@ export function ConfirmStep({
   disabled = false,
   expectedDebtAmount,
   debtAssetSymbol,
+  error,
+  isRefreshingQuote = false,
 }: ConfirmStepProps) {
   // Get real-time gas estimation
   const {
@@ -125,6 +129,12 @@ export function ConfirmStep({
         </div>
       </Card>
 
+      {error && (
+        <div className="rounded-lg border border-[var(--state-error-border)] bg-[var(--state-error-bg)] p-3 text-sm text-[var(--state-error-text)]">
+          {error}
+        </div>
+      )}
+
       <Button
         onClick={onConfirm}
         disabled={disabled}
@@ -133,7 +143,7 @@ export function ConfirmStep({
         className="w-full font-medium"
       >
         <Zap className="h-4 w-4" aria-hidden="true" />
-        {disabled ? 'Updating quote…' : 'Confirm Mint'}
+        {isRefreshingQuote ? 'Refreshing quote…' : disabled ? 'Updating quote…' : 'Confirm Mint'}
       </Button>
     </div>
   )
