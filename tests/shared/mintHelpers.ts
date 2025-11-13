@@ -21,7 +21,6 @@ import {
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
 import { ADDR, CHAIN_ID, RPC } from './env'
-import { readErc20Decimals } from './erc20'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
 
 export type MintSetupParams = {
@@ -99,7 +98,11 @@ export async function executeSharedMint({
   })
   console.info('[SHARED MINT] Token assets', { collateralAsset, debtAsset })
 
-  const decimals = await readErc20Decimals(config, collateralAsset)
+  const leverageTokenConfig = getLeverageTokenConfig(token, chainId)
+  if (!leverageTokenConfig) {
+    throw new Error(`Leverage token config not found for ${token}`)
+  }
+  const decimals = leverageTokenConfig.collateralAsset.decimals
   const equityHuman = process.env['TEST_EQUITY_AMOUNT'] ?? '0.1'
   const equityInInputAsset = parseUnits(equityHuman, decimals)
   console.info('[SHARED MINT] Funding + approving collateral', {
@@ -164,8 +167,8 @@ export async function executeSharedMint({
     args: [account.address],
   })
 
-  const collateralDecimals = await readErc20Decimals(config, collateralAsset)
-  const debtDecimals = await readErc20Decimals(config, debtAsset)
+  const collateralDecimals = leverageTokenConfig.collateralAsset.decimals
+  const debtDecimals = leverageTokenConfig.debtAsset.decimals
 
   console.info('[SHARED MINT] Planning mint')
   const plan = await planMint({

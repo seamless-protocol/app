@@ -4,6 +4,7 @@ import {
   type CollateralToDebtSwapConfig,
   createCollateralToDebtQuote,
 } from '@/domain/redeem/utils/createCollateralToDebtQuote'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -142,9 +143,12 @@ export async function planRedeemTest({
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
   })
 
-  const { readErc20Decimals } = await import('../erc20')
-  const collateralDecimals = await readErc20Decimals(ctx.config, scenario.collateralAsset)
-  const debtDecimals = await readErc20Decimals(ctx.config, scenario.debtAsset)
+  const leverageTokenConfig = getLeverageTokenConfig(scenario.token, scenario.chainId)
+  if (!leverageTokenConfig) {
+    throw new Error(`Leverage token config not found for ${scenario.token}`)
+  }
+  const collateralDecimals = leverageTokenConfig.collateralAsset.decimals
+  const debtDecimals = leverageTokenConfig.debtAsset.decimals
 
   const plan = await planRedeem({
     config: ctx.config,
