@@ -164,6 +164,9 @@ export async function executeSharedMint({
     args: [account.address],
   })
 
+  const collateralDecimals = await readErc20Decimals(config, collateralAsset)
+  const debtDecimals = await readErc20Decimals(config, debtAsset)
+
   console.info('[SHARED MINT] Planning mint')
   const plan = await planMint({
     config,
@@ -175,6 +178,8 @@ export async function executeSharedMint({
     chainId: chainId as any,
     collateralAsset,
     debtAsset,
+    collateralAssetDecimals: collateralDecimals,
+    debtAssetDecimals: debtDecimals,
   })
 
   console.info('[SHARED MINT PLAN]', {

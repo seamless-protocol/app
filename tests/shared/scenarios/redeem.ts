@@ -142,6 +142,10 @@ export async function planRedeemTest({
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
   })
 
+  const { readErc20Decimals } = await import('../erc20')
+  const collateralDecimals = await readErc20Decimals(ctx.config, scenario.collateralAsset)
+  const debtDecimals = await readErc20Decimals(ctx.config, scenario.debtAsset)
+
   const plan = await planRedeem({
     config: ctx.config,
     token: scenario.token,
@@ -153,6 +157,8 @@ export async function planRedeemTest({
     chainId: scenario.chainId,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
     intent: 'exactOut',
+    collateralAssetDecimals: collateralDecimals,
+    debtAssetDecimals: debtDecimals,
   })
 
   return {

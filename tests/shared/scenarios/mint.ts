@@ -73,6 +73,9 @@ export async function planMintTest({
     ensureLiquidity: false,
   })
 
+  const collateralDecimals = await readErc20Decimals(ctx.config, setup.collateralAsset)
+  const debtDecimals = await readErc20Decimals(ctx.config, setup.debtAsset)
+
   const plan = await planMint({
     config: ctx.config,
     token: setup.token,
@@ -83,6 +86,8 @@ export async function planMintTest({
     chainId: tokenDefinition.chainId as SupportedChainId,
     collateralAsset: setup.collateralAsset,
     debtAsset: setup.debtAsset,
+    collateralAssetDecimals: collateralDecimals,
+    debtAssetDecimals: debtDecimals,
   })
 
   return {
@@ -151,6 +156,9 @@ async function runMintScenario({
     args: [account.address],
   })) as bigint
 
+  const collateralDecimals = await readErc20Decimals(config, setup.collateralAsset)
+  const debtDecimals = await readErc20Decimals(config, setup.debtAsset)
+
   // Plan + simulate + write (no orchestrator)
   const plan = await planMint({
     config,
@@ -162,6 +170,8 @@ async function runMintScenario({
     chainId: tokenDefinition.chainId as SupportedChainId,
     collateralAsset: setup.collateralAsset,
     debtAsset: setup.debtAsset,
+    collateralAssetDecimals: collateralDecimals,
+    debtAssetDecimals: debtDecimals,
   })
 
   const { simulateLeverageRouterV2Deposit, writeLeverageRouterV2Deposit } = await import(

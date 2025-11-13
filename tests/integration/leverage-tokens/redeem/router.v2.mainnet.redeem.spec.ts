@@ -197,6 +197,9 @@ async function performRedeem(
     getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora',
   )
 
+  const collateralDecimals = await readErc20Decimals(config, collateralAsset)
+  const debtDecimals = await readErc20Decimals(config, debtAsset)
+
   const plan = await planRedeem({
     config,
     token,
@@ -208,6 +211,8 @@ async function performRedeem(
     chainId,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
     intent,
+    collateralAssetDecimals: collateralDecimals,
+    debtAssetDecimals: debtDecimals,
   })
 
   const collateralBalanceBefore = await publicClient.readContract({

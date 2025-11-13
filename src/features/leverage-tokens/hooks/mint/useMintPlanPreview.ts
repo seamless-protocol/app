@@ -19,14 +19,14 @@ interface UseMintPlanPreviewParams {
   enabled: boolean
   collateralAsset: Address | undefined
   debtAsset: Address | undefined
+  collateralDecimals: number | undefined
+  debtDecimals: number | undefined
   quote?: QuoteFn
   debounceMs?: number
   epsilonBps?: number
   // For derived USD estimates (optional; omit to skip)
   collateralUsdPrice?: number | undefined
   debtUsdPrice?: number | undefined
-  collateralDecimals?: number | undefined
-  debtDecimals?: number | undefined
 }
 
 export function useMintPlanPreview({
@@ -55,7 +55,9 @@ export function useMintPlanPreview({
     debounced > 0n &&
     typeof quote === 'function' &&
     !!collateralAsset &&
-    !!debtAsset
+    !!debtAsset &&
+    typeof collateralDecimals === 'number' &&
+    typeof debtDecimals === 'number'
 
   const keyParams = {
     chainId,
@@ -82,6 +84,9 @@ export function useMintPlanPreview({
       if (!collateralAsset || !debtAsset) {
         throw new Error('Leverage token assets not loaded')
       }
+      if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') {
+        throw new Error('Leverage token decimals not provided')
+      }
 
       return planMint({
         config,
@@ -93,6 +98,8 @@ export function useMintPlanPreview({
         chainId: chainId as SupportedChainId,
         collateralAsset,
         debtAsset,
+        collateralAssetDecimals: collateralDecimals,
+        debtAssetDecimals: debtDecimals,
         ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
       })
     },
