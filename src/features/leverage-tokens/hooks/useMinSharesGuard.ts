@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 
-interface UseMinSharesGuardParams {
+interface UseMinSharesGuardParams<TPlan> {
   currentStep: string
-  plan: { minShares: bigint } | undefined
+  plan: TPlan | undefined
+  getMinValue: (plan: TPlan) => bigint | undefined
   stepName?: string // The step name to track (default: 'confirm')
 }
 
 interface UseMinSharesGuardResult {
-  ackMinShares: bigint | undefined
+  ackMinValue: bigint | undefined
   needsReack: boolean
   errorMessage: string | undefined
   onUserAcknowledge: () => void
@@ -17,28 +18,32 @@ interface UseMinSharesGuardResult {
  * Hook to guard against quote worsening after user has acknowledged a floor value.
  *
  * Flow:
- * 1. On first entry to confirm step, locks in the current minShares as acknowledged
+ * 1. On first entry to confirm step, locks in the current minimum value as acknowledged
  * 2. Watches for auto-refresh changes to the plan
- * 3. If minShares worsens below acknowledged floor, requires re-acknowledgment
- * 4. If minShares improves, silently updates the acknowledged floor
+ * 3. If minimum value worsens below acknowledged floor, requires re-acknowledgment
+ * 4. If minimum value improves, silently updates the acknowledged floor
+ *
+ * Works with both mint plans (minShares) and redeem plans (minCollateralForSender).
  *
  * @param currentStep - Current step in the flow
- * @param plan - The plan containing minShares to track
+ * @param plan - The plan containing the minimum value to track
+ * @param getMinValue - Function to extract the minimum value from the plan
  * @param stepName - The step name to track (default: 'confirm')
  * @returns Guard state and acknowledgment handler
  */
-export function useMinSharesGuard({
+export function useMinSharesGuard<TPlan>({
   currentStep,
   plan,
+  getMinValue,
   stepName = 'confirm',
-}: UseMinSharesGuardParams): UseMinSharesGuardResult {
-  const [ackMinShares, setAckMinShares] = useState<bigint | undefined>(undefined)
+}: UseMinSharesGuardParams<TPlan>): UseMinSharesGuardResult {
+  const [ackMinValue, setAckMinValue] = useState<bigint | undefined>(undefined)
   const [needsReack, setNeedsReack] = useState(false)
 
   // Reset state when leaving the tracked step
   useEffect(() => {
     if (currentStep !== stepName) {
-      setAckMinShares(undefined)
+      setAckMinValue(undefined)
       setNeedsReack(false)
     }
   }, [currentStep, stepName])
@@ -46,34 +51,37 @@ export function useMinSharesGuard({
   // React to plan changes while on confirm step
   useEffect(() => {
     // Only act when on the tracked step
-    if (currentStep !== stepName || !plan?.minShares) {
+    if (currentStep !== stepName || !plan) {
       return
     }
 
-    const currentMinShares = plan.minShares
+    const currentMinValue = getMinValue(plan)
+    if (currentMinValue === undefined) {
+      return
+    }
 
     // First time on confirm: lock in the floor
-    if (ackMinShares === undefined) {
-      setAckMinShares(currentMinShares)
+    if (ackMinValue === undefined) {
+      setAckMinValue(currentMinValue)
       setNeedsReack(false)
       return
     }
 
     // Quote improved: silently update acknowledged floor
-    if (currentMinShares > ackMinShares) {
-      setAckMinShares(currentMinShares)
+    if (currentMinValue > ackMinValue) {
+      setAckMinValue(currentMinValue)
       setNeedsReack(false)
       return
     }
 
     // Quote worsened: require re-acknowledgment
-    if (currentMinShares < ackMinShares) {
+    if (currentMinValue < ackMinValue) {
       setNeedsReack(true)
       return
     }
 
     // Quote stayed the same: no action needed
-  }, [currentStep, stepName, plan?.minShares, ackMinShares])
+  }, [currentStep, stepName, plan, getMinValue, ackMinValue])
 
   // Generate error message when re-acknowledgment is needed
   const errorMessage = needsReack
@@ -82,13 +90,15 @@ export function useMinSharesGuard({
 
   // Handler for user re-acknowledgment
   const onUserAcknowledge = () => {
-    if (!plan?.minShares) return
-    setAckMinShares(plan.minShares)
+    if (!plan) return
+    const currentMinValue = getMinValue(plan)
+    if (currentMinValue === undefined) return
+    setAckMinValue(currentMinValue)
     setNeedsReack(false)
   }
 
   return {
-    ackMinShares,
+    ackMinValue,
     needsReack,
     errorMessage,
     onUserAcknowledge,
