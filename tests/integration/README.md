@@ -153,7 +153,7 @@ The CI workflow (`.github/workflows/ci.yml`) uses Anvil by default to avoid Tend
 
 - name: Start Anvil (Mainnet fork)
   run: |
-    anvil --fork-url "https://eth-mainnet.g.alchemy.com/v2/${{ secrets.ALCHEMY_API_KEY }}" --chain-id 1 --port 8545 &
+    anvil --fork-url "https://eth-mainnet.g.alchemy.com/v2/${{ secrets.VITE_ALCHEMY_API_KEY }}" --chain-id 1 --port 8545 &
     sleep 5
   env:
     ANVIL_NO_MINING: false
@@ -162,6 +162,7 @@ The CI workflow (`.github/workflows/ci.yml`) uses Anvil by default to avoid Tend
   run: TEST_CHAIN=mainnet E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration --backend=anvil -- tests/integration/leverage-tokens
   env:
     VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
+    VITE_INCLUDE_TEST_TOKENS: true
 ```
 
 **Required GitHub Secrets:**

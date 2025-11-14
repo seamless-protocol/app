@@ -145,7 +145,7 @@ VITE_ALCHEMY_API_KEY           # For Anvil mainnet fork - Get from https://www.a
 **Optional:**
 ```bash
 VITE_SENTRY_DSN                # Error tracking
-VITE_INCLUDE_TEST_TOKENS       # Include test-only tokens (auto-enabled for Tenderly)
+VITE_INCLUDE_TEST_TOKENS       # Include test-only tokens (defaults to true for integration/E2E when using scripts/run-tests)
 ```
 
 See `.env.example` for complete list.

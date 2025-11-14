@@ -483,13 +483,9 @@ function withTestDefaults(
     env['VITE_E2E'] = '1'
   }
 
-  // Auto-set VITE_INCLUDE_TEST_TOKENS based on backend if not explicitly set
+  // Auto-set VITE_INCLUDE_TEST_TOKENS for chain-aware suites if not explicitly set
   if (isChainAwareSuite && !env['VITE_INCLUDE_TEST_TOKENS']) {
-    // Tenderly backends use test-only tokens with deterministic configs
-    if (backend === 'tenderly') {
-      env['VITE_INCLUDE_TEST_TOKENS'] = 'true'
-    }
-    // Anvil uses production tokens by default
+    env['VITE_INCLUDE_TEST_TOKENS'] = 'true'
   }
 
   if (!env['VITE_ETHEREUM_RPC_URL']) {
