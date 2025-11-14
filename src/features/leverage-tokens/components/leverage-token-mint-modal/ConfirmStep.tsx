@@ -30,7 +30,8 @@ interface ConfirmStepProps {
   expectedDebtAmount?: string
   debtAssetSymbol?: string
   error?: string
-  isRefreshingQuote?: boolean
+  needsReack?: boolean
+  onUserAcknowledge?: () => void
 }
 
 export function ConfirmStep({
@@ -43,7 +44,8 @@ export function ConfirmStep({
   expectedDebtAmount,
   debtAssetSymbol,
   error,
-  isRefreshingQuote = false,
+  needsReack = false,
+  onUserAcknowledge,
 }: ConfirmStepProps) {
   // Get real-time gas estimation
   const {
@@ -136,14 +138,20 @@ export function ConfirmStep({
       )}
 
       <Button
-        onClick={onConfirm}
-        disabled={disabled}
+        onClick={() => {
+          if (needsReack && onUserAcknowledge) {
+            onUserAcknowledge()
+          } else {
+            onConfirm()
+          }
+        }}
+        disabled={disabled && !needsReack}
         variant="gradient"
         size="lg"
         className="w-full font-medium"
       >
         <Zap className="h-4 w-4" aria-hidden="true" />
-        {isRefreshingQuote ? 'Refreshing quote…' : disabled ? 'Updating quote…' : 'Confirm Mint'}
+        {needsReack ? 'Acknowledge Updated Quote' : disabled ? 'Updating quote…' : 'Confirm Mint'}
       </Button>
     </div>
   )

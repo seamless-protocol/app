@@ -39,6 +39,7 @@ import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
+import { useMinSharesGuard } from '../../hooks/useMinSharesGuard'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
 import { ApproveStep } from './ApproveStep'
@@ -189,9 +190,6 @@ export function LeverageTokenMintModal({
   // Derive expected tokens from preview data (no local state needed)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
-  // Store the floor minShares when user reaches confirm step
-  const [savedFloorMinShares, setSavedFloorMinShares] = useState<bigint | undefined>(undefined)
-  const [isRefreshingQuote, setIsRefreshingQuote] = useState(false)
 
   // Hooks: form, preview, allowance, execution
   const currentSupplyFormatted = leverageTokenState
@@ -425,8 +423,6 @@ export function LeverageTokenMintModal({
     form.setAmount('')
     setError('')
     setTransactionHash(undefined)
-    setSavedFloorMinShares(undefined)
-    setIsRefreshingQuote(false)
 
     // Track funnel step: mint modal opened
     analytics.funnelStep('mint_leverage_token', 'modal_opened', 1)
@@ -464,15 +460,15 @@ export function LeverageTokenMintModal({
     }
   }, [isApprovedFlag, approveErr, currentStep, toConfirm, toError])
 
-  // Save floor minShares when entering confirm step
-  useEffect(() => {
-    if (currentStep === 'confirm' && planPreview.plan?.minShares) {
-      // Only save if we don't have a saved floor yet, or if the plan has changed
-      if (savedFloorMinShares === undefined || planPreview.plan.minShares !== savedFloorMinShares) {
-        setSavedFloorMinShares(planPreview.plan.minShares)
-      }
-    }
-  }, [currentStep, planPreview.plan?.minShares, savedFloorMinShares])
+  // Guard against quote worsening after user has acknowledged a floor
+  const {
+    needsReack,
+    errorMessage: guardErrorMessage,
+    onUserAcknowledge,
+  } = useMinSharesGuard({
+    currentStep,
+    plan: planPreview.plan,
+  })
 
   const expectedTokens = useMemo(() => {
     const shares = planPreview.plan?.expectedShares
@@ -646,85 +642,15 @@ export function LeverageTokenMintModal({
     }
   }
 
-  // Pre-flight quote validation: refresh and check against saved floor
-  const validateQuoteBeforeSubmit = useCallback(async (): Promise<boolean> => {
-    const currentPlan = planPreview.plan
-    if (!currentPlan?.minShares) return true // No plan to validate
-
-    // Save floor on first confirm if not already saved
-    const floorToCheck = savedFloorMinShares ?? currentPlan.minShares
-    if (savedFloorMinShares === undefined) {
-      setSavedFloorMinShares(currentPlan.minShares)
-      // On first confirm, no need to refresh - just save and proceed
-      return true
-    }
-
-    setIsRefreshingQuote(true)
-    try {
-      // Refresh the quote
-      const refetchResult = await planPreview.refetch()
-      const refreshedPlan = refetchResult.data
-
-      if (!refreshedPlan?.minShares) {
-        // No refreshed plan - allow submission with current plan
-        return true
-      }
-
-      if (refreshedPlan.minShares < floorToCheck) {
-        // Quote fell below saved floor - block submission
-        setError('Route moved; increase slippage or retry')
-        // Auto-refetch after a delay
-        setTimeout(() => {
-          void planPreview.refetch().then((result) => {
-            const updatedPlan = result.data
-            const currentFloor = savedFloorMinShares
-            if (updatedPlan?.minShares && currentFloor !== undefined) {
-              if (updatedPlan.minShares >= currentFloor) {
-                // Quote is now acceptable - clear error
-                setError('')
-                // Update saved floor if quote improved
-                if (updatedPlan.minShares > currentFloor) {
-                  setSavedFloorMinShares(updatedPlan.minShares)
-                }
-              }
-            }
-          })
-        }, 2000)
-        return false
-      }
-
-      // Quote is acceptable - update saved floor if improved
-      if (refreshedPlan.minShares > floorToCheck) {
-        setSavedFloorMinShares(refreshedPlan.minShares)
-      }
-
-      // Clear any previous "Route moved" error
-      setError((prevError) => {
-        if (prevError?.includes('Route moved')) {
-          return ''
-        }
-        return prevError
-      })
-
-      return true
-    } catch (refreshError) {
-      // If refresh fails, log but don't block - proceed with current plan
-      console.warn('Failed to refresh quote before submission:', refreshError)
-      return true
-    } finally {
-      setIsRefreshingQuote(false)
-    }
-  }, [planPreview, savedFloorMinShares])
-
   // Handle mint confirmation
   const handleConfirm = async () => {
     if (!publicClient) return
     if (!userAddress || !isConnected || !form.amountRaw) return
 
-    // Pre-flight: Refresh quote and validate against saved floor
-    const canProceed = await validateQuoteBeforeSubmit()
-    if (!canProceed) {
-      // Stay on confirm step - quote validation failed
+    // If quote worsened, require re-acknowledgment
+    if (needsReack) {
+      // User needs to acknowledge the worsened quote before proceeding
+      // They can click Confirm again after reviewing, which will call onUserAcknowledge
       return
     }
 
@@ -936,15 +862,15 @@ export function LeverageTokenMintModal({
             onConfirm={handleConfirm}
             disabled={
               isCalculating ||
-              isRefreshingQuote ||
               (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
                 quoteDebtToCollateral.status !== 'ready') ||
               !planPreview.plan
             }
             expectedDebtAmount={expectedExcessDebtAmount}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
-            {...(error ? { error } : {})}
-            isRefreshingQuote={isRefreshingQuote}
+            {...(guardErrorMessage || error ? { error: guardErrorMessage || error } : {})}
+            needsReack={needsReack}
+            onUserAcknowledge={onUserAcknowledge}
           />
         )
 
