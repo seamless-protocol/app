@@ -13,7 +13,9 @@ import {
 const BASE_RPC_URL = RPC.primary
 const ADMIN_RPC_URL = RPC.admin
 const E2E_TOKEN_SOURCE = (process.env['E2E_TOKEN_SOURCE'] ?? TOKEN_SOURCE).toLowerCase()
-const INCLUDE_TEST_TOKENS = E2E_TOKEN_SOURCE !== 'prod'
+// Prefer explicit env from scripts/run-tests; fall back to source-based heuristic
+const INCLUDE_TEST_TOKENS =
+  process.env['VITE_INCLUDE_TEST_TOKENS'] === 'true' || E2E_TOKEN_SOURCE !== 'prod'
 
 // Ensure the process env is populated so tests can read the resolved value
 process.env['E2E_TOKEN_SOURCE'] = E2E_TOKEN_SOURCE
