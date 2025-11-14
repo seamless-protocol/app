@@ -37,6 +37,7 @@ export const mockSetup = {
     mockUseChainId.mockReturnValue(chainId)
     mockUsePublicClient.mockReturnValue({
       getChainId: () => Promise.resolve(chainId),
+      getBlockNumber: vi.fn().mockResolvedValue(12345678n),
       chain: { id: chainId },
       transport: { url: 'http://localhost:8545' },
       waitForTransactionReceipt: vi.fn().mockResolvedValue({

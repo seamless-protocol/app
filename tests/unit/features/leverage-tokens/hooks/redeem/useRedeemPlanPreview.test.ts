@@ -250,6 +250,7 @@ describe('useRedeemPlanPreview', () => {
         collateralAssetDecimals: 18,
         debtAssetDecimals: 18,
         intent: 'exactOut',
+        blockNumber: 12345678n,
       })
     })
 

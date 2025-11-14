@@ -34,6 +34,19 @@ vi.mock('@/features/leverage-tokens/hooks/useLeverageTokenManagerAssets', () => 
   })),
 }))
 
+// Mock wagmi hooks
+vi.mock('wagmi', async () => {
+  const actual = await vi.importActual('wagmi')
+  return {
+    ...actual,
+    usePublicClient: vi.fn(() => ({
+      getBlockNumber: vi.fn().mockResolvedValue(12345678n),
+      chain: { id: 1 },
+    })),
+    useConfig: vi.fn(() => ({})),
+  }
+})
+
 // Import after mocks
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
+import { usePublicClient } from 'wagmi'
 import type { MintPlan } from '@/domain/mint/planner/plan'
 import { planMint } from '@/domain/mint/planner/plan'
 import type { QuoteFn } from '@/domain/mint/planner/types'
@@ -48,6 +49,7 @@ export function useMintPlanPreview({
   debtDecimals,
 }: UseMintPlanPreviewParams) {
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
+  const publicClient = usePublicClient({ config, chainId })
 
   const enabledQuery =
     enabled &&
@@ -88,6 +90,12 @@ export function useMintPlanPreview({
         throw new Error('Leverage token decimals not provided')
       }
 
+      // Block number is fetched once per query for consistency across preview calls,
+      // but intentionally NOT added to query key to avoid per-block cache invalidation.
+      // React Query's staleTime/refetchInterval control when plans are recomputed.
+      if (!publicClient) throw new Error('Public client not available')
+      const blockNumber = await publicClient.getBlockNumber()
+
       return planMint({
         config,
         token,
@@ -101,6 +109,7 @@ export function useMintPlanPreview({
         collateralAssetDecimals: collateralDecimals,
         debtAssetDecimals: debtDecimals,
         ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
+        blockNumber,
       })
     },
   })

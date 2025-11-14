@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { Address } from 'viem'
 import type { Config } from 'wagmi'
+import { usePublicClient } from 'wagmi'
 import { getQuoteIntentForAdapter } from '@/domain/redeem/orchestrate'
 import { planRedeem } from '@/domain/redeem/planner/plan'
 import type { QuoteFn } from '@/domain/redeem/planner/types'
@@ -47,6 +48,8 @@ export function useRedeemPlanPreview({
   collateralDecimals,
   debtDecimals,
 }: UseRedeemPlanPreviewParams) {
+  const publicClient = usePublicClient({ config, chainId })
+
   const enabledQuery =
     enabled &&
     typeof sharesToRedeem === 'bigint' &&
@@ -82,6 +85,12 @@ export function useRedeemPlanPreview({
         throw new Error('Leverage token decimals not provided')
       }
 
+      // Block number is fetched once per query for consistency across preview calls,
+      // but intentionally NOT added to query key to avoid per-block cache invalidation.
+      // React Query's staleTime/refetchInterval control when plans are recomputed.
+      if (!publicClient) throw new Error('Public client not available')
+      const blockNumber = await publicClient.getBlockNumber()
+
       const intent = getQuoteIntentForAdapter(
         getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora',
       )
@@ -100,6 +109,7 @@ export function useRedeemPlanPreview({
         ...(managerAddress ? { managerAddress } : {}),
         ...(outputAsset ? { outputAsset } : {}),
         intent,
+        blockNumber,
       })
     },
   })

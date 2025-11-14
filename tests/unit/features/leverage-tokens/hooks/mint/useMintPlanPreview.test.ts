@@ -203,6 +203,7 @@ describe('useMintPlanPreview', () => {
         debtAsset: makeAddr('debt'),
         collateralAssetDecimals: 18,
         debtAssetDecimals: 18,
+        blockNumber: 12345678n,
       })
     })
 

@@ -84,6 +84,8 @@ export async function planRedeem(params: {
   chainId: number
   /** Intent for collateral->debt quote */
   intent: 'exactOut' | 'exactIn'
+  /** Optional block number to pin all on-chain previews for consistency */
+  blockNumber?: bigint
 }): Promise<RedeemPlan> {
   const {
     config,
@@ -97,6 +99,7 @@ export async function planRedeem(params: {
     debtAssetDecimals,
     chainId,
     intent,
+    blockNumber,
   } = params
 
   const {
@@ -114,6 +117,7 @@ export async function planRedeem(params: {
     collateralAssetDecimals,
     debtAssetDecimals,
     chainId,
+    blockNumber,
   })
 
   const useNativeCollateralPath = getAddress(collateralAsset) === getAddress(BASE_WETH)
@@ -238,6 +242,7 @@ async function getSwapParamsForRedeem(args: {
   collateralAssetDecimals: number
   debtAssetDecimals: number
   chainId: number
+  blockNumber: bigint | undefined
 }): Promise<{
   totalCollateralAvailable: bigint
   debtToRepay: bigint
@@ -254,10 +259,12 @@ async function getSwapParamsForRedeem(args: {
     collateralAssetDecimals,
     debtAssetDecimals,
     chainId,
+    blockNumber,
   } = args
   const preview = await readLeverageManagerV2PreviewRedeem(config, {
     args: [token, sharesToRedeem],
     chainId: chainId as SupportedChainId,
+    blockNumber,
   })
 
   const totalCollateralAvailable = preview.collateral
