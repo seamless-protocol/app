@@ -33,17 +33,17 @@ foundryup
    bun run anvil:mainnet
 
    # Terminal 2: Run tests
-   bun run test:integration:anvil
+   bun run test:integration
    ```
 
-3. **Option B: Using Tenderly JIT VNet**
+3. **Option B: Using Tenderly JIT VNet (Advanced)**
 
    With Tenderly credentials configured:
    ```bash
-   bun run test:integration:wsteth
+   bun run test:integration:tenderly
    ```
 
-4. **Option C: Using test runner directly with --backend flag**
+4. **Option C: Using test runner directly with --backend flag (Advanced)**
    ```bash
    # Explicit Anvil backend
    bun scripts/run-tests.ts integration --backend=anvil
@@ -59,43 +59,29 @@ foundryup
 
 ### Modes
 
-- Tenderly VNet (default when `TENDERLY_RPC_URL` is set):
-  - Pros: real hosted fork, easy admin balance methods, works without Foundry
-  - Funding: `tenderly_setBalance` / `tenderly_setErc20Balance`
-  - Snapshot: `evm_snapshot` / `evm_revert`
-
-- Anvil Base Fork (fallback):
+- Anvil fork (default):
   - Pros: no external dependency, fast and free
   - Funding: `setBalance`, WETH `deposit()`, or impersonation of rich holders
   - Snapshot: `snapshot` / `revert` via Viem Test Actions
+
+- Tenderly VNet (advanced):
+  - Pros: real hosted fork, easy admin balance methods, works without Foundry
+  - Funding: `tenderly_setBalance` / `tenderly_setErc20Balance`
+  - Snapshot: `evm_snapshot` / `evm_revert`
 
 ### Test Structure
 
 ```
 tests/integration/
+├── domain/               # Domain-level integration tests
+├── leverage-tokens/      # Leverage token mint/redeem flows
+├── prices/               # Pricing integrations
+├── vaults/               # Vault-related integrations
 ├── .env.example          # Environment configuration template
-├── setup.ts              # Anvil clients and Test Actions
-├── utils.ts              # Funding utilities (WETH deposit, impersonation)
-├── router.mint.test.ts   # Working integration tests
-└── vitest.config.ts      # Test runner configuration
+└── README.md             # This guide
 ```
 
-### Key Components
-
-#### Setup (setup.ts)
-- Mode: `tenderly` (when env present) or `anvil`
-- Clients: Public + Wallet; and an Admin client for funding/snapshots
-- Helpers: `topUpNative`, `setErc20Balance`, `takeSnapshot`, `revertSnapshot`
-
-#### Funding Strategy (utils.ts)
-1. **WETH**: Use `deposit()` function for deterministic funding
-2. **Other tokens**: Impersonate rich holders (add addresses to `RICH_HOLDERS` map)
-3. **Storage writes**: Disabled by default (ERC-7201 compatibility)
-
-#### Test Isolation
-- Each test uses `withFork()` wrapper
-- Automatic snapshot before test / revert after test
-- No state pollution between tests
+Integration tests use shared helpers under `tests/shared/` for backend resolution, funding, and withFork-style isolation.
 
 ## Local Development
 
@@ -109,7 +95,7 @@ ANVIL_BASE_FORK_URL=https://mainnet.base.org bun run anvil:base
 bun run test:integration
 
 # Run specific test file
-bun run test:integration router.mint.test.ts
+bun run test:integration -- tests/integration/leverage-tokens/mint/router.v2.mainnet.mint.spec.ts
 
 # Run with watch mode
 bun run test:integration --watch
