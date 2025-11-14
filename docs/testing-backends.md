@@ -143,6 +143,47 @@ In other words, `tests/shared/env.ts` is the **single source of truth** for “w
   - Logs which backend mode is used (`BACKEND.mode`).
   - If `executionKind === 'anvil'`, validates that the local RPC is reachable and has the expected chain id.
 
+## Environment Variables Overview
+
+To reduce cognitive load, it helps to think of env vars in a few small groups.
+
+### Core Testing Vars
+
+| Variable                | Required For                  | Set By / Used In                     | Notes                                                     |
+|-------------------------|------------------------------|--------------------------------------|-----------------------------------------------------------|
+| `VITE_ALCHEMY_API_KEY`  | Integration/E2E (Anvil forks)| `.env(.local)`, CI, `anvil:*` scripts| Single Alchemy key for Base/Mainnet forks                 |
+| `VITE_INCLUDE_TEST_TOKENS` | Integration/E2E (optional override) | CI, `.env`, `scripts/run-tests.ts` | When unset, `scripts/run-tests.ts` defaults it to `true` for chain‑aware suites |
+| `TEST_CHAIN`            | Advanced (multi‑chain runs)  | `scripts/run-tests.ts`, tests        | Logical chain slug: `base` or `mainnet`                  |
+| `TEST_MODE`             | Backend mode (internal)      | `scripts/run-tests.ts`, `backend.ts` | Values like `anvil`, `tenderly-jit`, `tenderly-static`   |
+| `TEST_SCENARIO`         | Scenario selection (mint/redeem)| `scripts/run-tests.ts`, `env.ts`  | Keys like `leverage-mint` or `leverage-redeem`           |
+| `TEST_RPC_URL`          | Node URL for tests           | `scripts/run-tests.ts`, `backend.ts` | Underlying RPC the tests hit (Anvil, Tenderly, etc.)     |
+| `VITE_TEST_RPC_URL`     | Node URL for frontend        | `env.ts`, Playwright                 | Same as `TEST_RPC_URL` but exposed to the app via Vite   |
+
+### Tenderly Configuration (Advanced)
+
+| Variable             | Required For      | Used By             | Notes                            |
+|----------------------|-------------------|---------------------|----------------------------------|
+| `TENDERLY_ACCOUNT`   | Tenderly JIT/CI   | `scripts/run-tests.ts`, `tenderly-vnet.ts` | Account slug                   |
+| `TENDERLY_PROJECT`   | Tenderly JIT/CI   | same                | Project slug                     |
+| `TENDERLY_ACCESS_KEY`| Tenderly JIT/CI   | same                | API access key                   |
+| `TENDERLY_TOKEN`     | Optional Tenderly | same                | Alternative auth (Bearer token)  |
+
+### Leverage Token Selection
+
+| Variable                    | Role                            | Notes                                             |
+|-----------------------------|---------------------------------|---------------------------------------------------|
+| `E2E_LEVERAGE_TOKEN_KEY`    | Primary knob for testers        | Which leverage token definition to exercise       |
+| `E2E_TOKEN_SOURCE`          | Advanced override               | Force `'prod'` vs `'tenderly'`; usually inferred  |
+
+For day‑to‑day work:
+
+- Most contributors only need to set:
+  - `VITE_ALCHEMY_API_KEY` (for Anvil forks used in integration/E2E).
+  - The usual app envs in `.env.local` (WalletConnect, TheGraph, etc.).
+- Testers occasionally set:
+  - `E2E_LEVERAGE_TOKEN_KEY` to focus on a specific token (e.g. a new Pendle token).
+- Everything else (`TEST_*`, `VITE_TEST_RPC_URL`, `E2E_TOKEN_SOURCE`) is typically managed by `scripts/run-tests.ts` and `tests/shared/env.ts`.
+
 ## Leverage Token Selection in Tests
 
 From a tester’s point of view, the main concern is usually:
@@ -211,39 +252,14 @@ This document intentionally stops short of specifying the exact implementation, 
 
 ## Known Inconsistencies / Cleanup Opportunities
 
-This doc describes the **target** mental model. The current repo is close, but there are a few gaps and duplicated concepts:
+This doc describes the **target** mental model. The current repo is now close to this, but a few areas still deserve attention:
 
-- **Backend default mismatch**
-  - `tests/shared/backend.ts` still comments “Default to Tenderly JIT VNets for tests” and sets `DEFAULT_MODE = 'tenderly-jit'`, while scripts/docs increasingly assume Anvil‑first.
-  - Action: flip `DEFAULT_MODE` to `'anvil'` and update comments so bare `resolveBackend()` matches the Anvil default story.
-
-- **Docs disagree on default backend**
-  - `AGENTS.md` still says “Tenderly is the default and preferred backend,” while `CLAUDE.md`, `tests/integration/README.md` and `package.json` scripts use Anvil by default.
-  - `tests/TESTING_MINT_FLOW.md` also calls Tenderly the default.
-  - Action: choose one canonical statement (Anvil‑first) and sync all docs, including `AGENTS.md` and `CLAUDE.md` as required by project rules.
-
-- **Integration README vs actual layout/scripts**
-  - `tests/integration/README.md` mentions `setup.ts`, `utils.ts`, and a `test:integration:anvil` script that may no longer exist or match the current structure.
-  - Action: refresh the README to match:
-    - The current directory layout under `tests/integration/`.
-    - The actual scripts in `package.json` (`test:integration`, `test:integration:tenderly`, etc.).
-
-- **Scattered `VITE_INCLUDE_TEST_TOKENS` logic**
-  - `scripts/run-tests.ts` (`withTestDefaults`), `playwright.config.ts`, `tests/integration/.env.example`, and CI snippets all have slightly different rules for when test‑only tokens are included.
-  - Action (in progress): treat `scripts/run-tests.ts` as the single source of truth for this flag:
-    - For chain-aware tests (integration/E2E), `withTestDefaults` now defaults `VITE_INCLUDE_TEST_TOKENS` to `true` when it is not explicitly set.
-    - `playwright.config.ts` prefers `process.env['VITE_INCLUDE_TEST_TOKENS']` and only falls back to its own heuristic when the env var is missing.
-    - CI and `tests/integration/.env.example` still set the flag explicitly, but that now matches the script’s default behavior rather than fighting it.
-
-- **Environment variable naming / docs**
-  - `.env.example` marks `VITE_ALCHEMY_API_KEY` as optional, but `anvil:mainnet` requires a working Alchemy key.
-  - `tests/integration/README.md` uses `ALCHEMY_API_KEY` in the CI snippet, which doesn’t match the app’s `VITE_*` naming convention.
-  - Action: clearly document `VITE_ALCHEMY_API_KEY` as “required for Anvil mainnet/mainnet‑base forks” and unify the name in docs and CI examples.
+- **Mint-flow documentation drift**
+  - `tests/TESTING_MINT_FLOW.md` still leans Tenderly‑first in its narrative.
+  - Follow‑up: refresh this doc to match the Anvil‑default story while still documenting Tenderly‑based flows where needed.
 
 - **Overlapping backend selection knobs**
-  - Today backend can be influenced by `--backend`, `TEST_MODE`, `TEST_RPC_URL`, `TENDERLY_RPC_URL`, and `VITE_TEST_RPC_URL_MAP`.
-  - Action: document the precedence order in one place (this doc or AGENTS/CLAUDE), and consider slimming it down in future refactors so that:
-    - CLI `--backend` is primary.
-    - `TEST_RPC_URL` is a low‑level escape hatch, not a primary configuration tool.
+  - Backend can still be influenced by `--backend`, `TEST_MODE`, `TEST_RPC_URL`, `TENDERLY_RPC_URL`, and `VITE_TEST_RPC_URL_MAP`.
+  - Follow‑up: continue to treat CLI `--backend` as primary, keep `TEST_RPC_URL` as an expert override, and consider trimming unused env knobs in future refactors.
 
-This document is meant as a living reference while we finish aligning code and documentation. Once the invariants above are enforced in code, the “Known inconsistencies” section can be shortened or removed.
+This document is meant as a living reference while we finish aligning code and documentation. As the remaining cleanups land, this section can be simplified further.
