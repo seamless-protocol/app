@@ -1,32 +1,38 @@
-import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Address } from 'viem'
-import type { Config } from 'wagmi'
-import type { MintPlan } from '@/domain/mint/planner/plan'
-import { planMint } from '@/domain/mint/planner/plan'
-import type { QuoteFn } from '@/domain/mint/planner/types'
-import { parseUsdPrice, toScaledUsd, usdDiffFloor, usdToFixedString } from '@/domain/shared/prices'
-import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
-import type { SupportedChainId } from '@/lib/contracts/addresses'
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Address } from "viem";
+import type { Config } from "wagmi";
+import { usePublicClient } from "wagmi";
+import type { MintPlan } from "@/domain/mint/planner/plan";
+import { planMint } from "@/domain/mint/planner/plan";
+import type { QuoteFn } from "@/domain/mint/planner/types";
+import {
+  parseUsdPrice,
+  toScaledUsd,
+  usdDiffFloor,
+  usdToFixedString,
+} from "@/domain/shared/prices";
+import { ltKeys } from "@/features/leverage-tokens/utils/queryKeys";
+import type { SupportedChainId } from "@/lib/contracts/addresses";
 
 interface UseMintPlanPreviewParams {
-  config: Config
-  token: Address
-  inputAsset: Address
-  equityInCollateralAsset: bigint | undefined
-  slippageBps: number
-  chainId: number
-  enabled: boolean
-  collateralAsset: Address | undefined
-  debtAsset: Address | undefined
-  collateralDecimals: number | undefined
-  debtDecimals: number | undefined
-  quote?: QuoteFn
-  debounceMs?: number
-  epsilonBps?: number
+  config: Config;
+  token: Address;
+  inputAsset: Address;
+  equityInCollateralAsset: bigint | undefined;
+  slippageBps: number;
+  chainId: number;
+  enabled: boolean;
+  collateralAsset: Address | undefined;
+  debtAsset: Address | undefined;
+  collateralDecimals: number | undefined;
+  debtDecimals: number | undefined;
+  quote?: QuoteFn;
+  debounceMs?: number;
+  epsilonBps?: number;
   // For derived USD estimates (optional; omit to skip)
-  collateralUsdPrice?: number | undefined
-  debtUsdPrice?: number | undefined
+  collateralUsdPrice?: number | undefined;
+  debtUsdPrice?: number | undefined;
 }
 
 export function useMintPlanPreview({
@@ -47,31 +53,32 @@ export function useMintPlanPreview({
   collateralDecimals,
   debtDecimals,
 }: UseMintPlanPreviewParams) {
-  const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
+  const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs);
+  const publicClient = usePublicClient({ config, chainId });
 
   const enabledQuery =
     enabled &&
-    typeof debounced === 'bigint' &&
+    typeof debounced === "bigint" &&
     debounced > 0n &&
-    typeof quote === 'function' &&
+    typeof quote === "function" &&
     !!collateralAsset &&
     !!debtAsset &&
-    typeof collateralDecimals === 'number' &&
-    typeof debtDecimals === 'number'
+    typeof collateralDecimals === "number" &&
+    typeof debtDecimals === "number";
 
   const keyParams = {
     chainId,
     addr: token,
     amount: debounced ?? 0n,
     slippageBps,
-    ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
-  }
+    ...(typeof epsilonBps === "number" ? { epsilonBps } : {}),
+  };
 
   const query = useQuery<MintPlan, Error>({
     queryKey: [
       ...ltKeys.simulation.mintKey(keyParams),
       `slippage:${slippageBps}`,
-      ...(typeof epsilonBps === 'number' ? [`epsilon:${epsilonBps}`] : []),
+      ...(typeof epsilonBps === "number" ? [`epsilon:${epsilonBps}`] : []),
     ],
     enabled: enabledQuery,
     // Periodically refresh quotes while user is editing
@@ -82,11 +89,20 @@ export function useMintPlanPreview({
     queryFn: async () => {
       // Inputs guaranteed by `enabledQuery`
       if (!collateralAsset || !debtAsset) {
-        throw new Error('Leverage token assets not loaded')
+        throw new Error("Leverage token assets not loaded");
       }
-      if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') {
-        throw new Error('Leverage token decimals not provided')
+      if (
+        typeof collateralDecimals !== "number" ||
+        typeof debtDecimals !== "number"
+      ) {
+        throw new Error("Leverage token decimals not provided");
       }
+
+      // Block number is fetched once per query for consistency across preview calls,
+      // but intentionally NOT added to query key to avoid per-block cache invalidation.
+      // React Query's staleTime/refetchInterval control when plans are recomputed.
+      if (!publicClient) throw new Error("Public client not available");
+      const blockNumber = await publicClient.getBlockNumber();
 
       return planMint({
         config,
@@ -100,78 +116,116 @@ export function useMintPlanPreview({
         debtAsset,
         collateralAssetDecimals: collateralDecimals,
         debtAssetDecimals: debtDecimals,
-        ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
-      })
+        ...(typeof epsilonBps === "number" ? { epsilonBps } : {}),
+        blockNumber,
+      });
     },
-  })
+  });
 
   // Derived USD estimates from the plan (nice-weather and worst-case)
   const expectedUsdOutScaled = useMemo(() => {
-    const plan = query.data
-    if (!plan) return undefined
-    if (typeof collateralUsdPrice !== 'number' || typeof debtUsdPrice !== 'number') return undefined
-    if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') return undefined
+    const plan = query.data;
+    if (!plan) return undefined;
+    if (
+      typeof collateralUsdPrice !== "number" ||
+      typeof debtUsdPrice !== "number"
+    )
+      return undefined;
+    if (
+      typeof collateralDecimals !== "number" ||
+      typeof debtDecimals !== "number"
+    )
+      return undefined;
     try {
-      const priceColl = parseUsdPrice(collateralUsdPrice)
-      const priceDebt = parseUsdPrice(debtUsdPrice)
+      const priceColl = parseUsdPrice(collateralUsdPrice);
+      const priceDebt = parseUsdPrice(debtUsdPrice);
       const usdFromCollateral = toScaledUsd(
         plan.expectedTotalCollateral,
         collateralDecimals,
         priceColl,
-      )
-      const usdFromDebt = toScaledUsd(plan.expectedDebt, debtDecimals, priceDebt)
-      return usdDiffFloor(usdFromCollateral, usdFromDebt)
+      );
+      const usdFromDebt = toScaledUsd(
+        plan.expectedDebt,
+        debtDecimals,
+        priceDebt,
+      );
+      return usdDiffFloor(usdFromCollateral, usdFromDebt);
     } catch {
-      return undefined
+      return undefined;
     }
-  }, [query.data, collateralUsdPrice, debtUsdPrice, collateralDecimals, debtDecimals])
+  }, [
+    query.data,
+    collateralUsdPrice,
+    debtUsdPrice,
+    collateralDecimals,
+    debtDecimals,
+  ]);
 
   const guaranteedUsdOutScaled = useMemo(() => {
-    const plan = query.data
-    if (!plan) return undefined
-    if (typeof collateralUsdPrice !== 'number' || typeof debtUsdPrice !== 'number') return undefined
-    if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') return undefined
+    const plan = query.data;
+    if (!plan) return undefined;
+    if (
+      typeof collateralUsdPrice !== "number" ||
+      typeof debtUsdPrice !== "number"
+    )
+      return undefined;
+    if (
+      typeof collateralDecimals !== "number" ||
+      typeof debtDecimals !== "number"
+    )
+      return undefined;
     try {
-      const priceColl = parseUsdPrice(collateralUsdPrice)
-      const priceDebt = parseUsdPrice(debtUsdPrice)
-      const worstCollRaw = (plan.equityInInputAsset ?? 0n) + (plan.swapMinOut ?? 0n)
-      const worstDebtRaw = plan.worstCaseRequiredDebt ?? 0n
-      const usdFromCollateral = toScaledUsd(worstCollRaw, collateralDecimals, priceColl)
-      const usdFromDebt = toScaledUsd(worstDebtRaw, debtDecimals, priceDebt)
-      return usdDiffFloor(usdFromCollateral, usdFromDebt)
+      const priceColl = parseUsdPrice(collateralUsdPrice);
+      const priceDebt = parseUsdPrice(debtUsdPrice);
+      const worstCollRaw =
+        (plan.equityInInputAsset ?? 0n) + (plan.swapMinOut ?? 0n);
+      const worstDebtRaw = plan.worstCaseRequiredDebt ?? 0n;
+      const usdFromCollateral = toScaledUsd(
+        worstCollRaw,
+        collateralDecimals,
+        priceColl,
+      );
+      const usdFromDebt = toScaledUsd(worstDebtRaw, debtDecimals, priceDebt);
+      return usdDiffFloor(usdFromCollateral, usdFromDebt);
     } catch {
-      return undefined
+      return undefined;
     }
-  }, [query.data, collateralUsdPrice, debtUsdPrice, collateralDecimals, debtDecimals])
+  }, [
+    query.data,
+    collateralUsdPrice,
+    debtUsdPrice,
+    collateralDecimals,
+    debtDecimals,
+  ]);
 
   return {
     plan: query.data,
     expectedUsdOutScaled,
     guaranteedUsdOutScaled,
     expectedUsdOutStr:
-      typeof expectedUsdOutScaled === 'bigint'
+      typeof expectedUsdOutScaled === "bigint"
         ? usdToFixedString(expectedUsdOutScaled, 2)
         : undefined,
     guaranteedUsdOutStr:
-      typeof guaranteedUsdOutScaled === 'bigint'
+      typeof guaranteedUsdOutScaled === "bigint"
         ? usdToFixedString(guaranteedUsdOutScaled, 2)
         : undefined,
     // Only show loading when the query is actually fetching and inputs are valid
     isLoading: enabled && query.isFetching,
     error: query.error,
     refetch: query.refetch,
-  }
+  };
 }
 
 function useDebouncedBigint(value: bigint | undefined, delay: number) {
-  const [debounced, setDebounced] = useState<bigint | undefined>(value)
-  const id = useRef(0)
+  const [debounced, setDebounced] = useState<bigint | undefined>(value);
+  const id = useRef(0);
   useEffect(() => {
-    const current = ++id.current
+    const current = ++id.current;
     const t = setTimeout(() => {
-      if (current === id.current) setDebounced(value)
-    }, delay)
-    return () => clearTimeout(t)
-  }, [value, delay])
-  return debounced
+      if (current === id.current) setDebounced(value);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
 }

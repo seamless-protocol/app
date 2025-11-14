@@ -92,6 +92,8 @@ export async function planMint(params: {
   debtAssetDecimals: number
   /** Optional per-pair epsilon (bps) for single-pass clamp */
   epsilonBps?: number
+  /** Optional block number to pin all on-chain previews for consistency */
+  blockNumber?: bigint
 }): Promise<MintPlan> {
   const {
     config,
@@ -106,6 +108,7 @@ export async function planMint(params: {
     collateralAssetDecimals,
     debtAssetDecimals,
     epsilonBps,
+    blockNumber,
   } = params
 
   // Basic input validation
@@ -126,7 +129,13 @@ export async function planMint(params: {
   }
 
   // 2) Ideal targets (router semantics)
-  const ideal = await previewIdeal({ config, token, userCollateralOut, chainId })
+  const ideal = await previewIdeal({
+    config,
+    token,
+    userCollateralOut,
+    chainId,
+    blockNumber,
+  })
   debugMintPlan('ideal', {
     userCollateralOut,
     idealDebt: ideal.idealDebt,
@@ -164,6 +173,7 @@ export async function planMint(params: {
     token,
     totalCollateral: totalCollateralInitial,
     chainId,
+    blockNumber,
   })
   debugMintPlan('quote.intermediateQuote', {
     totalCollateral: totalCollateralInitial,
@@ -182,12 +192,14 @@ export async function planMint(params: {
       token,
       userCollateralOut: adjustedUserCollateralOut,
       chainId,
+      blockNumber,
     })
     const adjustedQuote = await previewFinal({
       config,
       token,
       totalCollateral: adjustedIdeal.targetCollateral,
       chainId,
+      blockNumber,
     })
 
     debugMintPlan('final.maxSlippage', {
@@ -209,6 +221,7 @@ export async function planMint(params: {
       token,
       totalCollateral: userCollateralOut + effectiveQuote.out,
       chainId,
+      blockNumber,
     })
   }
 
@@ -318,11 +331,13 @@ async function previewIdeal(args: {
   token: Address
   userCollateralOut: bigint
   chainId: number
+  blockNumber: bigint | undefined
 }): Promise<{ targetCollateral: bigint; idealDebt: bigint; idealShares: bigint }> {
-  const { config, token, userCollateralOut, chainId } = args
+  const { config, token, userCollateralOut, chainId, blockNumber } = args
   const p = await readLeverageRouterV2PreviewDeposit(config, {
     args: [token, userCollateralOut],
     chainId: chainId as SupportedChainId,
+    blockNumber,
   })
   return {
     targetCollateral: p.collateral,
@@ -339,11 +354,13 @@ async function previewFinal(args: {
   token: Address
   totalCollateral: bigint
   chainId: number
+  blockNumber: bigint | undefined
 }): Promise<{ requiredDebt: bigint; shares: bigint; requiredCollateral: bigint }> {
-  const { config, token, totalCollateral, chainId } = args
+  const { config, token, totalCollateral, chainId, blockNumber } = args
   const m = await readLeverageManagerV2PreviewDeposit(config, {
     args: [token, totalCollateral],
     chainId: chainId as SupportedChainId,
+    blockNumber,
   })
   return { requiredDebt: m.debt, shares: m.shares, requiredCollateral: m.collateral }
 }
