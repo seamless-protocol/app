@@ -84,6 +84,8 @@ describe('useMintPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           quote: mockQuote,
           debounceMs: 0,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -106,6 +108,8 @@ describe('useMintPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           quote: mockQuote,
           debounceMs: 0,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -126,6 +130,8 @@ describe('useMintPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           quote: mockQuote,
           debounceMs: 0,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -147,6 +153,8 @@ describe('useMintPlanPreview', () => {
           collateralAsset: makeAddr('collateral'),
           debtAsset: makeAddr('debt'),
           debounceMs: 0,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -171,6 +179,8 @@ describe('useMintPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           quote: mockQuote,
           debounceMs: 0,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -191,6 +201,8 @@ describe('useMintPlanPreview', () => {
         chainId: CHAIN_ID,
         collateralAsset: makeAddr('collateral'),
         debtAsset: makeAddr('debt'),
+        collateralAssetDecimals: 18,
+        debtAssetDecimals: 18,
       })
     })
 
@@ -209,6 +221,8 @@ describe('useMintPlanPreview', () => {
           quote: mockQuote,
           debounceMs: 0,
           epsilonBps: 10,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -221,6 +235,8 @@ describe('useMintPlanPreview', () => {
           epsilonBps: 10,
           collateralAsset: makeAddr('collateral'),
           debtAsset: makeAddr('debt'),
+          collateralAssetDecimals: 18,
+          debtAssetDecimals: 18,
         }),
       )
     })
@@ -246,6 +262,8 @@ describe('useMintPlanPreview', () => {
             debtAsset: makeAddr('debt'),
             quote: mockQuote,
             debounceMs: 100,
+            collateralDecimals: 18,
+            debtDecimals: 18,
           }),
         {
           initialProps: { equity: undefined },
@@ -274,6 +292,8 @@ describe('useMintPlanPreview', () => {
           equityInInputAsset: 3000000000000000000n,
           collateralAsset: makeAddr('collateral'),
           debtAsset: makeAddr('debt'),
+          collateralAssetDecimals: 18,
+          debtAssetDecimals: 18,
         }),
       )
     })
@@ -369,6 +389,8 @@ describe('useMintPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           quote: mockQuote,
           debounceMs: 0,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -394,13 +416,15 @@ describe('useMintPlanPreview', () => {
           debounceMs: 0,
           collateralUsdPrice: 2000,
           debtUsdPrice: 1000,
+          collateralDecimals: undefined,
+          debtDecimals: undefined,
         }),
       )
 
-      await waitFor(() => {
-        expect(resultNoDecimals.current.plan).toBeDefined()
-      })
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
+      expect(resultNoDecimals.current.isLoading).toBe(false)
+      expect(resultNoDecimals.current.plan).toBeUndefined()
       expect(resultNoDecimals.current.expectedUsdOutScaled).toBeUndefined()
       expect(resultNoDecimals.current.guaranteedUsdOutScaled).toBeUndefined()
     })
@@ -461,6 +485,8 @@ describe('useMintPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           quote: mockQuote,
           debounceMs: 0,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 

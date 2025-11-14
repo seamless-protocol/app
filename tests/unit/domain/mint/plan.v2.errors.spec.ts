@@ -24,6 +24,8 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
+// Decimals are now passed as parameters instead of being fetched on-chain
+
 describe('planMint error branches', () => {
   it('throws when input != collateral', async () => {
     await expect(
@@ -41,6 +43,8 @@ describe('planMint error branches', () => {
         chainId: 8453,
         collateralAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
         debtAsset: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
+        collateralAssetDecimals: 18,
+        debtAssetDecimals: 18,
       }),
     ).rejects.toThrowError(/collateral-only/i)
   })
@@ -62,6 +66,8 @@ describe('planMint error branches', () => {
         chainId: 8453,
         collateralAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
         debtAsset: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
+        collateralAssetDecimals: 18,
+        debtAssetDecimals: 18,
       }),
     ).rejects.toThrowError(/no debt swap needed/i)
   })

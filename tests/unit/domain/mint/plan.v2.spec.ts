@@ -35,12 +35,6 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
-vi.mock('wagmi/actions', () => ({
-  getPublicClient: vi.fn(() => ({
-    readContract: vi.fn(async () => 18n), // Mock decimals as 18
-  })),
-}))
-
 vi.mock('@/lib/prices/coingecko', () => ({
   fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
     '0xcccccccccccccccccccccccccccccccccccccccc': 2000, // collateral (ETH)
@@ -81,6 +75,8 @@ describe('planMint', () => {
       chainId: 8453,
       collateralAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
       debtAsset: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 18,
     })
 
     expect(plan.inputAsset).toBe(inputAsset)

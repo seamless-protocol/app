@@ -50,11 +50,7 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
-vi.mock('wagmi/actions', () => ({
-  getPublicClient: vi.fn(() => ({
-    readContract: vi.fn(async () => 18n), // Mock decimals as 18
-  })),
-}))
+// Decimals are now passed as parameters instead of being fetched on-chain
 
 vi.mock('@/lib/prices/coingecko', () => ({
   fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
@@ -100,6 +96,8 @@ describe('planMint final clamp + re-quote', () => {
       chainId: 8453,
       collateralAsset: COLLATERAL,
       debtAsset: BASE_WETH,
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 18,
     })
 
     // Re-quote must be called at least once with the clamped amount (120e18)

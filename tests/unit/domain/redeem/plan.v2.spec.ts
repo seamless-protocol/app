@@ -29,21 +29,7 @@ import {
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
 
-vi.mock('wagmi/actions', () => ({
-  getPublicClient: vi.fn(() => ({
-    readContract: vi.fn(async (args: any) => {
-      const address = args.address?.toLowerCase()
-      // Return realistic decimals: 18 for ETH-like collateral, 6 for USDC-like debt
-      if (address === '0xcccccccccccccccccccccccccccccccccccccccc') {
-        return 18n // ETH/WETH decimals
-      }
-      if (address === '0xdddddddddddddddddddddddddddddddddddddddd') {
-        return 6n // USDC decimals
-      }
-      return 18n // default
-    }),
-  })),
-}))
+// Decimals are now passed as parameters instead of being fetched on-chain
 
 vi.mock('@/lib/prices/coingecko', () => ({
   fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
@@ -136,6 +122,8 @@ describe('planRedeem', () => {
       debtAsset: mockDebtAsset,
       chainId: 1,
       intent: 'exactOut',
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 6,
     })
 
     expect(plan.expectedTotalCollateral).toBe(100000000000000000000n) // 100 ETH
@@ -164,6 +152,8 @@ describe('planRedeem', () => {
         debtAsset: mockDebtAsset,
         chainId: 1,
         intent: 'exactOut',
+        collateralAssetDecimals: 18,
+        debtAssetDecimals: 6,
       }),
     ).rejects.toThrow(
       'Try increasing slippage: swap of collateral to repay debt for the leveraged position is below the required debt.',
@@ -186,6 +176,8 @@ describe('planRedeem', () => {
         debtAsset: mockDebtAsset,
         chainId: 1,
         intent: 'exactOut',
+        collateralAssetDecimals: 18,
+        debtAssetDecimals: 6,
       }),
     ).rejects.toThrow(
       'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
@@ -204,6 +196,8 @@ describe('planRedeem', () => {
       outputAsset: '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
       chainId: 1,
       intent: 'exactOut',
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 6,
     })
 
     expect(plan.payoutAsset.toLowerCase()).toBe('0xdddddddddddddddddddddddddddddddddddddddd')
@@ -238,6 +232,8 @@ describe('planRedeem', () => {
       debtAsset: mockDebtAsset,
       chainId: 1,
       intent: 'exactOut',
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 6,
     })
 
     // Should have at least 2 calls: WETH withdraw + swap
@@ -276,6 +272,8 @@ describe('planRedeem', () => {
       outputAsset: '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
       chainId: 1,
       intent: 'exactOut',
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 6,
     })
 
     // When converting to debt with zero remaining collateral
@@ -305,6 +303,8 @@ describe('planRedeem', () => {
       debtAsset: mockDebtAsset,
       chainId: 1,
       intent: 'exactOut',
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 6,
     })
 
     // With zero debt, no swap should occur
@@ -327,6 +327,8 @@ describe('planRedeem', () => {
       debtAsset: mockDebtAsset,
       chainId: 1,
       intent: 'exactOut',
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 6,
     })
 
     // With 90% slippage, minimum collateral should be 10% of expected
@@ -361,6 +363,8 @@ describe('planRedeem', () => {
         debtAsset: mockDebtAsset,
         chainId: 1,
         intent: 'exactOut',
+        collateralAssetDecimals: 18,
+        debtAssetDecimals: 6,
       }),
     ).rejects.toThrow(
       'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
@@ -387,32 +391,14 @@ describe('planRedeem', () => {
       debtAsset: mockDebtAsset,
       chainId: 1,
       intent: 'exactOut',
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 6,
     })
 
     // Should successfully plan with small but realistic amounts
     expect(plan.sharesToRedeem).toBe(100n)
     expect(plan.expectedTotalCollateral).toBe(1000000000000000n)
     expect(plan.expectedCollateral).toBeGreaterThan(0n)
-  })
-
-  it('should reject when public client is unavailable', async () => {
-    // Mock getPublicClient to return undefined
-    const { getPublicClient } = await import('wagmi/actions')
-    vi.mocked(getPublicClient).mockReturnValueOnce(undefined as any)
-
-    await expect(
-      planRedeem({
-        config: {} as any,
-        token: '0x1111111111111111111111111111111111111111' as Address,
-        sharesToRedeem: 50n,
-        slippageBps: 50,
-        quoteCollateralToDebt: mockQuote as any,
-        collateralAsset: mockCollateralAsset,
-        debtAsset: mockDebtAsset,
-        chainId: 1,
-        intent: 'exactOut',
-      }),
-    ).rejects.toThrow('Public client unavailable for redeem plan')
   })
 })
 

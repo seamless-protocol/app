@@ -9,7 +9,6 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseUnits, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
-import { getPublicClient } from 'wagmi/actions'
 import { USD_DECIMALS } from '@/domain/shared/prices'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
@@ -87,6 +86,10 @@ export async function planMint(params: {
   collateralAsset: Address
   /** Debt asset address */
   debtAsset: Address
+  /** Collateral asset decimals */
+  collateralAssetDecimals: number
+  /** Debt asset decimals */
+  debtAssetDecimals: number
   /** Optional per-pair epsilon (bps) for single-pass clamp */
   epsilonBps?: number
 }): Promise<MintPlan> {
@@ -100,6 +103,8 @@ export async function planMint(params: {
     chainId,
     collateralAsset,
     debtAsset,
+    collateralAssetDecimals,
+    debtAssetDecimals,
     epsilonBps,
   } = params
 
@@ -208,22 +213,6 @@ export async function planMint(params: {
   }
 
   const excessDebt = finalQuote.requiredDebt - debtIn
-
-  const publicClient = getPublicClient(config, { chainId })
-  if (!publicClient) {
-    throw new Error('Public client unavailable for mint plan')
-  }
-  // TODO: Multicall these / pass in
-  const collateralAssetDecimals = await publicClient.readContract({
-    address: collateralAsset,
-    abi: erc20Abi,
-    functionName: 'decimals',
-  })
-  const debtAssetDecimals = await publicClient.readContract({
-    address: debtAsset,
-    abi: erc20Abi,
-    functionName: 'decimals',
-  })
 
   const usdPriceMap = await fetchTokenUsdPrices(chainId, [collateralAsset, debtAsset])
   const collateralPriceUsd = usdPriceMap?.[collateralAsset.toLowerCase()]

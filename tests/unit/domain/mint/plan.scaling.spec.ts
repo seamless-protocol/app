@@ -34,11 +34,7 @@ vi.mock('@/lib/contracts/generated', () => ({
   readLeverageRouterV2PreviewDeposit: (_config: any, params: any) => routerPreview(params),
 }))
 
-vi.mock('wagmi/actions', () => ({
-  getPublicClient: vi.fn(() => ({
-    readContract: vi.fn(async () => 18n), // Mock decimals as 18
-  })),
-}))
+// Decimals are now passed as parameters instead of being fetched on-chain
 
 vi.mock('@/lib/prices/coingecko', () => ({
   fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
@@ -86,6 +82,8 @@ describe('planner scaling under underfill', () => {
       chainId: 8453,
       collateralAsset: COLLATERAL,
       debtAsset: DEBT,
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 18,
     })
 
     expect(plan.expectedTotalCollateral).toBe(1_994_020_891_474_923_263n)

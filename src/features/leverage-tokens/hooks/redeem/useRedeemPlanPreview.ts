@@ -18,6 +18,8 @@ interface UseRedeemPlanPreviewParams {
   enabled: boolean
   collateralAsset: Address | undefined
   debtAsset: Address | undefined
+  collateralDecimals: number | undefined
+  debtDecimals: number | undefined
   quote?: QuoteFn
   managerAddress?: Address
   swapKey?: string
@@ -25,8 +27,6 @@ interface UseRedeemPlanPreviewParams {
   // For derived USD estimates (optional; omit to skip)
   collateralUsdPrice?: number | undefined
   debtUsdPrice?: number | undefined
-  collateralDecimals?: number | undefined
-  debtDecimals?: number | undefined
 }
 
 export function useRedeemPlanPreview({
@@ -53,7 +53,9 @@ export function useRedeemPlanPreview({
     sharesToRedeem > 0n &&
     typeof quote === 'function' &&
     !!collateralAsset &&
-    !!debtAsset
+    !!debtAsset &&
+    typeof collateralDecimals === 'number' &&
+    typeof debtDecimals === 'number'
 
   const keyParams = {
     chainId,
@@ -76,6 +78,9 @@ export function useRedeemPlanPreview({
       if (!collateralAsset || !debtAsset) {
         throw new Error('Leverage token assets not loaded')
       }
+      if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') {
+        throw new Error('Leverage token decimals not provided')
+      }
 
       const intent = getQuoteIntentForAdapter(
         getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora',
@@ -90,6 +95,8 @@ export function useRedeemPlanPreview({
         chainId,
         collateralAsset,
         debtAsset,
+        collateralAssetDecimals: collateralDecimals,
+        debtAssetDecimals: debtDecimals,
         ...(managerAddress ? { managerAddress } : {}),
         ...(outputAsset ? { outputAsset } : {}),
         intent,

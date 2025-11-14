@@ -110,6 +110,8 @@ describe('useRedeemPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -130,6 +132,8 @@ describe('useRedeemPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -150,6 +154,8 @@ describe('useRedeemPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -170,6 +176,8 @@ describe('useRedeemPlanPreview', () => {
           collateralAsset: makeAddr('collateral'),
           debtAsset: makeAddr('debt'),
           enabled: true,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -192,6 +200,8 @@ describe('useRedeemPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           enabled: false,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -216,6 +226,8 @@ describe('useRedeemPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -235,6 +247,8 @@ describe('useRedeemPlanPreview', () => {
         chainId: CHAIN_ID,
         collateralAsset: makeAddr('collateral'),
         debtAsset: makeAddr('debt'),
+        collateralAssetDecimals: 18,
+        debtAssetDecimals: 18,
         intent: 'exactOut',
       })
     })
@@ -256,6 +270,8 @@ describe('useRedeemPlanPreview', () => {
           quote: mockQuote,
           managerAddress,
           outputAsset,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -267,6 +283,8 @@ describe('useRedeemPlanPreview', () => {
         expect.objectContaining({
           collateralAsset: makeAddr('collateral'),
           debtAsset: makeAddr('debt'),
+          collateralAssetDecimals: 18,
+          debtAssetDecimals: 18,
           managerAddress,
           outputAsset,
         }),
@@ -294,6 +312,8 @@ describe('useRedeemPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -306,6 +326,8 @@ describe('useRedeemPlanPreview', () => {
         expect.objectContaining({
           collateralAsset: makeAddr('collateral'),
           debtAsset: makeAddr('debt'),
+          collateralAssetDecimals: 18,
+          debtAssetDecimals: 18,
           intent: 'exactIn',
         }),
       )
@@ -325,6 +347,8 @@ describe('useRedeemPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -420,6 +444,8 @@ describe('useRedeemPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -445,13 +471,14 @@ describe('useRedeemPlanPreview', () => {
           quote: mockQuote,
           collateralUsdPrice: 2000,
           debtUsdPrice: 1000,
+          collateralDecimals: undefined,
+          debtDecimals: undefined,
         }),
       )
 
-      await waitFor(() => {
-        expect(resultNoDecimals.current.plan).toBeDefined()
-      })
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
+      expect(resultNoDecimals.current.plan).toBeUndefined()
       expect(resultNoDecimals.current.expectedUsdOutScaled).toBeUndefined()
       expect(resultNoDecimals.current.guaranteedUsdOutScaled).toBeUndefined()
     })
@@ -473,6 +500,8 @@ describe('useRedeemPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 

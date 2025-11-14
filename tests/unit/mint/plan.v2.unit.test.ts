@@ -26,6 +26,8 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
+// Decimals are now passed as parameters instead of being fetched on-chain
+
 describe('planMint validations', () => {
   const cfg = {} as any
   const token = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address
@@ -46,6 +48,8 @@ describe('planMint validations', () => {
         chainId: 8453,
         collateralAsset: '0x1111111111111111111111111111111111111111' as Address,
         debtAsset: '0x2222222222222222222222222222222222222222' as Address,
+        collateralAssetDecimals: 18,
+        debtAssetDecimals: 18,
       }),
     ).rejects.toThrowError(/collateral-only/i)
   })

@@ -80,6 +80,8 @@ describe('useMintPlanPreview', () => {
           debtAsset: '0x0000000000000000000000000000000000000003' as Address,
           debounceMs: 0,
           enabled: true,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       { wrapper },
     )
@@ -120,6 +122,8 @@ describe('useMintPlanPreview', () => {
             calldata: '0x' as `0x${string}`,
           }),
           enabled: true,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       { wrapper },
     )
@@ -160,6 +164,8 @@ describe('useMintPlanPreview', () => {
             calldata: '0x' as `0x${string}`,
           }),
           enabled: true,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       { wrapper },
     )
