@@ -129,11 +129,21 @@ ErrorBoundary (Sentry)
 
 ## Environment Variables
 
-Required for development:
+**Required for development:**
 ```bash
 VITE_WALLETCONNECT_PROJECT_ID  # Get from WalletConnect Cloud
 VITE_BASE_RPC_URL              # Base network RPC
+```
+
+**Required for testing (integration/E2E):**
+```bash
+VITE_ALCHEMY_API_KEY           # For Anvil mainnet fork - Get from https://www.alchemy.com/
+```
+
+**Optional:**
+```bash
 VITE_SENTRY_DSN                # Error tracking
+VITE_INCLUDE_TEST_TOKENS       # Include test-only tokens (auto-enabled for Tenderly)
 ```
 
 See `.env.example` for complete list.

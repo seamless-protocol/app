@@ -165,7 +165,7 @@ The CI workflow (`.github/workflows/ci.yml`) uses Anvil by default to avoid Tend
 ```
 
 **Required GitHub Secrets:**
-- `ALCHEMY_API_KEY` - For Anvil Mainnet fork
+- `VITE_ALCHEMY_API_KEY` - For Anvil Mainnet fork
 - `VITE_LIFI_API_KEY` - For LiFi quote adapter (optional but recommended)
 
 ## Performance
