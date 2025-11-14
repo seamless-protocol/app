@@ -30,11 +30,15 @@ bun format             # Format code with Biome
 bun typecheck          # Type-check only
 
 # Testing
-bun run test               # Run unit tests with Vitest
-bun run test:ui            # Run tests with UI
-bun run test:coverage      # Run tests with coverage
-bun run test:integration   # Run integration tests (uses Anvil by default)
-bun run test:e2e           # Run E2E tests with Playwright (uses Anvil by default)
+bun run test                    # Run unit tests with Vitest
+bun run test:ui                 # Run tests with UI
+bun run test:coverage           # Run tests with coverage
+bun run test:integration        # Run integration tests (uses Anvil by default)
+bun run test:e2e                # Run E2E tests with Playwright (uses Anvil by default)
+
+# Advanced Testing
+bun run test:integration:raw       # Integration tests directly via Vitest (no backend harness)
+bun run test:integration:tenderly  # Integration tests against Tenderly JIT VNet (advanced)
 
 # Testing Backend Configuration
 # DEFAULT: Local Anvil fork
