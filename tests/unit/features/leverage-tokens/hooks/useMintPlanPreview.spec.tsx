@@ -23,6 +23,17 @@ vi.mock('@/domain/mint/planner/plan', () => ({
   }),
 }))
 
+// Mock the asset manager hook
+vi.mock('@/features/leverage-tokens/hooks/useLeverageTokenManagerAssets', () => ({
+  useLeverageTokenManagerAssets: vi.fn(() => ({
+    collateralAsset: '0x0000000000000000000000000000000000000002' as Address,
+    debtAsset: '0x0000000000000000000000000000000000000003' as Address,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}))
+
 // Import after mocks
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
@@ -65,8 +76,12 @@ describe('useMintPlanPreview', () => {
           equityInCollateralAsset: undefined,
           slippageBps: 50,
           chainId: 1,
+          collateralAsset: '0x0000000000000000000000000000000000000002' as Address,
+          debtAsset: '0x0000000000000000000000000000000000000003' as Address,
           debounceMs: 0,
           enabled: true,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       { wrapper },
     )
@@ -95,6 +110,8 @@ describe('useMintPlanPreview', () => {
           equityInCollateralAsset: 0n,
           slippageBps: 50,
           chainId: 1,
+          collateralAsset: '0x0000000000000000000000000000000000000002' as Address,
+          debtAsset: '0x0000000000000000000000000000000000000003' as Address,
           debounceMs: 0,
           quote: async () => ({
             inToken: DUMMY_ADDR,
@@ -105,6 +122,8 @@ describe('useMintPlanPreview', () => {
             calldata: '0x' as `0x${string}`,
           }),
           enabled: true,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       { wrapper },
     )
@@ -133,6 +152,8 @@ describe('useMintPlanPreview', () => {
           equityInCollateralAsset: 10n,
           slippageBps: 50,
           chainId: 1,
+          collateralAsset: '0x0000000000000000000000000000000000000002' as Address,
+          debtAsset: '0x0000000000000000000000000000000000000003' as Address,
           debounceMs: 0,
           quote: async () => ({
             inToken: DUMMY_ADDR,
@@ -143,6 +164,8 @@ describe('useMintPlanPreview', () => {
             calldata: '0x' as `0x${string}`,
           }),
           enabled: true,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       { wrapper },
     )

@@ -35,11 +35,7 @@ vi.mock('@/lib/contracts/generated', async () => {
   }
 })
 
-vi.mock('wagmi/actions', () => ({
-  getPublicClient: vi.fn(() => ({
-    readContract: vi.fn(async () => 18n), // Mock decimals as 18
-  })),
-}))
+// Decimals are now passed as parameters instead of being fetched on-chain
 
 vi.mock('@/lib/prices/coingecko', () => ({
   fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
@@ -79,6 +75,10 @@ describe('planMint fallback exact-in sizing and non-native path', () => {
       slippageBps: 50,
       quoteDebtToCollateral,
       chainId: 8453,
+      collateralAsset: COLLATERAL,
+      debtAsset: '0x2222222222222222222222222222222222222222' as Address,
+      collateralAssetDecimals: 18,
+      debtAssetDecimals: 18,
     })
 
     expect(calls).toBeGreaterThan(1)

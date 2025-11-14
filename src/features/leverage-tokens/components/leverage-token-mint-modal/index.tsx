@@ -37,6 +37,7 @@ import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useMintWrite } from '../../hooks/mint/useMintWrite'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
+import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
@@ -101,7 +102,16 @@ export function LeverageTokenMintModal({
   // Get leverage router address for allowance check
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
   const leverageRouterAddress = contractAddresses.leverageRouterV2
-  // manager address not needed for mint plan preview anymore
+
+  const {
+    collateralAsset,
+    debtAsset,
+    isLoading: assetsLoading,
+  } = useLeverageTokenManagerAssets({
+    token: leverageTokenAddress,
+    chainId: leverageTokenConfig.chainId as SupportedChainId,
+    enabled: isOpen,
+  })
 
   // Fetch leverage token fees
   const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(
@@ -217,6 +227,8 @@ export function LeverageTokenMintModal({
     equityInCollateralAsset: form.amountRaw,
     slippageBps,
     chainId: leverageTokenConfig.chainId,
+    collateralAsset,
+    debtAsset,
     ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
     collateralUsdPrice,
     debtUsdPrice,
@@ -729,7 +741,8 @@ export function LeverageTokenMintModal({
   const isCalculating =
     typeof form.amountRaw === 'bigint' &&
     form.amountRaw > 0n &&
-    (planPreview.isLoading ||
+    (assetsLoading ||
+      planPreview.isLoading ||
       (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
         quoteDebtToCollateral.status !== 'ready'))
 

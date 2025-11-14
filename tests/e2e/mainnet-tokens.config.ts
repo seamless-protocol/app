@@ -33,7 +33,7 @@ export const MAINNET_E2E_TOKEN_CONFIGS: Array<MainnetE2ETokenTestConfig> = [
   {
     key: 'wsteth-eth-25x',
     label: 'wstETH/ETH 25x',
-    slippagePercent: '2.5',
+    slippagePercent: '5',
     mintAmount: '0.1',
     collateralAddress: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address, // Mainnet wstETH
     fundingAmount: '1',

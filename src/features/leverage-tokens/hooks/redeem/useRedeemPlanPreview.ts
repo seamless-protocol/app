@@ -16,6 +16,10 @@ interface UseRedeemPlanPreviewParams {
   slippageBps: number
   chainId: number
   enabled: boolean
+  collateralAsset: Address | undefined
+  debtAsset: Address | undefined
+  collateralDecimals: number | undefined
+  debtDecimals: number | undefined
   quote?: QuoteFn
   managerAddress?: Address
   swapKey?: string
@@ -23,8 +27,6 @@ interface UseRedeemPlanPreviewParams {
   // For derived USD estimates (optional; omit to skip)
   collateralUsdPrice?: number | undefined
   debtUsdPrice?: number | undefined
-  collateralDecimals?: number | undefined
-  debtDecimals?: number | undefined
 }
 
 export function useRedeemPlanPreview({
@@ -38,6 +40,8 @@ export function useRedeemPlanPreview({
   swapKey,
   outputAsset,
   enabled = true,
+  collateralAsset,
+  debtAsset,
   collateralUsdPrice,
   debtUsdPrice,
   collateralDecimals,
@@ -47,7 +51,11 @@ export function useRedeemPlanPreview({
     enabled &&
     typeof sharesToRedeem === 'bigint' &&
     sharesToRedeem > 0n &&
-    typeof quote === 'function'
+    typeof quote === 'function' &&
+    !!collateralAsset &&
+    !!debtAsset &&
+    typeof collateralDecimals === 'number' &&
+    typeof debtDecimals === 'number'
 
   const keyParams = {
     chainId,
@@ -66,8 +74,12 @@ export function useRedeemPlanPreview({
     refetchOnWindowFocus: false,
     retry: 1,
     queryFn: async () => {
-      if (!enabled || !quote || typeof sharesToRedeem !== 'bigint') {
-        throw new Error('Redeem plan prerequisites missing')
+      // Inputs guaranteed by `enabledQuery`
+      if (!collateralAsset || !debtAsset) {
+        throw new Error('Leverage token assets not loaded')
+      }
+      if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') {
+        throw new Error('Leverage token decimals not provided')
       }
 
       const intent = getQuoteIntentForAdapter(
@@ -77,10 +89,14 @@ export function useRedeemPlanPreview({
       return planRedeem({
         config,
         token,
-        sharesToRedeem,
+        sharesToRedeem: sharesToRedeem as bigint,
         slippageBps,
-        quoteCollateralToDebt: quote,
+        quoteCollateralToDebt: quote as QuoteFn,
         chainId,
+        collateralAsset,
+        debtAsset,
+        collateralAssetDecimals: collateralDecimals,
+        debtAssetDecimals: debtDecimals,
         ...(managerAddress ? { managerAddress } : {}),
         ...(outputAsset ? { outputAsset } : {}),
         intent,

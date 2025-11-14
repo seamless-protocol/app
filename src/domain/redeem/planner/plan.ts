@@ -7,14 +7,9 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi, parseUnits, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
-import { getPublicClient } from 'wagmi/actions'
 import { USD_DECIMALS } from '@/domain/shared/prices'
 import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
-import {
-  readLeverageManagerV2GetLeverageTokenCollateralAsset,
-  readLeverageManagerV2GetLeverageTokenDebtAsset,
-  readLeverageManagerV2PreviewRedeem,
-} from '@/lib/contracts/generated'
+import { readLeverageManagerV2PreviewRedeem } from '@/lib/contracts/generated'
 import { fetchTokenUsdPrices } from '@/lib/prices/fetchUsdPrices'
 import type { Quote, QuoteFn } from './types'
 
@@ -75,6 +70,14 @@ export async function planRedeem(params: {
   sharesToRedeem: SharesToRedeemArg
   slippageBps: number
   quoteCollateralToDebt: QuoteFn
+  /** Collateral asset address for the leverage token */
+  collateralAsset: Address
+  /** Debt asset address for the leverage token */
+  debtAsset: Address
+  /** Collateral asset decimals */
+  collateralAssetDecimals: number
+  /** Debt asset decimals */
+  debtAssetDecimals: number
   /** Optional explicit output asset for user payout (defaults to collateral). */
   outputAsset?: Address
   /** Chain ID to execute the transaction on */
@@ -88,13 +91,15 @@ export async function planRedeem(params: {
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt: quoter,
+    collateralAsset,
+    debtAsset,
+    collateralAssetDecimals,
+    debtAssetDecimals,
     chainId,
     intent,
   } = params
 
   const {
-    collateralAsset,
-    debtAsset,
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,
@@ -104,6 +109,10 @@ export async function planRedeem(params: {
     token,
     sharesToRedeem,
     slippageBps,
+    collateralAsset,
+    debtAsset,
+    collateralAssetDecimals,
+    debtAssetDecimals,
     chainId,
   })
 
@@ -180,22 +189,6 @@ export async function planRedeem(params: {
     }
   }
 
-  const publicClient = getPublicClient(config, { chainId })
-  if (!publicClient) {
-    throw new Error('Public client unavailable for mint plan')
-  }
-  // TODO: Multicall these / pass in
-  const collateralAssetDecimals = await publicClient.readContract({
-    address: collateralAsset,
-    abi: erc20Abi,
-    functionName: 'decimals',
-  })
-  const debtAssetDecimals = await publicClient.readContract({
-    address: debtAsset,
-    abi: erc20Abi,
-    functionName: 'decimals',
-  })
-
   const usdPriceMap = await fetchTokenUsdPrices(chainId, [collateralAsset, debtAsset])
   const priceColl2 = parseUnits(
     String(usdPriceMap?.[collateralAsset.toLowerCase()] ?? 0),
@@ -240,26 +233,28 @@ async function getSwapParamsForRedeem(args: {
   token: TokenArg
   sharesToRedeem: SharesToRedeemArg
   slippageBps: number
-  chainId: number
-}): Promise<{
   collateralAsset: Address
   debtAsset: Address
+  collateralAssetDecimals: number
+  debtAssetDecimals: number
+  chainId: number
+}): Promise<{
   totalCollateralAvailable: bigint
   debtToRepay: bigint
   minCollateralForSender: bigint
   collateralAvailableForSwap: bigint
 }> {
-  const { config, token, sharesToRedeem, slippageBps, chainId } = args
-
-  // TODO: Multicall these / pass in
-  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
-  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
+  const {
+    config,
+    token,
+    sharesToRedeem,
+    slippageBps,
+    collateralAsset,
+    debtAsset,
+    collateralAssetDecimals,
+    debtAssetDecimals,
+    chainId,
+  } = args
   const preview = await readLeverageManagerV2PreviewRedeem(config, {
     args: [token, sharesToRedeem],
     chainId: chainId as SupportedChainId,
@@ -267,23 +262,6 @@ async function getSwapParamsForRedeem(args: {
 
   const totalCollateralAvailable = preview.collateral
   const debtToRepay = preview.debt
-
-  const publicClient = getPublicClient(config, { chainId })
-  if (!publicClient) {
-    throw new Error('Public client unavailable for redeem plan')
-  }
-
-  // TODO: Multicall these / pass in
-  const collateralAssetDecimals = await publicClient.readContract({
-    address: collateralAsset,
-    abi: erc20Abi,
-    functionName: 'decimals',
-  })
-  const debtAssetDecimals = await publicClient.readContract({
-    address: debtAsset,
-    abi: erc20Abi,
-    functionName: 'decimals',
-  })
 
   const usdPriceMap = await fetchTokenUsdPrices(chainId, [collateralAsset, debtAsset])
   const priceColl = parseUnits(
@@ -308,8 +286,6 @@ async function getSwapParamsForRedeem(args: {
   const collateralAvailableForSwap = totalCollateralAvailable - minCollateralForSender
 
   return {
-    collateralAsset,
-    debtAsset,
     totalCollateralAvailable,
     debtToRepay,
     minCollateralForSender,

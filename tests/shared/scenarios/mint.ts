@@ -4,6 +4,7 @@ import {
   createDebtToCollateralQuote,
   type DebtToCollateralSwapConfig,
 } from '@/domain/mint/utils/createDebtToCollateralQuote'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
@@ -12,7 +13,6 @@ import {
 } from '@/lib/contracts/generated'
 import type { LeverageTokenDefinition } from '../../fixtures/addresses'
 import { AVAILABLE_LEVERAGE_TOKENS, getAddressesForToken } from '../env'
-import { readErc20Decimals } from '../erc20'
 import { approveIfNeeded, seedUniswapV2PairLiquidity, topUpErc20, topUpNative } from '../funding'
 import { type WithForkCtx, withFork } from '../withFork'
 
@@ -73,6 +73,13 @@ export async function planMintTest({
     ensureLiquidity: false,
   })
 
+  const leverageTokenConfig = getLeverageTokenConfig(setup.token, tokenDefinition.chainId)
+  if (!leverageTokenConfig) {
+    throw new Error(`Leverage token config not found for ${setup.token}`)
+  }
+  const collateralDecimals = leverageTokenConfig.collateralAsset.decimals
+  const debtDecimals = leverageTokenConfig.debtAsset.decimals
+
   const plan = await planMint({
     config: ctx.config,
     token: setup.token,
@@ -81,6 +88,10 @@ export async function planMintTest({
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
     chainId: tokenDefinition.chainId as SupportedChainId,
+    collateralAsset: setup.collateralAsset,
+    debtAsset: setup.debtAsset,
+    collateralAssetDecimals: collateralDecimals,
+    debtAssetDecimals: debtDecimals,
   })
 
   return {
@@ -149,6 +160,13 @@ async function runMintScenario({
     args: [account.address],
   })) as bigint
 
+  const leverageTokenConfig = getLeverageTokenConfig(setup.token, tokenDefinition.chainId)
+  if (!leverageTokenConfig) {
+    throw new Error(`Leverage token config not found for ${setup.token}`)
+  }
+  const collateralDecimals = leverageTokenConfig.collateralAsset.decimals
+  const debtDecimals = leverageTokenConfig.debtAsset.decimals
+
   // Plan + simulate + write (no orchestrator)
   const plan = await planMint({
     config,
@@ -158,6 +176,10 @@ async function runMintScenario({
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
     chainId: tokenDefinition.chainId as SupportedChainId,
+    collateralAsset: setup.collateralAsset,
+    debtAsset: setup.debtAsset,
+    collateralAssetDecimals: collateralDecimals,
+    debtAssetDecimals: debtDecimals,
   })
 
   const { simulateLeverageRouterV2Deposit, writeLeverageRouterV2Deposit } = await import(
@@ -248,6 +270,7 @@ async function prepareMintScenario({
   const { collateralAsset, debtAsset, equityInInputAsset } = await fetchTokenAssets({
     config,
     token,
+    chainId: tokenDefinition.chainId,
     equityAmountHuman,
   })
 
@@ -283,10 +306,12 @@ async function prepareMintScenario({
 async function fetchTokenAssets({
   config,
   token,
+  chainId,
   equityAmountHuman,
 }: {
   config: Parameters<typeof readLeverageTokenBalanceOf>[0]
   token: Address
+  chainId: number
   equityAmountHuman: string
 }) {
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
@@ -296,7 +321,11 @@ async function fetchTokenAssets({
     args: [token],
   })
 
-  const decimals = await readErc20Decimals(config, collateralAsset)
+  const leverageTokenConfig = getLeverageTokenConfig(token, chainId)
+  if (!leverageTokenConfig) {
+    throw new Error(`Leverage token config not found for ${token}`)
+  }
+  const decimals = leverageTokenConfig.collateralAsset.decimals
   const equityInInputAsset = parseUnits(equityAmountHuman, decimals)
 
   return { collateralAsset, debtAsset, equityInInputAsset }

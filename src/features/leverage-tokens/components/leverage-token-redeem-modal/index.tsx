@@ -25,6 +25,7 @@ import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
 import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
+import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
@@ -89,6 +90,16 @@ export function LeverageTokenRedeemModal({
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
   const leverageRouterAddress = contractAddresses.leverageRouterV2
   const leverageManagerAddress = contractAddresses.leverageManagerV2
+
+  const {
+    collateralAsset,
+    debtAsset,
+    isLoading: assetsLoading,
+  } = useLeverageTokenManagerAssets({
+    token: leverageTokenAddress,
+    chainId: leverageTokenConfig.chainId as SupportedChainId,
+    enabled: isOpen,
+  })
 
   // Fetch leverage token fees
   const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(
@@ -289,6 +300,8 @@ export function LeverageTokenRedeemModal({
     slippageBps,
     chainId: leverageTokenConfig.chainId,
     enabled: isOpen,
+    collateralAsset,
+    debtAsset,
     ...(exec.quote ? { quote: exec.quote } : {}),
     ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
     ...(swapConfigKey ? { swapKey: swapConfigKey } : {}),
@@ -497,7 +510,7 @@ export function LeverageTokenRedeemModal({
 
   const isPlanCalculating = Boolean(form.amountRaw) && planPreview.isLoading
 
-  const isCalculating = preview.isLoading || isPlanCalculating
+  const isCalculating = assetsLoading || preview.isLoading || isPlanCalculating
 
   const canProceed = () => {
     return (

@@ -17,14 +17,16 @@ interface UseMintPlanPreviewParams {
   slippageBps: number
   chainId: number
   enabled: boolean
+  collateralAsset: Address | undefined
+  debtAsset: Address | undefined
+  collateralDecimals: number | undefined
+  debtDecimals: number | undefined
   quote?: QuoteFn
   debounceMs?: number
   epsilonBps?: number
   // For derived USD estimates (optional; omit to skip)
   collateralUsdPrice?: number | undefined
   debtUsdPrice?: number | undefined
-  collateralDecimals?: number | undefined
-  debtDecimals?: number | undefined
 }
 
 export function useMintPlanPreview({
@@ -34,9 +36,11 @@ export function useMintPlanPreview({
   equityInCollateralAsset,
   slippageBps,
   chainId,
+  enabled = true,
+  collateralAsset,
+  debtAsset,
   quote,
   debounceMs = 500,
-  enabled = true,
   epsilonBps,
   collateralUsdPrice,
   debtUsdPrice,
@@ -44,8 +48,16 @@ export function useMintPlanPreview({
   debtDecimals,
 }: UseMintPlanPreviewParams) {
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
+
   const enabledQuery =
-    enabled && typeof debounced === 'bigint' && debounced > 0n && typeof quote === 'function'
+    enabled &&
+    typeof debounced === 'bigint' &&
+    debounced > 0n &&
+    typeof quote === 'function' &&
+    !!collateralAsset &&
+    !!debtAsset &&
+    typeof collateralDecimals === 'number' &&
+    typeof debtDecimals === 'number'
 
   const keyParams = {
     chainId,
@@ -68,7 +80,14 @@ export function useMintPlanPreview({
     refetchOnWindowFocus: true,
     retry: 1,
     queryFn: async () => {
-      // Inputs guaranteed by `enabled`
+      // Inputs guaranteed by `enabledQuery`
+      if (!collateralAsset || !debtAsset) {
+        throw new Error('Leverage token assets not loaded')
+      }
+      if (typeof collateralDecimals !== 'number' || typeof debtDecimals !== 'number') {
+        throw new Error('Leverage token decimals not provided')
+      }
+
       return planMint({
         config,
         token,
@@ -77,6 +96,10 @@ export function useMintPlanPreview({
         slippageBps,
         quoteDebtToCollateral: quote as QuoteFn,
         chainId: chainId as SupportedChainId,
+        collateralAsset,
+        debtAsset,
+        collateralAssetDecimals: collateralDecimals,
+        debtAssetDecimals: debtDecimals,
         ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
       })
     },

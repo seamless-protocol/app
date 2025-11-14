@@ -9,13 +9,10 @@
 import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseUnits, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
-import { getPublicClient } from 'wagmi/actions'
 import { USD_DECIMALS } from '@/domain/shared/prices'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads
-  readLeverageManagerV2GetLeverageTokenCollateralAsset,
-  readLeverageManagerV2GetLeverageTokenDebtAsset,
   readLeverageManagerV2PreviewDeposit,
   readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
@@ -85,6 +82,14 @@ export async function planMint(params: {
   quoteDebtToCollateral: QuoteFn
   /** Chain ID to execute the transaction on */
   chainId: SupportedChainId
+  /** Collateral asset address */
+  collateralAsset: Address
+  /** Debt asset address */
+  debtAsset: Address
+  /** Collateral asset decimals */
+  collateralAssetDecimals: number
+  /** Debt asset decimals */
+  debtAssetDecimals: number
   /** Optional per-pair epsilon (bps) for single-pass clamp */
   epsilonBps?: number
 }): Promise<MintPlan> {
@@ -96,6 +101,10 @@ export async function planMint(params: {
     slippageBps,
     quoteDebtToCollateral,
     chainId,
+    collateralAsset,
+    debtAsset,
+    collateralAssetDecimals,
+    debtAssetDecimals,
     epsilonBps,
   } = params
 
@@ -107,9 +116,8 @@ export async function planMint(params: {
     throw new Error('epsilonBps out of range (0-100)')
   }
 
-  // 1) Resolve manager assets first, enforce collateral-only input, then preview ideal
+  // 1) Enforce collateral-only input, then preview ideal
   const userCollateralOut = equityInInputAsset
-  const { collateralAsset, debtAsset } = await getManagerAssets({ config, token, chainId })
   const normalizedInputAsset = getAddress(inputAsset)
   const normalizedCollateralAsset = getAddress(collateralAsset)
   debugMintPlan('assets', { inputAsset, collateralAsset, debtAsset })
@@ -205,22 +213,6 @@ export async function planMint(params: {
   }
 
   const excessDebt = finalQuote.requiredDebt - debtIn
-
-  const publicClient = getPublicClient(config, { chainId })
-  if (!publicClient) {
-    throw new Error('Public client unavailable for mint plan')
-  }
-  // TODO: Multicall these / pass in
-  const collateralAssetDecimals = await publicClient.readContract({
-    address: collateralAsset,
-    abi: erc20Abi,
-    functionName: 'decimals',
-  })
-  const debtAssetDecimals = await publicClient.readContract({
-    address: debtAsset,
-    abi: erc20Abi,
-    functionName: 'decimals',
-  })
 
   const usdPriceMap = await fetchTokenUsdPrices(chainId, [collateralAsset, debtAsset])
   const collateralPriceUsd = usdPriceMap?.[collateralAsset.toLowerCase()]
@@ -354,19 +346,6 @@ async function previewFinal(args: {
     chainId: chainId as SupportedChainId,
   })
   return { requiredDebt: m.debt, shares: m.shares, requiredCollateral: m.collateral }
-}
-
-async function getManagerAssets(args: { config: Config; token: TokenArg; chainId: number }) {
-  const { config, token, chainId } = args
-  const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
-  const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
-    args: [token],
-    chainId: chainId as SupportedChainId,
-  })
-  return { collateralAsset, debtAsset }
 }
 
 function buildDebtSwapCalls(args: {

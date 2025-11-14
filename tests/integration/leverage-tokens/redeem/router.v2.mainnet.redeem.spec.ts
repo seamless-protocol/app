@@ -11,7 +11,6 @@ import {
 } from '@/lib/contracts/generated'
 import type { LeverageTokenKey } from '../../../fixtures/addresses'
 import { CHAIN_ID, getAddressesForToken } from '../../../shared/env'
-import { readErc20Decimals } from '../../../shared/erc20'
 import { approveIfNeeded } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
 import { type WithForkCtx, withFork } from '../../../shared/withFork'
@@ -100,7 +99,11 @@ async function prepareRedeemScenario(
     args: [token],
   })
 
-  const decimals = await readErc20Decimals(config, collateralAsset)
+  const leverageTokenConfig = getLeverageTokenConfig(token, mainnet.id)
+  if (!leverageTokenConfig) {
+    throw new Error(`Leverage token config not found for ${token}`)
+  }
+  const decimals = leverageTokenConfig.collateralAsset.decimals
   const equityInInputAsset = parseUnits(params.fundingAmount, decimals)
 
   return {
@@ -197,15 +200,22 @@ async function performRedeem(
     getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora',
   )
 
+  const collateralDecimals = tokenConfig.collateralAsset.decimals
+  const debtDecimals = tokenConfig.debtAsset.decimals
+
   const plan = await planRedeem({
     config,
     token,
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
+    collateralAsset,
+    debtAsset,
     chainId,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
     intent,
+    collateralAssetDecimals: collateralDecimals,
+    debtAssetDecimals: debtDecimals,
   })
 
   const collateralBalanceBefore = await publicClient.readContract({

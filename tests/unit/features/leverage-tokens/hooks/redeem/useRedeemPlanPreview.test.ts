@@ -22,6 +22,16 @@ vi.mock('@/features/leverage-tokens/leverageTokens.config', () => ({
   getLeverageTokenConfig: vi.fn(),
 }))
 
+vi.mock('@/features/leverage-tokens/hooks/useLeverageTokenManagerAssets', () => ({
+  useLeverageTokenManagerAssets: vi.fn(() => ({
+    collateralAsset: makeAddr('collateral'),
+    debtAsset: makeAddr('debt'),
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}))
+
 const mockPlanRedeem = planRedeem as Mock
 const mockGetQuoteIntentForAdapter = getQuoteIntentForAdapter as Mock
 const mockGetLeverageTokenConfig = getLeverageTokenConfig as Mock
@@ -96,8 +106,12 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -114,8 +128,12 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: undefined,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -132,8 +150,12 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: 0n,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -151,7 +173,11 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -170,8 +196,12 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: false,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -192,8 +222,12 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 75,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -211,6 +245,10 @@ describe('useRedeemPlanPreview', () => {
         slippageBps: 75,
         quoteCollateralToDebt: mockQuote,
         chainId: CHAIN_ID,
+        collateralAsset: makeAddr('collateral'),
+        debtAsset: makeAddr('debt'),
+        collateralAssetDecimals: 18,
+        debtAssetDecimals: 18,
         intent: 'exactOut',
       })
     })
@@ -226,10 +264,14 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
           managerAddress,
           outputAsset,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -239,6 +281,10 @@ describe('useRedeemPlanPreview', () => {
 
       expect(mockPlanRedeem).toHaveBeenCalledWith(
         expect.objectContaining({
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
+          collateralAssetDecimals: 18,
+          debtAssetDecimals: 18,
           managerAddress,
           outputAsset,
         }),
@@ -262,8 +308,12 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -274,6 +324,10 @@ describe('useRedeemPlanPreview', () => {
       expect(mockGetQuoteIntentForAdapter).toHaveBeenCalledWith('lifi')
       expect(mockPlanRedeem).toHaveBeenCalledWith(
         expect.objectContaining({
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
+          collateralAssetDecimals: 18,
+          debtAssetDecimals: 18,
           intent: 'exactIn',
         }),
       )
@@ -289,8 +343,12 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -318,6 +376,8 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
           collateralUsdPrice: 2000, // $2000 per token
@@ -352,6 +412,8 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
           collateralUsdPrice: 2000,
@@ -378,8 +440,12 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 
@@ -399,17 +465,20 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
           collateralUsdPrice: 2000,
           debtUsdPrice: 1000,
+          collateralDecimals: undefined,
+          debtDecimals: undefined,
         }),
       )
 
-      await waitFor(() => {
-        expect(resultNoDecimals.current.plan).toBeDefined()
-      })
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
+      expect(resultNoDecimals.current.plan).toBeUndefined()
       expect(resultNoDecimals.current.expectedUsdOutScaled).toBeUndefined()
       expect(resultNoDecimals.current.guaranteedUsdOutScaled).toBeUndefined()
     })
@@ -427,8 +496,12 @@ describe('useRedeemPlanPreview', () => {
           sharesToRedeem: SHARES_TO_REDEEM,
           slippageBps: 50,
           chainId: CHAIN_ID,
+          collateralAsset: makeAddr('collateral'),
+          debtAsset: makeAddr('debt'),
           enabled: true,
           quote: mockQuote,
+          collateralDecimals: 18,
+          debtDecimals: 18,
         }),
       )
 

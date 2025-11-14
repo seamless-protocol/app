@@ -4,6 +4,7 @@ import {
   type CollateralToDebtSwapConfig,
   createCollateralToDebtQuote,
 } from '@/domain/redeem/utils/createCollateralToDebtQuote'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2GetLeverageTokenDebtAsset,
@@ -142,15 +143,26 @@ export async function planRedeemTest({
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
   })
 
+  const leverageTokenConfig = getLeverageTokenConfig(scenario.token, scenario.chainId)
+  if (!leverageTokenConfig) {
+    throw new Error(`Leverage token config not found for ${scenario.token}`)
+  }
+  const collateralDecimals = leverageTokenConfig.collateralAsset.decimals
+  const debtDecimals = leverageTokenConfig.debtAsset.decimals
+
   const plan = await planRedeem({
     config: ctx.config,
     token: scenario.token,
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
+    collateralAsset: scenario.collateralAsset,
+    debtAsset: scenario.debtAsset,
     chainId: scenario.chainId,
     ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
     intent: 'exactOut',
+    collateralAssetDecimals: collateralDecimals,
+    debtAssetDecimals: debtDecimals,
   })
 
   return {
