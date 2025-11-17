@@ -159,7 +159,6 @@ The CI workflow (`.github/workflows/ci.yml`) uses Anvil by default to avoid Tend
   env:
     VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
     ANVIL_MAINNET_FORK_BLOCK: 23821277  # Pin block for caching
-    ANVIL_NO_MINING: false
 
 - name: Run integration tests
   run: TEST_CHAIN=mainnet E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration --backend=anvil -- tests/integration/leverage-tokens
