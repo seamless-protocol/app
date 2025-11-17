@@ -30,11 +30,15 @@ bun format             # Format code with Biome
 bun typecheck          # Type-check only
 
 # Testing
-bun run test               # Run unit tests with Vitest
-bun run test:ui            # Run tests with UI
-bun run test:coverage      # Run tests with coverage
-bun run test:integration   # Run integration tests (uses Anvil by default)
-bun run test:e2e           # Run E2E tests with Playwright (uses Anvil by default)
+bun run test                    # Run unit tests with Vitest
+bun run test:ui                 # Run tests with UI
+bun run test:coverage           # Run tests with coverage
+bun run test:integration        # Run integration tests (uses Anvil by default)
+bun run test:e2e                # Run E2E tests with Playwright (uses Anvil by default)
+
+# Advanced Testing
+bun run test:integration:raw       # Integration tests directly via Vitest (no backend harness)
+bun run test:integration:tenderly  # Integration tests against Tenderly JIT VNet (advanced)
 
 # Testing Backend Configuration
 # DEFAULT: Local Anvil fork
@@ -131,11 +135,21 @@ ErrorBoundary (Sentry)
 
 ## Environment Variables
 
-Required for development:
+**Required for development:**
 ```bash
 VITE_WALLETCONNECT_PROJECT_ID  # Get from WalletConnect Cloud
 VITE_BASE_RPC_URL              # Base network RPC
+```
+
+**Required for testing (integration/E2E):**
+```bash
+VITE_ALCHEMY_API_KEY           # For Anvil mainnet fork - Get from https://www.alchemy.com/
+```
+
+**Optional:**
+```bash
 VITE_SENTRY_DSN                # Error tracking
+VITE_INCLUDE_TEST_TOKENS       # Include test-only tokens (defaults to true for integration/E2E when using scripts/run-tests)
 ```
 
 See `.env.example` for complete list.

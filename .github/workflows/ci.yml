@@ -50,7 +50,7 @@ jobs:
         run: bunx @tanstack/router-cli generate --config vite.config.ts
       
       - name: Run unit tests
-        run: bunx vitest --run tests/unit --config vitest.config.ts
+        run: bun run test:unit
 
   test-e2e:
     name: E2E Tests
@@ -78,7 +78,7 @@ jobs:
 
       - name: Start Anvil (Mainnet fork)
         run: |
-          anvil --fork-url "https://eth-mainnet.g.alchemy.com/v2/${{ secrets.VITE_ALCHEMY_API_KEY }}" --chain-id 1 --port 8545 &
+          VITE_ALCHEMY_API_KEY=${{ secrets.VITE_ALCHEMY_API_KEY }} bun run anvil:mainnet &
           sleep 5
         env:
           ANVIL_NO_MINING: false
@@ -130,13 +130,13 @@ jobs:
 
       - name: Start Anvil (Mainnet fork)
         run: |
-          anvil --fork-url "https://eth-mainnet.g.alchemy.com/v2/${{ secrets.VITE_ALCHEMY_API_KEY }}" --chain-id 1 --port 8545 &
+          VITE_ALCHEMY_API_KEY=${{ secrets.VITE_ALCHEMY_API_KEY }} bun run anvil:mainnet &
           sleep 5
         env:
           ANVIL_NO_MINING: false
 
       - name: Run integration tests (Mainnet tokens, Anvil)
-        run: TEST_CHAIN=mainnet E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration --backend=anvil -- tests/integration/leverage-tokens
+        run: bun run test:integration
         env:
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless

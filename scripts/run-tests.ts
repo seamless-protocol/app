@@ -483,11 +483,9 @@ function withTestDefaults(
     env['VITE_E2E'] = '1'
   }
 
+  // Auto-set VITE_INCLUDE_TEST_TOKENS for chain-aware suites if not explicitly set
   if (isChainAwareSuite && !env['VITE_INCLUDE_TEST_TOKENS']) {
-    const currentRpc = env['TEST_RPC_URL']
-    if (backend === 'tenderly' || currentRpc?.includes('tenderly')) {
-      env['VITE_INCLUDE_TEST_TOKENS'] = 'true'
-    }
+    env['VITE_INCLUDE_TEST_TOKENS'] = 'true'
   }
 
   if (!env['VITE_ETHEREUM_RPC_URL']) {
@@ -500,12 +498,9 @@ function withTestDefaults(
     }
   }
 
+  // Auto-set E2E_TOKEN_SOURCE based on backend if not explicitly set
   if (isUiSuite && !env['E2E_TOKEN_SOURCE']) {
-    const currentRpc = env['TEST_RPC_URL']
-    if (backend === 'tenderly') env['E2E_TOKEN_SOURCE'] = 'tenderly'
-    else if (backend === 'anvil') env['E2E_TOKEN_SOURCE'] = 'prod'
-    else if (currentRpc?.includes('tenderly')) env['E2E_TOKEN_SOURCE'] = 'tenderly'
-    else env['E2E_TOKEN_SOURCE'] = 'prod'
+    env['E2E_TOKEN_SOURCE'] = backend === 'tenderly' ? 'tenderly' : 'prod'
   }
 
   // Default: disable LiFi live smoke specs in integration unless explicitly enabled
