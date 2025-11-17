@@ -1,7 +1,7 @@
 import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { planMint, validateMintPlan } from '@/domain/mint/planner/plan'
 import type { MintPlan } from '@/domain/mint/planner/plan'
+import { planMint, validateMintPlan } from '@/domain/mint/planner/plan'
 
 vi.mock('@/lib/contracts/generated', async () => {
   return {
