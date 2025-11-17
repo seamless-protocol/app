@@ -420,7 +420,8 @@ function debugMintPlan(label: string, data: Record<string, unknown>): void {
         return false
       }
     })()
-    const shouldLog = testMode || viteFlag || nodeFlag || lsFlag
+    // Only log if explicitly enabled via env var (not just TEST_MODE)
+    const shouldLog = viteFlag || nodeFlag || lsFlag
     if (!shouldLog) return
     // eslint-disable-next-line no-console
     console.info('[Mint][Plan][Debug]', label, sanitizeBigints(data))
