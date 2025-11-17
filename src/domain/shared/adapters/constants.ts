@@ -3,7 +3,7 @@
  */
 
 export const BPS_DENOMINATOR = 10000n
-export const DEFAULT_SLIPPAGE_BPS = 500 // 5% - Balanced default for DEX routing (tests manually set higher if needed)
+export const DEFAULT_SLIPPAGE_BPS = 50 // 0.5% - Conservative default (tests set higher for specific tokens as needed)
 
 /**
  * Convert basis points to decimal string (e.g., 50 bps -> "0.005")
