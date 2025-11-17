@@ -19,7 +19,6 @@ ARGS=(
   --fork-url "${ANVIL_BASE_FORK_URL}"
   --port "${ANVIL_PORT}"
   --chain-id 8453
-  --block-time 1
   --no-rate-limit
 )
 

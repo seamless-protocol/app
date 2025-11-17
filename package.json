@@ -19,7 +19,7 @@
     "test:integration": "TEST_CHAIN=mainnet bun scripts/run-tests.ts integration --backend=anvil -- tests/integration/leverage-tokens",
     "test:integration:raw": "vitest -c vitest.integration.config.ts --run tests/integration",
     "anvil:base": "bash ./scripts/anvil-base.sh",
-    "anvil:mainnet": "anvil --fork-url \"https://eth-mainnet.g.alchemy.com/v2/${VITE_ALCHEMY_API_KEY}\" --chain-id 1 --port 8545",
+    "anvil:mainnet": "bash ./scripts/anvil-mainnet.sh",
     "test:e2e": "TEST_CHAIN=mainnet bun scripts/run-tests.ts e2e --chain mainnet --backend=anvil -- tests/e2e/mainnet-tokens-mint.spec.ts tests/e2e/mainnet-tokens-redeem.spec.ts",
     "test:integration:tenderly": "TEST_CHAIN=mainnet bun scripts/run-tests.ts integration --backend=tenderly -- tests/integration/leverage-tokens",
     "storybook": "storybook dev -p 6006",
