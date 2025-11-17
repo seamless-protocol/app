@@ -290,6 +290,22 @@ export async function planMint(params: {
   }
 }
 
+/**
+ * Validate a mint plan to ensure it's safe to execute.
+ * Enforces invariants described in mint-redeem-debt-semantics.md
+ */
+export function validateMintPlan(plan: MintPlan): boolean {
+  if (plan.equityInInputAsset <= 0n) return false
+  if (plan.expectedShares <= 0n) return false
+  if (plan.minShares < 0n) return false
+  if (plan.expectedTotalCollateral < 0n) return false
+  if (plan.expectedDebt < 0n) return false
+  if (plan.expectedExcessDebt < 0n) return false
+  if (plan.swapExpectedOut < 0n) return false
+  if (plan.swapMinOut < 0n) return false
+  return true
+}
+
 // Helpers — defined below the main function for clarity
 
 /**
