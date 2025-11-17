@@ -404,7 +404,6 @@ function assertDebtSwapQuote(
 // Internal test-aware debug logger (no-ops outside test runs)
 function debugMintPlan(label: string, data: Record<string, unknown>): void {
   try {
-    const testMode = typeof process !== 'undefined' && !!process.env && !!process.env['TEST_MODE']
     const viteFlag =
       typeof import.meta !== 'undefined' &&
       (import.meta as unknown as { env?: Record<string, unknown> })?.env?.[
