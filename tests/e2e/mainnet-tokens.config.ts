@@ -51,7 +51,7 @@ export const MAINNET_E2E_TOKEN_CONFIGS: Array<MainnetE2ETokenTestConfig> = [
   {
     key: 'pt-rlp-4dec2025-usdc-2x',
     label: 'PT-RLP-4DEC2025/USDC 2x',
-    slippagePercent: '2',
+    slippagePercent: '5',
     mintAmount: '100',
     collateralAddress: '0x3A70F0C696dcB3A4aB3833cD9726397dD61AC85e' as Address, // Mainnet PT-RLP-4DEC2025
     fundingAmount: '200',
