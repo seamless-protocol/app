@@ -75,26 +75,12 @@ export const adminClient = createPublicClient({
  */
 export async function adminRequest<T = unknown>(method: string, params: Array<any> = []) {
   try {
-    console.info('[ADMIN RPC] request', {
-      method,
-      // Avoid dumping large payloads; show brief param summary
-      paramsPreview: Array.isArray(params)
-        ? params.map((p) =>
-            typeof p === 'string'
-              ? `${p.slice(0, 10)}...`
-              : Array.isArray(p)
-                ? `[${p.length}]`
-                : typeof p,
-          )
-        : typeof params,
-    })
     const req = (
       adminClient as unknown as {
         request: (args: { method: string; params?: Array<any> }) => Promise<any>
       }
     ).request
     const res = (await req({ method, params })) as T
-    console.info('[ADMIN RPC] response', { method, ok: true })
     return res
   } catch (err) {
     console.error('[ADMIN RPC] error', { method, err })

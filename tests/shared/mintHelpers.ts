@@ -20,7 +20,7 @@ import {
   simulateLeverageRouterV2Deposit,
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
-import { ADDR, CHAIN_ID, RPC } from './env'
+import { ADDR, CHAIN_ID } from './env'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
 
 export type MintSetupParams = {
@@ -86,9 +86,7 @@ export async function executeSharedMint({
   const manager: Address = (addresses?.manager ?? ADDR.managerV2 ?? ADDR.manager) as Address
   const router: Address = (addresses?.router ?? ADDR.routerV2 ?? ADDR.router) as Address
 
-  console.info('[SHARED MINT] Using public RPC', { url: RPC.primary })
   const chainId = chainIdOverride ?? CHAIN_ID
-  console.info('[SHARED MINT] Chain ID', { chainId })
 
   const collateralAsset = await readLeverageManagerV2GetLeverageTokenCollateralAsset(config, {
     args: [token],
@@ -96,7 +94,6 @@ export async function executeSharedMint({
   const debtAsset = await readLeverageManagerV2GetLeverageTokenDebtAsset(config, {
     args: [token],
   })
-  console.info('[SHARED MINT] Token assets', { collateralAsset, debtAsset })
 
   const leverageTokenConfig = getLeverageTokenConfig(token, chainId)
   if (!leverageTokenConfig) {
@@ -105,10 +102,6 @@ export async function executeSharedMint({
   const decimals = leverageTokenConfig.collateralAsset.decimals
   const equityHuman = process.env['TEST_EQUITY_AMOUNT'] ?? '0.1'
   const equityInInputAsset = parseUnits(equityHuman, decimals)
-  console.info('[SHARED MINT] Funding + approving collateral', {
-    collateralAsset,
-    equityInInputAsset: equityInInputAsset.toString(),
-  })
   await topUpNative(account.address, '1')
   await topUpErc20(collateralAsset, account.address, '25', richHolderAddress)
   await approveIfNeeded(collateralAsset, router, equityInInputAsset)
@@ -124,9 +117,6 @@ export async function executeSharedMint({
 
   // Use production config if available and no test override
   if (debtToCollateralConfig && !useLiFi && !quoteAdapterPreference) {
-    console.info('[SHARED MINT] Using production config', {
-      adapterType: debtToCollateralConfig.type,
-    })
     const { quote } = createDebtToCollateralQuote({
       chainId,
       routerAddress: router,
@@ -170,7 +160,6 @@ export async function executeSharedMint({
   const collateralDecimals = leverageTokenConfig.collateralAsset.decimals
   const debtDecimals = leverageTokenConfig.debtAsset.decimals
 
-  console.info('[SHARED MINT] Planning mint')
   const plan = await planMint({
     config,
     token,
@@ -185,15 +174,6 @@ export async function executeSharedMint({
     debtAssetDecimals: debtDecimals,
   })
 
-  console.info('[SHARED MINT PLAN]', {
-    minShares: plan.minShares.toString(),
-    expectedShares: plan.expectedShares.toString(),
-    expectedDebt: plan.expectedDebt.toString(),
-    expectedTotalCollateral: plan.expectedTotalCollateral.toString(),
-    calls: plan.calls.length,
-  })
-
-  console.info('[SHARED MINT] Simulate + write deposit')
   const { request } = await simulateLeverageRouterV2Deposit(config, {
     args: [
       token,
@@ -271,13 +251,6 @@ async function resolveDebtToCollateralQuote(params: {
 
   switch (mode) {
     case 'lifi': {
-      console.info('[SHARED MINT] Creating LiFi quote adapter', {
-        chainId,
-        router,
-        fromAddress: executor,
-        allowBridges: 'none',
-        slippageBps: resolvedSlippageBps,
-      })
       return createLifiQuoteAdapter({
         chainId,
         router,
@@ -298,15 +271,6 @@ async function resolveDebtToCollateralQuote(params: {
       ) {
         throw new Error('Uniswap v3 adapter selected but configuration is incomplete')
       }
-      console.info('[SHARED MINT] Creating Uniswap V3 quote adapter', {
-        chainId,
-        router,
-        quoter: config.quoter,
-        swapRouter: config.router,
-        pool: config.pool,
-        fee: config.fee,
-        slippageBps: resolvedSlippageBps,
-      })
       return createUniswapV3QuoteAdapter({
         publicClient: publicClient as unknown as UniswapV3QuoteOptions['publicClient'],
         quoter: config.quoter,
@@ -322,12 +286,6 @@ async function resolveDebtToCollateralQuote(params: {
       const uniswapRouter =
         (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
         ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
-      console.info('[SHARED MINT] Creating Uniswap V2 quote adapter', {
-        chainId,
-        router,
-        uniswapRouter,
-        slippageBps: resolvedSlippageBps,
-      })
       return createUniswapV2QuoteAdapter({
         publicClient: publicClient as unknown as UniswapV2QuoteOptions['publicClient'],
         router: uniswapRouter,
