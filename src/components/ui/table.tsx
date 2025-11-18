@@ -168,7 +168,7 @@ function TablePagination({
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
           <span>
             {totalItems > 0 ? `Showing ${startItem} to ${endItem} of ${totalItems} results` : 'No results found'}
-          </span>
+          </span> 
         </div>
 
         {/* Only show navigation when there are multiple pages */}
