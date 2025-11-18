@@ -97,6 +97,24 @@ test.describe('Mainnet token mints (production config)', () => {
         await expect(confirm).toBeVisible()
       }
 
+      // Wait for quote to stabilize and ensure "Confirm Mint" button is ready
+      // (not showing "Acknowledge Updated Quote" due to quote changes)
+      const confirmButton = page.getByRole('button', {
+        name: /^(Confirm Mint|Acknowledge Updated Quote)$/,
+      })
+      await expect(confirmButton).toBeVisible({ timeout: 5_000 })
+
+      // If quote worsened and needs re-acknowledgment, handle it
+      const buttonText = await confirmButton.innerText()
+      if (buttonText === 'Acknowledge Updated Quote') {
+        await confirmButton.click()
+        // Wait for button to change back to "Confirm Mint" after acknowledgment
+        await expect(page.getByRole('button', { name: 'Confirm Mint' })).toBeVisible({
+          timeout: 5_000,
+        })
+      }
+
+      // Now proceed with the actual confirmation
       await page.getByRole('button', { name: 'Confirm Mint' }).click()
 
       await expect(page.getByRole('heading', { name: 'Mint Success!' })).toBeVisible({
