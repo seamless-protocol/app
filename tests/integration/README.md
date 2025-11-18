@@ -14,16 +14,31 @@ foundryup
 
 ### Setup
 
-1. Configure environment (.env.local or .env):
+1. Configure environment (.env.local, .env, or tests/integration/.env):
    ```bash
    # Required for Anvil mainnet fork
    VITE_ALCHEMY_API_KEY=your_alchemy_key_here
+
+   # Optional: Anvil mainnet fork configuration
+   ANVIL_MAINNET_FORK_URL=https://eth-mainnet.g.alchemy.com/v2/${VITE_ALCHEMY_API_KEY}
+   ANVIL_PORT=8545
+   ANVIL_MAINNET_FORK_BLOCK=23821277  # Pin a specific block for caching (recommended)
 
    # Optional: Tenderly credentials (for Tenderly backend)
    TENDERLY_ACCOUNT=your_account
    TENDERLY_PROJECT=your_project
    TENDERLY_ACCESS_KEY=your_access_key
    ```
+
+   **Important: Pinning Fork Block for Performance**
+   - Set `ANVIL_MAINNET_FORK_BLOCK` to a specific block number (e.g., `23821277`) to enable Anvil's disk cache
+   - This dramatically speeds up subsequent test runs by reusing cached fork state
+   - Choose a block that:
+     - Is after all contracts you depend on were deployed
+     - Is after any critical config changes you care about
+     - You can verify on Etherscan or Alchemy UI
+   - Treat this block as a snapshot of mainnet for tests - everyone uses the same block for deterministic results
+   - When you need updated mainnet state, deliberately choose a new block and update the env var
 
 2. **Option A: Using Anvil (Recommended)**
 
@@ -139,10 +154,11 @@ The CI workflow (`.github/workflows/ci.yml`) uses Anvil by default to avoid Tend
 
 - name: Start Anvil (Mainnet fork)
   run: |
-    anvil --fork-url "https://eth-mainnet.g.alchemy.com/v2/${{ secrets.VITE_ALCHEMY_API_KEY }}" --chain-id 1 --port 8545 &
+    bash ./scripts/anvil-mainnet.sh &
     sleep 5
   env:
-    ANVIL_NO_MINING: false
+    VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
+    ANVIL_MAINNET_FORK_BLOCK: 23821277  # Pin block for caching
 
 - name: Run integration tests
   run: TEST_CHAIN=mainnet E2E_LEVERAGE_TOKEN_KEY=wsteth-eth-25x bun scripts/run-tests.ts integration --backend=anvil -- tests/integration/leverage-tokens
@@ -163,9 +179,10 @@ The CI workflow (`.github/workflows/ci.yml`) uses Anvil by default to avoid Tend
 - Individual test: <10s execution time
 
 **Optimizations:**
-- `--block-time 0`: Instant mining
+- **Instant mining**: Anvil mines blocks immediately when transactions are submitted (no `--block-time` delay)
 - `--no-rate-limit`: No compute throttling
 - Snapshot/revert: Fast state management
+- **Pinned fork block**: Set `ANVIL_MAINNET_FORK_BLOCK` to enable Anvil's disk cache (`~/.foundry/cache/rpc/1/<block>`), dramatically reducing startup time on subsequent runs
 
 ### Focused Run: Mainnet wstETH/ETH 25x (Tenderly JIT + LiFi)
 

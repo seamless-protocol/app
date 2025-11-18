@@ -420,7 +420,6 @@ function assertDebtSwapQuote(
 // Internal test-aware debug logger (no-ops outside test runs)
 function debugMintPlan(label: string, data: Record<string, unknown>): void {
   try {
-    const testMode = typeof process !== 'undefined' && !!process.env && !!process.env['TEST_MODE']
     const viteFlag =
       typeof import.meta !== 'undefined' &&
       (import.meta as unknown as { env?: Record<string, unknown> })?.env?.[
@@ -436,7 +435,8 @@ function debugMintPlan(label: string, data: Record<string, unknown>): void {
         return false
       }
     })()
-    const shouldLog = testMode || viteFlag || nodeFlag || lsFlag
+    // Only log if explicitly enabled via env var (not just TEST_MODE)
+    const shouldLog = viteFlag || nodeFlag || lsFlag
     if (!shouldLog) return
     // eslint-disable-next-line no-console
     console.info('[Mint][Plan][Debug]', label, sanitizeBigints(data))

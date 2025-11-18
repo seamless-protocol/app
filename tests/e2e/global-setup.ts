@@ -11,9 +11,12 @@ async function globalSetup() {
   console.log(`🔧 Using local backend at ${BACKEND.rpcUrl} — validating connectivity...`)
   const isReachable = await checkRpcHealth(BACKEND.rpcUrl, BACKEND.chainId)
   if (!isReachable) {
+    const chainName = BACKEND.chainKey === 'mainnet' ? 'mainnet' : 'base'
+    const anvilScript = BACKEND.chainKey === 'mainnet' ? 'anvil:mainnet' : 'anvil:base'
     throw new Error(
       `❌ RPC ${BACKEND.rpcUrl} not reachable.\n` +
-        '   Start Anvil with: ANVIL_BASE_FORK_URL=https://mainnet.base.org bun run anvil:base\n' +
+        `   Start Anvil with: bun run ${anvilScript}\n` +
+        `   Expected chain ID: ${BACKEND.chainId} (${chainName})\n` +
         '   Or run without TEST_MODE/Test overrides to use Tenderly JIT.',
     )
   }

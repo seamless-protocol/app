@@ -78,10 +78,11 @@ jobs:
 
       - name: Start Anvil (Mainnet fork)
         run: |
-          VITE_ALCHEMY_API_KEY=${{ secrets.VITE_ALCHEMY_API_KEY }} bun run anvil:mainnet &
+          bun run anvil:mainnet &
           sleep 5
         env:
-          ANVIL_NO_MINING: false
+          VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
+          ANVIL_MAINNET_FORK_BLOCK: 23821277
 
       - name: Run E2E tests (Mainnet tokens, Anvil)
         run: bun run test:e2e
@@ -130,10 +131,11 @@ jobs:
 
       - name: Start Anvil (Mainnet fork)
         run: |
-          VITE_ALCHEMY_API_KEY=${{ secrets.VITE_ALCHEMY_API_KEY }} bun run anvil:mainnet &
+          bun run anvil:mainnet &
           sleep 5
         env:
-          ANVIL_NO_MINING: false
+          VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
+          ANVIL_MAINNET_FORK_BLOCK: 23821277
 
       - name: Run integration tests (Mainnet tokens, Anvil)
         run: bun run test:integration
