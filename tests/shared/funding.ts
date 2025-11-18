@@ -19,35 +19,23 @@ export const wethAbi = parseAbi(['function deposit() payable', 'function withdra
 /** Top up native balance */
 export async function topUpNative(to: Address, ether: string) {
   if (mode === 'anvil') {
-    console.info('[STEP] Funding native (anvil)', { to, ether })
     await testClient.setBalance({ address: to, value: parseUnits(ether, 18) })
-    console.info('[STEP] Funded native (anvil)')
     return
   }
   // Use tenderly_addBalance so the action surfaces as a transaction in the VNet explorer
   // (setBalance performs a direct state write and may not show as a tx)
-  console.info('[STEP] Funding native (tenderly_addBalance)', { to, ether })
   await adminRequest('tenderly_addBalance', [[to], toHex(parseUnits(ether, 18))])
-  console.info('[STEP] Funded native (tenderly_addBalance)')
 }
 
 /** Set ERC-20 balance via admin RPC (Tenderly) */
 export async function setErc20Balance(token: Address, to: Address, human: string) {
-  console.info('[STEP] Funding ERC20 (tenderly_setErc20Balance) — preparing', { token, to, human })
   const decimals = await publicClient.readContract({
     address: token,
     abi: erc20Abi,
     functionName: 'decimals',
   })
   const raw = parseUnits(human, decimals)
-  console.info('[STEP] Funding ERC20 (tenderly_setErc20Balance)', {
-    token,
-    to,
-    human,
-    raw: raw.toString(),
-  })
   await adminRequest('tenderly_setErc20Balance', [token, to, toHex(raw)])
-  console.info('[STEP] Funded ERC20 (tenderly_setErc20Balance)')
 }
 
 async function fundErc20ViaWethDeposit(token: Address, to: Address, human: string) {
@@ -121,11 +109,6 @@ export async function topUpErc20(token: Address, to: Address, human: string, ric
 }
 
 async function setErc20BalanceRaw(token: Address, to: Address, amount: bigint) {
-  console.info('[STEP] Funding ERC20 (raw bigint)', {
-    token,
-    to,
-    amount: amount.toString(),
-  })
   await adminRequest('tenderly_setErc20Balance', [token, to, toHex(amount)])
 }
 
@@ -339,15 +322,7 @@ export async function approveIfNeeded(token: Address, spender: Address, minAmoun
     functionName: 'allowance',
     args: [account.address, spender],
   })
-  console.info('approveIfNeeded: current allowance', {
-    token,
-    spender,
-    currentAllowance: (allowance as bigint).toString(),
-    requiredAmount: minAmount.toString(),
-    needsApproval: (allowance as bigint) < minAmount,
-  })
   if ((allowance as bigint) >= minAmount) return
-  console.info('approveIfNeeded: sending approval tx...')
   const hash = await walletClient.writeContract({
     address: token,
     abi: erc20Abi,
@@ -355,5 +330,4 @@ export async function approveIfNeeded(token: Address, spender: Address, minAmoun
     args: [spender, maxUint256],
   })
   await publicClient.waitForTransactionReceipt({ hash })
-  console.info('approveIfNeeded: approval tx confirmed', { hash })
 }

@@ -232,6 +232,7 @@ export VITE_ALCHEMY_API_KEY="your_alchemy_key"
 - **Test client actions** - Direct balance manipulation via `setBalance`, `impersonateAccount`
 - **Snapshot/revert** - Fast state management for test isolation
 - **Per-test funding** - Automatic token funding with `withFork()` helper
+- **Pinned fork blocks** - Both `anvil:base` and `anvil:mainnet` scripts support `ANVIL_FORK_BLOCK` / `ANVIL_MAINNET_FORK_BLOCK` env vars to pin specific blocks, enabling Anvil's disk cache for faster subsequent runs
 
 **Test Architecture:**
 - **Public Client**: Read blockchain state from Base fork  
