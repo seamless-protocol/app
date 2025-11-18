@@ -167,7 +167,7 @@ function TablePagination({
       <div className="px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
           <span>
-            Showing {startItem} to {endItem} of {totalItems} results
+            {totalItems > 0 ? `Showing ${startItem} to ${endItem} of ${totalItems} results` : 'No results found'}
           </span>
         </div>
 
