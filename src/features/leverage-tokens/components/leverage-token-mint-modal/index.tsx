@@ -468,7 +468,7 @@ export function LeverageTokenMintModal({
   } = useMinSharesGuard({
     currentStep,
     plan: planPreview.plan,
-    getMinValue: (plan) => plan.minShares,
+    getMinValue: (plan) => ('minShares' in plan ? plan.minShares : undefined),
   })
 
   const expectedTokens = useMemo(() => {

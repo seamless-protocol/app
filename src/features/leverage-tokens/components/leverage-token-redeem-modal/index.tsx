@@ -514,7 +514,8 @@ export function LeverageTokenRedeemModal({
   } = useMinSharesGuard({
     currentStep,
     plan: planPreview.plan,
-    getMinValue: (plan) => plan.minCollateralForSender,
+    getMinValue: (plan) =>
+      'minCollateralForSender' in plan ? plan.minCollateralForSender : undefined,
   })
 
   // Check if approval is needed

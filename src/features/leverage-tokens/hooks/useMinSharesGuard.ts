@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
+import type { MintPlan } from '@/domain/mint/planner/plan'
+import type { RedeemPlan } from '@/domain/redeem/planner/plan'
 
-interface UseMinSharesGuardParams<TPlan> {
-  currentStep: string
-  plan: TPlan | undefined
-  getMinValue: (plan: TPlan) => bigint | undefined
-  stepName?: string // The step name to track (default: 'confirm')
+type ModalStep = 'userInput' | 'approve' | 'confirm' | 'pending' | 'success' | 'error'
+
+interface UseMinSharesGuardParams {
+  currentStep: ModalStep
+  plan: MintPlan | RedeemPlan | undefined
+  getMinValue: (plan: MintPlan | RedeemPlan) => bigint | undefined
+  stepName?: ModalStep // The step name to track (default: 'confirm')
 }
 
 interface UseMinSharesGuardResult {
@@ -31,12 +35,12 @@ interface UseMinSharesGuardResult {
  * @param stepName - The step name to track (default: 'confirm')
  * @returns Guard state and acknowledgment handler
  */
-export function useMinSharesGuard<TPlan>({
+export function useMinSharesGuard({
   currentStep,
   plan,
   getMinValue,
   stepName = 'confirm',
-}: UseMinSharesGuardParams<TPlan>): UseMinSharesGuardResult {
+}: UseMinSharesGuardParams): UseMinSharesGuardResult {
   const [ackMinValue, setAckMinValue] = useState<bigint | undefined>(undefined)
   const [needsReack, setNeedsReack] = useState(false)
 
