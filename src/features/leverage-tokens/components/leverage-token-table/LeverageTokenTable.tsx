@@ -373,7 +373,7 @@ export function LeverageTokenTable({
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.6, delay: index * 0.05 }}
-                      className="cursor-pointer border-[var(--divider-line)] transition-colors hover:bg-accent overflow-y-hidden h-[75px]"
+                      className="cursor-pointer border-[var(--divider-line)] transition-colors hover:bg-accent"
                       onClick={() => onTokenClick?.(token)}
                     >
                       <TableCell className="py-4 px-6">
