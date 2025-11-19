@@ -73,8 +73,10 @@ export function useRedeemPlanPreview({
   const query = useQuery({
     queryKey: ltKeys.simulation.redeemPlanKey(keyParams),
     enabled: enabledQuery,
-    staleTime: 0,
-    refetchOnWindowFocus: false,
+    // Periodically refresh quotes while user is editing
+    refetchInterval: enabled ? 30_000 : false,
+    staleTime: 10_000,
+    refetchOnWindowFocus: true,
     retry: 1,
     queryFn: async () => {
       // Inputs guaranteed by `enabledQuery`

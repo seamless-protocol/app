@@ -150,6 +150,24 @@ test.describe('Mainnet token redeems (production config)', () => {
         await expect(redeemConfirm).toBeVisible()
       }
 
+      // Wait for quote to stabilize and ensure "Confirm Redemption" button is ready
+      // (not showing "Acknowledge Updated Quote" due to quote changes)
+      const redeemConfirmButton = page.getByRole('button', {
+        name: /^(Confirm Redemption|Acknowledge Updated Quote)$/,
+      })
+      await expect(redeemConfirmButton).toBeVisible({ timeout: 5_000 })
+
+      // If quote worsened and needs re-acknowledgment, handle it
+      const redeemButtonText = await redeemConfirmButton.innerText()
+      if (redeemButtonText === 'Acknowledge Updated Quote') {
+        await redeemConfirmButton.click()
+        // Wait for button to change back to "Confirm Redemption" after acknowledgment
+        await expect(page.getByRole('button', { name: 'Confirm Redemption' })).toBeVisible({
+          timeout: 5_000,
+        })
+      }
+
+      // Now proceed with the actual confirmation
       await page.getByRole('button', { name: 'Confirm Redemption' }).click()
 
       // Wait for either wallet confirmation or processing state

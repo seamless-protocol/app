@@ -39,6 +39,7 @@ import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
+import { useMinSharesGuard } from '../../hooks/useMinSharesGuard'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
 import { ApproveStep } from './ApproveStep'
@@ -459,6 +460,18 @@ export function LeverageTokenMintModal({
     }
   }, [isApprovedFlag, approveErr, currentStep, toConfirm, toError])
 
+  // Guard against quote worsening after user has acknowledged a floor
+  const {
+    needsReack,
+    errorMessage: guardErrorMessage,
+    onUserAcknowledge,
+  } = useMinSharesGuard({
+    currentStep,
+    plan: planPreview.plan,
+    getMinValue: (plan) => ('minShares' in plan ? plan.minShares : undefined),
+    stepName: 'confirm',
+  })
+
   const expectedTokens = useMemo(() => {
     const shares = planPreview.plan?.expectedShares
     return formatTokenAmountFromBase(
@@ -635,6 +648,13 @@ export function LeverageTokenMintModal({
   const handleConfirm = async () => {
     if (!publicClient) return
     if (!userAddress || !isConnected || !form.amountRaw) return
+
+    // If quote worsened, require re-acknowledgment
+    if (needsReack) {
+      // User needs to acknowledge the worsened quote before proceeding
+      // They can click Confirm again after reviewing, which will call onUserAcknowledge
+      return
+    }
 
     // Track funnel step: mint transaction initiated
     analytics.funnelStep('mint_leverage_token', 'transaction_initiated', 2)
@@ -850,6 +870,9 @@ export function LeverageTokenMintModal({
             }
             expectedDebtAmount={expectedExcessDebtAmount}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
+            {...(guardErrorMessage || error ? { error: guardErrorMessage || error } : {})}
+            needsReack={needsReack}
+            onUserAcknowledge={onUserAcknowledge}
           />
         )
 

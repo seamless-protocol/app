@@ -27,6 +27,7 @@ import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
+import { useMinSharesGuard } from '../../hooks/useMinSharesGuard'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
 import { ApproveStep } from '../leverage-token-mint-modal/ApproveStep'
@@ -505,6 +506,19 @@ export function LeverageTokenRedeemModal({
     }
   }, [isApprovedFlag, approveErr, currentStep, toConfirm, toError])
 
+  // Guard against quote worsening after user has acknowledged a floor
+  const {
+    needsReack,
+    errorMessage: guardErrorMessage,
+    onUserAcknowledge,
+  } = useMinSharesGuard({
+    currentStep,
+    plan: planPreview.plan,
+    getMinValue: (plan) =>
+      'minCollateralForSender' in plan ? plan.minCollateralForSender : undefined,
+    stepName: 'confirm',
+  })
+
   // Check if approval is needed
   const needsApproval = () => Boolean(needsApprovalFlag)
 
@@ -566,6 +580,13 @@ export function LeverageTokenRedeemModal({
 
   // Handle redemption confirmation
   const handleConfirm = async () => {
+    // If quote worsened, require re-acknowledgment
+    if (needsReack) {
+      // User needs to acknowledge the worsened quote before proceeding
+      // They can click Confirm again after reviewing, which will call onUserAcknowledge
+      return
+    }
+
     const plan = planPreview.plan
     if (!plan) {
       setError('Plan not ready. Please try again.')
@@ -782,6 +803,9 @@ export function LeverageTokenRedeemModal({
             disabled={isCalculating || exec.quoteStatus !== 'ready' || !planPreview.plan}
             expectedDebtAmount={expectedDebtAmount}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
+            {...(guardErrorMessage || error ? { error: guardErrorMessage || error } : {})}
+            needsReack={needsReack}
+            onUserAcknowledge={onUserAcknowledge}
           />
         )
 
