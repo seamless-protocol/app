@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { motion } from 'framer-motion'
 import { Award, ExternalLink } from 'lucide-react'
 import { useEffect } from 'react'
 import { PageContainer } from '@/components/PageContainer'
@@ -26,7 +27,12 @@ function VaultsPage() {
     <PageContainer padded={false} className="py-2 xs:py-3 sm:py-4 lg:py-8">
       <div className="space-y-8 max-w-4xl mx-auto pb-8">
         {/* Hero */}
-        <div className="text-center space-y-6">
+        <motion.div
+          className="text-center space-y-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="space-y-4">
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Seamless Vaults</h1>
@@ -39,12 +45,23 @@ function VaultsPage() {
               with Morpho. Earn competitive returns with battle-tested security.
             </p>
           </div>
-        </div>
+        </motion.div>
 
-        <VaultStatCards />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <VaultStatCards />
+        </motion.div>
 
         {/* CTA Card */}
-        <Card className="text-card-foreground flex flex-col gap-6 rounded-xl bg-gradient-to-br from-purple-500/10 via-slate-900/80 to-cyan-500/10 border border-purple-500/20 hover:border-purple-500/30 transition-all duration-300">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card className="text-card-foreground flex flex-col gap-6 rounded-xl bg-gradient-to-br from-purple-500/10 via-slate-900/80 to-cyan-500/10 border border-purple-500/20 hover:border-purple-500/30 transition-all duration-300">
           <CardContent className="p-8 text-center space-y-8">
             <div className="space-y-6">
               <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">
@@ -105,7 +122,8 @@ function VaultsPage() {
               </Button>
             </div>
           </CardContent>
-        </Card>
+          </Card>
+        </motion.div>
       </div>
     </PageContainer>
   )

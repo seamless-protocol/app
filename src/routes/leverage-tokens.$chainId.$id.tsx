@@ -374,11 +374,15 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                 <div className="flex items-center space-x-1">
                   <Badge
                     variant={
-                      apyData?.totalAPY !== undefined && apyData.totalAPY < 0 ? 'error' : 'success'
+                      isApyError || (apyData?.totalAPY !== undefined && apyData.totalAPY < 0)
+                        ? 'error'
+                        : 'success'
                     }
                     className="text-sm"
                   >
-                    {apyData?.totalAPY ? (
+                    {isApyError ? (
+                      'No APY'
+                    ) : apyData?.totalAPY !== undefined ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
                       <Skeleton className="h-4 w-20" />
@@ -466,12 +470,14 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                 <div className="flex items-center space-x-1">
                   <Badge
                     className={
-                      apyData?.totalAPY !== undefined && apyData.totalAPY < 0
+                      isApyError || (apyData?.totalAPY !== undefined && apyData.totalAPY < 0)
                         ? 'border-[color-mix(in_srgb,var(--state-error-text)_25%,transparent)] bg-[var(--state-error-bg)] text-[var(--state-error-text)]'
                         : 'border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]'
                     }
                   >
-                    {apyData?.totalAPY ? (
+                    {isApyError ? (
+                      'No APY'
+                    ) : apyData?.totalAPY !== undefined ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
                     ) : (
                       <Skeleton className="h-4 w-20" />
