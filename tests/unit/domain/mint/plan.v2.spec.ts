@@ -1,6 +1,7 @@
 import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { planMint } from '@/domain/mint/planner/plan'
+import type { MintPlan } from '@/domain/mint/planner/plan'
+import { planMint, validateMintPlan } from '@/domain/mint/planner/plan'
 
 vi.mock('@/lib/contracts/generated', async () => {
   return {
@@ -94,5 +95,74 @@ describe('planMint', () => {
     expect(calls[0]?.value).toBe(0n)
     expect(calls[1]?.target).toBe('0x9999999999999999999999999999999999999999')
     expect(calls[1]?.value).toBe(0n)
+  })
+})
+
+describe('validateMintPlan', () => {
+  const validPlan: MintPlan = {
+    inputAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
+    equityInInputAsset: 1000000000000000000n, // 1 token
+    collateralAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
+    debtAsset: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
+    flashLoanAmount: 500000000000000000n, // 0.5 tokens
+    minShares: 950000000000000000n, // 0.95 tokens
+    expectedShares: 1000000000000000000n, // 1 token
+    expectedDebt: 1000000000000000000n, // 1 token
+    expectedTotalCollateral: 1500000000000000000n, // 1.5 tokens
+    expectedExcessDebt: 500000000000000000n, // 0.5 tokens
+    worstCaseRequiredDebt: 0n,
+    worstCaseShares: 0n,
+    swapExpectedOut: 500000000000000000n, // 0.5 tokens
+    swapMinOut: 490000000000000000n, // 0.49 tokens
+    calls: [],
+  }
+
+  it('should return true for valid plan', () => {
+    expect(validateMintPlan(validPlan)).toBe(true)
+  })
+
+  it('should return false if equityInInputAsset is zero', () => {
+    const invalidPlan = { ...validPlan, equityInInputAsset: 0n }
+    expect(validateMintPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if expectedShares is zero', () => {
+    const invalidPlan = { ...validPlan, expectedShares: 0n }
+    expect(validateMintPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if expectedShares is negative', () => {
+    const invalidPlan = { ...validPlan, expectedShares: -1n }
+    expect(validateMintPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if minShares is negative', () => {
+    const invalidPlan = { ...validPlan, minShares: -1n }
+    expect(validateMintPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if expectedTotalCollateral is negative', () => {
+    const invalidPlan = { ...validPlan, expectedTotalCollateral: -1n }
+    expect(validateMintPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if expectedDebt is negative', () => {
+    const invalidPlan = { ...validPlan, expectedDebt: -1n }
+    expect(validateMintPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if expectedExcessDebt is negative', () => {
+    const invalidPlan = { ...validPlan, expectedExcessDebt: -1n }
+    expect(validateMintPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if swapExpectedOut is negative', () => {
+    const invalidPlan = { ...validPlan, swapExpectedOut: -1n }
+    expect(validateMintPlan(invalidPlan)).toBe(false)
+  })
+
+  it('should return false if swapMinOut is negative', () => {
+    const invalidPlan = { ...validPlan, swapMinOut: -1n }
+    expect(validateMintPlan(invalidPlan)).toBe(false)
   })
 })

@@ -354,4 +354,21 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
   }
 
   expect(plan.payoutAsset.toLowerCase()).toBe((payoutAsset ?? collateralAsset).toLowerCase())
+
+  // Validate excess debt out matches planner expectation
+  const actualExcessDebtOut = debtDelta > 0n ? debtDelta : 0n
+  const isDebtPayout = payoutAsset?.toLowerCase() === plan.debtAsset.toLowerCase()
+
+  if (isDebtPayout) {
+    // Redeeming into debt asset: payoutAmount should equal expectedDebtPayout
+    expect(plan.payoutAmount).toBe(plan.expectedDebtPayout)
+  }
+
+  // Validate actual excess debt matches planner's expectedDebtPayout within tolerance
+  if (plan.expectedDebtPayout > 0n) {
+    expect(withinTolerance(actualExcessDebtOut, plan.expectedDebtPayout)).toBe(true)
+  } else {
+    // No excess debt expected: allow tiny dust tolerance
+    expect(debtDelta).toBeLessThanOrEqual(1000n) // ~$0.001 dust tolerance
+  }
 }

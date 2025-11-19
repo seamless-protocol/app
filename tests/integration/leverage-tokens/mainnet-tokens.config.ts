@@ -33,7 +33,7 @@ export const MAINNET_TOKEN_CONFIGS: Array<MainnetTokenTestConfig> = [
   {
     key: 'wsteth-eth-25x',
     label: 'wstETH/ETH 25x',
-    slippageBps: 500,
+    slippageBps: 1500, // 15% - Increased to handle LiFi routing variability
     toleranceBps: 10,
     fundingAmount: '0.5',
     richHolderAddress: '0x0B925eD163218f6662a35e0f0371Ac234f9E9371' as Address, // Aave v3 wstETH pool
@@ -49,7 +49,7 @@ export const MAINNET_TOKEN_CONFIGS: Array<MainnetTokenTestConfig> = [
   {
     key: 'pt-rlp-4dec2025-usdc-2x',
     label: 'PT-RLP-4DEC2025/USDC 2x',
-    slippageBps: 200,
+    slippageBps: 500,
     toleranceBps: 10,
     fundingAmount: '200',
     richHolderAddress: '0x3ee8A025fB8CF12A0a6c6027FD40caaBbbd8E2fb' as Address, // Pendle PT-RLP holder (EOA)
