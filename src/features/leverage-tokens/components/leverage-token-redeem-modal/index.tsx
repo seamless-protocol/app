@@ -516,6 +516,7 @@ export function LeverageTokenRedeemModal({
     plan: planPreview.plan,
     getMinValue: (plan) =>
       'minCollateralForSender' in plan ? plan.minCollateralForSender : undefined,
+    stepName: 'confirm',
   })
 
   // Check if approval is needed

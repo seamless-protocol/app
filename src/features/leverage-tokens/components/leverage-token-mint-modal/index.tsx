@@ -469,6 +469,7 @@ export function LeverageTokenMintModal({
     currentStep,
     plan: planPreview.plan,
     getMinValue: (plan) => ('minShares' in plan ? plan.minShares : undefined),
+    stepName: 'confirm',
   })
 
   const expectedTokens = useMemo(() => {

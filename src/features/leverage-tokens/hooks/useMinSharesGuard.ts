@@ -8,7 +8,7 @@ interface UseMinSharesGuardParams {
   currentStep: ModalStep
   plan: MintPlan | RedeemPlan | undefined
   getMinValue: (plan: MintPlan | RedeemPlan) => bigint | undefined
-  stepName?: ModalStep // The step name to track (default: 'confirm')
+  stepName: ModalStep // The step name to track (default: 'confirm')
 }
 
 interface UseMinSharesGuardResult {
