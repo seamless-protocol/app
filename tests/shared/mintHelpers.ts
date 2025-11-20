@@ -1,3 +1,4 @@
+import { createTestBalmySDK } from 'tests/shared/clients'
 import type { Address, PublicClient } from 'viem'
 import { parseUnits } from 'viem'
 import { planMint } from '@/domain/mint/planner/plan'
@@ -114,7 +115,6 @@ export async function executeSharedMint({
   const debtToCollateralConfig = tokenConfig?.swaps?.debtToCollateral
 
   let quoteDebtToCollateral: QuoteFn
-
   // Use production config if available and no test override
   if (debtToCollateralConfig && !useLiFi && !quoteAdapterPreference) {
     const { quote } = createDebtToCollateralQuote({
@@ -123,6 +123,7 @@ export async function executeSharedMint({
       swap: debtToCollateralConfig,
       slippageBps: resolvedSlippageBps,
       getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
+      balmySDK: createTestBalmySDK(),
     })
     quoteDebtToCollateral = quote
   } else {
