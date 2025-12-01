@@ -61,7 +61,9 @@ describe('DefiLlamaAprProvider', () => {
     expect(result.stakingAPR).toBeCloseTo(3.1, 4)
     expect(result.restakingAPR).toBe(0)
     expect(result.totalAPR).toBeCloseTo(3.1, 4)
-    expect(result.averagingPeriod).toBe('24-hour average')
+    expect(result.averagingPeriod).toBeDefined()
+    // Ensure that the averagingPeriod string matches the expected format: "as of ${datestring}"
+    expect(result.averagingPeriod).toMatch(/^as of \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/)
 
     expect(mockFetch).toHaveBeenCalledWith(
       `https://yields.llama.fi/chart/${protocolId}`,
