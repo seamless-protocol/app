@@ -1,7 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DefiLlamaAprProvider } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/defillama'
 
-// Mock fetch
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
@@ -9,45 +8,41 @@ describe('DefiLlamaAprProvider', () => {
   const protocolId = '747c1d2a-c668-4682-b9f9-296708a3dd90'
   const provider = new DefiLlamaAprProvider(protocolId)
 
-  it('should fetch APR data successfully and calculate 24-hour average', async () => {
-    // Create 3 days of data to test that we only use the last 24 hours
+  beforeEach(() => {
+    mockFetch.mockReset()
+  })
+
+  it('should fetch APR data successfully using the most recent entry', async () => {
+    const now = Date.now()
+    const isoHoursAgo = (hours: number) => new Date(now - hours * 60 * 60 * 1000).toISOString()
     const mockData = [
       {
-        timestamp: '2024-01-08T12:00:00Z',
-        apy: 2.0,
-        apyBase: 2.0,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      }, // Should be ignored (older than 24h)
-      {
-        timestamp: '2024-01-09T00:00:00Z',
+        timestamp: isoHoursAgo(24),
         apy: 3.0,
         apyBase: 3.0,
         apyReward: null,
         il7d: null,
         apyBase7d: null,
         tvlUsd: 1000000,
-      }, // Last 24 hours start here
+      },
       {
-        timestamp: '2024-01-09T12:00:00Z',
-        apy: 3.2,
-        apyBase: 3.2,
+        timestamp: isoHoursAgo(12),
+        apy: 3.8,
+        apyBase: 3.8,
         apyReward: null,
         il7d: null,
         apyBase7d: null,
         tvlUsd: 1000000,
       },
       {
-        timestamp: '2024-01-10T00:00:00.000Z',
-        apy: 3.4,
-        apyBase: 3.4,
+        timestamp: isoHoursAgo(1),
+        apy: 4.2,
+        apyBase: 4.2,
         apyReward: null,
         il7d: null,
         apyBase7d: null,
         tvlUsd: 1000000,
-      }, // Most recent (excluded from average)
+      },
     ]
 
     mockFetch.mockResolvedValueOnce({
@@ -57,11 +52,12 @@ describe('DefiLlamaAprProvider', () => {
 
     const result = await provider.fetchApr()
 
-    // Should average the last 24 hours (excluding most recent): 3.0, 3.2 = 3.1
-    expect(result.stakingAPR).toBeCloseTo(3.1, 4)
+    expect(result.stakingAPR).toBe(4.2)
     expect(result.restakingAPR).toBe(0)
-    expect(result.totalAPR).toBeCloseTo(3.1, 4)
-    expect(result.averagingPeriod).toBe('24-hour average')
+    expect(result.totalAPR).toBe(4.2)
+    expect(result.averagingPeriod).toBe(
+      `as of ${new Date(mockData[2]?.timestamp ?? '').toLocaleString(undefined, { timeZoneName: 'short' })}`,
+    )
 
     expect(mockFetch).toHaveBeenCalledWith(
       `https://yields.llama.fi/chart/${protocolId}`,
@@ -69,7 +65,6 @@ describe('DefiLlamaAprProvider', () => {
         method: 'GET',
       }),
     )
-    // Ensure we use a simple request (no custom headers) to avoid CORS preflight
     const options = (mockFetch.mock.calls[0] as Array<unknown>)[1] as Record<string, unknown>
     expect(options['headers']).toBeUndefined()
   })
@@ -84,150 +79,7 @@ describe('DefiLlamaAprProvider', () => {
     await expect(provider.fetchApr()).rejects.toThrow('DeFi Llama API error: 404 Not Found')
   })
 
-  it('should handle empty data', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ status: 'success', data: [] }),
-    })
-
-    await expect(provider.fetchApr()).rejects.toThrow(
-      'DeFi Llama API returned empty or invalid data',
-    )
-  })
-
-  it('should handle invalid data', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ status: 'success', data: [{ apy: null }] }),
-    })
-
-    await expect(provider.fetchApr()).rejects.toThrow('No valid APR data found')
-  })
-
-  it('should calculate average correctly with data within 24 hours', async () => {
-    // Test with only a few hours of data
-    const mockData = [
-      {
-        timestamp: '2024-01-02T20:00:00Z',
-        apy: 3.0,
-        apyBase: 3.0,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-02T22:00:00Z',
-        apy: 3.5,
-        apyBase: 3.5,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-03T00:00:00Z',
-        apy: 4.0,
-        apyBase: 4.0,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-    ]
-
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ status: 'success', data: mockData }),
-    })
-
-    const result = await provider.fetchApr()
-
-    // Should average entries within last 24 hours (excluding most recent): (3.0 + 3.5) / 2 = 3.25
-    expect(result.stakingAPR).toBe(3.25)
-    expect(result.totalAPR).toBe(3.25)
-  })
-
-  it('should handle mixed valid and invalid data in 24-hour window', async () => {
-    const mockData = [
-      {
-        timestamp: '2024-01-06T12:00:00Z',
-        apy: 3.0,
-        apyBase: 3.0,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-06T16:00:00Z',
-        apy: null,
-        apyBase: null,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      }, // Invalid
-      {
-        timestamp: '2024-01-06T18:00:00Z',
-        apy: 3.5,
-        apyBase: 3.5,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-06T20:00:00Z',
-        apy: Number.NaN,
-        apyBase: Number.NaN,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      }, // Invalid
-      {
-        timestamp: '2024-01-06T22:00:00Z',
-        apy: 4.0,
-        apyBase: 4.0,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-07T02:00:00Z',
-        apy: 4.5,
-        apyBase: 4.5,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-07T12:00:00Z',
-        apy: 5.0,
-        apyBase: 5.0,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-    ]
-
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ status: 'success', data: mockData }),
-    })
-
-    const result = await provider.fetchApr()
-
-    // Should average only valid data within last 24 hours (excluding most recent): (3.0 + 3.5 + 4.0 + 4.5) / 4 = 3.75
-    expect(result.stakingAPR).toBe(3.75)
-    expect(result.totalAPR).toBe(3.75)
-  })
-
-  it('should handle non-success status', async () => {
+  it('should handle non-success status responses', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ status: 'error', data: [] }),
@@ -238,23 +90,34 @@ describe('DefiLlamaAprProvider', () => {
     )
   })
 
-  it('should handle missing mostRecentEntry', async () => {
+  it('should handle empty data arrays', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ status: 'success', data: [] }),
     })
 
-    // Empty data array triggers "empty or invalid data" error before checking mostRecentEntry
     await expect(provider.fetchApr()).rejects.toThrow(
       'DeFi Llama API returned empty or invalid data',
     )
   })
 
-  it('should handle no valid data in last 24 hours', async () => {
-    // Data older than 24 hours
+  it('should handle missing data entries even when array length is non-zero', async () => {
+    const mockData = [undefined] as Array<unknown>
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ status: 'success', data: mockData }),
+    })
+
+    await expect(provider.fetchApr()).rejects.toThrow('No data entries found')
+  })
+
+  it('should handle most recent data older than 48 hours', async () => {
+    const now = Date.now()
+    const isoHoursAgo = (hours: number) => new Date(now - hours * 60 * 60 * 1000).toISOString()
     const mockData = [
       {
-        timestamp: '2024-01-01T00:00:00Z',
+        timestamp: isoHoursAgo(96),
         apy: 3.0,
         apyBase: 3.0,
         apyReward: null,
@@ -263,18 +126,9 @@ describe('DefiLlamaAprProvider', () => {
         tvlUsd: 1000000,
       },
       {
-        timestamp: '2024-01-02T00:00:00Z',
-        apy: null, // Invalid
-        apyBase: null,
-        apyReward: null,
-        il7d: null,
-        apyBase7d: null,
-        tvlUsd: 1000000,
-      },
-      {
-        timestamp: '2024-01-10T00:00:00Z',
-        apy: Number.NaN, // Invalid
-        apyBase: Number.NaN,
+        timestamp: isoHoursAgo(60),
+        apy: 3.5,
+        apyBase: 3.5,
         apyReward: null,
         il7d: null,
         apyBase7d: null,
@@ -287,9 +141,39 @@ describe('DefiLlamaAprProvider', () => {
       json: () => Promise.resolve({ status: 'success', data: mockData }),
     })
 
-    await expect(provider.fetchApr()).rejects.toThrow(
-      'No valid APR data found in the last 24 hours',
-    )
+    await expect(provider.fetchApr()).rejects.toThrow('Most recent APR data is older than 48 hours')
+  })
+
+  it('should handle invalid most recent APR values', async () => {
+    const now = Date.now()
+    const isoHoursAgo = (hours: number) => new Date(now - hours * 60 * 60 * 1000).toISOString()
+    const mockData = [
+      {
+        timestamp: isoHoursAgo(24),
+        apy: 3.0,
+        apyBase: 3.0,
+        apyReward: null,
+        il7d: null,
+        apyBase7d: null,
+        tvlUsd: 1000000,
+      },
+      {
+        timestamp: isoHoursAgo(2),
+        apy: null,
+        apyBase: null,
+        apyReward: null,
+        il7d: null,
+        apyBase7d: null,
+        tvlUsd: 1000000,
+      },
+    ]
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ status: 'success', data: mockData }),
+    })
+
+    await expect(provider.fetchApr()).rejects.toThrow('Most recent APR data point is invalid')
   })
 
   it('should handle non-Error exceptions', async () => {

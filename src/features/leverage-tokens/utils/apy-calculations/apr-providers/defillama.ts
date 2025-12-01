@@ -74,8 +74,6 @@ export class DefiLlamaAprProvider implements AprFetcher {
 
       const data = responseData.data
 
-      // Calculate 24-hour average APR by filtering to last 24 hours from the most recent entry
-      // Get the most recent entry to determine the cutoff date
       const mostRecentEntry = data[data.length - 1]
       if (!mostRecentEntry) {
         const error = new Error('No data entries found')
@@ -89,23 +87,12 @@ export class DefiLlamaAprProvider implements AprFetcher {
         throw error
       }
 
-      // Calculate 24 hours ago from the most recent entry (excluding current moment)
       const mostRecentDate = new Date(mostRecentEntry.timestamp)
-      const oneDayAgo = new Date(mostRecentDate.getTime() - 24 * 60 * 60 * 1000)
+      const now = new Date()
+      const hoursSinceMostRecent = (now.getTime() - mostRecentDate.getTime()) / (1000 * 60 * 60)
 
-      // Filter data to only include entries from the last 24 hours (excluding current moment)
-      const last24HoursData = data.filter((item) => {
-        const itemDate = new Date(item.timestamp)
-        return (
-          itemDate >= oneDayAgo &&
-          itemDate < mostRecentDate &&
-          item.apy != null &&
-          !Number.isNaN(item.apy)
-        )
-      })
-
-      if (last24HoursData.length === 0) {
-        const error = new Error('No valid APR data found in the last 24 hours')
+      if (Number.isNaN(hoursSinceMostRecent) || hoursSinceMostRecent > 48) {
+        const error = new Error('Most recent APR data is older than 48 hours')
         captureApiError({
           provider,
           method,
@@ -116,17 +103,25 @@ export class DefiLlamaAprProvider implements AprFetcher {
         throw error
       }
 
-      const validData = last24HoursData
+      if (mostRecentEntry.apy == null || Number.isNaN(mostRecentEntry.apy)) {
+        const error = new Error('Most recent APR data point is invalid')
+        captureApiError({
+          provider,
+          method,
+          url,
+          durationMs: elapsed,
+          error,
+        })
+        throw error
+      }
 
-      // Calculate average APR over the last 24 hours
-      // This gives us a current APR value based on the most recent day of data
-      const averageAPR = validData.reduce((sum, item) => sum + item.apy, 0) / validData.length
+      const latestApr = mostRecentEntry.apy
 
       return {
-        stakingAPR: averageAPR,
+        stakingAPR: latestApr,
         restakingAPR: 0, // DeFi Llama doesn't provide restaking APR
-        totalAPR: averageAPR,
-        averagingPeriod: '24-hour average',
+        totalAPR: latestApr,
+        averagingPeriod: `as of ${mostRecentDate.toLocaleString(undefined, { timeZoneName: 'short' })}`,
       }
     } catch (error) {
       const elapsed = elapsedMsSince(start)

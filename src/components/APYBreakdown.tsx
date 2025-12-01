@@ -1,4 +1,3 @@
-import type { AveragingPeriod } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/types'
 import type { RewardTokenApr } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers/types'
 import { formatPercentage, formatPoints } from '@/lib/utils/formatting'
 import { getTokenLogoComponent } from '@/lib/utils/token-logos'
@@ -21,8 +20,8 @@ export interface APYBreakdownData {
   }
   metadata?: {
     // Averaging periods for transparency
-    yieldAveragingPeriod?: AveragingPeriod
-    borrowAveragingPeriod?: AveragingPeriod
+    yieldAveragingPeriod?: string
+    borrowAveragingPeriod?: string
   }
 }
 
