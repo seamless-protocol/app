@@ -91,8 +91,8 @@ export class DefiLlamaAprProvider implements AprFetcher {
       const now = new Date()
       const hoursSinceMostRecent = (now.getTime() - mostRecentDate.getTime()) / (1000 * 60 * 60)
 
-      if (Number.isNaN(hoursSinceMostRecent) || hoursSinceMostRecent > 28) {
-        const error = new Error('Most recent APR data is older than 28 hours')
+      if (Number.isNaN(hoursSinceMostRecent) || hoursSinceMostRecent > 48) {
+        const error = new Error('Most recent APR data is older than 48 hours')
         captureApiError({
           provider,
           method,
