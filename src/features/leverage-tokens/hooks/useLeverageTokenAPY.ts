@@ -3,7 +3,6 @@ import type { Address } from 'viem'
 import { useConfig } from 'wagmi'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
-import type { AveragingPeriod } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers/types'
 import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { fetchAprForToken } from '../utils/apy-calculations/apr-providers'
 import { fetchBorrowApyForToken } from '../utils/apy-calculations/borrow-apy-providers'
@@ -161,8 +160,8 @@ export function useLeverageTokenAPY({
 
       // Build metadata object conditionally to satisfy exactOptionalPropertyTypes
       const metadata: {
-        yieldAveragingPeriod?: AveragingPeriod
-        borrowAveragingPeriod?: AveragingPeriod
+        yieldAveragingPeriod?: string
+        borrowAveragingPeriod?: string
       } = {}
       if (aprData.averagingPeriod) {
         metadata.yieldAveragingPeriod = aprData.averagingPeriod
