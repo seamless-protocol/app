@@ -1,19 +1,35 @@
-export const LEVERAGE_TOKEN_PRICE_COMPARISON_QUERY = `
-  query LeverageTokenPriceComparison($address: ID!, $first: Int) {
+export const LEVERAGE_TOKEN_PRICE_COMPARISON_METADATA_QUERY = `
+  query LeverageTokenPriceComparisonMetadata($address: ID!) {
     leverageToken(id: $address) {
-      stateHistory(orderBy: timestamp, orderDirection: desc, first: $first) {
-        equityPerTokenInDebt
-        timestamp
-      }
       lendingAdapter {
         oracle {
+          id
           decimals
-          priceUpdates(orderBy: timestamp, orderDirection: desc, first: $first) {
-            price
-            timestamp
-          }
         }
       }
+    }
+  }
+`
+
+export const LEVERAGE_TOKEN_PRICE_COMPARISON_QUERY = `
+  query LeverageTokenPriceComparison($address: ID!, $oracle: ID!, $first: Int) {
+    leverageTokenStateStats_collection(
+      interval: hour
+      where: { leverageToken: $address }
+      orderDirection: desc
+      first: $first
+    ) {
+      lastEquityPerTokenInDebt
+      timestamp
+    }
+    oraclePriceStats_collection(
+      interval: hour
+      where: { oracle: $oracle }
+      orderDirection: desc
+      first: $first
+    ) {
+      lastPrice
+      timestamp
     }
   }
 `

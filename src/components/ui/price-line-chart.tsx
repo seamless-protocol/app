@@ -72,11 +72,10 @@ export function PriceLineChart({
 }: PriceLineChartProps) {
   // Default formatters
   const defaultXAxisFormatter = (dateString: string) => {
-    const date = new Date(dateString)
-    // Use UTC formatting to avoid timezone issues
-    const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })
-    const day = date.getUTCDate()
-    return `${month} ${day}`
+    return new Date(dateString).toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    })
   }
 
   const defaultYAxisFormatter = (value: number) => {
@@ -108,7 +107,11 @@ export function PriceLineChart({
 
   const defaultLabelFormatter = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    return date.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+    })
   }
 
   const formatChartDate = xAxisFormatter || defaultXAxisFormatter
