@@ -1,4 +1,4 @@
-import type { buildSDK } from '@balmy/sdk'
+import type { buildSDK } from '@seamless-defi/defi-sdk'
 import type { Address, PublicClient } from 'viem'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 

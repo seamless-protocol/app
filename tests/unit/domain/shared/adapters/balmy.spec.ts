@@ -1,4 +1,4 @@
-import type { buildSDK } from '@balmy/sdk'
+import type { buildSDK } from '@seamless-defi/defi-sdk'
 import type { Address } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 import { createBalmyQuoteAdapter } from '@/domain/shared/adapters/balmy'

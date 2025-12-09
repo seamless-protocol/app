@@ -31,7 +31,6 @@ git clone git@github.com:seamless-protocol/app.git
 cd app
 
 # Install dependencies
-# Note: install time is long due to additional build step in @balmy/sdk and https://github.com/oven-sh/bun/issues/10297
 bun install
 
 # Copy environment variables

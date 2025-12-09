@@ -1,4 +1,4 @@
-import type { buildSDK, QuoteRequest } from '@balmy/sdk'
+import type { buildSDK, QuoteRequest } from '@seamless-defi/defi-sdk'
 import { type Address, getAddress, isAddressEqual } from 'viem'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import type { QuoteFn } from './types'

@@ -1,4 +1,4 @@
-import { buildSDK } from '@balmy/sdk'
+import { buildSDK } from '@seamless-defi/defi-sdk'
 import { createContext, useContext, useRef } from 'react'
 import { zeroAddress } from 'viem'
 import { useClient } from 'wagmi'
@@ -45,6 +45,9 @@ export function BalmySDKProvider({ children, ...props }: BalmySDKProviderProps) 
         source: {
           type: 'prioritized',
           sources: [
+            {
+              type: 'coingecko',
+            },
             ...(import.meta.env['VITE_ALCHEMY_API_KEY'] !== ''
               ? [
                   {
@@ -53,9 +56,9 @@ export function BalmySDKProvider({ children, ...props }: BalmySDKProviderProps) 
                   },
                 ]
               : []),
-            // {
-            //   type: 'coingecko',
-            // },
+            {
+              type: 'odos',
+            },
             // {
             //   type: 'defi-llama',
             // },

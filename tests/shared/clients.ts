@@ -1,4 +1,4 @@
-import { buildSDK } from '@balmy/sdk'
+import { buildSDK } from '@seamless-defi/defi-sdk'
 import type { Hash, Hex } from 'viem'
 import {
   createPublicClient,

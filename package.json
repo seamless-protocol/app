@@ -27,7 +27,7 @@
     "wagmi": "wagmi generate"
   },
   "dependencies": {
-    "@balmy/sdk": "github:seamless-protocol/balmy-sdk#main",
+    "@seamless-defi/defi-sdk": "^0.0.3",
     "@lifi/wallet-management": "^3.17.3",
     "@lifi/widget": "^3.32.2",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -94,9 +94,6 @@
     "vite": "^7.1.2",
     "vitest": "^3.2.4"
   },
-  "trustedDependencies": [
-    "@balmy/sdk"
-  ],
   "volta": {
     "node": "20.19.4"
   }
