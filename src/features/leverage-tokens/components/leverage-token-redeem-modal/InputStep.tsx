@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, Loader2, Percent, Settings, TrendingDown } from 'lucide-react'
 import { useEffect, useId, useRef } from 'react'
+import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
@@ -81,6 +82,8 @@ interface InputStepProps {
   expectedDebtAmount?: string
   debtAssetSymbol?: string
   debtAssetPrice?: number | undefined
+  // Optional selected quote source name/label
+  quoteSource: string | undefined
 }
 
 export function InputStep({
@@ -118,6 +121,7 @@ export function InputStep({
   expectedDebtAmount,
   debtAssetSymbol,
   debtAssetPrice,
+  quoteSource,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const redeemAmountId = useId()
@@ -368,6 +372,7 @@ export function InputStep({
               )}
             </span>
           </div>
+          <Separator className="my-2 bg-border" />
           <div className="flex justify-between font-medium">
             <span className="text-foreground">You will receive</span>
             <div className="text-right">
@@ -410,6 +415,18 @@ export function InputStep({
                   </div>
                 )}
             </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-secondary-foreground">Quote source</span>
+            {isCalculating ? (
+              <span className="inline-flex items-center" aria-live="polite">
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+              </span>
+            ) : quoteSource ? (
+              <span className="text-foreground">{quoteSource}</span>
+            ) : (
+              <span className="text-secondary-foreground">—</span>
+            )}
           </div>
         </div>
       </Card>

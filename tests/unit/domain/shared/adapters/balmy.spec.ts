@@ -16,6 +16,7 @@ function createMockBalmySDK() {
   const mockQuote = {
     source: {
       id: SOURCE_ID,
+      name: 'Mock Source',
       allowanceTarget: '0xABCDEFabcdefABCDefabcDEFabcdefABCDEFABCD',
     },
     buyAmount: { amount: 200n },
@@ -125,5 +126,7 @@ describe('createBalmyQuoteAdapter', () => {
     )
     expect(quote.calldata).toBe(txResponse.data)
     expect(quote.wantsNativeIn).toBe(true)
+    expect(quote.sourceId).toBe(SOURCE_ID)
+    expect(quote.sourceName).toBe('Mock Source')
   })
 })

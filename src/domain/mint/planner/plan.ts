@@ -64,6 +64,9 @@ export type MintPlan = {
   /** Swap outputs for transparency. */
   swapExpectedOut: bigint
   swapMinOut: bigint
+  /** Optional quote source metadata (aggregator/venue) for the debt->collateral swap. */
+  quoteSourceId: string | undefined
+  quoteSourceName: string | undefined
   /**
    * Encoded router calls (approve + swap) to be submitted to `mintWithCalls`.
    * The sequence includes the debt->collateral swap plus an ERC-20 approve when
@@ -286,6 +289,8 @@ export async function planMint(params: {
     swapExpectedOut: effectiveQuote.out,
     swapMinOut:
       typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : effectiveQuote.out,
+    quoteSourceId: effectiveQuote.sourceId,
+    quoteSourceName: effectiveQuote.sourceName,
     calls,
   }
 }

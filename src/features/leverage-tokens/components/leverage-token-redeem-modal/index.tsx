@@ -380,6 +380,12 @@ export function LeverageTokenRedeemModal({
     query: { enabled: Boolean(transactionHash) },
   })
 
+  const quoteSourceName =
+    planPreview.plan?.quoteSourceName ??
+    planPreview.plan?.quoteSourceId ??
+    planPreview.plan?.collateralToDebtQuote?.sourceName ??
+    planPreview.plan?.collateralToDebtQuote?.sourceId
+
   // Parse actual received amount from logs for the selected output asset
   const actualReceivedAmount = useMemo(() => {
     const receipt = receiptState.data
@@ -770,6 +776,7 @@ export function LeverageTokenRedeemModal({
             expectedDebtAmount={expectedDebtAmount}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
             debtAssetPrice={debtUsdPrice}
+            quoteSource={quoteSourceName}
           />
         )
 

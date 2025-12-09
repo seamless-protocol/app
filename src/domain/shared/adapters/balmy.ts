@@ -28,7 +28,7 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       takerAddress: opts.fromAddress,
       recipient: opts.toAddress,
       filters: {
-        excludeSources: ['balmy', 'sushiswap', 'fly-trade'],
+        excludeSources: ['sushiswap', 'fly-trade', 'swing'],
       },
       sourceConfig: { global: { disableValidation: true } },
     }
@@ -60,6 +60,8 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
     const tx = await txs[quote.source.id]
 
     const wantsNativeIn = isAddressEqual(request.sellToken as Address, ETH_SENTINEL)
+    const sourceId = quote.source.id
+    const sourceName = quote.source.name ?? quote.source.id
 
     return {
       out: quote.buyAmount.amount,
@@ -68,6 +70,8 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       approvalTarget: getAddress(quote.source.allowanceTarget),
       calldata: tx?.data as `0x${string}`,
       wantsNativeIn,
+      sourceId,
+      sourceName,
     }
   }
 }

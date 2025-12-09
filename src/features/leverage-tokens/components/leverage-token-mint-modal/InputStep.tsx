@@ -89,6 +89,8 @@ interface InputStepProps {
   // Debt asset information
   expectedDebtAmount?: string
   debtAssetSymbol?: string
+  // Optional selected quote source name/label
+  quoteSource: string | undefined
 }
 
 export function InputStep({
@@ -128,6 +130,7 @@ export function InputStep({
   supplyCapExceeded,
   expectedDebtAmount,
   debtAssetSymbol,
+  quoteSource,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const mintAmountId = useId()
@@ -451,6 +454,18 @@ export function InputStep({
                 </div>
               )}
             </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-secondary-foreground">Quote source</span>
+            {isCalculating ? (
+              <span className="inline-flex items-center" aria-live="polite">
+                <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
+              </span>
+            ) : quoteSource ? (
+              <span className="text-foreground">{quoteSource}</span>
+            ) : (
+              <span className="text-secondary-foreground">—</span>
+            )}
           </div>
 
           {/* Optional route & safety breakdown */}

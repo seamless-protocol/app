@@ -793,6 +793,8 @@ export function LeverageTokenMintModal({
     return usdToFixedString(total, 2)
   }, [expectedUsdOutScaled, planPreview.plan, debtUsdPrice, leverageTokenConfig.debtAsset.decimals])
 
+  const quoteSourceName = planPreview.plan?.quoteSourceName ?? planPreview.plan?.quoteSourceId
+
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
@@ -835,6 +837,7 @@ export function LeverageTokenMintModal({
             supplyCapExceeded={!form.supplyCapOk}
             expectedDebtAmount={expectedExcessDebtAmount}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
+            quoteSource={quoteSourceName}
           />
         )
 
