@@ -114,6 +114,8 @@ describe('validateMintPlan', () => {
     worstCaseShares: 0n,
     swapExpectedOut: 500000000000000000n, // 0.5 tokens
     swapMinOut: 490000000000000000n, // 0.49 tokens
+    quoteSourceId: undefined,
+    quoteSourceName: undefined,
     calls: [],
   }
 

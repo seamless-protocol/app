@@ -419,6 +419,8 @@ describe('validateRedeemPlan', () => {
       approvalTarget: '0xcccccccccccccccccccccccccccccccccccccccc' as Address,
       calldata: '0x1234' as `0x${string}`,
     },
+    quoteSourceId: undefined,
+    quoteSourceName: undefined,
     expectedTotalCollateral: 1000000000000000000n,
     expectedExcessCollateral: 50000000000000000n,
     expectedDebtPayout: 0n,
