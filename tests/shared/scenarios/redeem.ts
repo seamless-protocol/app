@@ -218,38 +218,24 @@ async function resolveRedeemScenario({
 
 function resolveRedeemSwapConfig({
   tokenDefinition,
-  addresses,
 }: {
   tokenDefinition: LeverageTokenDefinition
   addresses: ReturnType<typeof getAddressesForToken>
 }): CollateralToDebtSwapConfig {
   const swap = tokenDefinition.swap
-  if (swap?.type === 'lifi' || (swap?.type === undefined && process.env['TEST_USE_LIFI'] === '1')) {
+  const forceLiFi = process.env['TEST_USE_LIFI'] === '1'
+
+  if (swap?.type === 'lifi' || forceLiFi) {
     return { type: 'lifi', allowBridges: 'none' }
   }
+
+  if (swap?.type === 'balmy') {
+    return { type: 'balmy' }
+  }
+
   if (swap?.type === 'pendle') {
     return { type: 'pendle' }
   }
 
-  if (swap?.uniswapV2Router) {
-    return { type: 'uniswapV2', router: swap.uniswapV2Router }
-  }
-
-  const v3Config = swap?.uniswapV3
-  if (v3Config?.poolKey) {
-    if (!addresses.uniswapV3?.pool) {
-      throw new Error('Uniswap V3 configuration missing for leverage token')
-    }
-    return { type: 'uniswapV3', poolKey: v3Config.poolKey }
-  }
-
-  const fallbackRouter =
-    (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
-    ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
-
-  if (!fallbackRouter) {
-    throw new Error('Uniswap V2 router address required for fallback redeem swap')
-  }
-
-  return { type: 'uniswapV2', router: fallbackRouter }
+  return { type: 'balmy' }
 }

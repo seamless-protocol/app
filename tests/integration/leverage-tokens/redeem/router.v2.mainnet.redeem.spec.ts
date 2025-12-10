@@ -336,7 +336,7 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
 
   expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
 
-  // Add extra tolerance for LiFi routing variability
+  // Add extra tolerance for routing variability
   const effectiveToleranceBps = BigInt(toleranceBps) + 100n
   const withinTolerance = (actual: bigint, expected: bigint): boolean => {
     if (expected === 0n) return actual === 0n

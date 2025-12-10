@@ -129,4 +129,43 @@ describe('createBalmyQuoteAdapter', () => {
     expect(quote.sourceId).toBe(SOURCE_ID)
     expect(quote.sourceName).toBe('Mock Source')
   })
+
+  it('falls back to source id when name missing and keeps wantsNativeIn false for ERC20 sells', async () => {
+    const { balmySDK, getBestQuote, txResponse } = createMockBalmySDK()
+
+    const namelessQuote = {
+      source: {
+        id: SOURCE_ID,
+        name: undefined,
+        allowanceTarget: '0xABCDEFabcdefABCDefabcDEFabcdefABCDEFABCD',
+      },
+      buyAmount: { amount: 300n },
+      minBuyAmount: { amount: 250n },
+      maxSellAmount: { amount: 350n },
+    }
+    getBestQuote.mockResolvedValueOnce(namelessQuote as any)
+
+    const adapter = createBalmyQuoteAdapter({
+      balmySDK,
+      chainId: 8453,
+      fromAddress: CALLER,
+      toAddress: ROUTER,
+      slippageBps: 50,
+    })
+
+    const quote = await adapter({
+      inToken: IN_TOKEN,
+      outToken: OUT_TOKEN,
+      amountIn: 999n,
+      intent: 'exactIn',
+    })
+
+    expect(quote.wantsNativeIn).toBe(false)
+    expect(quote.sourceId).toBe(SOURCE_ID)
+    expect(quote.sourceName).toBe(SOURCE_ID)
+    expect(quote.calldata).toBe(txResponse.data)
+    expect(quote.out).toBe(300n)
+    expect(quote.minOut).toBe(250n)
+    expect(quote.maxIn).toBe(350n)
+  })
 })

@@ -4,15 +4,9 @@ import { config } from 'dotenv'
 import { type Address, getAddress, type Hex } from 'viem'
 import { anvil } from 'viem/chains'
 import { z } from 'zod'
-import {
-  getUniswapV3ChainConfig,
-  getUniswapV3PoolConfig,
-  type UniswapV3PoolKey,
-} from '../../src/lib/config/uniswapV3.js'
 import { BASE_WETH, getContractAddresses } from '../../src/lib/contracts/addresses.js'
 import {
   DEFAULT_PROD_LEVERAGE_TOKEN_KEY,
-  DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY,
   getDefaultLeverageTokenDefinition,
   getLeverageTokenDefinition,
   isLeverageTokenKey,
@@ -98,15 +92,6 @@ process.env['TEST_RPC_URL'] ||= backend.rpcUrl
 process.env['VITE_TEST_RPC_URL'] ||= backend.rpcUrl
 process.env['VITE_BASE_RPC_URL'] ||= backend.rpcUrl
 
-if (backend.executionKind === 'tenderly') {
-  process.env['TENDERLY_VNET_PRIMARY_RPC'] ||= backend.rpcUrl
-  process.env['TENDERLY_VNET_ADMIN_RPC'] ||= backend.adminRpcUrl
-  process.env['TENDERLY_ADMIN_RPC_URL'] ||= backend.adminRpcUrl
-  if (backend.contractOverrides) {
-    process.env['VITE_CONTRACT_ADDRESS_OVERRIDES'] ||= JSON.stringify(backend.contractOverrides)
-  }
-}
-
 const detectedChainId = backend.chainId
 const canonicalChainId = backend.canonicalChainId
 const resolvedChain = backend.chain
@@ -131,8 +116,7 @@ function normalizeTokenSource(
   fallback: LeverageTokenSource,
 ): LeverageTokenSource {
   if (!raw) return fallback
-  const normalized = raw.toLowerCase()
-  return normalized === 'prod' ? 'prod' : 'tenderly'
+  return 'prod' as LeverageTokenSource
 }
 
 const leverageTokenSource: LeverageTokenSource = normalizeTokenSource(
@@ -173,11 +157,7 @@ function assertTokenAvailable(
 const selectedTokenKey = (() => {
   const raw = process.env['E2E_LEVERAGE_TOKEN_KEY']
   if (!raw) {
-    const fallbackKey =
-      scenario.defaultLeverageTokenKey ??
-      (leverageTokenSource === 'tenderly'
-        ? DEFAULT_TENDERLY_LEVERAGE_TOKEN_KEY
-        : DEFAULT_PROD_LEVERAGE_TOKEN_KEY)
+    const fallbackKey = scenario.defaultLeverageTokenKey ?? DEFAULT_PROD_LEVERAGE_TOKEN_KEY
     return fallbackKey
   }
   const normalized = raw.toLowerCase()
@@ -234,10 +214,7 @@ type LeverageTokenAddresses = {
   }
 }
 
-function buildAddressContext(
-  definition: LeverageTokenDefinition,
-  source: LeverageTokenSource = leverageTokenSource,
-): LeverageTokenAddresses {
+function buildAddressContext(definition: LeverageTokenDefinition): LeverageTokenAddresses {
   const contracts = getContractAddresses(definition.chainId)
   if (!contracts || Object.keys(contracts).length === 0) {
     throw new Error(`No contract addresses found for chain ${definition.chainId}`)
@@ -307,33 +284,6 @@ function buildAddressContext(
   if (rebalanceAddress) result.rebalanceAdapter = rebalanceAddress
   if (lendingAddress) result.lendingAdapter = lendingAddress
 
-  const swapV3Config = definition.swap?.uniswapV3
-  const isTenderlySource = source === 'tenderly'
-  const poolKey: UniswapV3PoolKey | undefined = swapV3Config?.poolKey
-  const chainV3Config = getUniswapV3ChainConfig(definition.chainId)
-  const poolConfig = poolKey ? getUniswapV3PoolConfig(definition.chainId, poolKey) : undefined
-  const resolvedPool = swapV3Config?.pool ?? (isTenderlySource ? undefined : poolConfig?.address)
-  const resolvedFee = swapV3Config?.fee ?? (isTenderlySource ? undefined : poolConfig?.fee)
-  const resolvedQuoter = optionalAddress(
-    (swapV3Config?.quoter as Address | undefined) ??
-      (isTenderlySource ? undefined : chainV3Config?.quoter),
-  )
-  const resolvedRouter = optionalAddress(
-    (swapV3Config?.router as Address | undefined) ??
-      (isTenderlySource ? undefined : chainV3Config?.swapRouter),
-  )
-  const resolvedTickSpacing = poolConfig?.tickSpacing
-
-  if (resolvedPool && typeof resolvedFee === 'number') {
-    result.uniswapV3 = {
-      pool: getAddress(resolvedPool),
-      fee: resolvedFee,
-      ...(resolvedQuoter ? { quoter: resolvedQuoter } : {}),
-      ...(resolvedRouter ? { router: resolvedRouter } : {}),
-      ...(typeof resolvedTickSpacing === 'number' ? { tickSpacing: resolvedTickSpacing } : {}),
-    }
-  }
-
   return result
 }
 
@@ -346,10 +296,10 @@ export function getAddressesForToken(
   source: LeverageTokenSource = leverageTokenSource,
 ): LeverageTokenAddresses {
   const definition = getLeverageTokenDefinition(source, key)
-  return buildAddressContext(definition, source)
+  return buildAddressContext(definition)
 }
 
-export const ADDR = buildAddressContext(leverageTokenDefinition, leverageTokenSource)
+export const ADDR = buildAddressContext(leverageTokenDefinition)
 
 export const Extra = {
   keys: (Env.TEST_PRIVATE_KEYS_CSV ?? '')
@@ -365,8 +315,6 @@ export const LEVERAGE_TOKEN_LABEL = leverageTokenLabel
 export const LEVERAGE_TOKEN_DEFINITION = leverageTokenDefinition
 export { AVAILABLE_LEVERAGE_TOKENS }
 export const DEFAULT_CHAIN_ID = canonicalChainId
-export const DEFAULT_TENDERLY_ADDRESS = getAddress(
-  getDefaultLeverageTokenDefinition('tenderly').address,
-)
+export const DEFAULT_ADDRESS = getAddress(getDefaultLeverageTokenDefinition('prod').address)
 
 export type { LeverageTokenAddresses }

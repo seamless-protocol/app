@@ -1,18 +1,9 @@
-import { createTestBalmySDK } from 'tests/shared/clients'
 import type { Address, PublicClient } from 'viem'
 import { parseUnits } from 'viem'
 import { planMint } from '@/domain/mint/planner/plan'
 import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
-import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
+import { createBalmyQuoteAdapter } from '@/domain/shared/adapters/balmy'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
-import {
-  createUniswapV2QuoteAdapter,
-  type UniswapV2QuoteOptions,
-} from '@/domain/shared/adapters/uniswapV2'
-import {
-  createUniswapV3QuoteAdapter,
-  type UniswapV3QuoteOptions,
-} from '@/domain/shared/adapters/uniswapV3'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
@@ -21,6 +12,7 @@ import {
   simulateLeverageRouterV2Deposit,
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
+import { createTestBalmySDK } from './clients'
 import { ADDR, CHAIN_ID } from './env'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
 
@@ -128,23 +120,11 @@ export async function executeSharedMint({
     quoteDebtToCollateral = quote
   } else {
     // Fall back to test helper logic
-    const uniswapV3Config = addresses?.uniswapV3 ?? ADDR.uniswapV3
-    const canUseV3 = Boolean(
-      uniswapV3Config?.quoter &&
-        uniswapV3Config?.router &&
-        uniswapV3Config?.pool &&
-        typeof uniswapV3Config?.fee === 'number',
-    )
-
     quoteDebtToCollateral = await resolveDebtToCollateralQuote({
-      preference: quoteAdapterPreference,
-      useLiFi,
-      canUseV3,
       chainId,
       router,
       executor,
       resolvedSlippageBps,
-      publicClient,
     })
   }
 
@@ -227,91 +207,18 @@ export async function executeSharedMint({
 }
 
 async function resolveDebtToCollateralQuote(params: {
-  preference: string
-  useLiFi: boolean
-  canUseV3: boolean
   chainId: number
   router: Address
   executor: Address
   resolvedSlippageBps: number
-  publicClient: PublicClient
 }): Promise<QuoteFn> {
-  const {
-    preference,
-    useLiFi,
-    canUseV3,
+  const { chainId, router, executor, resolvedSlippageBps } = params
+
+  return createBalmyQuoteAdapter({
     chainId,
-    router,
-    executor,
-    resolvedSlippageBps,
-    publicClient,
-  } = params
-
-  const normalizedPreference = preference.trim()
-  const mode = selectQuoteMode({ preference: normalizedPreference, useLiFi, canUseV3 })
-
-  switch (mode) {
-    case 'lifi': {
-      return createLifiQuoteAdapter({
-        chainId,
-        router,
-        // Align LiFi's expected sender with the actual caller (MulticallExecutor)
-        fromAddress: executor,
-        allowBridges: 'none',
-        slippageBps: resolvedSlippageBps,
-      })
-    }
-    case 'uniswapv3': {
-      const config = ADDR.uniswapV3
-      if (
-        !canUseV3 ||
-        !config?.quoter ||
-        !config.router ||
-        !config.pool ||
-        typeof config.fee !== 'number'
-      ) {
-        throw new Error('Uniswap v3 adapter selected but configuration is incomplete')
-      }
-      return createUniswapV3QuoteAdapter({
-        publicClient: publicClient as unknown as UniswapV3QuoteOptions['publicClient'],
-        quoter: config.quoter,
-        router: config.router,
-        fee: config.fee,
-        recipient: router,
-        poolAddress: config.pool,
-        slippageBps: resolvedSlippageBps,
-        ...(ADDR.weth ? { wrappedNative: ADDR.weth } : {}),
-      })
-    }
-    default: {
-      const uniswapRouter =
-        (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
-        ('0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24' as Address)
-      return createUniswapV2QuoteAdapter({
-        publicClient: publicClient as unknown as UniswapV2QuoteOptions['publicClient'],
-        router: uniswapRouter,
-        recipient: router,
-        wrappedNative: ADDR.weth,
-        slippageBps: resolvedSlippageBps,
-      })
-    }
-  }
-}
-
-function selectQuoteMode(params: {
-  preference: string
-  useLiFi: boolean
-  canUseV3: boolean
-}): 'lifi' | 'uniswapv3' | 'uniswapv2' {
-  const { preference, useLiFi, canUseV3 } = params
-  const normalized = preference.toLowerCase()
-  if (normalized === 'lifi') return 'lifi'
-  if (normalized === 'uniswapv3' || normalized === 'v3' || normalized === 'uni-v3')
-    return 'uniswapv3'
-  if (normalized === 'uniswapv2' || normalized === 'v2' || normalized === 'uni-v2')
-    return 'uniswapv2'
-
-  if (useLiFi) return 'lifi'
-  if (canUseV3) return 'uniswapv3'
-  return 'uniswapv2'
+    toAddress: router,
+    fromAddress: executor,
+    slippageBps: resolvedSlippageBps,
+    balmySDK: createTestBalmySDK(),
+  })
 }
