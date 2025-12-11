@@ -6,7 +6,6 @@ import {
   Loader2,
   Percent,
   Settings,
-  TrendingUp,
 } from 'lucide-react'
 import { useEffect, useId, useRef } from 'react'
 import { cn } from '@/lib/utils/cn'
@@ -14,9 +13,7 @@ import { Alert } from '../../../../components/ui/alert'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
-import { FilterDropdown } from '../../../../components/ui/filter-dropdown'
 import { Input } from '../../../../components/ui/input'
-import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
@@ -42,14 +39,18 @@ interface LeverageTokenConfig {
     address: string
     decimals: number
   }
+  debtAsset: {
+    symbol: string
+    name: string
+    address: string
+    decimals: number
+  }
 }
 
 interface InputStepProps {
-  selectedToken: Token
-  availableTokens: Array<Token>
+  inputToken: Token
   amount: string
   onAmountChange: (value: string) => void
-  onTokenChange: (token: Token) => void
   onPercentageClick: (percentage: number) => void
   showAdvanced: boolean
   onToggleAdvanced: () => void
@@ -94,11 +95,9 @@ interface InputStepProps {
 }
 
 export function InputStep({
-  selectedToken,
-  availableTokens,
+  inputToken,
   amount,
   onAmountChange,
-  onTokenChange,
   onPercentageClick,
   showAdvanced,
   onToggleAdvanced,
@@ -150,13 +149,13 @@ export function InputStep({
   const actionState = (() => {
     if (!isConnected) return { label: 'Connect Wallet', busy: false }
     const amountNum = parseFloat(amount || '0')
-    const balanceNum = parseFloat(selectedToken.balance || '0')
+    const balanceNum = parseFloat(inputToken.balance || '0')
     if (amountNum === 0) return { label: 'Enter an amount', busy: false }
     if (amountNum > balanceNum) return { label: 'Insufficient balance', busy: false }
     if (isCalculating) return { label: 'Calculating...', busy: true }
     if (isAllowanceLoading) return { label: 'Checking allowance...', busy: true }
     if (isApproving) return { label: 'Approving...', busy: true }
-    if (needsApproval) return { label: `Approve ${selectedToken.symbol}`, busy: false }
+    if (needsApproval) return { label: `Approve ${inputToken.symbol}`, busy: false }
     return { label: `Mint ${leverageTokenConfig.symbol}`, busy: false }
   })()
 
@@ -164,15 +163,12 @@ export function InputStep({
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <label htmlFor={mintAmountId} className="text-sm font-medium text-foreground">
-            Mint Amount
-          </label>
           <div className="text-xs text-secondary-foreground">
             Balance:{' '}
             {isCollateralBalanceLoading ? (
               <Skeleton className="inline-block h-3 w-16" />
             ) : (
-              `${selectedToken.balance} ${selectedToken.symbol}`
+              `${inputToken.balance} ${inputToken.symbol}`
             )}
           </div>
         </div>
@@ -190,27 +186,17 @@ export function InputStep({
                   className="h-auto px-3 text-lg font-medium text-foreground focus:ring-0 focus:ring-offset-0"
                 />
                 <div className="ml-4 flex items-center space-x-2">
-                  <FilterDropdown
-                    label=""
-                    value={selectedToken.symbol}
-                    options={availableTokens.map((token) => ({
-                      value: token.symbol,
-                      label: token.symbol,
-                      icon: <AssetDisplay asset={token} size="sm" variant="logo-only" />,
-                    }))}
-                    onValueChange={(value) => {
-                      const token = availableTokens.find((t) => t.symbol === value)
-                      if (token) onTokenChange(token)
-                    }}
-                    placeholder="Select token"
-                  />
+                  <div className="inline-flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2">
+                    <AssetDisplay asset={inputToken} size="sm" variant="logo-only" />
+                    <span className="text-sm font-medium text-foreground">{inputToken.symbol}</span>
+                  </div>
                 </div>
               </div>
               <div className="mt-1 text-xs text-secondary-foreground">
                 {isUsdPriceLoading ? (
                   <Skeleton className="h-4 w-20" />
                 ) : (
-                  `≈ $${(parseFloat(amount || '0') * selectedToken.price).toLocaleString('en-US', {
+                  `≈ $${(parseFloat(amount || '0') * inputToken.price).toLocaleString('en-US', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}`
@@ -318,8 +304,8 @@ export function InputStep({
         </div>
 
         <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="text-sm text-secondary-foreground">You will receive</div>
+          <div className="mb-3 flex items-center justify-between">
+            <div className="text-sm text-secondary-foreground">You will receive at least</div>
             {isCalculating && (
               <div className="flex items-center text-xs text-slate-400" aria-live="polite">
                 <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
@@ -327,34 +313,86 @@ export function InputStep({
             )}
           </div>
 
-          <div className="flex items-end justify-between">
-            <div className="flex-1">
-              <div className="text-xl font-medium text-foreground">
-                {isCalculating ? <Skeleton className="h-6 w-20" /> : expectedTokens}
+          <div className="space-y-3 text-right">
+            <div className="flex flex-wrap items-start justify-end gap-3">
+              <div className="flex flex-col items-end">
+                <div className="text-xl font-medium text-foreground">
+                  {isCalculating ? <Skeleton className="h-6 w-24" /> : expectedTokens}
+                </div>
+                <div className="h-4">
+                  {isCalculating ? (
+                    <Skeleton className="mt-1 h-3 w-20" />
+                  ) : (
+                    expectedUsdOutStr && (
+                      <div className="text-xs text-secondary-foreground">
+                        ≈ ${expectedUsdOutStr}
+                      </div>
+                    )
+                  )}
+                </div>
               </div>
-              <div className="mt-1 text-sm text-secondary-foreground">Leverage Tokens</div>
-            </div>
-
-            <div className="ml-4 flex items-center space-x-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent">
-                <TrendingUp className="h-3 w-3 text-brand-purple" />
-              </div>
-              <span className="text-sm font-medium text-foreground">
-                {leverageTokenConfig.symbol}
-              </span>
-            </div>
-          </div>
-
-          {parseFloat(expectedTokens) > 0 && (
-            <div className="mt-3 border-t border-border pt-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-secondary-foreground">Target Leverage</span>
-                <div className="flex items-center text-brand-purple">
-                  <span className="font-semibold">{leverageTokenConfig.leverageRatio}x</span>
+              <div className="flex min-w-[140px] items-center justify-end gap-2">
+                <span className="text-sm font-medium text-foreground">
+                  {leverageTokenConfig.symbol}
+                </span>
+                <div className="flex -space-x-1">
+                  <AssetDisplay
+                    asset={leverageTokenConfig.collateralAsset}
+                    size="sm"
+                    variant="logo-only"
+                  />
+                  <AssetDisplay
+                    asset={leverageTokenConfig.debtAsset}
+                    size="sm"
+                    variant="logo-only"
+                  />
                 </div>
               </div>
             </div>
-          )}
+
+            <div className="flex flex-wrap items-start justify-end gap-3 text-sm">
+              <div className="flex flex-col items-end text-foreground">
+                <div>
+                  {isCalculating ? (
+                    <span className="inline-flex items-center" aria-live="polite">
+                      <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
+                    </span>
+                  ) : expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol ? (
+                    `${expectedDebtAmount}`
+                  ) : (
+                    '—'
+                  )}
+                </div>
+                <div className="h-4">
+                  {isCalculating ? (
+                    <Skeleton className="mt-1 h-3 w-20" />
+                  ) : (
+                    expectedDebtUsdOutStr && (
+                      <div className="text-xs text-secondary-foreground">
+                        ≈ ${expectedDebtUsdOutStr}
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+              <div className="flex min-w-[140px] items-center justify-end gap-2">
+                <span className="text-secondary-foreground">
+                  {debtAssetSymbol ?? leverageTokenConfig.debtAsset.symbol}
+                </span>
+                <div className="flex items-center gap-1">
+                  <AssetDisplay
+                    asset={leverageTokenConfig.debtAsset}
+                    size="sm"
+                    variant="logo-only"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 space-y-1 text-right text-xs text-secondary-foreground">
+            {!isCalculating && totalUsdOutStr && <div>≈ ${totalUsdOutStr}</div>}
+          </div>
         </Card>
       </div>
 
@@ -362,7 +400,7 @@ export function InputStep({
         variant="gradient"
         className="gap-2 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
       >
-        <h4 className="mb-3 text-sm font-medium text-foreground">Transaction Summary</h4>
+        <h4 className="mb-3 text-sm font-medium text-foreground">Transaction Preview</h4>
         <div className="space-y-2 text-sm">
           {impactWarning && (
             <div className="flex items-start gap-2 rounded-md border border-[var(--tag-warning-bg)]/40 bg-[var(--tag-warning-bg)]/20 p-2 text-[var(--tag-warning-text)]">
@@ -394,6 +432,18 @@ export function InputStep({
               )}
             </span>
           </div>
+          <div className="flex items-center justify-between">
+            <span className="text-secondary-foreground">Quote source</span>
+            {isCalculating ? (
+              <span className="inline-flex items-center" aria-live="polite">
+                <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
+              </span>
+            ) : quoteSource ? (
+              <span className="text-foreground">{quoteSource}</span>
+            ) : (
+              <span className="text-secondary-foreground">—</span>
+            )}
+          </div>
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Slippage Tolerance</span>
             <span className="text-foreground">{slippage}%</span>
@@ -419,53 +469,6 @@ export function InputStep({
                 'Approved'
               )}
             </span>
-          </div>
-          <Separator className="my-2 bg-border" />
-          <div className="flex justify-between font-medium items-center">
-            <span className="text-foreground">You will receive</span>
-            <div className="text-right">
-              <div className="text-foreground">
-                {isCalculating ? (
-                  <span className="inline-flex items-center" aria-live="polite">
-                    <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
-                  </span>
-                ) : (
-                  <>
-                    {expectedTokens} {leverageTokenConfig.symbol}
-                    {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
-                      <>
-                        {' '}
-                        + {expectedDebtAmount} {debtAssetSymbol}
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-              {!isCalculating && expectedUsdOutStr && (
-                <div className="text-xs text-secondary-foreground">
-                  {expectedDebtUsdOutStr && totalUsdOutStr
-                    ? `≈ $${expectedUsdOutStr} + $${expectedDebtUsdOutStr} = $${totalUsdOutStr}`
-                    : `≈ $${expectedUsdOutStr}`}
-                </div>
-              )}
-              {!isCalculating && guaranteedUsdOutStr && (
-                <div className="text-xs text-secondary-foreground">
-                  Guaranteed ≥ ${`$${guaranteedUsdOutStr}`}
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-secondary-foreground">Quote source</span>
-            {isCalculating ? (
-              <span className="inline-flex items-center" aria-live="polite">
-                <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
-              </span>
-            ) : quoteSource ? (
-              <span className="text-foreground">{quoteSource}</span>
-            ) : (
-              <span className="text-secondary-foreground">—</span>
-            )}
           </div>
 
           {/* Optional route & safety breakdown */}

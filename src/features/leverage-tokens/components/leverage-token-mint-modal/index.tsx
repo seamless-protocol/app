@@ -178,12 +178,20 @@ export function LeverageTokenMintModal({
     toError,
   } = useMintSteps('userInput')
 
-  const [selectedToken, setSelectedToken] = useState<Token>({
-    symbol: leverageTokenConfig.collateralAsset.symbol,
-    name: leverageTokenConfig.collateralAsset.name,
-    balance: collateralBalanceFormatted,
-    price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
-  })
+  const inputToken: Token = useMemo(
+    () => ({
+      symbol: leverageTokenConfig.collateralAsset.symbol,
+      name: leverageTokenConfig.collateralAsset.name,
+      balance: collateralBalanceFormatted,
+      price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
+    }),
+    [
+      leverageTokenConfig.collateralAsset.symbol,
+      leverageTokenConfig.collateralAsset.name,
+      collateralBalanceFormatted,
+      collateralUsdPrice,
+    ],
+  )
   const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showBreakdown, _] = useState(false)
@@ -432,21 +440,6 @@ export function LeverageTokenMintModal({
     if (isOpen) resetModal()
   }, [isOpen, resetModal])
 
-  // View model for selected token: inject live balance/price when it's the collateral asset
-  const selectedTokenView = useMemo(() => {
-    if (selectedToken.symbol !== leverageTokenConfig.collateralAsset.symbol) return selectedToken
-    return {
-      ...selectedToken,
-      balance: collateralBalanceFormatted,
-      price: collateralUsdPrice || 0,
-    }
-  }, [
-    selectedToken,
-    leverageTokenConfig.collateralAsset.symbol,
-    collateralBalanceFormatted,
-    collateralUsdPrice,
-  ])
-
   // Handle approval side-effects in one place
   useEffect(() => {
     if (currentStep !== 'approve') return
@@ -551,7 +544,7 @@ export function LeverageTokenMintModal({
         } catch {}
         const tokenSymbol = leverageTokenConfig.symbol
         const amount = form.amount
-        const usdValue = (parseFloat(form.amount || '0') || 0) * (selectedToken.price || 0)
+        const usdValue = (parseFloat(form.amount || '0') || 0) * (inputToken.price || 0)
         trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
         analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
         // Success feedback is conveyed by the Success step UI
@@ -567,7 +560,7 @@ export function LeverageTokenMintModal({
     leverageTokenAddress,
     userAddress,
     form.amount,
-    selectedToken.price,
+    inputToken.price,
     refetchCollateralBalance,
     refetchLeverageTokenBalance,
     trackLeverageTokenMinted,
@@ -577,16 +570,6 @@ export function LeverageTokenMintModal({
     leverageTokenConfig.symbol,
     queryClient,
   ])
-
-  // Available tokens for minting (only collateral asset for now)
-  const availableTokens: Array<Token> = [
-    {
-      symbol: leverageTokenConfig.collateralAsset.symbol,
-      name: leverageTokenConfig.collateralAsset.name,
-      balance: collateralBalanceFormatted,
-      price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
-    },
-  ]
 
   // Handle amount input changes
   const handleAmountChange = (value: string) => {
@@ -801,11 +784,9 @@ export function LeverageTokenMintModal({
       case 'userInput':
         return (
           <InputStep
-            selectedToken={selectedTokenView}
-            availableTokens={availableTokens}
+            inputToken={inputToken}
             amount={form.amount}
             onAmountChange={handleAmountChange}
-            onTokenChange={setSelectedToken}
             onPercentageClick={handlePercentageClick}
             showAdvanced={showAdvanced}
             onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
@@ -844,7 +825,7 @@ export function LeverageTokenMintModal({
       case 'approve':
         return (
           <ApproveStep
-            selectedToken={selectedTokenView}
+            selectedToken={inputToken}
             amount={form.amount}
             chainId={leverageTokenConfig.chainId}
             transactionHash={approveHash as `0x${string}` | undefined}
@@ -855,7 +836,7 @@ export function LeverageTokenMintModal({
       case 'confirm':
         return (
           <ConfirmStep
-            selectedToken={selectedTokenView}
+            selectedToken={inputToken}
             amount={form.amount}
             expectedTokens={expectedTokens}
             leverageTokenConfig={{
@@ -894,7 +875,7 @@ export function LeverageTokenMintModal({
       case 'success':
         return (
           <SuccessStep
-            selectedToken={selectedTokenView}
+            selectedToken={inputToken}
             amount={form.amount}
             expectedTokens={actualMintedTokens ?? expectedTokens}
             leverageTokenSymbol={leverageTokenConfig.symbol}
