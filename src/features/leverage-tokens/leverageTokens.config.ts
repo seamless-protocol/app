@@ -110,11 +110,6 @@ export interface LeverageTokenConfig {
     collateralToDebt?: SwapConfig
   }
 
-  // Planner tuning (optional)
-  planner?: {
-    epsilonBps?: number // tiny safety margin used in sizing (default 10 bps)
-  }
-
   // Related resources (optional)
   relatedResources?: {
     underlyingPlatforms: Array<ResourceItem>
@@ -183,7 +178,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         allowBridges: 'none',
       },
     },
-    planner: { epsilonBps: 10 },
     relatedResources: {
       additionalRewards: [
         {
@@ -270,7 +264,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         allowBridges: 'none',
       },
     },
-    planner: { epsilonBps: 10 },
     relatedResources: {
       additionalRewards: [
         {
@@ -366,7 +359,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         type: 'pendle',
       },
     },
-    planner: { epsilonBps: 10 },
     relatedResources: {
       additionalRewards: [
         {
@@ -463,7 +455,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         allowBridges: 'none',
       },
     },
-    planner: { epsilonBps: 10 },
     relatedResources: {
       additionalRewards: [
         {
@@ -559,7 +550,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         allowBridges: 'none',
       },
     },
-    planner: { epsilonBps: 10 },
   },
   [LeverageTokenKey.WEETH_WETH_17X_TENDERLY]: {
     isTestOnly: true,
