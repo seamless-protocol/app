@@ -9,7 +9,7 @@ export {
 export { createInfinifiQuoteAdapter, type InfinifiAdapterOptions } from './infinifi'
 export { createLifiQuoteAdapter, type LifiAdapterOptions, type LifiOrder } from './lifi'
 export { createPendleQuoteAdapter, type PendleAdapterOptions } from './pendle'
-export type { Quote, QuoteCall, QuoteFn, VeloraQuote } from './types'
+export type { Quote, QuoteFn, VeloraQuote } from './types'
 export {
   createUniswapV2QuoteAdapter,
   type UniswapV2QuoteOptions,

@@ -584,7 +584,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       // Should still work with optional value field
-      expect(result.calldata).toBe('0xdeadbeef')
+      expect(result.calls[0]?.data).toBe('0xdeadbeef')
     })
 
     it('sets minOut to 0n (not used)', async () => {
