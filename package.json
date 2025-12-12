@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite",
+    "compile": "hardhat compile",
     "build": "bunx @tanstack/router-cli generate --config vite.config.ts && tsc -b && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
     "check": "bunx --bun biome check . && bunx --bun tsc -b --noEmit",
