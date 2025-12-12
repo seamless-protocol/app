@@ -83,6 +83,8 @@ describe('orchestrateRedeem', () => {
     expectedCollateral: 950000000000000000n,
     expectedDebt: 50000000n,
     collateralToDebtQuote: mockStandardQuote,
+    quoteSourceId: undefined,
+    quoteSourceName: undefined,
     expectedTotalCollateral: 1000000000000000000n,
     expectedExcessCollateral: 50000000000000000n,
     expectedDebtPayout: 0n,

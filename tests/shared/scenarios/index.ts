@@ -16,17 +16,16 @@ const baseScenarios: Record<ScenarioKey, ScenarioDefinition> = {
   'leverage-mint': {
     key: 'leverage-mint',
     label: 'Base leverage mint',
-    description:
-      'Exercises leverage token mint flows on Base Tenderly VNets using VNet-only leverage tokens.',
-    leverageTokenSource: 'tenderly',
+    description: 'Exercises leverage token mint flows on Base using prod leverage tokens.',
+    leverageTokenSource: 'prod',
     leverageTokenKeys: ['weeth-weth-17x'],
     defaultLeverageTokenKey: 'weeth-weth-17x',
   },
   'leverage-redeem': {
     key: 'leverage-redeem',
     label: 'Base leverage redeem',
-    description: 'Exercises leverage token redeem flows on Base Tenderly VNets.',
-    leverageTokenSource: 'tenderly',
+    description: 'Exercises leverage token redeem flows on Base.',
+    leverageTokenSource: 'prod',
     leverageTokenKeys: ['weeth-weth-17x'],
     defaultLeverageTokenKey: 'weeth-weth-17x',
   },
@@ -36,8 +35,7 @@ const mainnetScenarios: Record<ScenarioKey, ScenarioDefinition> = {
   'leverage-mint': {
     key: 'leverage-mint',
     label: 'Mainnet leverage mint',
-    description:
-      'Exercises leverage token mint flows on Mainnet Tenderly VNets for all available leverage tokens.',
+    description: 'Exercises leverage token mint flows on Mainnet using prod leverage tokens.',
     leverageTokenSource: 'prod',
     leverageTokenKeys: ['wsteth-eth-25x'],
     defaultLeverageTokenKey: 'wsteth-eth-25x',
@@ -45,8 +43,7 @@ const mainnetScenarios: Record<ScenarioKey, ScenarioDefinition> = {
   'leverage-redeem': {
     key: 'leverage-redeem',
     label: 'Mainnet leverage redeem',
-    description:
-      'Exercises leverage token redeem flows on Mainnet Tenderly VNets using LiFi swaps.',
+    description: 'Exercises leverage token redeem flows on Mainnet using prod leverage tokens.',
     leverageTokenSource: 'prod',
     leverageTokenKeys: ['wsteth-eth-25x'],
     defaultLeverageTokenKey: 'wsteth-eth-25x',

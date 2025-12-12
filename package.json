@@ -27,6 +27,7 @@
     "wagmi": "wagmi generate"
   },
   "dependencies": {
+    "@seamless-defi/defi-sdk": "^0.0.3",
     "@lifi/wallet-management": "^3.17.3",
     "@lifi/widget": "^3.32.2",
     "@radix-ui/react-accordion": "^1.2.12",

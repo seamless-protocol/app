@@ -1,6 +1,8 @@
+import type { buildSDK } from '@seamless-defi/defi-sdk'
 import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import {
+  createBalmyQuoteAdapter,
   createLifiQuoteAdapter,
   createPendleQuoteAdapter,
   createUniswapV3QuoteAdapter,
@@ -17,7 +19,7 @@ import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/co
 import type { QuoteFn } from '../planner/types'
 
 /** Supported adapter types for collateral-to-debt swaps */
-export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2' | 'pendle'
+export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2' | 'pendle' | 'balmy'
 
 /**
  * Validated ParaSwap methods for Velora exactOut operations.
@@ -27,6 +29,9 @@ export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2' | 'p
 const VELORA_VALIDATED_EXACT_OUT_METHODS = ['swapExactAmountOut'] as const
 
 export type CollateralToDebtSwapConfig =
+  | {
+      type: 'balmy'
+    }
   | {
       type: 'uniswapV3'
       poolKey: UniswapV3PoolKey
@@ -55,6 +60,7 @@ export interface CreateCollateralToDebtQuoteParams {
   getPublicClient: (chainId: number) => PublicClient | undefined
   /** Optional override for aggregator `fromAddress` (defaults handled by adapter). */
   fromAddress?: Address
+  balmySDK: ReturnType<typeof buildSDK>
 }
 
 export interface CreateCollateralToDebtQuoteResult {
@@ -69,7 +75,24 @@ export function createCollateralToDebtQuote({
   slippageBps,
   getPublicClient,
   fromAddress,
+  balmySDK,
 }: CreateCollateralToDebtQuoteParams): CreateCollateralToDebtQuoteResult {
+  const publicClient = getPublicClient(chainId)
+  if (!publicClient) {
+    throw new Error('Public client unavailable for collateral quote')
+  }
+
+  if (swap.type === 'balmy') {
+    const quote = createBalmyQuoteAdapter({
+      chainId,
+      fromAddress: fromAddress ?? routerAddress,
+      toAddress: routerAddress,
+      slippageBps,
+      balmySDK,
+    })
+    return { quote, adapterType: 'balmy' }
+  }
+
   if (swap.type === 'lifi') {
     const quote = createLifiQuoteAdapter({
       chainId,
@@ -101,10 +124,6 @@ export function createCollateralToDebtQuote({
       slippageBps,
     })
     return { quote, adapterType: 'pendle' }
-  }
-  const publicClient = getPublicClient(chainId)
-  if (!publicClient) {
-    throw new Error('Public client unavailable for collateral quote')
   }
 
   if (swap.type === 'uniswapV2') {

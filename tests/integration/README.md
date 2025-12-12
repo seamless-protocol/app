@@ -184,9 +184,9 @@ The CI workflow (`.github/workflows/ci.yml`) uses Anvil by default to avoid Tend
 - Snapshot/revert: Fast state management
 - **Pinned fork block**: Set `ANVIL_MAINNET_FORK_BLOCK` to enable Anvil's disk cache (`~/.foundry/cache/rpc/1/<block>`), dramatically reducing startup time on subsequent runs
 
-### Focused Run: Mainnet wstETH/ETH 25x (Tenderly JIT + LiFi)
+### Focused Run: Mainnet wstETH/ETH 25x (Balmy by default)
 
-When you only need to validate the production wstETH/ETH 25x leverage token mint/redeem paths on a Tenderly JIT VNet, run this focused command:
+When you only need to validate the production wstETH/ETH 25x leverage token mint/redeem paths, run this focused command:
 
 ```bash
 # Required env (CI/dev)
@@ -194,8 +194,9 @@ export TENDERLY_ACCOUNT=your_account
 export TENDERLY_PROJECT=your_project
 export TENDERLY_ACCESS_KEY=your_access_key
 # LiFi key recommended to avoid 429s during mint
-export VITE_LIFI_API_KEY=your_lifi_api_key
-export VITE_LIFI_INTEGRATOR=seamless
+# Optional: LiFi smoke tests (set only if you need to exercise LiFi)
+# export VITE_LIFI_API_KEY=your_lifi_api_key
+# export VITE_LIFI_INTEGRATOR=seamless
 
 "# Run focused integration test (Tenderly JIT VNet, mainnet)"
 "# Requires TENDERLY_ACCESS_KEY, TENDERLY_ACCOUNT, and TENDERLY_PROJECT set"
@@ -203,5 +204,6 @@ bun run test:integration:wsteth
 ```
 
 Notes:
-- Test mints via LiFi and redeems via LiFi with bridges disabled (same-chain).
+- Tests now mint and redeem via Balmy with bridges disabled (same-chain).
+- Set `LIFI_LIVE=1` and LiFi env vars if you need to run the LiFi live smoke suite.
 - Keeps other integration tests untouched and skipped in CI.

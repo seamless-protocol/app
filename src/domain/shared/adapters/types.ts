@@ -19,6 +19,10 @@ export type BaseQuote = {
   approvalTarget: Address
   // Calldata to execute the swap on the aggregator/DEX
   calldata: Hex
+  // Optional identifier for the venue/adapter that produced this quote
+  sourceId?: string
+  // Human-friendly source/venue name when available
+  sourceName?: string
 }
 
 // Velora-specific quote with required veloraData (used for exactOut)

@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import type { ReactNode } from 'react'
 import { base, mainnet } from 'viem/chains'
 import { vi } from 'vitest'
 import type { ContractAddresses } from '@/lib/contracts/addresses'
@@ -8,6 +9,13 @@ vi.stubEnv('VITE_ENABLE_LEVERAGE_TOKENS', 'true')
 vi.stubEnv('VITE_ENABLE_LEVERAGE_TOKEN_CREATION', 'false')
 vi.stubEnv('VITE_TEST_MODE', 'mock')
 vi.stubEnv('VITE_MULTICALL_EXECUTOR_ADDRESS', '0x0000000000000000000000000000000000000001')
+
+const mockBalmySDK = {}
+
+vi.mock('@/components/BalmySDKProvider', () => ({
+  BalmySDKProvider: ({ children }: { children: ReactNode }): ReactNode => children,
+  useBalmySDK: () => ({ balmySDK: mockBalmySDK }),
+}))
 
 // Mock wagmi hooks
 vi.mock('wagmi', () => ({

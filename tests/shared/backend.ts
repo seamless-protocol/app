@@ -2,13 +2,6 @@ import type { Chain } from 'viem'
 import { anvil, base, mainnet } from 'viem/chains'
 import type { ContractAddresses } from '../../src/lib/contracts/addresses'
 import {
-  BASE_TENDERLY_VNET_ADMIN_RPC,
-  BASE_TENDERLY_VNET_PRIMARY_RPC,
-  MAINNET_TENDERLY_VNET_ADMIN_RPC,
-  MAINNET_TENDERLY_VNET_PRIMARY_RPC,
-  TENDERLY_VNET_CONTRACT_OVERRIDES,
-} from '../fixtures/addresses'
-import {
   type ChainKey,
   defaultScenarioKey,
   listScenarioKeys,
@@ -32,30 +25,13 @@ export interface ResolvedBackend {
   rpcUrl: string
   adminRpcUrl: string
   mode: BackendMode
-  executionKind: 'tenderly' | 'anvil'
+  executionKind: 'anvil'
   scenario: ScenarioDefinition
   chain: Chain
   contractOverrides?: Record<number, Partial<ContractAddresses>>
 }
 
-const STATIC_ENDPOINTS: Record<
-  ChainKey,
-  { rpcUrl: string; adminRpcUrl: string; expectedChainId: number }
-> = {
-  base: {
-    rpcUrl: BASE_TENDERLY_VNET_PRIMARY_RPC,
-    adminRpcUrl: BASE_TENDERLY_VNET_ADMIN_RPC,
-    expectedChainId: base.id,
-  },
-  mainnet: {
-    rpcUrl: MAINNET_TENDERLY_VNET_PRIMARY_RPC,
-    adminRpcUrl: MAINNET_TENDERLY_VNET_ADMIN_RPC,
-    expectedChainId: mainnet.id,
-  },
-}
-
 const DEFAULT_CHAIN: ChainKey = 'base'
-// Default to Anvil for tests (fast, no API quotas); Tenderly available via --backend=tenderly
 const DEFAULT_MODE: BackendMode = 'anvil'
 const DEFAULT_ANVIL_RPC_URL = anvil.rpcUrls.default.http[0]
 
@@ -68,11 +44,6 @@ const CHAIN_ALIAS_MAP: Record<string, ChainKey> = {
 }
 
 const MODE_ALIAS_MAP: Record<string, BackendMode> = {
-  static: 'tenderly-static',
-  'tenderly-static': 'tenderly-static',
-  jit: 'tenderly-jit',
-  'tenderly-jit': 'tenderly-jit',
-  tenderly: 'tenderly-jit',
   anvil: 'anvil',
   local: 'anvil',
 }
@@ -80,23 +51,16 @@ const MODE_ALIAS_MAP: Record<string, BackendMode> = {
 export async function resolveBackend(
   options: ResolveBackendOptions = {},
 ): Promise<ResolvedBackend> {
-  return resolveBackendInternal(options, true)
+  return resolveBackendInternal(options)
 }
 
-async function resolveBackendInternal(
-  options: ResolveBackendOptions,
-  allowFallback: boolean,
-): Promise<ResolvedBackend> {
+async function resolveBackendInternal(options: ResolveBackendOptions): Promise<ResolvedBackend> {
   const chainKey = options.chain ?? parseChain(process.env['TEST_CHAIN']) ?? DEFAULT_CHAIN
   const mode = options.mode ?? parseMode(process.env['TEST_MODE']) ?? DEFAULT_MODE
   const scenarioKey = options.scenario ?? parseScenario(chainKey, process.env['TEST_SCENARIO'])
   const scenario = resolveScenario(chainKey, scenarioKey)
 
   switch (mode) {
-    case 'tenderly-static':
-      return resolveStaticBackend({ chainKey, scenario }, allowFallback, options)
-    case 'tenderly-jit':
-      return resolveJitBackend({ chainKey, scenario })
     case 'anvil':
       return resolveAnvilBackend({ chainKey, scenario })
     default:
@@ -106,80 +70,12 @@ async function resolveBackendInternal(
 
 type StaticBackendContext = { chainKey: ChainKey; scenario: ScenarioDefinition }
 
-type JitBackendContext = StaticBackendContext
-
 type AnvilBackendContext = StaticBackendContext
-
-async function resolveStaticBackend(
-  ctx: StaticBackendContext,
-  allowFallback: boolean,
-  options: ResolveBackendOptions,
-): Promise<ResolvedBackend> {
-  const staticConfig = STATIC_ENDPOINTS[ctx.chainKey]
-  const rpcUrl = staticConfig.rpcUrl
-  const adminRpcUrl = staticConfig.adminRpcUrl
-
-  try {
-    const chainId = await detectChainId(rpcUrl, true)
-    if (chainId !== staticConfig.expectedChainId) {
-      throw new Error(
-        `Static Tenderly RPC returned chain ${chainId}, expected ${staticConfig.expectedChainId}`,
-      )
-    }
-    return buildResolvedBackend({
-      chainKey: ctx.chainKey,
-      scenario: ctx.scenario,
-      rpcUrl,
-      adminRpcUrl,
-      chainId,
-      mode: 'tenderly-static',
-      executionKind: 'tenderly',
-      contractOverrides: TENDERLY_VNET_CONTRACT_OVERRIDES,
-    })
-  } catch (error) {
-    if (allowFallback) {
-      const jitCandidate = getJitRpcCandidate()
-      if (jitCandidate) {
-        console.warn(
-          '[resolveBackend] Static Tenderly RPC unavailable, falling back to JIT fork',
-          composeErrorDetails(error),
-        )
-        return resolveBackendInternal({ ...options, mode: 'tenderly-jit' }, false)
-      }
-    }
-    throw new Error(
-      `Failed to connect to static Tenderly RPC at ${rpcUrl}: ${composeErrorDetails(error)}`,
-    )
-  }
-}
-
-async function resolveJitBackend(ctx: JitBackendContext): Promise<ResolvedBackend> {
-  const jit = getJitRpcCandidate()
-  if (!jit?.rpcUrl) {
-    throw new Error(
-      'JIT backend requested but no Tenderly RPC URL found. Set TENDERLY_RPC_URL or TEST_RPC_URL.',
-    )
-  }
-  const rpcUrl = jit.rpcUrl
-  const adminRpcUrl = jit.adminRpcUrl ?? rpcUrl
-  const chainId = await detectChainId(rpcUrl, true)
-
-  return buildResolvedBackend({
-    chainKey: ctx.chainKey,
-    scenario: ctx.scenario,
-    rpcUrl,
-    adminRpcUrl,
-    chainId,
-    mode: 'tenderly-jit',
-    executionKind: 'tenderly',
-    contractOverrides: TENDERLY_VNET_CONTRACT_OVERRIDES,
-  })
-}
 
 async function resolveAnvilBackend(ctx: AnvilBackendContext): Promise<ResolvedBackend> {
   const rpcUrl = pickAnvilRpcUrl()
   const adminRpcUrl = rpcUrl
-  const chainId = await detectChainId(rpcUrl, false)
+  const chainId = await detectChainId(rpcUrl)
 
   return buildResolvedBackend({
     chainKey: ctx.chainKey,
@@ -199,7 +95,7 @@ type BuildBackendParams = {
   adminRpcUrl: string
   chainId: number
   mode: BackendMode
-  executionKind: 'tenderly' | 'anvil'
+  executionKind: 'anvil'
   contractOverrides?: Record<number, Partial<ContractAddresses>>
 }
 
@@ -257,22 +153,6 @@ function parseScenario(chain: ChainKey, raw: string | undefined): ScenarioKey {
   return defaultScenarioKey(chain)
 }
 
-function getJitRpcCandidate(): { rpcUrl?: string; adminRpcUrl?: string } | undefined {
-  const rpcUrl = pickNonLocalRpc([
-    process.env['TENDERLY_RPC_URL'],
-    process.env['TEST_RPC_URL'],
-    process.env['RPC_URL'],
-  ])
-  if (!rpcUrl) {
-    return undefined
-  }
-  const adminRpcUrl = pickNonLocalRpc([
-    process.env['TENDERLY_ADMIN_RPC_URL'],
-    process.env['TENDERLY_VNET_ADMIN_RPC'],
-  ])
-  return adminRpcUrl ? { rpcUrl, adminRpcUrl } : { rpcUrl }
-}
-
 function pickAnvilRpcUrl(): string {
   const candidates = [
     process.env['TEST_RPC_URL'],
@@ -287,15 +167,6 @@ function pickAnvilRpcUrl(): string {
   return DEFAULT_ANVIL_RPC_URL
 }
 
-function pickNonLocalRpc(candidates: Array<string | undefined>): string | undefined {
-  for (const candidate of candidates) {
-    if (candidate && !isLocalRpc(candidate)) {
-      return candidate
-    }
-  }
-  return undefined
-}
-
 function isLocalRpc(value: string | undefined): boolean {
   if (!value) return false
   try {
@@ -306,23 +177,10 @@ function isLocalRpc(value: string | undefined): boolean {
   }
 }
 
-function buildTenderlyHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const token = process.env['TENDERLY_TOKEN']
-  const accessKey = process.env['TENDERLY_ACCESS_KEY']
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  } else if (accessKey) {
-    headers['X-Access-Key'] = accessKey
-  }
-  return headers
-}
-
-async function detectChainId(rpcUrl: string, tenderly: boolean): Promise<number> {
-  const headers = tenderly ? buildTenderlyHeaders() : { 'Content-Type': 'application/json' }
+async function detectChainId(rpcUrl: string): Promise<number> {
   const response = await fetch(rpcUrl, {
     method: 'POST',
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_chainId', params: [] }),
   })
   if (!response.ok) {
@@ -333,11 +191,4 @@ async function detectChainId(rpcUrl: string, tenderly: boolean): Promise<number>
     throw new Error('Missing chain id in RPC response')
   }
   return Number(BigInt(json.result))
-}
-
-function composeErrorDetails(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message
-  }
-  return String(error)
 }

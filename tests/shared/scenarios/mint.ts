@@ -12,6 +12,7 @@ import {
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
 import type { LeverageTokenDefinition } from '../../fixtures/addresses'
+import { createTestBalmySDK } from '../clients'
 import { AVAILABLE_LEVERAGE_TOKENS, getAddressesForToken } from '../env'
 import { approveIfNeeded, seedUniswapV2PairLiquidity, topUpErc20, topUpNative } from '../funding'
 import { type WithForkCtx, withFork } from '../withFork'
@@ -369,6 +370,7 @@ function buildQuoteAdapter({
     slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
     fromAddress: executor,
+    balmySDK: createTestBalmySDK(),
   })
   return quote
 }
@@ -378,36 +380,23 @@ function resolveDebtSwapConfig({
 }: {
   tokenDefinition: LeverageTokenDefinition
 }): DebtToCollateralSwapConfig {
-  if (
-    tokenDefinition.swap?.type === 'lifi' ||
-    (tokenDefinition.swap?.type === undefined && process.env['TEST_USE_LIFI'] === '1')
-  ) {
+  const swap = tokenDefinition.swap
+  const forceLiFi = process.env['TEST_USE_LIFI'] === '1'
+
+  if (swap?.type === 'lifi' || forceLiFi) {
     return { type: 'lifi', allowBridges: 'none' }
   }
 
-  if (tokenDefinition.swap?.type === 'pendle') {
+  if (swap?.type === 'balmy') {
+    return { type: 'balmy' }
+  }
+
+  if (swap?.type === 'pendle') {
     return { type: 'pendle' }
   }
 
-  const v3Config = tokenDefinition.swap?.uniswapV3
-  // Prefer Uniswap V3 when poolKey is provided (Tenderly tokens aim for deterministic v3 routes)
-  if (v3Config?.poolKey) {
-    return { type: 'uniswapV3', poolKey: v3Config.poolKey }
-  }
-
-  if (tokenDefinition.swap?.uniswapV2Router) {
-    return { type: 'uniswapV2', router: tokenDefinition.swap.uniswapV2Router }
-  }
-
-  const fallbackRouter =
-    (process.env['TEST_UNISWAP_V2_ROUTER'] as Address | undefined) ??
-    ('0x4752ba5DBc23f44D87826276BF6Fd6b1c372ad24' as Address)
-
-  if (!fallbackRouter) {
-    throw new Error('Uniswap V2 router address required for fallback debt swap')
-  }
-
-  return { type: 'uniswapV2', router: fallbackRouter }
+  // Default to Balmy when no explicit swap adapter is provided
+  return { type: 'balmy' }
 }
 
 export function assertMintResult({

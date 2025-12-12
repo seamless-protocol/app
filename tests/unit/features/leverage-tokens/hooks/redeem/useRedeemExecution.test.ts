@@ -42,6 +42,8 @@ describe('useRedeemExecution', () => {
       approvalTarget: makeAddr('approval'),
       calldata: '0xabcdef' as `0x${string}`,
     },
+    quoteSourceId: undefined,
+    quoteSourceName: undefined,
     expectedTotalCollateral: 2000000000000000000n, // 2 tokens
     expectedExcessCollateral: 1000000000000000000n, // 1 token
     expectedDebtPayout: 0n,
