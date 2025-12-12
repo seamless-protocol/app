@@ -5,10 +5,16 @@ import {
   decodeFunctionResult,
   encodeFunctionData,
   getAddress,
+  isAddressEqual,
   RawContractError,
 } from 'viem'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
+import {
+  applySlippageCeiling,
+  applySlippageFloor,
+  DEFAULT_SLIPPAGE_BPS,
+  validateSlippage,
+} from './helpers'
 import type { QuoteFn } from './types'
 
 type PublicClientLike = Pick<PublicClient, 'call' | 'getBlock' | 'readContract'>
@@ -194,9 +200,7 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
     deadlineSeconds = 15 * 60,
   } = options
 
-  if (slippageBps < 0 || slippageBps > Number(BPS_DENOMINATOR)) {
-    throw new Error('Invalid slippage basis points')
-  }
+  validateSlippage(slippageBps)
 
   const poolTokensPromise = resolvePoolTokens(publicClient, poolAddress)
 
@@ -244,13 +248,15 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
         ],
       })
 
+      const callValue = isAddressEqual(inToken, ETH_SENTINEL) ? maxIn : 0n
+
       return {
         out: targetOut,
         minOut: targetOut,
         approvalTarget: getAddress(router),
-        calldata,
+        calls: [{ target: getAddress(router), data: calldata, value: callValue }],
         deadline,
-        ...(inToken.toLowerCase() === ETH_SENTINEL.toLowerCase() ? { wantsNativeIn: true } : {}),
+        ...(callValue > 0n ? { wantsNativeIn: true } : {}),
       }
     }
 
@@ -281,13 +287,15 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
       ],
     })
 
+    const callValue = isAddressEqual(inToken, ETH_SENTINEL) ? amountIn : 0n
+
     return {
       out: amountOut,
       minOut,
       approvalTarget: getAddress(router),
-      calldata,
+      calls: [{ target: getAddress(router), data: calldata, value: callValue }],
       deadline,
-      ...(inToken.toLowerCase() === ETH_SENTINEL.toLowerCase() ? { wantsNativeIn: true } : {}),
+      ...(callValue > 0n ? { wantsNativeIn: true } : {}),
     }
   }
 }
@@ -458,8 +466,10 @@ async function assertPoolCompatibility(
   },
 ) {
   const poolTokens = await poolTokensPromise
-  const matchesDirect = poolTokens.token0 === tokenIn && poolTokens.token1 === tokenOut
-  const matchesReverse = poolTokens.token0 === tokenOut && poolTokens.token1 === tokenIn
+  const matchesDirect =
+    isAddressEqual(poolTokens.token0, tokenIn) && isAddressEqual(poolTokens.token1, tokenOut)
+  const matchesReverse =
+    isAddressEqual(poolTokens.token0, tokenOut) && isAddressEqual(poolTokens.token1, tokenIn)
 
   if (!matchesDirect && !matchesReverse) {
     throw new Error(
@@ -514,21 +524,10 @@ function normalizeTokens(args: { inToken: Address; outToken: Address; wrappedNat
 }
 
 function normalizeToken(token: Address, wrappedNative?: Address): Address {
-  if (token.toLowerCase() === ETH_SENTINEL.toLowerCase()) {
+  if (isAddressEqual(token, ETH_SENTINEL)) {
     if (!wrappedNative)
       throw new Error('Wrapped native token address required for ETH sentinel input')
     return getAddress(wrappedNative)
   }
   return getAddress(token)
-}
-
-function applySlippageFloor(amount: bigint, slippageBps: number): bigint {
-  const slippage = BigInt(slippageBps)
-  return (amount * (BPS_DENOMINATOR - slippage)) / BPS_DENOMINATOR
-}
-
-function applySlippageCeiling(amount: bigint, slippageBps: number): bigint {
-  const slippage = BigInt(slippageBps)
-  const numerator = amount * (BPS_DENOMINATOR + slippage)
-  return (numerator + (BPS_DENOMINATOR - 1n)) / BPS_DENOMINATOR
 }

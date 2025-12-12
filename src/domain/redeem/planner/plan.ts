@@ -12,12 +12,11 @@ import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/
 import { readLeverageManagerV2PreviewRedeem } from '@/lib/contracts/generated'
 import { fetchTokenUsdPrices } from '@/lib/prices/fetchUsdPrices'
 import type { Quote, QuoteFn } from './types'
+import type { Call } from '@/domain/shared/types'
 
 // Local structural types (avoid brittle codegen coupling)
 type TokenArg = Address
 type SharesToRedeemArg = bigint
-type RouterCall = { target: Address; data: `0x${string}`; value: bigint }
-type Calls = Array<RouterCall>
 
 const WETH_WITHDRAW_ABI = parseAbi(['function withdraw(uint256 wad)'])
 
@@ -61,7 +60,7 @@ export type RedeemPlan = {
    * Encoded router calls (approve + swap) to be submitted to `redeem`.
    * The sequence includes the collateral->debt swap needed for debt repayment.
    */
-  calls: Calls
+  calls: Call[]
 }
 
 export async function planRedeem(params: {
@@ -158,7 +157,7 @@ export async function planRedeem(params: {
     expectedDebtPayout: quote.out - debtToRepay,
     payoutAsset: wantsDebtOutput ? debtAddr : collateralAddr,
     payoutAmount: remainingCollateral,
-    calls: [...swapCalls] as Calls,
+    calls: [...swapCalls] as Call[],
   }
 
   if (wantsDebtOutput) {
@@ -311,7 +310,7 @@ async function getCollateralToDebtQuote(args: {
   const { debtAsset, requiredDebt, quoter, collateralAvailableForSwap, inTokenForQuote, intent } =
     args
 
-  if (requiredDebt <= 0n) return { out: 0n, approvalTarget: zeroAddress, calldata: '0x' }
+  if (requiredDebt <= 0n) return { out: 0n, approvalTarget: zeroAddress, calls: [] }
 
   // Build type-safe quote request based on intent
   const quote = await quoter(
@@ -346,14 +345,14 @@ async function buildCollateralToDebtSwapCalls(args: {
   collateralAmount: bigint
   useNativeCollateralPath: boolean
   quote: Quote
-}): Promise<{ calls: Calls }> {
+}): Promise<{ calls: Call[] }> {
   const { collateralAsset, collateralAmount, useNativeCollateralPath, quote } = args
 
   if (collateralAmount <= 0n) {
     return { calls: [] }
   }
 
-  const calls: Calls = []
+  const calls: Call[] = []
 
   if (useNativeCollateralPath) {
     calls.push({
@@ -377,11 +376,7 @@ async function buildCollateralToDebtSwapCalls(args: {
     })
   }
 
-  calls.push({
-    target: getAddress(quote.approvalTarget),
-    data: quote.calldata,
-    value: useNativeCollateralPath ? collateralAmount : 0n,
-  })
+  calls.push(...quote.calls)
 
   return { calls }
 }
