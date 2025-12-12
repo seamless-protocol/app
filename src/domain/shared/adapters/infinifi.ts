@@ -191,6 +191,7 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
       functionName: 'unstake',
       args: [normalizedRouter, amountIn],
     })
+    // TODO: Actual iUSD amount received can change between when previewed offchain and executed onchain. We need some helper contract for this
     const approveIusdCalldata = encodeFunctionData({
       abi: erc20Abi,
       functionName: 'approve',
