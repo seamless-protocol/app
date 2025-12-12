@@ -19,11 +19,11 @@ import type { REWARDS_PROVIDERS } from './utils/apy-calculations/rewards-provide
 
 // Leverage token keys enum for type safety
 export enum LeverageTokenKey {
-  SIUSD_USDC_2X_TENDERLY = 'siUSD-usdc-2x-tenderly',
   WSTETH_ETH_2X_MAINNET = 'wsteth-eth-2x-mainnet',
   WEETH_WETH_17X_BASE_MAINNET = 'weeth-weth-17x-base-mainnet',
   WSTETH_ETH_25X_ETHEREUM_MAINNET = 'wsteth-eth-25x-ethereum-mainnet',
   RLP_USDC_6_75X_ETHEREUM_MAINNET = 'rlp-usdc-6.75x-ethereum-mainnet',
+  SIUSD_USDC_11X_ETHEREUM_MAINNET = 'siUSD-usdc-11x-ethereum-mainnet',
   PT_RLP_4DEC2025_USDC_2X_ETHEREUM_MAINNET = 'pt-rlp-4dec2025-usdc-2x-ethereum-mainnet',
   // Add more token keys here as they are added
   // ANOTHER_TOKEN = 'another-token',
@@ -549,15 +549,15 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       },
     },
   },
-  [LeverageTokenKey.SIUSD_USDC_2X_TENDERLY]: {
+  [LeverageTokenKey.SIUSD_USDC_11X_ETHEREUM_MAINNET]: {
     isTestOnly: true,
     address: '0x77b77b16384221abc58152c94c53dc630f98661e' as Address,
-    name: 'siUSD / USDC 2x Leverage Token (Tenderly)',
-    symbol: 'SIUSD-USDC-2x',
+    name: 'siUSD / USDC 11x Leverage Token',
+    symbol: 'SIUSD-USDC-11x',
     description:
-      'Tenderly VNet deployment of the siUSD / USDC 2x Leverage Token used for automated integration testing.',
+      'siUSD / USDC 11x Leverage Token that amplifies relative price movements between siUSD and USDC on Ethereum',
     decimals: 18,
-    leverageRatio: 2,
+    leverageRatio: 11,
     chainId: 1,
     chainName: 'Ethereum',
     chainLogo: EthereumLogo,
