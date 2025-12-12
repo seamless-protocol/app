@@ -1,4 +1,4 @@
-import { BPS_DENOMINATOR } from './constants'
+import { BPS_DENOMINATOR } from '../../shared/adapters/helpers'
 
 /**
  * Apply slippage protection to a redemption amount.

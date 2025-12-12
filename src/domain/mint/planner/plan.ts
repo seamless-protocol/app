@@ -10,6 +10,7 @@ import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseUnits, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import { USD_DECIMALS } from '@/domain/shared/prices'
+import type { Call } from '@/domain/shared/types'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads
@@ -19,7 +20,6 @@ import {
 import { fetchTokenUsdPrices } from '@/lib/prices/fetchUsdPrices'
 import { applySlippageFloor, mulDivFloor } from './math'
 import type { Quote, QuoteFn } from './types'
-import type { Call } from '@/domain/shared/types'
 
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
 type TokenArg = Address
@@ -68,7 +68,7 @@ export type MintPlan = {
    * the debt asset is not the wrapped native token. Input->collateral conversions
    * are out of scope for this planner.
    */
-  calls: Call[]
+  calls: Array<Call>
 }
 
 export async function planMint(params: {
@@ -254,7 +254,7 @@ export async function planMint(params: {
   const minShares = applySlippageFloor(finalQuote.shares, effectiveAllowedSlippage)
 
   // Build calls based on the amount actually used for the swap
-  const calls: Call[] = [
+  const calls: Array<Call> = [
     ...buildDebtSwapCalls({
       debtAsset,
       debtQuote: effectiveQuote,

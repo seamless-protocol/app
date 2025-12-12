@@ -164,7 +164,7 @@ describe('orchestrateRedeem', () => {
           limitAmount: 100n,
           quotedAmount: 164n,
         },
-        swapData: mockVeloraQuote.calldata,
+        swapData: mockVeloraQuote.calls[0]?.data,
         routerAddress: ROUTER_V2,
         chainId: base.id,
       })

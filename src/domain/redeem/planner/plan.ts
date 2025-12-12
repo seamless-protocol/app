@@ -8,11 +8,11 @@ import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseAbi, parseUnits, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import { USD_DECIMALS } from '@/domain/shared/prices'
+import type { Call } from '@/domain/shared/types'
 import { BASE_WETH, ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
 import { readLeverageManagerV2PreviewRedeem } from '@/lib/contracts/generated'
 import { fetchTokenUsdPrices } from '@/lib/prices/fetchUsdPrices'
 import type { Quote, QuoteFn } from './types'
-import type { Call } from '@/domain/shared/types'
 
 // Local structural types (avoid brittle codegen coupling)
 type TokenArg = Address
@@ -60,7 +60,7 @@ export type RedeemPlan = {
    * Encoded router calls (approve + swap) to be submitted to `redeem`.
    * The sequence includes the collateral->debt swap needed for debt repayment.
    */
-  calls: Call[]
+  calls: Array<Call>
 }
 
 export async function planRedeem(params: {
@@ -157,7 +157,7 @@ export async function planRedeem(params: {
     expectedDebtPayout: quote.out - debtToRepay,
     payoutAsset: wantsDebtOutput ? debtAddr : collateralAddr,
     payoutAmount: remainingCollateral,
-    calls: [...swapCalls] as Call[],
+    calls: [...swapCalls] as Array<Call>,
   }
 
   if (wantsDebtOutput) {
@@ -345,14 +345,14 @@ async function buildCollateralToDebtSwapCalls(args: {
   collateralAmount: bigint
   useNativeCollateralPath: boolean
   quote: Quote
-}): Promise<{ calls: Call[] }> {
+}): Promise<{ calls: Array<Call> }> {
   const { collateralAsset, collateralAmount, useNativeCollateralPath, quote } = args
 
   if (collateralAmount <= 0n) {
     return { calls: [] }
   }
 
-  const calls: Call[] = []
+  const calls: Array<Call> = []
 
   if (useNativeCollateralPath) {
     calls.push({
@@ -364,6 +364,14 @@ async function buildCollateralToDebtSwapCalls(args: {
       }),
       value: 0n,
     })
+    if (quote.calls[0]) {
+      calls.push({
+        target: quote.calls[0]?.target,
+        data: quote.calls[0]?.data,
+        value: collateralAmount,
+      })
+      delete quote.calls[0]
+    }
   } else {
     calls.push({
       target: getAddress(collateralAsset),
