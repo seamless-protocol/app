@@ -24,7 +24,6 @@ interface UseMintPlanPreviewParams {
   debtDecimals: number | undefined
   quote?: QuoteFn
   debounceMs?: number
-  epsilonBps?: number
   // For derived USD estimates (optional; omit to skip)
   collateralUsdPrice?: number | undefined
   debtUsdPrice?: number | undefined
@@ -42,7 +41,6 @@ export function useMintPlanPreview({
   debtAsset,
   quote,
   debounceMs = 500,
-  epsilonBps,
   collateralUsdPrice,
   debtUsdPrice,
   collateralDecimals,
@@ -66,15 +64,10 @@ export function useMintPlanPreview({
     addr: token,
     amount: debounced ?? 0n,
     slippageBps,
-    ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
   }
 
   const query = useQuery<MintPlan, Error>({
-    queryKey: [
-      ...ltKeys.simulation.mintKey(keyParams),
-      `slippage:${slippageBps}`,
-      ...(typeof epsilonBps === 'number' ? [`epsilon:${epsilonBps}`] : []),
-    ],
+    queryKey: [...ltKeys.simulation.mintKey(keyParams), `slippage:${slippageBps}`],
     enabled: enabledQuery,
     // Periodically refresh quotes while user is editing
     refetchInterval: enabled ? 30_000 : false,
@@ -108,7 +101,6 @@ export function useMintPlanPreview({
         debtAsset,
         collateralAssetDecimals: collateralDecimals,
         debtAssetDecimals: debtDecimals,
-        ...(typeof epsilonBps === 'number' ? { epsilonBps } : {}),
         blockNumber,
       })
     },

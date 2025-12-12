@@ -206,41 +206,6 @@ describe('useMintPlanPreview', () => {
         blockNumber: 12345678n,
       })
     })
-
-    it('should include epsilonBps when provided', async () => {
-      const { result } = hookTestUtils.renderHookWithQuery(() =>
-        useMintPlanPreview({
-          config: MOCK_CONFIG,
-          token: TOKEN_ADDRESS,
-          inputAsset: INPUT_ASSET,
-          equityInCollateralAsset: EQUITY_AMOUNT,
-          slippageBps: 50,
-          chainId: CHAIN_ID,
-          enabled: true,
-          collateralAsset: makeAddr('collateral'),
-          debtAsset: makeAddr('debt'),
-          quote: mockQuote,
-          debounceMs: 0,
-          epsilonBps: 10,
-          collateralDecimals: 18,
-          debtDecimals: 18,
-        }),
-      )
-
-      await waitFor(() => {
-        expect(result.current.plan).toBeDefined()
-      })
-
-      expect(mockPlanMint).toHaveBeenCalledWith(
-        expect.objectContaining({
-          epsilonBps: 10,
-          collateralAsset: makeAddr('collateral'),
-          debtAsset: makeAddr('debt'),
-          collateralAssetDecimals: 18,
-          debtAssetDecimals: 18,
-        }),
-      )
-    })
   })
 
   describe('Debouncing', () => {

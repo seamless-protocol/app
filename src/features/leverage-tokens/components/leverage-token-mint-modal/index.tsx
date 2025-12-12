@@ -270,9 +270,6 @@ export function LeverageTokenMintModal({
       }
       // Aggregator slippage (from UI setting)
       rows.push({ label: 'Aggregator slippage', value: `${slippageBps} bps` })
-      // Planner margin (epsilon)
-      const eps = leverageTokenConfig.planner?.epsilonBps ?? 10
-      rows.push({ label: 'Planner safety', value: `${eps} bps` })
       // Route provider
       const provider = leverageTokenConfig.swaps?.debtToCollateral?.type ?? '—'
       rows.push({ label: 'Route provider', value: String(provider) })
@@ -297,7 +294,6 @@ export function LeverageTokenMintModal({
     planPreview.plan,
     leverageTokenConfig.collateralAsset.decimals,
     leverageTokenConfig.debtAsset.decimals,
-    leverageTokenConfig.planner?.epsilonBps,
     leverageTokenConfig.swaps?.debtToCollateral,
     slippageBps,
   ])

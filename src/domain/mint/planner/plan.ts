@@ -90,8 +90,6 @@ export async function planMint(params: {
   collateralAssetDecimals: number
   /** Debt asset decimals */
   debtAssetDecimals: number
-  /** Optional per-pair epsilon (bps) for single-pass clamp */
-  epsilonBps?: number
   /** Optional block number to pin all on-chain previews for consistency */
   blockNumber?: bigint
 }): Promise<MintPlan> {
@@ -107,16 +105,12 @@ export async function planMint(params: {
     debtAsset,
     collateralAssetDecimals,
     debtAssetDecimals,
-    epsilonBps,
     blockNumber,
   } = params
 
   // Basic input validation
   if (slippageBps < 0 || slippageBps > 5_000) {
     throw new Error('slippageBps out of range (0-5000)')
-  }
-  if (typeof epsilonBps === 'number' && (epsilonBps < 0 || epsilonBps > 100)) {
-    throw new Error('epsilonBps out of range (0-100)')
   }
 
   // 1) Enforce collateral-only input, then preview ideal
