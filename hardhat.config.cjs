@@ -1,0 +1,58 @@
+/**
+ * SPDX-License-Identifier: MIT
+ */
+const { subtask } = require("hardhat/config");
+const { existsSync, mkdirSync, writeFileSync } = require("node:fs");
+const { dirname, join, parse } = require("node:path");
+const { inspect } = require("node:util");
+const {
+  TASK_COMPILE_SOLIDITY_EMIT_ARTIFACTS,
+} = require("hardhat/builtin-tasks/task-names");
+
+subtask(TASK_COMPILE_SOLIDITY_EMIT_ARTIFACTS).setAction(
+  async (args, _, next) => {
+    const output = await next();
+
+    await Promise.all(
+      Object.entries(args.output.contracts).map(
+        async ([sourceName, contract]) => {
+          if (sourceName.includes("interfaces")) return;
+
+          const parsed = parse(sourceName);
+          const source = parsed.name;
+          const path = join(
+            parsed.dir.replaceAll("solidity", "queries"),
+            `${source}.ts`,
+          );
+          console.log("path", path);
+
+          const dir = dirname(path);
+          if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+
+          const {
+            abi,
+            evm: {
+              bytecode: { object: bytecode },
+            },
+          } = Object.entries(contract).find(([name]) => name === source)[1];
+
+          writeFileSync(
+            path,
+            `export const abi = ${inspect(abi, false, null)} as const;
+
+export const code = "0x${bytecode}";`,
+          );
+        },
+      ),
+    );
+
+    return output;
+  },
+);
+
+exports.default = {
+  solidity: "0.8.30",
+  paths: {
+    sources: "./src/lib/contracts/solidity",
+  },
+};
