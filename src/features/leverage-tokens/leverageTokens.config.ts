@@ -4,12 +4,12 @@ import {
   BaseLogo,
   EthereumLogo,
   EtherfiLogo,
-  siUSDLogo,
   LidoLogo,
   MerklLogo,
   MorphoLogo,
   PendleLogo,
   ResolvLogo,
+  siUSDLogo,
 } from '@/components/icons'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
