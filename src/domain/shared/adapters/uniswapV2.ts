@@ -1,7 +1,7 @@
 import type { Address, PublicClient } from 'viem'
-import { encodeFunctionData, getAddress } from 'viem'
+import { encodeFunctionData, getAddress, isAddressEqual } from 'viem'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
+import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './helpers'
 import type { QuoteFn } from './types'
 
 const UNISWAP_V2_ROUTER_ABI = [
@@ -82,7 +82,7 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
       throw new Error('UniswapV2 adapter requires amountIn (exactIn quotes only)')
     }
 
-    const isNativeIn = getAddress(inToken) === getAddress(ETH_SENTINEL)
+    const isNativeIn = isAddressEqual(getAddress(inToken), getAddress(ETH_SENTINEL))
     if (isNativeIn && !wrappedNative) {
       throw new Error(
         'createUniswapV2QuoteAdapter requires wrappedNative when using ETH sentinel input',
@@ -132,7 +132,13 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
       out,
       minOut,
       approvalTarget: normalizedRouter,
-      calldata,
+      calls: [
+        {
+          target: normalizedRouter,
+          data: calldata,
+          value: isNativeIn ? amountIn : 0n,
+        },
+      ],
       ...(isNativeIn ? { wantsNativeIn: true } : {}),
     }
   }

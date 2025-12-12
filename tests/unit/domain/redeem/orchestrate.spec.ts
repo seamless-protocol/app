@@ -5,7 +5,7 @@
  * based on adapter configuration and quote type.
  */
 
-import type { Address, Hash } from 'viem'
+import type { Address, Hash, Hex } from 'viem'
 import { base } from 'viem/chains'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
@@ -58,7 +58,13 @@ describe('orchestrateRedeem', () => {
     minOut: 49000000n,
     maxIn: 100000000000000000n,
     approvalTarget: '0x8888888888888888888888888888888888888888' as Address,
-    calldata: '0x1234' as `0x${string}`,
+    calls: [
+      {
+        target: '0x8888888888888888888888888888888888888888' as Address,
+        data: '0x1234' as Hex,
+        value: 0n,
+      },
+    ],
   }
 
   const mockVeloraQuote: VeloraQuote = {

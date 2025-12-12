@@ -87,6 +87,13 @@ export async function orchestrateRedeem(params: {
       throw new Error('Velora quote missing veloraData for exactOut operation')
     }
     const { augustus, offsets } = quote.veloraData
+    if (quote.calls.length !== 1) {
+      throw new Error('Velora quote must have exactly one call for redeem')
+    }
+    const swapCall = quote.calls[0]
+    if (!swapCall) {
+      throw new Error('Velora quote missing call data for redeem')
+    }
 
     const tx = await executeRedeemWithVelora({
       config,
@@ -97,7 +104,7 @@ export async function orchestrateRedeem(params: {
       veloraAdapter: veloraAdapterAddress,
       augustus,
       offsets,
-      swapData: quote.calldata,
+      swapData: swapCall.data,
       routerAddress: routerAddress,
       chainId: chainId as SupportedChainId,
     })

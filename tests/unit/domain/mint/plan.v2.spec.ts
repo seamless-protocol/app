@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address, Hex } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MintPlan } from '@/domain/mint/planner/plan'
 import { planMint, validateMintPlan } from '@/domain/mint/planner/plan'
@@ -62,7 +62,13 @@ describe('planMint', () => {
       return {
         out: 150n,
         approvalTarget: '0x9999999999999999999999999999999999999999' as Address,
-        calldata: '0xdeadbeef' as `0x${string}`,
+        calls: [
+          {
+            target: '0x9999999999999999999999999999999999999999' as Address,
+            data: '0xdeadbeef' as Hex,
+            value: 0n,
+          },
+        ],
       }
     })
 

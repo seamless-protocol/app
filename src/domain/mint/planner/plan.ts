@@ -19,13 +19,11 @@ import {
 import { fetchTokenUsdPrices } from '@/lib/prices/fetchUsdPrices'
 import { applySlippageFloor, mulDivFloor } from './math'
 import type { Quote, QuoteFn } from './types'
+import type { Call } from '@/domain/shared/types'
 
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
 type TokenArg = Address
 type EquityInInputAssetArg = bigint
-type RouterCall = { target: Address; data: `0x${string}`; value: bigint }
-type Calls = Array<RouterCall>
-type Call = RouterCall
 
 // No additional normalizers; use viem's getAddress where needed
 
@@ -70,7 +68,7 @@ export type MintPlan = {
    * the debt asset is not the wrapped native token. Input->collateral conversions
    * are out of scope for this planner.
    */
-  calls: Calls
+  calls: Call[]
 }
 
 export async function planMint(params: {
@@ -256,7 +254,7 @@ export async function planMint(params: {
   const minShares = applySlippageFloor(finalQuote.shares, effectiveAllowedSlippage)
 
   // Build calls based on the amount actually used for the swap
-  const calls: Calls = [
+  const calls: Call[] = [
     ...buildDebtSwapCalls({
       debtAsset,
       debtQuote: effectiveQuote,
@@ -392,7 +390,7 @@ function buildDebtSwapCalls(args: {
       }),
       value: 0n,
     },
-    { target: debtQuote.approvalTarget, data: debtQuote.calldata, value: 0n },
+    ...debtQuote.calls,
   ]
 }
 

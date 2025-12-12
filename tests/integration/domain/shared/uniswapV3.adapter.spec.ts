@@ -117,7 +117,7 @@ describeIfV3('Uniswap v3 adapter (Tenderly)', () => {
     expect(quote.out > 0n).toBe(true)
     expect(quote.approvalTarget).toEqual(options.router)
 
-    const decoded = decodeFunctionData({ abi: SWAP_ROUTER_ABI, data: quote.calldata })
+    const decoded = decodeFunctionData({ abi: SWAP_ROUTER_ABI, data: quote.calls[0]?.data ?? '0x' })
     expect(decoded.functionName).toBe('exactInputSingle')
   })
 
@@ -135,7 +135,7 @@ describeIfV3('Uniswap v3 adapter (Tenderly)', () => {
     expect(quote.out).toBe(targetOut)
     expect(quote.approvalTarget).toEqual(options.router)
 
-    const decoded = decodeFunctionData({ abi: SWAP_ROUTER_ABI, data: quote.calldata })
+    const decoded = decodeFunctionData({ abi: SWAP_ROUTER_ABI, data: quote.calls[0]?.data ?? '0x' })
     expect(decoded.functionName).toBe('exactOutputSingle')
   })
 })

@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address, Hex } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
 import { planMint } from '@/domain/mint/planner/plan'
@@ -61,14 +61,26 @@ describe('planner scaling under underfill', () => {
         return {
           out: 997_357_108_403_566_456n,
           approvalTarget: '0x0000000000000000000000000000000000000004' as Address,
-          calldata: '0x',
+          calls: [
+            {
+              target: '0x0000000000000000000000000000000000000004' as Address,
+              data: '0x' as Hex,
+              value: 0n,
+            },
+          ],
         }
       }
       // After scaling, final quote out: 0.994020891474923263 collateral
       return {
         out: 994_020_891_474_923_263n,
         approvalTarget: '0x0000000000000000000000000000000000000004' as Address,
-        calldata: '0x',
+        calls: [
+          {
+            target: '0x0000000000000000000000000000000000000004' as Address,
+            data: '0x' as Hex,
+            value: 0n,
+          },
+        ],
       }
     }
 

@@ -1,7 +1,15 @@
-export { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
+export {
+  applySlippageCeiling,
+  applySlippageFloor,
+  BPS_DENOMINATOR,
+  bpsToDecimalString,
+  DEFAULT_SLIPPAGE_BPS,
+  validateSlippage,
+} from './helpers'
+export { createInfinifiQuoteAdapter, type InfinifiAdapterOptions } from './infinifi'
 export { createLifiQuoteAdapter, type LifiAdapterOptions, type LifiOrder } from './lifi'
 export { createPendleQuoteAdapter, type PendleAdapterOptions } from './pendle'
-export type { Quote, QuoteFn, VeloraQuote } from './types'
+export type { Quote, QuoteCall, QuoteFn, VeloraQuote } from './types'
 export {
   createUniswapV2QuoteAdapter,
   type UniswapV2QuoteOptions,

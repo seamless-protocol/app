@@ -3,7 +3,7 @@ import { getAddress, isAddressEqual } from 'viem'
 import { z } from 'zod'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
+import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './helpers'
 import type { QuoteFn } from './types'
 
 export interface PendleAdapterOptions {
@@ -177,7 +177,13 @@ function mapPendleResponseToQuote(
     minOut: 0n, // Not used
     maxIn: inAmount,
     approvalTarget: route.tx.to,
-    calldata: route.tx.data,
+    calls: [
+      {
+        target: getAddress(route.tx.to),
+        data: route.tx.data,
+        value: route.tx.value ? BigInt(route.tx.value) : 0n,
+      },
+    ],
     wantsNativeIn: isAddressEqual(inToken, ETH_SENTINEL),
   }
 }

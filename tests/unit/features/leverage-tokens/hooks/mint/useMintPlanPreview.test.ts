@@ -1,5 +1,5 @@
 import { waitFor } from '@testing-library/react'
-import type { Address } from 'viem'
+import type { Address, Hex } from 'viem'
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
 import type { Config } from 'wagmi'
 import { planMint } from '@/domain/mint/planner/plan'
@@ -35,7 +35,7 @@ describe('useMintPlanPreview', () => {
   const mockQuote: QuoteFn = vi.fn(async () => ({
     out: 1000000000000000000n,
     approvalTarget: makeAddr('approval'),
-    calldata: '0xabcdef' as `0x${string}`,
+    calls: [{ target: makeAddr('approval'), data: '0xabcdef' as Hex, value: 0n }],
   }))
 
   const mockPlan = {
@@ -65,7 +65,7 @@ describe('useMintPlanPreview', () => {
     vi.mocked(mockQuote).mockResolvedValue({
       out: 1000000000000000000n,
       approvalTarget: makeAddr('approval'),
-      calldata: '0xabcdef' as `0x${string}`,
+      calls: [{ target: makeAddr('approval'), data: '0xabcdef' as Hex, value: 0n }],
     })
   })
 

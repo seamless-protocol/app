@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address, Hex } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 import { planMint } from '@/domain/mint/planner/plan'
 
@@ -38,7 +38,13 @@ describe('planMint error branches', () => {
         quoteDebtToCollateral: async () => ({
           out: 100n,
           approvalTarget: '0x3333333333333333333333333333333333333333' as Address,
-          calldata: '0x' as `0x${string}`,
+          calls: [
+            {
+              target: '0x3333333333333333333333333333333333333333' as Address,
+              data: '0x' as Hex,
+              value: 0n,
+            },
+          ],
         }),
         chainId: 8453,
         collateralAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
@@ -61,7 +67,13 @@ describe('planMint error branches', () => {
         quoteDebtToCollateral: async () => ({
           out: 0n,
           approvalTarget: '0x3333333333333333333333333333333333333333' as Address,
-          calldata: '0x' as `0x${string}`,
+          calls: [
+            {
+              target: '0x3333333333333333333333333333333333333333' as Address,
+              data: '0x' as Hex,
+              value: 0n,
+            },
+          ],
         }),
         chainId: 8453,
         collateralAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
