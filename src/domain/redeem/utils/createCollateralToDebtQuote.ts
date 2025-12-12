@@ -1,6 +1,7 @@
 import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import {
+  createInfinifiQuoteAdapter,
   createLifiQuoteAdapter,
   createPendleQuoteAdapter,
   createUniswapV3QuoteAdapter,
@@ -17,8 +18,7 @@ import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/co
 import type { QuoteFn } from '../planner/types'
 
 /** Supported adapter types for collateral-to-debt swaps */
-export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2' | 'pendle'
-
+export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2' | 'pendle' | 'infinifi'
 /**
  * Validated ParaSwap methods for Velora exactOut operations.
  * Contract has hardcoded byte offsets that only work with swapExactAmountOut.
@@ -45,6 +45,9 @@ export type CollateralToDebtSwapConfig =
     }
   | {
       type: 'pendle'
+    }
+  | {
+      type: 'infinifi'
     }
 
 export interface CreateCollateralToDebtQuoteParams {
@@ -105,6 +108,16 @@ export function createCollateralToDebtQuote({
   const publicClient = getPublicClient(chainId)
   if (!publicClient) {
     throw new Error('Public client unavailable for collateral quote')
+  }
+
+  if (swap.type === 'infinifi') {
+    const quote = createInfinifiQuoteAdapter({
+      publicClient,
+      chainId,
+      router: routerAddress,
+      slippageBps,
+    })
+    return { quote, adapterType: 'infinifi' }
   }
 
   if (swap.type === 'uniswapV2') {

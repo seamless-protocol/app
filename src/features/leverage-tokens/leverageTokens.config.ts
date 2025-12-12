@@ -4,6 +4,7 @@ import {
   BaseLogo,
   EthereumLogo,
   EtherfiLogo,
+  siUSDLogo,
   LidoLogo,
   MerklLogo,
   MorphoLogo,
@@ -16,12 +17,9 @@ import { APR_PROVIDERS } from './utils/apy-calculations/apr-providers'
 import type { BORROW_APR_PROVIDERS } from './utils/apy-calculations/borrow-apy-providers'
 import type { REWARDS_PROVIDERS } from './utils/apy-calculations/rewards-providers'
 
-const BASE_UNISWAP_V2_ROUTER = '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' as Address
-
 // Leverage token keys enum for type safety
 export enum LeverageTokenKey {
-  WEETH_WETH_17X_TENDERLY = 'weeth-weth-17x-tenderly',
-  CBBTC_USDC_2X_TENDERLY = 'cbbtc-usdc-2x-tenderly',
+  SIUSD_USDC_2X_TENDERLY = 'siUSD-usdc-2x-tenderly',
   WSTETH_ETH_2X_MAINNET = 'wsteth-eth-2x-mainnet',
   WEETH_WETH_17X_BASE_MAINNET = 'weeth-weth-17x-base-mainnet',
   WSTETH_ETH_25X_ETHEREUM_MAINNET = 'wsteth-eth-25x-ethereum-mainnet',
@@ -551,66 +549,32 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       },
     },
   },
-  [LeverageTokenKey.WEETH_WETH_17X_TENDERLY]: {
+  [LeverageTokenKey.SIUSD_USDC_2X_TENDERLY]: {
     isTestOnly: true,
-    address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
-    name: 'weETH / WETH 17x Leverage Token (Tenderly)',
-    symbol: 'WEETH-WETH-17x',
+    address: '0x77b77b16384221abc58152c94c53dc630f98661e' as Address,
+    name: 'siUSD / USDC 2x Leverage Token (Tenderly)',
+    symbol: 'SIUSD-USDC-2x',
     description:
-      'Tenderly VNet deployment of the weETH / WETH 17x Leverage Token used for automated integration testing.',
-    decimals: 18,
-    leverageRatio: 17,
-    chainId: 8453,
-    chainName: 'Base (Tenderly VNet)',
-    chainLogo: BaseLogo,
-    supplyCap: 150,
-    apyConfig: {
-      pointsMultiplier: 7,
-    },
-    collateralAsset: {
-      symbol: 'weETH',
-      name: 'Wrapped Ether.fi ETH',
-      description:
-        'Liquid staking token from Ether.fi that represents staked ETH with additional rewards',
-      address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a' as Address,
-      decimals: 18,
-    },
-    debtAsset: {
-      symbol: 'WETH',
-      name: 'Wrapped Ether',
-      address: BASE_WETH,
-      decimals: 18,
-    },
-    swaps: {
-      debtToCollateral: {
-        type: 'uniswapV2',
-        router: BASE_UNISWAP_V2_ROUTER,
-      },
-      collateralToDebt: {
-        type: 'uniswapV2',
-        router: BASE_UNISWAP_V2_ROUTER,
-      },
-    },
-  },
-  [LeverageTokenKey.CBBTC_USDC_2X_TENDERLY]: {
-    isTestOnly: true,
-    address: '0x662c3f931D4101b7e2923f8493D6b35368a991aD' as Address,
-    name: 'cbBTC / USDC 2x Leverage Token (Tenderly)',
-    symbol: 'CBBTC-USDC-2x',
-    description:
-      'Tenderly VNet deployment of the cbBTC / USDC 2x Leverage Token used for automated integration testing.',
+      'Tenderly VNet deployment of the siUSD / USDC 2x Leverage Token used for automated integration testing.',
     decimals: 18,
     leverageRatio: 2,
     chainId: 1,
-    chainName: 'Ethereum (Tenderly VNet)',
+    chainName: 'Ethereum',
     chainLogo: EthereumLogo,
-    supplyCap: 200,
+    supplyCap: 625000,
+    apyConfig: {
+      aprProvider: {
+        type: APR_PROVIDERS.DEFI_LLAMA,
+        id: '8fa2e60e-365a-41fc-8d50-fadde5041f94',
+      },
+      pointsMultiplier: 16.5,
+    },
     collateralAsset: {
-      symbol: 'cbBTC',
-      name: 'Coinbase Wrapped BTC',
-      description: "Coinbase's wrapped Bitcoin token, bringing Bitcoin liquidity to Ethereum",
-      address: '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf' as Address,
-      decimals: 8,
+      symbol: 'siUSD',
+      name: 'siUSD',
+      description: 'siUSD is a synthetic stablecoin that is pegged to USD',
+      address: '0xDBDC1Ef57537E34680B898E1FEBD3D68c7389bCB' as Address,
+      decimals: 18,
     },
     debtAsset: {
       symbol: 'USDC',
@@ -620,13 +584,64 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'uniswapV3',
-        poolKey: 'usdc-cbbtc',
+        type: 'infinifi',
       },
       collateralToDebt: {
-        type: 'uniswapV3',
-        poolKey: 'usdc-cbbtc',
+        type: 'infinifi',
       },
+    },
+    relatedResources: {
+      additionalRewards: [
+        {
+          id: 'infinifi-points',
+          title: 'Infinifi Points',
+          description: 'Infinifi Points',
+          url: 'https://app.infinifi.xyz/points',
+          icon: siUSDLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'yellow' as const,
+          },
+        },
+        {
+          id: 'merkl-rewards',
+          title: 'Merkl Rewards',
+          description: 'Additional DeFi rewards and incentive tracking',
+          // Default goes to dashboard; if connected, deep-link to user page
+          url: 'https://app.merkl.xyz/users/',
+          getUrl: ({ address }) =>
+            address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
+          icon: MerklLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'purple' as const,
+          },
+        },
+      ],
+      underlyingPlatforms: [
+        {
+          id: 'morpho-lending',
+          title: 'Morpho Lending Market',
+          description: 'View the underlying lending market powering this Leverage Token',
+          url: 'https://app.morpho.org/ethereum/market/0xbbf7ce1b40d32d3e3048f5cf27eeaa6de8cb27b80194690aab191a63381d8c99/',
+          icon: MorphoLogo,
+          badge: {
+            text: 'Lending Market',
+            color: 'blue' as const,
+          },
+        },
+        {
+          id: 'infinifi',
+          title: 'Infinifi',
+          description: 'Infinifi',
+          url: 'https://infinifi.xyz/',
+          icon: siUSDLogo,
+          badge: {
+            text: 'Protocol Info',
+            color: 'yellow' as const,
+          },
+        },
+      ],
     },
   },
 }
