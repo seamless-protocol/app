@@ -358,20 +358,21 @@ export function LeverageTokenTable({
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {currentItems.length === 0 ? (
-                <TableEmpty colSpan={6} />
-              ) : (
-                currentItems.map((token, index) => {
+              <TableBody>
+                {currentItems.length === 0 ? (
+                  <TableEmpty colSpan={6} />
+                ) : (
+                  currentItems.map((token, index) => {
                   const tokenApyData = apyDataMap?.get(token.address)
                   const tokenApyError = apyError || (!apyLoading && !apyDataMap?.has(token.address))
+
 
                   return (
                     <motion.tr
                       key={token.address}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.6, delay: index * 0.05 }}
                       className="cursor-pointer border-[var(--divider-line)] transition-colors hover:bg-accent"
                       onClick={() => onTokenClick?.(token)}
                     >
