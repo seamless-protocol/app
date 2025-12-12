@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { DEFAULT_SLIPPAGE_BPS } from '@/domain/mint/utils/constants'
+import { DEFAULT_SLIPPAGE_BPS } from '@/domain/shared/adapters/helpers'
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage'
 
 export function useSlippage(initial: string = '0.5') {

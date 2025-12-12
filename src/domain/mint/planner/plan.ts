@@ -10,6 +10,7 @@ import type { Address } from 'viem'
 import { encodeFunctionData, erc20Abi, getAddress, parseUnits, zeroAddress } from 'viem'
 import type { Config } from 'wagmi'
 import { USD_DECIMALS } from '@/domain/shared/prices'
+import type { Call } from '@/domain/shared/types'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
   // V2 reads
@@ -23,9 +24,6 @@ import type { Quote, QuoteFn } from './types'
 // Local structural types (avoid brittle codegen coupling in tests/VNet)
 type TokenArg = Address
 type EquityInInputAssetArg = bigint
-type RouterCall = { target: Address; data: `0x${string}`; value: bigint }
-type Calls = Array<RouterCall>
-type Call = RouterCall
 
 // No additional normalizers; use viem's getAddress where needed
 
@@ -70,7 +68,7 @@ export type MintPlan = {
    * the debt asset is not the wrapped native token. Input->collateral conversions
    * are out of scope for this planner.
    */
-  calls: Calls
+  calls: Array<Call>
 }
 
 export async function planMint(params: {
@@ -256,7 +254,7 @@ export async function planMint(params: {
   const minShares = applySlippageFloor(finalQuote.shares, effectiveAllowedSlippage)
 
   // Build calls based on the amount actually used for the swap
-  const calls: Calls = [
+  const calls: Array<Call> = [
     ...buildDebtSwapCalls({
       debtAsset,
       debtQuote: effectiveQuote,
@@ -392,7 +390,7 @@ function buildDebtSwapCalls(args: {
       }),
       value: 0n,
     },
-    { target: debtQuote.approvalTarget, data: debtQuote.calldata, value: 0n },
+    ...debtQuote.calls,
   ]
 }
 

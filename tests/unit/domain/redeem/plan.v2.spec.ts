@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address, Hex } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 
 // Unmock the function we want to test
@@ -60,7 +60,7 @@ function createMockQuoteFunction({
       minOut: minOutValue,
       maxIn: maxInValue,
       approvalTarget: dummyQuoteTarget,
-      calldata: '0x1234' as `0x${string}`,
+      calls: [{ target: dummyQuoteTarget, data: '0x1234' as Hex, value: 0n }],
     }
   }
 }
@@ -91,7 +91,7 @@ async function mockQuote(args: {
       minOut: amountOut,
       maxIn: ethInUnits,
       approvalTarget: dummyQuoteTarget,
-      calldata: '0x1234' as `0x${string}`,
+      calls: [{ target: dummyQuoteTarget, data: '0x1234' as Hex, value: 0n }],
     }
   }
 
@@ -106,7 +106,7 @@ async function mockQuote(args: {
     minOut: usdcInUnits,
     maxIn: amountIn,
     approvalTarget: dummyQuoteTarget,
-    calldata: '0x1234' as `0x${string}`,
+    calls: [{ target: dummyQuoteTarget, data: '0x1234' as Hex, value: 0n }],
   }
 }
 
@@ -417,7 +417,13 @@ describe('validateRedeemPlan', () => {
       minOut: 49000000n,
       maxIn: 100000000000000000n,
       approvalTarget: '0xcccccccccccccccccccccccccccccccccccccccc' as Address,
-      calldata: '0x1234' as `0x${string}`,
+      calls: [
+        {
+          target: '0xcccccccccccccccccccccccccccccccccccccccc' as Address,
+          data: '0x1234' as Hex,
+          value: 0n,
+        },
+      ],
     },
     expectedTotalCollateral: 1000000000000000000n,
     expectedExcessCollateral: 50000000000000000n,

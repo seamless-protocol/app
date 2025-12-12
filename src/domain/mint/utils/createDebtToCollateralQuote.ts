@@ -2,6 +2,7 @@ import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import {
+  createInfinifiQuoteAdapter,
   createLifiQuoteAdapter,
   createPendleQuoteAdapter,
   createUniswapV3QuoteAdapter,
@@ -79,6 +80,16 @@ export function createDebtToCollateralQuote({
   const publicClient = getPublicClient(chainId)
   if (!publicClient) {
     throw new Error('Public client unavailable for debt swap quote')
+  }
+
+  if (swap.type === 'infinifi') {
+    const quote = createInfinifiQuoteAdapter({
+      publicClient,
+      chainId,
+      router: routerAddress,
+      slippageBps,
+    })
+    return { quote, adapterType: 'infinifi' }
   }
 
   if (swap.type === 'uniswapV2') {

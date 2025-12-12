@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address, Hex } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 import { planMint } from '@/domain/mint/planner/plan'
 
@@ -43,7 +43,13 @@ describe('planMint validations', () => {
         quoteDebtToCollateral: async () => ({
           out: 1000n,
           approvalTarget: '0x3333333333333333333333333333333333333333' as Address,
-          calldata: '0x',
+          calls: [
+            {
+              target: '0x3333333333333333333333333333333333333333' as Address,
+              data: '0x' as Hex,
+              value: 0n,
+            },
+          ],
         }),
         chainId: 8453,
         collateralAsset: '0x1111111111111111111111111111111111111111' as Address,

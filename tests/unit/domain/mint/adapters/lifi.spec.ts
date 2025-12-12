@@ -35,7 +35,7 @@ describe('createLifiQuoteAdapter', () => {
     const res = await quote({ inToken: IN, outToken: OUT, amountIn: 123n, intent: 'exactIn' })
     expect(res.out).toBe(1000n)
     expect(res.approvalTarget.toLowerCase()).toBe(ROUTER.toLowerCase())
-    expect(res.calldata).toBe('0xdeadbeef')
+    expect(res.calls[0]?.data).toBe('0xdeadbeef')
 
     const url = new URL((fetchMock.mock.calls[0] as Array<any>)[0])
     expect(url.pathname).toBe('/v1/quote')

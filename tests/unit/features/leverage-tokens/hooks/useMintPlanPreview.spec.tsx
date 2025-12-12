@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import type React from 'react'
-import type { Address } from 'viem'
+import type { Address, Hex } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
 
@@ -132,7 +132,7 @@ describe('useMintPlanPreview', () => {
             amountIn: 0n,
             out: 0n,
             approvalTarget: DUMMY_ADDR,
-            calldata: '0x' as `0x${string}`,
+            calls: [{ target: DUMMY_ADDR, data: '0x' as Hex, value: 0n }],
           }),
           enabled: true,
           collateralDecimals: 18,
@@ -174,7 +174,7 @@ describe('useMintPlanPreview', () => {
             amountIn: 10n,
             out: 10n,
             approvalTarget: DUMMY_ADDR,
-            calldata: '0x' as `0x${string}`,
+            calls: [{ target: DUMMY_ADDR, data: '0x' as Hex, value: 0n }],
           }),
           enabled: true,
           collateralDecimals: 18,

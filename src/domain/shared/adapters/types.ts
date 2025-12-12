@@ -1,7 +1,8 @@
 /**
  * Shared types for quote adapters used by both mint and redeem operations.
  */
-import type { Address, Hex } from 'viem'
+import type { Address } from 'viem'
+import type { Call } from '@/domain/shared/types'
 
 // Quote for external swaps (if needed during operations)
 export type BaseQuote = {
@@ -15,10 +16,10 @@ export type BaseQuote = {
   wantsNativeIn?: boolean
   // Optional deadline (if provided by the aggregator/DEX)
   deadline?: bigint
-  // Target to approve before submitting calldata
+  // Target to approve before executing calls
   approvalTarget: Address
-  // Calldata to execute the swap on the aggregator/DEX
-  calldata: Hex
+  // Explicit call sequence (for single- or multi-step flows)
+  calls: Array<Call>
 }
 
 // Velora-specific quote with required veloraData (used for exactOut)

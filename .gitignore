@@ -71,3 +71,7 @@ package-lock.json
 # Local Sources
 _sources
 _data
+
+# Hardhat
+cache/
+artifacts/

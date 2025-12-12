@@ -80,7 +80,7 @@ describe('createVeloraQuoteAdapter', () => {
 
       expect(quote.out).toBe(2000000000000000000n)
       expect(quote.approvalTarget.toLowerCase()).toBe(AUGUSTUS.toLowerCase())
-      expect(quote.calldata).toBe('0x12345678')
+      expect(quote.calls[0]?.data).toBe('0x12345678')
       expect(quote.maxIn).toBe(1000000000000000000n)
     })
 

@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address, Hex } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 import { planMint } from '@/domain/mint/planner/plan'
 
@@ -56,7 +56,13 @@ describe('planMint (native path, exact-in)', () => {
       return {
         out: req.amountIn as bigint,
         approvalTarget: '0x9999999999999999999999999999999999999999' as Address,
-        calldata: '0xdeadbeef' as `0x${string}`,
+        calls: [
+          {
+            target: '0x9999999999999999999999999999999999999999' as Address,
+            data: '0xdeadbeef' as Hex,
+            value: 0n,
+          },
+        ],
       }
     })
 

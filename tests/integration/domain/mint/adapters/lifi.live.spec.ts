@@ -44,7 +44,7 @@ const describeOrSkip = LIVE ? describe : describe.skip
 
 describeOrSkip('LiFi adapter live smoke', () => {
   for (const target of QUOTE_TARGETS) {
-    it(`returns approvalTarget, calldata, and out > 0 (${target.label})`, async () => {
+    it(`returns approvalTarget, calls, and out > 0 (${target.label})`, async () => {
       const quote = createLifiQuoteAdapter({
         chainId: target.chainId,
         router: target.router,
@@ -57,7 +57,7 @@ describeOrSkip('LiFi adapter live smoke', () => {
         intent: 'exactIn',
       })
 
-      expect(res.calldata.startsWith('0x')).toBe(true)
+      expect((res.calls[0]?.data ?? '').startsWith('0x')).toBe(true)
       expect(/^0x[a-fA-F0-9]{40}$/.test(res.approvalTarget)).toBe(true)
       expect(res.out).toBeGreaterThan(0n)
     })
@@ -82,7 +82,7 @@ describeOrSkip('LiFi adapter live smoke', () => {
         intent: 'exactOut',
       })
 
-      expect(res.calldata.startsWith('0x')).toBe(true)
+      expect((res.calls[0]?.data ?? '').startsWith('0x')).toBe(true)
       expect(/^0x[a-fA-F0-9]{40}$/.test(res.approvalTarget)).toBe(true)
       // Adapter maps out := toAmountMin || toAmount
       expect(res.out).toBeGreaterThanOrEqual(toAmount)

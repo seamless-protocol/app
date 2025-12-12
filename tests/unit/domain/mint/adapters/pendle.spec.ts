@@ -81,7 +81,7 @@ describe('createPendleQuoteAdapter', () => {
       expect(result.out).toBe(2000000000000000000n)
       expect(result.maxIn).toBe(1000000000000000000n)
       expect(result.approvalTarget.toLowerCase()).toBe(APPROVAL_TARGET.toLowerCase())
-      expect(result.calldata).toBe('0xdeadbeef')
+      expect(result.calls[0]?.data).toBe('0xdeadbeef')
       expect(result.wantsNativeIn).toBe(false)
     })
 
@@ -584,7 +584,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       // Should still work with optional value field
-      expect(result.calldata).toBe('0xdeadbeef')
+      expect(result.calls[0]?.data).toBe('0xdeadbeef')
     })
 
     it('sets minOut to 0n (not used)', async () => {

@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address, Hex } from 'viem'
 import { describe, expect, it, vi } from 'vitest'
 import { planMint } from '@/domain/mint/planner/plan'
 
@@ -56,14 +56,26 @@ describe('planMint fallback exact-in sizing and non-native path', () => {
         return {
           out: (req.amountOut as bigint) - 1n,
           approvalTarget: '0x9999999999999999999999999999999999999999' as Address,
-          calldata: '0xdeadbeef' as `0x${string}`,
+          calls: [
+            {
+              target: '0x9999999999999999999999999999999999999999' as Address,
+              data: '0xdeadbeef' as Hex,
+              value: 0n,
+            },
+          ],
         }
       }
       // exact-in refinement: return gradually closer outs; keep it simple and sufficient
       return {
         out: 50n,
         approvalTarget: '0x9999999999999999999999999999999999999999' as Address,
-        calldata: '0xfeedbeef' as `0x${string}`,
+        calls: [
+          {
+            target: '0x9999999999999999999999999999999999999999' as Address,
+            data: '0xfeedbeef' as Hex,
+            value: 0n,
+          },
+        ],
       }
     })
 

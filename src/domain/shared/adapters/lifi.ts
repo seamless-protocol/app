@@ -1,8 +1,8 @@
 import type { Address } from 'viem'
-import { getAddress } from 'viem'
+import { getAddress, isAddressEqual } from 'viem'
 import { base } from 'viem/chains'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
+import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './helpers'
 import type { QuoteFn } from './types'
 
 export type LifiOrder = 'CHEAPEST' | 'FASTEST'
@@ -140,7 +140,7 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
         hasTxData: Boolean(step.transactionRequest?.data),
       })
     }
-    const wantsNativeIn = inToken.toLowerCase() === ETH_SENTINEL.toLowerCase()
+    const wantsNativeIn = isAddressEqual(inToken, ETH_SENTINEL)
     return mapStepToQuote(step, wantsNativeIn)
   }
 }
@@ -175,7 +175,7 @@ function buildQuoteUrl(
   // - exact-out: /v1/quote/toAmount (toAmount in query)
   const url = new URL(params.intent === 'exactOut' ? '/v1/quote/toAmount' : '/v1/quote', baseUrl)
   const normalizeToken = (token: Address) =>
-    token.toLowerCase() === ETH_SENTINEL.toLowerCase()
+    isAddressEqual(token, ETH_SENTINEL)
       ? '0x0000000000000000000000000000000000000000'
       : getAddress(token)
   url.searchParams.set('fromChain', String(params.chainId))
@@ -208,6 +208,7 @@ function buildQuoteUrl(
 
 function mapStepToQuote(step: Step, wantsNativeIn: boolean) {
   const tx = step.transactionRequest
+  if (!tx?.to) throw new Error('LiFi quote missing transaction target')
   const approvalTarget = step.estimate?.approvalAddress || tx?.to
   if (!approvalTarget) throw new Error('LiFi quote missing approval target')
   const data = tx?.data
@@ -225,7 +226,7 @@ function mapStepToQuote(step: Step, wantsNativeIn: boolean) {
     minOut,
     ...(typeof maxIn === 'bigint' ? { maxIn } : {}),
     approvalTarget: getAddress(approvalTarget),
-    calldata: data,
+    calls: [{ target: getAddress(tx?.to), data, value: 0n }],
     wantsNativeIn,
   }
 }
