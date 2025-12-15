@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import type { Formatter, NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 import { cn } from '@/lib/utils/cn'
 import { Card, CardContent, CardHeader, CardTitle } from './card'
 
@@ -42,7 +43,7 @@ export interface PriceLineChartProps {
   height?: number
   xAxisFormatter?: (dateString: string) => string
   yAxisFormatter?: (value: number) => string
-  tooltipFormatter?: (value: number | string, name?: string) => [string, string]
+  tooltipFormatter?: Formatter<ValueType, NameType>
   labelFormatter?: (dateString: string) => string
   yAxisLabel?: string
   dataKey?: string
@@ -85,7 +86,11 @@ export function PriceLineChart({
     return `$${value.toFixed(6)}` // Show 6 decimal places for price data
   }
 
-  const defaultTooltipFormatter = (value: number | string, name?: string): [string, string] => {
+  const defaultTooltipFormatter: Formatter<ValueType, NameType> = (value, name) => {
+    if (Array.isArray(value)) {
+      value = value.join(' ~ ')
+    }
+
     if (chartType === 'tvl') {
       return [`$${Number(value).toFixed(2)}M`, 'TVL']
     }

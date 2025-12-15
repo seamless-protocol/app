@@ -181,9 +181,9 @@ const LeverageTokenWrapper = () => {
       timeframes={['1H', '1D', '1W', '1M', '3M', '1Y']}
       xAxisFormatter={(value: string | number) => new Date(value).toLocaleDateString()}
       yAxisFormatter={(value: string | number) => Number(value).toFixed(4)}
-      tooltipFormatter={(value: string | number, name: string | undefined) => [
-        `${Number(value).toFixed(6)} ETH`,
-        name || 'Price',
+      tooltipFormatter={(value, name) => [
+        `${Array.isArray(value) ? value.map((n) => Number(n).toFixed(6)).join(' ~ ') : Number(value ?? 0).toFixed(6)} ETH`,
+        typeof name === 'string' || typeof name === 'number' ? String(name) : 'Price',
       ]}
     />
   )
