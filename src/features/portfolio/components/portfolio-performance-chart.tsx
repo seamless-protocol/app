@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import type { Formatter } from 'recharts/types/component/DefaultTooltipContent'
 import { Button } from '../../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
 import { Skeleton } from '../../../components/ui/skeleton'
@@ -34,7 +35,7 @@ export interface PortfolioPerformanceChartProps {
   }
   strokeColor?: string
   yAxisLabel?: string
-  tooltipFormatter?: (value: number | string, name?: string) => [string, string]
+  tooltipFormatter?: Formatter<number | string, string | number>
   yAxisFormatter?: (value: number) => string
 }
 
@@ -59,9 +60,9 @@ export function PortfolioPerformanceChart({
   const defaultYAxisFormatter = (value: number) =>
     value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-  const defaultTooltipFormatter = (value: number | string): [string, string] => [
+  const defaultTooltipFormatter: Formatter<number | string, string | number> = (value, name) => [
     `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    'Portfolio Value',
+    typeof name === 'string' || typeof name === 'number' ? String(name) : 'Portfolio Value',
   ]
 
   const formatCurrency = yAxisFormatter || defaultYAxisFormatter

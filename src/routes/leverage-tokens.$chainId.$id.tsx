@@ -600,13 +600,15 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                     const formatted = formatToSignificantDigits(value, 4)
                     return formatted
                   }}
-                  tooltipFormatter={(value: number | string, name?: string) => {
+                  tooltipFormatter={(value, name) => {
+                    if (Array.isArray(value)) {
+                      value = value.join(' ~ ')
+                    }
                     const numValue = Number(value)
                     const formatted = formatToSignificantDigits(numValue, 8)
-                    return [
-                      `${formatted} ${tokenConfig?.debtAsset?.symbol || 'ETH'}`,
-                      name || 'Price',
-                    ]
+                    const label =
+                      typeof name === 'string' || typeof name === 'number' ? String(name) : 'Price'
+                    return [`${formatted} ${tokenConfig?.debtAsset?.symbol}`, label]
                   }}
                   yAxisLabel={`Price (${tokenConfig?.debtAsset?.symbol || 'ETH'})`}
                 />
