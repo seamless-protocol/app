@@ -550,8 +550,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
   },
   [LeverageTokenKey.SIUSD_USDC_11X_ETHEREUM_MAINNET]: {
-    isTestOnly: true,
-    address: '0x77b77b16384221abc58152c94c53dc630f98661e' as Address,
+    address: '0x604d37747f3382fA51519e7542d54F1e730B97A3' as Address,
     name: 'siUSD / USDC 11x Leverage Token',
     symbol: 'SIUSD-USDC-11x',
     description:
@@ -571,8 +570,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     collateralAsset: {
       symbol: 'siUSD',
-      name: 'siUSD',
-      description: 'siUSD is a synthetic stablecoin that is pegged to USD',
+      name: 'Staked infiniFi USD',
+      description: 'siUSD is a yield bearing version of iUSD, a synthetic stablecoin that is pegged to USD',
       address: '0xDBDC1Ef57537E34680B898E1FEBD3D68c7389bCB' as Address,
       decimals: 18,
     },
