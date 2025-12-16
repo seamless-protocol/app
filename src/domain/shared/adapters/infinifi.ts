@@ -1,30 +1,30 @@
 import type { Address, PublicClient } from 'viem'
-import { encodeFunctionData, erc20Abi, getAddress, isAddressEqual } from 'viem'
+import { encodeFunctionData, getAddress, isAddressEqual } from 'viem'
 import { mainnet } from 'viem/chains'
 import {
   abi as infinifiPreviewerAbi,
   code as infinifiPreviewerBytecode,
 } from '@/lib/contracts/queries/InfinifiPreviewer'
 import infinifiGatewayAbi from './abi/infinifi/InfinifiGateway'
-import siUSDAbi from './abi/infinifi/siUSD'
+import unstakeAndRedeemHelperAbi from './abi/infinifi/UnstakeAndRedeemHelper'
 import { applySlippageFloor, DEFAULT_SLIPPAGE_BPS, validateSlippage } from './helpers'
 import type { QuoteFn } from './types'
 
 const ADDRESSES: Record<number, InfinifiAddresses> = {
   [mainnet.id]: {
     gateway: '0x3f04b65Ddbd87f9CE0A2e7Eb24d80e7fb87625b5',
-    iusd: '0x48f9e38f3070AD8945DFEae3FA70987722E3D89c',
+    unstakeAndRedeemHelper: '0x4f0122D43aB4893d5977FB0358B73CC178339dFE',
     siusd: '0xDBDC1Ef57537E34680B898E1FEBD3D68c7389bCB',
   },
 }
 
 type InfinifiAddresses = {
   gateway: Address
-  iusd: Address
+  unstakeAndRedeemHelper: Address
   siusd: Address
 }
 
-type PublicClientLike = Pick<PublicClient, 'readContract'>
+type PublicClientLike = Pick<PublicClient, 'multicall' | 'readContract'>
 
 export interface InfinifiAdapterOptions {
   publicClient: PublicClientLike
@@ -41,8 +41,8 @@ export interface InfinifiAdapterOptions {
  * returns call sequences to execute the operation on-chain.
  *
  * Supported pairs:
- * - iUSD -> siUSD (mint/stake)
- * - siUSD -> iUSD (redeem/unstake)
+ * - USDC -> siUSD (mint/stake)
+ * - siUSD -> USDC (redeem/unstake)
  *
  * The adapter only supports exact-in:
  * - exactIn: deposit/redeem with slippage floor on expected output
@@ -61,156 +61,96 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
   const normalizedRouter = getAddress(router)
 
   return async ({ inToken, outToken, amountIn, intent }) => {
+    console.log('inToken', inToken)
+    console.log('outToken', outToken)
+    console.log('amountIn', amountIn)
+    console.log('intent', intent)
     const normalizedIn = getAddress(inToken)
     const normalizedOut = getAddress(outToken)
-    const usdcOnGateway = (await publicClient.readContract({
-      address: addresses.gateway,
-      abi: infinifiGatewayAbi,
-      functionName: 'getAddress',
-      args: ['USDC'],
-    })) as Address
-    const mintController = (await publicClient.readContract({
-      address: addresses.gateway,
-      abi: infinifiGatewayAbi,
-      functionName: 'getAddress',
-      args: ['mintController'],
-    })) as Address
-    const redeemController = (await publicClient.readContract({
-      address: addresses.gateway,
-      abi: infinifiGatewayAbi,
-      functionName: 'getAddress',
-      args: ['redeemController'],
-    })) as Address
+    const [usdcOnGateway, mintController] = await publicClient.multicall({
+      allowFailure: false,
+      contracts: [
+        { address: addresses.gateway, abi: infinifiGatewayAbi, functionName: 'getAddress', args: ['USDC'] },
+        { address: addresses.gateway, abi: infinifiGatewayAbi, functionName: 'getAddress', args: ['mintController'] },
+      ],
+    })
     const normalizedUsdc = getAddress(usdcOnGateway)
     const normalizedMintController = getAddress(mintController)
-    const normalizedRedeemController = getAddress(redeemController)
+    const normalizedUnstakeAndRedeemHelper = getAddress(addresses.unstakeAndRedeemHelper)
 
     const inputIsSiusd = isAddressEqual(normalizedIn, addresses.siusd)
     const outputIsSiusd = isAddressEqual(normalizedOut, addresses.siusd)
-    const outputIsIusd = isAddressEqual(normalizedOut, addresses.iusd)
     const outputIsUsdc = isAddressEqual(normalizedOut, normalizedUsdc)
+    const inputIsUsdc = isAddressEqual(normalizedIn, normalizedUsdc)
 
-    const isMint =
-      outputIsSiusd &&
-      (isAddressEqual(normalizedIn, addresses.iusd) || isAddressEqual(normalizedIn, normalizedUsdc))
-    const isRedeem = inputIsSiusd && (outputIsIusd || outputIsUsdc)
+    const isMint = outputIsSiusd && inputIsUsdc
+    const isRedeem = inputIsSiusd && outputIsUsdc
 
     if (!isMint && !isRedeem) {
-      throw new Error('Infinifi adapter only supports iUSD <-> siUSD conversions')
+      throw new Error('Infinifi adapter only supports USDC <-> siUSD conversions')
     }
 
     if (intent === 'exactOut') {
       throw new Error('Infinifi adapter does not support exactOut/withdraw')
     }
 
-    // iUSD/USDC -> siUSD (stake)
+    // USDC -> siUSD (stake)
     if (isMint) {
-      const inputIsUsdc = isAddressEqual(normalizedIn, normalizedUsdc)
-      const inputIsIusd = isAddressEqual(normalizedIn, addresses.iusd)
-      if (!inputIsUsdc && !inputIsIusd) {
-        throw new Error('Infinifi mint only supports USDC or iUSD as input')
-      }
       if (typeof amountIn !== 'bigint') {
         throw new Error('Infinifi exact-in mint requires amountIn')
       }
-      let iusdAmount: bigint
-      let sharesOut: bigint
 
-      if (inputIsUsdc) {
-        const [receiptAmount, previewSharesOut] = await publicClient.readContract({
-          // Deployless call using the previewer bytecode (not deployed on-chain).
-          abi: infinifiPreviewerAbi,
-          code: infinifiPreviewerBytecode,
-          functionName: 'previewDepositFromAsset',
-          args: [normalizedMintController, addresses.siusd, amountIn],
-        })
+      const [, sharesOut] = await publicClient.readContract({
+        // Deployless call using the previewer bytecode (not deployed on-chain).
+        abi: infinifiPreviewerAbi,
+        code: infinifiPreviewerBytecode,
+        functionName: 'previewDepositFromAsset',
+        args: [normalizedMintController, addresses.siusd, amountIn],
+      })
 
-        iusdAmount = receiptAmount
-        sharesOut = previewSharesOut
-      } else {
-        iusdAmount = amountIn
-        sharesOut = (await publicClient.readContract({
-          address: addresses.siusd,
-          abi: siUSDAbi,
-          functionName: 'previewDeposit',
-          args: [iusdAmount],
-        })) as bigint
-      }
       const minOut = applySlippageFloor(sharesOut, slippageBps)
       const calldata = encodeFunctionData({
         abi: infinifiGatewayAbi,
-        functionName: inputIsUsdc ? 'mintAndStake' : 'stake',
+        functionName: 'mintAndStake',
         args: [normalizedRouter, amountIn],
       })
 
       return {
         out: sharesOut,
         minOut,
+        maxIn: amountIn,
         approvalTarget: addresses.gateway,
         calls: [{ target: addresses.gateway, data: calldata, value: 0n }],
       }
     }
 
-    // siUSD -> iUSD/USDC (unstake, optional redeem)
+    // siUSD -> USDC (unstake and redeem)
     if (typeof amountIn !== 'bigint') {
       throw new Error('Infinifi exact-in redeem requires amountIn')
     }
-    if (outputIsIusd) {
-      const iusdOut = await publicClient.readContract({
-        address: addresses.siusd,
-        abi: siUSDAbi,
-        functionName: 'previewRedeem',
-        args: [amountIn],
-      })
-      const minOut = applySlippageFloor(iusdOut, slippageBps)
-      const calldata = encodeFunctionData({
-        abi: infinifiGatewayAbi,
-        functionName: 'unstake',
-        args: [normalizedRouter, amountIn],
-      })
-
-      return {
-        out: iusdOut,
-        minOut,
-        approvalTarget: addresses.gateway,
-        calls: [{ target: addresses.gateway, data: calldata, value: 0n }],
-      }
-    }
-
-    // siUSD -> USDC: unstake to iUSD then redeem via gateway
-    const [iusdOut, usdcOut] = await publicClient.readContract({
+    const [, usdcOut] = await publicClient.readContract({
       // Deployless call using the previewer bytecode (not deployed on-chain).
       abi: infinifiPreviewerAbi,
       code: infinifiPreviewerBytecode,
       functionName: 'previewRedeemToAsset',
-      args: [normalizedRedeemController, addresses.siusd, amountIn],
+      args: [normalizedUnstakeAndRedeemHelper, amountIn],
     })
+
+    // siUSD -> USDC: unstake then redeem via helper
     const minOut = applySlippageFloor(usdcOut, slippageBps)
-    const unstakeCalldata = encodeFunctionData({
-      abi: infinifiGatewayAbi,
-      functionName: 'unstake',
-      args: [normalizedRouter, amountIn],
-    })
-    // TODO: Actual iUSD amount received can change between when previewed offchain and executed onchain. We need some helper contract for this
-    const approveIusdCalldata = encodeFunctionData({
-      abi: erc20Abi,
-      functionName: 'approve',
-      args: [addresses.gateway, iusdOut],
-    })
-    const redeemCalldata = encodeFunctionData({
-      abi: infinifiGatewayAbi,
-      functionName: 'redeem',
-      args: [normalizedRouter, iusdOut, minOut],
+    const unstakeAndRedeemCalldata = encodeFunctionData({
+      abi: unstakeAndRedeemHelperAbi,
+      functionName: 'unstakeAndRedeem',
+      args: [amountIn],
     })
 
     return {
       out: usdcOut,
       minOut,
-      approvalTarget: addresses.gateway,
+      maxIn: amountIn,
+      approvalTarget: normalizedUnstakeAndRedeemHelper,
       calls: [
-        { target: addresses.gateway, data: unstakeCalldata, value: 0n },
-        { target: addresses.iusd, data: approveIusdCalldata, value: 0n },
-        { target: addresses.gateway, data: redeemCalldata, value: 0n },
+        { target: normalizedUnstakeAndRedeemHelper, data: unstakeAndRedeemCalldata, value: 0n },
       ],
     }
   }
@@ -226,7 +166,9 @@ function resolveAddresses(
   }
   return {
     gateway: getAddress(overrides.gateway ?? defaults.gateway),
-    iusd: getAddress(overrides.iusd ?? defaults.iusd),
+    unstakeAndRedeemHelper: getAddress(
+      overrides.unstakeAndRedeemHelper ?? defaults.unstakeAndRedeemHelper,
+    ),
     siusd: getAddress(overrides.siusd ?? defaults.siusd),
   }
 }

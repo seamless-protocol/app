@@ -48,6 +48,15 @@ export const MAINNET_E2E_TOKEN_CONFIGS: Array<MainnetE2ETokenTestConfig> = [
     fundingAmount: '500',
     richHolderAddress: '0x234C908E749961d0329a0eD5916d55a99d1aD06c' as Address, // Large RLP holder
   },
+  {
+    key: 'siusd-usdc-11x',
+    label: 'siUSD/USDC 11x',
+    slippagePercent: '0',
+    mintAmount: '25',
+    collateralAddress: '0xDBDC1Ef57537E34680B898E1FEBD3D68c7389bCB' as Address, // Mainnet siUSD
+    fundingAmount: '200',
+    richHolderAddress: '0x81001E398b65F641EB087EC83e209545544BF4D8' as Address, // EOA
+  },
   // Skip PT-RLP-4DEC2025/USDC 2x due PT being expired
   // {
   //   key: 'pt-rlp-4dec2025-usdc-2x',
