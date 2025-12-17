@@ -61,10 +61,6 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
   const normalizedRouter = getAddress(router)
 
   return async ({ inToken, outToken, amountIn, intent }) => {
-    console.log('inToken', inToken)
-    console.log('outToken', outToken)
-    console.log('amountIn', amountIn)
-    console.log('intent', intent)
     const normalizedIn = getAddress(inToken)
     const normalizedOut = getAddress(outToken)
     const [usdcOnGateway, mintController] = await publicClient.multicall({
