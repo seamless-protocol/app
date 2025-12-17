@@ -81,7 +81,7 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
                 {collateralAsset.protocol?.name} Points. Example: If you deposit $10,000 s
                 {collateralAsset.symbol} into this LT, your effective leveraged position is{' '}
                 <strong>
-                  ${leverageRatio * 10000e8} {collateralAsset.symbol}
+                  ${(leverageRatio * 10000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {collateralAsset.symbol}
                 </strong>{' '}
                 — and you'll earn points as if you held that full amount. See related resources
                 links for more info on {collateralAsset.protocol?.name} points.
