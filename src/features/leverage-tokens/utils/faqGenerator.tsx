@@ -11,7 +11,7 @@ interface LeverageTokenFAQParams {
  */
 export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams): Array<FAQItem> {
   const { leverageRatio, collateralAsset, debtAsset, address, chainId } = tokenConfig
-  const collateralRatio = 1 / leverageRatio
+  const collateralRatio = leverageRatio / (leverageRatio - 1)
 
   const tokenExplorerUrl = getTokenExplorerUrl(chainId, address)
 
@@ -34,8 +34,17 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
             {collateralAsset.symbol}/{debtAsset.symbol} staking yield spread
           </strong>
           , offering the potential for enhanced returns compared to holding{' '}
-          <strong>{collateralAsset.symbol}</strong>
-          directly.
+          <strong>{collateralAsset.symbol}</strong> directly.
+          <br />
+          {tokenConfig.apyConfig?.pointsMultiplier && (
+            <>
+              <br />
+              This LT provides amplified exposure to to the {collateralAsset.symbol}/
+              {debtAsset.symbol} staking yield spread as well as{' '}
+              {tokenConfig.apyConfig.pointsMultiplier}x multiplier on{' '}
+              {collateralAsset.protocol?.name} points.
+            </>
+          )}
         </p>
       ),
     },
@@ -57,6 +66,40 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
       question: `What is ${collateralAsset.symbol}?`,
       answer: <p>{collateralAsset.description}</p>,
     },
+    ...(tokenConfig.apyConfig?.pointsMultiplier
+      ? [
+          {
+            id: 'points-multiplier-info',
+            question: 'Are there points involved with this LT?',
+            answer: (
+              <p>
+                Yes. When you supply {collateralAsset.symbol} into the {collateralAsset.symbol}/
+                {debtAsset.symbol} {leverageRatio}x Leverage Token, you earn{' '}
+                {collateralAsset.protocol?.name} Points, which will convert into a future{' '}
+                {collateralAsset.protocol?.name} airdrop. With this Leverage Token, users earn a{' '}
+                {tokenConfig.apyConfig.pointsMultiplier}x multiple on{' '}
+                {collateralAsset.protocol?.name} Points. Example: If you deposit $10,000 s
+                {collateralAsset.symbol} into this LT, your effective leveraged position is{' '}
+                <strong>
+                  ${leverageRatio * 10000e8} {collateralAsset.symbol}
+                </strong>{' '}
+                — and you'll earn points as if you held that full amount. See related resources
+                links for more info on {collateralAsset.protocol?.name} points.
+              </p>
+            ),
+          },
+        ]
+      : []),
+    {
+      id: 'what-are-the-fees-for-this-lt',
+      question: 'What are the fees for this LT?',
+      answer: (
+        <p>
+          There are currently no Seamless Protocol fees on this Leverage Token. Underlying protocol
+          fees may apply, see related resources links for more info.
+        </p>
+      ),
+    },
     {
       id: 'usd-exposure',
       question: `Do I have leveraged exposure to ${debtAsset.symbol}'s USD price with this LT?`,
@@ -76,7 +119,7 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
       question: "What's the target leverage ratio for this LT?",
       answer: (
         <p>
-          The strategy targets <strong>{leverageRatio}x leverage</strong>, which corresponds to a
+          The strategy targets <strong>{leverageRatio}x leverage</strong>, which corresponds to a{' '}
           <strong>collateral ratio</strong> of approximately{' '}
           <strong>{collateralRatio.toFixed(4)}</strong>.
         </p>
@@ -157,26 +200,30 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
             </li>
             <li>
               <strong>Lending Market Risk (Morpho):</strong> Includes volatility in borrow rates,
-              liquidation risk, and integration dependencies with Chainlink oracles.
+              liquidation risk, and integration dependencies with oracles.
             </li>
             <li>
               <strong>Oracle Risk:</strong> The {collateralAsset.symbol}/{debtAsset.symbol} exchange
-              rate is sourced from a Chainlink oracle. If this feed is delayed, incorrect, or
-              manipulated, it could lead to mispriced rebalances or liquidation.
+              rate is sourced from the underlying lending market's price oracle. If this feed is
+              delayed, incorrect, or manipulated, it could lead to mispriced rebalances or
+              liquidation.
             </li>
             <li>
               <strong>Borrow Rate Risk:</strong> If the {debtAsset.symbol} borrow rate exceeds the
-              yield earned by {collateralAsset.symbol}, the position becomes unprofitable.
+              yield earned by {collateralAsset.symbol}, the position becomes unprofitable. See
+              related resources links for more info on the underlying lending market (i.e.: Morpho).
             </li>
             <li>
               <strong>Inflexibility:</strong> LT parameters are fixed. If market conditions shift
-              unfavorably, the token will continue executing its programmed logic. Users must
-              actively monitor and exit if the strategy no longer serves their goals.
+              unfavorably, the token will continue executing its programmed logic, i.e.: stay within
+              it's configured leverage band by rebalancing. Users must actively monitor and exit if
+              the strategy no longer serves their goals.
             </li>
             <li>
               <strong>Exit Risk:</strong> Exiting a position may require converting{' '}
               {collateralAsset.symbol} to {debtAsset.symbol}, which can involve DEX slippage or
-              protocol withdrawal costs.
+              {collateralAsset.symbol} withdrawal costs. See related resources links for more info
+              on {collateralAsset.symbol}.
             </li>
             <li>
               <strong>Inherent Leverage Risk:</strong> Gains and losses are magnified. Leverage

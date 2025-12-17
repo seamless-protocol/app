@@ -95,6 +95,11 @@ export interface LeverageTokenConfig {
     description: string
     address: Address
     decimals: number
+    protocol?: {
+      name: string
+      url: string
+      icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+    }
   }
   debtAsset: {
     symbol: string
@@ -571,9 +576,15 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     collateralAsset: {
       symbol: 'siUSD',
       name: 'Staked infiniFi USD',
-      description: 'siUSD is a yield bearing version of iUSD, a synthetic stablecoin that is pegged to USD',
+      description:
+        "siUSD is Infinifi's senior-debt tranche token. It captures yield from Infinifi's fractional reserve yield strategy, which involves various liquid and illiquid yield strategies, always keeping a portion of reserves in liquid positions to facilitate instant withdrawals. Learn more here.",
       address: '0xDBDC1Ef57537E34680B898E1FEBD3D68c7389bCB' as Address,
       decimals: 18,
+      protocol: {
+        name: 'Infinifi',
+        url: 'https://infinifi.xyz/',
+        icon: siUSDLogo,
+      },
     },
     debtAsset: {
       symbol: 'USDC',
@@ -627,6 +638,17 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           badge: {
             text: 'Lending Market',
             color: 'blue' as const,
+          },
+        },
+        {
+          id: 'infinifi',
+          title: 'Infinifi Transparency Dashboard',
+          description: 'Infinifi Transparency Dashboard',
+          url: 'https://stats.infinifi.xyz/',
+          icon: siUSDLogo,
+          badge: {
+            text: 'Protocol Info',
+            color: 'yellow' as const,
           },
         },
         {
