@@ -30,22 +30,22 @@ export interface MainnetTokenTestConfig {
 }
 
 export const MAINNET_TOKEN_CONFIGS: Array<MainnetTokenTestConfig> = [
-  // {
-  //   key: 'wsteth-eth-25x',
-  //   label: 'wstETH/ETH 25x',
-  //   slippageBps: 1500, // 15% - Increased to handle LiFi routing variability
-  //   toleranceBps: 10,
-  //   fundingAmount: '0.5',
-  //   richHolderAddress: '0x0B925eD163218f6662a35e0f0371Ac234f9E9371' as Address, // Aave v3 wstETH pool
-  // },
-  // {
-  //   key: 'rlp-usdc-6.75x',
-  //   label: 'RLP/USDC 6.75x',
-  //   slippageBps: 2000, // 20% - Velora quotes vary significantly on Anvil
-  //   toleranceBps: 10,
-  //   fundingAmount: '500',
-  //   richHolderAddress: '0x234C908E749961d0329a0eD5916d55a99d1aD06c' as Address, // Large RLP holder
-  // },
+  {
+    key: 'wsteth-eth-25x',
+    label: 'wstETH/ETH 25x',
+    slippageBps: 1500, // 15% - Increased to handle LiFi routing variability
+    toleranceBps: 10,
+    fundingAmount: '0.5',
+    richHolderAddress: '0x0B925eD163218f6662a35e0f0371Ac234f9E9371' as Address, // Aave v3 wstETH pool
+  },
+  {
+    key: 'rlp-usdc-6.75x',
+    label: 'RLP/USDC 6.75x',
+    slippageBps: 2000, // 20% - Velora quotes vary significantly on Anvil
+    toleranceBps: 10,
+    fundingAmount: '500',
+    richHolderAddress: '0x234C908E749961d0329a0eD5916d55a99d1aD06c' as Address, // Large RLP holder
+  },
   {
     key: 'siusd-usdc-11x',
     label: 'siUSD/USDC 11x',
