@@ -70,8 +70,18 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
     const [usdcOnGateway, mintController] = await publicClient.multicall({
       allowFailure: false,
       contracts: [
-        { address: addresses.gateway, abi: infinifiGatewayAbi, functionName: 'getAddress', args: ['USDC'] },
-        { address: addresses.gateway, abi: infinifiGatewayAbi, functionName: 'getAddress', args: ['mintController'] },
+        {
+          address: addresses.gateway,
+          abi: infinifiGatewayAbi,
+          functionName: 'getAddress',
+          args: ['USDC'],
+        },
+        {
+          address: addresses.gateway,
+          abi: infinifiGatewayAbi,
+          functionName: 'getAddress',
+          args: ['mintController'],
+        },
       ],
     })
     const normalizedUsdc = getAddress(usdcOnGateway)
