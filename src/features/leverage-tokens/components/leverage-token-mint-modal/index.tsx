@@ -416,7 +416,7 @@ export function LeverageTokenMintModal({
     const expectedTokensUsdOut = toScaledUsd(
       planPreview.plan?.previewShares,
       leverageTokenConfig.decimals,
-      parseUsdPrice(leverageTokenUsdPrice),
+      leverageTokenUsdPrice,
     )
     const expectedDebtUsdOut = toScaledUsd(
       planPreview.plan?.previewExcessDebt,
@@ -427,7 +427,7 @@ export function LeverageTokenMintModal({
     const minTokensUsdOut = toScaledUsd(
       planPreview.plan?.minShares,
       leverageTokenConfig.decimals,
-      parseUsdPrice(leverageTokenUsdPrice),
+      leverageTokenUsdPrice,
     )
     const minExcessDebtUsdOut = toScaledUsd(
       planPreview.plan?.minExcessDebt,
@@ -435,18 +435,6 @@ export function LeverageTokenMintModal({
       parseUsdPrice(debtUsdPrice),
     )
     const minTotalUsdOut = minTokensUsdOut + minExcessDebtUsdOut
-    const amountInUsd = Number(form.amount || '0') * (selectedTokenView.price || 0)
-    console.log('amount in usd: ', amountInUsd)
-    console.log('min total usd out: ', minTotalUsdOut)
-    console.log('min tokens usd out: ', minTokensUsdOut)
-    console.log(
-      'actual slippage total: ',
-      ((amountInUsd - Number(formatUnits(minTotalUsdOut, 8))) / amountInUsd) * 100,
-    )
-    console.log(
-      'actual slippage lt: ',
-      ((amountInUsd - Number(formatUnits(minTokensUsdOut, 8))) / amountInUsd) * 100,
-    )
     return {
       expectedTokensUsdOutStr: usdToFixedString(expectedTokensUsdOut, 2),
       expectedDebtUsdOutStr: usdToFixedString(expectedDebtUsdOut, 2),

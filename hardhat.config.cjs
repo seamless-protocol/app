@@ -24,7 +24,6 @@ subtask(TASK_COMPILE_SOLIDITY_EMIT_ARTIFACTS).setAction(
             parsed.dir.replaceAll("solidity", "queries"),
             `${source}.ts`,
           );
-          console.log("path", path);
 
           const dir = dirname(path);
           if (!existsSync(dir)) mkdirSync(dir, { recursive: true });

@@ -1,10 +1,9 @@
 import { useMemo } from 'react'
 import type { Address } from 'viem'
-import { formatUnits } from 'viem'
 import { useReadContracts } from 'wagmi'
-import { lendingAdapterAbi, leverageManagerV2Abi } from '@/lib/contracts'
+import { parseUsdPrice, toScaledUsd } from '@/domain/shared/prices'
+import { leverageManagerV2Abi } from '@/lib/contracts'
 import { getLeverageManagerAddress, type SupportedChainId } from '@/lib/contracts/addresses'
-import { useReadLeverageManagerV2GetLeverageTokenLendingAdapter } from '@/lib/contracts/generated'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
 import { getLeverageTokenConfig } from '../leverageTokens.config'
 import { STALE_TIME } from '../utils/constants'
@@ -25,11 +24,6 @@ export function useLeverageTokenUsdPrice({ tokenAddress }: UseLeverageTokenUsdPr
   const collateralAssetDecimals = collateralAssetFromConfig?.decimals
   const debtAssetDecimals = debtAssetFromConfig?.decimals
 
-  const { data: lendingAdapterAddress } = useReadLeverageManagerV2GetLeverageTokenLendingAdapter({
-    args: [tokenAddress],
-    chainId: chainId as SupportedChainId,
-  })
-
   const {
     data: contractData,
     isLoading: isContractsLoading,
@@ -45,18 +39,6 @@ export function useLeverageTokenUsdPrice({ tokenAddress }: UseLeverageTokenUsdPr
         chainId: chainId as SupportedChainId,
       },
       {
-        address: lendingAdapterAddress,
-        abi: lendingAdapterAbi,
-        functionName: 'getDebt' as const,
-        chainId: chainId as SupportedChainId,
-      },
-      {
-        address: lendingAdapterAddress,
-        abi: lendingAdapterAbi,
-        functionName: 'getCollateral' as const,
-        chainId: chainId as SupportedChainId,
-      },
-      {
         address: managerAddress as Address,
         abi: leverageManagerV2Abi,
         functionName: 'getLeverageTokenState' as const,
@@ -66,10 +48,7 @@ export function useLeverageTokenUsdPrice({ tokenAddress }: UseLeverageTokenUsdPr
     ],
     query: {
       enabled: Boolean(
-        chainId &&
-          collateralAssetFromConfig?.address &&
-          debtAssetFromConfig?.address &&
-          lendingAdapterAddress,
+        chainId && collateralAssetFromConfig?.address && debtAssetFromConfig?.address,
       ),
       staleTime: STALE_TIME.price,
       refetchInterval: STALE_TIME.price,
@@ -103,8 +82,6 @@ export function useLeverageTokenUsdPrice({ tokenAddress }: UseLeverageTokenUsdPr
     if (
       !contractData?.[0]?.result ||
       !contractData?.[1]?.result ||
-      !contractData?.[2]?.result ||
-      !contractData?.[3]?.result ||
       !leverageTokenDecimals ||
       !collateralAssetDecimals ||
       !debtAssetDecimals
@@ -121,40 +98,19 @@ export function useLeverageTokenUsdPrice({ tokenAddress }: UseLeverageTokenUsdPr
       return undefined
     }
 
-    const totalSupply = parseFloat(formatUnits(contractData?.[0]?.result, leverageTokenDecimals))
+    const totalSupply = contractData?.[0]?.result
 
-    const debtUsd =
-      parseFloat(formatUnits(contractData?.[1]?.result, debtAssetDecimals)) * debtPriceUsd
-    const collateralUsd =
-      parseFloat(formatUnits(contractData?.[2]?.result, collateralAssetDecimals)) *
-      collateralPriceUsd
-    //const equityUsd = collateralUsd - debtUsd
-    const equityUsd =
-      parseFloat(formatUnits(contractData?.[3]?.result.equity, debtAssetDecimals)) * debtPriceUsd
-
-    const price = equityUsd / totalSupply
-
-    console.log('---------------- COMPUTED USD PRICE DEBUG ----------------', {
-      tokenAddress,
+    const equityUsd = toScaledUsd(
+      contractData?.[1]?.result.equity,
       debtAssetDecimals,
-      collateralAssetDecimals,
-      leverageTokenDecimals,
-      equity: contractData?.[3]?.result,
-      debt: contractData?.[1]?.result,
-      collateral: contractData?.[2]?.result,
-      debtPriceUsd,
-      collateralPriceUsd,
-      debtUsd,
-      collateralUsd,
-      equityUsd,
-      totalSupply,
-      price,
-    })
+      parseUsdPrice(debtPriceUsd),
+    )
+
+    const price = (equityUsd * 10n ** BigInt(leverageTokenDecimals)) / totalSupply
     return price
   }, [
     contractData?.[0]?.result,
     contractData?.[1]?.result,
-    contractData?.[2]?.result,
     collateralPriceUsd,
     debtPriceUsd,
     collateralAssetDecimals,

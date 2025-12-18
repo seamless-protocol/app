@@ -1,14 +1,11 @@
-import { readContract } from '@wagmi/core'
 import { type Address, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
 import type { Config } from 'wagmi'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import type { Call } from '@/domain/shared/types'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { collateralRatioToLeverage } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
-import { lendingAdapterAbi } from '@/lib/contracts'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
-  readLeverageManagerV2GetLeverageTokenLendingAdapter,
   readLeverageManagerV2GetLeverageTokenState,
   readLeverageManagerV2PreviewDeposit,
   readLeverageRouterV2PreviewDeposit,
@@ -75,7 +72,6 @@ export async function planMint({
   const currentLeverage = collateralRatioToLeverage(collateralRatio)
 
   // Leverage-adjusted slippage for the swap: scale by previewed leverage.
-  // We only need this for very illiquid tokens. Maybe separate slippage for swap quote and minShares
   const quoteSlippageBps = Math.max(
     1,
     Math.floor(slippageBps / (Number(formatUnits(currentLeverage, 18)) - 1)),
@@ -103,27 +99,6 @@ export async function planMint({
     chainId,
     blockNumber,
   })
-
-  // for (let i = 0; i < 5; i += 1) {
-  //   if (managerPreview.debt >= flashLoanAmount) {
-  //     break
-  //   }
-
-  //   flashLoanAmount = managerPreview.debt
-  //   debtToCollateralQuote = await quoteDebtToCollateral({
-  //     intent: 'exactIn',
-  //     inToken: debtAsset,
-  //     outToken: collateralAsset,
-  //     amountIn: flashLoanAmount,
-  //     slippageBps: quoteSlippageBps,
-  //   })
-  //   totalCollateral = equityInCollateralAsset + debtToCollateralQuote.minOut
-  //   managerPreview = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
-  //     args: [token, totalCollateral],
-  //     chainId,
-  //     blockNumber,
-  //   })
-  // }
 
   if (managerPreview.debt < flashLoanAmount) {
     throw new Error(
@@ -162,16 +137,6 @@ export async function planMint({
   const calls: Array<Call> = []
   if (approvalCall) calls.push(approvalCall)
   calls.push(...debtToCollateralQuote.calls)
-
-  console.log('planMint', {
-    minShares,
-    minExcessDebt,
-    previewShares: managerPreview.shares,
-    previewExcessDebt,
-    flashLoanAmount,
-    equityInCollateralAsset,
-    calls,
-  })
 
   return {
     minShares,
