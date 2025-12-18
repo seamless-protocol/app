@@ -1,11 +1,14 @@
+import { readContract } from '@wagmi/core'
 import { type Address, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
 import type { Config } from 'wagmi'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import type { Call } from '@/domain/shared/types'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { collateralRatioToLeverage } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
+import { lendingAdapterAbi } from '@/lib/contracts'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
+  readLeverageManagerV2GetLeverageTokenLendingAdapter,
   readLeverageManagerV2GetLeverageTokenState,
   readLeverageManagerV2PreviewDeposit,
   readLeverageRouterV2PreviewDeposit,
@@ -78,7 +81,7 @@ export async function planMint({
     Math.floor(slippageBps / (Number(formatUnits(currentLeverage, 18)) - 1)),
   )
 
-  const flashLoanAmount = applySlippageFloor(routerPreview.debt, quoteSlippageBps)
+  const flashLoanAmount = applySlippageFloor(routerPreview.debt, slippageBps)
 
   // Exact-in quote using the previewed debt amount (with leverage-adjusted slippage hint)
   const debtToCollateralQuote = await quoteDebtToCollateral({
@@ -134,9 +137,9 @@ export async function planMint({
     )
   }
 
-  if (managerPreview.shares < minShares) {
+  if (managerMin.shares < minShares) {
     throw new Error(
-      `Previewed shares ${managerPreview.shares} are less than min shares ${minShares}, likely due to slippage`,
+      `Manager minimum shares ${managerMin.shares} are less than min shares ${minShares}, likely due to slippage`,
     )
   }
 
