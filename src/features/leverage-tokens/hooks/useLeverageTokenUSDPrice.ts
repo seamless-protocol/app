@@ -56,6 +56,13 @@ export function useLeverageTokenUsdPrice({ tokenAddress }: UseLeverageTokenUsdPr
         functionName: 'getCollateral' as const,
         chainId: chainId as SupportedChainId,
       },
+      {
+        address: managerAddress as Address,
+        abi: leverageManagerV2Abi,
+        functionName: 'getLeverageTokenState' as const,
+        args: [tokenAddress],
+        chainId: chainId as SupportedChainId,
+      },
     ],
     query: {
       enabled: Boolean(
@@ -97,6 +104,7 @@ export function useLeverageTokenUsdPrice({ tokenAddress }: UseLeverageTokenUsdPr
       !contractData?.[0]?.result ||
       !contractData?.[1]?.result ||
       !contractData?.[2]?.result ||
+      !contractData?.[3]?.result ||
       !leverageTokenDecimals ||
       !collateralAssetDecimals ||
       !debtAssetDecimals
@@ -120,9 +128,15 @@ export function useLeverageTokenUsdPrice({ tokenAddress }: UseLeverageTokenUsdPr
     const collateralUsd =
       parseFloat(formatUnits(contractData?.[2]?.result, collateralAssetDecimals)) *
       collateralPriceUsd
-    const equityUsd = collateralUsd - debtUsd
+
+    const leverageTokenState = contractData?.[3]?.result
+
+    const equityUsd =
+      parseFloat(formatUnits(leverageTokenState.equity, debtAssetDecimals)) *
+      debtPriceUsd
 
     const price = equityUsd / totalSupply
+
     console.log('---------------- COMPUTED USD PRICE DEBUG ----------------', {
       tokenAddress,
       debtAssetDecimals,

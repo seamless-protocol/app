@@ -53,12 +53,6 @@ export async function planMint({
   const collateralAsset = leverageTokenConfig.collateralAsset.address as Address
   const debtAsset = leverageTokenConfig.debtAsset.address as Address
 
-  const { collateralRatio } = await readLeverageManagerV2GetLeverageTokenState(wagmiConfig, {
-    args: [token],
-    chainId,
-    blockNumber,
-  })
-
   // Initial router preview to size required debt and collateral top-up.
   const routerPreview = await readLeverageRouterV2PreviewDeposit(wagmiConfig, {
     args: [token, equityInCollateralAsset],
@@ -69,16 +63,7 @@ export async function planMint({
   // This price is adding the NAV diff from spot on top of the share slippage
   const minShares = applySlippageFloor(routerPreview.shares, slippageBps)
 
-  const currentLeverage = collateralRatioToLeverage(collateralRatio)
-
-  // Leverage-adjusted slippage for the swap: scale by previewed leverage.
-  // We only need this for very illiquid tokens. Maybe separate slippage for swap quote and minShares
-  const quoteSlippageBps = Math.max(
-    1,
-    Math.floor(slippageBps / (Number(formatUnits(currentLeverage, 18)) - 1)),
-  )
-
-  const flashLoanAmount = applySlippageFloor(routerPreview.debt, quoteSlippageBps)
+  const flashLoanAmount = applySlippageFloor(routerPreview.debt, slippageBps)
 
   // Exact-in quote using the previewed debt amount (with leverage-adjusted slippage hint)
   const debtToCollateralQuote = await quoteDebtToCollateral({
@@ -86,7 +71,7 @@ export async function planMint({
     inToken: debtAsset,
     outToken: collateralAsset,
     amountIn: flashLoanAmount,
-    slippageBps: quoteSlippageBps,
+    slippageBps: slippageBps,
   })
 
   const managerPreview = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
@@ -101,36 +86,9 @@ export async function planMint({
     blockNumber,
   })
 
-  // for (let i = 0; i < 5; i += 1) {
-  //   if (managerPreview.debt >= flashLoanAmount) {
-  //     break
-  //   }
-
-  //   flashLoanAmount = managerPreview.debt
-  //   debtToCollateralQuote = await quoteDebtToCollateral({
-  //     intent: 'exactIn',
-  //     inToken: debtAsset,
-  //     outToken: collateralAsset,
-  //     amountIn: flashLoanAmount,
-  //     slippageBps: quoteSlippageBps,
-  //   })
-  //   totalCollateral = equityInCollateralAsset + debtToCollateralQuote.minOut
-  //   managerPreview = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
-  //     args: [token, totalCollateral],
-  //     chainId,
-  //     blockNumber,
-  //   })
-  // }
-
   if (managerPreview.debt < flashLoanAmount) {
     throw new Error(
       `Manager previewed debt ${managerPreview.debt} is less than flash loan amount ${flashLoanAmount}, likely due to slippage`,
-    )
-  }
-
-  if (managerMin.debt < flashLoanAmount) {
-    throw new Error(
-      `Manager minimum debt ${managerMin.debt} is less than flash loan amount ${flashLoanAmount}, likely due to slippage`,
     )
   }
 
