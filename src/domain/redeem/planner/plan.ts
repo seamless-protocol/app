@@ -370,7 +370,7 @@ async function buildCollateralToDebtSwapCalls(args: {
         data: quote.calls[0]?.data,
         value: collateralAmount,
       })
-      delete quote.calls[0]
+      quote.calls.splice(0, 1)
     }
   } else {
     calls.push({
