@@ -3,13 +3,12 @@ import { getAddress, isAddressEqual } from 'viem'
 import { z } from 'zod'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './helpers'
+import { bpsToDecimalString, validateSlippage } from './helpers'
 import type { QuoteFn } from './types'
 
 export interface PendleAdapterOptions {
   chainId: SupportedChainId
   router: Address
-  slippageBps?: number
   baseUrl?: string
 }
 
@@ -74,16 +73,12 @@ const pendleResponseSchema = pendleSuccessResponseSchema
 type PendleSwapResponse = z.infer<typeof pendleSuccessResponseSchema>
 
 export function createPendleQuoteAdapter(opts: PendleAdapterOptions): QuoteFn {
-  const {
-    chainId,
-    router,
-    slippageBps = DEFAULT_SLIPPAGE_BPS,
-    baseUrl = 'https://api-v2.pendle.finance',
-  } = opts
+  const { chainId, router, baseUrl = 'https://api-v2.pendle.finance' } = opts
 
-  const slippage = bpsToDecimalString(slippageBps)
+  return async ({ inToken, outToken, amountIn, intent, slippageBps }) => {
+    validateSlippage(slippageBps)
+    const slippage = bpsToDecimalString(slippageBps)
 
-  return async ({ inToken, outToken, amountIn, intent }) => {
     if (intent === 'exactOut') {
       throw new Error('Pendle adapter only supports exactIn quotes')
     }

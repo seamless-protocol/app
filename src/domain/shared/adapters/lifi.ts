@@ -2,7 +2,7 @@ import type { Address } from 'viem'
 import { getAddress, isAddressEqual } from 'viem'
 import { base } from 'viem/chains'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './helpers'
+import { bpsToDecimalString, validateSlippage } from './helpers'
 import type { QuoteFn } from './types'
 
 export type LifiOrder = 'CHEAPEST' | 'FASTEST'
@@ -12,7 +12,6 @@ export interface LifiAdapterOptions {
   router: Address
   /** Optional override for quote `fromAddress` (defaults to `router`). */
   fromAddress?: Address
-  slippageBps?: number
   baseUrl?: string
   apiKey?: string
   order?: LifiOrder
@@ -68,7 +67,6 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
     chainId = base.id,
     router,
     fromAddress,
-    slippageBps = DEFAULT_SLIPPAGE_BPS,
     // Always use li.quest as documented by LiFi for /v1/quote
     baseUrl = opts.baseUrl ?? 'https://partner-seashell.li.quest',
     // Read from Vite env in browser; avoid referencing process.env in client bundles
@@ -80,9 +78,11 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
   } = opts
 
   const headers = buildHeaders(apiKey)
-  const slippage = bpsToDecimalString(slippageBps)
 
-  return async ({ inToken, outToken, amountIn, amountOut, intent }) => {
+  return async ({ inToken, outToken, amountIn, amountOut, intent, slippageBps }) => {
+    validateSlippage(slippageBps)
+    const slippage = bpsToDecimalString(slippageBps)
+
     const url = buildQuoteUrl(baseUrl, {
       chainId,
       inToken,

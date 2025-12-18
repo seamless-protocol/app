@@ -9,7 +9,7 @@ export type BaseQuote = {
   // Expected output (nice-weather) in outToken base units
   out: bigint
   // Guaranteed output after slippage in outToken base units
-  minOut?: bigint
+  minOut: bigint
   // For exact-out quotes: maximum input the router may spend to achieve `out` under slippage
   maxIn?: bigint
   // Adapter may require native (ETH) input value
@@ -44,6 +44,7 @@ export type QuoteIntent = 'exactIn' | 'exactOut'
 type QuoteRequestBase = {
   inToken: Address
   outToken: Address
+  slippageBps: number
 }
 
 // Exact-in: specify input amount, get output amount

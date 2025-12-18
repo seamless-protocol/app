@@ -54,7 +54,6 @@ export interface CreateCollateralToDebtQuoteParams {
   chainId: number
   routerAddress: Address
   swap: CollateralToDebtSwapConfig
-  slippageBps: number
   getPublicClient: (chainId: number) => PublicClient | undefined
   /** Optional override for aggregator `fromAddress` (defaults handled by adapter). */
   fromAddress?: Address
@@ -69,7 +68,6 @@ export function createCollateralToDebtQuote({
   chainId,
   routerAddress,
   swap,
-  slippageBps,
   getPublicClient,
   fromAddress,
 }: CreateCollateralToDebtQuoteParams): CreateCollateralToDebtQuoteResult {
@@ -77,7 +75,6 @@ export function createCollateralToDebtQuote({
     const quote = createLifiQuoteAdapter({
       chainId,
       router: routerAddress,
-      slippageBps,
       ...(fromAddress ? { fromAddress } : {}),
       ...(swap.allowBridges ? { allowBridges: swap.allowBridges } : {}),
       ...(swap.order ? { order: swap.order } : {}),
@@ -89,7 +86,6 @@ export function createCollateralToDebtQuote({
     const quote = createVeloraQuoteAdapter({
       chainId: chainId as SupportedChainId,
       router: routerAddress,
-      slippageBps,
       ...(fromAddress ? { fromAddress } : {}),
       // Restrict to validated methods for exactOut operations (redeem)
       includeContractMethods: [...VELORA_VALIDATED_EXACT_OUT_METHODS],
@@ -101,7 +97,6 @@ export function createCollateralToDebtQuote({
     const quote = createPendleQuoteAdapter({
       chainId: chainId as SupportedChainId,
       router: routerAddress,
-      slippageBps,
     })
     return { quote, adapterType: 'pendle' }
   }
@@ -115,7 +110,6 @@ export function createCollateralToDebtQuote({
       publicClient,
       chainId,
       router: routerAddress,
-      slippageBps,
     })
     return { quote, adapterType: 'infinifi' }
   }
@@ -133,7 +127,6 @@ export function createCollateralToDebtQuote({
       router: swap.router,
       recipient: routerAddress,
       wrappedNative,
-      slippageBps,
     })
 
     return { quote, adapterType: 'uniswapV2' }
@@ -154,7 +147,6 @@ export function createCollateralToDebtQuote({
     fee: poolConfig.fee,
     recipient: routerAddress,
     poolAddress: poolConfig.address,
-    slippageBps,
     ...(wrappedNative ? { wrappedNative } : {}),
   })
 

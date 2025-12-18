@@ -129,6 +129,7 @@ export async function planRedeem(params: {
     collateralAvailableForSwap,
     inTokenForQuote,
     intent,
+    slippageBps,
   })
 
   const collateralRequiredForSwap = quote.maxIn ?? 0n
@@ -172,6 +173,7 @@ export async function planRedeem(params: {
         collateralAvailableForSwap: totalCollateralAvailable,
         inTokenForQuote,
         intent: 'exactIn',
+        slippageBps,
       })
       const { calls: payoutCalls } = await buildCollateralToDebtSwapCalls({
         collateralAsset,
@@ -306,9 +308,17 @@ async function getCollateralToDebtQuote(args: {
   collateralAvailableForSwap: bigint
   inTokenForQuote: Address
   intent: 'exactOut' | 'exactIn'
+  slippageBps: number
 }): Promise<Quote> {
-  const { debtAsset, requiredDebt, quoter, collateralAvailableForSwap, inTokenForQuote, intent } =
-    args
+  const {
+    debtAsset,
+    requiredDebt,
+    quoter,
+    collateralAvailableForSwap,
+    inTokenForQuote,
+    intent,
+    slippageBps,
+  } = args
 
   if (requiredDebt <= 0n) return { out: 0n, approvalTarget: zeroAddress, calls: [] }
 
@@ -320,6 +330,7 @@ async function getCollateralToDebtQuote(args: {
           outToken: debtAsset,
           intent: 'exactOut',
           amountOut: requiredDebt,
+          slippageBps,
           // amountIn is optional for exactOut (used as reference if needed)
         }
       : {
@@ -328,6 +339,7 @@ async function getCollateralToDebtQuote(args: {
           intent: 'exactIn',
           amountIn: collateralAvailableForSwap,
           amountOut: requiredDebt, // Optional, used for validation below
+          slippageBps,
         },
   )
 

@@ -1,447 +1,182 @@
-/**
- * Planner for single-tx mint.
- *
- * Builds the debt->collateral swap sized from router/manager previews, then
- * re-previews the manager state with total collateral to ensure repayability.
- * Note: input-asset->collateral conversions are not handled here; the current
- * planner assumes `inputAsset === collateralAsset`.
- */
-import type { Address } from 'viem'
-import { encodeFunctionData, erc20Abi, getAddress, parseUnits, zeroAddress } from 'viem'
+import { type Address, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
 import type { Config } from 'wagmi'
-import { USD_DECIMALS } from '@/domain/shared/prices'
+import type { QuoteFn } from '@/domain/shared/adapters/types'
 import type { Call } from '@/domain/shared/types'
+import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
+import { collateralRatioToLeverage } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import {
-  // V2 reads
+  readLeverageManagerV2GetLeverageTokenState,
   readLeverageManagerV2PreviewDeposit,
   readLeverageRouterV2PreviewDeposit,
 } from '@/lib/contracts/generated'
-import { fetchTokenUsdPrices } from '@/lib/prices/fetchUsdPrices'
-import { applySlippageFloor, mulDivFloor } from './math'
-import type { Quote, QuoteFn } from './types'
+import { applySlippageFloor } from './math'
 
-// Local structural types (avoid brittle codegen coupling in tests/VNet)
-type TokenArg = Address
-type EquityInInputAssetArg = bigint
-
-// No additional normalizers; use viem's getAddress where needed
-
-/**
- * Structured plan for executing a single-transaction mint.
- *
- * Fields prefixed with "expected" are derived from LeverageManager.previewDeposit and
- * are used to size swaps and to provide UI expectations. "minShares" is a
- * slippage-adjusted floor used for the on-chain mint call.
- */
-export type MintPlan = {
-  /** User-selected input asset (can differ from collateral). */
-  inputAsset: Address
-  /** Equity amount denominated in the input asset. */
-  equityInInputAsset: EquityInInputAssetArg
-  /** Token's collateral asset as reported by the manager. */
-  collateralAsset: Address
-  /** Token's debt asset as reported by the manager. */
-  debtAsset: Address
-  /** Amount of debt we plan to flash-borrow and swap (sized once). */
-  flashLoanAmount: bigint
-  /** Minimum acceptable shares after applying `slippageBps` against expected shares. */
+export interface MintPlan {
   minShares: bigint
-  /** Shares expected from preview with total collateral (user + swap output). */
-  expectedShares: bigint
-  /** Debt expected from preview with total collateral (prior to flash loan payback). */
-  expectedDebt: bigint
-  /** Total collateral expected (user out + debt->collateral swap out). */
-  expectedTotalCollateral: bigint
-  /** Excess debt (if previewed debt exceeds the flash loan amount sized by the quote). */
-  expectedExcessDebt: bigint
-  /** Worst-case preview debt if the swap only returns minOut. */
-  worstCaseRequiredDebt: bigint
-  /** Worst-case preview shares if the swap only returns minOut. */
-  worstCaseShares: bigint
-  /** Swap outputs for transparency. */
-  swapExpectedOut: bigint
-  swapMinOut: bigint
-  /**
-   * Encoded router calls (approve + swap) to be submitted to `mintWithCalls`.
-   * The sequence includes the debt->collateral swap plus an ERC-20 approve when
-   * the debt asset is not the wrapped native token. Input->collateral conversions
-   * are out of scope for this planner.
-   */
+  minExcessDebt: bigint
+  previewShares: bigint
+  previewExcessDebt: bigint
+  flashLoanAmount: bigint
+  equityInCollateralAsset: bigint
   calls: Array<Call>
 }
 
-export async function planMint(params: {
-  config: Config
-  token: TokenArg
-  inputAsset: Address
-  equityInInputAsset: EquityInInputAssetArg
+export interface PlanMintParams {
+  wagmiConfig: Config
+  blockNumber: bigint
+  leverageTokenConfig: LeverageTokenConfig
+  equityInCollateralAsset: bigint
   slippageBps: number
   quoteDebtToCollateral: QuoteFn
-  /** Chain ID to execute the transaction on */
-  chainId: SupportedChainId
-  /** Collateral asset address */
-  collateralAsset: Address
-  /** Debt asset address */
-  debtAsset: Address
-  /** Collateral asset decimals */
-  collateralAssetDecimals: number
-  /** Debt asset decimals */
-  debtAssetDecimals: number
-  /** Optional block number to pin all on-chain previews for consistency */
-  blockNumber?: bigint
-}): Promise<MintPlan> {
-  const {
-    config,
-    token,
-    inputAsset,
-    equityInInputAsset,
-    slippageBps,
-    quoteDebtToCollateral,
-    chainId,
-    collateralAsset,
-    debtAsset,
-    collateralAssetDecimals,
-    debtAssetDecimals,
-    blockNumber,
-  } = params
+}
 
-  // Basic input validation
-  if (slippageBps < 0 || slippageBps > 5_000) {
-    throw new Error('slippageBps out of range (0-5000)')
+export async function planMint({
+  wagmiConfig,
+  blockNumber,
+  leverageTokenConfig,
+  equityInCollateralAsset,
+  slippageBps,
+  quoteDebtToCollateral,
+}: PlanMintParams): Promise<MintPlan> {
+  if (equityInCollateralAsset <= 0n) {
+    throw new Error('equityInCollateralAsset must be positive')
   }
 
-  // 1) Enforce collateral-only input, then preview ideal
-  const userCollateralOut = equityInInputAsset
-  const normalizedInputAsset = getAddress(inputAsset)
-  const normalizedCollateralAsset = getAddress(collateralAsset)
-  debugMintPlan('assets', { inputAsset, collateralAsset, debtAsset })
-  if (normalizedInputAsset !== normalizedCollateralAsset) {
-    throw new Error('Router requires collateral-only input (inputAsset must equal collateralAsset)')
+  if (slippageBps < 0) {
+    throw new Error('slippageBps cannot be negative')
   }
 
-  // 2) Ideal targets (router semantics)
-  const ideal = await previewIdeal({
-    config,
-    token,
-    userCollateralOut,
+  const chainId = leverageTokenConfig.chainId as SupportedChainId
+
+  const token = leverageTokenConfig.address as Address
+  const collateralAsset = leverageTokenConfig.collateralAsset.address as Address
+  const debtAsset = leverageTokenConfig.debtAsset.address as Address
+
+  const { collateralRatio } = await readLeverageManagerV2GetLeverageTokenState(wagmiConfig, {
+    args: [token],
     chainId,
     blockNumber,
   })
-  debugMintPlan('ideal', {
-    userCollateralOut,
-    idealDebt: ideal.idealDebt,
-    targetCollateral: ideal.targetCollateral,
-  })
-  const neededFromDebtSwap = ideal.targetCollateral - userCollateralOut
-  debugMintPlan('need.swap.out', { neededFromDebtSwap })
-  if (neededFromDebtSwap <= 0n) throw new Error('Preview indicates no debt swap needed')
 
-  // 3) Quote debt->collateral for the missing collateral
-  const inTokenForQuote = debtAsset
-  // Default to exact-in path for robustness across venues
-  const r = await quoteDebtForMissingCollateral({
-    idealDebt: ideal.idealDebt,
-    neededOut: neededFromDebtSwap,
-    inToken: inTokenForQuote,
-    outToken: collateralAsset,
-    quote: quoteDebtToCollateral,
-  })
-  let debtIn = r.debtIn
-  let effectiveQuote = r.debtQuote
-  if (typeof effectiveQuote.minOut !== 'bigint') {
-    effectiveQuote = { ...effectiveQuote, minOut: effectiveQuote.out }
-  }
-  debugMintPlan('quote.initial', {
-    debtIn,
-    out: effectiveQuote.out,
-    minOut: effectiveQuote.minOut ?? 0n,
-  })
-  assertDebtSwapQuote(effectiveQuote, debtAsset)
-
-  const totalCollateralInitial = userCollateralOut + effectiveQuote.out
-  const intermediateQuote = await previewFinal({
-    config,
-    token,
-    totalCollateral: totalCollateralInitial,
+  // Initial router preview to size required debt and collateral top-up.
+  const routerPreview = await readLeverageRouterV2PreviewDeposit(wagmiConfig, {
+    args: [token, equityInCollateralAsset],
     chainId,
     blockNumber,
   })
-  debugMintPlan('quote.intermediateQuote', {
-    totalCollateral: totalCollateralInitial,
-    requiredDebt: intermediateQuote.requiredDebt,
-    shares: intermediateQuote.shares,
-  })
 
-  let finalQuote = intermediateQuote
+  // This price is adding the NAV diff from spot on top of the share slippage
+  const minShares = applySlippageFloor(routerPreview.shares, slippageBps)
 
-  // If the debt received from the LT deposit is still less than the flash loan, we need to adjust the flash loan amount down further.
-  // We adjust it as low as possible wrt the slippage tolerance.
-  if (intermediateQuote.requiredDebt < debtIn) {
-    const adjustedUserCollateralOut = applySlippageFloor(userCollateralOut, slippageBps)
-    const adjustedIdeal = await previewIdeal({
-      config,
-      token,
-      userCollateralOut: adjustedUserCollateralOut,
-      chainId,
-      blockNumber,
-    })
-    const adjustedQuote = await previewFinal({
-      config,
-      token,
-      totalCollateral: adjustedIdeal.targetCollateral,
-      chainId,
-      blockNumber,
-    })
+  const currentLeverage = collateralRatioToLeverage(collateralRatio)
 
-    debugMintPlan('final.maxSlippage', {
-      totalCollateral: adjustedIdeal.targetCollateral,
-      requiredDebt: adjustedQuote.requiredDebt,
-      shares: adjustedQuote.shares,
-    })
-
-    debtIn = adjustedQuote.requiredDebt
-    effectiveQuote = await quoteDebtToCollateral({
-      inToken: inTokenForQuote,
-      outToken: collateralAsset,
-      amountIn: debtIn,
-      intent: 'exactIn',
-    })
-
-    finalQuote = await previewFinal({
-      config,
-      token,
-      totalCollateral: userCollateralOut + effectiveQuote.out,
-      chainId,
-      blockNumber,
-    })
-  }
-
-  const excessDebt = finalQuote.requiredDebt - debtIn
-
-  const usdPriceMap = await fetchTokenUsdPrices(chainId, [collateralAsset, debtAsset])
-  const collateralPriceUsd = usdPriceMap?.[collateralAsset.toLowerCase()]
-  const debtPriceUsd = usdPriceMap?.[debtAsset.toLowerCase()]
-
-  if (!collateralPriceUsd) {
-    throw new Error('Missing price for collateral asset')
-  }
-
-  if (!debtPriceUsd) {
-    throw new Error('Missing price for debt asset')
-  }
-
-  const minEquityDepositedInCollateral = applySlippageFloor(equityInInputAsset, slippageBps)
-
-  const priceColl = parseUnits(String(usdPriceMap?.[inputAsset.toLowerCase()] ?? 0), USD_DECIMALS)
-  const priceDebt = parseUnits(String(usdPriceMap?.[debtAsset.toLowerCase()] ?? 0), USD_DECIMALS)
-  const collScale = 10n ** BigInt(collateralAssetDecimals)
-  const debtScale = 10n ** BigInt(debtAssetDecimals)
-
-  const minEquityDepositedInUsdScaled = (minEquityDepositedInCollateral * priceColl) / collScale
-  const sharesValueInUsdScaled =
-    (finalQuote.requiredCollateral * priceColl) / collScale - (debtIn * priceDebt) / debtScale
-  const excessDebtInUsdScaled = (excessDebt * priceDebt) / debtScale
-
-  if (minEquityDepositedInUsdScaled > sharesValueInUsdScaled + excessDebtInUsdScaled) {
-    throw new Error('Try increasing slippage: the transaction will likely revert due to slippage')
-  }
-
-  const sharesValueInCollateral = finalQuote.shares
-  const effectiveAllowedSlippage = Number(
-    ((sharesValueInCollateral - minEquityDepositedInCollateral) * 10000n) / sharesValueInCollateral,
+  // Leverage-adjusted slippage for the swap: scale by previewed leverage.
+  // We only need this for very illiquid tokens. Maybe separate slippage for swap quote and minShares
+  const quoteSlippageBps = Math.max(
+    1,
+    Math.floor(slippageBps / (Number(formatUnits(currentLeverage, 18)) - 1)),
   )
-  const minShares = applySlippageFloor(finalQuote.shares, effectiveAllowedSlippage)
 
-  // Build calls based on the amount actually used for the swap
-  const calls: Array<Call> = [
-    ...buildDebtSwapCalls({
-      debtAsset,
-      debtQuote: effectiveQuote,
-      debtIn,
-    }),
-  ]
+  const flashLoanAmount = applySlippageFloor(routerPreview.debt, quoteSlippageBps)
+
+  // Exact-in quote using the previewed debt amount (with leverage-adjusted slippage hint)
+  const debtToCollateralQuote = await quoteDebtToCollateral({
+    intent: 'exactIn',
+    inToken: debtAsset,
+    outToken: collateralAsset,
+    amountIn: flashLoanAmount,
+    slippageBps: quoteSlippageBps,
+  })
+
+  const managerPreview = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
+    args: [token, equityInCollateralAsset + debtToCollateralQuote.out],
+    chainId,
+    blockNumber,
+  })
+
+  const managerMin = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
+    args: [token, equityInCollateralAsset + debtToCollateralQuote.minOut],
+    chainId,
+    blockNumber,
+  })
+
+  // for (let i = 0; i < 5; i += 1) {
+  //   if (managerPreview.debt >= flashLoanAmount) {
+  //     break
+  //   }
+
+  //   flashLoanAmount = managerPreview.debt
+  //   debtToCollateralQuote = await quoteDebtToCollateral({
+  //     intent: 'exactIn',
+  //     inToken: debtAsset,
+  //     outToken: collateralAsset,
+  //     amountIn: flashLoanAmount,
+  //     slippageBps: quoteSlippageBps,
+  //   })
+  //   totalCollateral = equityInCollateralAsset + debtToCollateralQuote.minOut
+  //   managerPreview = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
+  //     args: [token, totalCollateral],
+  //     chainId,
+  //     blockNumber,
+  //   })
+  // }
+
+  if (managerPreview.debt < flashLoanAmount) {
+    throw new Error(
+      `Manager previewed debt ${managerPreview.debt} is less than flash loan amount ${flashLoanAmount}, likely due to slippage`,
+    )
+  }
+
+  if (managerMin.debt < flashLoanAmount) {
+    throw new Error(
+      `Manager minimum debt ${managerMin.debt} is less than flash loan amount ${flashLoanAmount}, likely due to slippage`,
+    )
+  }
+
+  if (managerPreview.shares < minShares) {
+    throw new Error(
+      `Previewed shares ${managerPreview.shares} are less than min shares ${minShares}, likely due to slippage`,
+    )
+  }
+
+  const previewExcessDebt = managerPreview.debt - flashLoanAmount
+  const minExcessDebt = managerMin.debt - flashLoanAmount
+
+  const approvalCall: Call | undefined =
+    flashLoanAmount > 0n
+      ? {
+          target: debtAsset,
+          data: encodeFunctionData({
+            abi: erc20Abi,
+            functionName: 'approve',
+            args: [debtToCollateralQuote.approvalTarget, flashLoanAmount],
+          }),
+          value: 0n,
+        }
+      : undefined
+
+  const calls: Array<Call> = []
+  if (approvalCall) calls.push(approvalCall)
+  calls.push(...debtToCollateralQuote.calls)
+
+  console.log('planMint', {
+    minShares,
+    minExcessDebt,
+    previewShares: managerPreview.shares,
+    previewExcessDebt,
+    flashLoanAmount,
+    equityInCollateralAsset,
+    calls,
+  })
 
   return {
-    inputAsset,
-    equityInInputAsset,
-    collateralAsset,
-    debtAsset,
-    flashLoanAmount: debtIn,
     minShares,
-    expectedShares: finalQuote.shares,
-    expectedDebt: finalQuote.requiredDebt,
-    expectedTotalCollateral: userCollateralOut + effectiveQuote.out,
-    expectedExcessDebt: excessDebt,
-    worstCaseRequiredDebt: 0n, // TODO: Do we need this?
-    worstCaseShares: 0n, // TODO: Do we need this?
-    swapExpectedOut: effectiveQuote.out,
-    swapMinOut:
-      typeof effectiveQuote.minOut === 'bigint' ? effectiveQuote.minOut : effectiveQuote.out,
+    minExcessDebt,
+    previewShares: managerPreview.shares,
+    previewExcessDebt,
+    flashLoanAmount,
+    equityInCollateralAsset,
     calls,
   }
-}
-
-/**
- * Validate a mint plan to ensure it's safe to execute.
- * Enforces invariants described in mint-redeem-debt-semantics.md
- */
-export function validateMintPlan(plan: MintPlan): boolean {
-  if (plan.equityInInputAsset <= 0n) return false
-  if (plan.expectedShares <= 0n) return false
-  if (plan.minShares < 0n) return false
-  if (plan.expectedTotalCollateral < 0n) return false
-  if (plan.expectedDebt < 0n) return false
-  if (plan.expectedExcessDebt < 0n) return false
-  if (plan.swapExpectedOut < 0n) return false
-  if (plan.swapMinOut < 0n) return false
-  return true
-}
-
-// Helpers — defined below the main function for clarity
-
-/**
- * Size the debt flash loan and quote the debt->collateral swap.
- *
- * Default: exact-in (fast) — start from manager-sized idealDebt and refine.
- * If the adapter supports exact-out and we ever need a fallback, add it explicitly
- * in the caller, but keep default path as exact-in for responsiveness.
- */
-export async function quoteDebtForMissingCollateral(args: {
-  idealDebt: bigint
-  neededOut: bigint
-  inToken: Address
-  outToken: Address
-  quote: QuoteFn
-}): Promise<{ debtIn: bigint; debtQuote: Quote }> {
-  const { idealDebt, neededOut, inToken, outToken, quote } = args
-  // Exact-in quote with manager-sized idealDebt
-  let debtIn = idealDebt
-  let debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
-
-  // If the quote out is below the target, proportionally reduce once and re-quote.
-  if (debtQuote.out < neededOut) {
-    const adjusted = mulDivFloor(debtIn, debtQuote.out, neededOut)
-    if (adjusted > 0n && adjusted < debtIn) {
-      debtIn = adjusted
-      debtQuote = await quote({ inToken, outToken, amountIn: debtIn, intent: 'exactIn' })
-      debugMintPlan('quote.adjusted', { debtIn, out: debtQuote.out, neededOut })
-    }
-  }
-  return { debtIn, debtQuote }
-}
-
-/**
- * Router-only preview used to determine the ideal target collateral and ideal debt for user equity.
- */
-async function previewIdeal(args: {
-  config: Config
-  token: Address
-  userCollateralOut: bigint
-  chainId: number
-  blockNumber: bigint | undefined
-}): Promise<{ targetCollateral: bigint; idealDebt: bigint; idealShares: bigint }> {
-  const { config, token, userCollateralOut, chainId, blockNumber } = args
-  const p = await readLeverageRouterV2PreviewDeposit(config, {
-    args: [token, userCollateralOut],
-    chainId: chainId as SupportedChainId,
-    blockNumber,
-  })
-  return {
-    targetCollateral: p.collateral,
-    idealDebt: p.debt,
-    idealShares: p.shares,
-  }
-}
-
-/**
- * Manager preview with total collateral to derive requiredDebt and final shares.
- */
-async function previewFinal(args: {
-  config: Config
-  token: Address
-  totalCollateral: bigint
-  chainId: number
-  blockNumber: bigint | undefined
-}): Promise<{ requiredDebt: bigint; shares: bigint; requiredCollateral: bigint }> {
-  const { config, token, totalCollateral, chainId, blockNumber } = args
-  const m = await readLeverageManagerV2PreviewDeposit(config, {
-    args: [token, totalCollateral],
-    chainId: chainId as SupportedChainId,
-    blockNumber,
-  })
-  return { requiredDebt: m.debt, shares: m.shares, requiredCollateral: m.collateral }
-}
-
-function buildDebtSwapCalls(args: {
-  debtAsset: Address
-  debtQuote: Quote
-  debtIn: bigint
-}): Array<Call> {
-  const { debtAsset, debtQuote, debtIn } = args
-  // ERC20-in path: approve router for debt asset then perform swap
-  return [
-    {
-      target: debtAsset,
-      data: encodeFunctionData({
-        abi: erc20Abi,
-        functionName: 'approve',
-        args: [debtQuote.approvalTarget, debtIn],
-      }),
-      value: 0n,
-    },
-    ...debtQuote.calls,
-  ]
-}
-
-// Shared validation for swap quotes used by the planner
-function assertDebtSwapQuote(
-  quote: Quote,
-  debtAsset: Address,
-): asserts quote is Quote & { minOut: bigint } {
-  if (typeof quote.minOut !== 'bigint') throw new Error('Swap quote missing minOut')
-  const approval = quote.approvalTarget
-  if (!approval) throw new Error('Missing approval target for ERC20 swap')
-  const normalizedApproval = getAddress(approval)
-  if (normalizedApproval === zeroAddress) throw new Error('Missing approval target for ERC20 swap')
-  if (normalizedApproval === getAddress(debtAsset)) {
-    throw new Error('Approval target cannot equal input token')
-  }
-}
-
-// Internal test-aware debug logger (no-ops outside test runs)
-function debugMintPlan(label: string, data: Record<string, unknown>): void {
-  try {
-    const viteFlag =
-      typeof import.meta !== 'undefined' &&
-      (import.meta as unknown as { env?: Record<string, unknown> })?.env?.[
-        'VITE_MINT_PLAN_DEBUG'
-      ] === '1'
-    const nodeFlag = typeof process !== 'undefined' && process.env?.['MINT_PLAN_DEBUG'] === '1'
-    const lsFlag = (() => {
-      try {
-        return (
-          typeof window !== 'undefined' && window?.localStorage?.getItem('mint-plan-debug') === '1'
-        )
-      } catch {
-        return false
-      }
-    })()
-    // Only log if explicitly enabled via env var (not just TEST_MODE)
-    const shouldLog = viteFlag || nodeFlag || lsFlag
-    if (!shouldLog) return
-    // eslint-disable-next-line no-console
-    console.info('[Mint][Plan][Debug]', label, sanitizeBigints(data))
-  } catch {
-    // ignore
-  }
-}
-
-function sanitizeBigints(obj: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(obj)) {
-    if (typeof v === 'bigint') out[k] = v.toString()
-    else out[k] = v as unknown
-  }
-  return out
 }

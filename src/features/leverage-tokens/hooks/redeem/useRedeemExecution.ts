@@ -13,7 +13,6 @@ type Status = 'idle' | 'submitting' | 'pending' | 'success' | 'error'
 interface UseRedeemExecutionParams {
   token: Address
   account?: Address
-  slippageBps: number
   chainId: SupportedChainId
   routerAddress?: Address
   managerAddress?: Address
@@ -23,7 +22,6 @@ interface UseRedeemExecutionParams {
 export function useRedeemExecution({
   token,
   account,
-  slippageBps,
   chainId,
   routerAddress,
   managerAddress,
@@ -50,7 +48,6 @@ export function useRedeemExecution({
     chainId,
     ...(routerAddress ? { routerAddress } : {}),
     ...(swap ? { swap } : {}),
-    slippageBps,
     requiresQuote,
   })
 

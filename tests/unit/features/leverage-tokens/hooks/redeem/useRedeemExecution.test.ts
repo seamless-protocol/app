@@ -101,7 +101,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           managerAddress: MANAGER_ADDRESS,
@@ -123,7 +122,6 @@ describe('useRedeemExecution', () => {
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useRedeemExecution({
           token: TOKEN_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -144,7 +142,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -165,7 +162,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -192,7 +188,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           managerAddress: MANAGER_ADDRESS,
@@ -243,7 +238,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -277,7 +271,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
         }),
       )
@@ -298,7 +291,6 @@ describe('useRedeemExecution', () => {
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useRedeemExecution({
           token: TOKEN_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -326,7 +318,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -355,7 +346,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -393,7 +383,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -422,7 +411,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -450,7 +438,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -484,7 +471,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -514,7 +500,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -536,7 +521,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,
@@ -560,7 +544,6 @@ describe('useRedeemExecution', () => {
         useRedeemExecution({
           token: TOKEN_ADDRESS,
           account: ACCOUNT_ADDRESS,
-          slippageBps: SLIPPAGE_BPS,
           chainId: CHAIN_ID,
           routerAddress: ROUTER_ADDRESS,
           swap: mockSwap,

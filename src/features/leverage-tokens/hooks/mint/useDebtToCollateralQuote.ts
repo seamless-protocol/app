@@ -19,7 +19,6 @@ interface UseDebtToCollateralQuoteParams {
   chainId: number
   routerAddress?: Address
   swap?: DebtToCollateralSwapConfig
-  slippageBps: number
   requiresQuote: boolean
   fromAddress?: Address
 }
@@ -28,7 +27,6 @@ export function useDebtToCollateralQuote({
   chainId,
   routerAddress,
   swap,
-  slippageBps,
   requiresQuote,
   fromAddress,
 }: UseDebtToCollateralQuoteParams): {
@@ -59,7 +57,6 @@ export function useDebtToCollateralQuote({
         chainId,
         routerAddress,
         swap,
-        slippageBps,
         getPublicClient,
         ...(fromAddress ? { fromAddress } : {}),
       })
@@ -89,5 +86,5 @@ export function useDebtToCollateralQuote({
       }
       return { status: 'error', quote: undefined, error }
     }
-  }, [chainId, fromAddress, publicClient, requiresQuote, routerAddress, slippageBps, swap])
+  }, [chainId, fromAddress, publicClient, requiresQuote, routerAddress, swap])
 }

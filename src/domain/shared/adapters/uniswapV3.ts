@@ -9,12 +9,7 @@ import {
   RawContractError,
 } from 'viem'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import {
-  applySlippageCeiling,
-  applySlippageFloor,
-  DEFAULT_SLIPPAGE_BPS,
-  validateSlippage,
-} from './helpers'
+import { applySlippageCeiling, applySlippageFloor, validateSlippage } from './helpers'
 import type { QuoteFn } from './types'
 
 type PublicClientLike = Pick<PublicClient, 'call' | 'getBlock' | 'readContract'>
@@ -33,7 +28,6 @@ export type UniswapV3QuoteOptions = {
   recipient: Address
   poolAddress: Address
   wrappedNative?: Address
-  slippageBps?: number
   deadlineSeconds?: number
 }
 
@@ -196,15 +190,14 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
     recipient,
     poolAddress,
     wrappedNative,
-    slippageBps = DEFAULT_SLIPPAGE_BPS,
     deadlineSeconds = 15 * 60,
   } = options
 
-  validateSlippage(slippageBps)
-
   const poolTokensPromise = resolvePoolTokens(publicClient, poolAddress)
 
-  return async ({ inToken, outToken, amountIn, amountOut: requiredOut, intent }) => {
+  return async ({ inToken, outToken, amountIn, amountOut: requiredOut, intent, slippageBps }) => {
+    validateSlippage(slippageBps)
+
     const { tokenIn, tokenOut } = normalizeTokens({
       inToken,
       outToken,

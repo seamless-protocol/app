@@ -139,7 +139,6 @@ export async function planRedeemTest({
     chainId: scenario.chainId,
     routerAddress: scenario.router,
     swap: scenario.swap,
-    slippageBps,
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
   })
 

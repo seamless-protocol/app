@@ -3,7 +3,7 @@ import { getAddress, isAddressEqual } from 'viem'
 import { z } from 'zod'
 import { getTokenDecimals } from '@/features/leverage-tokens/leverageTokens.config'
 import { ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
-import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './helpers'
+import { bpsToDecimalString, validateSlippage } from './helpers'
 import type { QuoteFn } from './types'
 
 export interface VeloraAdapterOptions {
@@ -11,7 +11,6 @@ export interface VeloraAdapterOptions {
   router: Address
   /** Optional override for quote `fromAddress` (defaults to `router`). */
   fromAddress?: Address
-  slippageBps?: number
   baseUrl?: string
   /** Optional list of ParaSwap contract methods to restrict quotes to. Useful for testing specific methods. */
   includeContractMethods?: Array<string>
@@ -84,14 +83,14 @@ export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
     chainId,
     router,
     fromAddress,
-    slippageBps = DEFAULT_SLIPPAGE_BPS,
     baseUrl = 'https://api.velora.xyz',
     includeContractMethods,
   } = opts
 
-  const slippage = bpsToDecimalString(slippageBps)
+  return async ({ inToken, outToken, amountIn, amountOut, intent, slippageBps }) => {
+    validateSlippage(slippageBps)
+    const slippage = bpsToDecimalString(slippageBps)
 
-  return async ({ inToken, outToken, amountIn, amountOut, intent }) => {
     const url = buildQuoteUrl(baseUrl, {
       chainId,
       inToken,

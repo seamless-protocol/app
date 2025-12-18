@@ -17,6 +17,13 @@ vi.mock('wagmi', () => ({
   useReadContracts: vi.fn(),
   usePublicClient: vi.fn(),
   useSwitchChain: vi.fn(),
+  useWriteContract: vi.fn(() => ({
+    data: undefined,
+    error: undefined,
+    isPending: false,
+    writeContractAsync: vi.fn(),
+    reset: vi.fn(),
+  })),
   createConfig: vi.fn(),
   http: vi.fn(),
 }))
