@@ -3,6 +3,7 @@ import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
+import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { hookTestUtils, makeAddr, mockSetup } from '../../../../../utils.tsx'
 
 const planMint = vi.fn()
@@ -10,9 +11,14 @@ vi.mock('@/domain/mint/planner/plan', () => ({
   planMint: (...args: Array<unknown>) => planMint(...args),
 }))
 
+vi.mock('@/features/leverage-tokens/leverageTokens.config', () => ({
+  getLeverageTokenConfig: vi.fn(),
+}))
+
 const MOCK_CONFIG = {} as Config
 const TOKEN: Address = makeAddr('token')
 const CHAIN_ID = 8453
+const mockGetLeverageTokenConfig = getLeverageTokenConfig as unknown as ReturnType<typeof vi.fn>
 
 describe('useMintPlanPreview', () => {
   beforeEach(() => {
@@ -22,10 +28,18 @@ describe('useMintPlanPreview', () => {
     planMint.mockResolvedValue({
       minShares: 1n,
       previewShares: 2n,
-      expectedExcessDebt: 0n,
+      previewExcessDebt: 0n,
+      minExcessDebt: 0n,
       flashLoanAmount: 10n,
       equityInCollateralAsset: 5n,
       calls: [],
+    })
+    mockGetLeverageTokenConfig.mockReturnValue({
+      address: TOKEN,
+      chainId: CHAIN_ID,
+      decimals: 18,
+      collateralAsset: { address: makeAddr('collateral'), decimals: 18 },
+      debtAsset: { address: makeAddr('debt'), decimals: 6 },
     })
   })
 

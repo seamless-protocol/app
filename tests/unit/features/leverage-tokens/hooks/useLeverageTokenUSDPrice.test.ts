@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
 import { useReadContracts } from 'wagmi'
-import { useLeverageTokenUsdPrice } from '@/features/leverage-tokens/hooks/useLeverageTokenUSDPrice'
+import { useLeverageTokenUsdPrice } from '@/features/leverage-tokens/hooks/useLeverageTokenUsdPrice'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { STALE_TIME } from '@/features/leverage-tokens/utils/constants'
 import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
@@ -36,7 +36,7 @@ describe('useLeverageTokenUsdPrice', () => {
     mockSetup.clearAllMocks()
     mockSetup.setupWagmiMocks(makeAddr('owner'), chainId)
 
-    ;(STALE_TIME as Record<string, number>).price = STALE_TIME.price ?? 10_000
+    ;(STALE_TIME as Record<string, number>)['price'] = STALE_TIME.price ?? 10_000
     mockGetLeverageManagerAddress.mockReturnValue(managerAddress)
     mockGetLeverageTokenConfig.mockReturnValue(createConfig())
 

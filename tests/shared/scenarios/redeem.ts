@@ -145,7 +145,6 @@ export async function planRedeemTest({
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
-    intent: 'exactOut',
     blockNumber,
   })
 

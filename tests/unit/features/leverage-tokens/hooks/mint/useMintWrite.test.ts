@@ -2,6 +2,7 @@ import type { Address, Hash } from 'viem'
 import { base } from 'viem/chains'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Config } from 'wagmi'
+import type { MintPlan } from '@/domain/mint/planner/plan'
 import { useMintWrite } from '@/features/leverage-tokens/hooks/mint/useMintWrite'
 import { getContractAddresses, isSupportedChain } from '@/lib/contracts/addresses'
 import {
@@ -9,6 +10,11 @@ import {
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
 import { hookTestUtils, makeAddr, makeTxnHash, mockSetup } from '../../../../../utils.tsx'
+
+vi.mock('@/lib/contracts/addresses', () => ({
+  getContractAddresses: vi.fn(),
+  isSupportedChain: vi.fn(),
+}))
 
 vi.mock('@/lib/contracts/generated', () => ({
   simulateLeverageRouterV2Deposit: vi.fn(),
@@ -30,11 +36,12 @@ const ACCOUNT_ADDRESS: Address = makeAddr('account')
 const MULTICALL_EXECUTOR: Address = makeAddr('executor')
 const MOCK_HASH: Hash = makeTxnHash('mint-transaction')
 
-const basePlan = {
+const basePlan: MintPlan = {
   equityInCollateralAsset: 1000000000000000000n,
   minShares: 900000000000000000n,
   previewShares: 1000000000000000000n,
-  expectedExcessDebt: 0n,
+  previewExcessDebt: 0n,
+  minExcessDebt: 0n,
   flashLoanAmount: 1000000000000000000n,
   calls: [
     {
@@ -83,7 +90,7 @@ describe('useMintWrite', () => {
       chainId: CHAIN_ID,
       account: ACCOUNT_ADDRESS,
       token: TOKEN_ADDRESS,
-      plan: basePlan as any,
+      plan: basePlan,
     })
 
     expect(hash).toBe(MOCK_HASH)
@@ -94,8 +101,6 @@ describe('useMintWrite', () => {
     })
     expect(mockWriteLeverageRouterV2Deposit).toHaveBeenCalledWith(MOCK_CONFIG, {
       args: expectedArgs,
-      account: ACCOUNT_ADDRESS,
-      chainId: CHAIN_ID,
     })
   })
 
@@ -109,7 +114,7 @@ describe('useMintWrite', () => {
         chainId: CHAIN_ID,
         account: ACCOUNT_ADDRESS,
         token: TOKEN_ADDRESS,
-        plan: basePlan as any,
+        plan: basePlan,
       }),
     ).rejects.toThrow('Multicall executor not found')
   })
@@ -124,7 +129,7 @@ describe('useMintWrite', () => {
         chainId: 1,
         account: ACCOUNT_ADDRESS,
         token: TOKEN_ADDRESS,
-        plan: basePlan as any,
+        plan: basePlan,
       }),
     ).rejects.toThrow(/Chain ID 1 not supported/)
   })

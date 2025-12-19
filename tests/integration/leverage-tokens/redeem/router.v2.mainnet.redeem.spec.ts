@@ -1,7 +1,7 @@
 import { type Address, erc20Abi, parseUnits } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
-import { getQuoteIntentForAdapter, orchestrateRedeem, planRedeem } from '@/domain/redeem'
+import { orchestrateRedeem, planRedeem } from '@/domain/redeem'
 import { createCollateralToDebtQuote } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
@@ -185,10 +185,6 @@ async function performRedeem(
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
   })
 
-  const intent = getQuoteIntentForAdapter(
-    getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora',
-  )
-
   const blockNumber = await publicClient.getBlockNumber()
 
   const plan = await planRedeem({
@@ -197,7 +193,6 @@ async function performRedeem(
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
-    intent,
     blockNumber,
   })
 
@@ -276,11 +271,8 @@ function assertRedeemPlan(
   collateralAsset: Address,
 ): void {
   expect(plan.sharesToRedeem).toBeGreaterThan(0n)
-  expect(plan.expectedDebt).toBeGreaterThan(0n)
+  expect(plan.minCollateralForSender).toBeGreaterThan(0n)
   expect(plan.calls.length).toBeGreaterThanOrEqual(1)
-
-  const payoutAsset = plan.payoutAsset.toLowerCase()
-  const expectedPayoutAsset = collateralAsset.toLowerCase()
 
   const hasApprovalOrWithdraw = plan.calls.some((call) => {
     if (call.target.toLowerCase() !== collateralAsset.toLowerCase()) return false
@@ -290,8 +282,6 @@ function assertRedeemPlan(
     )
   })
   expect(hasApprovalOrWithdraw).toBe(true)
-
-  expect(payoutAsset).toBe(expectedPayoutAsset)
 }
 
 function assertRedeemExecution(result: RedeemExecutionResult): void {
@@ -303,7 +293,6 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
     sharesAfter,
     sharesToRedeem,
     toleranceBps,
-    collateralAsset,
   } = result
 
   expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
@@ -319,8 +308,7 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
   }
 
   expect(collateralDelta).toBeGreaterThan(0n)
-  expect(withinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
-  expect(plan.payoutAsset.toLowerCase()).toBe(collateralAsset.toLowerCase())
+  expect(withinTolerance(collateralDelta, plan.previewCollateralForSender)).toBe(true)
 
   // No debt payout expected in collateral-only path
   expect(debtDelta).toBeLessThanOrEqual(1000n) // ~$0.001 dust tolerance
