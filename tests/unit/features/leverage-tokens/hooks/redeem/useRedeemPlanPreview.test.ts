@@ -54,6 +54,10 @@ describe('useRedeemPlanPreview', () => {
     collateralAsset: makeAddr('collateral'),
     debtAsset: makeAddr('debt'),
     slippageBps: 50,
+    previewCollateral: 2000000000000000000n,
+    previewDebt: 500000000000000000n,
+    collateralSpent: 1000000000000000000n,
+    previewCollateralForSender: 1000000000000000000n,
     minCollateralForSender: 900000000000000000n, // 0.9 tokens
     expectedCollateral: 1000000000000000000n, // 1 token
     expectedDebt: 500000000000000000n, // 0.5 tokens
@@ -111,7 +115,6 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -133,7 +136,6 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -155,7 +157,6 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -177,7 +178,6 @@ describe('useRedeemPlanPreview', () => {
           debtAsset: makeAddr('debt'),
           enabled: true,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -201,7 +201,6 @@ describe('useRedeemPlanPreview', () => {
           enabled: false,
           quote: mockQuote,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -227,7 +226,6 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -256,7 +254,6 @@ describe('useRedeemPlanPreview', () => {
 
     it('should pass optional parameters when provided', async () => {
       const managerAddress = makeAddr('manager')
-      const outputAsset = makeAddr('output')
 
       const { result } = hookTestUtils.renderHookWithQuery(() =>
         useRedeemPlanPreview({
@@ -270,9 +267,7 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           managerAddress,
-          outputAsset,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -282,12 +277,12 @@ describe('useRedeemPlanPreview', () => {
 
       expect(mockPlanRedeem).toHaveBeenCalledWith(
         expect.objectContaining({
-          collateralAsset: makeAddr('collateral'),
-          debtAsset: makeAddr('debt'),
-          collateralAssetDecimals: 18,
-          debtAssetDecimals: 18,
-          managerAddress,
-          outputAsset,
+          wagmiConfig: MOCK_CONFIG,
+          leverageTokenConfig: expect.any(Object),
+          sharesToRedeem: SHARES_TO_REDEEM,
+          slippageBps: 50,
+          quoteCollateralToDebt: mockQuote,
+          intent: 'exactOut',
         }),
       )
     })
@@ -314,7 +309,6 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -349,7 +343,6 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -366,7 +359,6 @@ describe('useRedeemPlanPreview', () => {
       const planWithUsdData: typeof mockPlan = {
         ...mockPlan,
         expectedCollateral: 2000000000000000000n, // 2 tokens
-        expectedDebtPayout: 1000000000000000000n, // 1 token
       }
       mockPlanRedeem.mockResolvedValueOnce(planWithUsdData)
 
@@ -382,9 +374,7 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralUsdPrice: 2000, // $2000 per token
-          debtUsdPrice: 1000, // $1000 per token
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -392,8 +382,7 @@ describe('useRedeemPlanPreview', () => {
         expect(result.current.plan).toBeDefined()
       })
 
-      // Expected: (2 * 2000) + (1 * 1000) = 4000 + 1000 = 5000
-      // Scaled to USD_DECIMALS (6): 5000 * 10^6 = 5000000000
+      // Expected: 1 token collateral out at $2000 -> 2_000 * 1e6
       expect(result.current.expectedUsdOutScaled).toBeDefined()
       expect(result.current.expectedUsdOutStr).toBeDefined()
     })
@@ -402,7 +391,6 @@ describe('useRedeemPlanPreview', () => {
       const planWithWorstCase: typeof mockPlan = {
         ...mockPlan,
         minCollateralForSender: 1500000000000000000n, // 1.5 tokens
-        expectedDebtPayout: 500000000000000000n, // 0.5 tokens
       }
       mockPlanRedeem.mockResolvedValueOnce(planWithWorstCase)
 
@@ -418,9 +406,7 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralUsdPrice: 2000,
-          debtUsdPrice: 1000,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -446,7 +432,6 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 
@@ -471,9 +456,7 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralUsdPrice: 2000,
-          debtUsdPrice: 1000,
           collateralDecimals: undefined,
-          debtDecimals: undefined,
         }),
       )
 
@@ -502,7 +485,6 @@ describe('useRedeemPlanPreview', () => {
           enabled: true,
           quote: mockQuote,
           collateralDecimals: 18,
-          debtDecimals: 18,
         }),
       )
 

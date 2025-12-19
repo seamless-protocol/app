@@ -1,10 +1,20 @@
-import { ChevronDown, ChevronUp, Loader2, Percent, Settings, TrendingDown } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowDown,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Percent,
+  Settings,
+  TrendingDown,
+} from 'lucide-react'
 import { useEffect, useId, useRef } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
 import { Input } from '../../../../components/ui/input'
+import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
@@ -12,21 +22,12 @@ import {
   SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM,
 } from '../../constants'
 
-type OutputAssetId = 'collateral' | 'debt'
-
 interface Token {
   symbol: string
   name: string
   balance: string
   price: number
   logo?: string
-}
-
-interface Asset {
-  id: OutputAssetId
-  symbol: string
-  name: string
-  price: number
 }
 
 interface LeverageTokenConfig {
@@ -43,13 +44,21 @@ interface LeverageTokenConfig {
 
 interface InputStepProps {
   selectedToken: Token
-  availableAssets: Array<Asset>
+  collateralAssetSymbol: string
   amount: string
+  expectedTokens: string
+  expectedExcessDebt: string
+  expectedTokensUsdOutStr: string
+  expectedDebtUsdOutStr: string
+  expectedTotalUsdOutStr: string
+  minTokens: string
+  minExcessDebt: string
+  minTokensUsdOutStr: string
+  minExcessDebtUsdOutStr: string
+  minTotalUsdOutStr: string
   redemptionFee?: string | undefined
   onAmountChange: (value: string) => void
   onPercentageClick: (percentage: number) => void
-  selectedAssetId: OutputAssetId
-  onAssetChange: (asset: OutputAssetId) => void
   showAdvanced: boolean
   onToggleAdvanced: () => void
   slippage: string
@@ -60,37 +69,36 @@ interface InputStepProps {
   isAllowanceLoading: boolean
   isApproving: boolean
   isRedemptionFeeLoading?: boolean | undefined
-
-  // Calculations
-  expectedAmount: string
-  selectedAssetSymbol: string
-  selectedAssetPrice?: number
-  disabledAssets?: Array<OutputAssetId>
+  redeemTokenFee?: string | undefined
+  isRedeemTokenFeeLoading?: boolean | undefined
   canProceed: boolean
   needsApproval: boolean
   isConnected: boolean
   onApprove: () => void
   error?: string | undefined
   leverageTokenConfig: LeverageTokenConfig
-  redeemTokenFee?: string | undefined
-  isRedeemTokenFeeLoading?: boolean | undefined
-
-  // Warning
   isBelowMinimum?: boolean | undefined
-  // Debt asset information
-  expectedDebtAmount?: string
+  impactWarning?: string
   debtAssetSymbol?: string
-  debtAssetPrice?: number | undefined
 }
 
 export function InputStep({
   selectedToken,
-  availableAssets,
+  collateralAssetSymbol,
   amount,
+  expectedTokens,
+  expectedExcessDebt,
+  expectedTokensUsdOutStr,
+  expectedDebtUsdOutStr,
+  expectedTotalUsdOutStr,
+  minTokens,
+  minExcessDebt,
+  minTokensUsdOutStr,
+  minExcessDebtUsdOutStr,
+  minTotalUsdOutStr,
+  redemptionFee,
   onAmountChange,
   onPercentageClick,
-  selectedAssetId,
-  onAssetChange,
   showAdvanced,
   onToggleAdvanced,
   slippage,
@@ -100,24 +108,18 @@ export function InputStep({
   isCalculating,
   isAllowanceLoading,
   isApproving,
-  expectedAmount,
-  selectedAssetSymbol,
-  selectedAssetPrice,
-  disabledAssets = [],
+  redeemTokenFee,
+  isRedeemTokenFeeLoading,
+  isRedemptionFeeLoading,
   canProceed,
   needsApproval,
   isConnected,
   onApprove,
   error,
   leverageTokenConfig,
-  redemptionFee,
-  isRedemptionFeeLoading,
-  redeemTokenFee,
-  isRedeemTokenFeeLoading,
   isBelowMinimum,
-  expectedDebtAmount,
   debtAssetSymbol,
-  debtAssetPrice,
+  impactWarning,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const redeemAmountId = useId()
@@ -136,14 +138,13 @@ export function InputStep({
   const balanceFloat = parseFloat(selectedToken.balance)
   const pricePerToken = balanceFloat > 0 ? selectedToken.price / balanceFloat : 0
 
-  // Derive minimal, KISS action button state for consistency with Mint
+  // Derive action button state (mirrors mint)
   const actionState = (() => {
     if (!isConnected) return { label: 'Connect Wallet', busy: false }
     const amountNum = parseFloat(amount || '0')
     const balanceNum = parseFloat(selectedToken.balance || '0')
     if (amountNum === 0) return { label: 'Enter an amount', busy: false }
-    if (amountNum > balanceNum)
-      return { label: `Insufficient ${selectedToken.symbol}`, busy: false }
+    if (amountNum > balanceNum) return { label: 'Insufficient balance', busy: false }
     if (isCalculating) return { label: 'Calculating...', busy: true }
     if (isAllowanceLoading) return { label: 'Checking allowance...', busy: true }
     if (isApproving) return { label: 'Approving...', busy: true }
@@ -156,7 +157,7 @@ export function InputStep({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <label htmlFor={redeemAmountId} className="text-sm font-medium text-foreground">
-            Redemption Amount
+            Redeem Amount
           </label>
           <div className="text-xs text-secondary-foreground">
             Balance:{' '}
@@ -220,7 +221,7 @@ export function InputStep({
               variant="ghost"
               size="sm"
               onClick={onToggleAdvanced}
-              className="text-brand-purple transition-colors hover:text-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]"
+              className="text-brand-purple transition-colors hover:opacity-90"
             >
               <Settings className="mr-1 h-4 w-4 text-[inherit]" />
               Advanced
@@ -242,8 +243,8 @@ export function InputStep({
                     className={cn(
                       'h-8 px-3 text-xs transition-colors',
                       slippage === value
-                        ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]'
-                        : 'border border-border text-secondary-foreground hover:bg-accent hover:text-foreground',
+                        ? 'border border-brand-purple bg-brand-purple text-primary-foreground hover:opacity-90'
+                        : 'border border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-foreground',
                     )}
                   >
                     {value}%
@@ -292,32 +293,72 @@ export function InputStep({
         )}
       </div>
 
-      <div className="space-y-4">
-        <div className="text-sm font-medium text-foreground">Redeem to</div>
-        <div className="flex space-x-3">
-          {availableAssets.map((asset) => (
-            <Button
-              key={asset.id}
-              variant={selectedAssetId === asset.id ? 'default' : 'outline'}
-              onClick={() => onAssetChange(asset.id)}
-              disabled={disabledAssets.includes(asset.id)}
-              className={cn(
-                'flex-1 transition-colors',
-                selectedAssetId === asset.id
-                  ? 'border border-[var(--brand-secondary)] bg-[var(--brand-secondary)] text-[var(--primary-foreground)] hover:bg-[color-mix(in_srgb,var(--brand-secondary) 85%,black 15%)]'
-                  : 'border border-border text-secondary-foreground hover:bg-accent hover:text-foreground',
-                disabledAssets.includes(asset.id) && 'cursor-not-allowed opacity-50',
-              )}
-            >
-              {asset.symbol}
-            </Button>
-          ))}
+      <div className="space-y-3">
+        <div className="flex justify-center">
+          <div className="rounded-full border border-border bg-card p-2">
+            <ArrowDown className="h-4 w-4 text-muted-foreground" />
+          </div>
         </div>
+
+        <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-sm text-secondary-foreground">Preview</div>
+            {isCalculating && (
+              <div className="flex items-center text-xs text-slate-400" aria-live="polite">
+                <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-end justify-between">
+            <div className="flex-1">
+              <div className="text-xl font-medium text-foreground">
+                {isCalculating ? <Skeleton className="h-6 w-20" /> : expectedTokens}
+              </div>
+              {!isCalculating && (
+                <>
+                  <div className="text-xs text-secondary-foreground">
+                    {expectedExcessDebt && expectedExcessDebt !== '0' && debtAssetSymbol && (
+                      <>
+                        {' '}
+                        + {expectedExcessDebt} {debtAssetSymbol}
+                      </>
+                    )}
+                  </div>
+                  <div className="text-xs text-secondary-foreground">
+                    {expectedTokensUsdOutStr &&
+                    expectedDebtUsdOutStr &&
+                    expectedTotalUsdOutStr &&
+                    expectedDebtUsdOutStr !== '0'
+                      ? `≈ $${expectedTokensUsdOutStr} + $${expectedDebtUsdOutStr} = $${expectedTotalUsdOutStr}`
+                      : `≈ $${expectedTokensUsdOutStr}`}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="ml-4 flex items-center space-x-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent">
+                <TrendingDown className="h-3 w-3 text-brand-purple" />
+              </div>
+              <div className="text-sm font-medium text-foreground">{collateralAssetSymbol}</div>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      <Card variant="gradient" className="gap-2 border border-border bg-card p-4">
+      <Card
+        variant="gradient"
+        className="gap-2 border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] p-4"
+      >
         <h4 className="mb-3 text-sm font-medium text-foreground">Transaction Summary</h4>
         <div className="space-y-2 text-sm">
+          {impactWarning && (
+            <div className="flex items-start gap-2 rounded-md border border-[var(--tag-warning-bg)]/40 bg-[var(--tag-warning-bg)]/20 p-2 text-[var(--tag-warning-text)]">
+              <AlertTriangle className="mt-0.5 h-4 w-4" />
+              <div>{impactWarning}</div>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Redeem Token Fee</span>
             <span className="text-foreground">
@@ -368,8 +409,9 @@ export function InputStep({
               )}
             </span>
           </div>
-          <div className="flex justify-between font-medium">
-            <span className="text-foreground">You will receive</span>
+          <Separator className="my-2 bg-border" />
+          <div className="flex items-center justify-between font-medium">
+            <span className="text-foreground">You will receive at least</span>
             <div className="text-right">
               <div className="text-foreground">
                 {isCalculating ? (
@@ -378,37 +420,30 @@ export function InputStep({
                   </span>
                 ) : (
                   <>
-                    {expectedAmount} {selectedAssetSymbol}
-                    {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
-                      <>
-                        {' '}
-                        + {expectedDebtAmount} {debtAssetSymbol}
-                      </>
-                    )}
+                    {minTokens} {leverageTokenConfig.collateralAsset.symbol}
                   </>
                 )}
               </div>
-              {!isCalculating &&
-                expectedAmount &&
-                parseFloat(expectedAmount) > 0 &&
-                selectedAssetPrice && (
+              {!isCalculating && (
+                <>
                   <div className="text-xs text-secondary-foreground">
-                    ≈ ${(() => {
-                      const mainAssetValue = parseFloat(expectedAmount) * selectedAssetPrice
-                      const debtAssetValue =
-                        expectedDebtAmount &&
-                        expectedDebtAmount !== '0' &&
-                        debtAssetSymbol &&
-                        debtAssetPrice
-                          ? parseFloat(expectedDebtAmount) * debtAssetPrice
-                          : 0
-                      return (mainAssetValue + debtAssetValue).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    })()}
+                    {minExcessDebt && minExcessDebt !== '0' && debtAssetSymbol && (
+                      <>
+                        {' '}
+                        + {minExcessDebt} {debtAssetSymbol}
+                      </>
+                    )}
                   </div>
-                )}
+                  <div className="text-xs text-secondary-foreground">
+                    {minTokensUsdOutStr &&
+                    minExcessDebtUsdOutStr &&
+                    minTotalUsdOutStr &&
+                    minExcessDebtUsdOutStr !== '0'
+                      ? `≈ $${minTokensUsdOutStr} + $${minExcessDebtUsdOutStr} = $${minTotalUsdOutStr}`
+                      : `≈ $${minTokensUsdOutStr}`}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

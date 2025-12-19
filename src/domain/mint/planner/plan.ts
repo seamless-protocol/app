@@ -102,19 +102,19 @@ export async function planMint({
 
   if (managerPreview.debt < flashLoanAmount) {
     throw new Error(
-      `Manager previewed debt ${managerPreview.debt} is less than flash loan amount ${flashLoanAmount}, likely due to slippage`,
+      `Manager previewed debt ${managerPreview.debt} is less than flash loan amount ${flashLoanAmount}. Try increasing your slippage tolerance`,
     )
   }
 
   if (managerMin.debt < flashLoanAmount) {
     throw new Error(
-      `Manager minimum debt ${managerMin.debt} is less than flash loan amount ${flashLoanAmount}, likely due to slippage`,
+      `Manager minimum debt ${managerMin.debt} is less than flash loan amount ${flashLoanAmount}. Try increasing your slippage tolerance`,
     )
   }
 
   if (managerMin.shares < minShares) {
     throw new Error(
-      `Manager minimum shares ${managerMin.shares} are less than min shares ${minShares}, likely due to slippage`,
+      `Manager minimum shares ${managerMin.shares} are less than min shares ${minShares}. Try increasing your slippage tolerance`,
     )
   }
 

@@ -2,6 +2,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
 import { useAccount, useConfig, useWaitForTransactionReceipt } from 'wagmi'
+import { parseUsdPrice, toScaledUsd, usdToFixedString } from '@/domain/shared/prices'
+import { useLeverageTokenUsdPrice } from '@/features/leverage-tokens/hooks/useLeverageTokenUsdPrice'
 import { parseErc20ReceivedFromReceipt } from '@/features/leverage-tokens/utils/receipt'
 import { invalidatePortfolioQueries } from '@/features/portfolio/utils/invalidation'
 import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
@@ -13,19 +15,13 @@ import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
-import {
-  DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
-  MIN_REDEEM_AMOUNT_DISPLAY,
-  TOKEN_AMOUNT_DISPLAY_DECIMALS,
-} from '../../constants'
+import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
 import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
 import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
-import { useRedeemPreview } from '../../hooks/redeem/useRedeemPreview'
 import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
-import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { useMinSharesGuard } from '../../hooks/useMinSharesGuard'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
@@ -44,8 +40,6 @@ interface Token {
   price: number
   logo?: string
 }
-
-type OutputAssetId = 'collateral' | 'debt'
 
 interface LeverageTokenRedeemModalProps {
   isOpen: boolean
@@ -91,16 +85,6 @@ export function LeverageTokenRedeemModal({
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
   const leverageRouterAddress = contractAddresses.leverageRouterV2
   const leverageManagerAddress = contractAddresses.leverageManagerV2
-
-  const {
-    collateralAsset,
-    debtAsset,
-    isLoading: assetsLoading,
-  } = useLeverageTokenManagerAssets({
-    token: leverageTokenAddress,
-    chainId: leverageTokenConfig.chainId as SupportedChainId,
-    enabled: isOpen,
-  })
 
   // Fetch leverage token fees
   const { data: fees, isLoading: isFeesLoading } = useLeverageTokenFees(
@@ -160,47 +144,6 @@ export function LeverageTokenRedeemModal({
     usdPriceMap?.[leverageTokenConfig.collateralAsset.address.toLowerCase()]
   const debtUsdPrice = usdPriceMap?.[leverageTokenConfig.debtAsset.address.toLowerCase()]
 
-  const outputAssetOptions = useMemo(
-    () => ({
-      collateral: {
-        id: 'collateral' as const,
-        symbol: leverageTokenConfig.collateralAsset.symbol,
-        name: leverageTokenConfig.collateralAsset.name,
-        address: leverageTokenConfig.collateralAsset.address,
-        decimals: leverageTokenConfig.collateralAsset.decimals,
-        price: collateralUsdPrice || 0,
-      },
-      debt: {
-        id: 'debt' as const,
-        symbol: leverageTokenConfig.debtAsset.symbol,
-        name: leverageTokenConfig.debtAsset.name,
-        address: leverageTokenConfig.debtAsset.address,
-        decimals: leverageTokenConfig.debtAsset.decimals,
-        price: debtUsdPrice || 0,
-      },
-    }),
-    [
-      collateralUsdPrice,
-      debtUsdPrice,
-      leverageTokenConfig.collateralAsset.address,
-      leverageTokenConfig.collateralAsset.decimals,
-      leverageTokenConfig.collateralAsset.name,
-      leverageTokenConfig.collateralAsset.symbol,
-      leverageTokenConfig.debtAsset.address,
-      leverageTokenConfig.debtAsset.decimals,
-      leverageTokenConfig.debtAsset.name,
-      leverageTokenConfig.debtAsset.symbol,
-    ],
-  )
-
-  const availableAssets = useMemo(
-    () => [
-      outputAssetOptions.collateral,
-      // outputAssetOptions.debt
-    ],
-    [outputAssetOptions],
-  )
-
   // Format balances for display
   const leverageTokenBalanceFormatted = leverageTokenBalance
     ? formatUnits(leverageTokenBalance, leverageTokenConfig.decimals)
@@ -216,20 +159,31 @@ export function LeverageTokenRedeemModal({
     toError,
   } = useRedeemSteps('userInput')
 
-  const [selectedToken] = useState<Token>({
+  const { data: leverageTokenUsdPrice } = useLeverageTokenUsdPrice({
+    tokenAddress: leverageTokenAddress,
+  })
+
+  const [selectedToken, setSelectedToken] = useState<Token>({
     symbol: leverageTokenConfig.symbol,
     name: leverageTokenConfig.name,
     balance: leverageTokenBalanceFormatted,
-    price: positionData?.equityUsd || 0,
+    price: leverageTokenUsdPrice ? parseFloat(formatUnits(leverageTokenUsdPrice, 18)) : 0,
   })
+
+  useEffect(() => {
+    const price = leverageTokenUsdPrice ? parseFloat(formatUnits(leverageTokenUsdPrice, 18)) : 0
+    if (selectedToken.price !== price) {
+      setSelectedToken({
+        ...selectedToken,
+        price,
+      })
+    }
+  }, [leverageTokenUsdPrice, selectedToken])
 
   const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
-
-  const [selectedOutputId, setSelectedOutputId] = useState<OutputAssetId>('collateral')
-  const selectedOutputAsset = outputAssetOptions[selectedOutputId]
 
   // Form state and logic
   const form = useRedeemForm({
@@ -238,13 +192,6 @@ export function LeverageTokenRedeemModal({
   })
 
   // Preview redemption (like mint modal)
-  const preview = useRedeemPreview({
-    config: wagmiConfig,
-    token: leverageTokenAddress,
-    sharesToRedeem: form.amountRaw,
-    chainId: leverageTokenConfig.chainId,
-  })
-
   // Execution hook (like mint modal)
   const exec = useRedeemExecution({
     token: leverageTokenAddress,
@@ -277,22 +224,6 @@ export function LeverageTokenRedeemModal({
     query: { enabled: Boolean(transactionHash) },
   })
 
-  const collateralSwapConfig = leverageTokenConfig.swaps?.collateralToDebt
-
-  const swapConfigKey = useMemo(() => {
-    if (!collateralSwapConfig) return 'none'
-    switch (collateralSwapConfig.type) {
-      case 'lifi':
-        return `lifi:${collateralSwapConfig.allowBridges ?? 'default'}:${collateralSwapConfig.order ?? 'CHEAPEST'}`
-      case 'uniswapV2':
-        return `uniswapV2:${collateralSwapConfig.router}`
-      case 'uniswapV3':
-        return `uniswapV3:${collateralSwapConfig.poolKey}`
-      default:
-        return 'unknown'
-    }
-  }, [collateralSwapConfig])
-
   const planPreview = useRedeemPlanPreview({
     config: wagmiConfig,
     token: leverageTokenAddress,
@@ -300,17 +231,7 @@ export function LeverageTokenRedeemModal({
     slippageBps,
     chainId: leverageTokenConfig.chainId,
     enabled: isOpen,
-    collateralAsset,
-    debtAsset,
     ...(exec.quote ? { quote: exec.quote } : {}),
-    ...(leverageManagerAddress ? { managerAddress: leverageManagerAddress } : {}),
-    ...(swapConfigKey ? { swapKey: swapConfigKey } : {}),
-    outputAsset: selectedOutputAsset.address,
-    // USD calculation parameters (both prices/decimals needed for expectedCollateral + expectedDebtPayout)
-    collateralUsdPrice,
-    debtUsdPrice,
-    collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
-    debtDecimals: leverageTokenConfig.debtAsset.decimals,
   })
 
   const quoteBlockingError = useMemo(() => {
@@ -341,35 +262,124 @@ export function LeverageTokenRedeemModal({
 
   const redeemBlockingError = quoteBlockingError || planError
 
-  const expectedPayoutRaw = useMemo(() => {
-    return planPreview.plan?.payoutAmount
-  }, [planPreview.plan?.payoutAmount])
+  const expectedCollateralRaw = useMemo(() => {
+    return planPreview.plan?.previewCollateralForSender
+  }, [planPreview.plan?.previewCollateralForSender])
 
-  const expectedAmount = useMemo(() => {
-    if (typeof expectedPayoutRaw !== 'bigint') return '0'
-    const decimals =
-      selectedOutputAsset.id === 'debt'
-        ? leverageTokenConfig.debtAsset.decimals
-        : leverageTokenConfig.collateralAsset.decimals
-    return formatTokenAmountFromBase(expectedPayoutRaw, decimals, TOKEN_AMOUNT_DISPLAY_DECIMALS)
-  }, [
-    expectedPayoutRaw,
-    selectedOutputAsset.id,
-    leverageTokenConfig.collateralAsset.decimals,
-    leverageTokenConfig.debtAsset.decimals,
-  ])
+  const expectedTokens = useMemo(() => {
+    if (typeof expectedCollateralRaw !== 'bigint') return '0'
+    return formatTokenAmountFromBase(
+      expectedCollateralRaw,
+      leverageTokenConfig.collateralAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [expectedCollateralRaw, leverageTokenConfig.collateralAsset.decimals])
 
-  // Calculate debt asset amount that will be received
-  const expectedDebtAmount = useMemo(() => {
+  const expectedExcessDebt = useMemo(() => {
     const plan = planPreview.plan
-    if (!plan || typeof plan.expectedDebtPayout !== 'bigint' || plan.expectedDebtPayout <= 0n)
+    if (!plan || typeof plan.previewExcessDebt !== 'bigint' || plan.previewExcessDebt <= 0n)
       return '0'
     return formatTokenAmountFromBase(
-      plan.expectedDebtPayout,
+      plan.previewExcessDebt,
       leverageTokenConfig.debtAsset.decimals,
       TOKEN_AMOUNT_DISPLAY_DECIMALS,
     )
   }, [planPreview.plan, leverageTokenConfig.debtAsset.decimals])
+
+  const minCollateral = useMemo(() => {
+    const plan = planPreview.plan
+    if (!plan || typeof plan.minCollateralForSender !== 'bigint') return '0'
+    return formatTokenAmountFromBase(
+      plan.minCollateralForSender,
+      leverageTokenConfig.collateralAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [planPreview.plan, leverageTokenConfig.collateralAsset.decimals])
+
+  const minExcessDebt = useMemo(() => {
+    const plan = planPreview.plan
+    if (!plan || typeof plan.minExcessDebt !== 'bigint' || plan.minExcessDebt <= 0n) return '0'
+    return formatTokenAmountFromBase(
+      plan.minExcessDebt,
+      leverageTokenConfig.debtAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [planPreview.plan, leverageTokenConfig.debtAsset.decimals])
+
+  const {
+    expectedTokensUsdOutStr,
+    expectedDebtUsdOutStr,
+    expectedTotalUsdOutStr,
+    minTokensUsdOutStr,
+    minExcessDebtUsdOutStr,
+    minTotalUsdOutStr,
+  } = useMemo(() => {
+    const collateralPriceScaled =
+      typeof collateralUsdPrice === 'number' && collateralUsdPrice > 0
+        ? parseUsdPrice(collateralUsdPrice)
+        : 0n
+    const debtPriceScaled =
+      typeof debtUsdPrice === 'number' && debtUsdPrice > 0 ? parseUsdPrice(debtUsdPrice) : 0n
+    const plan = planPreview.plan
+
+    if (!plan || collateralPriceScaled === 0n) {
+      return {
+        expectedTokensUsdOutStr: '0',
+        expectedDebtUsdOutStr: '0',
+        expectedTotalUsdOutStr: '0',
+        minTokensUsdOutStr: '0',
+        minExcessDebtUsdOutStr: '0',
+        minTotalUsdOutStr: '0',
+      }
+    }
+
+    const expectedTokensUsdOut = toScaledUsd(
+      plan.previewCollateralForSender ?? 0n,
+      leverageTokenConfig.collateralAsset.decimals,
+      collateralPriceScaled,
+    )
+    const expectedDebtUsdOut =
+      debtPriceScaled === 0n
+        ? 0n
+        : toScaledUsd(
+            plan.previewExcessDebt ?? 0n,
+            leverageTokenConfig.debtAsset.decimals,
+            debtPriceScaled,
+          )
+    const expectedTotalUsdOut = expectedTokensUsdOut + expectedDebtUsdOut
+
+    const minTokensUsdOut = toScaledUsd(
+      plan.minCollateralForSender ?? 0n,
+      leverageTokenConfig.collateralAsset.decimals,
+      collateralPriceScaled,
+    )
+    const minExcessDebtUsdOut =
+      debtPriceScaled === 0n
+        ? 0n
+        : toScaledUsd(
+            plan.minExcessDebt ?? 0n,
+            leverageTokenConfig.debtAsset.decimals,
+            debtPriceScaled,
+          )
+    const minTotalUsdOut = minTokensUsdOut + minExcessDebtUsdOut
+
+    const formatUsd = (value: bigint) => usdToFixedString(value, 2)
+
+    return {
+      expectedTokensUsdOutStr: formatUsd(expectedTokensUsdOut),
+      expectedDebtUsdOutStr: formatUsd(expectedDebtUsdOut),
+      expectedTotalUsdOutStr: formatUsd(expectedTotalUsdOut),
+      minTokensUsdOutStr: formatUsd(minTokensUsdOut),
+      minExcessDebtUsdOutStr: formatUsd(minExcessDebtUsdOut),
+      minTotalUsdOutStr: formatUsd(minTotalUsdOut),
+    }
+  }, [
+    collateralUsdPrice,
+    debtUsdPrice,
+    planPreview.plan,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.decimals,
+  ])
 
   // Wait for receipt once we have a hash to derive actual received amount
   const receiptState = useWaitForTransactionReceipt({
@@ -385,22 +395,20 @@ export function LeverageTokenRedeemModal({
     if (!receipt || !userAddress) return undefined
     const raw = parseErc20ReceivedFromReceipt({
       receipt,
-      tokenAddress: selectedOutputAsset.address as `0x${string}`,
+      tokenAddress: leverageTokenConfig.collateralAsset.address as `0x${string}`,
       userAddress: userAddress as `0x${string}`,
     })
     if (typeof raw !== 'bigint') return undefined
-    const decimals =
-      selectedOutputAsset.id === 'debt'
-        ? leverageTokenConfig.debtAsset.decimals
-        : leverageTokenConfig.collateralAsset.decimals
-    return formatTokenAmountFromBase(raw, decimals, TOKEN_AMOUNT_DISPLAY_DECIMALS)
+    return formatTokenAmountFromBase(
+      raw,
+      leverageTokenConfig.collateralAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
   }, [
     receiptState.data,
     userAddress,
-    selectedOutputAsset.address,
-    selectedOutputAsset.id,
     leverageTokenConfig.collateralAsset.decimals,
-    leverageTokenConfig.debtAsset.decimals,
+    leverageTokenConfig.collateralAsset.address,
   ])
 
   // Parse actual debt amount received from logs
@@ -480,7 +488,6 @@ export function LeverageTokenRedeemModal({
   const resetModal = useCallback(() => {
     toInput()
     form.setAmount('')
-    setSelectedOutputId('collateral')
     setTransactionHash(undefined)
     setError('')
 
@@ -521,16 +528,21 @@ export function LeverageTokenRedeemModal({
   // Check if approval is needed
   const needsApproval = () => Boolean(needsApprovalFlag)
 
-  const isPlanCalculating = Boolean(form.amountRaw) && planPreview.isLoading
-
-  const isCalculating = assetsLoading || preview.isLoading || isPlanCalculating
+  const quoteReady = exec.quoteStatus === 'ready' || exec.quoteStatus === 'not-required'
+  const isCalculating =
+    typeof form.amountRaw === 'bigint' &&
+    form.amountRaw > 0n &&
+    (planPreview.isLoading || exec.quoteStatus !== 'ready')
 
   const canProceed = () => {
     return (
       form.isAmountValid &&
       form.hasBalance &&
       !isCalculating &&
-      typeof expectedPayoutRaw === 'bigint' &&
+      quoteReady &&
+      Boolean(planPreview.plan) &&
+      typeof expectedCollateralRaw === 'bigint' &&
+      parseFloat(expectedTokens || '0') > 0 &&
       isConnected &&
       !isAllowanceLoading &&
       exec.canSubmit
@@ -539,9 +551,8 @@ export function LeverageTokenRedeemModal({
 
   // Check if amount is below minimum for warning
   const isBelowMinimum = () => {
-    const amount = parseFloat(form.amount || '0')
-    const minAmount = parseFloat(MIN_REDEEM_AMOUNT_DISPLAY)
-    return amount > 0 && amount < minAmount
+    if (!form.amount || form.amount.trim() === '') return false
+    return !form.minAmountOk
   }
 
   // Handle amount input changes (with error clearing)
@@ -554,11 +565,6 @@ export function LeverageTokenRedeemModal({
   const handlePercentageClickWithBalance = (percentage: number) => {
     form.onPercent(percentage, selectedTokenView.balance)
   }
-
-  const handleOutputAssetChange = useCallback((asset: OutputAssetId) => {
-    setSelectedOutputId(asset)
-    setError('')
-  }, [])
 
   // Handle approval step
   const handleApprove = async () => {
@@ -593,7 +599,7 @@ export function LeverageTokenRedeemModal({
       return
     }
 
-    if (!exec.canSubmit || typeof expectedPayoutRaw !== 'bigint') {
+    if (!exec.canSubmit || typeof expectedCollateralRaw !== 'bigint') {
       setError(
         redeemBlockingError || 'Redeem configuration is not ready. Please try again shortly.',
       )
@@ -627,10 +633,10 @@ export function LeverageTokenRedeemModal({
         chainId: leverageTokenConfig.chainId,
         ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
         token: leverageTokenAddress,
-        outputAsset: selectedOutputAsset.address,
+        inputAsset: leverageTokenAddress,
         slippageBps,
-        amountIn: form.amount,
-        expectedOut: expectedAmount,
+        amountIn: form.amount ?? '',
+        expectedOut: String(expectedTokens),
         ...(provider ? { provider } : {}),
         error,
       })
@@ -661,7 +667,7 @@ export function LeverageTokenRedeemModal({
       void (async () => {
         const tokenSymbol = leverageTokenConfig.symbol
         const amount = form.amount
-        const usdValue = parseFloat(form.amount) * (selectedOutputAsset.price || 0)
+        const usdValue = parseFloat(form.amount || '0') * (collateralUsdPrice || 0)
         trackLeverageTokenRedeemed(tokenSymbol, amount, usdValue)
         analytics.funnelStep('redeem_leverage_token', 'transaction_completed', 3)
 
@@ -702,7 +708,6 @@ export function LeverageTokenRedeemModal({
     leverageTokenConfig.symbol,
     leverageTokenAddress,
     form.amount,
-    selectedOutputAsset.price,
     refetchLeverageTokenBalance,
     refetchCollateralTokenBalance,
     refetchDebtTokenBalance,
@@ -713,6 +718,7 @@ export function LeverageTokenRedeemModal({
     toSuccess,
     toError,
     leverageTokenConfig.chainId,
+    collateralUsdPrice,
   ])
 
   // Handle retry from error state
@@ -727,6 +733,7 @@ export function LeverageTokenRedeemModal({
     // Prevent closing while any tx is on-chain pending (approve or redeem)
     if (currentStep === 'pending') return
     if (currentStep === 'approve' && approveHash) return
+    setTransactionHash(undefined)
     onClose()
   }
 
@@ -737,13 +744,20 @@ export function LeverageTokenRedeemModal({
         return (
           <InputStep
             selectedToken={selectedTokenView}
-            availableAssets={availableAssets}
+            collateralAssetSymbol={leverageTokenConfig.collateralAsset.symbol}
             amount={form.amount}
+            expectedTokens={expectedTokens}
+            expectedExcessDebt={expectedExcessDebt}
+            expectedTokensUsdOutStr={expectedTokensUsdOutStr}
+            expectedDebtUsdOutStr={expectedDebtUsdOutStr}
+            expectedTotalUsdOutStr={expectedTotalUsdOutStr}
+            minTokens={minCollateral}
+            minExcessDebt={minExcessDebt}
+            minTokensUsdOutStr={minTokensUsdOutStr}
+            minExcessDebtUsdOutStr={minExcessDebtUsdOutStr}
+            minTotalUsdOutStr={minTotalUsdOutStr}
             onAmountChange={handleAmountChangeWithErrorClear}
             onPercentageClick={handlePercentageClickWithBalance}
-            selectedAssetId={selectedOutputId}
-            selectedAssetSymbol={selectedOutputAsset.symbol}
-            onAssetChange={handleOutputAssetChange}
             showAdvanced={showAdvanced}
             onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
             slippage={slippage}
@@ -753,8 +767,6 @@ export function LeverageTokenRedeemModal({
             isCalculating={isCalculating}
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
-            expectedAmount={expectedAmount}
-            selectedAssetPrice={selectedOutputAsset.price}
             canProceed={canProceed()}
             needsApproval={needsApproval()}
             isConnected={isConnected}
@@ -766,9 +778,7 @@ export function LeverageTokenRedeemModal({
             redeemTokenFee={fees?.redeemTokenFee}
             isRedeemTokenFeeLoading={isFeesLoading}
             isBelowMinimum={isBelowMinimum()}
-            expectedDebtAmount={expectedDebtAmount}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
-            debtAssetPrice={debtUsdPrice}
           />
         )
 
@@ -788,8 +798,8 @@ export function LeverageTokenRedeemModal({
           <ConfirmStep
             selectedToken={selectedTokenView}
             amount={form.amount}
-            expectedAmount={expectedAmount}
-            selectedAsset={selectedOutputAsset.symbol}
+            expectedAmount={expectedTokens}
+            selectedAsset={leverageTokenConfig.collateralAsset.symbol}
             leverageTokenConfig={{
               symbol: leverageTokenConfig.symbol,
               name: leverageTokenConfig.name,
@@ -800,7 +810,7 @@ export function LeverageTokenRedeemModal({
             isRedemptionFeeLoading={isFeesLoading}
             onConfirm={handleConfirm}
             disabled={isCalculating || exec.quoteStatus !== 'ready' || !planPreview.plan}
-            expectedDebtAmount={expectedDebtAmount}
+            expectedDebtAmount={expectedExcessDebt}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
             {...(guardErrorMessage || error ? { error: guardErrorMessage || error } : {})}
             needsReack={needsReack}
@@ -811,8 +821,8 @@ export function LeverageTokenRedeemModal({
       case 'pending':
         return (
           <PendingStep
-            expectedCollateralAmount={expectedAmount}
-            collateralSymbol={selectedOutputAsset.symbol}
+            expectedCollateralAmount={expectedTokens}
+            collateralSymbol={leverageTokenConfig.collateralAsset.symbol}
             leverageTokenConfig={{
               symbol: leverageTokenConfig.symbol,
               name: leverageTokenConfig.name,
@@ -821,7 +831,7 @@ export function LeverageTokenRedeemModal({
             }}
             mode={transactionHash ? 'onChain' : 'awaitingWallet'}
             transactionHash={transactionHash as `0x${string}` | undefined}
-            expectedDebtAmount={expectedDebtAmount}
+            expectedDebtAmount={expectedExcessDebt}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
           />
         )
@@ -830,8 +840,8 @@ export function LeverageTokenRedeemModal({
         return (
           <SuccessStep
             amount={form.amount}
-            expectedAmount={actualReceivedAmount ?? expectedAmount}
-            selectedAsset={selectedOutputAsset.symbol}
+            expectedAmount={actualReceivedAmount ?? expectedTokens}
+            selectedAsset={leverageTokenConfig.collateralAsset.symbol}
             leverageTokenSymbol={leverageTokenConfig.symbol}
             transactionHash={transactionHash ?? ('' as unknown as `0x${string}`)}
             onClose={handleClose}

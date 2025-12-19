@@ -333,21 +333,24 @@ export function InputStep({
                 {isCalculating ? <Skeleton className="h-6 w-20" /> : expectedTokens}
               </div>
               {!isCalculating && (
-                <div className="text-xs text-secondary-foreground">
-                  {expectedExcessDebt && expectedExcessDebt !== '0' && debtAssetSymbol && (
-                    <>
-                      {' '}
-                      + {expectedExcessDebt} {debtAssetSymbol}
-                    </>
-                  )}
-
-                  {expectedTokensUsdOutStr &&
-                  expectedDebtUsdOutStr &&
-                  expectedTotalUsdOutStr &&
-                  expectedDebtUsdOutStr !== '0'
-                    ? `≈ $${expectedTokensUsdOutStr} + $${expectedDebtUsdOutStr} = $${expectedTotalUsdOutStr}`
-                    : `≈ $${expectedTokensUsdOutStr}`}
-                </div>
+                <>
+                  <div className="text-xs text-secondary-foreground">
+                    {expectedExcessDebt && expectedExcessDebt !== '0' && debtAssetSymbol && (
+                      <>
+                        {' '}
+                        + {expectedExcessDebt} {debtAssetSymbol}
+                      </>
+                    )}
+                  </div>
+                  <div className="text-xs text-secondary-foreground">
+                    {expectedTokensUsdOutStr &&
+                    expectedDebtUsdOutStr &&
+                    expectedTotalUsdOutStr &&
+                    expectedDebtUsdOutStr !== '0'
+                      ? `≈ $${expectedTokensUsdOutStr} + $${expectedDebtUsdOutStr} = $${expectedTotalUsdOutStr}`
+                      : `≈ $${expectedTokensUsdOutStr}`}
+                  </div>
+                </>
               )}
             </div>
 
@@ -441,21 +444,24 @@ export function InputStep({
                 )}
               </div>
               {!isCalculating && (
-                <div className="text-xs text-secondary-foreground">
-                  {minExcessDebt && minExcessDebt !== '0' && debtAssetSymbol && (
-                    <>
-                      {' '}
-                      + {minExcessDebt} {debtAssetSymbol}
-                    </>
-                  )}
-
-                  {minTokensUsdOutStr &&
-                  minExcessDebtUsdOutStr &&
-                  expectedTotalUsdOutStr &&
-                  minExcessDebtUsdOutStr !== '0'
-                    ? `≈ $${minTokensUsdOutStr} + $${minExcessDebtUsdOutStr} = $${minTotalUsdOutStr}`
-                    : `≈ $${minTokensUsdOutStr}`}
-                </div>
+                <>
+                  <div className="text-xs text-secondary-foreground">
+                    {minExcessDebt && minExcessDebt !== '0' && debtAssetSymbol && (
+                      <>
+                        {' '}
+                        + {minExcessDebt} {debtAssetSymbol}
+                      </>
+                    )}
+                  </div>
+                  <div className="text-xs text-secondary-foreground">
+                    {minTokensUsdOutStr &&
+                    minExcessDebtUsdOutStr &&
+                    expectedTotalUsdOutStr &&
+                    minExcessDebtUsdOutStr !== '0'
+                      ? `≈ $${minTokensUsdOutStr} + $${minExcessDebtUsdOutStr} = $${minTotalUsdOutStr}`
+                      : `≈ $${minTokensUsdOutStr}`}
+                  </div>
+                </>
               )}
             </div>
           </div>

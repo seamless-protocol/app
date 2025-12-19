@@ -1,8 +1,5 @@
 import type { Address, Hex } from 'viem'
-import { describe, expect, it, vi } from 'vitest'
-
-// Unmock the function we want to test
-vi.unmock('@/domain/redeem/planner/plan')
+import { describe, expect, it, type Mock, vi } from 'vitest'
 
 vi.mock('@/lib/contracts/generated', () => ({
   readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(
@@ -23,27 +20,28 @@ vi.mock('@/lib/contracts/generated', () => ({
   ),
 }))
 
+import { planRedeem, type RedeemPlan, validateRedeemPlan } from '@/domain/redeem/planner/plan'
+import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
+import { BASE_WETH } from '@/lib/contracts/addresses'
 // Import mocked functions for type-safe mocking
 import {
   readLeverageManagerV2GetLeverageTokenCollateralAsset,
   readLeverageManagerV2PreviewRedeem,
 } from '@/lib/contracts/generated'
 
-// Decimals are now passed as parameters instead of being fetched on-chain
-
-vi.mock('@/lib/prices/coingecko', () => ({
-  fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
-    '0xcccccccccccccccccccccccccccccccccccccccc': 2000, // collateral (ETH)
-    '0xdddddddddddddddddddddddddddddddddddddddd': 1.001, // debt (USDC)
-  })),
-}))
-
-import { planRedeem, type RedeemPlan, validateRedeemPlan } from '@/domain/redeem/planner/plan'
-import { BASE_WETH } from '@/lib/contracts/addresses'
-
 const dummyQuoteTarget = '0x0000000000000000000000000000000000000aAa' as Address
 const mockCollateralAsset = '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC' as Address
 const mockDebtAsset = '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address
+const mockPreviewRedeem = readLeverageManagerV2PreviewRedeem as unknown as Mock
+const mockGetCollateralAsset =
+  readLeverageManagerV2GetLeverageTokenCollateralAsset as unknown as Mock
+const leverageTokenConfig = {
+  address: '0x1111111111111111111111111111111111111111' as Address,
+  chainId: 1,
+  collateralAsset: { address: mockCollateralAsset, decimals: 18 },
+  debtAsset: { address: mockDebtAsset, decimals: 6 },
+} as unknown as LeverageTokenConfig
+const blockNumber = 1n
 
 function createMockQuoteFunction({
   outValue,
@@ -113,34 +111,28 @@ async function mockQuote(args: {
 describe('planRedeem', () => {
   it('should plan a redeem', async () => {
     const plan = await planRedeem({
-      config: {} as any,
-      token: '0x1111111111111111111111111111111111111111' as Address,
+      wagmiConfig: {} as any,
+      leverageTokenConfig,
       sharesToRedeem: 50n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
-      collateralAsset: mockCollateralAsset,
-      debtAsset: mockDebtAsset,
-      chainId: 1,
       intent: 'exactOut',
-      collateralAssetDecimals: 18,
-      debtAssetDecimals: 6,
+      blockNumber,
     })
 
     expect(plan.expectedTotalCollateral).toBe(100000000000000000000n) // 100 ETH
     expect(plan.expectedDebt).toBe(50000000n) // 50 USDC
-    // With realistic prices: need ~0.025 ETH to buy 50 USDC, so ~99.975 ETH remains
-    expect(plan.expectedCollateral).toBeGreaterThan(99900000000000000000n) // > 99.9 ETH
-    expect(plan.expectedCollateral).toBeLessThan(100000000000000000000n) // < 100 ETH
-    expect(plan.expectedDebtPayout).toBe(0n) // No excess debt in collateral mode
-    expect(plan.payoutAsset.toLowerCase()).toBe('0xcccccccccccccccccccccccccccccccccccccccc')
+    expect(plan.expectedCollateral).toBeLessThan(plan.expectedTotalCollateral)
+    expect(plan.expectedDebtPayout).toBe(0n)
+    expect(plan.payoutAsset.toLowerCase()).toBe(mockCollateralAsset.toLowerCase())
     expect(plan.payoutAmount).toBe(plan.expectedCollateral)
   })
 
   it('should revert if the debt output from the swap is below the required debt', async () => {
     await expect(
       planRedeem({
-        config: {} as any,
-        token: '0x1111111111111111111111111111111111111111' as Address,
+        wagmiConfig: {} as any,
+        leverageTokenConfig,
         sharesToRedeem: 50n,
         slippageBps: 50,
         quoteCollateralToDebt: createMockQuoteFunction({
@@ -148,12 +140,8 @@ describe('planRedeem', () => {
           minOutValue: 0n,
           maxInValue: 100000000000000000n, // 0.1 ETH
         }) as any,
-        collateralAsset: mockCollateralAsset,
-        debtAsset: mockDebtAsset,
-        chainId: 1,
         intent: 'exactOut',
-        collateralAssetDecimals: 18,
-        debtAssetDecimals: 6,
+        blockNumber,
       }),
     ).rejects.toThrow(
       'Try increasing slippage: swap of collateral to repay debt for the leveraged position is below the required debt.',
@@ -161,10 +149,17 @@ describe('planRedeem', () => {
   })
 
   it('should revert if the collateral required for the swap is above the allowed amount wrt slippage', async () => {
+    mockPreviewRedeem.mockResolvedValueOnce({
+      collateral: 500000000000000000n, // 0.5 ETH
+      debt: 50000000n,
+      shares: 50n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
     await expect(
       planRedeem({
-        config: {} as any,
-        token: '0x1111111111111111111111111111111111111111' as Address,
+        wagmiConfig: {} as any,
+        leverageTokenConfig,
         sharesToRedeem: 50n,
         slippageBps: 50,
         quoteCollateralToDebt: createMockQuoteFunction({
@@ -172,68 +167,44 @@ describe('planRedeem', () => {
           minOutValue: 50000000n,
           maxInValue: 1000000000000000000n, // 1 ETH (more than available ~0.525 ETH)
         }) as any,
-        collateralAsset: mockCollateralAsset,
-        debtAsset: mockDebtAsset,
-        chainId: 1,
         intent: 'exactOut',
-        collateralAssetDecimals: 18,
-        debtAssetDecimals: 6,
+        blockNumber,
       }),
     ).rejects.toThrow(
       'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
     )
   })
 
-  it('supports redeeming into the debt asset when requested', async () => {
+  it('always returns collateral as payout asset', async () => {
     const plan = await planRedeem({
-      config: {} as any,
-      token: '0x1111111111111111111111111111111111111111' as Address,
+      wagmiConfig: {} as any,
+      leverageTokenConfig,
       sharesToRedeem: 50n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
-      collateralAsset: mockCollateralAsset,
-      debtAsset: mockDebtAsset,
-      outputAsset: '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
-      chainId: 1,
       intent: 'exactOut',
-      collateralAssetDecimals: 18,
-      debtAssetDecimals: 6,
+      blockNumber,
     })
 
-    expect(plan.payoutAsset.toLowerCase()).toBe('0xdddddddddddddddddddddddddddddddddddddddd')
-    expect(plan.expectedCollateral).toBe(0n)
-    // 100 ETH = $200k, at $1.001/USDC = ~199,800 USDC, minus 50 USDC debt = ~199,750 USDC
-    expect(plan.expectedDebtPayout).toBeGreaterThan(199700000000n) // > 199,700 USDC
-    expect(plan.expectedDebtPayout).toBeLessThan(199900000000n) // < 199,900 USDC
-    expect(plan.payoutAmount).toBe(plan.expectedDebtPayout)
-    expect(plan.payoutAmount).toBeGreaterThan(0n)
-    expect(plan.expectedExcessCollateral).toBe(0n) // Full debt output, no excess collateral
-    expect(plan.calls.length).toBeGreaterThan(2)
+    expect(plan.payoutAsset.toLowerCase()).toBe(mockCollateralAsset.toLowerCase())
+    expect(plan.expectedDebtPayout).toBe(0n)
+    expect(plan.payoutAmount).toBe(plan.expectedCollateral)
   })
 
   it('should handle native collateral (WETH) redemption', async () => {
     // Override mock to return WETH as collateral
-    vi.mocked(readLeverageManagerV2GetLeverageTokenCollateralAsset).mockResolvedValueOnce(BASE_WETH)
-
-    // Mock price for WETH
-    const { fetchCoingeckoTokenUsdPrices } = await import('@/lib/prices/coingecko')
-    vi.mocked(fetchCoingeckoTokenUsdPrices).mockResolvedValueOnce({
-      [BASE_WETH.toLowerCase()]: 2000, // WETH price
-      '0xdddddddddddddddddddddddddddddddddddddddd': 1.001, // debt (USDC)
-    })
-
+    mockGetCollateralAsset.mockResolvedValueOnce(BASE_WETH)
     const plan = await planRedeem({
-      config: {} as any,
-      token: '0x1111111111111111111111111111111111111111' as Address,
+      wagmiConfig: {} as any,
+      leverageTokenConfig: {
+        ...leverageTokenConfig,
+        collateralAsset: { address: BASE_WETH, decimals: 18 },
+      } as LeverageTokenConfig,
       sharesToRedeem: 50n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
-      collateralAsset: BASE_WETH, // Use BASE_WETH for native collateral test
-      debtAsset: mockDebtAsset,
-      chainId: 1,
       intent: 'exactOut',
-      collateralAssetDecimals: 18,
-      debtAssetDecimals: 6,
+      blockNumber,
     })
 
     // Should have at least 2 calls: WETH withdraw + swap
@@ -253,7 +224,7 @@ describe('planRedeem', () => {
 
   it('should handle debt output when remaining collateral is zero', async () => {
     // Create a scenario where all collateral is consumed
-    vi.mocked(readLeverageManagerV2PreviewRedeem).mockResolvedValueOnce({
+    mockPreviewRedeem.mockResolvedValueOnce({
       collateral: 25126582278481012n, // Very small collateral (just enough for debt)
       debt: 50000000n,
       shares: 50n,
@@ -262,30 +233,22 @@ describe('planRedeem', () => {
     })
 
     const plan = await planRedeem({
-      config: {} as any,
-      token: '0x1111111111111111111111111111111111111111' as Address,
+      wagmiConfig: {} as any,
+      leverageTokenConfig,
       sharesToRedeem: 50n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
-      collateralAsset: mockCollateralAsset,
-      debtAsset: mockDebtAsset,
-      outputAsset: '0xdDdDddDdDDdDdDdDdDdDddDdDDdDdDDDdDDDdDDD' as Address,
-      chainId: 1,
       intent: 'exactOut',
-      collateralAssetDecimals: 18,
-      debtAssetDecimals: 6,
+      blockNumber,
     })
 
-    // When converting to debt with zero remaining collateral
-    expect(plan.payoutAsset.toLowerCase()).toBe('0xdddddddddddddddddddddddddddddddddddddddd')
-    expect(plan.expectedCollateral).toBe(0n)
-    // Payout should be zero or minimal
-    expect(plan.payoutAmount).toBeLessThanOrEqual(1000000n) // <= 1 USDC
+    expect(plan.payoutAsset.toLowerCase()).toBe(mockCollateralAsset.toLowerCase())
+    expect(plan.expectedCollateral).toBeGreaterThanOrEqual(0n)
   })
 
   it('should handle zero-debt scenario (no swap needed)', async () => {
     // Scenario: Position has no debt, so redemption just returns all collateral
-    vi.mocked(readLeverageManagerV2PreviewRedeem).mockResolvedValueOnce({
+    mockPreviewRedeem.mockResolvedValueOnce({
       collateral: 100000000000000000000n, // 100 ETH
       debt: 0n, // No debt to repay
       shares: 50n,
@@ -294,17 +257,13 @@ describe('planRedeem', () => {
     })
 
     const plan = await planRedeem({
-      config: {} as any,
-      token: '0x1111111111111111111111111111111111111111' as Address,
+      wagmiConfig: {} as any,
+      leverageTokenConfig,
       sharesToRedeem: 50n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
-      collateralAsset: mockCollateralAsset,
-      debtAsset: mockDebtAsset,
-      chainId: 1,
       intent: 'exactOut',
-      collateralAssetDecimals: 18,
-      debtAssetDecimals: 6,
+      blockNumber,
     })
 
     // With zero debt, no swap should occur
@@ -318,17 +277,13 @@ describe('planRedeem', () => {
   it('should handle extreme slippage tolerance (90%)', async () => {
     // Test with very high slippage (9000 bps = 90%)
     const plan = await planRedeem({
-      config: {} as any,
-      token: '0x1111111111111111111111111111111111111111' as Address,
+      wagmiConfig: {} as any,
+      leverageTokenConfig,
       sharesToRedeem: 50n,
       slippageBps: 9000, // 90% slippage tolerance
       quoteCollateralToDebt: mockQuote as any,
-      collateralAsset: mockCollateralAsset,
-      debtAsset: mockDebtAsset,
-      chainId: 1,
       intent: 'exactOut',
-      collateralAssetDecimals: 18,
-      debtAssetDecimals: 6,
+      blockNumber,
     })
 
     // With 90% slippage, minimum collateral should be 10% of expected
@@ -343,7 +298,7 @@ describe('planRedeem', () => {
 
   it('should reject unrealistic tiny collateral amounts', async () => {
     // Test with minimal collateral that cannot cover swap costs
-    vi.mocked(readLeverageManagerV2PreviewRedeem).mockResolvedValueOnce({
+    mockPreviewRedeem.mockResolvedValueOnce({
       collateral: 1000n, // Very small amount
       debt: 1n, // 1 wei of debt
       shares: 1n,
@@ -354,17 +309,13 @@ describe('planRedeem', () => {
     // Planner should reject this as the collateral is insufficient for the swap
     await expect(
       planRedeem({
-        config: {} as any,
-        token: '0x1111111111111111111111111111111111111111' as Address,
+        wagmiConfig: {} as any,
+        leverageTokenConfig,
         sharesToRedeem: 1n,
         slippageBps: 50,
         quoteCollateralToDebt: mockQuote as any,
-        collateralAsset: mockCollateralAsset,
-        debtAsset: mockDebtAsset,
-        chainId: 1,
         intent: 'exactOut',
-        collateralAssetDecimals: 18,
-        debtAssetDecimals: 6,
+        blockNumber,
       }),
     ).rejects.toThrow(
       'Try increasing slippage: the transaction will likely revert due to unmet minimum collateral received',
@@ -373,7 +324,7 @@ describe('planRedeem', () => {
 
   it('should handle small but realistic collateral amounts', async () => {
     // Test with small amounts that are still realistic (0.001 ETH)
-    vi.mocked(readLeverageManagerV2PreviewRedeem).mockResolvedValueOnce({
+    mockPreviewRedeem.mockResolvedValueOnce({
       collateral: 1000000000000000n, // 0.001 ETH (15 decimals)
       debt: 500n, // 0.0005 USDC (6 decimals)
       shares: 100n,
@@ -382,17 +333,13 @@ describe('planRedeem', () => {
     })
 
     const plan = await planRedeem({
-      config: {} as any,
-      token: '0x1111111111111111111111111111111111111111' as Address,
+      wagmiConfig: {} as any,
+      leverageTokenConfig,
       sharesToRedeem: 100n,
       slippageBps: 50,
       quoteCollateralToDebt: mockQuote as any,
-      collateralAsset: mockCollateralAsset,
-      debtAsset: mockDebtAsset,
-      chainId: 1,
       intent: 'exactOut',
-      collateralAssetDecimals: 18,
-      debtAssetDecimals: 6,
+      blockNumber,
     })
 
     // Should successfully plan with small but realistic amounts
@@ -409,6 +356,10 @@ describe('validateRedeemPlan', () => {
     collateralAsset: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as Address,
     debtAsset: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' as Address,
     slippageBps: 50,
+    previewCollateral: 1000000000000000000n,
+    previewDebt: 50000000n,
+    collateralSpent: 50000000000000000n,
+    previewCollateralForSender: 950000000000000000n,
     minCollateralForSender: 900000000000000000n,
     expectedCollateral: 950000000000000000n,
     expectedDebt: 50000000n,
@@ -426,7 +377,7 @@ describe('validateRedeemPlan', () => {
       ],
     },
     expectedTotalCollateral: 1000000000000000000n,
-    expectedExcessCollateral: 50000000000000000n,
+    expectedExcessCollateral: 950000000000000000n,
     expectedDebtPayout: 0n,
     payoutAsset: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as Address,
     payoutAmount: 950000000000000000n,
