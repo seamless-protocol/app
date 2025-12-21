@@ -43,6 +43,16 @@ export const Route = createFileRoute('/leverage-tokens/')({
       })
     }
 
+    // Get the top 3 featured tokens
+    const featuredTokens = leverageTokens
+      .filter((token) => token.featuredRank !== undefined && token.featuredRank > 0)
+      .sort((a, b) => {
+        const rankA = a.featuredRank ?? Infinity
+        const rankB = b.featuredRank ?? Infinity
+        return rankA - rankB
+      })
+      .slice(0, 3)
+
     return (
       <div className="min-h-screen w-full overflow-hidden">
         <div className="w-full space-y-6 sm:space-y-8">
@@ -50,7 +60,7 @@ export const Route = createFileRoute('/leverage-tokens/')({
           {features.featuredTokensSection && (
             <div className="overflow-hidden w-full p-1">
               <FeaturedLeverageTokens
-                tokens={leverageTokens.slice(0, 3)} // Show top 3 tokens
+                tokens={featuredTokens}
                 onTokenClick={handleTokenClick}
                 apyDataMap={tokensAPYData}
                 isApyLoading={isApyLoading}

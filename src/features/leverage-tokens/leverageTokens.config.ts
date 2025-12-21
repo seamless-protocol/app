@@ -60,6 +60,7 @@ type SwapConfig = CollateralToDebtSwapConfig
 export interface LeverageTokenConfig {
   // Basic token info
   address: Address
+  featuredRank?: number
   name: string
   symbol: string
   description: string
@@ -140,6 +141,7 @@ export function getTokenDecimals(tokenAddress: Address): number {
 // Leverage token configurations
 export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   [LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]: {
+    featuredRank: 1,
     address: '0x98c4E43e3Bde7B649E5aa2F88DE1658E8d3eD1bF' as Address,
     name: 'wstETH / ETH 25x Leverage Token',
     symbol: 'WSTETH-ETH-25x',
@@ -226,6 +228,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   },
   [LeverageTokenKey.RLP_USDC_6_75X_ETHEREUM_MAINNET]: {
     address: '0x6426811fF283Fa7c78F0BC5D71858c2f79c0Fc3d' as Address,
+    featuredRank: 3,
     name: 'RLP / USDC 6.75x Leverage Token',
     symbol: 'RLP-USDC-6.75x',
     description:
@@ -555,6 +558,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
   },
   [LeverageTokenKey.SIUSD_USDC_11X_ETHEREUM_MAINNET]: {
+    featuredRank: 2,
     address: '0x604d37747f3382fA51519e7542d54F1e730B97A3' as Address,
     name: 'siUSD / USDC 11x Leverage Token',
     symbol: 'SIUSD-USDC-11x',
