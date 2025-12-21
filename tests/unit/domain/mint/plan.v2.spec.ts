@@ -113,12 +113,15 @@ describe('planMint', () => {
     expect(plan.calls[0]?.target).toBe(debt) // approval first
     expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
-    // quote slippage scales with leverage and applies a 95% safety factor:
-    // collateralRatio 3 → leverage 1.5 → (100 * 0.95)/(1.5-1)=190 bps
+    // quote slippage scales with leverage using a 50% factor:
+    // collateralRatio 3 → leverage 1.5 → (100 * 0.5)/(1.5-1)=100 bps
     expect(quote).toHaveBeenCalledWith(
       expect.objectContaining({
-        slippageBps: 190,
+        slippageBps: 100,
         amountIn: 990n,
+        intent: 'exactIn',
+        inToken: debt,
+        outToken: collateral,
       }),
     )
   })

@@ -33,7 +33,7 @@ export const MAINNET_E2E_TOKEN_CONFIGS: Array<MainnetE2ETokenTestConfig> = [
   {
     key: 'wsteth-eth-25x',
     label: 'wstETH/ETH 25x',
-    slippagePercent: '5',
+    slippagePercent: '6',
     mintAmount: '0.1',
     collateralAddress: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0' as Address, // Mainnet wstETH
     fundingAmount: '1',
@@ -42,7 +42,7 @@ export const MAINNET_E2E_TOKEN_CONFIGS: Array<MainnetE2ETokenTestConfig> = [
   {
     key: 'rlp-usdc-6.75x',
     label: 'RLP/USDC 6.75x',
-    slippagePercent: '20',
+    slippagePercent: '1.5',
     mintAmount: '100',
     collateralAddress: '0x4956b52aE2fF65D74CA2d61207523288e4528f96' as Address, // Mainnet RLP
     fundingAmount: '500',
@@ -51,7 +51,7 @@ export const MAINNET_E2E_TOKEN_CONFIGS: Array<MainnetE2ETokenTestConfig> = [
   {
     key: 'siusd-usdc-11x',
     label: 'siUSD/USDC 11x',
-    slippagePercent: '0',
+    slippagePercent: '0.1',
     mintAmount: '25',
     collateralAddress: '0xDBDC1Ef57537E34680B898E1FEBD3D68c7389bCB' as Address, // Mainnet siUSD
     fundingAmount: '200',
