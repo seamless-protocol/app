@@ -1,24 +1,25 @@
 /**
  * Shared types for quote adapters used by both mint and redeem operations.
  */
-import type { Address, Hex } from 'viem'
+import type { Address } from 'viem'
+import type { Call } from '@/domain/shared/types'
 
 // Quote for external swaps (if needed during operations)
 export type BaseQuote = {
   // Expected output (nice-weather) in outToken base units
   out: bigint
   // Guaranteed output after slippage in outToken base units
-  minOut?: bigint
+  minOut: bigint
   // For exact-out quotes: maximum input the router may spend to achieve `out` under slippage
   maxIn?: bigint
   // Adapter may require native (ETH) input value
   wantsNativeIn?: boolean
   // Optional deadline (if provided by the aggregator/DEX)
   deadline?: bigint
-  // Target to approve before submitting calldata
+  // Target to approve before executing calls
   approvalTarget: Address
-  // Calldata to execute the swap on the aggregator/DEX
-  calldata: Hex
+  // Explicit call sequence (for single- or multi-step flows)
+  calls: Array<Call>
 }
 
 // Velora-specific quote with required veloraData (used for exactOut)
@@ -43,6 +44,7 @@ export type QuoteIntent = 'exactIn' | 'exactOut'
 type QuoteRequestBase = {
   inToken: Address
   outToken: Address
+  slippageBps: number
 }
 
 // Exact-in: specify input amount, get output amount

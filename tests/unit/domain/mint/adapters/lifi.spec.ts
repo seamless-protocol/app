@@ -29,13 +29,18 @@ describe('createLifiQuoteAdapter', () => {
 
     const quote = createLifiQuoteAdapter({
       router: ROUTER,
-      slippageBps: 50,
       baseUrl: 'https://li.quest',
     })
-    const res = await quote({ inToken: IN, outToken: OUT, amountIn: 123n, intent: 'exactIn' })
+    const res = await quote({
+      inToken: IN,
+      outToken: OUT,
+      amountIn: 123n,
+      intent: 'exactIn',
+      slippageBps: 50,
+    })
     expect(res.out).toBe(1000n)
     expect(res.approvalTarget.toLowerCase()).toBe(ROUTER.toLowerCase())
-    expect(res.calldata).toBe('0xdeadbeef')
+    expect(res.calls[0]?.data).toBe('0xdeadbeef')
 
     const url = new URL((fetchMock.mock.calls[0] as Array<any>)[0])
     expect(url.pathname).toBe('/v1/quote')
@@ -53,7 +58,13 @@ describe('createLifiQuoteAdapter', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify(step), { status: 200 })) as any
 
     const quote = createLifiQuoteAdapter({ router: ROUTER })
-    const res = await quote({ inToken: IN, outToken: OUT, amountIn: 1n, intent: 'exactIn' })
+    const res = await quote({
+      inToken: IN,
+      outToken: OUT,
+      amountIn: 1n,
+      intent: 'exactIn',
+      slippageBps: 100,
+    })
     expect(res.out).toBe(777n)
   })
 
@@ -67,7 +78,7 @@ describe('createLifiQuoteAdapter', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify(bad), { status: 200 })) as any
     const quote = createLifiQuoteAdapter({ router: ROUTER })
     await expect(
-      quote({ inToken: IN, outToken: OUT, amountIn: 1n, intent: 'exactIn' }),
+      quote({ inToken: IN, outToken: OUT, amountIn: 1n, intent: 'exactIn', slippageBps: 100 }),
     ).rejects.toThrow()
   })
 
@@ -82,7 +93,13 @@ describe('createLifiQuoteAdapter', () => {
     global.fetch = fetchMock as any
 
     const quote = createLifiQuoteAdapter({ router: ROUTER })
-    await quote({ inToken: IN, outToken: OUT, amountIn: 123n, intent: 'exactIn' })
+    await quote({
+      inToken: IN,
+      outToken: OUT,
+      amountIn: 123n,
+      intent: 'exactIn',
+      slippageBps: 100,
+    })
 
     const url = new URL((fetchMock.mock.calls[0] as Array<any>)[0])
     expect(url.searchParams.get('skipSimulation')).toBe('true')

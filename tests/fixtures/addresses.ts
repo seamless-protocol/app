@@ -66,6 +66,7 @@ export type LeverageTokenKey =
   | 'wsteth-eth-2x'
   | 'wsteth-eth-25x'
   | 'rlp-usdc-6.75x'
+  | 'siusd-usdc-11x'
   | 'pt-rlp-4dec2025-usdc-2x'
 
 export interface LeverageTokenDefinition {
@@ -197,6 +198,14 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
       type: 'lifi',
     },
   },
+  'siusd-usdc-11x': {
+    key: 'siusd-usdc-11x',
+    address: '0x604d37747f3382fA51519e7542d54F1e730B97A3' as Address,
+    label: 'siUSD / USDC 11x Leverage Token',
+    chainId: mainnet.id,
+    collateralSymbol: 'siUSD',
+    debtSymbol: 'USDC',
+  },
   'pt-rlp-4dec2025-usdc-2x': {
     key: 'pt-rlp-4dec2025-usdc-2x',
     address: '0x0E5eB844bc0A29c9B949137bbb13327f86809779' as Address,
@@ -252,6 +261,14 @@ const PROD_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition> = 
     label: 'RLP / USDC 6.75x Leverage Token',
     chainId: mainnet.id,
     collateralSymbol: 'RLP',
+    debtSymbol: 'USDC',
+  },
+  'siusd-usdc-11x': {
+    key: 'siusd-usdc-11x',
+    address: '0x604d37747f3382fA51519e7542d54F1e730B97A3' as Address,
+    label: 'siUSD / USDC 11x Leverage Token',
+    chainId: mainnet.id,
+    collateralSymbol: 'siUSD',
     debtSymbol: 'USDC',
   },
   'pt-rlp-4dec2025-usdc-2x': {
@@ -311,6 +328,7 @@ export function isLeverageTokenKey(value: unknown): value is LeverageTokenKey {
     value === 'wsteth-eth-2x' ||
     value === 'wsteth-eth-25x' ||
     value === 'rlp-usdc-6.75x' ||
+    value === 'siusd-usdc-11x' ||
     value === 'pt-rlp-4dec2025-usdc-2x'
   )
 }

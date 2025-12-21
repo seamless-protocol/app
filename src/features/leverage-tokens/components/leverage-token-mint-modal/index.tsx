@@ -39,6 +39,7 @@ import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
+import { useLeverageTokenUsdPrice } from '../../hooks/useLeverageTokenUsdPrice'
 import { useMinSharesGuard } from '../../hooks/useMinSharesGuard'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
@@ -104,11 +105,7 @@ export function LeverageTokenMintModal({
   const contractAddresses = getContractAddresses(leverageTokenConfig.chainId)
   const leverageRouterAddress = contractAddresses.leverageRouterV2
 
-  const {
-    collateralAsset,
-    debtAsset,
-    isLoading: assetsLoading,
-  } = useLeverageTokenManagerAssets({
+  const { isLoading: assetsLoading } = useLeverageTokenManagerAssets({
     token: leverageTokenAddress,
     chainId: leverageTokenConfig.chainId as SupportedChainId,
     enabled: isOpen,
@@ -158,9 +155,14 @@ export function LeverageTokenMintModal({
     ),
   })
 
+  const { data: leverageTokenUsdPrice } = useLeverageTokenUsdPrice({
+    tokenAddress: leverageTokenAddress,
+  })
+
   // USD prices
   const collateralUsdPrice =
     usdPriceMap?.[leverageTokenConfig.collateralAsset.address.toLowerCase()]
+
   const debtUsdPrice = usdPriceMap?.[leverageTokenConfig.debtAsset.address.toLowerCase()]
 
   // Format balance for display
@@ -186,7 +188,6 @@ export function LeverageTokenMintModal({
   })
   const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [showBreakdown, _] = useState(false)
   // Derive expected tokens from preview data (no local state needed)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
@@ -214,7 +215,6 @@ export function LeverageTokenMintModal({
     ...(leverageTokenConfig.swaps?.debtToCollateral
       ? { swap: leverageTokenConfig.swaps.debtToCollateral }
       : {}),
-    slippageBps,
     requiresQuote: Boolean(leverageTokenConfig.swaps?.debtToCollateral),
     ...(contractAddresses.multicallExecutor
       ? { fromAddress: contractAddresses.multicallExecutor }
@@ -224,25 +224,12 @@ export function LeverageTokenMintModal({
   const planPreview = useMintPlanPreview({
     config: wagmiConfig,
     token: leverageTokenAddress,
-    inputAsset: leverageTokenConfig.collateralAsset.address,
     equityInCollateralAsset: form.amountRaw,
     slippageBps,
     chainId: leverageTokenConfig.chainId,
-    collateralAsset,
-    debtAsset,
     ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
-    collateralUsdPrice,
-    debtUsdPrice,
-    collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
-    debtDecimals: leverageTokenConfig.debtAsset.decimals,
     enabled: isOpen,
   })
-
-  // USD estimates now derived inside useMintPlanPreview
-  const expectedUsdOutScaled = planPreview.expectedUsdOutScaled
-  const guaranteedUsdOutScaled = planPreview.guaranteedUsdOutScaled
-  const expectedUsdOutStr = planPreview.expectedUsdOutStr
-  const guaranteedUsdOutStr = planPreview.guaranteedUsdOutStr
 
   // Track receipt (declared before expectedTokens; effect declared below after expectedTokens)
   const receiptState = useWaitForTransactionReceipt({
@@ -251,52 +238,6 @@ export function LeverageTokenMintModal({
     confirmations: 1,
     query: { enabled: Boolean(transactionHash) },
   })
-
-  // Build route/safety breakdown (best-effort)
-  const breakdown = useMemo(() => {
-    const plan = planPreview.plan
-    const rows: Array<{ label: string; value: string }> = []
-    if (!plan) return rows
-    try {
-      // Leverage multiple ~ expectedDebt / equityIn
-      if (typeof plan.expectedDebt === 'bigint' && typeof plan.equityInInputAsset === 'bigint') {
-        const eq = Number(
-          formatUnits(plan.equityInInputAsset, leverageTokenConfig.collateralAsset.decimals),
-        )
-        const debt = Number(formatUnits(plan.expectedDebt, leverageTokenConfig.debtAsset.decimals))
-        if (eq > 0 && Number.isFinite(eq) && Number.isFinite(debt)) {
-          rows.push({ label: 'Leverage multiple', value: `×${(debt / eq).toFixed(2)}` })
-        }
-      }
-      // Aggregator slippage (from UI setting)
-      rows.push({ label: 'Aggregator slippage', value: `${slippageBps} bps` })
-      // Route provider
-      const provider = leverageTokenConfig.swaps?.debtToCollateral?.type ?? '—'
-      rows.push({ label: 'Route provider', value: String(provider) })
-      // MinOut vs Expected out (route floor)
-      if (typeof plan.swapExpectedOut === 'bigint' && typeof plan.swapMinOut === 'bigint') {
-        const exp = Number(
-          formatUnits(plan.swapExpectedOut, leverageTokenConfig.collateralAsset.decimals),
-        )
-        const min = Number(
-          formatUnits(plan.swapMinOut, leverageTokenConfig.collateralAsset.decimals),
-        )
-        if (exp > 0 && Number.isFinite(exp) && Number.isFinite(min)) {
-          const bps = Math.max(0, Math.round((1 - min / exp) * 10000))
-          rows.push({ label: 'Route minOut gap', value: `${bps} bps` })
-        }
-      }
-      return rows
-    } catch {
-      return rows
-    }
-  }, [
-    planPreview.plan,
-    leverageTokenConfig.collateralAsset.decimals,
-    leverageTokenConfig.debtAsset.decimals,
-    leverageTokenConfig.swaps?.debtToCollateral,
-    slippageBps,
-  ])
 
   // Parse actual debt amount received from logs
   const actualExcessDebtAmountReceived = useMemo(() => {
@@ -320,38 +261,6 @@ export function LeverageTokenMintModal({
     leverageTokenConfig.debtAsset.decimals,
   ])
 
-  // Impact warning on stable pairs (LST/WETH) if estimated or guaranteed falls below thresholds
-  const impactWarning: string | undefined = useMemo(() => {
-    if (!expectedUsdOutScaled || !guaranteedUsdOutScaled) return undefined
-    const symbol = leverageTokenConfig.collateralAsset.symbol?.toLowerCase?.()
-    const debtSym = leverageTokenConfig.debtAsset.symbol?.toLowerCase?.()
-    const stable = (symbol === 'weeth' || symbol === 'wsteth') && debtSym === 'weth'
-    if (!stable) return undefined
-    if (!form.amountRaw || form.amountRaw <= 0n || !collateralUsdPrice) return undefined
-    const priceScaled = parseUsdPrice(collateralUsdPrice)
-    const inputUsdScaled = toScaledUsd(
-      form.amountRaw,
-      leverageTokenConfig.collateralAsset.decimals,
-      priceScaled,
-    )
-    if (inputUsdScaled <= 0n) return undefined
-    const expRatioBps = Number((expectedUsdOutScaled * 10000n) / inputUsdScaled)
-    const floorRatioBps = Number((guaranteedUsdOutScaled * 10000n) / inputUsdScaled)
-    if (floorRatioBps < 9500)
-      return 'Guaranteed outcome is more than 5% below input value for a stable pair.'
-    if (expRatioBps < 9700)
-      return 'Estimated outcome is more than 3% below input value for a stable pair.'
-    return undefined
-  }, [
-    leverageTokenConfig.collateralAsset.symbol,
-    leverageTokenConfig.debtAsset.symbol,
-    form.amountRaw,
-    collateralUsdPrice,
-    expectedUsdOutScaled,
-    guaranteedUsdOutScaled,
-    leverageTokenConfig.collateralAsset.decimals,
-  ])
-
   const {
     isAllowanceLoading,
     needsApproval: needsApprovalFlag,
@@ -370,24 +279,7 @@ export function LeverageTokenMintModal({
     enabled: isOpen,
   })
 
-  const mintWrite = useMintWrite(
-    userAddress && planPreview.plan
-      ? {
-          chainId: leverageTokenConfig.chainId as SupportedChainId,
-          token: leverageTokenAddress,
-          account: userAddress,
-          plan: {
-            inputAsset: planPreview.plan.inputAsset,
-            equityInInputAsset: planPreview.plan.equityInInputAsset,
-            minShares: planPreview.plan.minShares,
-            calls: planPreview.plan.calls,
-            expectedTotalCollateral: planPreview.plan.expectedTotalCollateral,
-            expectedDebt: planPreview.plan.expectedDebt,
-            flashLoanAmount: planPreview.plan.flashLoanAmount,
-          },
-        }
-      : undefined,
-  )
+  const { mutateAsync: mintWrite } = useMintWrite()
 
   // Step configuration (static once modal is opened)
   const steps = useMemo(() => {
@@ -469,13 +361,98 @@ export function LeverageTokenMintModal({
   })
 
   const expectedTokens = useMemo(() => {
-    const shares = planPreview.plan?.expectedShares
+    const shares = planPreview.plan?.previewShares
     return formatTokenAmountFromBase(
       shares,
       leverageTokenConfig.decimals,
       TOKEN_AMOUNT_DISPLAY_DECIMALS,
     )
-  }, [planPreview.plan?.expectedShares, leverageTokenConfig.decimals])
+  }, [planPreview.plan?.previewShares, leverageTokenConfig.decimals])
+
+  const minTokens = useMemo(() => {
+    const shares = planPreview.plan?.minShares
+    return formatTokenAmountFromBase(
+      shares,
+      leverageTokenConfig.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [planPreview.plan?.minShares, leverageTokenConfig.decimals])
+
+  const minExcessDebt = useMemo(() => {
+    const debt = planPreview.plan?.minExcessDebt
+    return formatTokenAmountFromBase(
+      debt,
+      leverageTokenConfig.debtAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [planPreview.plan?.minExcessDebt, leverageTokenConfig.debtAsset.decimals])
+
+  const expectedExcessDebt = useMemo(() => {
+    const debt = planPreview.plan?.previewExcessDebt
+    return formatTokenAmountFromBase(
+      debt,
+      leverageTokenConfig.debtAsset.decimals,
+      TOKEN_AMOUNT_DISPLAY_DECIMALS,
+    )
+  }, [planPreview.plan?.previewExcessDebt, leverageTokenConfig.debtAsset.decimals])
+
+  const {
+    expectedTokensUsdOutStr,
+    expectedDebtUsdOutStr,
+    expectedTotalUsdOutStr,
+    minTokensUsdOutStr,
+    minExcessDebtUsdOutStr,
+    minTotalUsdOutStr,
+  } = useMemo(() => {
+    if (!leverageTokenUsdPrice || !debtUsdPrice || !planPreview.plan?.previewShares)
+      return {
+        expectedTokensUsdOutStr: '',
+        expectedDebtUsdOutStr: '',
+        expectedTotalUsdOutStr: '',
+        minTokensUsdOutStr: '',
+        minExcessDebtUsdOutStr: '',
+        minTotalUsdOutStr: '',
+      }
+    const expectedTokensUsdOut = toScaledUsd(
+      planPreview.plan?.previewShares,
+      leverageTokenConfig.decimals,
+      leverageTokenUsdPrice,
+    )
+    const expectedDebtUsdOut = toScaledUsd(
+      planPreview.plan?.previewExcessDebt,
+      leverageTokenConfig.debtAsset.decimals,
+      parseUsdPrice(debtUsdPrice),
+    )
+    const expectedTotalUsdOut = expectedTokensUsdOut + expectedDebtUsdOut
+    const minTokensUsdOut = toScaledUsd(
+      planPreview.plan?.minShares,
+      leverageTokenConfig.decimals,
+      leverageTokenUsdPrice,
+    )
+    const minExcessDebtUsdOut = toScaledUsd(
+      planPreview.plan?.minExcessDebt,
+      leverageTokenConfig.debtAsset.decimals,
+      parseUsdPrice(debtUsdPrice),
+    )
+    const minTotalUsdOut = minTokensUsdOut + minExcessDebtUsdOut
+    return {
+      expectedTokensUsdOutStr: usdToFixedString(expectedTokensUsdOut, 2),
+      expectedDebtUsdOutStr: usdToFixedString(expectedDebtUsdOut, 2),
+      expectedTotalUsdOutStr: usdToFixedString(expectedTotalUsdOut, 2),
+      minTokensUsdOutStr: usdToFixedString(minTokensUsdOut, 2),
+      minExcessDebtUsdOutStr: usdToFixedString(minExcessDebtUsdOut, 2),
+      minTotalUsdOutStr: usdToFixedString(minTotalUsdOut, 2),
+    }
+  }, [
+    leverageTokenUsdPrice,
+    leverageTokenConfig.decimals,
+    planPreview.plan?.previewShares,
+    planPreview.plan?.previewExcessDebt,
+    planPreview.plan?.minShares,
+    planPreview.plan?.minExcessDebt,
+    debtUsdPrice,
+    leverageTokenConfig.debtAsset.decimals,
+  ])
 
   // Parse actual minted shares from receipt logs (typed util) and format for display
   const actualMintedTokens = useMemo(() => {
@@ -495,18 +472,6 @@ export function LeverageTokenMintModal({
     }
     return undefined
   }, [receiptState.data, userAddress, leverageTokenAddress, leverageTokenConfig.decimals])
-
-  // Calculate debt asset amount that will be received
-  const expectedExcessDebtAmount = useMemo(() => {
-    const plan = planPreview.plan
-    if (!plan || typeof plan.expectedExcessDebt !== 'bigint' || plan.expectedExcessDebt <= 0n)
-      return '0'
-    return formatTokenAmountFromBase(
-      plan.expectedExcessDebt,
-      leverageTokenConfig.debtAsset.decimals,
-      TOKEN_AMOUNT_DISPLAY_DECIMALS,
-    )
-  }, [planPreview.plan, leverageTokenConfig.debtAsset.decimals])
 
   // Receipt effect (after expectedTokens to satisfy dependency ordering)
   useEffect(() => {
@@ -684,20 +649,12 @@ export function LeverageTokenMintModal({
         const p = planPreview.plan
         if (!p || !userAddress) throw new Error('Missing finalized plan or account')
 
-        const hash = await mintWrite.mutateAsync({
+        const hash = await mintWrite({
           config: wagmiConfig,
-          chainId: leverageTokenConfig.chainId as SupportedChainId,
+          chainId: leverageTokenConfig.chainId,
           account: userAddress as `0x${string}`,
           token: leverageTokenAddress,
-          plan: {
-            inputAsset: p.inputAsset,
-            equityInInputAsset: p.equityInInputAsset,
-            minShares: p.minShares,
-            calls: p.calls,
-            expectedTotalCollateral: p.expectedTotalCollateral,
-            expectedDebt: p.expectedDebt,
-            flashLoanAmount: p.flashLoanAmount,
-          },
+          plan: p,
         })
         setTransactionHash(hash)
       } catch (e: unknown) {
@@ -762,33 +719,6 @@ export function LeverageTokenMintModal({
       (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
         quoteDebtToCollateral.status !== 'ready'))
 
-  // Precompute USD strings for debt payout and totals
-  const expectedDebtUsdOutStr = useMemo(() => {
-    const plan = planPreview.plan
-    if (!plan || !debtUsdPrice) return undefined
-    const priceDebt = parseUsdPrice(debtUsdPrice)
-    const usd = toScaledUsd(
-      plan.expectedExcessDebt ?? 0n,
-      leverageTokenConfig.debtAsset.decimals,
-      priceDebt,
-    )
-    return usdToFixedString(usd, 2)
-  }, [planPreview.plan, debtUsdPrice, leverageTokenConfig.debtAsset.decimals])
-
-  const totalUsdOutStr = useMemo(() => {
-    if (!expectedUsdOutScaled) return undefined
-    const plan = planPreview.plan
-    if (!plan || !debtUsdPrice) return usdToFixedString(expectedUsdOutScaled, 2)
-    const priceDebt = parseUsdPrice(debtUsdPrice)
-    const debtUsd = toScaledUsd(
-      plan.expectedExcessDebt ?? 0n,
-      leverageTokenConfig.debtAsset.decimals,
-      priceDebt,
-    )
-    const total = expectedUsdOutScaled + debtUsd
-    return usdToFixedString(total, 2)
-  }, [expectedUsdOutScaled, planPreview.plan, debtUsdPrice, leverageTokenConfig.debtAsset.decimals])
-
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
@@ -811,12 +741,15 @@ export function LeverageTokenMintModal({
             isAllowanceLoading={isAllowanceLoading}
             isApproving={!!isApprovingPending}
             expectedTokens={expectedTokens}
-            expectedUsdOutStr={expectedUsdOutStr}
-            guaranteedUsdOutStr={impactWarning ? guaranteedUsdOutStr : undefined}
+            expectedExcessDebt={expectedExcessDebt}
+            minTokens={minTokens}
+            minExcessDebt={minExcessDebt}
+            expectedTokensUsdOutStr={expectedTokensUsdOutStr}
             expectedDebtUsdOutStr={expectedDebtUsdOutStr}
-            totalUsdOutStr={totalUsdOutStr}
-            breakdown={showBreakdown ? breakdown : []}
-            {...(!isCalculating && impactWarning ? { impactWarning } : {})}
+            expectedTotalUsdOutStr={expectedTotalUsdOutStr}
+            minTokensUsdOutStr={minTokensUsdOutStr}
+            minExcessDebtUsdOutStr={minExcessDebtUsdOutStr}
+            minTotalUsdOutStr={minTotalUsdOutStr}
             canProceed={canProceed()}
             needsApproval={needsApproval()}
             isConnected={isConnected}
@@ -829,7 +762,6 @@ export function LeverageTokenMintModal({
             isMintTokenFeeLoading={isFeesLoading}
             isBelowMinimum={isBelowMinimum()}
             supplyCapExceeded={!form.supplyCapOk}
-            expectedDebtAmount={expectedExcessDebtAmount}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
           />
         )
@@ -864,7 +796,7 @@ export function LeverageTokenMintModal({
                 quoteDebtToCollateral.status !== 'ready') ||
               !planPreview.plan
             }
-            expectedDebtAmount={expectedExcessDebtAmount}
+            expectedDebtAmount={expectedExcessDebt}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
             {...(guardErrorMessage || error ? { error: guardErrorMessage || error } : {})}
             needsReack={needsReack}
@@ -879,7 +811,7 @@ export function LeverageTokenMintModal({
             leverageTokenConfig={leverageTokenConfig}
             mode={transactionHash ? 'onChain' : 'awaitingWallet'}
             transactionHash={transactionHash}
-            expectedDebtAmount={expectedExcessDebtAmount}
+            expectedDebtAmount={expectedExcessDebt}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
           />
         )

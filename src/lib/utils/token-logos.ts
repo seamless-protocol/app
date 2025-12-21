@@ -5,6 +5,7 @@ import {
   RLPLogo,
   rETHLogo,
   SeamlessLogo,
+  siUSDLogo,
   USDCLogo,
   WETHLogo,
   weETHLogo,
@@ -15,6 +16,8 @@ export function getTokenLogo(asset: string) {
   switch (asset) {
     case 'USDC':
       return USDCLogo
+    case 'siUSD':
+      return siUSDLogo
     case 'cbBTC':
       return CBBTCLogo
     case 'WETH':

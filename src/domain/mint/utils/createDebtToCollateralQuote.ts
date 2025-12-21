@@ -2,6 +2,7 @@ import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import {
+  createInfinifiQuoteAdapter,
   createLifiQuoteAdapter,
   createPendleQuoteAdapter,
   createUniswapV3QuoteAdapter,
@@ -18,7 +19,6 @@ export interface CreateDebtToCollateralQuoteParams {
   chainId: number
   routerAddress: Address
   swap: DebtToCollateralSwapConfig
-  slippageBps: number
   getPublicClient: (chainId: number) => PublicClient | undefined
   fromAddress?: Address
 }
@@ -32,7 +32,6 @@ export function createDebtToCollateralQuote({
   chainId,
   routerAddress,
   swap,
-  slippageBps,
   getPublicClient,
   fromAddress,
 }: CreateDebtToCollateralQuoteParams): CreateDebtToCollateralQuoteResult {
@@ -50,7 +49,6 @@ export function createDebtToCollateralQuote({
     const quote = createLifiQuoteAdapter({
       chainId,
       router: routerAddress,
-      slippageBps,
       ...(effectiveFrom ? { fromAddress: effectiveFrom } : {}),
       ...(swap.allowBridges ? { allowBridges: swap.allowBridges } : {}),
       ...(swap.order ? { order: swap.order } : {}),
@@ -62,7 +60,6 @@ export function createDebtToCollateralQuote({
     const quote = createVeloraQuoteAdapter({
       chainId: chainId as SupportedChainId,
       router: routerAddress,
-      slippageBps,
       ...(effectiveFrom ? { fromAddress: effectiveFrom } : {}),
     })
     return { quote, adapterType: 'velora' }
@@ -72,13 +69,21 @@ export function createDebtToCollateralQuote({
     const quote = createPendleQuoteAdapter({
       chainId: chainId as SupportedChainId,
       router: routerAddress,
-      slippageBps,
     })
     return { quote, adapterType: 'pendle' }
   }
   const publicClient = getPublicClient(chainId)
   if (!publicClient) {
     throw new Error('Public client unavailable for debt swap quote')
+  }
+
+  if (swap.type === 'infinifi') {
+    const quote = createInfinifiQuoteAdapter({
+      publicClient,
+      chainId,
+      router: routerAddress,
+    })
+    return { quote, adapterType: 'infinifi' }
   }
 
   if (swap.type === 'uniswapV2') {
@@ -94,7 +99,6 @@ export function createDebtToCollateralQuote({
       router: swap.router,
       recipient: routerAddress,
       wrappedNative,
-      slippageBps,
     })
     return { quote, adapterType: 'uniswapV2' }
   }
@@ -114,7 +118,6 @@ export function createDebtToCollateralQuote({
     fee: poolConfig.fee,
     recipient: routerAddress,
     poolAddress: poolConfig.address,
-    slippageBps,
     ...(wrappedNative ? { wrappedNative } : {}),
   })
   return { quote, adapterType: 'uniswapV3' }

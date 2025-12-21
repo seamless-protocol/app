@@ -37,12 +37,10 @@ export type RedeemPlanResult = {
   plan: Awaited<ReturnType<typeof planRedeem>>
   collateralAsset: Address
   debtAsset: Address
-  payoutAsset?: Address
 }
 
 export type RedeemSetupResult = RedeemScenarioConfig & {
   sharesToRedeem: bigint
-  payoutAsset?: Address
 }
 
 type RedeemPlanParams = {
@@ -50,14 +48,12 @@ type RedeemPlanParams = {
   tokenDefinition: LeverageTokenDefinition
   sharesToRedeem: bigint
   slippageBps?: number
-  payoutAsset?: Address
 }
 
 type RedeemSetupParams = {
   ctx: RedeemPlanningContext
   tokenDefinition: LeverageTokenDefinition
   slippageBps?: number
-  payoutAsset?: Address
 }
 
 export function listRedeemTokenDefinitions(): Array<LeverageTokenDefinition> {
@@ -68,12 +64,10 @@ export async function ensureRedeemSetup({
   ctx,
   tokenDefinition,
   slippageBps = DEFAULT_SLIPPAGE_BPS,
-  payoutAsset,
 }: RedeemSetupParams): Promise<RedeemSetupResult> {
   const scenario = await resolveRedeemScenario({
     ctx,
     tokenDefinition,
-    ...(payoutAsset ? { payoutAsset } : {}),
   })
 
   if (scenario.swap.type === 'uniswapV2') {
@@ -118,7 +112,6 @@ export async function ensureRedeemSetup({
   return {
     ...scenario,
     sharesToRedeem,
-    ...(payoutAsset ? { payoutAsset } : {}),
   }
 }
 
@@ -127,19 +120,16 @@ export async function planRedeemTest({
   tokenDefinition,
   sharesToRedeem,
   slippageBps = DEFAULT_SLIPPAGE_BPS,
-  payoutAsset,
 }: RedeemPlanParams): Promise<RedeemPlanResult> {
   const scenario = await resolveRedeemScenario({
     ctx,
     tokenDefinition,
-    ...(payoutAsset ? { payoutAsset } : {}),
   })
 
   const { quote: quoteCollateralToDebt } = createCollateralToDebtQuote({
     chainId: scenario.chainId,
     routerAddress: scenario.router,
     swap: scenario.swap,
-    slippageBps,
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
   })
 
@@ -147,41 +137,31 @@ export async function planRedeemTest({
   if (!leverageTokenConfig) {
     throw new Error(`Leverage token config not found for ${scenario.token}`)
   }
-  const collateralDecimals = leverageTokenConfig.collateralAsset.decimals
-  const debtDecimals = leverageTokenConfig.debtAsset.decimals
+  const blockNumber = await ctx.publicClient.getBlockNumber()
 
   const plan = await planRedeem({
-    config: ctx.config,
-    token: scenario.token,
+    wagmiConfig: ctx.config,
+    leverageTokenConfig,
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
-    collateralAsset: scenario.collateralAsset,
-    debtAsset: scenario.debtAsset,
-    chainId: scenario.chainId,
-    ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
-    intent: 'exactOut',
-    collateralAssetDecimals: collateralDecimals,
-    debtAssetDecimals: debtDecimals,
+    blockNumber,
   })
 
   return {
     plan,
     collateralAsset: scenario.collateralAsset,
     debtAsset: scenario.debtAsset,
-    ...(payoutAsset ? { payoutAsset } : {}),
   }
 }
 
 async function resolveRedeemScenario({
   ctx,
   tokenDefinition,
-  payoutAsset,
 }: {
   ctx: RedeemPlanningContext
   tokenDefinition: LeverageTokenDefinition
-  payoutAsset?: Address
-}): Promise<RedeemScenarioConfig & { payoutAsset?: Address }> {
+}): Promise<RedeemScenarioConfig> {
   const addresses = getAddressesForToken(tokenDefinition.key)
   const executor = addresses.executor
   if (!executor) {
@@ -210,7 +190,6 @@ async function resolveRedeemScenario({
     debtAsset,
     swap,
     chainId,
-    ...(payoutAsset ? { payoutAsset } : {}),
   }
 }
 

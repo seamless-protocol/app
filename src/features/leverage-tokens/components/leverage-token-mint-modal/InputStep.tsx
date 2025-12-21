@@ -61,6 +61,15 @@ interface InputStepProps {
   isAllowanceLoading: boolean
   isApproving: boolean
   expectedTokens: string
+  expectedExcessDebt: string
+  expectedTokensUsdOutStr: string
+  expectedDebtUsdOutStr: string
+  expectedTotalUsdOutStr: string
+  minTokens: string
+  minExcessDebt: string
+  minTokensUsdOutStr: string
+  minExcessDebtUsdOutStr: string
+  minTotalUsdOutStr: string
   canProceed: boolean
   needsApproval: boolean
   isConnected: boolean
@@ -74,15 +83,6 @@ interface InputStepProps {
 
   // Warning
   isBelowMinimum?: boolean | undefined
-  // Estimated USD value of expected shares (as fixed string)
-  expectedUsdOutStr?: string | undefined
-  // Guaranteed (minOut-aware) USD value floor (as fixed string)
-  guaranteedUsdOutStr?: string | undefined
-  // Optional USD value of expected debt and their sum (as fixed strings)
-  expectedDebtUsdOutStr?: string | undefined
-  totalUsdOutStr?: string | undefined
-  // Optional route/safety breakdown lines
-  breakdown?: Array<{ label: string; value: string }>
   // Optional impact warning text
   impactWarning?: string
   supplyCapExceeded?: boolean | undefined
@@ -108,6 +108,15 @@ export function InputStep({
   isAllowanceLoading,
   isApproving,
   expectedTokens,
+  expectedTokensUsdOutStr,
+  expectedExcessDebt,
+  minTokens,
+  minExcessDebt,
+  expectedDebtUsdOutStr,
+  expectedTotalUsdOutStr,
+  minTokensUsdOutStr,
+  minExcessDebtUsdOutStr,
+  minTotalUsdOutStr,
   canProceed,
   needsApproval,
   isConnected,
@@ -119,14 +128,8 @@ export function InputStep({
   mintTokenFee,
   isMintTokenFeeLoading,
   isBelowMinimum,
-  expectedUsdOutStr,
-  guaranteedUsdOutStr,
-  expectedDebtUsdOutStr,
-  totalUsdOutStr,
-  breakdown,
   impactWarning,
   supplyCapExceeded,
-  expectedDebtAmount,
   debtAssetSymbol,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
@@ -316,7 +319,7 @@ export function InputStep({
 
         <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
           <div className="mb-2 flex items-center justify-between">
-            <div className="text-sm text-secondary-foreground">You will receive</div>
+            <div className="text-sm text-secondary-foreground">Preview</div>
             {isCalculating && (
               <div className="flex items-center text-xs text-slate-400" aria-live="polite">
                 <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
@@ -329,29 +332,37 @@ export function InputStep({
               <div className="text-xl font-medium text-foreground">
                 {isCalculating ? <Skeleton className="h-6 w-20" /> : expectedTokens}
               </div>
-              <div className="mt-1 text-sm text-secondary-foreground">Leverage Tokens</div>
+              {!isCalculating && (
+                <>
+                  <div className="text-xs text-secondary-foreground">
+                    {expectedExcessDebt && expectedExcessDebt !== '0' && debtAssetSymbol && (
+                      <>
+                        {' '}
+                        + {expectedExcessDebt} {debtAssetSymbol}
+                      </>
+                    )}
+                  </div>
+                  <div className="text-xs text-secondary-foreground">
+                    {expectedTokensUsdOutStr &&
+                    expectedDebtUsdOutStr &&
+                    expectedTotalUsdOutStr &&
+                    expectedDebtUsdOutStr !== '0'
+                      ? `≈ $${expectedTokensUsdOutStr} + $${expectedDebtUsdOutStr} = $${expectedTotalUsdOutStr}`
+                      : `≈ $${expectedTokensUsdOutStr}`}
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="ml-4 flex items-center space-x-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent">
                 <TrendingUp className="h-3 w-3 text-brand-purple" />
               </div>
-              <span className="text-sm font-medium text-foreground">
+              <div className="text-sm font-medium text-foreground">
                 {leverageTokenConfig.symbol}
-              </span>
-            </div>
-          </div>
-
-          {parseFloat(expectedTokens) > 0 && (
-            <div className="mt-3 border-t border-border pt-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-secondary-foreground">Target Leverage</span>
-                <div className="flex items-center text-brand-purple">
-                  <span className="font-semibold">{leverageTokenConfig.leverageRatio}x</span>
-                </div>
               </div>
             </div>
-          )}
+          </div>
         </Card>
       </div>
 
@@ -419,7 +430,7 @@ export function InputStep({
           </div>
           <Separator className="my-2 bg-border" />
           <div className="flex justify-between font-medium items-center">
-            <span className="text-foreground">You will receive</span>
+            <span className="text-foreground">You will receive at least</span>
             <div className="text-right">
               <div className="text-foreground">
                 {isCalculating ? (
@@ -428,48 +439,32 @@ export function InputStep({
                   </span>
                 ) : (
                   <>
-                    {expectedTokens} {leverageTokenConfig.symbol}
-                    {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
-                      <>
-                        {' '}
-                        + {expectedDebtAmount} {debtAssetSymbol}
-                      </>
-                    )}
+                    {minTokens} {leverageTokenConfig.symbol}
                   </>
                 )}
               </div>
-              {!isCalculating && expectedUsdOutStr && (
-                <div className="text-xs text-secondary-foreground">
-                  {expectedDebtUsdOutStr && totalUsdOutStr
-                    ? `≈ $${expectedUsdOutStr} + $${expectedDebtUsdOutStr} = $${totalUsdOutStr}`
-                    : `≈ $${expectedUsdOutStr}`}
-                </div>
-              )}
-              {!isCalculating && guaranteedUsdOutStr && (
-                <div className="text-xs text-secondary-foreground">
-                  Guaranteed ≥ ${`$${guaranteedUsdOutStr}`}
-                </div>
+              {!isCalculating && (
+                <>
+                  <div className="text-xs text-secondary-foreground">
+                    {minExcessDebt && minExcessDebt !== '0' && debtAssetSymbol && (
+                      <>
+                        {' '}
+                        + {minExcessDebt} {debtAssetSymbol}
+                      </>
+                    )}
+                  </div>
+                  <div className="text-xs text-secondary-foreground">
+                    {minTokensUsdOutStr &&
+                    minExcessDebtUsdOutStr &&
+                    expectedTotalUsdOutStr &&
+                    minExcessDebtUsdOutStr !== '0'
+                      ? `≈ $${minTokensUsdOutStr} + $${minExcessDebtUsdOutStr} = $${minTotalUsdOutStr}`
+                      : `≈ $${minTokensUsdOutStr}`}
+                  </div>
+                </>
               )}
             </div>
           </div>
-
-          {/* Optional route & safety breakdown */}
-          {!isCalculating && breakdown && breakdown.length > 0 && (
-            <details className="mt-2 text-xs text-secondary-foreground">
-              <summary className="cursor-pointer select-none">Show route & safety details</summary>
-              <div className="mt-2 space-y-1">
-                {breakdown.map((row) => (
-                  <div
-                    key={`${row.label}:${row.value}`}
-                    className="flex items-center justify-between"
-                  >
-                    <span>{row.label}</span>
-                    <span className="text-foreground">{row.value}</span>
-                  </div>
-                ))}
-              </div>
-            </details>
-          )}
         </div>
       </Card>
 

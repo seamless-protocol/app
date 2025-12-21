@@ -1,7 +1,7 @@
 import type { Address } from 'viem'
 import { base } from 'viem/chains'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { hasVeloraData } from '@/domain/shared/adapters/types'
+import { hasVeloraData, type QuoteRequest } from '@/domain/shared/adapters/types'
 import { createVeloraQuoteAdapter } from '@/domain/shared/adapters/velora'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 
@@ -15,6 +15,7 @@ const ROUTER: Address = '0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57'
 const WETH: Address = '0x4200000000000000000000000000000000000006'
 const WEETH: Address = '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A'
 const AUGUSTUS: Address = '0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57'
+const DEFAULT_TEST_SLIPPAGE_BPS = 50
 
 describe('createVeloraQuoteAdapter', () => {
   const originalFetch = global.fetch
@@ -52,6 +53,18 @@ describe('createVeloraQuoteAdapter', () => {
     },
   })
 
+  const withSlippage = (
+    adapter: ReturnType<typeof createVeloraQuoteAdapter>,
+    params: Omit<Parameters<ReturnType<typeof createVeloraQuoteAdapter>>[0], 'slippageBps'> &
+      Partial<Pick<Parameters<ReturnType<typeof createVeloraQuoteAdapter>>[0], 'slippageBps'>>,
+    slippageBps: number = DEFAULT_TEST_SLIPPAGE_BPS,
+  ) => {
+    const { slippageBps: paramSlippage, ...rest } = params
+    const effectiveSlippage = paramSlippage ?? slippageBps
+    const quoteRequest = { ...rest, slippageBps: effectiveSlippage } as QuoteRequest
+    return adapter(quoteRequest)
+  }
+
   describe('ExactIn Quotes (Mint Flow)', () => {
     it('maps response to Quote correctly (out, approvalTarget, calldata)', async () => {
       const response = createSuccessResponse({
@@ -68,10 +81,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      const quote = await adapter({
+      const quote = await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -80,7 +92,7 @@ describe('createVeloraQuoteAdapter', () => {
 
       expect(quote.out).toBe(2000000000000000000n)
       expect(quote.approvalTarget.toLowerCase()).toBe(AUGUSTUS.toLowerCase())
-      expect(quote.calldata).toBe('0x12345678')
+      expect(quote.calls[0]?.data).toBe('0x12345678')
       expect(quote.maxIn).toBe(1000000000000000000n)
     })
 
@@ -94,10 +106,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -121,10 +132,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: ETH_SENTINEL,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -145,15 +155,18 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 250, // 2.5%
       })
 
-      await adapter({
-        inToken: WETH,
-        outToken: WEETH,
-        amountIn: 1000000000000000000n,
-        intent: 'exactIn',
-      })
+      await withSlippage(
+        adapter,
+        {
+          inToken: WETH,
+          outToken: WEETH,
+          amountIn: 1000000000000000000n,
+          intent: 'exactIn',
+        },
+        250,
+      )
 
       const url = new URL(String(fetchMock.mock.calls[0]?.[0]))
       expect(url.searchParams.get('slippage')).toBe('250')
@@ -169,10 +182,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -194,10 +206,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      const quote = await adapter({
+      const quote = await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -217,10 +228,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      const quote = await adapter({
+      const quote = await withSlippage(adapter, {
         inToken: ETH_SENTINEL,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -240,10 +250,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -272,10 +281,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      const quote = await adapter({
+      const quote = await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountOut: 2000000000000000000n,
@@ -301,10 +309,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountOut: 2000000000000000000n,
@@ -326,11 +333,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountOut: 2000000000000000000n,
@@ -349,11 +355,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountOut: 2000000000000000000n,
@@ -372,11 +377,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountOut: 2000000000000000000n,
@@ -397,10 +401,9 @@ describe('createVeloraQuoteAdapter', () => {
         chainId: base.id,
         router: ROUTER,
         fromAddress: FROM_ADDRESS,
-        slippageBps: 50,
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountOut: 2000000000000000000n,
@@ -421,10 +424,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountOut: 2000000000000000000n,
@@ -447,11 +449,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountIn: 1000000000000000000n,
@@ -470,11 +471,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountIn: 1000000000000000000n,
@@ -493,11 +493,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountIn: 1000000000000000000n,
@@ -516,11 +515,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountIn: 1000000000000000000n,
@@ -539,11 +537,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountIn: 1000000000000000000n,
@@ -565,10 +562,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      const quote = await adapter({
+      const quote = await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -590,10 +586,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      const quote = await adapter({
+      const quote = await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -616,11 +611,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountIn: 1000000000000000000n,
@@ -639,11 +633,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountIn: 1000000000000000000n,
@@ -665,11 +658,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountIn: 1000000000000000000n,
@@ -685,11 +677,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           amountIn: 1000000000000000000n,
@@ -702,11 +693,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           intent: 'exactOut',
@@ -718,11 +708,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: WETH,
           outToken: WEETH,
           intent: 'exactIn',
@@ -742,11 +731,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
         baseUrl: 'https://custom-api.example.com',
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -768,11 +756,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
         includeContractMethods: ['swapExactAmountOut'],
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -793,11 +780,10 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
         includeContractMethods: ['swapExactAmountOut', 'swapExactAmountOutOnUniswapV3'],
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,
@@ -820,15 +806,18 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 100, // 1%
       })
 
-      const quote = await adapter({
-        inToken: WETH,
-        outToken: WEETH,
-        amountIn: 1000000000000000000n,
-        intent: 'exactIn',
-      })
+      const quote = await withSlippage(
+        adapter,
+        {
+          inToken: WETH,
+          outToken: WEETH,
+          amountIn: 1000000000000000000n,
+          intent: 'exactIn',
+        },
+        100,
+      )
 
       // minOut = 1000000000000000000 * (1 - 0.01) = 990000000000000000
       expect(quote.minOut).toBe(990000000000000000n)
@@ -844,10 +833,9 @@ describe('createVeloraQuoteAdapter', () => {
       const adapter = createVeloraQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 50,
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: WETH,
         outToken: WEETH,
         amountIn: 1000000000000000000n,

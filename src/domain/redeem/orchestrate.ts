@@ -8,16 +8,8 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
-import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
-import { hasVeloraData } from '@/domain/shared/adapters/types'
-import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
-import {
-  contractAddresses,
-  getContractAddresses,
-  type SupportedChainId,
-} from '@/lib/contracts/addresses'
+import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
 import { executeRedeem } from './exec/execute'
-import { executeRedeemWithVelora } from './exec/execute.velora'
 import type { RedeemPlan } from './planner/plan'
 
 // Keep parameter types simple to avoid brittle codegen coupling
@@ -65,43 +57,12 @@ export async function orchestrateRedeem(params: {
 }): Promise<OrchestrateRedeemResult> {
   const { config, account, token, plan, chainId } = params
 
-  const adapterType =
-    getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora'
-
   const envRouter = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
   // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit/env overrides
   const chainAddresses = getContractAddresses(chainId)
   const routerAddress = params.routerAddress || chainAddresses.leverageRouterV2 || envRouter
   if (!routerAddress) {
     throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
-  }
-
-  if (adapterType === 'velora') {
-    const veloraAdapterAddress = chainAddresses.veloraAdapter
-    if (!veloraAdapterAddress) {
-      throw new Error(`Velora adapter address required on chain ${chainId}`)
-    }
-
-    const quote = plan.collateralToDebtQuote
-    if (!hasVeloraData(quote)) {
-      throw new Error('Velora quote missing veloraData for exactOut operation')
-    }
-    const { augustus, offsets } = quote.veloraData
-
-    const tx = await executeRedeemWithVelora({
-      config,
-      token,
-      account,
-      sharesToRedeem: plan.sharesToRedeem,
-      minCollateralForSender: plan.minCollateralForSender,
-      veloraAdapter: veloraAdapterAddress,
-      augustus,
-      offsets,
-      swapData: quote.calldata,
-      routerAddress: routerAddress,
-      chainId: chainId as SupportedChainId,
-    })
-    return { plan, ...tx }
   }
 
   const tx = await executeRedeem({
@@ -133,33 +94,4 @@ export async function orchestrateRedeem(params: {
     chainId,
   })
   return { plan, ...tx }
-}
-
-/**
- * Determines the quote intent (exactIn vs exactOut) based on the adapter type for REDEEM operations.
- *
- * IMPORTANT: This is specific to redemptions. Mints use a different intent (exactIn).
- *
- * Why exactOut for Velora redeems:
- * - Redeems use the `redeemWithVelora()` contract function which requires specific byte offsets
- *   to read swap parameters from the calldata (augustus address, exactAmount, limitAmount, quotedAmount)
- * - These offsets are only valid for ParaSwap BUY (exactOut) methods like swapExactAmountOut
- * - SELL (exactIn) methods have different calldata structures, so offsets wouldn't work
- * - See: https://github.com/seamless-protocol/leverage-tokens/blob/audit-fixes/test/integration/8453/LeverageRouter/RedeemWithVelora.t.sol#L19
- *
- * Why exactIn for other adapters:
- * - LiFi, UniswapV2, UniswapV3 use the standard `redeem()` function which passes raw calldata through
- * - No offsets needed, so we can use exactIn which is generally more responsive for quote APIs
- *
- * Note: Mints always use exactIn (even for Velora) because the `deposit()` function doesn't need offsets.
- */
-export const getQuoteIntentForAdapter = (
-  adapterType: CollateralToDebtSwapConfig['type'],
-): 'exactOut' | 'exactIn' => {
-  switch (adapterType) {
-    case 'velora':
-      return 'exactOut'
-    default:
-      return 'exactIn'
-  }
 }

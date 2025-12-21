@@ -1,9 +1,9 @@
 import type { Address, Hex } from 'viem'
-import { getAddress } from 'viem'
+import { getAddress, isAddressEqual } from 'viem'
 import { z } from 'zod'
 import { getTokenDecimals } from '@/features/leverage-tokens/leverageTokens.config'
 import { ETH_SENTINEL, type SupportedChainId } from '@/lib/contracts/addresses'
-import { bpsToDecimalString, DEFAULT_SLIPPAGE_BPS } from './constants'
+import { bpsToDecimalString, validateSlippage } from './helpers'
 import type { QuoteFn } from './types'
 
 export interface VeloraAdapterOptions {
@@ -11,7 +11,6 @@ export interface VeloraAdapterOptions {
   router: Address
   /** Optional override for quote `fromAddress` (defaults to `router`). */
   fromAddress?: Address
-  slippageBps?: number
   baseUrl?: string
   /** Optional list of ParaSwap contract methods to restrict quotes to. Useful for testing specific methods. */
   includeContractMethods?: Array<string>
@@ -84,14 +83,14 @@ export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
     chainId,
     router,
     fromAddress,
-    slippageBps = DEFAULT_SLIPPAGE_BPS,
     baseUrl = 'https://api.velora.xyz',
     includeContractMethods,
   } = opts
 
-  const slippage = bpsToDecimalString(slippageBps)
+  return async ({ inToken, outToken, amountIn, amountOut, intent, slippageBps }) => {
+    validateSlippage(slippageBps)
+    const slippage = bpsToDecimalString(slippageBps)
 
-  return async ({ inToken, outToken, amountIn, amountOut, intent }) => {
     const url = buildQuoteUrl(baseUrl, {
       chainId,
       inToken,
@@ -117,7 +116,7 @@ export function createVeloraQuoteAdapter(opts: VeloraAdapterOptions): QuoteFn {
       throw new Error(`Velora quote failed: ${response.error}`)
     }
 
-    const wantsNativeIn = inToken.toLowerCase() === ETH_SENTINEL.toLowerCase()
+    const wantsNativeIn = isAddressEqual(inToken, ETH_SENTINEL)
     return mapVeloraResponseToQuote(response, wantsNativeIn, slippage, intent)
   }
 }
@@ -141,7 +140,7 @@ function buildQuoteUrl(
 ): URL {
   const url = new URL('/swap', baseUrl)
   const normalizeToken = (token: Address) =>
-    token.toLowerCase() === ETH_SENTINEL.toLowerCase()
+    isAddressEqual(token, ETH_SENTINEL)
       ? '0x0000000000000000000000000000000000000000'
       : getAddress(token)
 
@@ -220,8 +219,14 @@ function mapVeloraResponseToQuote(
     minOut,
     maxIn,
     approvalTarget: getAddress(approvalTarget),
-    calldata: swapData,
     wantsNativeIn,
+    calls: [
+      {
+        target: getAddress(approvalTarget),
+        data: swapData,
+        value: wantsNativeIn ? maxIn : 0n,
+      },
+    ],
   }
 
   // For mint (exactIn), offsets are not used and ParaSwap returns SELL methods.

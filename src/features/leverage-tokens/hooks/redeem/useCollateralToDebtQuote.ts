@@ -21,7 +21,6 @@ interface UseCollateralToDebtQuoteParams {
   chainId: SupportedChainId
   routerAddress?: Address
   swap?: CollateralToDebtSwapConfig
-  slippageBps: number
   requiresQuote: boolean
 }
 
@@ -29,7 +28,6 @@ export function useCollateralToDebtQuote({
   chainId,
   routerAddress,
   swap,
-  slippageBps,
   requiresQuote,
 }: UseCollateralToDebtQuoteParams): {
   quote: ReturnType<typeof createCollateralToDebtQuote>['quote'] | undefined
@@ -61,7 +59,6 @@ export function useCollateralToDebtQuote({
         chainId,
         routerAddress,
         swap,
-        slippageBps,
         // Align aggregator expectations: executor executes the swap on-chain
         ...(executor ? { fromAddress: executor } : {}),
         getPublicClient,
@@ -81,5 +78,5 @@ export function useCollateralToDebtQuote({
       }
       return { status: 'error' as QuoteStatus, quote: undefined, error }
     }
-  }, [chainId, publicClient, requiresQuote, routerAddress, slippageBps, swap])
+  }, [chainId, publicClient, requiresQuote, routerAddress, swap])
 }

@@ -112,12 +112,18 @@ describeIfV3('Uniswap v3 adapter (Tenderly)', () => {
   it('quotes exact input swaps', async () => {
     const { token0, token1 } = await getPoolTokens()
     const adapter = createUniswapV3QuoteAdapter(options)
-    const quote = await adapter({ inToken: token0, outToken: token1, amountIn, intent: 'exactIn' })
+    const quote = await adapter({
+      inToken: token0,
+      outToken: token1,
+      amountIn,
+      intent: 'exactIn',
+      slippageBps: 50,
+    })
 
     expect(quote.out > 0n).toBe(true)
     expect(quote.approvalTarget).toEqual(options.router)
 
-    const decoded = decodeFunctionData({ abi: SWAP_ROUTER_ABI, data: quote.calldata })
+    const decoded = decodeFunctionData({ abi: SWAP_ROUTER_ABI, data: quote.calls[0]?.data ?? '0x' })
     expect(decoded.functionName).toBe('exactInputSingle')
   })
 
@@ -130,12 +136,13 @@ describeIfV3('Uniswap v3 adapter (Tenderly)', () => {
       outToken: token1,
       amountOut: targetOut,
       intent: 'exactOut',
+      slippageBps: 50,
     })
 
     expect(quote.out).toBe(targetOut)
     expect(quote.approvalTarget).toEqual(options.router)
 
-    const decoded = decodeFunctionData({ abi: SWAP_ROUTER_ABI, data: quote.calldata })
+    const decoded = decodeFunctionData({ abi: SWAP_ROUTER_ABI, data: quote.calls[0]?.data ?? '0x' })
     expect(decoded.functionName).toBe('exactOutputSingle')
   })
 })

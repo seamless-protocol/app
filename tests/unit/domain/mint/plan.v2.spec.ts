@@ -1,168 +1,191 @@
-import type { Address } from 'viem'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { MintPlan } from '@/domain/mint/planner/plan'
-import { planMint, validateMintPlan } from '@/domain/mint/planner/plan'
+import type { Address, Hex } from 'viem'
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
+import type { Config } from 'wagmi'
+import { planMint } from '@/domain/mint/planner/plan'
+import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
+import {
+  readLeverageManagerV2GetLeverageTokenState,
+  readLeverageManagerV2PreviewDeposit,
+  readLeverageRouterV2PreviewDeposit,
+} from '@/lib/contracts/generated'
 
-vi.mock('@/lib/contracts/generated', async () => {
-  return {
-    readLeverageManagerV2GetLeverageTokenCollateralAsset: vi.fn(
-      async () => '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
-    ),
-    readLeverageManagerV2GetLeverageTokenDebtAsset: vi.fn(
-      async () => '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
-    ),
-    readLeverageManagerV2PreviewDeposit: vi.fn(async (_config: any, { args }: any) => {
-      const totalCollateral = args[1] as bigint
-      return {
-        collateral: totalCollateral,
-        debt: 1_000n,
-        shares: totalCollateral,
-        tokenFee: 0n,
-        treasuryFee: 0n,
-      }
-    }),
-    readLeverageRouterV2PreviewDeposit: vi.fn(async (_config: any, { args }: any) => {
-      const equity = args[1] as bigint
-      // For a given equity, router preview reports +10% collateral need and initial debt of 5_000
-      // Shares equal equity for simplicity
-      return {
-        collateral: (equity * 11n) / 10n,
-        debt: 5_000n,
-        shares: equity,
-        tokenFee: 0n,
-        treasuryFee: 0n,
-      }
-    }),
-  }
-})
-
-vi.mock('@/lib/prices/coingecko', () => ({
-  fetchCoingeckoTokenUsdPrices: vi.fn(async () => ({
-    '0xcccccccccccccccccccccccccccccccccccccccc': 2000, // collateral (ETH)
-    '0xdddddddddddddddddddddddddddddddddddddddd': 1, // debt (USDC)
-  })),
+vi.mock('@/lib/contracts/generated', () => ({
+  readLeverageManagerV2GetLeverageTokenState: vi.fn(),
+  readLeverageRouterV2PreviewDeposit: vi.fn(),
+  readLeverageManagerV2PreviewDeposit: vi.fn(),
 }))
 
-describe('planMint', () => {
-  const cfg = {} as any
-  const token = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' as Address
+const wagmiConfig = {} as Config
+const leverageToken = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as Address
+const collateral = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' as Address
+const debt = '0xcccccccccccccccccccccccccccccccccccccccc' as Address
 
+const leverageTokenConfig: LeverageTokenConfig = {
+  address: leverageToken,
+  name: 'Test Leverage Token',
+  symbol: 'tLT',
+  description: 'Test leverage token config',
+  chainId: 8453,
+  chainName: 'Base',
+  chainLogo: () => null,
+  leverageRatio: 2,
+  decimals: 18,
+  collateralAsset: {
+    address: collateral,
+    symbol: 'COLL',
+    name: 'Collateral',
+    description: 'Collateral asset',
+    decimals: 18,
+  },
+  debtAsset: {
+    address: debt,
+    symbol: 'DEBT',
+    name: 'Debt',
+    decimals: 6,
+  },
+  swaps: {},
+}
+
+const readState = readLeverageManagerV2GetLeverageTokenState as Mock
+const readRouterPreview = readLeverageRouterV2PreviewDeposit as Mock
+const readManagerPreview = readLeverageManagerV2PreviewDeposit as Mock
+
+describe('planMint', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    readState.mockResolvedValue({ collateralRatio: 3n * 10n ** 18n })
+    readRouterPreview.mockResolvedValue({
+      collateral: 2_000n,
+      debt: 1_000n,
+      shares: 1_000n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
+    readManagerPreview.mockResolvedValue({
+      collateral: 2_500n,
+      debt: 1_300n,
+      shares: 1_600n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
   })
 
-  it('input == collateral: no input conversion calls, sizes debt swap, and computes minShares', async () => {
-    const inputAsset = '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address // equals mocked collateral
-    const equityInInputAsset = 1_000n
+  it('builds a plan with leverage-adjusted slippage and approvals', async () => {
+    const quote = vi.fn(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
+    }))
 
-    // Quote returns slightly more than neededFromDebtSwap, so no re-quote path
-    const quoteDebtToCollateral = vi.fn(async () => {
-      // neededFromDebtSwap = collateral - equity = 1100 - 1000 = 100
-      // Return more than needed: 150
-      return {
-        out: 150n,
-        approvalTarget: '0x9999999999999999999999999999999999999999' as Address,
-        calldata: '0xdeadbeef' as `0x${string}`,
-      }
+    readManagerPreview.mockResolvedValueOnce({
+      collateral: 2_500n,
+      debt: 1_300n,
+      shares: 1_600n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
+    // managerMin response for minOut path
+    readManagerPreview.mockResolvedValueOnce({
+      collateral: 2_400n,
+      debt: 1_100n,
+      shares: 1_500n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
     })
 
     const plan = await planMint({
-      config: cfg,
-      token,
-      inputAsset,
-      equityInInputAsset,
-      slippageBps: 50,
-      quoteDebtToCollateral,
-      chainId: 8453,
-      collateralAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
-      debtAsset: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
-      collateralAssetDecimals: 18,
-      debtAssetDecimals: 18,
+      wagmiConfig,
+      leverageTokenConfig,
+      equityInCollateralAsset: 500n,
+      slippageBps: 100,
+      quoteDebtToCollateral: quote as any,
+      blockNumber: 1n,
     })
 
-    expect(plan.inputAsset).toBe(inputAsset)
-    expect(plan.equityInInputAsset).toBe(equityInInputAsset)
-    expect(plan.collateralAsset).toBe('0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC')
-    expect(plan.debtAsset).toBe('0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
-    // expectedTotalCollateral = user(1000) + quote.out(150)
-    expect(plan.expectedTotalCollateral).toBe(1_150n)
-    // minShares is slippage-adjusted 0.5% below expected shares (shares == total collateral via mock)
-    expect(plan.minShares).toBeGreaterThan(0n)
-    // Calls: approve debt asset then perform aggregator swap
-    const calls = plan.calls ?? []
-    expect(calls.length).toBe(2)
-    expect(calls[0]?.target).toBe(plan.debtAsset)
-    expect(calls[0]?.value).toBe(0n)
-    expect(calls[1]?.target).toBe('0x9999999999999999999999999999999999999999')
-    expect(calls[1]?.value).toBe(0n)
-  })
-})
+    // flash loan and shares are slippage-adjusted from router preview
+    expect(plan.flashLoanAmount).toBe(990n)
+    expect(plan.minShares).toBe(990n)
+    expect(plan.previewShares).toBe(1_600n)
+    expect(plan.previewExcessDebt).toBe(310n) // 1300 - 990
+    expect(plan.minExcessDebt).toBe(110n) // 1100 - 990
+    expect(plan.calls[0]?.target).toBe(debt) // approval first
+    expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
-describe('validateMintPlan', () => {
-  const validPlan: MintPlan = {
-    inputAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
-    equityInInputAsset: 1000000000000000000n, // 1 token
-    collateralAsset: '0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC' as Address,
-    debtAsset: '0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD' as Address,
-    flashLoanAmount: 500000000000000000n, // 0.5 tokens
-    minShares: 950000000000000000n, // 0.95 tokens
-    expectedShares: 1000000000000000000n, // 1 token
-    expectedDebt: 1000000000000000000n, // 1 token
-    expectedTotalCollateral: 1500000000000000000n, // 1.5 tokens
-    expectedExcessDebt: 500000000000000000n, // 0.5 tokens
-    worstCaseRequiredDebt: 0n,
-    worstCaseShares: 0n,
-    swapExpectedOut: 500000000000000000n, // 0.5 tokens
-    swapMinOut: 490000000000000000n, // 0.49 tokens
-    calls: [],
-  }
-
-  it('should return true for valid plan', () => {
-    expect(validateMintPlan(validPlan)).toBe(true)
+    // quote slippage scales with leverage using a 50% factor:
+    // collateralRatio 3 → leverage 1.5 → (100 * 0.5)/(1.5-1)=100 bps
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 100,
+        amountIn: 990n,
+        intent: 'exactIn',
+        inToken: debt,
+        outToken: collateral,
+      }),
+    )
   })
 
-  it('should return false if equityInInputAsset is zero', () => {
-    const invalidPlan = { ...validPlan, equityInInputAsset: 0n }
-    expect(validateMintPlan(invalidPlan)).toBe(false)
+  it('throws when manager previewed debt is below flash loan amount', async () => {
+    readManagerPreview.mockResolvedValueOnce({
+      collateral: 2_500n,
+      debt: 800n,
+      shares: 1_600n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
+
+    const quote = vi.fn(async () => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+    }))
+
+    await expect(
+      planMint({
+        wagmiConfig,
+        leverageTokenConfig,
+        equityInCollateralAsset: 500n,
+        slippageBps: 100,
+        quoteDebtToCollateral: quote as any,
+        blockNumber: 1n,
+      }),
+    ).rejects.toThrow(/previewed debt 800.*flash loan amount 990/i)
   })
 
-  it('should return false if expectedShares is zero', () => {
-    const invalidPlan = { ...validPlan, expectedShares: 0n }
-    expect(validateMintPlan(invalidPlan)).toBe(false)
-  })
+  it('throws when minimum shares from manager are below slippage floor', async () => {
+    readManagerPreview.mockResolvedValueOnce({
+      collateral: 2_500n,
+      debt: 1_300n,
+      shares: 1_600n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
+    readManagerPreview.mockResolvedValueOnce({
+      collateral: 2_400n,
+      debt: 1_000n,
+      shares: 800n, // below minShares of 990n
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
 
-  it('should return false if expectedShares is negative', () => {
-    const invalidPlan = { ...validPlan, expectedShares: -1n }
-    expect(validateMintPlan(invalidPlan)).toBe(false)
-  })
+    const quote = vi.fn(async () => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+    }))
 
-  it('should return false if minShares is negative', () => {
-    const invalidPlan = { ...validPlan, minShares: -1n }
-    expect(validateMintPlan(invalidPlan)).toBe(false)
-  })
-
-  it('should return false if expectedTotalCollateral is negative', () => {
-    const invalidPlan = { ...validPlan, expectedTotalCollateral: -1n }
-    expect(validateMintPlan(invalidPlan)).toBe(false)
-  })
-
-  it('should return false if expectedDebt is negative', () => {
-    const invalidPlan = { ...validPlan, expectedDebt: -1n }
-    expect(validateMintPlan(invalidPlan)).toBe(false)
-  })
-
-  it('should return false if expectedExcessDebt is negative', () => {
-    const invalidPlan = { ...validPlan, expectedExcessDebt: -1n }
-    expect(validateMintPlan(invalidPlan)).toBe(false)
-  })
-
-  it('should return false if swapExpectedOut is negative', () => {
-    const invalidPlan = { ...validPlan, swapExpectedOut: -1n }
-    expect(validateMintPlan(invalidPlan)).toBe(false)
-  })
-
-  it('should return false if swapMinOut is negative', () => {
-    const invalidPlan = { ...validPlan, swapMinOut: -1n }
-    expect(validateMintPlan(invalidPlan)).toBe(false)
+    await expect(
+      planMint({
+        wagmiConfig,
+        leverageTokenConfig,
+        equityInCollateralAsset: 500n,
+        slippageBps: 100,
+        quoteDebtToCollateral: quote as any,
+        blockNumber: 1n,
+      }),
+    ).rejects.toThrow(/minimum shares.*less than min shares/i)
   })
 })

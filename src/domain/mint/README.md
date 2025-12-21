@@ -36,7 +36,7 @@ Allowances
 Quotes
 - Adapters: Located in `domain/shared/adapters/` (lifi, uniswapV2, uniswapV3, velora).
 - Factory: `utils/createDebtToCollateralQuote.ts` creates quote adapters based on token configuration.
-- Quote adapters return `{ out, approvalTarget, calldata }`.
+- Quote adapters return `{ out, approvalTarget, calls }`.
 - Note: We currently don't enforce a `deadline` field on quotes; add if required by policy.
 
 Orchestrator

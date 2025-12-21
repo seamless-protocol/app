@@ -1,6 +1,7 @@
 import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import {
+  createInfinifiQuoteAdapter,
   createLifiQuoteAdapter,
   createPendleQuoteAdapter,
   createUniswapV3QuoteAdapter,
@@ -17,8 +18,7 @@ import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/co
 import type { QuoteFn } from '../planner/types'
 
 /** Supported adapter types for collateral-to-debt swaps */
-export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2' | 'pendle'
-
+export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2' | 'pendle' | 'infinifi'
 /**
  * Validated ParaSwap methods for Velora exactOut operations.
  * Contract has hardcoded byte offsets that only work with swapExactAmountOut.
@@ -46,12 +46,14 @@ export type CollateralToDebtSwapConfig =
   | {
       type: 'pendle'
     }
+  | {
+      type: 'infinifi'
+    }
 
 export interface CreateCollateralToDebtQuoteParams {
   chainId: number
   routerAddress: Address
   swap: CollateralToDebtSwapConfig
-  slippageBps: number
   getPublicClient: (chainId: number) => PublicClient | undefined
   /** Optional override for aggregator `fromAddress` (defaults handled by adapter). */
   fromAddress?: Address
@@ -66,7 +68,6 @@ export function createCollateralToDebtQuote({
   chainId,
   routerAddress,
   swap,
-  slippageBps,
   getPublicClient,
   fromAddress,
 }: CreateCollateralToDebtQuoteParams): CreateCollateralToDebtQuoteResult {
@@ -74,7 +75,6 @@ export function createCollateralToDebtQuote({
     const quote = createLifiQuoteAdapter({
       chainId,
       router: routerAddress,
-      slippageBps,
       ...(fromAddress ? { fromAddress } : {}),
       ...(swap.allowBridges ? { allowBridges: swap.allowBridges } : {}),
       ...(swap.order ? { order: swap.order } : {}),
@@ -86,7 +86,6 @@ export function createCollateralToDebtQuote({
     const quote = createVeloraQuoteAdapter({
       chainId: chainId as SupportedChainId,
       router: routerAddress,
-      slippageBps,
       ...(fromAddress ? { fromAddress } : {}),
       // Restrict to validated methods for exactOut operations (redeem)
       includeContractMethods: [...VELORA_VALIDATED_EXACT_OUT_METHODS],
@@ -98,13 +97,21 @@ export function createCollateralToDebtQuote({
     const quote = createPendleQuoteAdapter({
       chainId: chainId as SupportedChainId,
       router: routerAddress,
-      slippageBps,
     })
     return { quote, adapterType: 'pendle' }
   }
   const publicClient = getPublicClient(chainId)
   if (!publicClient) {
     throw new Error('Public client unavailable for collateral quote')
+  }
+
+  if (swap.type === 'infinifi') {
+    const quote = createInfinifiQuoteAdapter({
+      publicClient,
+      chainId,
+      router: routerAddress,
+    })
+    return { quote, adapterType: 'infinifi' }
   }
 
   if (swap.type === 'uniswapV2') {
@@ -120,7 +127,6 @@ export function createCollateralToDebtQuote({
       router: swap.router,
       recipient: routerAddress,
       wrappedNative,
-      slippageBps,
     })
 
     return { quote, adapterType: 'uniswapV2' }
@@ -141,7 +147,6 @@ export function createCollateralToDebtQuote({
     fee: poolConfig.fee,
     recipient: routerAddress,
     poolAddress: poolConfig.address,
-    slippageBps,
     ...(wrappedNative ? { wrappedNative } : {}),
   })
 

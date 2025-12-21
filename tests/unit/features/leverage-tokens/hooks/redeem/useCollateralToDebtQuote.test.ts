@@ -9,7 +9,6 @@ const mockCreateCollateralToDebtQuote = createCollateralToDebtQuote as Mock
 describe('useCollateralToDebtQuote', () => {
   const mockChainId = 8453
   const mockRouterAddress = makeAddr('router')
-  const mockSlippageBps = 50
 
   const mockSwap = {
     type: 'uniswapV3' as const,
@@ -29,7 +28,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: false,
       }),
     )
@@ -45,7 +43,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: undefined as any,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -61,7 +58,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: undefined as any,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -81,7 +77,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -94,7 +89,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         getPublicClient: expect.any(Function),
       }),
     )
@@ -111,7 +105,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -132,7 +125,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -153,7 +145,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -174,7 +165,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -194,7 +184,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -215,7 +204,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -225,7 +213,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         getPublicClient: expect.any(Function),
       }),
     )
@@ -241,7 +228,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -265,7 +251,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: differentChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -276,14 +261,12 @@ describe('useCollateralToDebtQuote', () => {
         chainId: differentChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: mockSlippageBps,
         getPublicClient: expect.any(Function),
       }),
     )
   })
 
   it('should handle different slippage values', () => {
-    const customSlippageBps = 100
     mockCreateCollateralToDebtQuote.mockReturnValue({
       quote: mockQuote,
     })
@@ -293,7 +276,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: customSlippageBps,
         requiresQuote: true,
       }),
     )
@@ -303,7 +285,6 @@ describe('useCollateralToDebtQuote', () => {
         chainId: mockChainId,
         routerAddress: mockRouterAddress,
         swap: mockSwap,
-        slippageBps: customSlippageBps,
         getPublicClient: expect.any(Function),
       }),
     )

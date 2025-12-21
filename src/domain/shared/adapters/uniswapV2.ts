@@ -1,7 +1,7 @@
 import type { Address, PublicClient } from 'viem'
-import { encodeFunctionData, getAddress } from 'viem'
+import { encodeFunctionData, getAddress, isAddressEqual } from 'viem'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
-import { BPS_DENOMINATOR, DEFAULT_SLIPPAGE_BPS } from './constants'
+import { BPS_DENOMINATOR, validateSlippage } from './helpers'
 import type { QuoteFn } from './types'
 
 const UNISWAP_V2_ROUTER_ABI = [
@@ -50,7 +50,6 @@ export type UniswapV2QuoteOptions = {
   recipient: Address
   wrappedNative?: Address
   resolvePath?: ResolvePath
-  slippageBps?: number
   deadlineSeconds?: number
 }
 
@@ -69,20 +68,21 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
     recipient,
     wrappedNative,
     resolvePath = ({ inToken, outToken }) => [inToken, outToken],
-    slippageBps = DEFAULT_SLIPPAGE_BPS,
     deadlineSeconds = 15 * 60,
   } = options
 
-  const slippage = BigInt(slippageBps)
   const normalizedRouter = getAddress(router)
 
-  return async ({ inToken, outToken, amountIn }) => {
+  return async ({ inToken, outToken, amountIn, slippageBps }) => {
+    validateSlippage(slippageBps)
+    const slippage = BigInt(slippageBps)
+
     // UniswapV2 only supports exactIn quotes
     if (typeof amountIn !== 'bigint') {
       throw new Error('UniswapV2 adapter requires amountIn (exactIn quotes only)')
     }
 
-    const isNativeIn = getAddress(inToken) === getAddress(ETH_SENTINEL)
+    const isNativeIn = isAddressEqual(getAddress(inToken), getAddress(ETH_SENTINEL))
     if (isNativeIn && !wrappedNative) {
       throw new Error(
         'createUniswapV2QuoteAdapter requires wrappedNative when using ETH sentinel input',
@@ -132,7 +132,13 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
       out,
       minOut,
       approvalTarget: normalizedRouter,
-      calldata,
+      calls: [
+        {
+          target: normalizedRouter,
+          data: calldata,
+          value: isNativeIn ? amountIn : 0n,
+        },
+      ],
       ...(isNativeIn ? { wantsNativeIn: true } : {}),
     }
   }
