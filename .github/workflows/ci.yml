@@ -74,7 +74,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: v1.4.4
+          version: stable
 
       - name: Start Anvil (Mainnet fork)
         run: |
@@ -122,7 +122,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: v1.4.4
+          version: stable
 
       - name: Prepare integration env
         run: |
