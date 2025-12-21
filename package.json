@@ -46,7 +46,6 @@
     "@tanstack/react-query-devtools": "^5.91.1",
     "@tanstack/react-router": "1.128.0",
     "@tanstack/react-router-devtools": "1.128.0",
-    "baseline-browser-mapping": "^2.9.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
