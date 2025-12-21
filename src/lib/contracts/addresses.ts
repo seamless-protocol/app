@@ -18,6 +18,10 @@ export const BASE_WETH = '0x4200000000000000000000000000000000000006' as Address
  */
 export type SupportedChainId = typeof mainnet.id | typeof base.id
 
+export function isSupportedChain(chainId: number): chainId is SupportedChainId {
+  return chainId === mainnet.id || chainId === base.id
+}
+
 /**
  * Contract addresses for each supported chain
  * Will be populated as contracts are deployed

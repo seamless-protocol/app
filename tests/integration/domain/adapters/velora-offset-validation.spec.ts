@@ -87,7 +87,6 @@ testSuite('Velora Offset Validation (Live API)', () => {
       const adapterOpts: VeloraAdapterOptions = {
         chainId: base.id,
         router,
-        slippageBps: 50,
         includeContractMethods: [method],
       }
 
@@ -103,6 +102,7 @@ testSuite('Velora Offset Validation (Live API)', () => {
           outToken: weeth,
           amountOut,
           intent: 'exactOut',
+          slippageBps: 50,
         })
       } catch (error) {
         if (error instanceof Error && error.message.includes('unsupported ParaSwap method')) {

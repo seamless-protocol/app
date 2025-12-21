@@ -17,6 +17,13 @@ vi.mock('wagmi', () => ({
   useReadContracts: vi.fn(),
   usePublicClient: vi.fn(),
   useSwitchChain: vi.fn(),
+  useWriteContract: vi.fn(() => ({
+    data: undefined,
+    error: undefined,
+    isPending: false,
+    writeContractAsync: vi.fn(),
+    reset: vi.fn(),
+  })),
   createConfig: vi.fn(),
   http: vi.fn(),
 }))
@@ -379,9 +386,15 @@ vi.mock('@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
   fetchBorrowApyForToken: vi.fn(),
 }))
 
-vi.mock('@/features/leverage-tokens/utils/apy-calculations/leverage-ratios', () => ({
-  fetchLeverageRatios: vi.fn(),
-}))
+vi.mock('@/features/leverage-tokens/utils/apy-calculations/leverage-ratios', async () => {
+  const actual = await vi.importActual<
+    typeof import('@/features/leverage-tokens/utils/apy-calculations/leverage-ratios')
+  >('@/features/leverage-tokens/utils/apy-calculations/leverage-ratios')
+  return {
+    ...actual,
+    fetchLeverageRatios: vi.fn(),
+  }
+})
 
 vi.mock('@/features/leverage-tokens/utils/apy-calculations/rewards-providers', () => ({
   fetchRewardsAprForToken: vi.fn().mockResolvedValue({ rewardsAPR: 0 }),
@@ -404,10 +417,6 @@ vi.mock('@/domain/mint/utils/createDebtToCollateralQuote', () => ({
 
 vi.mock('@/domain/redeem/utils/createCollateralToDebtQuote', () => ({
   createCollateralToDebtQuote: vi.fn(),
-}))
-
-vi.mock('@/domain/redeem/planner/plan', () => ({
-  planRedeem: vi.fn(),
 }))
 
 // Mock leverage token config

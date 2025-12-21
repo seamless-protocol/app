@@ -55,8 +55,7 @@ export type MintOutcome = {
   token: Address
   sharesMinted: bigint
   minShares: bigint
-  expectedShares: bigint
-  expectedTotalCollateral: bigint
+  previewShares: bigint
   collateralBalanceBefore: bigint
   collateralBalanceAfter: bigint
 }
@@ -121,7 +120,6 @@ export async function executeSharedMint({
       chainId,
       routerAddress: router,
       swap: debtToCollateralConfig,
-      slippageBps: resolvedSlippageBps,
       getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
     })
     quoteDebtToCollateral = quote
@@ -142,7 +140,6 @@ export async function executeSharedMint({
       chainId,
       router,
       executor,
-      resolvedSlippageBps,
       publicClient,
     })
   }
@@ -157,28 +154,22 @@ export async function executeSharedMint({
     args: [account.address],
   })
 
-  const collateralDecimals = leverageTokenConfig.collateralAsset.decimals
-  const debtDecimals = leverageTokenConfig.debtAsset.decimals
+  const blockNumber = await publicClient.getBlockNumber()
 
   const plan = await planMint({
-    config,
-    token,
-    inputAsset: collateralAsset,
-    equityInInputAsset,
+    wagmiConfig: config,
+    leverageTokenConfig,
+    equityInCollateralAsset: equityInInputAsset,
     slippageBps: resolvedSlippageBps,
     quoteDebtToCollateral,
-    chainId: chainId as any,
-    collateralAsset,
-    debtAsset,
-    collateralAssetDecimals: collateralDecimals,
-    debtAssetDecimals: debtDecimals,
+    blockNumber,
   })
 
   const { request } = await simulateLeverageRouterV2Deposit(config, {
     args: [
       token,
-      plan.equityInInputAsset,
-      plan.flashLoanAmount ?? plan.expectedDebt,
+      plan.equityInCollateralAsset,
+      plan.flashLoanAmount,
       plan.minShares,
       executor,
       plan.calls,
@@ -218,8 +209,7 @@ export async function executeSharedMint({
     token,
     sharesMinted: mintedShares,
     minShares: plan.minShares,
-    expectedShares: plan.expectedShares,
-    expectedTotalCollateral: plan.expectedTotalCollateral,
+    previewShares: plan.previewShares,
     collateralBalanceBefore,
     collateralBalanceAfter,
   }
@@ -232,19 +222,9 @@ async function resolveDebtToCollateralQuote(params: {
   chainId: number
   router: Address
   executor: Address
-  resolvedSlippageBps: number
   publicClient: PublicClient
 }): Promise<QuoteFn> {
-  const {
-    preference,
-    useLiFi,
-    canUseV3,
-    chainId,
-    router,
-    executor,
-    resolvedSlippageBps,
-    publicClient,
-  } = params
+  const { preference, useLiFi, canUseV3, chainId, router, executor, publicClient } = params
 
   const normalizedPreference = preference.trim()
   const mode = selectQuoteMode({ preference: normalizedPreference, useLiFi, canUseV3 })
@@ -257,7 +237,6 @@ async function resolveDebtToCollateralQuote(params: {
         // Align LiFi's expected sender with the actual caller (MulticallExecutor)
         fromAddress: executor,
         allowBridges: 'none',
-        slippageBps: resolvedSlippageBps,
       })
     }
     case 'uniswapv3': {
@@ -278,7 +257,6 @@ async function resolveDebtToCollateralQuote(params: {
         fee: config.fee,
         recipient: router,
         poolAddress: config.pool,
-        slippageBps: resolvedSlippageBps,
         ...(ADDR.weth ? { wrappedNative: ADDR.weth } : {}),
       })
     }
@@ -291,7 +269,6 @@ async function resolveDebtToCollateralQuote(params: {
         router: uniswapRouter,
         recipient: router,
         wrappedNative: ADDR.weth,
-        slippageBps: resolvedSlippageBps,
       })
     }
   }

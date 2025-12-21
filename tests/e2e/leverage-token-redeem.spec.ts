@@ -37,8 +37,6 @@ test.describe('Leverage token redeem flow', () => {
   let baseSnapshot: Hash
   let sharesToRedeem: bigint
   let collateralAsset: `0x${string}`
-  let payoutAsset: `0x${string}` | undefined
-
   test.beforeAll(async () => {
     baseSnapshot = await takeSnapshot()
   })
@@ -55,7 +53,6 @@ test.describe('Leverage token redeem flow', () => {
 
     sharesToRedeem = setup.sharesToRedeem
     collateralAsset = setup.collateralAsset
-    payoutAsset = setup.payoutAsset
   })
 
   test.afterEach(async () => {
@@ -76,7 +73,7 @@ test.describe('Leverage token redeem flow', () => {
 
     const tokenBalanceBefore = await readLeverageTokenBalance()
     const collateralBalanceBefore = await readErc20Balance(collateralAsset)
-    const payoutAddress = payoutAsset ?? collateralAsset
+    const payoutAddress = collateralAsset
 
     await page.goto('/#/tokens', { waitUntil: 'domcontentloaded' })
     await page.waitForLoadState('domcontentloaded')

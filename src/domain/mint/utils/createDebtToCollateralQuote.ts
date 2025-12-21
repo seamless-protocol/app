@@ -19,7 +19,6 @@ export interface CreateDebtToCollateralQuoteParams {
   chainId: number
   routerAddress: Address
   swap: DebtToCollateralSwapConfig
-  slippageBps: number
   getPublicClient: (chainId: number) => PublicClient | undefined
   fromAddress?: Address
 }
@@ -33,7 +32,6 @@ export function createDebtToCollateralQuote({
   chainId,
   routerAddress,
   swap,
-  slippageBps,
   getPublicClient,
   fromAddress,
 }: CreateDebtToCollateralQuoteParams): CreateDebtToCollateralQuoteResult {
@@ -51,7 +49,6 @@ export function createDebtToCollateralQuote({
     const quote = createLifiQuoteAdapter({
       chainId,
       router: routerAddress,
-      slippageBps,
       ...(effectiveFrom ? { fromAddress: effectiveFrom } : {}),
       ...(swap.allowBridges ? { allowBridges: swap.allowBridges } : {}),
       ...(swap.order ? { order: swap.order } : {}),
@@ -63,7 +60,6 @@ export function createDebtToCollateralQuote({
     const quote = createVeloraQuoteAdapter({
       chainId: chainId as SupportedChainId,
       router: routerAddress,
-      slippageBps,
       ...(effectiveFrom ? { fromAddress: effectiveFrom } : {}),
     })
     return { quote, adapterType: 'velora' }
@@ -73,7 +69,6 @@ export function createDebtToCollateralQuote({
     const quote = createPendleQuoteAdapter({
       chainId: chainId as SupportedChainId,
       router: routerAddress,
-      slippageBps,
     })
     return { quote, adapterType: 'pendle' }
   }
@@ -87,7 +82,6 @@ export function createDebtToCollateralQuote({
       publicClient,
       chainId,
       router: routerAddress,
-      slippageBps,
     })
     return { quote, adapterType: 'infinifi' }
   }
@@ -105,7 +99,6 @@ export function createDebtToCollateralQuote({
       router: swap.router,
       recipient: routerAddress,
       wrappedNative,
-      slippageBps,
     })
     return { quote, adapterType: 'uniswapV2' }
   }
@@ -125,7 +118,6 @@ export function createDebtToCollateralQuote({
     fee: poolConfig.fee,
     recipient: routerAddress,
     poolAddress: poolConfig.address,
-    slippageBps,
     ...(wrappedNative ? { wrappedNative } : {}),
   })
   return { quote, adapterType: 'uniswapV3' }

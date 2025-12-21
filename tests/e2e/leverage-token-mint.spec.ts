@@ -124,7 +124,7 @@ test.describe('Leverage token mint flow', () => {
 
     const balanceAfter = await readLeverageTokenBalance()
     assertMintedShares(balanceBefore, balanceAfter, {
-      expectedShares: plan.expectedShares,
+      expectedShares: plan.previewShares,
       minShares: plan.minShares,
     })
   })

@@ -1,7 +1,7 @@
 import { type Address, erc20Abi, parseUnits } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
-import { getQuoteIntentForAdapter, orchestrateRedeem, planRedeem } from '@/domain/redeem'
+import { orchestrateRedeem, planRedeem } from '@/domain/redeem'
 import { createCollateralToDebtQuote } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import {
@@ -18,7 +18,6 @@ import { MAINNET_TOKEN_CONFIGS } from '../mainnet-tokens.config'
 
 const redeemSuite = CHAIN_ID === mainnet.id ? describe : describe.skip
 
-// TODO: Investigate why tests require higher slippage (250-500 bps vs 50 bps)
 // Likely due to price discrepancies between CoinGecko (used for slippage calc) and on-chain oracles
 describe.each(MAINNET_TOKEN_CONFIGS)('Leverage Router V2 Redeem (Mainnet $label)', (config) => {
   redeemSuite(`${config.label}`, () => {
@@ -30,7 +29,7 @@ describe.each(MAINNET_TOKEN_CONFIGS)('Leverage Router V2 Redeem (Mainnet $label)
         fundingAmount: config.fundingAmount,
         richHolderAddress: config.richHolderAddress,
       })
-      assertRedeemPlan(result.plan, result.collateralAsset, result.payoutAsset)
+      assertRedeemPlan(result.plan, result.collateralAsset)
       assertRedeemExecution(result)
     }, 60_000)
   })
@@ -157,26 +156,17 @@ type RedeemExecutionResult = {
   sharesToRedeem: bigint
   slippageBps: number
   toleranceBps: number
-  payoutAsset: Address | undefined
   collateralAsset: Address
   debtAsset: Address
 }
 
 async function performRedeem(
   ctx: WithForkCtx,
-  scenario: RedeemScenario & { sharesAfterMint: bigint; payoutAsset?: Address },
+  scenario: RedeemScenario & { sharesAfterMint: bigint },
 ): Promise<RedeemExecutionResult> {
   const { account, config, publicClient } = ctx
-  const {
-    token,
-    router,
-    collateralAsset,
-    sharesAfterMint,
-    slippageBps,
-    debtAsset,
-    chainId,
-    payoutAsset,
-  } = scenario
+  const { token, router, collateralAsset, sharesAfterMint, slippageBps, debtAsset, chainId } =
+    scenario
 
   const sharesToRedeem = sharesAfterMint
   await approveIfNeeded(token, router, sharesToRedeem)
@@ -192,30 +182,18 @@ async function performRedeem(
     chainId,
     routerAddress: router,
     swap: collateralToDebtConfig,
-    slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
   })
 
-  const intent = getQuoteIntentForAdapter(
-    getLeverageTokenConfig(token, chainId)?.swaps?.collateralToDebt?.type ?? 'velora',
-  )
-
-  const collateralDecimals = tokenConfig.collateralAsset.decimals
-  const debtDecimals = tokenConfig.debtAsset.decimals
+  const blockNumber = await publicClient.getBlockNumber()
 
   const plan = await planRedeem({
-    config,
-    token,
+    wagmiConfig: config,
+    leverageTokenConfig: tokenConfig,
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
-    collateralAsset,
-    debtAsset,
-    chainId,
-    ...(payoutAsset ? { outputAsset: payoutAsset } : {}),
-    intent,
-    collateralAssetDecimals: collateralDecimals,
-    debtAssetDecimals: debtDecimals,
+    blockNumber,
   })
 
   const collateralBalanceBefore = await publicClient.readContract({
@@ -283,7 +261,6 @@ async function performRedeem(
     sharesToRedeem,
     slippageBps: scenario.slippageBps,
     toleranceBps: scenario.toleranceBps,
-    payoutAsset,
     collateralAsset: scenario.collateralAsset,
     debtAsset: scenario.debtAsset,
   }
@@ -292,14 +269,10 @@ async function performRedeem(
 function assertRedeemPlan(
   plan: Awaited<ReturnType<typeof planRedeem>>,
   collateralAsset: Address,
-  expectedPayout?: Address,
 ): void {
   expect(plan.sharesToRedeem).toBeGreaterThan(0n)
-  expect(plan.expectedDebt).toBeGreaterThan(0n)
+  expect(plan.minCollateralForSender).toBeGreaterThan(0n)
   expect(plan.calls.length).toBeGreaterThanOrEqual(1)
-
-  const payoutAsset = plan.payoutAsset.toLowerCase()
-  const expectedPayoutAsset = (expectedPayout ?? collateralAsset).toLowerCase()
 
   const hasApprovalOrWithdraw = plan.calls.some((call) => {
     if (call.target.toLowerCase() !== collateralAsset.toLowerCase()) return false
@@ -309,28 +282,10 @@ function assertRedeemPlan(
     )
   })
   expect(hasApprovalOrWithdraw).toBe(true)
-
-  if (expectedPayoutAsset === collateralAsset.toLowerCase()) {
-    expect(plan.expectedCollateral).toBeGreaterThanOrEqual(0n)
-  } else {
-    expect(plan.expectedDebtPayout).toBeGreaterThanOrEqual(0n)
-  }
-
-  expect(payoutAsset).toBe(expectedPayoutAsset)
 }
 
 function assertRedeemExecution(result: RedeemExecutionResult): void {
-  const {
-    plan,
-    collateralDelta,
-    debtDelta,
-    sharesBefore,
-    sharesAfter,
-    sharesToRedeem,
-    toleranceBps,
-    payoutAsset,
-    collateralAsset,
-  } = result
+  const { plan, collateralDelta, sharesBefore, sharesAfter, sharesToRedeem, toleranceBps } = result
 
   expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
 
@@ -344,31 +299,6 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
     return actual >= lowerBound && actual <= upperBound
   }
 
-  if (payoutAsset) {
-    expect(collateralDelta).toBeLessThanOrEqual(plan.minCollateralForSender)
-    expect(plan.expectedCollateral).toBe(0n)
-    expect(withinTolerance(debtDelta, plan.payoutAmount)).toBe(true)
-  } else {
-    expect(collateralDelta).toBeGreaterThan(0n)
-    expect(withinTolerance(collateralDelta, plan.expectedCollateral)).toBe(true)
-  }
-
-  expect(plan.payoutAsset.toLowerCase()).toBe((payoutAsset ?? collateralAsset).toLowerCase())
-
-  // Validate excess debt out matches planner expectation
-  const actualExcessDebtOut = debtDelta > 0n ? debtDelta : 0n
-  const isDebtPayout = payoutAsset?.toLowerCase() === plan.debtAsset.toLowerCase()
-
-  if (isDebtPayout) {
-    // Redeeming into debt asset: payoutAmount should equal expectedDebtPayout
-    expect(plan.payoutAmount).toBe(plan.expectedDebtPayout)
-  }
-
-  // Validate actual excess debt matches planner's expectedDebtPayout within tolerance
-  if (plan.expectedDebtPayout > 0n) {
-    expect(withinTolerance(actualExcessDebtOut, plan.expectedDebtPayout)).toBe(true)
-  } else {
-    // No excess debt expected: allow tiny dust tolerance
-    expect(debtDelta).toBeLessThanOrEqual(1000n) // ~$0.001 dust tolerance
-  }
+  expect(collateralDelta).toBeGreaterThan(0n)
+  expect(withinTolerance(collateralDelta, plan.previewCollateralForSender)).toBe(true)
 }

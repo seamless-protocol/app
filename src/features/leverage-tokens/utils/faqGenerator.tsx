@@ -24,9 +24,9 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
           When you mint the {collateralAsset.symbol}/{debtAsset.symbol} {leverageRatio}x Leverage
           Token with {collateralAsset.symbol}, you receive a new token that represents a{' '}
           {leverageRatio}x leveraged {collateralAsset.symbol}/{debtAsset.symbol} position on Morpho.
-          This position provides amplified exposure to the {collateralAsset.symbol}/{debtAsset.symbol}{' '}
-          staking yield spread, offering the potential for enhanced returns compared to holding{' '}
-          {collateralAsset.symbol} directly.
+          This position provides amplified exposure to the {collateralAsset.symbol}/
+          {debtAsset.symbol} staking yield spread, offering the potential for enhanced returns
+          compared to holding {collateralAsset.symbol} directly.
           <br />
           {tokenConfig.apyConfig?.pointsMultiplier && (
             <>
@@ -45,10 +45,10 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
       question: 'What asset can I use to mint this Leverage Token?',
       answer: (
         <p>
-          Only {collateralAsset.symbol} is accepted to mint this LT for now. Additional functionality
-          to mint this Leverage Token with other assets is coming soon. In the meantime, you can use
-          the Swap/Bridge widget in the app to swap directly into {collateralAsset.symbol} if it's
-          not already in your wallet.
+          Only {collateralAsset.symbol} is accepted to mint this LT for now. Additional
+          functionality to mint this Leverage Token with other assets is coming soon. In the
+          meantime, you can use the Swap/Bridge widget in the app to swap directly into{' '}
+          {collateralAsset.symbol} if it's not already in your wallet.
         </p>
       ),
     },
@@ -70,12 +70,14 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
                 {collateralAsset.protocol?.name} airdrop. With this Leverage Token, users earn a{' '}
                 {tokenConfig.apyConfig.pointsMultiplier}x multiple on{' '}
                 {collateralAsset.protocol?.name} Points. Example: If you deposit $10,000 s
-                {collateralAsset.symbol} into this LT, your effective leveraged position is{' '}
-                ${(
-                  leverageRatio * 10000
-                ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+                {collateralAsset.symbol} into this LT, your effective leveraged position is $
+                {(leverageRatio * 10000).toLocaleString('en-US', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{' '}
                 {collateralAsset.symbol} — and you'll earn points as if you held that full amount.
-                See related resources links for more info on {collateralAsset.protocol?.name} points.
+                See related resources links for more info on {collateralAsset.protocol?.name}{' '}
+                points.
               </p>
             ),
           },
@@ -91,20 +93,23 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
         </p>
       ),
     },
-    ...(debtAsset.symbol !== 'USDC' ? [
-    {
-      id: 'usd-exposure',
-      question: `Do I have leveraged exposure to ${collateralAsset.symbol}'s USD price with this LT?`,
-      answer: (
-        <p>
-          No. The LT gives you leveraged exposure to the difference between the yield on{' '}
-          {collateralAsset.symbol} and the borrowing cost of {debtAsset.symbol}. Since{' '}
-          {collateralAsset.symbol} and {debtAsset.symbol} are highly correlated, the strategy behaves
-          similarly to yield farming or a carry trade rather than a directional {debtAsset.symbol}{' '}
-          bet.
-        </p>
-      ),
-    }]: []),
+    ...(debtAsset.symbol !== 'USDC'
+      ? [
+          {
+            id: 'usd-exposure',
+            question: `Do I have leveraged exposure to ${collateralAsset.symbol}'s USD price with this LT?`,
+            answer: (
+              <p>
+                No. The LT gives you leveraged exposure to the difference between the yield on{' '}
+                {collateralAsset.symbol} and the borrowing cost of {debtAsset.symbol}. Since{' '}
+                {collateralAsset.symbol} and {debtAsset.symbol} are highly correlated, the strategy
+                behaves similarly to yield farming or a carry trade rather than a directional{' '}
+                {debtAsset.symbol} bet.
+              </p>
+            ),
+          },
+        ]
+      : []),
     {
       id: 'target-leverage-ratio',
       question: "What's the target leverage ratio for this LT?",
@@ -124,8 +129,8 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
             Rebalancing helps the Leverage Token maintain its target leverage. Each token has
             built-in rules (called "rebalancing adapters") that tell it when and how to adjust the
             position. For example, it might rebalance when leverage drifts too far from target, when
-            it's close to liquidation, or through timed auctions. Everything happens automatically—no
-            manual steps are required.
+            it's close to liquidation, or through timed auctions. Everything happens
+            automatically—no manual steps are required.
           </p>
           <p className="mt-3">
             Seamless contributors have created 3 types of rebalance adapters as a starting point:
@@ -175,9 +180,9 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
             through predefined smart contract rules with no human oversight or discretionary
             decisions. They function much like a passive strategy that holds assets in a fixed,
             rules-based allocation—maintaining a target leverage exactly as specified, regardless of
-            broader market conditions. The contracts do not adjust based on changing trends or attempt
-            to manage risk dynamically. If the set parameters ever stop matching your objectives or
-            risk tolerance, you can redeem your LT shares at any time.
+            broader market conditions. The contracts do not adjust based on changing trends or
+            attempt to manage risk dynamically. If the set parameters ever stop matching your
+            objectives or risk tolerance, you can redeem your LT shares at any time.
           </p>
           <p className="mt-3">Here are some key risks to be aware of:</p>
           <ul className="mt-2 list-disc list-inside space-y-1">
@@ -186,8 +191,8 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
               on multiple smart contracts that could contain bugs or be exploited.
             </li>
             <li>
-              Lending Market Risk (Morpho): Includes volatility in borrow rates, liquidation risk, and
-              integration dependencies with oracles.
+              Lending Market Risk (Morpho): Includes volatility in borrow rates, liquidation risk,
+              and integration dependencies with oracles.
             </li>
             <li>
               Oracle Risk: The {collateralAsset.symbol}/{debtAsset.symbol} exchange rate is sourced
@@ -196,8 +201,8 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
             </li>
             <li>
               Borrow Rate Risk: If the {debtAsset.symbol} borrow rate exceeds the yield earned by
-              {collateralAsset.symbol}, the position becomes unprofitable. See related resources links
-              for more info on the underlying lending market (i.e.: Morpho).
+              {collateralAsset.symbol}, the position becomes unprofitable. See related resources
+              links for more info on the underlying lending market (i.e.: Morpho).
             </li>
             <li>
               Inflexibility: LT parameters are fixed. If market conditions shift unfavorably, the
@@ -208,7 +213,8 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
             <li>
               Exit Risk: Exiting a position may require converting {collateralAsset.symbol} to{' '}
               {debtAsset.symbol}, which can involve DEX slippage or {collateralAsset.symbol}
-              withdrawal costs. See related resources links for more info on {collateralAsset.symbol}.
+              withdrawal costs. See related resources links for more info on{' '}
+              {collateralAsset.symbol}.
             </li>
             <li>
               Inherent Leverage Risk: Gains and losses are magnified. Leverage amplifies
@@ -236,10 +242,11 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
       question: 'Can I lose money with this LT?',
       answer: (
         <p>
-          Yes. Although the strategy is designed to earn a yield by leveraging {collateralAsset.symbol}{' '}
-          against {debtAsset.symbol}, negative yield spreads (e.g., if {debtAsset.symbol} borrow rate
-          &gt; {collateralAsset.symbol} yield) can erode value. In extreme scenarios like oracle
-          malfunction or protocol exploit, liquidation or capital loss is possible.
+          Yes. Although the strategy is designed to earn a yield by leveraging{' '}
+          {collateralAsset.symbol} against {debtAsset.symbol}, negative yield spreads (e.g., if{' '}
+          {debtAsset.symbol} borrow rate &gt; {collateralAsset.symbol} yield) can erode value. In
+          extreme scenarios like oracle malfunction or protocol exploit, liquidation or capital loss
+          is possible.
         </p>
       ),
     },

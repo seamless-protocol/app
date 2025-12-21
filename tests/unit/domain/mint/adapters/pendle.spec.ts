@@ -2,6 +2,7 @@ import type { Address } from 'viem'
 import { base } from 'viem/chains'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPendleQuoteAdapter } from '@/domain/shared/adapters/pendle'
+import type { QuoteRequest } from '@/domain/shared/adapters/types'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 
 // Test addresses
@@ -9,6 +10,7 @@ const ROUTER: Address = '0x1111111111111111111111111111111111111111'
 const IN_TOKEN: Address = '0x2222222222222222222222222222222222222222'
 const OUT_TOKEN: Address = '0x3333333333333333333333333333333333333333'
 const APPROVAL_TARGET: Address = '0x4444444444444444444444444444444444444444'
+const DEFAULT_TEST_SLIPPAGE_BPS = 50
 
 describe('createPendleQuoteAdapter', () => {
   const originalFetch = global.fetch
@@ -58,6 +60,18 @@ describe('createPendleQuoteAdapter', () => {
     ],
   })
 
+  const withSlippage = (
+    adapter: ReturnType<typeof createPendleQuoteAdapter>,
+    params: Omit<Parameters<ReturnType<typeof createPendleQuoteAdapter>>[0], 'slippageBps'> &
+      Partial<Pick<Parameters<ReturnType<typeof createPendleQuoteAdapter>>[0], 'slippageBps'>>,
+    slippageBps: number = DEFAULT_TEST_SLIPPAGE_BPS,
+  ) => {
+    const { slippageBps: paramSlippage, ...rest } = params
+    const effectiveSlippage = paramSlippage ?? slippageBps
+    const quoteRequest = { ...rest, slippageBps: effectiveSlippage } as QuoteRequest
+    return adapter(quoteRequest)
+  }
+
   describe('Successful Quotes', () => {
     it('maps response fields correctly for exactIn quote', async () => {
       const response = createSuccessResponse()
@@ -71,7 +85,7 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      const result = await adapter({
+      const result = await withSlippage(adapter, {
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 1000000000000000000n,
@@ -99,7 +113,7 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      const result = await adapter({
+      const result = await withSlippage(adapter, {
         inToken: ETH_SENTINEL,
         outToken: OUT_TOKEN,
         amountIn: 1000000000000000000n,
@@ -124,7 +138,7 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      const result = await adapter({
+      const result = await withSlippage(adapter, {
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 50000000000000000000n,
@@ -149,7 +163,7 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 1000000000000000000n,
@@ -174,7 +188,7 @@ describe('createPendleQuoteAdapter', () => {
         baseUrl: 'https://custom-api.example.com',
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 1000000000000000000n,
@@ -195,15 +209,18 @@ describe('createPendleQuoteAdapter', () => {
       const adapter = createPendleQuoteAdapter({
         chainId: base.id,
         router: ROUTER,
-        slippageBps: 100,
       })
 
-      await adapter({
-        inToken: IN_TOKEN,
-        outToken: OUT_TOKEN,
-        amountIn: 5000000000000000000n,
-        intent: 'exactIn',
-      })
+      await withSlippage(
+        adapter,
+        {
+          inToken: IN_TOKEN,
+          outToken: OUT_TOKEN,
+          amountIn: 5000000000000000000n,
+          intent: 'exactIn',
+        },
+        100,
+      )
 
       const url = new URL(String(fetchMock.mock.calls[0]?.[0]))
       expect(url.searchParams.get('receiver')).toBe(ROUTER)
@@ -216,7 +233,7 @@ describe('createPendleQuoteAdapter', () => {
       expect(url.searchParams.get('needScale')).toBe('false')
     })
 
-    it('uses default slippage when not provided', async () => {
+    it('uses provided slippage when specified', async () => {
       const response = createSuccessResponse()
       const fetchMock = vi
         .fn()
@@ -228,15 +245,19 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      await adapter({
-        inToken: IN_TOKEN,
-        outToken: OUT_TOKEN,
-        amountIn: 1000000000000000000n,
-        intent: 'exactIn',
-      })
+      await withSlippage(
+        adapter,
+        {
+          inToken: IN_TOKEN,
+          outToken: OUT_TOKEN,
+          amountIn: 1000000000000000000n,
+          intent: 'exactIn',
+        },
+        50,
+      )
 
       const url = new URL(String(fetchMock.mock.calls[0]?.[0]))
-      expect(url.searchParams.get('slippage')).toBe('0.005') // DEFAULT_SLIPPAGE_BPS = 50
+      expect(url.searchParams.get('slippage')).toBe('0.005')
     })
 
     it('handles zero amountIn', async () => {
@@ -253,7 +274,7 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      await adapter({
+      await withSlippage(adapter, {
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 0n,
@@ -273,7 +294,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: IN_TOKEN,
           outToken: OUT_TOKEN,
           amountOut: 1000000000000000000n,
@@ -301,7 +322,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: IN_TOKEN,
           outToken: OUT_TOKEN,
           amountIn: 1000000000000000000n,
@@ -325,7 +346,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: IN_TOKEN,
           outToken: OUT_TOKEN,
           amountIn: 1000000000000000000n,
@@ -349,7 +370,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: IN_TOKEN,
           outToken: OUT_TOKEN,
           amountIn: 1000000000000000000n,
@@ -376,7 +397,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: IN_TOKEN,
           outToken: OUT_TOKEN,
           amountIn: 1000000000000000000n,
@@ -402,7 +423,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: IN_TOKEN,
           outToken: OUT_TOKEN,
           amountIn: 1000000000000000000n,
@@ -428,7 +449,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: IN_TOKEN,
           outToken: OUT_TOKEN,
           amountIn: 1000000000000000000n,
@@ -447,7 +468,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: IN_TOKEN,
           outToken: OUT_TOKEN,
           amountIn: 1000000000000000000n,
@@ -472,7 +493,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: IN_TOKEN,
           outToken: OUT_TOKEN,
           amountIn: 1000000000000000000n,
@@ -496,7 +517,7 @@ describe('createPendleQuoteAdapter', () => {
       })
 
       await expect(
-        adapter({
+        withSlippage(adapter, {
           inToken: IN_TOKEN,
           outToken: OUT_TOKEN,
           amountIn: 1000000000000000000n,
@@ -525,7 +546,7 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      const result = await adapter({
+      const result = await withSlippage(adapter, {
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 1000000000000000000n,
@@ -552,7 +573,7 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      const result = await adapter({
+      const result = await withSlippage(adapter, {
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 1000000000000000000n,
@@ -576,7 +597,7 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      const result = await adapter({
+      const result = await withSlippage(adapter, {
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 1000000000000000000n,
@@ -599,7 +620,7 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      const result = await adapter({
+      const result = await withSlippage(adapter, {
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 1000000000000000000n,
@@ -629,7 +650,7 @@ describe('createPendleQuoteAdapter', () => {
         router: ROUTER,
       })
 
-      const result = await adapter({
+      const result = await withSlippage(adapter, {
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 1000000000000000000n,

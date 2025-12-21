@@ -1,5 +1,5 @@
 import type { Address } from 'viem'
-import { getAddress } from 'viem'
+import { getAddress, isAddressEqual } from 'viem'
 import {
   BaseLogo,
   EthereumLogo,
@@ -674,7 +674,7 @@ export function getLeverageTokenConfig(
 ): LeverageTokenConfig | undefined {
   return getFilteredConfigs().find(
     (config) =>
-      config.address.toLowerCase() === address.toLowerCase() &&
+      isAddressEqual(config.address, address) &&
       (chainId === undefined || config.chainId === chainId),
   )
 }

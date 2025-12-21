@@ -68,7 +68,6 @@ export async function planMintTest({
     config: ctx.config,
     publicClient: ctx.publicClient,
     tokenDefinition,
-    slippageBps,
     equityAmountHuman,
     ensureLiquidity: false,
   })
@@ -77,21 +76,14 @@ export async function planMintTest({
   if (!leverageTokenConfig) {
     throw new Error(`Leverage token config not found for ${setup.token}`)
   }
-  const collateralDecimals = leverageTokenConfig.collateralAsset.decimals
-  const debtDecimals = leverageTokenConfig.debtAsset.decimals
-
+  const blockNumber = await ctx.publicClient.getBlockNumber()
   const plan = await planMint({
-    config: ctx.config,
-    token: setup.token,
-    inputAsset: setup.collateralAsset,
-    equityInInputAsset: setup.equityInInputAsset,
+    wagmiConfig: ctx.config,
+    leverageTokenConfig,
+    equityInCollateralAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    chainId: tokenDefinition.chainId as SupportedChainId,
-    collateralAsset: setup.collateralAsset,
-    debtAsset: setup.debtAsset,
-    collateralAssetDecimals: collateralDecimals,
-    debtAssetDecimals: debtDecimals,
+    blockNumber,
   })
 
   return {
@@ -105,14 +97,12 @@ export async function planMintTest({
 export async function ensureMintLiquidity({
   ctx,
   tokenDefinition,
-  slippageBps = DEFAULT_SLIPPAGE_BPS,
   equityAmountHuman = DEFAULT_EQUITY_HUMAN,
 }: MintTestParams & { ctx: MintPlanningContext }): Promise<void> {
   await prepareMintScenario({
     config: ctx.config,
     publicClient: ctx.publicClient,
     tokenDefinition,
-    slippageBps,
     equityAmountHuman,
     ensureLiquidity: true,
   })
@@ -136,7 +126,6 @@ async function runMintScenario({
     config,
     publicClient,
     tokenDefinition,
-    slippageBps,
     equityAmountHuman,
   })
 
@@ -164,22 +153,16 @@ async function runMintScenario({
   if (!leverageTokenConfig) {
     throw new Error(`Leverage token config not found for ${setup.token}`)
   }
-  const collateralDecimals = leverageTokenConfig.collateralAsset.decimals
-  const debtDecimals = leverageTokenConfig.debtAsset.decimals
+  const blockNumber = await publicClient.getBlockNumber()
 
   // Plan + simulate + write (no orchestrator)
   const plan = await planMint({
-    config,
-    token: setup.token,
-    inputAsset: setup.collateralAsset,
-    equityInInputAsset: setup.equityInInputAsset,
+    wagmiConfig: config,
+    leverageTokenConfig,
+    equityInCollateralAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    chainId: tokenDefinition.chainId as SupportedChainId,
-    collateralAsset: setup.collateralAsset,
-    debtAsset: setup.debtAsset,
-    collateralAssetDecimals: collateralDecimals,
-    debtAssetDecimals: debtDecimals,
+    blockNumber,
   })
 
   const { simulateLeverageRouterV2Deposit, writeLeverageRouterV2Deposit } = await import(
@@ -188,8 +171,8 @@ async function runMintScenario({
   const { request } = await simulateLeverageRouterV2Deposit(config, {
     args: [
       setup.token,
-      plan.equityInInputAsset,
-      plan.flashLoanAmount ?? plan.expectedDebt,
+      plan.equityInCollateralAsset,
+      plan.flashLoanAmount,
       plan.minShares,
       getAddressesForToken(tokenDefinition.key).executor as Address,
       plan.calls,
@@ -246,14 +229,12 @@ async function prepareMintScenario({
   config,
   publicClient,
   tokenDefinition,
-  slippageBps,
   equityAmountHuman,
   ensureLiquidity = true,
 }: {
   config: Parameters<typeof readLeverageTokenBalanceOf>[0]
   publicClient: PublicClient
   tokenDefinition: LeverageTokenDefinition
-  slippageBps: number
   equityAmountHuman: string
   ensureLiquidity?: boolean
 }): Promise<{
@@ -288,7 +269,6 @@ async function prepareMintScenario({
     router,
     executor: addresses.executor as Address,
     publicClient,
-    slippageBps,
     swapConfig: effectiveSwapConfig,
   })
 
@@ -352,21 +332,18 @@ function buildQuoteAdapter({
   router,
   executor,
   publicClient,
-  slippageBps,
   swapConfig,
 }: {
   chainId: number
   router: Address
   executor: Address
   publicClient: PublicClient
-  slippageBps: number
   swapConfig: DebtToCollateralSwapConfig
 }) {
   const { quote } = createDebtToCollateralQuote({
     chainId,
     routerAddress: router,
     swap: swapConfig,
-    slippageBps,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
     fromAddress: executor,
   })
@@ -429,7 +406,7 @@ export function assertMintResult({
     throw new Error(`Minted shares ${mintedShares} fell below plan minimum ${plan.minShares}.`)
   }
 
-  const expectedShares = plan.expectedShares
+  const expectedShares = plan.previewShares
   const delta =
     mintedShares >= expectedShares ? mintedShares - expectedShares : expectedShares - mintedShares
   const tolerance = expectedShares / 100n || 1n // allow up to 1% variance from preview

@@ -55,6 +55,7 @@ describeOrSkip('LiFi adapter live smoke', () => {
         outToken: target.outToken,
         amountIn: target.amountIn ?? parseUnits('0.5', 18),
         intent: 'exactIn',
+        slippageBps: 50,
       })
 
       expect((res.calls[0]?.data ?? '').startsWith('0x')).toBe(true)
@@ -67,7 +68,6 @@ describeOrSkip('LiFi adapter live smoke', () => {
       const quote = createLifiQuoteAdapter({
         chainId: target.chainId,
         router: target.router,
-        slippageBps: 150, // 1.50%
       })
 
       // Use a small target on Base and a larger one on Mainnet to avoid min-size issues
@@ -80,6 +80,7 @@ describeOrSkip('LiFi adapter live smoke', () => {
         amountIn: 0n,
         amountOut: toAmount,
         intent: 'exactOut',
+        slippageBps: 150, // 1.50%
       })
 
       expect((res.calls[0]?.data ?? '').startsWith('0x')).toBe(true)

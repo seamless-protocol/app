@@ -34,7 +34,14 @@ describe('LiFi adapter (exact-out URL)', () => {
     ;(global as any).fetch = fetchMock
 
     const quote = createLifiQuoteAdapter({ router: ROUTER })
-    await quote({ inToken: IN, outToken: OUT, amountIn: 0n, amountOut: 10n, intent: 'exactOut' })
+    await quote({
+      inToken: IN,
+      outToken: OUT,
+      amountIn: 0n,
+      amountOut: 10n,
+      intent: 'exactOut',
+      slippageBps: 50,
+    })
 
     const url = new URL((fetchMock.mock.calls[0] as Array<any>)[0])
     expect(url.pathname).toBe('/v1/quote/toAmount')

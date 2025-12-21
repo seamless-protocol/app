@@ -4,7 +4,6 @@ import { mainnet } from 'viem/chains'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import infinifiGatewayAbi from '@/domain/shared/adapters/abi/infinifi/InfinifiGateway'
 import unstakeAndRedeemHelperAbi from '@/domain/shared/adapters/abi/infinifi/UnstakeAndRedeemHelper'
-import { DEFAULT_SLIPPAGE_BPS } from '@/domain/shared/adapters/helpers'
 import { createInfinifiQuoteAdapter } from '@/domain/shared/adapters/infinifi'
 
 const DEFAULT_ADDRESSES = {
@@ -28,19 +27,18 @@ describe('createInfinifiQuoteAdapter', () => {
     multicall = vi.fn().mockResolvedValue([USDC, MINT_CONTROLLER])
   })
 
-  const createAdapter = (slippageBps: number = DEFAULT_SLIPPAGE_BPS) =>
+  const createAdapter = () =>
     createInfinifiQuoteAdapter({
       publicClient: { readContract, multicall } as any,
       router: getAddress(ROUTER),
       chainId: mainnet.id,
-      slippageBps,
     })
 
   it('quotes mintAndStake for USDC -> siUSD with slippage floor', async () => {
     multicall.mockResolvedValueOnce([USDC, MINT_CONTROLLER])
     readContract.mockResolvedValueOnce([5_000_000n, 4_000_000n]) // previewDepositFromAsset
 
-    const adapter = createAdapter(100) // 1%
+    const adapter = createAdapter()
     const amountIn = 1_000_000n
 
     const quote = await adapter({
@@ -48,6 +46,7 @@ describe('createInfinifiQuoteAdapter', () => {
       outToken: DEFAULT_ADDRESSES.siusd,
       amountIn,
       intent: 'exactIn',
+      slippageBps: 100,
     })
 
     expect(quote.out).toBe(4_000_000n)
@@ -97,7 +96,7 @@ describe('createInfinifiQuoteAdapter', () => {
     multicall.mockResolvedValueOnce([USDC, MINT_CONTROLLER])
     readContract.mockResolvedValueOnce([6_000_000n, 5_700_000n]) // previewRedeemToAsset
 
-    const adapter = createAdapter(200) // 2%
+    const adapter = createAdapter()
     const amountIn = 6_500_000n
 
     const quote = await adapter({
@@ -105,6 +104,7 @@ describe('createInfinifiQuoteAdapter', () => {
       outToken: USDC,
       amountIn,
       intent: 'exactIn',
+      slippageBps: 200,
     })
 
     expect(quote.out).toBe(5_700_000n)
@@ -134,6 +134,7 @@ describe('createInfinifiQuoteAdapter', () => {
         outToken: DEFAULT_ADDRESSES.siusd,
         amountIn: 1_000n,
         intent: 'exactIn',
+        slippageBps: 50,
       }),
     ).rejects.toThrow('Infinifi adapter only supports USDC <-> siUSD conversions')
 
@@ -143,6 +144,7 @@ describe('createInfinifiQuoteAdapter', () => {
         outToken: IUSD,
         amountIn: 1_000n,
         intent: 'exactIn',
+        slippageBps: 50,
       }),
     ).rejects.toThrow('Infinifi adapter only supports USDC <-> siUSD conversions')
 
@@ -160,6 +162,7 @@ describe('createInfinifiQuoteAdapter', () => {
         outToken: MINT_CONTROLLER, // arbitrary non-supported token
         amountIn: 1_000n,
         intent: 'exactIn',
+        slippageBps: 50,
       }),
     ).rejects.toThrow('Infinifi adapter only supports USDC <-> siUSD conversions')
 
@@ -177,6 +180,7 @@ describe('createInfinifiQuoteAdapter', () => {
         outToken: DEFAULT_ADDRESSES.siusd,
         amountOut: 1_000n,
         intent: 'exactOut',
+        slippageBps: 50,
       } as any),
     ).rejects.toThrow('Infinifi adapter does not support exactOut/withdraw')
   })

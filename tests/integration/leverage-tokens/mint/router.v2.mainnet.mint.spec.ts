@@ -41,8 +41,8 @@ describe.each(MAINNET_TOKEN_CONFIGS)('Leverage Router V2 Mint (Mainnet $label)',
           return actual >= lowerBound && actual <= upperBound
         }
 
-        // Minted shares should be within tolerance of expected shares
-        expect(withinTolerance(res.sharesMinted, res.expectedShares)).toBe(true)
+        // Minted shares should be within tolerance of previewed shares
+        expect(withinTolerance(res.sharesMinted, res.previewShares)).toBe(true)
 
         // Sanity check: minted shares should meet minimum threshold
         expect(res.sharesMinted).toBeGreaterThanOrEqual(res.minShares)

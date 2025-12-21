@@ -7,7 +7,7 @@ import {
 } from '@/lib/contracts/queries/InfinifiPreviewer'
 import infinifiGatewayAbi from './abi/infinifi/InfinifiGateway'
 import unstakeAndRedeemHelperAbi from './abi/infinifi/UnstakeAndRedeemHelper'
-import { applySlippageFloor, DEFAULT_SLIPPAGE_BPS, validateSlippage } from './helpers'
+import { applySlippageFloor, validateSlippage } from './helpers'
 import type { QuoteFn } from './types'
 
 const ADDRESSES: Record<number, InfinifiAddresses> = {
@@ -31,7 +31,6 @@ export interface InfinifiAdapterOptions {
   /** Receiver for minted shares and redeemed assets (typically the router). */
   router: Address
   chainId?: number
-  slippageBps?: number
   /** Optional per-chain overrides (e.g., forks/Tenderly). */
   overrides?: Partial<InfinifiAddresses>
 }
@@ -48,19 +47,14 @@ export interface InfinifiAdapterOptions {
  * - exactIn: deposit/redeem with slippage floor on expected output
  */
 export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): QuoteFn {
-  const {
-    publicClient,
-    router,
-    chainId = mainnet.id,
-    slippageBps = DEFAULT_SLIPPAGE_BPS,
-    overrides = {},
-  } = options
+  const { publicClient, router, chainId = mainnet.id, overrides = {} } = options
 
-  validateSlippage(slippageBps)
   const addresses = resolveAddresses(chainId, overrides)
   const normalizedRouter = getAddress(router)
 
-  return async ({ inToken, outToken, amountIn, intent }) => {
+  return async ({ inToken, outToken, amountIn, intent, slippageBps }) => {
+    validateSlippage(slippageBps)
+
     const normalizedIn = getAddress(inToken)
     const normalizedOut = getAddress(outToken)
     const [usdcOnGateway, mintController] = await publicClient.multicall({
