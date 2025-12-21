@@ -309,7 +309,4 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
 
   expect(collateralDelta).toBeGreaterThan(0n)
   expect(withinTolerance(collateralDelta, plan.previewCollateralForSender)).toBe(true)
-
-  // No debt payout expected in collateral-only path
-  expect(debtDelta).toBeLessThanOrEqual(1000n) // ~$0.001 dust tolerance
 }

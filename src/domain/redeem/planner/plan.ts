@@ -86,7 +86,7 @@ export async function planRedeem({
   // Leverage-adjusted slippage for the swap: scale by previewed leverage.
   const quoteSlippageBps = Math.max(
     1,
-    Math.floor(slippageBps / (Number(formatUnits(currentLeverage, 18)) - 1)),
+    Math.floor((slippageBps * 0.95) / (Number(formatUnits(currentLeverage, 18)) - 1)),
   )
 
   const collateralToSpend = preview.collateral - minCollateralForSender
@@ -106,7 +106,7 @@ export async function planRedeem({
 
   if (collateralToDebtQuote.minOut < preview.debt) {
     throw new Error(
-      `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}. Try reducing your slippage tolerance`,
+      `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}. Try increasing your slippage tolerance`,
     )
   }
 

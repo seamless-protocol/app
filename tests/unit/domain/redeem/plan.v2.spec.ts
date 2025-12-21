@@ -74,10 +74,10 @@ describe('planRedeem', () => {
     expect(plan.calls[0]?.target).toBe(collateralAsset) // approval first
     expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
-    // slippage scales with leverage: collateralRatio 3 → leverage 1.5 → 100/(1.5-1)=200 bps
+    // slippage scales with leverage and a 5% buffer: collateralRatio 3 -> leverage 1.5 -> floor(100*0.95/(1.5-1)) = 190 bps
     expect(quote).toHaveBeenCalledWith(
       expect.objectContaining({
-        slippageBps: 200,
+        slippageBps: 190,
         amountIn: 208n, // 1000 - 792
       }),
     )
