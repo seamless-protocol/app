@@ -285,15 +285,7 @@ function assertRedeemPlan(
 }
 
 function assertRedeemExecution(result: RedeemExecutionResult): void {
-  const {
-    plan,
-    collateralDelta,
-    debtDelta,
-    sharesBefore,
-    sharesAfter,
-    sharesToRedeem,
-    toleranceBps,
-  } = result
+  const { plan, collateralDelta, sharesBefore, sharesAfter, sharesToRedeem, toleranceBps } = result
 
   expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
 
