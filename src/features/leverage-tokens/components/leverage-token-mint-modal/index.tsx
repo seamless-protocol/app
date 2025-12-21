@@ -10,7 +10,6 @@ import {
   useWaitForTransactionReceipt,
 } from 'wagmi'
 import { parseUsdPrice, toScaledUsd, usdToFixedString } from '@/domain/shared/prices'
-import { useLeverageTokenUsdPrice } from '@/features/leverage-tokens/hooks/useLeverageTokenUsdPrice'
 import {
   parseErc20ReceivedFromReceipt,
   parseMintedSharesFromReceipt,
@@ -40,6 +39,7 @@ import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
+import { useLeverageTokenUsdPrice } from '../../hooks/useLeverageTokenUsdPrice'
 import { useMinSharesGuard } from '../../hooks/useMinSharesGuard'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'

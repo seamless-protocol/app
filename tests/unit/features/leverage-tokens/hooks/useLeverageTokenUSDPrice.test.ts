@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
 import { useReadContracts } from 'wagmi'
-import { useLeverageTokenUsdPrice } from '@/features/leverage-tokens/hooks/useLeverageTokenUsdPrice'
+import { useLeverageTokenUsdPrice } from '@/features/leverage-tokens/hooks/useLeverageTokenUsdPrice.ts'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { STALE_TIME } from '@/features/leverage-tokens/utils/constants'
 import { getLeverageManagerAddress } from '@/lib/contracts/addresses'
