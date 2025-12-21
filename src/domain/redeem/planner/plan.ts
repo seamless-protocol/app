@@ -86,7 +86,7 @@ export async function planRedeem({
   // Leverage-adjusted slippage for the swap: scale by previewed leverage.
   const quoteSlippageBps = Math.max(
     1,
-    Math.floor((slippageBps * 0.95) / (Number(formatUnits(currentLeverage, 18)) - 1)),
+    Math.floor((slippageBps * 0.5) / (Number(formatUnits(currentLeverage, 18)) - 1)),
   )
 
   const collateralToSpend = preview.collateral - minCollateralForSender
