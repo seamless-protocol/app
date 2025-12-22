@@ -69,7 +69,7 @@ export function generateLeverageTokenFAQ({ tokenConfig }: LeverageTokenFAQParams
                 {collateralAsset.protocol?.name} Points, which will convert into a future{' '}
                 {collateralAsset.protocol?.name} airdrop. With this Leverage Token, users earn a{' '}
                 {tokenConfig.apyConfig.pointsMultiplier}x multiple on{' '}
-                {collateralAsset.protocol?.name} Points. Example: If you deposit $10,000 s
+                {collateralAsset.protocol?.name} Points. Example: If you deposit $10,000
                 {collateralAsset.symbol} into this LT, your effective leveraged position is $
                 {(leverageRatio * 10000).toLocaleString('en-US', {
                   minimumFractionDigits: 2,

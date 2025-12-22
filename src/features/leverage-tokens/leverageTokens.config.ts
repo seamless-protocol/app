@@ -581,11 +581,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       symbol: 'siUSD',
       name: 'Staked infiniFi USD',
       description:
-        "siUSD is Infinifi's senior-debt tranche token. It captures yield from Infinifi's fractional reserve yield strategy, which involves various liquid and illiquid yield strategies, always keeping a portion of reserves in liquid positions to facilitate instant withdrawals. Learn more here.",
+        "siUSD is infiniFi's senior-debt tranche token. It captures yield from infiniFi's fractional reserve yield strategy, which involves various liquid and illiquid yield strategies, always keeping a portion of reserves in liquid positions to facilitate instant withdrawals. Learn more here.",
       address: '0xDBDC1Ef57537E34680B898E1FEBD3D68c7389bCB' as Address,
       decimals: 18,
       protocol: {
-        name: 'Infinifi',
+        name: 'infiniFi',
         url: 'https://infinifi.xyz/',
         icon: siUSDLogo,
       },
@@ -608,8 +608,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       additionalRewards: [
         {
           id: 'infinifi-points',
-          title: 'Infinifi Points',
-          description: 'Infinifi Points',
+          title: 'infiniFi Points',
+          description: 'infiniFi Points',
           url: 'https://app.infinifi.xyz/points',
           icon: siUSDLogo,
           badge: {
@@ -646,8 +646,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
         {
           id: 'infinifi',
-          title: 'Infinifi Transparency Dashboard',
-          description: 'Infinifi Transparency Dashboard',
+          title: 'infiniFi Transparency Dashboard',
+          description: 'infiniFi Transparency Dashboard',
           url: 'https://stats.infinifi.xyz/',
           icon: siUSDLogo,
           badge: {
@@ -657,8 +657,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
         {
           id: 'infinifi',
-          title: 'Infinifi',
-          description: 'Infinifi',
+          title: 'infiniFi',
+          description: 'infiniFi',
           url: 'https://infinifi.xyz/',
           icon: siUSDLogo,
           badge: {
