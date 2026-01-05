@@ -60,9 +60,6 @@ export function BalmySDKProvider({ children, ...props }: BalmySDKProviderProps) 
             {
               type: 'odos',
             },
-            // {
-            //   type: 'defi-llama',
-            // },
           ],
         },
       },
