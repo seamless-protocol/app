@@ -228,5 +228,6 @@ function mapStepToQuote(step: Step, wantsNativeIn: boolean) {
     approvalTarget: getAddress(approvalTarget),
     calls: [{ target: getAddress(tx?.to), data, value: 0n }],
     wantsNativeIn,
+    sourceName: 'LiFi',
   }
 }

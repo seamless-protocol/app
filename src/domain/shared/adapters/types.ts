@@ -20,6 +20,10 @@ export type BaseQuote = {
   approvalTarget: Address
   // Explicit call sequence (for single- or multi-step flows)
   calls: Array<Call>
+  // Optional identifier for the venue/adapter that produced this quote
+  sourceId?: string
+  // Human-friendly source/venue name when available
+  sourceName?: string
 }
 
 // Velora-specific quote with required veloraData (used for exactOut)
