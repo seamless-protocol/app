@@ -86,7 +86,7 @@ export interface LeverageTokenDefinition {
   adminRpcUrl?: string
   swap?: {
     uniswapV2Router?: Address
-    type?: 'lifi' | 'velora' | 'pendle' | 'uniswapV2' | 'uniswapV3'
+    type?: 'lifi' | 'velora' | 'pendle' | 'uniswapV2' | 'uniswapV3' | 'balmy'
     uniswapV3?: {
       pool?: Address
       poolKey?: UniswapV3PoolKey

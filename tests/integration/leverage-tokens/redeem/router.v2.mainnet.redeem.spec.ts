@@ -10,6 +10,7 @@ import {
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
 import type { LeverageTokenKey } from '../../../fixtures/addresses'
+import { createTestBalmySDK } from '../../../shared/clients'
 import { CHAIN_ID, getAddressesForToken } from '../../../shared/env'
 import { approveIfNeeded } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
@@ -183,6 +184,7 @@ async function performRedeem(
     routerAddress: router,
     swap: collateralToDebtConfig,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
+    balmySDK: createTestBalmySDK(),
   })
 
   const blockNumber = await publicClient.getBlockNumber()
@@ -289,7 +291,7 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
 
   expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
 
-  // Add extra tolerance for LiFi routing variability
+  // Add extra tolerance for routing variability
   const effectiveToleranceBps = BigInt(toleranceBps) + 100n
   const withinTolerance = (actual: bigint, expected: bigint): boolean => {
     if (expected === 0n) return actual === 0n

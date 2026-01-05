@@ -12,6 +12,7 @@ import {
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
 import type { LeverageTokenDefinition } from '../../fixtures/addresses'
+import { createTestBalmySDK } from '../clients'
 import { AVAILABLE_LEVERAGE_TOKENS, getAddressesForToken } from '../env'
 import { approveIfNeeded, seedUniswapV2PairLiquidity, topUpErc20, topUpNative } from '../funding'
 import { type WithForkCtx, withFork } from '../withFork'
@@ -346,6 +347,7 @@ function buildQuoteAdapter({
     swap: swapConfig,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
     fromAddress: executor,
+    balmySDK: createTestBalmySDK(),
   })
   return quote
 }

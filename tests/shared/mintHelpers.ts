@@ -20,6 +20,7 @@ import {
   simulateLeverageRouterV2Deposit,
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
+import { createTestBalmySDK } from './clients'
 import { ADDR, CHAIN_ID } from './env'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
 
@@ -121,6 +122,7 @@ export async function executeSharedMint({
       routerAddress: router,
       swap: debtToCollateralConfig,
       getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
+      balmySDK: createTestBalmySDK(),
     })
     quoteDebtToCollateral = quote
   } else {

@@ -34,6 +34,8 @@ describe('useRedeemExecution', () => {
     previewCollateralForSender: 950_000_000_000_000_000n,
     previewExcessDebt: 0n,
     calls: [{ target: makeAddr('swap'), value: 0n, data: '0xabcdef1234567890' as `0x${string}` }],
+    quoteSourceName: 'Mock Source',
+    quoteSourceId: 'mock-source-id',
   }
 
   const mockSwap = {
