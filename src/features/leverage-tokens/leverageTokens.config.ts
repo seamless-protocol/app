@@ -10,6 +10,7 @@ import {
   PendleLogo,
   ResolvLogo,
   siUSDLogo,
+  sUSDSLogo,
 } from '@/components/icons'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
@@ -682,13 +683,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainId: 1,
     chainName: 'Ethereum',
     chainLogo: EthereumLogo,
-    supplyCap: 625000,
+    supplyCap: 418000,
     apyConfig: {
       aprProvider: {
         type: APR_PROVIDERS.DEFI_LLAMA,
         id: 'd8c4eff5-c8a9-46fc-a888-057c4c668e72',
       },
-      pointsMultiplier: 16.5,
     },
     collateralAsset: {
       symbol: 'sUSDS',
@@ -711,25 +711,14 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'sky',
+        type: 'lifi',
       },
       collateralToDebt: {
-        type: 'sky',
+        type: 'lifi',
       },
     },
     relatedResources: {
       additionalRewards: [
-        {
-          id: 'infinifi-points',
-          title: 'infiniFi Points',
-          description: 'infiniFi Points',
-          url: 'https://app.infinifi.xyz/points',
-          icon: siUSDLogo,
-          badge: {
-            text: 'Rewards Program',
-            color: 'yellow' as const,
-          },
-        },
         {
           id: 'merkl-rewards',
           title: 'Merkl Rewards',
@@ -750,7 +739,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           id: 'morpho-lending',
           title: 'Morpho Lending Market',
           description: 'View the underlying lending market powering this Leverage Token',
-          url: 'https://app.morpho.org/ethereum/market/0xbbf7ce1b40d32d3e3048f5cf27eeaa6de8cb27b80194690aab191a63381d8c99/',
+          url: 'https://app.morpho.org/ethereum/market/0x3274643db77a064abd3bc851de77556a4ad2e2f502f4f0c80845fa8f909ecf0b/',
           icon: MorphoLogo,
           badge: {
             text: 'Lending Market',
@@ -758,22 +747,22 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           },
         },
         {
-          id: 'infinifi',
-          title: 'infiniFi Transparency Dashboard',
-          description: 'infiniFi Transparency Dashboard',
-          url: 'https://stats.infinifi.xyz/',
-          icon: siUSDLogo,
+          id: 'sky',
+          title: 'sky Transparency Dashboard',
+          description: 'sky Transparency Dashboard',
+          url: 'https://info.sky.money/',
+          icon: sUSDSLogo,
           badge: {
             text: 'Protocol Info',
             color: 'yellow' as const,
           },
         },
         {
-          id: 'infinifi',
-          title: 'infiniFi',
-          description: 'infiniFi',
-          url: 'https://infinifi.xyz/',
-          icon: siUSDLogo,
+          id: 'sky',
+          title: 'sky',
+          description: 'sky',
+          url: 'https://sky.money/',
+          icon: sUSDSLogo,
           badge: {
             text: 'Protocol Info',
             color: 'yellow' as const,
