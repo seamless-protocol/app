@@ -230,7 +230,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   },
   [LeverageTokenKey.RLP_USDC_6_75X_ETHEREUM_MAINNET]: {
     address: '0x6426811fF283Fa7c78F0BC5D71858c2f79c0Fc3d' as Address,
-    featuredRank: 4,
     name: 'RLP / USDC 6.75x Leverage Token',
     symbol: 'RLP-USDC-6.75x',
     description:
@@ -712,9 +711,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     swaps: {
       debtToCollateral: {
         type: 'lifi',
+        allowBridges: 'none',
       },
       collateralToDebt: {
         type: 'lifi',
+        allowBridges: 'none',
       },
     },
     relatedResources: {
