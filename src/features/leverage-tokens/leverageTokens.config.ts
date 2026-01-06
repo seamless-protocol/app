@@ -748,8 +748,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
         {
           id: 'sky',
-          title: 'sky Transparency Dashboard',
-          description: 'sky Transparency Dashboard',
+          title: 'Sky Transparency Dashboard',
+          description: 'Sky Transparency Dashboard',
           url: 'https://info.sky.money/',
           icon: sUSDSLogo,
           badge: {
@@ -759,8 +759,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
         {
           id: 'sky',
-          title: 'sky',
-          description: 'sky',
+          title: 'Sky',
+          description: 'Sky',
           url: 'https://sky.money/',
           icon: sUSDSLogo,
           badge: {

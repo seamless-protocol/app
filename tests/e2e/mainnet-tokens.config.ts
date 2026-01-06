@@ -60,10 +60,10 @@ export const MAINNET_E2E_TOKEN_CONFIGS: Array<MainnetE2ETokenTestConfig> = [
   {
     key: 'susds-usdt-25x',
     label: 'sUSDS/USDT 25x',
-    slippagePercent: '0.1',
-    mintAmount: '10',
+    slippagePercent: '1.5',
+    mintAmount: '100',
     collateralAddress: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD' as Address, // Mainnet sUSDS
-    fundingAmount: '200',
+    fundingAmount: '500',
     richHolderAddress: '0xBc65ad17c5C0a2A4D159fa5a503f4992c7B545FE' as Address, // Large sUSDS Holder
   },
   // Skip PT-RLP-4DEC2025/USDC 2x due PT being expired
