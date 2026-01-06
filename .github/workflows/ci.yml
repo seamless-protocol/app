@@ -135,7 +135,6 @@ jobs:
           sleep 5
         env:
           VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
-          ANVIL_MAINNET_FORK_BLOCK: 23821277
 
       - name: Run integration tests (Mainnet tokens, Anvil)
         run: bun run test:integration
