@@ -692,9 +692,9 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     collateralAsset: {
       symbol: 'sUSDS',
-      name: 'Savings USDS"',
+      name: 'Savings USDS',
       description:
-        "sUSDS is the new version of sDAI, offered by Sky which offers a higher yield. sUSDS represents USDS deposited into and earning the Sky Savings Rate.",
+        'sUSDS is the new version of sDAI, offered by Sky which offers a higher yield. sUSDS represents USDS deposited into and earning the Sky Savings Rate.',
       address: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD' as Address,
       decimals: 18,
       protocol: {

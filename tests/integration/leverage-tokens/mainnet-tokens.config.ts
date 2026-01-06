@@ -62,7 +62,6 @@ export const MAINNET_TOKEN_CONFIGS: Array<MainnetTokenTestConfig> = [
     fundingAmount: '10',
     richHolderAddress: '0xBc65ad17c5C0a2A4D159fa5a503f4992c7B545FE' as Address, // EOA
   },
-  
   // Skip PT-RLP-4DEC2025/USDC 2x due PT being expired
   // {
   //   key: 'pt-rlp-4dec2025-usdc-2x',
