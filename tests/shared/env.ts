@@ -221,7 +221,7 @@ type LeverageTokenAddresses = {
   usdc: Address
   weth: Address
   weeth: Address
-  executor?: Address
+  multicallExecutor?: Address
   veloraAdapter?: Address
   rebalanceAdapter?: Address
   lendingAdapter?: Address
@@ -302,7 +302,7 @@ function buildAddressContext(
   if (factoryAddress) result.factory = factoryAddress
   if (managerV2Address) result.managerV2 = managerV2Address
   if (routerV2Address) result.routerV2 = routerV2Address
-  if (executorAddress) result.executor = executorAddress
+  if (executorAddress) result.multicallExecutor = executorAddress
   if (veloraAddress) result.veloraAdapter = veloraAddress
   if (rebalanceAddress) result.rebalanceAdapter = rebalanceAddress
   if (lendingAddress) result.lendingAdapter = lendingAddress

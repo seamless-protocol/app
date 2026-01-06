@@ -47,6 +47,7 @@ type RedeemScenario = {
   toleranceBps: number
   richHolderAddress: Address
   chainId: number
+  multicallExecutor: Address
 }
 
 async function runRedeemTest({
@@ -117,6 +118,7 @@ async function prepareRedeemScenario(
     toleranceBps: params.toleranceBps,
     richHolderAddress: params.richHolderAddress,
     chainId: mainnet.id,
+    multicallExecutor: addresses.multicallExecutor as Address,
   }
 }
 
@@ -136,6 +138,7 @@ async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Prom
       token: scenario.token,
       manager: scenario.manager,
       router: scenario.router,
+      multicallExecutor: scenario.multicallExecutor,
     },
   })
 

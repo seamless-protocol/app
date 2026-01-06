@@ -185,7 +185,7 @@ export function createTestBalmySDK() {
         global: {
           referrer: {
             address: zeroAddress,
-            name: 'seamless-test',
+            name: 'seamless',
           },
         },
         custom: {

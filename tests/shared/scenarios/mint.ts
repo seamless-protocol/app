@@ -175,7 +175,7 @@ async function runMintScenario({
       plan.equityInCollateralAsset,
       plan.flashLoanAmount,
       plan.minShares,
-      getAddressesForToken(tokenDefinition.key).executor as Address,
+      getAddressesForToken(tokenDefinition.key).multicallExecutor as Address,
       plan.calls,
     ],
     account: account.address,
@@ -214,8 +214,8 @@ async function runMintScenario({
 
 function resolveTokenAddresses(tokenDefinition: LeverageTokenDefinition) {
   const addresses = getAddressesForToken(tokenDefinition.key)
-  const executor = addresses.executor
-  if (!executor) {
+  const multicallExecutor = addresses.multicallExecutor
+  if (!multicallExecutor) {
     throw new Error('Multicall executor address missing; update contract map for V2 harness')
   }
 
@@ -268,7 +268,7 @@ async function prepareMintScenario({
   const quoteDebtToCollateral = buildQuoteAdapter({
     chainId: tokenDefinition.chainId,
     router,
-    executor: addresses.executor as Address,
+    multicallExecutor: addresses.multicallExecutor as Address,
     publicClient,
     swapConfig: effectiveSwapConfig,
   })
@@ -331,13 +331,13 @@ async function fundAccount({
 function buildQuoteAdapter({
   chainId,
   router,
-  executor,
+  multicallExecutor,
   publicClient,
   swapConfig,
 }: {
   chainId: number
   router: Address
-  executor: Address
+  multicallExecutor: Address
   publicClient: PublicClient
   swapConfig: DebtToCollateralSwapConfig
 }) {
@@ -346,7 +346,7 @@ function buildQuoteAdapter({
     routerAddress: router,
     swap: swapConfig,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
-    fromAddress: executor,
+    fromAddress: multicallExecutor,
     balmySDK: createTestBalmySDK(),
   })
   return quote

@@ -28,6 +28,7 @@ export type RedeemScenarioConfig = {
   token: Address
   manager: Address
   router: Address
+  multicallExecutor: Address
   collateralAsset: Address
   debtAsset: Address
   swap: CollateralToDebtSwapConfig
@@ -96,6 +97,7 @@ export async function ensureRedeemSetup({
         token: scenario.token,
         manager: scenario.manager,
         router: scenario.router,
+        multicallExecutor: scenario.multicallExecutor,
       },
     })
   } finally {
@@ -165,8 +167,8 @@ async function resolveRedeemScenario({
   tokenDefinition: LeverageTokenDefinition
 }): Promise<RedeemScenarioConfig> {
   const addresses = getAddressesForToken(tokenDefinition.key)
-  const executor = addresses.executor
-  if (!executor) {
+  const multicallExecutor = addresses.multicallExecutor
+  if (!multicallExecutor) {
     throw new Error('Multicall executor address missing; update contract map for V2 harness')
   }
 
@@ -192,6 +194,7 @@ async function resolveRedeemScenario({
     debtAsset,
     swap,
     chainId,
+    multicallExecutor,
   }
 }
 
