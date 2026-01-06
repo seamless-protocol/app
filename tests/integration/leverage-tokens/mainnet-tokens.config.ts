@@ -54,6 +54,15 @@ export const MAINNET_TOKEN_CONFIGS: Array<MainnetTokenTestConfig> = [
     fundingAmount: '100',
     richHolderAddress: '0x81001E398b65F641EB087EC83e209545544BF4D8' as Address, // EOA
   },
+  {
+    key: 'susd-usdt-25x',
+    label: 'sUSD/USDT 25x',
+    slippageBps: 50, // Infinifi staking path is deterministic; modest buffer
+    toleranceBps: 10,
+    fundingAmount: '10',
+    richHolderAddress: '0xBc65ad17c5C0a2A4D159fa5a503f4992c7B545FE' as Address, // EOA
+  },
+  
   // Skip PT-RLP-4DEC2025/USDC 2x due PT being expired
   // {
   //   key: 'pt-rlp-4dec2025-usdc-2x',
