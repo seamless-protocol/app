@@ -58,13 +58,13 @@ export const MAINNET_E2E_TOKEN_CONFIGS: Array<MainnetE2ETokenTestConfig> = [
     richHolderAddress: '0x81001E398b65F641EB087EC83e209545544BF4D8' as Address, // EOA
   },
   {
-    key: 'susd-usdt-25x',
-    label: 'sUSD/USDT 25x',
+    key: 'susds-usdt-25x',
+    label: 'sUSDS/USDT 25x',
     slippagePercent: '0.1',
     mintAmount: '10',
-    collateralAddress: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD' as Address, // Mainnet sUSD
+    collateralAddress: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD' as Address, // Mainnet sUSDS
     fundingAmount: '200',
-    richHolderAddress: '0xBc65ad17c5C0a2A4D159fa5a503f4992c7B545FE' as Address, // EOA
+    richHolderAddress: '0xBc65ad17c5C0a2A4D159fa5a503f4992c7B545FE' as Address, // Large sUSDS Holder
   },
   // Skip PT-RLP-4DEC2025/USDC 2x due PT being expired
   // {
