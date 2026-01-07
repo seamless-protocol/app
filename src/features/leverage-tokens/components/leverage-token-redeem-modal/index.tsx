@@ -180,7 +180,9 @@ export function LeverageTokenRedeemModal({
     }
   }, [leverageTokenUsdPrice, selectedToken])
 
-  const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
+  const { slippage, setSlippage, slippageBps } = useSlippage(
+    leverageTokenConfig.slippagePresets?.redeem?.default ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+  )
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')

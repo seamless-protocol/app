@@ -186,7 +186,9 @@ export function LeverageTokenMintModal({
     balance: collateralBalanceFormatted,
     price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
   })
-  const { slippage, setSlippage, slippageBps } = useSlippage(DEFAULT_SLIPPAGE_PERCENT_DISPLAY)
+  const { slippage, setSlippage, slippageBps } = useSlippage(
+    leverageTokenConfig.slippagePresets?.mint?.default ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+  )
   const [showAdvanced, setShowAdvanced] = useState(false)
   // Derive expected tokens from preview data (no local state needed)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
