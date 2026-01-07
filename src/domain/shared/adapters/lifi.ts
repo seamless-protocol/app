@@ -39,6 +39,8 @@ type Step = {
   transactionRequest?: TransactionRequest
 }
 
+const DEFAULT_DENY_EXCHANGES = ['sushiswap']
+
 /**
  * Create a QuoteFn adapter backed by LiFi's /v1/quote.
  * - Quotes are same-chain (Base -> Base) by default.
@@ -103,6 +105,7 @@ export function createLifiQuoteAdapter(opts: LifiAdapterOptions): QuoteFn {
       ...(integrator ? { integrator } : {}),
       order,
       ...(allowBridges ? { allowBridges } : {}),
+      denyExchanges: DEFAULT_DENY_EXCHANGES,
     })
 
     if ((readEnv('VITE_LIFI_DEBUG') ?? readEnv('LIFI_DEBUG')) === '1') {
@@ -168,6 +171,7 @@ function buildQuoteUrl(
     integrator?: string
     order: LifiOrder
     allowBridges?: string
+    denyExchanges?: Array<string>
   },
 ): URL {
   // Use LiFi's dedicated endpoints for clarity:
@@ -201,6 +205,7 @@ function buildQuoteUrl(
   if (params.integrator) url.searchParams.set('integrator', params.integrator)
   url.searchParams.set('order', params.order)
   if (params.allowBridges) url.searchParams.set('allowBridges', params.allowBridges)
+  if (params.denyExchanges) url.searchParams.set('denyExchanges', params.denyExchanges.join(','))
   // Always skip simulation for faster responses
   url.searchParams.set('skipSimulation', 'true')
   return url
