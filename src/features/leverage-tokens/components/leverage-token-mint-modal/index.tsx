@@ -187,6 +187,7 @@ export function LeverageTokenMintModal({
     price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
   })
   const { slippage, setSlippage, slippageBps } = useSlippage(
+    leverageTokenAddress,
     leverageTokenConfig.slippagePresets?.mint?.default ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
   )
   const [showAdvanced, setShowAdvanced] = useState(false)
