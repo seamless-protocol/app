@@ -10,6 +10,7 @@ import {
   PendleLogo,
   ResolvLogo,
   siUSDLogo,
+  sUSDSLogo,
 } from '@/components/icons'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { BASE_WETH } from '@/lib/contracts/addresses'
@@ -25,6 +26,7 @@ export enum LeverageTokenKey {
   RLP_USDC_6_75X_ETHEREUM_MAINNET = 'rlp-usdc-6.75x-ethereum-mainnet',
   SIUSD_USDC_11X_ETHEREUM_MAINNET = 'siUSD-usdc-11x-ethereum-mainnet',
   PT_RLP_4DEC2025_USDC_2X_ETHEREUM_MAINNET = 'pt-rlp-4dec2025-usdc-2x-ethereum-mainnet',
+  SUSDS_USDT_25X_ETHEREUM_MAINNET = 'sUSDS-usdt-25x-ethereum-mainnet',
   // Add more token keys here as they are added
   // ANOTHER_TOKEN = 'another-token',
 }
@@ -228,7 +230,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   },
   [LeverageTokenKey.RLP_USDC_6_75X_ETHEREUM_MAINNET]: {
     address: '0x6426811fF283Fa7c78F0BC5D71858c2f79c0Fc3d' as Address,
-    featuredRank: 3,
     name: 'RLP / USDC 6.75x Leverage Token',
     symbol: 'RLP-USDC-6.75x',
     description:
@@ -558,7 +559,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
   },
   [LeverageTokenKey.SIUSD_USDC_11X_ETHEREUM_MAINNET]: {
-    featuredRank: 2,
+    featuredRank: 3,
     address: '0x604d37747f3382fA51519e7542d54F1e730B97A3' as Address,
     name: 'siUSD / USDC 11x Leverage Token',
     symbol: 'SIUSD-USDC-11x',
@@ -661,6 +662,108 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           description: 'infiniFi',
           url: 'https://infinifi.xyz/',
           icon: siUSDLogo,
+          badge: {
+            text: 'Protocol Info',
+            color: 'yellow' as const,
+          },
+        },
+      ],
+    },
+  },
+  [LeverageTokenKey.SUSDS_USDT_25X_ETHEREUM_MAINNET]: {
+    featuredRank: 2,
+    address: '0xc73CE54dBC4A02D7110F69AdF123B3DbE5B3033f' as Address,
+    name: 'sUSDS / USDT 25x Leverage Token',
+    symbol: 'sUSDS-USDT-25x',
+    description:
+      'sUSDS / USDT 25x Leverage Token that amplifies relative price movements between sUSDS and USDT on Ethereum',
+    decimals: 18,
+    leverageRatio: 25,
+    chainId: 1,
+    chainName: 'Ethereum',
+    chainLogo: EthereumLogo,
+    supplyCap: 418000,
+    apyConfig: {
+      aprProvider: {
+        type: APR_PROVIDERS.DEFI_LLAMA,
+        id: 'd8c4eff5-c8a9-46fc-a888-057c4c668e72',
+      },
+    },
+    collateralAsset: {
+      symbol: 'sUSDS',
+      name: 'Savings USDS',
+      description:
+        'sUSDS is the new version of sDAI, offered by Sky which offers a higher yield. sUSDS represents USDS deposited into and earning the Sky Savings Rate.',
+      address: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD' as Address,
+      decimals: 18,
+      protocol: {
+        name: 'Sky',
+        url: 'https://sky.money/',
+        icon: sUSDSLogo,
+      },
+    },
+    debtAsset: {
+      symbol: 'USDT',
+      name: 'Tether USD',
+      address: '0xdAC17F958D2ee523a2206206994597C13D831ec7' as Address,
+      decimals: 6,
+    },
+    swaps: {
+      debtToCollateral: {
+        type: 'lifi',
+        allowBridges: 'none',
+      },
+      collateralToDebt: {
+        type: 'lifi',
+        allowBridges: 'none',
+      },
+    },
+    relatedResources: {
+      additionalRewards: [
+        {
+          id: 'merkl-rewards',
+          title: 'Merkl Rewards',
+          description: 'Additional DeFi rewards and incentive tracking',
+          // Default goes to dashboard; if connected, deep-link to user page
+          url: 'https://app.merkl.xyz/users/',
+          getUrl: ({ address }) =>
+            address ? `https://app.merkl.xyz/users/${address}` : 'https://app.merkl.xyz/users/',
+          icon: MerklLogo,
+          badge: {
+            text: 'Rewards Program',
+            color: 'purple' as const,
+          },
+        },
+      ],
+      underlyingPlatforms: [
+        {
+          id: 'morpho-lending',
+          title: 'Morpho Lending Market',
+          description: 'View the underlying lending market powering this Leverage Token',
+          url: 'https://app.morpho.org/ethereum/market/0x3274643db77a064abd3bc851de77556a4ad2e2f502f4f0c80845fa8f909ecf0b/',
+          icon: MorphoLogo,
+          badge: {
+            text: 'Lending Market',
+            color: 'blue' as const,
+          },
+        },
+        {
+          id: 'sky',
+          title: 'Sky Transparency Dashboard',
+          description: 'Sky Transparency Dashboard',
+          url: 'https://info.sky.money/',
+          icon: sUSDSLogo,
+          badge: {
+            text: 'Protocol Info',
+            color: 'yellow' as const,
+          },
+        },
+        {
+          id: 'sky',
+          title: 'Sky',
+          description: 'Sky',
+          url: 'https://sky.money/',
+          icon: sUSDSLogo,
           badge: {
             text: 'Protocol Info',
             color: 'yellow' as const,
