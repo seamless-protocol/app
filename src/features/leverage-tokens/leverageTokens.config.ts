@@ -697,7 +697,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       address: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD' as Address,
       decimals: 18,
       protocol: {
-        name: 'sky',
+        name: 'Sky',
         url: 'https://sky.money/',
         icon: sUSDSLogo,
       },
