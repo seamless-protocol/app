@@ -121,6 +121,17 @@ export interface LeverageTokenConfig {
     underlyingPlatforms: Array<ResourceItem>
     additionalRewards: Array<ResourceItem>
   }
+
+  slippagePresets?: {
+    mint?: {
+      default: string
+      presets: Array<string>
+    }
+    redeem?: {
+      default: string
+      presets: Array<string>
+    }
+  }
 }
 
 /**
@@ -770,6 +781,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           },
         },
       ],
+    },
+    slippagePresets: {
+      mint: {
+        default: '0.7',
+        presets: ['0.5', '1.0', '1.5'],
+      },
     },
   },
 }

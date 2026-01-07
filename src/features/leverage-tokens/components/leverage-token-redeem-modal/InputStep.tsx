@@ -40,6 +40,12 @@ interface LeverageTokenConfig {
     address: string
     decimals: number
   }
+  slippagePresets?: {
+    redeem?: {
+      default: string
+      presets: Array<string>
+    }
+  }
 }
 
 interface InputStepProps {
@@ -152,6 +158,9 @@ export function InputStep({
     return { label: `Redeem ${leverageTokenConfig.symbol}`, busy: false }
   })()
 
+  const slippagePresets =
+    leverageTokenConfig.slippagePresets?.redeem?.presets || SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -234,7 +243,7 @@ export function InputStep({
             <div className="flex items-center justify-between">
               <div className="text-xs font-medium text-foreground">Slippage Tolerance</div>
               <div className="flex items-center space-x-2">
-                {SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM.map((value) => (
+                {slippagePresets.map((value) => (
                   <Button
                     key={value}
                     variant={slippage === value ? 'default' : 'outline'}
