@@ -2,8 +2,11 @@ import { useMemo } from 'react'
 import { DEFAULT_SLIPPAGE_BPS } from '@/domain/shared/adapters/helpers'
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage'
 
-export function useSlippage(initial: string = '0.5') {
-  const [slippage, setSlippage] = useLocalStorage<string>('slippage-tolerance', initial)
+export function useSlippage(tokenAddress: string, initial: string = '0.5') {
+  const [slippage, setSlippage] = useLocalStorage<string>(
+    `slippage-tolerance-${tokenAddress}`,
+    initial,
+  )
 
   const slippageBps = useMemo(() => {
     // Accept common user inputs like "2" or "2%"; trim whitespace and a trailing % sign

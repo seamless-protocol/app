@@ -4,22 +4,24 @@ import { useSlippage } from '@/features/leverage-tokens/hooks/mint/useSlippage'
 import { hookTestUtils } from '../../../../../utils.tsx'
 
 describe('useSlippage', () => {
+  const tokenAddress = '0xBEEF'
+
   it('should initialize with default slippage', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     expect(result.current.slippage).toBe('0.5')
     expect(result.current.slippageBps).toBe(50) // 0.5% * 100 = 50 bps
   })
 
   it('should initialize with custom slippage', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage('1.0'))
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress, '1.0'))
 
     expect(result.current.slippage).toBe('1.0')
     expect(result.current.slippageBps).toBe(100) // 1.0% * 100 = 100 bps
   })
 
   it('should handle valid slippage input', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('2.5')
@@ -29,7 +31,7 @@ describe('useSlippage', () => {
   })
 
   it('should handle decimal slippage', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('0.1')
@@ -39,7 +41,7 @@ describe('useSlippage', () => {
   })
 
   it('should handle zero slippage', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('0')
@@ -49,7 +51,7 @@ describe('useSlippage', () => {
   })
 
   it('should handle negative slippage by falling back to default', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('-1.0')
@@ -59,7 +61,7 @@ describe('useSlippage', () => {
   })
 
   it('should handle very high slippage by clamping to 100%', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('150.0')
@@ -69,7 +71,7 @@ describe('useSlippage', () => {
   })
 
   it('should handle invalid input gracefully', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('abc')
@@ -79,7 +81,7 @@ describe('useSlippage', () => {
   })
 
   it('should handle empty string input', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('')
@@ -89,7 +91,7 @@ describe('useSlippage', () => {
   })
 
   it('should handle undefined input gracefully', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage(undefined as any)
@@ -99,7 +101,7 @@ describe('useSlippage', () => {
   })
 
   it('should handle very small slippage values', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('0.01')
@@ -109,7 +111,7 @@ describe('useSlippage', () => {
   })
 
   it('should handle fractional slippage values', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('0.25')
@@ -119,7 +121,7 @@ describe('useSlippage', () => {
   })
 
   it('should maintain precision for valid inputs', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('1.234')
@@ -129,7 +131,7 @@ describe('useSlippage', () => {
   })
 
   it('should handle edge case of exactly 100%', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('100.0')
@@ -139,12 +141,34 @@ describe('useSlippage', () => {
   })
 
   it('should handle edge case of exactly 0%', () => {
-    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage())
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
 
     act(() => {
       result.current.setSlippage('0.0')
     })
     expect(result.current.slippage).toBe('0.0')
     expect(result.current.slippageBps).toBe(0) // 0% = 0 bps
+  })
+
+  it('should handle multiple token addresses', () => {
+    const { result } = hookTestUtils.renderHookWithQuery(() => useSlippage(tokenAddress))
+
+    act(() => {
+      result.current.setSlippage('0.5')
+    })
+
+    const otherTokenAddress = '0xCAFE'
+    const { result: otherResult } = hookTestUtils.renderHookWithQuery(() =>
+      useSlippage(otherTokenAddress),
+    )
+
+    act(() => {
+      otherResult.current.setSlippage('1.0')
+    })
+
+    expect(result.current.slippage).toBe('0.5')
+    expect(result.current.slippageBps).toBe(50) // 0.5% * 100 = 50 bps
+    expect(otherResult.current.slippage).toBe('1.0')
+    expect(otherResult.current.slippageBps).toBe(100) // 1.0% * 100 = 100 bps
   })
 })
