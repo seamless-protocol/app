@@ -201,7 +201,7 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
   },
   'siusd-usdc-11x': {
     key: 'siusd-usdc-11x',
-    address: '0xA4C6BC650f96f677cEF5264a4281153D8208eDce' as Address,
+    address: '0x604d37747f3382fA51519e7542d54F1e730B97A3' as Address,
     label: 'siUSD / USDC 11x Leverage Token',
     chainId: mainnet.id,
     collateralSymbol: 'siUSD',
@@ -209,7 +209,7 @@ const TENDERLY_LEVERAGE_TOKENS: Record<LeverageTokenKey, LeverageTokenDefinition
   },
   'susds-usdt-25x': {
     key: 'susds-usdt-25x',
-    address: '0xB52Dd116CE002FDCa127C06780C63Eff67f9CcDa' as Address,
+    address: '0xc73CE54dBC4A02D7110F69AdF123B3DbE5B3033f' as Address,
     label: 'sUSDS / USDT 25x Leverage Token',
     chainId: mainnet.id,
     collateralSymbol: 'sUSDS',
