@@ -16,7 +16,6 @@ describe.each(MAINNET_TOKEN_CONFIGS)('Leverage Router V2 Mint (Mainnet $label)',
       const addresses = getAddressesForToken(config.key, 'prod')
 
       await withFork(async ({ account, publicClient, config: wagmiConfig }) => {
-        // Use production config (Velora for debt->collateral swap)
         const res = await executeSharedMint({
           account,
           publicClient,
@@ -29,6 +28,7 @@ describe.each(MAINNET_TOKEN_CONFIGS)('Leverage Router V2 Mint (Mainnet $label)',
             manager: (addresses.managerV2 ?? addresses.manager) as Address,
             router: (addresses.routerV2 ?? addresses.router) as Address,
             ...(addresses.uniswapV3 ? { uniswapV3: addresses.uniswapV3 } : {}),
+            multicallExecutor: addresses.multicallExecutor as Address,
           },
         })
 

@@ -180,5 +180,6 @@ function mapPendleResponseToQuote(
       },
     ],
     wantsNativeIn: isAddressEqual(inToken, ETH_SENTINEL),
+    sourceName: 'Pendle',
   }
 }

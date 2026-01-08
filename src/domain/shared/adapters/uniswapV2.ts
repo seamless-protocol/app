@@ -140,6 +140,7 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
         },
       ],
       ...(isNativeIn ? { wantsNativeIn: true } : {}),
+      sourceName: 'Uniswap V2',
     }
   }
 }

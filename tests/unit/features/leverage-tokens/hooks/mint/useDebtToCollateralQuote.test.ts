@@ -8,6 +8,10 @@ vi.mock('@/domain/mint/utils/createDebtToCollateralQuote', () => ({
   createDebtToCollateralQuote: vi.fn(),
 }))
 
+vi.mock('@/components/BalmySDKProvider', () => ({
+  useBalmySDK: () => ({ balmySDK: {} as any }),
+}))
+
 const mockCreateDebtToCollateralQuote = createDebtToCollateralQuote as Mock
 
 describe('useDebtToCollateralQuote', () => {

@@ -188,12 +188,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
     },
     relatedResources: {
@@ -274,12 +272,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
     },
     relatedResources: {
@@ -465,12 +461,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
     },
     relatedResources: {
@@ -560,12 +554,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
     },
   },

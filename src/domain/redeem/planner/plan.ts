@@ -27,6 +27,8 @@ export interface RedeemPlan {
   previewExcessDebt: bigint
   sharesToRedeem: bigint
   calls: Array<Call>
+  quoteSourceName: string | undefined
+  quoteSourceId: string | undefined
 }
 
 export interface PlanRedeemParams {
@@ -137,5 +139,7 @@ export async function planRedeem({
     previewExcessDebt,
     sharesToRedeem,
     calls,
+    quoteSourceName: collateralToDebtQuote.sourceName,
+    quoteSourceId: collateralToDebtQuote.sourceId,
   }
 }

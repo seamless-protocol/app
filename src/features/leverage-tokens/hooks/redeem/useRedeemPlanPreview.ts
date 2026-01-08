@@ -79,6 +79,8 @@ export function useRedeemPlanPreview({
     isLoading: query.isPending || query.isFetching,
     error: query.error,
     refetch: query.refetch,
+    quoteSourceName: query.data?.quoteSourceName,
+    quoteSourceId: query.data?.quoteSourceId,
   }
 }
 

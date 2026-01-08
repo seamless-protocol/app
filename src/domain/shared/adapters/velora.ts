@@ -227,6 +227,7 @@ function mapVeloraResponseToQuote(
         value: wantsNativeIn ? maxIn : 0n,
       },
     ],
+    sourceName: 'Velora',
   }
 
   // For mint (exactIn), offsets are not used and ParaSwap returns SELL methods.

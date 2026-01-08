@@ -289,6 +289,7 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
       calls: [{ target: getAddress(router), data: calldata, value: callValue }],
       deadline,
       ...(callValue > 0n ? { wantsNativeIn: true } : {}),
+      sourceName: 'Uniswap V3',
     }
   }
 }
