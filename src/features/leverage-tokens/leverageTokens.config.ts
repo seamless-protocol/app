@@ -165,7 +165,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainId: 1,
     chainName: 'Ethereum',
     chainLogo: EthereumLogo,
-    supplyCap: 887,
+    supplyCap: 1084,
     apyConfig: {
       aprProvider: {
         type: APR_PROVIDERS.DEFI_LLAMA,
