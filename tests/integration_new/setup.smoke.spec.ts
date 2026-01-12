@@ -9,25 +9,28 @@ const wagmiTest = createWagmiTest(mainnet, {
   forkBlockNumber,
 })
 
-wagmiTest('anvil fork is up with expected chainId and block', async ({ client }) => {
-  expect(await client.getChainId()).toBe(mainnet.id)
+wagmiTest(
+  'anvil fork is up with expected chainId and block, reset and mine work',
+  async ({ client }) => {
+    expect(await client.getChainId()).toBe(mainnet.id)
 
-  const blockNumber = await client.getBlockNumber({
-    cacheTime: 0,
-  })
-  expect(blockNumber).toBe(forkBlockNumber + 1n)
+    const blockNumber = await client.getBlockNumber({
+      cacheTime: 0,
+    })
+    expect(blockNumber).toBe(forkBlockNumber + 1n)
 
-  await client.mine({ blocks: 1 })
+    await client.mine({ blocks: 1 })
 
-  const blockNumber2 = await client.getBlockNumber({
-    cacheTime: 0,
-  })
-  expect(blockNumber2).toBe(forkBlockNumber + 2n)
+    const blockNumber2 = await client.getBlockNumber({
+      cacheTime: 0,
+    })
+    expect(blockNumber2).toBe(forkBlockNumber + 2n)
 
-  await client.reset({ blockNumber: forkBlockNumber })
+    await client.reset({ blockNumber: forkBlockNumber })
 
-  const blockNumber3 = await client.getBlockNumber({
-    cacheTime: 0,
-  })
-  expect(blockNumber3).toBe(forkBlockNumber)
-})
+    const blockNumber3 = await client.getBlockNumber({
+      cacheTime: 0,
+    })
+    expect(blockNumber3).toBe(forkBlockNumber)
+  },
+)

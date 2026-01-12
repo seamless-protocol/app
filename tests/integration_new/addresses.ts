@@ -9,10 +9,10 @@ function must<T>(value: T | null | undefined, msg: string): T {
 export const mainnetAddresses = {
   leverageRouterV2: must(
     contractAddresses[mainnet.id]?.leverageRouterV2,
-    'Leverage router not found for mainnet',
+    'LeverageRouter not found for mainnet',
   ),
   multicallExecutor: must(
     contractAddresses[mainnet.id]?.multicallExecutor,
-    'Multicall executor not found for mainnet',
+    'MulticallExecutor not found for mainnet',
   ),
 }

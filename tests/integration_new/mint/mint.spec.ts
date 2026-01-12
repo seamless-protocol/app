@@ -154,9 +154,11 @@ describe('mint integration tests', () => {
         }),
       )
       await waitFor(() => expect(mintPlanPreviewResult.current.isLoading).toBe(false))
-      
+
       expect(mintPlanPreviewResult.current.error).toBeDefined()
-      expect(mintPlanPreviewResult.current.error?.message).toBe('Manager previewed debt 29089783914938493397 is less than flash loan amount 29368589283800209967. Try increasing your slippage tolerance')
+      expect(mintPlanPreviewResult.current.error?.message).toBe(
+        'Manager previewed debt 29089783914938493397 is less than flash loan amount 29368589283800209967. Try increasing your slippage tolerance',
+      )
     },
   )
 })
