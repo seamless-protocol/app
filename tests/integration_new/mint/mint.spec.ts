@@ -1,7 +1,8 @@
 import { createWagmiTest, renderHook, waitFor } from '@morpho-org/test-wagmi'
-import { parseEther, type PublicClient } from 'viem'
+import { parseEther } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect } from 'vitest'
+import { useDebtToCollateralQuote } from '@/features/leverage-tokens/hooks/mint/useDebtToCollateralQuote'
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
 import { useMintWrite } from '@/features/leverage-tokens/hooks/mint/useMintWrite'
 import {
@@ -10,7 +11,6 @@ import {
 } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
 import { mainnetAddresses } from '../addresses'
-import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
 
 const test_wsteth_eth_25x_lifi = createWagmiTest(mainnet, {
   forkUrl: process.env['VITE_ETHEREUM_RPC_URL'],
@@ -38,13 +38,20 @@ describe('mint integration tests', () => {
         value: parseEther('1'),
       })
 
-      const quoteFn = createDebtToCollateralQuote({
-        chainId: mainnet.id,
-        routerAddress: mainnetAddresses.leverageRouterV2,
-        swap: { type: 'lifi', allowBridges: 'none', order: 'CHEAPEST' },
-        getPublicClient: (cid: number) => (cid === mainnet.id ? client as unknown as PublicClient : undefined),
-        fromAddress: mainnetAddresses.multicallExecutor,
-      }).quote
+      const { result: useDebtToCollateralQuoteResult } = renderHook(wagmiConfig, () =>
+        useDebtToCollateralQuote({
+          chainId: mainnet.id,
+          routerAddress: mainnetAddresses.leverageRouterV2,
+          swap: { type: 'lifi', allowBridges: 'none', order: 'CHEAPEST' },
+          requiresQuote: true,
+          fromAddress: mainnetAddresses.multicallExecutor,
+        }),
+      )
+      await waitFor(() => expect(useDebtToCollateralQuoteResult.current.quote).toBeDefined())
+      if (!useDebtToCollateralQuoteResult.current.quote) {
+        throw new Error('Quote function for debt to collateral not found')
+      }
+      const quoteFn = useDebtToCollateralQuoteResult.current.quote
 
       const equityInCollateralAsset = 10n ** 18n // 1 wstETH deposited by the user
       const { result: mintPlanPreviewResult } = renderHook(wagmiConfig, () =>
