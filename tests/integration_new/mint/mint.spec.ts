@@ -1,17 +1,16 @@
 import { createWagmiTest, renderHook, waitFor } from '@morpho-org/test-wagmi'
-import type { Address } from 'viem'
-import { parseEther } from 'viem'
+import { parseEther, type PublicClient } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect } from 'vitest'
-import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
 import { useMintWrite } from '@/features/leverage-tokens/hooks/mint/useMintWrite'
 import {
   LeverageTokenKey,
   leverageTokenConfigs,
 } from '@/features/leverage-tokens/leverageTokens.config'
-import { contractAddresses } from '@/lib/contracts/addresses'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
+import { mainnetAddresses } from '../addresses'
+import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
 
 const test_wsteth_eth_25x_lifi = createWagmiTest(mainnet, {
   forkUrl: process.env['VITE_ETHEREUM_RPC_URL'],
@@ -39,25 +38,20 @@ describe('mint integration tests', () => {
         value: parseEther('1'),
       })
 
-      const router = contractAddresses[mainnet.id]?.leverageRouterV2 ?? null
-      const multicallExecutor = contractAddresses[mainnet.id]?.multicallExecutor ?? null
-      if (!router || !multicallExecutor) {
-        throw new Error('Leverage router not found')
-      }
-
-      const quoteFn = createLifiQuoteAdapter({
+      const quoteFn = createDebtToCollateralQuote({
         chainId: mainnet.id,
-        router,
-        fromAddress: multicallExecutor,
-        allowBridges: 'none',
-        order: 'CHEAPEST',
-      })
+        routerAddress: mainnetAddresses.leverageRouterV2,
+        swap: { type: 'lifi', allowBridges: 'none', order: 'CHEAPEST' },
+        getPublicClient: (cid: number) => (cid === mainnet.id ? client as unknown as PublicClient : undefined),
+        fromAddress: mainnetAddresses.multicallExecutor,
+      }).quote
 
+      const equityInCollateralAsset = 10n ** 18n // 1 wstETH deposited by the user
       const { result: mintPlanPreviewResult } = renderHook(wagmiConfig, () =>
         useMintPlanPreview({
           config: wagmiConfig,
           token: leverageTokenConfig.address,
-          equityInCollateralAsset: 10n ** 18n, // 1 wstETH deposited by the user
+          equityInCollateralAsset,
           slippageBps: 100,
           chainId: mainnet.id,
           enabled: true,
@@ -93,7 +87,7 @@ describe('mint integration tests', () => {
       // Approve the leverage router to spend the collateral asset
       await client.approve({
         address: leverageTokenConfig.collateralAsset.address,
-        args: [contractAddresses[mainnet.id]?.leverageRouterV2 as Address, 10n ** 18n],
+        args: [mainnetAddresses.leverageRouterV2, equityInCollateralAsset],
       })
 
       const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())

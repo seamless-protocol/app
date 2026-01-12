@@ -19,7 +19,7 @@
     "test:coverage": "vitest --coverage",
     "test:integration": "TEST_CHAIN=mainnet bun scripts/run-tests.ts integration --backend=anvil -- tests/integration/leverage-tokens",
     "test:integration:raw": "vitest -c vitest.integration.config.ts --run tests/integration",
-    "test:integration:new": "bunx --bun vitest -c vitest.integration.config.ts --run tests/integration_new/mint/mint.spec.ts",
+    "test:integration:new": "bunx --bun vitest --run -c vitest.integration.config.ts",
     "anvil:base": "bash ./scripts/anvil-base.sh",
     "anvil:mainnet": "bash ./scripts/anvil-mainnet.sh",
     "test:e2e": "TEST_CHAIN=mainnet bun scripts/run-tests.ts e2e --chain mainnet --backend=anvil -- tests/e2e/mainnet-tokens-mint.spec.ts tests/e2e/mainnet-tokens-redeem.spec.ts",

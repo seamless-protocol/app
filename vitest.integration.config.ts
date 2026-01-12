@@ -13,6 +13,11 @@ export default defineProject({
     hookTimeout: 30_000,
     poolOptions: { threads: { singleThread: true } }, // avoid Prool port clashes
     sequence: { hooks: 'list' },
+    server: {
+      deps: {
+        inline: ['zod'],
+      }
+    }
   },
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
 })

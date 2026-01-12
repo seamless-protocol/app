@@ -1,6 +1,13 @@
+import { createWagmiTest } from '@morpho-org/test-wagmi'
 import { mainnet } from 'viem/chains'
 import { expect } from 'vitest'
-import { forkBlockNumber, wagmiTest } from './setup'
+
+const forkBlockNumber = 24219436n
+
+const wagmiTest = createWagmiTest(mainnet, {
+  forkUrl: process.env['VITE_ETHEREUM_RPC_URL'],
+  forkBlockNumber,
+})
 
 wagmiTest('anvil fork is up with expected chainId and block', async ({ client }) => {
   expect(await client.getChainId()).toBe(mainnet.id)

@@ -1,7 +1,4 @@
-import { createViemTest } from '@morpho-org/test/playwright'
-import { createWagmiTest } from '@morpho-org/test-wagmi'
 import { Headers, Request, Response, fetch as undiciFetch } from 'undici'
-import { mainnet } from 'viem/chains'
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { mswServer } from './mocks/node'
 
@@ -13,18 +10,6 @@ globalThis.fetch = undiciFetch as unknown as typeof globalThis.fetch
 globalThis.Headers = Headers as unknown as typeof globalThis.Headers
 globalThis.Request = Request as unknown as typeof globalThis.Request
 globalThis.Response = Response as unknown as typeof globalThis.Response
-
-export const forkBlockNumber = 24219436n
-
-export const wagmiTest = createWagmiTest(mainnet, {
-  forkUrl: process.env['VITE_ETHEREUM_RPC_URL'],
-  forkBlockNumber: forkBlockNumber,
-})
-
-export const playwrightTest = createViemTest(mainnet, {
-  forkUrl: process.env['VITE_ETHEREUM_RPC_URL'],
-  forkBlockNumber: forkBlockNumber,
-})
 
 beforeAll(() => mswServer.listen())
 afterEach(() => mswServer.resetHandlers())
