@@ -1,16 +1,8 @@
 import { HttpResponse, http, passthrough } from 'msw'
 
-export const handlers = [
-  // wsteth-eth-25x quote at block 24219436
-  http.get(`https://partner-seashell.li.quest/v1/quote`, ({ request }) => {
-    const url = new URL(request.url)
-    const queryString = url.search.slice(1) // Slice to remove the ? from the query string
-
-    if (
-      queryString ===
-      `fromChain=1&toChain=1&fromToken=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&toToken=0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0&toAddress=0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA&fromAmount=29077811172079415809&fromAddress=0x16D02Ebd89988cAd1Ce945807b963aB7A9Fd22E1&slippage=0.0002&integrator=${process.env['VITE_LIFI_INTEGRATOR']}&order=CHEAPEST&allowBridges=none&denyExchanges=sushiswap&skipSimulation=true`
-    ) {
-      return HttpResponse.json({
+const LIFI_QUOTES = {
+    // 'mints wsteth-eth-25x using lifi test' quote at block 24219436
+    [`fromChain=1&toChain=1&fromToken=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&toToken=0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0&toAddress=0xb0764dE7eeF0aC69855C431334B7BC51A96E6DbA&fromAmount=29077811172079415809&fromAddress=0x16D02Ebd89988cAd1Ce945807b963aB7A9Fd22E1&slippage=0.0002&integrator=${process.env['VITE_LIFI_INTEGRATOR']}&order=CHEAPEST&allowBridges=none&denyExchanges=sushiswap&skipSimulation=true`]: {
         type: 'lifi',
         id: '601e6173-b2f8-4888-80e0-daa81f730f49:0',
         tool: 'okx',
@@ -163,12 +155,24 @@ export const handlers = [
           from: '0x16D02Ebd89988cAd1Ce945807b963aB7A9Fd22E1',
         },
         transactionId: '0x0c7a182bddeddc9bbe259345e49504c83b4e06c2adec7c3ee53aed5d477fa220',
-      })
-    } else {
-      return HttpResponse.json({
-        error: 'LiFi quote mock not found',
-      })
+    },
+}
+
+export const handlers = [
+  // wsteth-eth-25x quote at block 24219436
+  http.get(`https://partner-seashell.li.quest/v1/quote`, ({ request }) => {
+    const url = new URL(request.url)
+    const queryString = url.search.slice(1) // Slice to remove the ? from the query string
+
+    const quote = LIFI_QUOTES[queryString]
+
+    if (quote) {
+      return HttpResponse.json(quote)
     }
+
+    return HttpResponse.json({
+      error: 'LiFi quote mock not found',
+    })
   }),
   // Intercept all HTTP methods to localhost on any port. We passthrough to the actual request (i.e. the anvil fork).
   http.all(/^http:\/\/localhost(:\d+)?\//, () => {
