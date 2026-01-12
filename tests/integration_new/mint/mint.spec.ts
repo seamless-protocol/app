@@ -19,7 +19,7 @@ const test_wsteth_eth_25x_lifi = createWagmiTest(mainnet, {
 
 describe('mint integration tests', () => {
   test_wsteth_eth_25x_lifi(
-    'mints wsteth-eth-25x using lifi',
+    'mints wsteth-eth-25x using lifi: happy path',
     async ({ client, config: wagmiConfig }) => {
       const leverageTokenConfig =
         leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]
@@ -66,7 +66,7 @@ describe('mint integration tests', () => {
           debounceMs: 0,
         }),
       )
-      await waitFor(() => expect(mintPlanPreviewResult.current.plan).toBeDefined())
+      await waitFor(() => expect(mintPlanPreviewResult.current.isLoading).toBe(false))
       if (!mintPlanPreviewResult.current.plan) {
         throw new Error('Current plan not found')
       }
@@ -102,6 +102,61 @@ describe('mint integration tests', () => {
       })
       expect(sharesAfter).toBeGreaterThanOrEqual(plan.minShares)
       expect(sharesAfter).toBe(952772571476942294n)
+    },
+  )
+
+  test_wsteth_eth_25x_lifi(
+    'mints wsteth-eth-25x using lifi: slippage exceeded',
+    async ({ client, config: wagmiConfig }) => {
+      const leverageTokenConfig =
+        leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]
+      if (!leverageTokenConfig) {
+        throw new Error('Leverage token config not found')
+      }
+
+      // Fund the client account with 1 ETH and 1 wstETH
+      await client.deal({
+        erc20: leverageTokenConfig.collateralAsset.address,
+        account: client.account.address,
+        amount: parseEther('1'),
+      })
+      await client.setBalance({
+        address: client.account.address,
+        value: parseEther('1'),
+      })
+
+      const { result: useDebtToCollateralQuoteResult } = renderHook(wagmiConfig, () =>
+        useDebtToCollateralQuote({
+          chainId: mainnet.id,
+          routerAddress: mainnetAddresses.leverageRouterV2,
+          swap: { type: 'lifi', allowBridges: 'none', order: 'CHEAPEST' },
+          requiresQuote: true,
+          fromAddress: mainnetAddresses.multicallExecutor,
+        }),
+      )
+      await waitFor(() => expect(useDebtToCollateralQuoteResult.current.quote).toBeDefined())
+      if (!useDebtToCollateralQuoteResult.current.quote) {
+        throw new Error('Quote function for debt to collateral not found')
+      }
+      const quoteFn = useDebtToCollateralQuoteResult.current.quote
+
+      const equityInCollateralAsset = 10n ** 18n // 1 wstETH deposited by the user
+      const { result: mintPlanPreviewResult } = renderHook(wagmiConfig, () =>
+        useMintPlanPreview({
+          config: wagmiConfig,
+          token: leverageTokenConfig.address,
+          equityInCollateralAsset,
+          slippageBps: 1,
+          chainId: mainnet.id,
+          enabled: true,
+          quote: quoteFn,
+          debounceMs: 0,
+        }),
+      )
+      await waitFor(() => expect(mintPlanPreviewResult.current.isLoading).toBe(false))
+      
+      expect(mintPlanPreviewResult.current.error).toBeDefined()
+      expect(mintPlanPreviewResult.current.error?.message).toBe('Manager previewed debt 29089783914938493397 is less than flash loan amount 29368589283800209967. Try increasing your slippage tolerance')
     },
   )
 })
