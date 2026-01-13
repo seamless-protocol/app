@@ -15,7 +15,7 @@ import { getContractAddresses } from '@/lib/contracts'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
 import { wagmiTest } from '../setup'
 
-const useMintPlanPreviewWithSlippageAttempts = async ({
+const useMintPlanPreviewWithSlippageRetries = async ({
   wagmiConfig,
   leverageTokenConfig,
   equityInCollateralAsset,
@@ -109,8 +109,8 @@ describe('mint integration tests', () => {
         }
         const quoteFn = useDebtToCollateralQuoteResult.current.quote
 
-        // Preview the mint plan with slippage attempts using the quote function
-        const mintPlanPreviewResult = await useMintPlanPreviewWithSlippageAttempts({
+        // Preview the mint plan with slippage retries using the quote function
+        const mintPlanPreviewResult = await useMintPlanPreviewWithSlippageRetries({
           wagmiConfig,
           leverageTokenConfig,
           equityInCollateralAsset,
