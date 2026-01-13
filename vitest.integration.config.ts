@@ -6,7 +6,7 @@ export default defineProject({
   test: {
     name: 'integration',
     include: ['tests/integration_new/**/*.{test,spec}.{ts,tsx}'],
-    environment: 'happy-dom',
+    environment: 'jsdom',
     globals: true,
     setupFiles: './tests/integration_new/setup.ts',
     testTimeout: 60_000,
