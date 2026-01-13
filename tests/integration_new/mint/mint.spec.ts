@@ -32,11 +32,10 @@ const useMintPlanPreviewWithSlippageRetries = async ({
   retries: number
   slippageIncrementBps: number
 }) => {
-  let remainingAttempts = 1 + retries
+  const totalAttempts = 1 + retries
   let currentSlippageBps = slippageBps
 
-  while (remainingAttempts > 0) {
-    remainingAttempts -= 1
+  for (let i = 0; i < totalAttempts; i++) {
     const { result: mintPlanPreviewResult } = renderHook(wagmiConfig, () =>
       // biome-ignore lint/correctness/useHookAtTopLevel: renderHook usage inside retry loop is intentional
       useMintPlanPreview({
@@ -56,16 +55,7 @@ const useMintPlanPreviewWithSlippageRetries = async ({
       return mintPlanPreviewResult
     }
 
-    const isSlippageError = mintPlanPreviewResult.current.error?.message.includes(
-      'Try increasing your slippage tolerance',
-    )
-
-    if (isSlippageError && remainingAttempts > 0) {
-      currentSlippageBps += slippageIncrementBps
-      continue
-    }
-
-    return mintPlanPreviewResult
+    currentSlippageBps += slippageIncrementBps
   }
 
   throw new Error(`Failed to create mint plan with retry helper after ${1 + retries} attempts`)
