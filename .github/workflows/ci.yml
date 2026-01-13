@@ -124,27 +124,14 @@ jobs:
         with:
           version: stable
 
-      - name: Prepare integration env
-        run: |
-          cp tests/integration/.env.example tests/integration/.env
-          echo "Integration test environment prepared"
-
-      - name: Start Anvil (Mainnet fork)
-        run: |
-          bun run anvil:mainnet &
-          sleep 5
-        env:
-          VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
-          ANVIL_MAINNET_FORK_BLOCK: 23821277
-
-      - name: Run integration tests (Mainnet tokens, Anvil)
-        run: bun run test:integration
+      - name: Run integration tests
+        run: bun run test:integration:new
         env:
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless
           VITE_COINGECKO_API_URL: ${{ secrets.VITE_COINGECKO_API_URL }}
-          VITE_INCLUDE_TEST_TOKENS: true
-
+          VITE_ETHEREUM_RPC_URL: ${{ secrets.VITE_ETHEREUM_RPC_URL }}
+          VITE_BASE_RPC_URL: ${{ secrets.VITE_BASE_RPC_URL }}
 
   build:
     name: Build
