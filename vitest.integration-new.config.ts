@@ -1,8 +1,8 @@
 /// <reference types="vitest/config" />
 import path from 'node:path'
-import { defineProject } from 'vitest/config'
+import { defineConfig } from 'vitest/config'
 
-export default defineProject({
+export default defineConfig({
   test: {
     name: 'integration',
     include: ['tests/integration_new/**/*.{test,spec}.{ts,tsx}'],
