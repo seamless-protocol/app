@@ -39,7 +39,7 @@ type Step = {
   transactionRequest?: TransactionRequest
 }
 
-const DEFAULT_DENY_EXCHANGES = ['sushiswap']
+const DEFAULT_DENY_EXCHANGES = ['sushiswap', 'fly']
 
 /**
  * Create a QuoteFn adapter backed by LiFi's /v1/quote.

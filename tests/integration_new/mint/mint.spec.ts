@@ -4,6 +4,7 @@ import { describe, expect } from 'vitest'
 import type { Config } from 'wagmi'
 import type { DebtToCollateralSwapConfig } from '@/domain/mint/utils/createDebtToCollateralQuote'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
+import { useApprovalFlow } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
 import { useDebtToCollateralQuote } from '@/features/leverage-tokens/hooks/mint/useDebtToCollateralQuote'
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
 import { useMintWrite } from '@/features/leverage-tokens/hooks/mint/useMintWrite'
@@ -13,6 +14,7 @@ import {
 } from '@/features/leverage-tokens/leverageTokens.config'
 import { getContractAddresses } from '@/lib/contracts'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
+import { connectMockConnectorToAnvil } from '../helpers/wagmi'
 import { wagmiTest } from '../setup'
 
 const useMintPlanPreviewWithSlippageRetries = async ({
@@ -78,6 +80,11 @@ describe('mint integration tests', () => {
     wagmiTest(leverageTokenConfig.chainId)(
       `mints ${leverageTokenConfig.symbol} shares on ${leverageTokenConfig.chainId}`,
       async ({ client, config: wagmiConfig }) => {
+        await connectMockConnectorToAnvil({
+          client,
+          wagmiConfig,
+        })
+
         // Give the account some ETH and the collateral asset to mint with
         await client.deal({
           erc20: leverageTokenConfig.collateralAsset.address,
@@ -126,11 +133,20 @@ describe('mint integration tests', () => {
           throw new Error('Mint plan not found')
         }
 
-        // Approve the leverage router to spend the collateral asset for the mint
-        await client.approve({
-          address: leverageTokenConfig.collateralAsset.address,
-          args: [addresses.leverageRouterV2 as Address, plan.equityInCollateralAsset],
-        })
+        // Approve the collateral asset from the user to be spent by the leverage router
+        const { result: approvalFlow } = renderHook(wagmiConfig, () =>
+          useApprovalFlow({
+            tokenAddress: leverageTokenConfig.collateralAsset.address,
+            spender: addresses.leverageRouterV2 as Address,
+            amountRaw: plan.equityInCollateralAsset,
+            decimals: leverageTokenConfig.collateralAsset.decimals,
+            chainId: leverageTokenConfig.chainId,
+            enabled: true,
+          }),
+        )
+        expect(approvalFlow.current.isApproved).toBe(false)
+        approvalFlow.current.approve()
+        await waitFor(() => expect(approvalFlow.current.isApproved).toBe(true))
 
         // Execute the mint using the plan
         const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())
