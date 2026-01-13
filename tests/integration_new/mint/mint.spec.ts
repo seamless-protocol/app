@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@morpho-org/test-wagmi'
 import { parseEther, parseUnits } from 'viem'
-import { base, mainnet } from 'viem/chains'
+import { mainnet } from 'viem/chains'
 import { describe, expect } from 'vitest'
 import { useDebtToCollateralQuote } from '@/features/leverage-tokens/hooks/mint/useDebtToCollateralQuote'
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
@@ -45,7 +45,7 @@ const useMintPlanPreviewWithSlippageAttempts = async ({
         token: leverageTokenConfig.address,
         equityInCollateralAsset,
         slippageBps: currentSlippageBps,
-        chainId: mainnet.id,
+        chainId: leverageTokenConfig.chainId,
         enabled: true,
         quote: quoteFn,
         debounceMs: 0,
@@ -76,75 +76,74 @@ describe('mint integration tests', () => {
 
   for (const leverageTokenConfig of leverageTokenConfigs) {
     const addresses = getContractAddresses(leverageTokenConfig.chainId)
+    const testRunner =
+      (leverageTokenConfig.chainId === mainnet.id ? mainnetTest : baseTest) as typeof mainnetTest 
 
     const equityInCollateralAsset = parseUnits(
       '1',
       leverageTokenConfig.collateralAsset.decimals,
     )
-    
-    if (leverageTokenConfig.chainId === mainnet.id) {
-      mainnetTest(
-        `mints ${leverageTokenConfig.symbol}: happy path`,
-        async ({ client, config: wagmiConfig }) => {
 
-          await client.deal({
-            erc20: leverageTokenConfig.collateralAsset.address,
-            account: client.account.address,
-            amount: equityInCollateralAsset,
-          })
-          await client.setBalance({
-            address: client.account.address,
-            value: parseEther('1'),
-          })
+    testRunner(
+      `mints ${leverageTokenConfig.symbol}: happy path`,
+      async ({ client, config: wagmiConfig }) => {
+        await client.deal({
+          erc20: leverageTokenConfig.collateralAsset.address,
+          account: client.account.address,
+          amount: equityInCollateralAsset,
+        })
+        await client.setBalance({
+          address: client.account.address,
+          value: parseEther('1'),
+        })
 
-          const { result: useDebtToCollateralQuoteResult } = renderHook(wagmiConfig, () =>
-            useDebtToCollateralQuote({
-              chainId: leverageTokenConfig.chainId,
-              routerAddress: addresses.leverageRouterV2!,
-              swap: leverageTokenConfig.swaps!.debtToCollateral as DebtToCollateralSwapConfig,
-              requiresQuote: true,
-              fromAddress: addresses.multicallExecutor!,
-            }),
-          )
-          await waitFor(() => expect(useDebtToCollateralQuoteResult.current.quote).toBeDefined())
-          if (!useDebtToCollateralQuoteResult.current.quote) {
-            throw new Error('Quote function for debt to collateral not found')
-          }
-          const quoteFn = useDebtToCollateralQuoteResult.current.quote
-
-          const mintPlanPreviewResult = await useMintPlanPreviewWithSlippageAttempts({
-            wagmiConfig,
-            leverageTokenConfig,
-            equityInCollateralAsset,
-            quoteFn,
-            slippageBps: 50,
-            retries: 5,
-            slippageIncrementBps: 50,
-          })
-
-          await client.approve({
-            address: leverageTokenConfig.collateralAsset.address,
-            args: [addresses.leverageRouterV2!, equityInCollateralAsset],
-          })
-
-          const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())
-          await waitFor(() => expect(mintWriteResult.current.mutateAsync).toBeDefined())
-
-          await mintWriteResult.current.mutateAsync({
-            config: wagmiConfig,
+        const { result: useDebtToCollateralQuoteResult } = renderHook(wagmiConfig, () =>
+          useDebtToCollateralQuote({
             chainId: leverageTokenConfig.chainId,
-            account: client.account,
-            token: leverageTokenConfig.address,
-            plan: mintPlanPreviewResult.current.plan!,
-          })
+            routerAddress: addresses.leverageRouterV2!,
+            swap: leverageTokenConfig.swaps!.debtToCollateral as DebtToCollateralSwapConfig,
+            requiresQuote: true,
+            fromAddress: addresses.multicallExecutor!,
+          }),
+        )
+        await waitFor(() => expect(useDebtToCollateralQuoteResult.current.quote).toBeDefined())
+        if (!useDebtToCollateralQuoteResult.current.quote) {
+          throw new Error('Quote function for debt to collateral not found')
+        }
+        const quoteFn = useDebtToCollateralQuoteResult.current.quote
 
-          const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
-            address: leverageTokenConfig.address,
-            args: [client.account.address],
-          })
-          expect(sharesAfter).toBeGreaterThanOrEqual(mintPlanPreviewResult.current.plan!.minShares)
-        },
-      )
-    }
+        const mintPlanPreviewResult = await useMintPlanPreviewWithSlippageAttempts({
+          wagmiConfig,
+          leverageTokenConfig,
+          equityInCollateralAsset,
+          quoteFn,
+          slippageBps: 50,
+          retries: 5,
+          slippageIncrementBps: 50,
+        })
+
+        await client.approve({
+          address: leverageTokenConfig.collateralAsset.address,
+          args: [addresses.leverageRouterV2!, equityInCollateralAsset],
+        })
+
+        const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())
+        await waitFor(() => expect(mintWriteResult.current.mutateAsync).toBeDefined())
+
+        await mintWriteResult.current.mutateAsync({
+          config: wagmiConfig,
+          chainId: leverageTokenConfig.chainId,
+          account: client.account,
+          token: leverageTokenConfig.address,
+          plan: mintPlanPreviewResult.current.plan!,
+        })
+
+        const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
+          address: leverageTokenConfig.address,
+          args: [client.account.address],
+        })
+        expect(sharesAfter).toBeGreaterThanOrEqual(mintPlanPreviewResult.current.plan!.minShares)
+      },
+    )
   }
 })
