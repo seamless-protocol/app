@@ -93,6 +93,11 @@ describe('mint integration tests', () => {
           value: parseEther('1'),
         })
 
+        const collateralBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
+          address: leverageTokenConfig.collateralAsset.address,
+          args: [client.account.address],
+        })
+
         // Get the function to quote the debt to collateral swap for the mint
         const { result: useDebtToCollateralQuoteResult } = renderHook(wagmiConfig, () =>
           useDebtToCollateralQuote({
@@ -148,6 +153,14 @@ describe('mint integration tests', () => {
           args: [client.account.address],
         })
         expect(sharesAfter).toBeGreaterThanOrEqual(plan.minShares)
+
+        // Verify the user's collateral balance decreased by the expected amount
+        const collateralBalanceAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
+          address: leverageTokenConfig.collateralAsset.address,
+          args: [client.account.address],
+        })
+        const collateralDelta = collateralBalanceBefore - collateralBalanceAfter
+        expect(collateralDelta).toBe(equityInCollateralAsset)
       },
     )
   }
