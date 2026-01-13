@@ -24,12 +24,12 @@ globalThis.Request = Request as unknown as typeof globalThis.Request
 
 export const mainnetTest: WagmiChainTestAPI<typeof mainnet> = createWagmiTest(mainnet, {
   forkBlockNumber: await mainnetPublicClient.getBlockNumber(),
-  forkUrl: `https://eth-mainnet.g.alchemy.com/v2/${import.meta.env['VITE_ALCHEMY_API_KEY']}`,
+  forkUrl: import.meta.env['VITE_ETHEREUM_FORK_RPC_URL'],
 })
 
 export const baseTest: WagmiChainTestAPI<typeof base> = createWagmiTest(base, {
   forkBlockNumber: await basePublicClient.getBlockNumber(),
-  forkUrl: `https://base-mainnet.g.alchemy.com/v2/${import.meta.env['VITE_ALCHEMY_API_KEY']}`,
+  forkUrl: import.meta.env['VITE_BASE_FORK_RPC_URL'],
 })
 
 export const wagmiTest = (chainId: number): typeof mainnetTest =>

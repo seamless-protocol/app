@@ -130,7 +130,8 @@ jobs:
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless
           VITE_COINGECKO_API_URL: ${{ secrets.VITE_COINGECKO_API_URL }}
-          VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
+          VITE_BASE_FORK_RPC_URL: ${{ secrets.VITE_BASE_FORK_RPC_URL }}
+          VITE_ETHEREUM_FORK_RPC_URL: ${{ secrets.VITE_ETHEREUM_FORK_RPC_URL }}
 
   build:
     name: Build
