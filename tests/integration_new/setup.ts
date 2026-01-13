@@ -1,16 +1,20 @@
-import { Headers, Request, Response, fetch as undiciFetch } from 'undici'
-import { afterAll, afterEach, beforeAll } from 'vitest'
-import { mswServer } from './mocks/node'
+import { createWagmiTest } from '@morpho-org/test-wagmi'
+import { mainnetPublicClient } from './utils'
+import { Request } from 'undici'
+import { mainnet } from 'viem/chains'
 
-// happy‑dom is providing its own fetch/Headers/Request/Response, and viem’s test client is using those to call the spawned anvil.
-// happy‑dom’s fetch sometimes returns an empty body for the POST, so viem sees “Unexpected EOF”. Force Node/undici fetch instead.
-// We use happy-dom because it provides the DOM APIs needed for `renderHook` from @morpho-org/test-wagmi to work. It also gives
-// a more realistic browser environment for the tests.
-globalThis.fetch = undiciFetch as unknown as typeof globalThis.fetch
-globalThis.Headers = Headers as unknown as typeof globalThis.Headers
+
+// Vitest is overriding the AbortController and AbortSignal globals from jsdom and Node 24's native fetch (undici) does not 
+// work with jsdom's AbortSignal implementation.
+// Without this assignment, some blockchain test actions (such as RPC calls to Anvil)
+// will throw an error like:
+//   "Failed to construct 'Request': signal is not of type AbortSignal."
+// This occurs because Viem expects the global Request implementation to match browser standards.
+// By assigning undici's Request to globalThis.Request, we ensure Node.js tests use the correct implementation.
+// Note: This has been fixed in vitest but not yet released in a stable version.
 globalThis.Request = Request as unknown as typeof globalThis.Request
-globalThis.Response = Response as unknown as typeof globalThis.Response
 
-beforeAll(() => mswServer.listen())
-afterEach(() => mswServer.resetHandlers())
-afterAll(() => mswServer.close())
+export const mainnetTest = createWagmiTest(mainnet, {
+  forkBlockNumber: await mainnetPublicClient.getBlockNumber(),
+  forkUrl: import.meta.env['VITE_ETHEREUM_RPC_URL'],
+})

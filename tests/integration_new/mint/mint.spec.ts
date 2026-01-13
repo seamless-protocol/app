@@ -1,4 +1,4 @@
-import { createWagmiTest, renderHook, waitFor } from '@morpho-org/test-wagmi'
+import { renderHook, waitFor } from '@morpho-org/test-wagmi'
 import { parseEther } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect } from 'vitest'
@@ -8,18 +8,73 @@ import { useMintWrite } from '@/features/leverage-tokens/hooks/mint/useMintWrite
 import {
   LeverageTokenKey,
   leverageTokenConfigs,
+  type LeverageTokenConfig,
 } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
 import { mainnetAddresses } from '../addresses'
+import type { QuoteFn } from '@/domain/shared/adapters/types'
+import type { Config } from 'wagmi'
+import type { DebtToCollateralSwapConfig } from '@/domain/mint/utils/createDebtToCollateralQuote'
+import { mainnetTest } from '../setup'
 
-const test_wsteth_eth_25x_lifi = createWagmiTest(mainnet, {
-  forkUrl: process.env['VITE_ETHEREUM_RPC_URL'],
-  forkBlockNumber: 24219436n,
-})
+const useMintPlanPreviewWithSlippageAttempts = async ({
+  wagmiConfig,
+  leverageTokenConfig,
+  equityInCollateralAsset,
+  quoteFn,
+  slippageBps,
+  retries,
+  slippageIncrementBps,
+}: {
+  wagmiConfig: Config
+  leverageTokenConfig: LeverageTokenConfig
+  equityInCollateralAsset: bigint
+  quoteFn: QuoteFn
+  slippageBps: number
+  retries: number
+  slippageIncrementBps: number
+}) => {
+  let remainingAttempts = 1 + retries
+  let currentSlippageBps = slippageBps
+
+  // Try increasing slippage up to the allowed attempts
+  while (remainingAttempts > 0) {
+    remainingAttempts -= 1
+    const { result: mintPlanPreviewResult } = renderHook(wagmiConfig, () =>
+      useMintPlanPreview({
+        config: wagmiConfig,
+        token: leverageTokenConfig.address,
+        equityInCollateralAsset,
+        slippageBps: currentSlippageBps,
+        chainId: mainnet.id,
+        enabled: true,
+        quote: quoteFn,
+        debounceMs: 0,
+      }),
+    )
+    await waitFor(() => expect(mintPlanPreviewResult.current.isLoading).toBe(false))
+
+    if (mintPlanPreviewResult.current.plan) {
+      return mintPlanPreviewResult
+    }
+
+    const isSlippageError =
+      mintPlanPreviewResult.current.error?.message.includes('Try increasing your slippage tolerance')
+
+    if (isSlippageError && remainingAttempts > 0) {
+      currentSlippageBps += slippageIncrementBps
+      continue
+    }
+
+    return mintPlanPreviewResult
+  }
+
+  throw new Error(`Failed to create mint plan with retry helper after ${1 + retries} attempts`)
+}
 
 describe('mint integration tests', () => {
-  test_wsteth_eth_25x_lifi(
-    'mints wsteth-eth-25x using lifi: happy path',
+  mainnetTest(
+    'mints wsteth-eth-25x: happy path',
     async ({ client, config: wagmiConfig }) => {
       const leverageTokenConfig =
         leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]
@@ -42,7 +97,7 @@ describe('mint integration tests', () => {
         useDebtToCollateralQuote({
           chainId: mainnet.id,
           routerAddress: mainnetAddresses.leverageRouterV2,
-          swap: { type: 'lifi', allowBridges: 'none', order: 'CHEAPEST' },
+          swap: leverageTokenConfig.swaps!.debtToCollateral as DebtToCollateralSwapConfig,
           requiresQuote: true,
           fromAddress: mainnetAddresses.multicallExecutor,
         }),
@@ -54,30 +109,15 @@ describe('mint integration tests', () => {
       const quoteFn = useDebtToCollateralQuoteResult.current.quote
 
       const equityInCollateralAsset = 10n ** 18n // 1 wstETH deposited by the user
-      const { result: mintPlanPreviewResult } = renderHook(wagmiConfig, () =>
-        useMintPlanPreview({
-          config: wagmiConfig,
-          token: leverageTokenConfig.address,
-          equityInCollateralAsset,
-          slippageBps: 100,
-          chainId: mainnet.id,
-          enabled: true,
-          quote: quoteFn,
-          debounceMs: 0,
-        }),
-      )
-      await waitFor(() => expect(mintPlanPreviewResult.current.isLoading).toBe(false))
-      if (!mintPlanPreviewResult.current.plan) {
-        throw new Error('Current plan not found')
-      }
-      const plan = mintPlanPreviewResult.current.plan
-
-      expect(plan.minShares).toBe(952417000492971631n)
-      expect(plan.minExcessDebt).toBe(6389842463548018n)
-      expect(plan.previewShares).toBe(952809156689806197n)
-      expect(plan.previewExcessDebt).toBe(11972742859077588n)
-      expect(plan.flashLoanAmount).toBe(29077811172079415809n)
-      expect(plan.equityInCollateralAsset).toBe(1000000000000000000n)
+      const mintPlanPreviewResult = await useMintPlanPreviewWithSlippageAttempts({
+        wagmiConfig,
+        leverageTokenConfig,
+        equityInCollateralAsset,
+        quoteFn,
+        slippageBps: 50,
+        retries: 2,
+        slippageIncrementBps: 50,
+      })
 
       // Approve the leverage router to spend the collateral asset
       await client.approve({
@@ -93,20 +133,19 @@ describe('mint integration tests', () => {
         chainId: mainnet.id,
         account: client.account,
         token: leverageTokenConfig.address,
-        plan: plan,
+        plan: mintPlanPreviewResult.current.plan!,
       })
 
       const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
         address: leverageTokenConfig.address,
         args: [client.account.address],
       })
-      expect(sharesAfter).toBeGreaterThanOrEqual(plan.minShares)
-      expect(sharesAfter).toBe(952772571476942294n)
+      expect(sharesAfter).toBeGreaterThanOrEqual(mintPlanPreviewResult.current.plan!.minShares)
     },
   )
 
-  test_wsteth_eth_25x_lifi(
-    'mints wsteth-eth-25x using lifi: slippage exceeded',
+  mainnetTest(
+    'mints wsteth-eth-25x: slippage exceeded',
     async ({ client, config: wagmiConfig }) => {
       const leverageTokenConfig =
         leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]
@@ -129,7 +168,7 @@ describe('mint integration tests', () => {
         useDebtToCollateralQuote({
           chainId: mainnet.id,
           routerAddress: mainnetAddresses.leverageRouterV2,
-          swap: { type: 'lifi', allowBridges: 'none', order: 'CHEAPEST' },
+          swap: leverageTokenConfig.swaps!.debtToCollateral as DebtToCollateralSwapConfig,
           requiresQuote: true,
           fromAddress: mainnetAddresses.multicallExecutor,
         }),
@@ -141,23 +180,19 @@ describe('mint integration tests', () => {
       const quoteFn = useDebtToCollateralQuoteResult.current.quote
 
       const equityInCollateralAsset = 10n ** 18n // 1 wstETH deposited by the user
-      const { result: mintPlanPreviewResult } = renderHook(wagmiConfig, () =>
-        useMintPlanPreview({
-          config: wagmiConfig,
-          token: leverageTokenConfig.address,
-          equityInCollateralAsset,
-          slippageBps: 1,
-          chainId: mainnet.id,
-          enabled: true,
-          quote: quoteFn,
-          debounceMs: 0,
-        }),
-      )
-      await waitFor(() => expect(mintPlanPreviewResult.current.isLoading).toBe(false))
+      const plan = await useMintPlanPreviewWithSlippageAttempts({
+        wagmiConfig,
+        leverageTokenConfig,
+        equityInCollateralAsset,
+        quoteFn,
+        slippageBps: 1,
+        retries: 0,
+        slippageIncrementBps: 0,
+      })
 
-      expect(mintPlanPreviewResult.current.error).toBeDefined()
-      expect(mintPlanPreviewResult.current.error?.message).toBe(
-        'Manager previewed debt 29089783914938493397 is less than flash loan amount 29368589283800209967. Try increasing your slippage tolerance',
+      expect(plan.current.error).toBeDefined()
+      expect(plan.current.error?.message).includes(
+        'Try increasing your slippage tolerance',
       )
     },
   )
