@@ -49,6 +49,7 @@ const useMintPlanPreviewWithSlippageRetries = async ({
         debounceMs: 0,
       }),
     )
+    
     await waitFor(() => expect(mintPlanPreviewResult.current.isLoading).toBe(false))
 
     if (mintPlanPreviewResult.current.plan) {
