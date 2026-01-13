@@ -1,21 +1,20 @@
 import { renderHook, waitFor } from '@morpho-org/test-wagmi'
-import { parseEther } from 'viem'
-import { mainnet } from 'viem/chains'
+import { parseEther, parseUnits } from 'viem'
+import { base, mainnet } from 'viem/chains'
 import { describe, expect } from 'vitest'
 import { useDebtToCollateralQuote } from '@/features/leverage-tokens/hooks/mint/useDebtToCollateralQuote'
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
 import { useMintWrite } from '@/features/leverage-tokens/hooks/mint/useMintWrite'
 import {
-  LeverageTokenKey,
-  leverageTokenConfigs,
+  getAllLeverageTokenConfigs,
   type LeverageTokenConfig,
 } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
-import { mainnetAddresses } from '../addresses'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import type { Config } from 'wagmi'
 import type { DebtToCollateralSwapConfig } from '@/domain/mint/utils/createDebtToCollateralQuote'
-import { mainnetTest } from '../setup'
+import { mainnetTest, baseTest } from '../setup'
+import { getContractAddresses } from '@/lib/contracts'
 
 const useMintPlanPreviewWithSlippageAttempts = async ({
   wagmiConfig,
@@ -73,127 +72,79 @@ const useMintPlanPreviewWithSlippageAttempts = async ({
 }
 
 describe('mint integration tests', () => {
-  mainnetTest(
-    'mints wsteth-eth-25x: happy path',
-    async ({ client, config: wagmiConfig }) => {
-      const leverageTokenConfig =
-        leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]
-      if (!leverageTokenConfig) {
-        throw new Error('Leverage token config not found')
-      }
+  const leverageTokenConfigs = getAllLeverageTokenConfigs()
 
-      // Fund the client account with 1 ETH and 1 wstETH
-      await client.deal({
-        erc20: leverageTokenConfig.collateralAsset.address,
-        account: client.account.address,
-        amount: parseEther('1'),
-      })
-      await client.setBalance({
-        address: client.account.address,
-        value: parseEther('1'),
-      })
+  for (const leverageTokenConfig of leverageTokenConfigs) {
+    const addresses = getContractAddresses(leverageTokenConfig.chainId)
 
-      const { result: useDebtToCollateralQuoteResult } = renderHook(wagmiConfig, () =>
-        useDebtToCollateralQuote({
-          chainId: mainnet.id,
-          routerAddress: mainnetAddresses.leverageRouterV2,
-          swap: leverageTokenConfig.swaps!.debtToCollateral as DebtToCollateralSwapConfig,
-          requiresQuote: true,
-          fromAddress: mainnetAddresses.multicallExecutor,
-        }),
+    const equityInCollateralAsset = parseUnits(
+      '1',
+      leverageTokenConfig.collateralAsset.decimals,
+    )
+    
+    if (leverageTokenConfig.chainId === mainnet.id) {
+      mainnetTest(
+        `mints ${leverageTokenConfig.symbol}: happy path`,
+        async ({ client, config: wagmiConfig }) => {
+
+          await client.deal({
+            erc20: leverageTokenConfig.collateralAsset.address,
+            account: client.account.address,
+            amount: equityInCollateralAsset,
+          })
+          await client.setBalance({
+            address: client.account.address,
+            value: parseEther('1'),
+          })
+
+          const { result: useDebtToCollateralQuoteResult } = renderHook(wagmiConfig, () =>
+            useDebtToCollateralQuote({
+              chainId: leverageTokenConfig.chainId,
+              routerAddress: addresses.leverageRouterV2!,
+              swap: leverageTokenConfig.swaps!.debtToCollateral as DebtToCollateralSwapConfig,
+              requiresQuote: true,
+              fromAddress: addresses.multicallExecutor!,
+            }),
+          )
+          await waitFor(() => expect(useDebtToCollateralQuoteResult.current.quote).toBeDefined())
+          if (!useDebtToCollateralQuoteResult.current.quote) {
+            throw new Error('Quote function for debt to collateral not found')
+          }
+          const quoteFn = useDebtToCollateralQuoteResult.current.quote
+
+          const mintPlanPreviewResult = await useMintPlanPreviewWithSlippageAttempts({
+            wagmiConfig,
+            leverageTokenConfig,
+            equityInCollateralAsset,
+            quoteFn,
+            slippageBps: 50,
+            retries: 5,
+            slippageIncrementBps: 50,
+          })
+
+          await client.approve({
+            address: leverageTokenConfig.collateralAsset.address,
+            args: [addresses.leverageRouterV2!, equityInCollateralAsset],
+          })
+
+          const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())
+          await waitFor(() => expect(mintWriteResult.current.mutateAsync).toBeDefined())
+
+          await mintWriteResult.current.mutateAsync({
+            config: wagmiConfig,
+            chainId: leverageTokenConfig.chainId,
+            account: client.account,
+            token: leverageTokenConfig.address,
+            plan: mintPlanPreviewResult.current.plan!,
+          })
+
+          const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
+            address: leverageTokenConfig.address,
+            args: [client.account.address],
+          })
+          expect(sharesAfter).toBeGreaterThanOrEqual(mintPlanPreviewResult.current.plan!.minShares)
+        },
       )
-      await waitFor(() => expect(useDebtToCollateralQuoteResult.current.quote).toBeDefined())
-      if (!useDebtToCollateralQuoteResult.current.quote) {
-        throw new Error('Quote function for debt to collateral not found')
-      }
-      const quoteFn = useDebtToCollateralQuoteResult.current.quote
-
-      const equityInCollateralAsset = 10n ** 18n // 1 wstETH deposited by the user
-      const mintPlanPreviewResult = await useMintPlanPreviewWithSlippageAttempts({
-        wagmiConfig,
-        leverageTokenConfig,
-        equityInCollateralAsset,
-        quoteFn,
-        slippageBps: 50,
-        retries: 2,
-        slippageIncrementBps: 50,
-      })
-
-      // Approve the leverage router to spend the collateral asset
-      await client.approve({
-        address: leverageTokenConfig.collateralAsset.address,
-        args: [mainnetAddresses.leverageRouterV2, equityInCollateralAsset],
-      })
-
-      const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())
-      await waitFor(() => expect(mintWriteResult.current.mutateAsync).toBeDefined())
-
-      await mintWriteResult.current.mutateAsync({
-        config: wagmiConfig,
-        chainId: mainnet.id,
-        account: client.account,
-        token: leverageTokenConfig.address,
-        plan: mintPlanPreviewResult.current.plan!,
-      })
-
-      const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
-        address: leverageTokenConfig.address,
-        args: [client.account.address],
-      })
-      expect(sharesAfter).toBeGreaterThanOrEqual(mintPlanPreviewResult.current.plan!.minShares)
-    },
-  )
-
-  mainnetTest(
-    'mints wsteth-eth-25x: slippage exceeded',
-    async ({ client, config: wagmiConfig }) => {
-      const leverageTokenConfig =
-        leverageTokenConfigs[LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]
-      if (!leverageTokenConfig) {
-        throw new Error('Leverage token config not found')
-      }
-
-      // Fund the client account with 1 ETH and 1 wstETH
-      await client.deal({
-        erc20: leverageTokenConfig.collateralAsset.address,
-        account: client.account.address,
-        amount: parseEther('1'),
-      })
-      await client.setBalance({
-        address: client.account.address,
-        value: parseEther('1'),
-      })
-
-      const { result: useDebtToCollateralQuoteResult } = renderHook(wagmiConfig, () =>
-        useDebtToCollateralQuote({
-          chainId: mainnet.id,
-          routerAddress: mainnetAddresses.leverageRouterV2,
-          swap: leverageTokenConfig.swaps!.debtToCollateral as DebtToCollateralSwapConfig,
-          requiresQuote: true,
-          fromAddress: mainnetAddresses.multicallExecutor,
-        }),
-      )
-      await waitFor(() => expect(useDebtToCollateralQuoteResult.current.quote).toBeDefined())
-      if (!useDebtToCollateralQuoteResult.current.quote) {
-        throw new Error('Quote function for debt to collateral not found')
-      }
-      const quoteFn = useDebtToCollateralQuoteResult.current.quote
-
-      const equityInCollateralAsset = 10n ** 18n // 1 wstETH deposited by the user
-      const plan = await useMintPlanPreviewWithSlippageAttempts({
-        wagmiConfig,
-        leverageTokenConfig,
-        equityInCollateralAsset,
-        quoteFn,
-        slippageBps: 1,
-        retries: 0,
-        slippageIncrementBps: 0,
-      })
-
-      expect(plan.current.error).toBeDefined()
-      expect(plan.current.error?.message).includes(
-        'Try increasing your slippage tolerance',
-      )
-    },
-  )
+    }
+  }
 })

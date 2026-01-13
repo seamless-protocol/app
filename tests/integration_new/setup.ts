@@ -1,7 +1,7 @@
 import { createWagmiTest } from '@morpho-org/test-wagmi'
-import { mainnetPublicClient } from './utils'
+import { basePublicClient, mainnetPublicClient } from './utils'
 import { Request } from 'undici'
-import { mainnet } from 'viem/chains'
+import { base, mainnet } from 'viem/chains'
 
 
 // Vitest is overriding the AbortController and AbortSignal globals from jsdom and Node 24's native fetch (undici) does not 
@@ -17,4 +17,9 @@ globalThis.Request = Request as unknown as typeof globalThis.Request
 export const mainnetTest = createWagmiTest(mainnet, {
   forkBlockNumber: await mainnetPublicClient.getBlockNumber(),
   forkUrl: import.meta.env['VITE_ETHEREUM_RPC_URL'],
+})
+
+export const baseTest = createWagmiTest(base, {
+  forkBlockNumber: await basePublicClient.getBlockNumber(),
+  forkUrl: import.meta.env['VITE_BASE_RPC_URL'],
 })
