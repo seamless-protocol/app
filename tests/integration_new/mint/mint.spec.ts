@@ -131,9 +131,9 @@ describe('mint integration tests', () => {
           args: [addresses.leverageRouterV2 as Address, plan.equityInCollateralAsset],
         })
 
+        // Execute the mint using the plan
         const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())
         await waitFor(() => expect(mintWriteResult.current.mutateAsync).toBeDefined())
-
         await mintWriteResult.current.mutateAsync({
           config: wagmiConfig,
           chainId: leverageTokenConfig.chainId,
@@ -142,6 +142,7 @@ describe('mint integration tests', () => {
           plan: plan,
         })
 
+        // Verify the mint was successful by checking the balance of shares
         const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
           address: leverageTokenConfig.address,
           args: [client.account.address],
