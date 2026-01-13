@@ -55,6 +55,11 @@ const useMintPlanPreviewWithSlippageRetries = async ({
       return mintPlanPreviewResult
     }
 
+    const error = mintPlanPreviewResult.current.error
+    if (error && !error.message.includes('Try increasing your slippage tolerance')) {
+      return mintPlanPreviewResult
+    }
+
     currentSlippageBps += slippageIncrementBps
   }
 
