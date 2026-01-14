@@ -1,16 +1,6 @@
-import type { Chain } from 'viem'
-import { features } from '@/lib/config/features'
-import { config as prodConfig } from '@/lib/config/wagmi.config'
-import { testConfig } from '@/lib/config/wagmi.config.test'
+import { config } from '@/lib/config/wagmi.config'
 
-function getChains(): ReadonlyArray<Chain> {
-  try {
-    return (features.testMode ? testConfig : prodConfig).chains
-  } catch {
-    // Extremely defensive fallback: return empty list to trigger default URLs below
-    return [] as const
-  }
-}
+const getChains = () => config.chains || []
 
 function getExplorerBase(chainId: number): { url: string; name: string } {
   const chain = getChains().find((c) => c.id === chainId)

@@ -3,7 +3,7 @@ import { RouterProvider } from '@tanstack/react-router'
 import '@rainbow-me/rainbowkit/styles.css'
 import { type LazyExoticComponent, lazy, StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
-import { WagmiProvider } from 'wagmi'
+import { type Config, WagmiProvider } from 'wagmi'
 import { validateEnv } from './lib/env'
 import { createLogger } from './lib/logger'
 import './index.css'
@@ -18,8 +18,7 @@ import { features } from './lib/config/features'
 import { initGA4 } from './lib/config/ga4.config'
 import { queryClient } from './lib/config/query.config'
 import { initSentry } from './lib/config/sentry.config'
-import { config as prodConfig } from './lib/config/wagmi.config'
-import { testConfig } from './lib/config/wagmi.config.test'
+import { config } from './lib/config/wagmi.config'
 import { router } from './router'
 
 declare global {
@@ -98,24 +97,17 @@ if (import.meta.env.MODE === 'development') {
 }
 
 // Bypass LiFi's wagmi sync in test mode so connectors stay intact
-function LiFiWrapper({
-  config,
-  children,
-}: {
-  config: typeof prodConfig | typeof testConfig
-  children: React.ReactNode
-}) {
+function LiFiWrapper({ config, children }: { config: Config; children: React.ReactNode }) {
   if (features.testMode) {
     return <>{children}</>
   }
   // Type assertion is safe here because we only use LiFiSync in prod mode
-  return <LiFiSync config={config as typeof prodConfig}>{children}</LiFiSync>
+  return <LiFiSync config={config}>{children}</LiFiSync>
 }
 
 try {
   const root = createRoot(rootElement)
 
-  const config = features.testMode ? testConfig : prodConfig
   root.render(
     <StrictMode>
       <ErrorBoundary>
