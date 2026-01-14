@@ -3,9 +3,6 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { createConfig, http } from 'wagmi'
 import { base, mainnet } from 'wagmi/chains'
 import { mock } from 'wagmi/connectors'
-import { createLogger } from '@/lib/logger'
-
-const logger = createLogger('wagmi-test-config')
 
 // Use a deterministic account for tests (Anvil default #0 unless overridden)
 export const TEST_ADDRESS = (import.meta.env['VITE_TEST_ADDRESS'] ??
@@ -33,16 +30,6 @@ const fallbackRpcUrl: string =
 // Use chain-specific RPC URLs or fallback
 const baseRpcUrl: string = rpcUrlMap['8453'] || fallbackRpcUrl
 const mainnetRpcUrl: string = rpcUrlMap['1'] || fallbackRpcUrl
-
-// Debug logging for RPC configuration
-if (rpcUrlMap && Object.keys(rpcUrlMap).length > 0) {
-  logger.info('Using RPC URL map', {
-    base: baseRpcUrl,
-    mainnet: mainnetRpcUrl,
-  })
-} else {
-  logger.info('Using fallback RPC', { fallbackRpcUrl })
-}
 
 const baseChain: Chain = {
   ...base,
