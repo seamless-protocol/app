@@ -93,7 +93,7 @@ describe('redeem integration tests', () => {
             tokenAddress: leverageTokenConfig.address,
             spender: addresses.leverageRouterV2 as Address,
             amountRaw: plan.sharesToRedeem,
-            decimals: leverageTokenConfig.collateralAsset.decimals,
+            decimals: leverageTokenConfig.decimals,
             chainId: leverageTokenConfig.chainId,
             enabled: true,
           }),
