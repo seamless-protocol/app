@@ -14,8 +14,8 @@ import {
 } from '@/features/leverage-tokens/leverageTokens.config'
 import { getContractAddresses } from '@/lib/contracts'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
-import { connectMockConnectorToAnvil } from '../helpers/wagmi'
 import { wagmiTest } from '../setup'
+import { act } from '@testing-library/react'
 
 const useMintPlanPreviewWithSlippageRetries = async ({
   wagmiConfig,
@@ -80,11 +80,6 @@ describe('mint integration tests', () => {
     wagmiTest(leverageTokenConfig.chainId)(
       `mints ${leverageTokenConfig.symbol} shares on ${leverageTokenConfig.chainId}`,
       async ({ client, config: wagmiConfig }) => {
-        await connectMockConnectorToAnvil({
-          client,
-          wagmiConfig,
-        })
-
         // Give the account some ETH and the collateral asset to mint with
         await client.deal({
           erc20: leverageTokenConfig.collateralAsset.address,
@@ -98,6 +93,10 @@ describe('mint integration tests', () => {
 
         const collateralBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
           address: leverageTokenConfig.collateralAsset.address,
+          args: [client.account.address],
+        })
+        const debtBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
+          address: leverageTokenConfig.debtAsset.address,
           args: [client.account.address],
         })
 
@@ -151,15 +150,17 @@ describe('mint integration tests', () => {
         // Execute the mint using the plan
         const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())
         await waitFor(() => expect(mintWriteResult.current.mutateAsync).toBeDefined())
-        await mintWriteResult.current.mutateAsync({
-          config: wagmiConfig,
-          chainId: leverageTokenConfig.chainId,
-          account: client.account,
-          token: leverageTokenConfig.address,
-          plan: plan,
+        await act(async () => {
+          await mintWriteResult.current.mutateAsync({
+            config: wagmiConfig,
+            chainId: leverageTokenConfig.chainId,
+            account: client.account,
+            token: leverageTokenConfig.address,
+            plan: plan,
+         })
         })
 
-        // Verify the mint was successful by checking the balance of shares
+        // Check the shares minted to the user
         const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
           address: leverageTokenConfig.address,
           args: [client.account.address],
@@ -173,6 +174,14 @@ describe('mint integration tests', () => {
         })
         const collateralDelta = collateralBalanceBefore - collateralBalanceAfter
         expect(collateralDelta).toBe(equityInCollateralAsset)
+
+        // Check the excess debt assets the user received from the mint
+        const debtAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
+          address: leverageTokenConfig.debtAsset.address,
+          args: [client.account.address],
+        })
+        const debtDelta = debtAfter - debtBalanceBefore
+        expect(debtDelta).toBeGreaterThanOrEqual(plan.minExcessDebt)
       },
     )
   }

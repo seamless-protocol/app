@@ -5,6 +5,7 @@ import type { Chain, HttpTransport } from 'viem'
 import { base, mainnet } from 'viem/chains'
 import type { TestAPI } from 'vitest'
 import type { Config } from 'wagmi'
+import { connectMockConnectorToAnvil } from './helpers/wagmi'
 import { basePublicClient, mainnetPublicClient } from './utils'
 
 export type WagmiChainTestAPI<chain extends Chain = Chain> = TestAPI<{
@@ -22,15 +23,47 @@ export type WagmiChainTestAPI<chain extends Chain = Chain> = TestAPI<{
 // Note: This has been fixed in vitest but not yet released in a stable version.
 globalThis.Request = Request as unknown as typeof globalThis.Request
 
-export const mainnetTest: WagmiChainTestAPI<typeof mainnet> = createWagmiTest(mainnet, {
+const mainnetTestBase = createWagmiTest(mainnet, {
   forkBlockNumber: await mainnetPublicClient.getBlockNumber(),
   forkUrl: import.meta.env['VITE_ETHEREUM_FORK_RPC_URL'],
 })
+export const mainnetTest: WagmiChainTestAPI<typeof mainnet> = withConnectedMockConnector(
+  mainnetTestBase,
+  mainnet.id,
+)
 
-export const baseTest: WagmiChainTestAPI<typeof base> = createWagmiTest(base, {
+const baseTestBase = createWagmiTest(base, {
   forkBlockNumber: await basePublicClient.getBlockNumber(),
   forkUrl: import.meta.env['VITE_BASE_FORK_RPC_URL'],
 })
+export const baseTest: WagmiChainTestAPI<typeof base> = withConnectedMockConnector(baseTestBase, base.id)
 
 export const wagmiTest = (chainId: number): typeof mainnetTest =>
   (chainId === mainnet.id ? mainnetTest : baseTest) as typeof mainnetTest
+
+/**
+ * Connects wagmi’s mock connector to the local Anvil instance used by the test client.
+ * - Repoints the wagmi chain RPC URLs to the Anvil RPC from the test client transport.
+ * - Connects the selected mock connector so wagmi writeContract/sendTx calls hit Anvil.
+ * - Without this, writeContract calls will fail during tests
+ */
+function withConnectedMockConnector<chain extends Chain>(
+  testApi: WagmiChainTestAPI<chain>,
+  chainId: number,
+): WagmiChainTestAPI<chain> {
+  return testApi.extend<{
+    config: Config<readonly [chain], Record<chain['id'], HttpTransport>>
+  }>({
+    config: async (
+      { client, config },
+      use,
+    ): Promise<void> => {
+      await connectMockConnectorToAnvil({
+        client: client as unknown as AnvilTestClient,
+        wagmiConfig: config,
+        chainId,
+      })
+      await use(config)
+    },
+  }) as WagmiChainTestAPI<chain>
+}
