@@ -1,5 +1,6 @@
 import { waitFor } from '@testing-library/react'
 import type { Address } from 'viem'
+import { base } from 'viem/chains'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import { fetchAprForToken } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers'
@@ -17,7 +18,7 @@ const mockFetchRewardsAprForToken = vi.mocked(fetchRewardsAprForToken)
 
 describe('useLeverageTokenAPY', () => {
   const tokenAddress = '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address
-  const chainId = 8453
+  const chainId = base.id
 
   const mockLeverageTokenConfig = {
     address: tokenAddress,
@@ -27,7 +28,7 @@ describe('useLeverageTokenAPY', () => {
     decimals: 18,
     leverageRatio: 17,
     chainId,
-    chainName: 'Base',
+    chainName: base.name,
     chainLogo: () => null,
     collateralAsset: {
       symbol: 'WETH',

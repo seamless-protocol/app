@@ -5,6 +5,7 @@ import {
   createDebtToCollateralQuote,
   type DebtToCollateralSwapConfig,
 } from '@/domain/mint/utils/createDebtToCollateralQuote'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 
 export type QuoteStatus =
   | 'not-required'
@@ -16,7 +17,7 @@ export type QuoteStatus =
   | 'error'
 
 interface UseDebtToCollateralQuoteParams {
-  chainId: number
+  chainId: SupportedChainId
   routerAddress?: Address
   swap?: DebtToCollateralSwapConfig
   requiresQuote: boolean
