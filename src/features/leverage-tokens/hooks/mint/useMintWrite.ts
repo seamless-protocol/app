@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import type { Address, Hash } from 'viem'
+import type { Account, Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
 import type { MintPlan } from '@/domain/mint/planner/plan'
 import { getContractAddresses, isSupportedChain } from '@/lib/contracts/addresses'
@@ -11,7 +11,7 @@ import {
 type Args = {
   config: Config
   chainId: number
-  account: Address
+  account: Address | Account
   token: Address
   plan: MintPlan
 }

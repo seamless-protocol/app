@@ -858,7 +858,7 @@ export function LeverageTokenMintModal({
 }
 
 // Local hook: wraps token allowance + approval flow
-function useApprovalFlow(params: {
+export function useApprovalFlow(params: {
   tokenAddress: `0x${string}`
   owner?: `0x${string}`
   spender?: `0x${string}`
