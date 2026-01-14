@@ -1,7 +1,7 @@
 import type { AnvilTestClient } from '@morpho-org/test'
 import { renderHook, waitFor } from '@morpho-org/test-wagmi'
 import { act } from '@testing-library/react'
-import { type Address, parseEther } from 'viem'
+import type { Address } from 'viem'
 import { expect } from 'vitest'
 import type { Config } from 'wagmi'
 import type { MintPlan } from '@/domain/mint'
@@ -13,13 +13,9 @@ import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMin
 import { useMintWrite } from '@/features/leverage-tokens/hooks/mint/useMintWrite'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { getContractAddresses } from '@/lib/contracts'
-import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
 
 export type MintExecutionResult = {
   plan: MintPlan
-  collateralBalanceBefore: bigint
-  equityInCollateralAsset: bigint
-  debtBalanceBefore: bigint
 }
 
 export async function executeMintFlow({
@@ -34,25 +30,6 @@ export async function executeMintFlow({
   equityInCollateralAsset: bigint
 }): Promise<MintExecutionResult> {
   const addresses = getContractAddresses(leverageTokenConfig.chainId)
-
-  await client.deal({
-    erc20: leverageTokenConfig.collateralAsset.address,
-    account: client.account.address,
-    amount: equityInCollateralAsset,
-  })
-  await client.setBalance({
-    address: client.account.address,
-    value: parseEther('1'),
-  })
-
-  const collateralBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
-    address: leverageTokenConfig.collateralAsset.address,
-    args: [client.account.address],
-  })
-  const debtBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
-    address: leverageTokenConfig.debtAsset.address,
-    args: [client.account.address],
-  })
 
   // Get the function to quote the debt to collateral swap for the mint
   const { result: useDebtToCollateralQuoteResult } = renderHook(wagmiConfig, () =>
@@ -78,7 +55,7 @@ export async function executeMintFlow({
     quoteFn,
     slippageBps: 50,
     retries: 5,
-    slippageIncrementBps: 50,
+    slippageIncrementBps: 100,
   })
 
   const plan = mintPlanPreviewResult.current.plan
@@ -114,7 +91,7 @@ export async function executeMintFlow({
     })
   })
 
-  return { plan, collateralBalanceBefore, debtBalanceBefore, equityInCollateralAsset }
+  return { plan }
 }
 
 async function useMintPlanPreviewWithSlippageRetries({

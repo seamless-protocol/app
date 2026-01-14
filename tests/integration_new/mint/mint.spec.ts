@@ -1,4 +1,4 @@
-import { parseUnits } from 'viem'
+import { parseEther, parseUnits } from 'viem'
 import { describe, expect } from 'vitest'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
@@ -16,7 +16,27 @@ describe('mint integration tests', () => {
           '1',
           leverageTokenConfig.collateralAsset.decimals,
         )
-        const { plan, collateralBalanceBefore, debtBalanceBefore } = await executeMintFlow({
+
+        await client.deal({
+          erc20: leverageTokenConfig.collateralAsset.address,
+          account: client.account.address,
+          amount: equityInCollateralAsset,
+        })
+        await client.setBalance({
+          address: client.account.address,
+          value: parseEther('1'),
+        })
+
+        const collateralBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
+          address: leverageTokenConfig.collateralAsset.address,
+          args: [client.account.address],
+        })
+        const debtBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
+          address: leverageTokenConfig.debtAsset.address,
+          args: [client.account.address],
+        })
+
+        const { plan } = await executeMintFlow({
           client,
           wagmiConfig,
           leverageTokenConfig,

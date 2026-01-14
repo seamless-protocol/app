@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import { WagmiProvider } from 'wagmi'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { EthereumLogo } from '../../../components/icons/logos'
 import { FeaturedLeverageTokens } from '../../../features/leverage-tokens/components/FeaturedLeverageToken'
 import { config } from '../../../lib/config/wagmi.config'
@@ -68,7 +69,7 @@ const mockToken = {
   currentSupply: 750000,
   collateralAmount: 850000,
   debtAmount: 425000,
-  chainId: 137,
+  chainId: 137 as SupportedChainId,
   chainName: 'Polygon',
   chainLogo: EthereumLogo,
   rank: 1,

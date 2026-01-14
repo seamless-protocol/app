@@ -13,7 +13,7 @@ import {
   sUSDSLogo,
 } from '@/components/icons'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
-import { BASE_WETH } from '@/lib/contracts/addresses'
+import { BASE_WETH, type SupportedChainId } from '@/lib/contracts/addresses'
 import { APR_PROVIDERS } from './utils/apy-calculations/apr-providers'
 import type { BORROW_APR_PROVIDERS } from './utils/apy-calculations/borrow-apy-providers'
 import type { REWARDS_PROVIDERS } from './utils/apy-calculations/rewards-providers'
@@ -68,7 +68,7 @@ export interface LeverageTokenConfig {
   description: string
   decimals: number
   leverageRatio: number
-  chainId: number
+  chainId: SupportedChainId
   chainName: string
   chainLogo: React.ComponentType<React.SVGProps<SVGSVGElement>>
   // Supply cap (token units) - hardcoded until contract supports dynamic fetching

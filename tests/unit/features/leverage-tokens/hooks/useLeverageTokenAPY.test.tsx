@@ -6,7 +6,7 @@ import { fetchAprForToken } from '@/features/leverage-tokens/utils/apy-calculati
 import { fetchBorrowApyForToken } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
 import { fetchLeverageRatios } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
 import { fetchRewardsAprForToken } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
-import { BASE_WETH } from '@/lib/contracts/addresses'
+import { BASE_WETH, type SupportedChainId } from '@/lib/contracts/addresses'
 import { hookTestUtils } from '../../../../utils'
 
 // Mock the external dependencies
@@ -26,7 +26,7 @@ describe('useLeverageTokenAPY', () => {
     description: 'Mock leverage token for unit testing',
     decimals: 18,
     leverageRatio: 17,
-    chainId,
+    chainId: chainId as SupportedChainId,
     chainName: 'Base',
     chainLogo: () => null,
     collateralAsset: {
