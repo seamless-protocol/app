@@ -1,12 +1,13 @@
 import { waitFor } from '@testing-library/react'
 import type { Address } from 'viem'
+import { base } from 'viem/chains'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useLeverageTokenAPY } from '@/features/leverage-tokens/hooks/useLeverageTokenAPY'
 import { fetchAprForToken } from '@/features/leverage-tokens/utils/apy-calculations/apr-providers'
 import { fetchBorrowApyForToken } from '@/features/leverage-tokens/utils/apy-calculations/borrow-apy-providers'
 import { fetchLeverageRatios } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
 import { fetchRewardsAprForToken } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers'
-import { BASE_WETH, type SupportedChainId } from '@/lib/contracts/addresses'
+import { BASE_WETH } from '@/lib/contracts/addresses'
 import { hookTestUtils } from '../../../../utils'
 
 // Mock the external dependencies
@@ -17,7 +18,7 @@ const mockFetchRewardsAprForToken = vi.mocked(fetchRewardsAprForToken)
 
 describe('useLeverageTokenAPY', () => {
   const tokenAddress = '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address
-  const chainId = 8453
+  const chainId = base.id
 
   const mockLeverageTokenConfig = {
     address: tokenAddress,
@@ -26,8 +27,8 @@ describe('useLeverageTokenAPY', () => {
     description: 'Mock leverage token for unit testing',
     decimals: 18,
     leverageRatio: 17,
-    chainId: chainId as SupportedChainId,
-    chainName: 'Base',
+    chainId,
+    chainName: base.name,
     chainLogo: () => null,
     collateralAsset: {
       symbol: 'WETH',

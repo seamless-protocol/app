@@ -2,8 +2,8 @@ import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import type { Meta, StoryObj } from '@storybook/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { Address } from 'viem'
+import { mainnet } from 'viem/chains'
 import { WagmiProvider } from 'wagmi'
-import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { EthereumLogo, USDCLogo, weETHLogo } from '../../../components/icons/logos'
 import { LeverageTokenTable } from '../../../features/leverage-tokens/components/leverage-token-table'
 import { config } from '../../../lib/config/wagmi.config'
@@ -59,8 +59,8 @@ const mockTokens = [
       decimals: 6,
     },
     leverageRatio: 2,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: EthereumLogo,
     tvl: 12500000,
     supplyCap: 1000000,
@@ -90,8 +90,8 @@ const mockTokens = [
     leverageRatio: 3,
     supplyCap: 5000000,
     currentSupply: 3200000,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: USDCLogo,
   },
   {
@@ -117,8 +117,8 @@ const mockTokens = [
     leverageRatio: 1.5,
     supplyCap: 2000000,
     currentSupply: 1800000,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: weETHLogo,
   },
   {
@@ -144,8 +144,8 @@ const mockTokens = [
     leverageRatio: 5,
     supplyCap: 1500000,
     currentSupply: 1200000,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: EthereumLogo,
   },
   {
@@ -171,8 +171,8 @@ const mockTokens = [
     leverageRatio: 4,
     supplyCap: 3000000,
     currentSupply: 2500000,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: USDCLogo,
   },
   {
@@ -198,8 +198,8 @@ const mockTokens = [
     leverageRatio: 2.5,
     supplyCap: 800000,
     currentSupply: 600000,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: EthereumLogo,
   },
   {
@@ -225,8 +225,8 @@ const mockTokens = [
     leverageRatio: 3.5,
     supplyCap: 1200000,
     currentSupply: 900000,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: USDCLogo,
   },
   {
@@ -252,8 +252,8 @@ const mockTokens = [
     leverageRatio: 2,
     supplyCap: 600000,
     currentSupply: 450000,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: weETHLogo,
   },
   {
@@ -279,8 +279,8 @@ const mockTokens = [
     leverageRatio: 3,
     supplyCap: 1000000,
     currentSupply: 750000,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: EthereumLogo,
   },
   {
@@ -306,8 +306,8 @@ const mockTokens = [
     leverageRatio: 2.5,
     supplyCap: 500000,
     currentSupply: 350000,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: USDCLogo,
   },
   {
@@ -333,8 +333,8 @@ const mockTokens = [
     leverageRatio: 2,
     supplyCap: 400000,
     currentSupply: 280000,
-    chainId: 137 as SupportedChainId,
-    chainName: 'Polygon',
+    chainId: mainnet.id,
+    chainName: mainnet.name,
     chainLogo: weETHLogo,
   },
 ]
