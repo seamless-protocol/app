@@ -36,7 +36,10 @@ const baseTestBase = createWagmiTest(base, {
   forkBlockNumber: await basePublicClient.getBlockNumber(),
   forkUrl: import.meta.env['VITE_BASE_FORK_RPC_URL'],
 })
-export const baseTest: WagmiChainTestAPI<typeof base> = withConnectedMockConnector(baseTestBase, base.id)
+export const baseTest: WagmiChainTestAPI<typeof base> = withConnectedMockConnector(
+  baseTestBase,
+  base.id,
+)
 
 export const wagmiTest = (chainId: number): typeof mainnetTest =>
   (chainId === mainnet.id ? mainnetTest : baseTest) as typeof mainnetTest
@@ -54,10 +57,7 @@ function withConnectedMockConnector<chain extends Chain>(
   return testApi.extend<{
     config: Config<readonly [chain], Record<chain['id'], HttpTransport>>
   }>({
-    config: async (
-      { client, config },
-      use,
-    ): Promise<void> => {
+    config: async ({ client, config }, use): Promise<void> => {
       await connectMockConnectorToAnvil({
         client: client as unknown as AnvilTestClient,
         wagmiConfig: config,

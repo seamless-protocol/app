@@ -1,4 +1,5 @@
 import { renderHook, waitFor } from '@morpho-org/test-wagmi'
+import { act } from '@testing-library/react'
 import { type Address, parseEther, parseUnits } from 'viem'
 import { describe, expect } from 'vitest'
 import type { Config } from 'wagmi'
@@ -15,7 +16,6 @@ import {
 import { getContractAddresses } from '@/lib/contracts'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
 import { wagmiTest } from '../setup'
-import { act } from '@testing-library/react'
 
 const useMintPlanPreviewWithSlippageRetries = async ({
   wagmiConfig,
@@ -157,7 +157,7 @@ describe('mint integration tests', () => {
             account: client.account,
             token: leverageTokenConfig.address,
             plan: plan,
-         })
+          })
         })
 
         // Check the shares minted to the user
