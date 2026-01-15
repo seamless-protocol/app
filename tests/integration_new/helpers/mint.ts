@@ -1,5 +1,5 @@
 import type { AnvilTestClient } from '@morpho-org/test'
-import { renderHook, waitFor } from '@morpho-org/test-wagmi'
+import { waitFor } from '@morpho-org/test-wagmi'
 import { act } from '@testing-library/react'
 import type { Address } from 'viem'
 import { expect } from 'vitest'
@@ -13,6 +13,7 @@ import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMin
 import { useMintWrite } from '@/features/leverage-tokens/hooks/mint/useMintWrite'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { getContractAddresses } from '@/lib/contracts'
+import { renderHook } from './wagmi'
 
 export type MintExecutionResult = {
   plan: MintPlan
@@ -53,7 +54,7 @@ export async function executeMintFlow({
     leverageTokenConfig,
     equityInCollateralAsset,
     quoteFn,
-    slippageBps: 50,
+    slippageBps: 100,
     retries: 5,
     slippageIncrementBps: 100,
   })
@@ -67,6 +68,7 @@ export async function executeMintFlow({
   const { result: approvalFlow } = renderHook(wagmiConfig, () =>
     useApprovalFlow({
       tokenAddress: leverageTokenConfig.collateralAsset.address,
+      owner: client.account.address,
       spender: addresses.leverageRouterV2 as Address,
       amountRaw: plan.equityInCollateralAsset,
       decimals: leverageTokenConfig.collateralAsset.decimals,

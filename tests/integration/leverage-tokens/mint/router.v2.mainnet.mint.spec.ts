@@ -28,6 +28,7 @@ describe.each(MAINNET_TOKEN_CONFIGS)('Leverage Router V2 Mint (Mainnet $label)',
             token: addresses.leverageToken,
             manager: (addresses.managerV2 ?? addresses.manager) as Address,
             router: (addresses.routerV2 ?? addresses.router) as Address,
+            multicallExecutor: addresses.multicallExecutor as Address,
             ...(addresses.uniswapV3 ? { uniswapV3: addresses.uniswapV3 } : {}),
           },
         })

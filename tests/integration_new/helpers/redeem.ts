@@ -1,9 +1,10 @@
-import { renderHook, waitFor } from '@morpho-org/test-wagmi'
+import { waitFor } from '@morpho-org/test-wagmi'
 import { expect } from 'vitest'
 import type { Config } from 'wagmi'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import { useRedeemPlanPreview } from '@/features/leverage-tokens/hooks/redeem/useRedeemPlanPreview'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
+import { renderHook } from './wagmi'
 
 export async function useRedeemPlanPreviewWithSlippageRetries({
   wagmiConfig,

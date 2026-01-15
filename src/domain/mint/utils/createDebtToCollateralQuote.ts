@@ -1,3 +1,4 @@
+import type { buildSDK } from '@seamless-defi/defi-sdk'
 import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
@@ -8,6 +9,7 @@ import {
   createUniswapV3QuoteAdapter,
   createVeloraQuoteAdapter,
 } from '@/domain/shared/adapters'
+import { createBalmyQuoteAdapter } from '@/domain/shared/adapters/balmy'
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
 import { getUniswapV3ChainConfig, getUniswapV3PoolConfig } from '@/lib/config/uniswapV3'
 import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
@@ -21,6 +23,7 @@ export interface CreateDebtToCollateralQuoteParams {
   swap: DebtToCollateralSwapConfig
   getPublicClient: (chainId: number) => PublicClient | undefined
   fromAddress?: Address
+  balmySDK: ReturnType<typeof buildSDK>
 }
 
 export interface CreateDebtToCollateralQuoteResult {
@@ -34,6 +37,7 @@ export function createDebtToCollateralQuote({
   swap,
   getPublicClient,
   fromAddress,
+  balmySDK,
 }: CreateDebtToCollateralQuoteParams): CreateDebtToCollateralQuoteResult {
   // Default fromAddress to the chain's MulticallExecutor when not provided
   const defaultFrom = (() => {
@@ -45,6 +49,18 @@ export function createDebtToCollateralQuote({
     }
   })()
   const effectiveFrom = (fromAddress ?? defaultFrom) as Address | undefined
+
+  if (swap.type === 'balmy') {
+    const quote = createBalmyQuoteAdapter({
+      chainId,
+      fromAddress: effectiveFrom ?? routerAddress,
+      toAddress: routerAddress,
+      balmySDK,
+      excludeAdditionalSources: swap.excludeAdditionalSources,
+    })
+    return { quote, adapterType: 'balmy' }
+  }
+
   if (swap.type === 'lifi') {
     const quote = createLifiQuoteAdapter({
       chainId,

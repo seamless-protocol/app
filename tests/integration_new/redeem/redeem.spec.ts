@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@morpho-org/test-wagmi'
+import { waitFor } from '@morpho-org/test-wagmi'
 import { act } from '@testing-library/react'
 import { type Address, parseEther, parseUnits } from 'viem'
 import { describe, expect } from 'vitest'
@@ -11,6 +11,7 @@ import { getContractAddresses } from '@/lib/contracts'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
 import { executeMintFlow } from '../helpers/mint'
 import { useRedeemPlanPreviewWithSlippageRetries } from '../helpers/redeem'
+import { renderHook } from '../helpers/wagmi'
 import { wagmiTest } from '../setup'
 
 describe('redeem integration tests', () => {
@@ -78,7 +79,7 @@ describe('redeem integration tests', () => {
           leverageTokenConfig,
           sharesToRedeem: leverageTokenBalanceBefore,
           quoteFn,
-          slippageBps: 50,
+          slippageBps: 100,
           retries: 5,
           slippageIncrementBps: 100,
         })

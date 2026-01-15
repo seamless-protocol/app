@@ -722,6 +722,8 @@ export function LeverageTokenMintModal({
       (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
         quoteDebtToCollateral.status !== 'ready'))
 
+  const quoteSourceName = planPreview.plan?.quoteSourceName
+
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
@@ -766,6 +768,7 @@ export function LeverageTokenMintModal({
             isBelowMinimum={isBelowMinimum()}
             supplyCapExceeded={!form.supplyCapOk}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
+            quoteSourceName={quoteSourceName}
           />
         )
 

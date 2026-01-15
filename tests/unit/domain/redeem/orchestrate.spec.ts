@@ -36,6 +36,8 @@ const mockPlan: RedeemPlan = {
       value: 0n,
     },
   ],
+  quoteSourceName: 'Mock Source',
+  quoteSourceId: 'mock-source-id',
 }
 
 describe('orchestrateRedeem', () => {

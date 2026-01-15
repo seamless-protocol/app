@@ -20,6 +20,8 @@ export interface MintPlan {
   flashLoanAmount: bigint
   equityInCollateralAsset: bigint
   calls: Array<Call>
+  quoteSourceName: string | undefined
+  quoteSourceId: string | undefined
 }
 
 export interface PlanMintParams {
@@ -146,5 +148,7 @@ export async function planMint({
     flashLoanAmount,
     equityInCollateralAsset,
     calls,
+    quoteSourceName: debtToCollateralQuote.quoteSourceName,
+    quoteSourceId: debtToCollateralQuote.quoteSourceId,
   }
 }
