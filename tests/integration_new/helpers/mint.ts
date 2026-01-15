@@ -54,7 +54,7 @@ export async function executeMintFlow({
     leverageTokenConfig,
     equityInCollateralAsset,
     quoteFn,
-    slippageBps: 100,
+    slippageBps: 50,
     retries: 5,
     slippageIncrementBps: 100,
   })
