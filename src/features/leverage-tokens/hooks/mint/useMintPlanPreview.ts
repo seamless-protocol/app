@@ -77,6 +77,8 @@ export function useMintPlanPreview({
     isLoading: enabled && query.isFetching,
     error: query.error,
     refetch: query.refetch,
+    quoteSourceName: query.data?.quoteSourceName,
+    quoteSourceId: query.data?.quoteSourceId,
   }
 }
 

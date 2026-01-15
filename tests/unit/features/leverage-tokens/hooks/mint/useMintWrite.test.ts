@@ -50,6 +50,8 @@ const basePlan: MintPlan = {
       data: '0xabcdef1234567890' as `0x${string}`,
     },
   ],
+  quoteSourceName: 'Mock Source',
+  quoteSourceId: 'mock-source-id',
 }
 
 describe('useMintWrite', () => {

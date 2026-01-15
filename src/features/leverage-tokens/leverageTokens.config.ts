@@ -188,12 +188,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
     },
     relatedResources: {
@@ -274,12 +272,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
     },
     relatedResources: {
@@ -465,12 +461,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+        excludeAdditionalSources: ['kyberswap'], // Kyberswap seems to give flaky quotes on Base for WETH to WEETH
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+        excludeAdditionalSources: ['kyberswap'], // Kyberswap seems to give flaky quotes on Base for WEETH to WETH
       },
     },
     relatedResources: {
@@ -560,12 +556,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
     },
   },
@@ -721,12 +715,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
     },
     relatedResources: {

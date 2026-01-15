@@ -11,6 +11,7 @@ import {
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
 import type { LeverageTokenDefinition } from '../../fixtures/addresses'
+import { createTestBalmySDK } from '../clients'
 import { AVAILABLE_LEVERAGE_TOKENS, getAddressesForToken } from '../env'
 import { seedUniswapV2PairLiquidity } from '../funding'
 import { executeSharedMint } from '../mintHelpers'
@@ -31,6 +32,7 @@ export type RedeemScenarioConfig = {
   debtAsset: Address
   swap: CollateralToDebtSwapConfig
   chainId: number
+  multicallExecutor: Address
 }
 
 export type RedeemPlanResult = {
@@ -95,6 +97,7 @@ export async function ensureRedeemSetup({
         token: scenario.token,
         manager: scenario.manager,
         router: scenario.router,
+        multicallExecutor: scenario.multicallExecutor,
       },
     })
   } finally {
@@ -131,6 +134,7 @@ export async function planRedeemTest({
     routerAddress: scenario.router,
     swap: scenario.swap,
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
+    balmySDK: createTestBalmySDK(),
   })
 
   const leverageTokenConfig = getLeverageTokenConfig(scenario.token, scenario.chainId)
@@ -163,8 +167,8 @@ async function resolveRedeemScenario({
   tokenDefinition: LeverageTokenDefinition
 }): Promise<RedeemScenarioConfig> {
   const addresses = getAddressesForToken(tokenDefinition.key)
-  const executor = addresses.executor
-  if (!executor) {
+  const multicallExecutor = addresses.multicallExecutor
+  if (!multicallExecutor) {
     throw new Error('Multicall executor address missing; update contract map for V2 harness')
   }
 
@@ -190,6 +194,7 @@ async function resolveRedeemScenario({
     debtAsset,
     swap,
     chainId,
+    multicallExecutor,
   }
 }
 

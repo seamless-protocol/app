@@ -121,6 +121,7 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
         maxIn: amountIn,
         approvalTarget: addresses.gateway,
         calls: [{ target: addresses.gateway, data: calldata, value: 0n }],
+        quoteSourceName: 'infiniFi',
       }
     }
 
@@ -152,6 +153,7 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
       calls: [
         { target: normalizedUnstakeAndRedeemHelper, data: unstakeAndRedeemCalldata, value: 0n },
       ],
+      quoteSourceName: 'infinifi',
     }
   }
 }

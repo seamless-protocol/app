@@ -221,7 +221,7 @@ type LeverageTokenAddresses = {
   usdc: Address
   weth: Address
   weeth: Address
-  executor?: Address
+  multicallExecutor?: Address
   veloraAdapter?: Address
   rebalanceAdapter?: Address
   lendingAdapter?: Address
@@ -292,7 +292,7 @@ function buildAddressContext(
   const factoryAddress = optionalAddress(contracts.leverageTokenFactory as Address | undefined)
   const managerV2Address = optionalAddress(resolvedManagerV2)
   const routerV2Address = optionalAddress(resolvedRouterV2)
-  const executorAddress = optionalAddress(
+  const multicallExecutorAddress = optionalAddress(
     executorOverride ?? (contracts.multicallExecutor as Address | undefined),
   )
   const veloraAddress = optionalAddress(veloraOverride)
@@ -302,7 +302,7 @@ function buildAddressContext(
   if (factoryAddress) result.factory = factoryAddress
   if (managerV2Address) result.managerV2 = managerV2Address
   if (routerV2Address) result.routerV2 = routerV2Address
-  if (executorAddress) result.executor = executorAddress
+  if (multicallExecutorAddress) result.multicallExecutor = multicallExecutorAddress
   if (veloraAddress) result.veloraAdapter = veloraAddress
   if (rebalanceAddress) result.rebalanceAdapter = rebalanceAddress
   if (lendingAddress) result.lendingAdapter = lendingAddress

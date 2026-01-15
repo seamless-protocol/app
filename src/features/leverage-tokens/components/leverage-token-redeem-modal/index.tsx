@@ -740,6 +740,8 @@ export function LeverageTokenRedeemModal({
     onClose()
   }
 
+  const quoteSourceName = planPreview.plan?.quoteSourceName
+
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
@@ -782,6 +784,7 @@ export function LeverageTokenRedeemModal({
             isRedeemTokenFeeLoading={isFeesLoading}
             isBelowMinimum={isBelowMinimum()}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
+            quoteSourceName={quoteSourceName}
           />
         )
 
