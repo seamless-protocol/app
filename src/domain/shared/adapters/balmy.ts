@@ -17,6 +17,16 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
     validateSlippage(slippageBps)
     const slippage = parseFloat(bpsToDecimalString(slippageBps))
 
+    if (intent === 'exactOut') {
+      if (!amountOut) {
+        throw new Error('Exact-out quote requires amountOut > 0')
+      }
+    } else {
+      if (!amountIn) {
+        throw new Error('Exact-in quote requires amountIn > 0')
+      }
+    }
+
     const excludeSources = [
       'sushiswap',
       'fly-trade',
@@ -30,7 +40,7 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       buyToken: outToken,
       order: {
         ...(intent === 'exactOut'
-          ? { type: 'buy', buyAmount: amountOut ?? 0n }
+          ? { type: 'buy', buyAmount: amountOut }
           : { type: 'sell', sellAmount: amountIn }),
       },
       slippagePercentage: slippage,

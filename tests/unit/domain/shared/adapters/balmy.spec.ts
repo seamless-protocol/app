@@ -169,4 +169,38 @@ describe('createBalmyQuoteAdapter', () => {
     expect(quote.minOut).toBe(250n)
     expect(quote.maxIn).toBe(350n)
   })
+
+  it('throws when amountOut is 0 for exact-out', async () => {
+    await expect(
+      createBalmyQuoteAdapter({
+        balmySDK: createMockBalmySDK().balmySDK,
+        chainId: 8453,
+        fromAddress: CALLER,
+        toAddress: ROUTER,
+      })({
+        inToken: IN_TOKEN,
+        outToken: OUT_TOKEN,
+        amountOut: 0n,
+        intent: 'exactOut',
+        slippageBps: 50,
+      }),
+    ).rejects.toThrow('Exact-out quote requires amountOut > 0')
+  })
+
+  it('throws when amountIn is 0 for exact-in', async () => {
+    await expect(
+      createBalmyQuoteAdapter({
+        balmySDK: createMockBalmySDK().balmySDK,
+        chainId: 8453,
+        fromAddress: CALLER,
+        toAddress: ROUTER,
+      })({
+        inToken: IN_TOKEN,
+        outToken: OUT_TOKEN,
+        amountIn: 0n,
+        intent: 'exactIn',
+        slippageBps: 50,
+      }),
+    ).rejects.toThrow('Exact-in quote requires amountIn > 0')
+  })
 })
