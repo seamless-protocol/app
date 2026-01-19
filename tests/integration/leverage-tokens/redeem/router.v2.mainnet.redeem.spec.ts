@@ -10,7 +10,7 @@ import {
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
 import type { LeverageTokenKey } from '../../../fixtures/addresses'
-import { createTestBalmySDK } from '../../../shared/clients'
+import { createBalmySDK } from '../../../shared/clients'
 import { CHAIN_ID, getAddressesForToken } from '../../../shared/env'
 import { approveIfNeeded } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
@@ -187,7 +187,7 @@ async function performRedeem(
     routerAddress: router,
     swap: collateralToDebtConfig,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
-    balmySDK: createTestBalmySDK(),
+    balmySDK: createBalmySDK(),
   })
 
   const blockNumber = await publicClient.getBlockNumber()

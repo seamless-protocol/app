@@ -1,5 +1,6 @@
 import type { Address, PublicClient } from 'viem'
 import { parseUnits } from 'viem'
+import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { planMint } from '@/domain/mint/planner/plan'
 import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
 import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
@@ -20,7 +21,6 @@ import {
   simulateLeverageRouterV2Deposit,
   writeLeverageRouterV2Deposit,
 } from '@/lib/contracts/generated'
-import { createTestBalmySDK } from './clients'
 import { ADDR, CHAIN_ID } from './env'
 import { approveIfNeeded, topUpErc20, topUpNative } from './funding'
 
@@ -123,7 +123,7 @@ export async function executeSharedMint({
       routerAddress: router,
       swap: debtToCollateralConfig,
       getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
-      balmySDK: createTestBalmySDK(),
+      balmySDK: createBalmySDK(publicClient),
     })
     quoteDebtToCollateral = quote
   } else {

@@ -1,7 +1,7 @@
 import { buildSDK } from '@seamless-defi/defi-sdk'
 import { createContext, useContext, useRef } from 'react'
-import { zeroAddress } from 'viem'
-import { useClient } from 'wagmi'
+import { type PublicClient, zeroAddress } from 'viem'
+import { type UseClientReturnType, useClient } from 'wagmi'
 
 type BalmySDKProviderProps = {
   children: React.ReactNode
@@ -18,53 +18,7 @@ export function BalmySDKProvider({ children, ...props }: BalmySDKProviderProps) 
   const client = useClient()
 
   if (balmySDKRef.current === null) {
-    balmySDKRef.current = buildSDK({
-      quotes: {
-        defaultConfig: {
-          global: {
-            referrer: {
-              address: zeroAddress,
-              name: 'seamless',
-            },
-          },
-          custom: {
-            'li-fi': {
-              apiKey: import.meta.env['VITE_LIFI_API_KEY'] || undefined,
-              baseUrl: 'https://partner-seashell.li.quest/v1/quote',
-            },
-          },
-        },
-        sourceList: { type: 'local' },
-      },
-      providers: {
-        source: {
-          type: 'custom',
-          instance: client,
-        },
-      },
-      prices: {
-        source: {
-          type: 'prioritized',
-          sources: [
-            {
-              type: 'coingecko',
-              baseUrl: import.meta.env['VITE_COINGECKO_API_URL'] ?? undefined,
-            },
-            ...(import.meta.env['VITE_ALCHEMY_API_KEY'] !== ''
-              ? [
-                  {
-                    type: 'alchemy',
-                    apiKey: import.meta.env['VITE_ALCHEMY_API_KEY'],
-                  },
-                ]
-              : []),
-            {
-              type: 'odos',
-            },
-          ],
-        },
-      },
-    })
+    balmySDKRef.current = createBalmySDK(client)
   }
 
   return (
@@ -81,3 +35,52 @@ export const useBalmySDK = () => {
 
   return context
 }
+
+export const createBalmySDK = (client: UseClientReturnType | PublicClient) =>
+  buildSDK({
+    quotes: {
+      defaultConfig: {
+        global: {
+          referrer: {
+            address: zeroAddress,
+            name: 'seamless',
+          },
+        },
+        custom: {
+          'li-fi': {
+            apiKey: import.meta.env['VITE_LIFI_API_KEY'] || undefined,
+            baseUrl: 'https://partner-seashell.li.quest/v1/quote',
+          },
+        },
+      },
+      sourceList: { type: 'local' },
+    },
+    providers: {
+      source: {
+        type: 'custom',
+        instance: client,
+      },
+    },
+    prices: {
+      source: {
+        type: 'prioritized',
+        sources: [
+          {
+            type: 'coingecko',
+            baseUrl: import.meta.env['VITE_COINGECKO_API_URL'] ?? undefined,
+          },
+          ...(import.meta.env['VITE_ALCHEMY_API_KEY'] !== ''
+            ? [
+                {
+                  type: 'alchemy',
+                  apiKey: import.meta.env['VITE_ALCHEMY_API_KEY'],
+                },
+              ]
+            : []),
+          {
+            type: 'odos',
+          },
+        ],
+      },
+    },
+  })

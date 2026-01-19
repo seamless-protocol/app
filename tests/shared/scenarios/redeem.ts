@@ -1,4 +1,5 @@
 import { type Address, getAddress, type PublicClient } from 'viem'
+import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { planRedeem } from '@/domain/redeem'
 import {
   type CollateralToDebtSwapConfig,
@@ -11,7 +12,6 @@ import {
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
 import type { LeverageTokenDefinition } from '../../fixtures/addresses'
-import { createTestBalmySDK } from '../clients'
 import { AVAILABLE_LEVERAGE_TOKENS, getAddressesForToken } from '../env'
 import { seedUniswapV2PairLiquidity } from '../funding'
 import { executeSharedMint } from '../mintHelpers'
@@ -134,7 +134,7 @@ export async function planRedeemTest({
     routerAddress: scenario.router,
     swap: scenario.swap,
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
-    balmySDK: createTestBalmySDK(),
+    balmySDK: createBalmySDK(ctx.publicClient),
   })
 
   const leverageTokenConfig = getLeverageTokenConfig(scenario.token, scenario.chainId)
