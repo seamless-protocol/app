@@ -1,6 +1,7 @@
 import { type Address, erc20Abi, parseUnits } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
+import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { orchestrateRedeem, planRedeem } from '@/domain/redeem'
 import { createCollateralToDebtQuote } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
@@ -10,7 +11,6 @@ import {
   readLeverageTokenBalanceOf,
 } from '@/lib/contracts/generated'
 import type { LeverageTokenKey } from '../../../fixtures/addresses'
-import { createBalmySDK } from '../../../shared/clients'
 import { CHAIN_ID, getAddressesForToken } from '../../../shared/env'
 import { approveIfNeeded } from '../../../shared/funding'
 import { executeSharedMint } from '../../../shared/mintHelpers'
@@ -187,7 +187,7 @@ async function performRedeem(
     routerAddress: router,
     swap: collateralToDebtConfig,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
-    balmySDK: createBalmySDK(),
+    balmySDK: createBalmySDK(publicClient),
   })
 
   const blockNumber = await publicClient.getBlockNumber()

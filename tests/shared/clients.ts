@@ -1,4 +1,3 @@
-import { buildSDK } from '@seamless-defi/defi-sdk'
 import {
   createPublicClient,
   createTestClient,
@@ -7,7 +6,6 @@ import {
   type Hex,
   http,
   publicActions,
-  zeroAddress,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import {
