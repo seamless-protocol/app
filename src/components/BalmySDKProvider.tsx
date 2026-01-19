@@ -30,6 +30,7 @@ export function BalmySDKProvider({ children, ...props }: BalmySDKProviderProps) 
           custom: {
             'li-fi': {
               apiKey: import.meta.env['VITE_LIFI_API_KEY'] || undefined,
+              baseUrl: 'https://partner-seashell.li.quest/v1/quote',
             },
           },
         },
