@@ -6,6 +6,7 @@ import {
   type CollateralToDebtSwapConfig,
   createCollateralToDebtQuote,
 } from '@/domain/redeem/utils/createCollateralToDebtQuote'
+import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { getContractAddresses } from '@/lib/contracts/addresses'
 
@@ -23,6 +24,7 @@ interface UseCollateralToDebtQuoteParams {
   routerAddress?: Address
   swap?: CollateralToDebtSwapConfig
   requiresQuote: boolean
+  balmyOverrideOptions?: BalmyAdapterOverrideOptions
 }
 
 export function useCollateralToDebtQuote({
@@ -30,6 +32,7 @@ export function useCollateralToDebtQuote({
   routerAddress,
   swap,
   requiresQuote,
+  balmyOverrideOptions,
 }: UseCollateralToDebtQuoteParams): {
   quote: ReturnType<typeof createCollateralToDebtQuote>['quote'] | undefined
   status: QuoteStatus
@@ -65,6 +68,7 @@ export function useCollateralToDebtQuote({
         ...(executor ? { fromAddress: executor } : {}),
         getPublicClient,
         balmySDK,
+        ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
       })
       return { status: 'ready' as QuoteStatus, quote, error: undefined }
     } catch (err) {

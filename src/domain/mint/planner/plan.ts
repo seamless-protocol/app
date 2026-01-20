@@ -49,6 +49,8 @@ export async function planMint({
     throw new Error('slippageBps cannot be negative')
   }
 
+  console.debug(`planMint slippageBps: ${slippageBps}`)
+
   const chainId = leverageTokenConfig.chainId as SupportedChainId
 
   const token = leverageTokenConfig.address as Address

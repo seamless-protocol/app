@@ -10,12 +10,20 @@ export interface BalmyAdapterOptions {
   fromAddress: Address
   toAddress: Address
   excludeAdditionalSources?: Array<string> | undefined
+  balmyOverrideOptions?: BalmyAdapterOverrideOptions
 }
 
-export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
+export interface BalmyAdapterOverrideOptions {
+  // Optional list of sources to include in the quote. If defined, only these sources will be used.
+  includeSources?: Array<string> | undefined
+}
+
+export function createBalmyQuoteAdapter(
+  opts: BalmyAdapterOptions & BalmyAdapterOverrideOptions,
+): QuoteFn {
   return async ({ inToken, outToken, amountIn, amountOut, intent, slippageBps }: QuoteRequest) => {
     validateSlippage(slippageBps)
-    const slippage = parseFloat(bpsToDecimalString(slippageBps))
+    const slippagePercentage = parseFloat(bpsToDecimalString(slippageBps)) * 100
 
     if (intent === 'exactOut') {
       if (!amountOut) {
@@ -31,8 +39,13 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       'sushiswap',
       'fly-trade',
       'swing',
+      'odos',
       ...(opts.excludeAdditionalSources ?? []),
     ]
+
+    const filters = opts.balmyOverrideOptions?.includeSources
+      ? { includeSources: opts.balmyOverrideOptions.includeSources }
+      : { excludeSources }
 
     const request: BalmyQuoteRequest = {
       chainId: opts.chainId,
@@ -43,12 +56,10 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
           ? { type: 'buy', buyAmount: amountOut }
           : { type: 'sell', sellAmount: amountIn }),
       },
-      slippagePercentage: slippage,
+      slippagePercentage,
       takerAddress: opts.fromAddress,
       recipient: opts.toAddress,
-      filters: {
-        excludeSources,
-      },
+      filters,
       sourceConfig: { global: { disableValidation: true } },
     }
 

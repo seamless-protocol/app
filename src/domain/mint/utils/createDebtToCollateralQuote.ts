@@ -9,6 +9,7 @@ import {
   createUniswapV3QuoteAdapter,
   createVeloraQuoteAdapter,
 } from '@/domain/shared/adapters'
+import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy'
 import { createBalmyQuoteAdapter } from '@/domain/shared/adapters/balmy'
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
 import { getUniswapV3ChainConfig, getUniswapV3PoolConfig } from '@/lib/config/uniswapV3'
@@ -24,6 +25,7 @@ export interface CreateDebtToCollateralQuoteParams {
   getPublicClient: (chainId: number) => PublicClient | undefined
   fromAddress?: Address
   balmySDK: ReturnType<typeof buildSDK>
+  balmyOverrideOptions?: BalmyAdapterOverrideOptions
 }
 
 export interface CreateDebtToCollateralQuoteResult {
@@ -38,6 +40,7 @@ export function createDebtToCollateralQuote({
   getPublicClient,
   fromAddress,
   balmySDK,
+  balmyOverrideOptions,
 }: CreateDebtToCollateralQuoteParams): CreateDebtToCollateralQuoteResult {
   // Default fromAddress to the chain's MulticallExecutor when not provided
   const defaultFrom = (() => {
@@ -57,6 +60,7 @@ export function createDebtToCollateralQuote({
       toAddress: routerAddress,
       balmySDK,
       excludeAdditionalSources: swap.excludeAdditionalSources,
+      ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
     })
     return { quote, adapterType: 'balmy' }
   }

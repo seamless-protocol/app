@@ -23,35 +23,58 @@ export async function useRedeemPlanPreviewWithSlippageRetries({
   retries: number
   slippageIncrementBps: number
 }) {
-  const totalAttempts = 1 + retries
   let currentSlippageBps = slippageBps
 
-  for (let i = 0; i < totalAttempts; i++) {
-    const { result: redeemPlanPreviewResult } = renderHook(wagmiConfig, () =>
+  const { result: redeemPlanPreviewResult, rerender } = renderHook(
+    wagmiConfig,
+    (props: { slippageBps: number }) =>
       // biome-ignore lint/correctness/useHookAtTopLevel: renderHook usage inside retry loop is intentional
       useRedeemPlanPreview({
         config: wagmiConfig,
         token: leverageTokenConfig.address,
         sharesToRedeem,
-        slippageBps: currentSlippageBps,
         chainId: leverageTokenConfig.chainId,
         enabled: true,
         quote: quoteFn,
+        ...props,
       }),
-    )
+    {
+      initialProps: { slippageBps: currentSlippageBps },
+    },
+  )
+  await waitFor(() => expect(redeemPlanPreviewResult.current.isLoading).toBe(false), {
+    timeout: 15000,
+  })
 
-    await waitFor(() => expect(redeemPlanPreviewResult.current.isLoading).toBe(false))
+  const error = redeemPlanPreviewResult.current.error
+  if (error && !error.message.includes('Try increasing your slippage tolerance')) {
+    throw error
+  }
 
-    if (redeemPlanPreviewResult.current.plan) {
-      return redeemPlanPreviewResult
-    }
+  if (!error) {
+    return redeemPlanPreviewResult
+  }
+
+  for (let i = 0; i < retries; i++) {
+    // avoid rate limiting by waiting 2 seconds
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    currentSlippageBps += slippageIncrementBps
+
+    rerender({ slippageBps: currentSlippageBps })
+
+    await waitFor(() => expect(redeemPlanPreviewResult.current.isLoading).toBe(false), {
+      timeout: 15000,
+    })
 
     const error = redeemPlanPreviewResult.current.error
     if (error && !error.message.includes('Try increasing your slippage tolerance')) {
-      return redeemPlanPreviewResult
+      throw error
     }
 
-    currentSlippageBps += slippageIncrementBps
+    if (!error) {
+      return redeemPlanPreviewResult
+    }
   }
 
   throw new Error(`Failed to create redeem plan with retry helper after ${1 + retries} attempts`)

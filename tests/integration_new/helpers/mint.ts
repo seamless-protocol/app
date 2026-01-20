@@ -6,6 +6,7 @@ import { expect } from 'vitest'
 import type { Config } from 'wagmi'
 import type { MintPlan } from '@/domain/mint'
 import type { DebtToCollateralSwapConfig } from '@/domain/mint/utils/createDebtToCollateralQuote'
+import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import { useApprovalFlow } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
 import { useDebtToCollateralQuote } from '@/features/leverage-tokens/hooks/mint/useDebtToCollateralQuote'
@@ -24,11 +25,13 @@ export async function executeMintFlow({
   wagmiConfig,
   leverageTokenConfig,
   equityInCollateralAsset,
+  balmyOverrideOptions,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
+  balmyOverrideOptions?: BalmyAdapterOverrideOptions
 }): Promise<MintExecutionResult> {
   const addresses = getContractAddresses(leverageTokenConfig.chainId)
 
@@ -40,13 +43,16 @@ export async function executeMintFlow({
       swap: leverageTokenConfig.swaps?.debtToCollateral as DebtToCollateralSwapConfig,
       requiresQuote: true,
       fromAddress: addresses.multicallExecutor as Address,
+      ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
     }),
   )
-  await waitFor(() => expect(useDebtToCollateralQuoteResult.current.quote).toBeDefined())
-  if (!useDebtToCollateralQuoteResult.current.quote) {
-    throw new Error('Quote function for debt to collateral not found')
-  }
-  const quoteFn = useDebtToCollateralQuoteResult.current.quote
+  await waitFor(() =>
+    expect(
+      useDebtToCollateralQuoteResult.current.quote,
+      'Quote function for debt to collateral not found',
+    ).toBeDefined(),
+  )
+  const quoteFn = useDebtToCollateralQuoteResult.current.quote as QuoteFn
 
   // Preview the mint plan with slippage retries using the quote function
   const mintPlanPreviewResult = await useMintPlanPreviewWithSlippageRetries({
@@ -78,11 +84,18 @@ export async function executeMintFlow({
   )
   expect(approvalFlow.current.isApproved).toBe(false)
   approvalFlow.current.approve()
-  await waitFor(() => expect(approvalFlow.current.isApproved).toBe(true))
+  await waitFor(() =>
+    expect(
+      approvalFlow.current.isApproved,
+      'isApproved not set to true on mint approval flow',
+    ).toBe(true),
+  )
 
   // Execute the mint using the plan
   const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())
-  await waitFor(() => expect(mintWriteResult.current.mutateAsync).toBeDefined())
+  await waitFor(() =>
+    expect(mintWriteResult.current.mutateAsync, 'Mint write function not defined').toBeDefined(),
+  )
   await act(async () => {
     await mintWriteResult.current.mutateAsync({
       config: wagmiConfig,
@@ -113,36 +126,68 @@ async function useMintPlanPreviewWithSlippageRetries({
   retries: number
   slippageIncrementBps: number
 }) {
-  const totalAttempts = 1 + retries
   let currentSlippageBps = slippageBps
 
-  for (let i = 0; i < totalAttempts; i++) {
-    const { result: mintPlanPreviewResult } = renderHook(wagmiConfig, () =>
+  const { result: mintPlanPreviewResult, rerender } = renderHook(
+    wagmiConfig,
+    (props: { slippageBps: number }) =>
       // biome-ignore lint/correctness/useHookAtTopLevel: renderHook usage inside retry loop is intentional
       useMintPlanPreview({
         config: wagmiConfig,
         token: leverageTokenConfig.address,
         equityInCollateralAsset,
-        slippageBps: currentSlippageBps,
         chainId: leverageTokenConfig.chainId,
         enabled: true,
         quote: quoteFn,
         debounceMs: 0,
+        ...props,
       }),
+    {
+      initialProps: { slippageBps: currentSlippageBps },
+    },
+  )
+  await waitFor(
+    () =>
+      expect(
+        mintPlanPreviewResult.current.isLoading,
+        'Initial render of mint plan preview failed',
+      ).toBe(false),
+    { timeout: 15000 },
+  )
+
+  const error = mintPlanPreviewResult.current.error
+  if (error && !error.message.includes('Try increasing your slippage tolerance')) {
+    throw error
+  }
+
+  if (!error) {
+    return mintPlanPreviewResult
+  }
+
+  for (let i = 0; i < retries; i++) {
+    // avoid rate limiting by waiting 1 seconds
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    currentSlippageBps += slippageIncrementBps
+
+    rerender({ slippageBps: currentSlippageBps })
+    await waitFor(
+      () =>
+        expect(
+          mintPlanPreviewResult.current.isLoading,
+          'Rerender of mint plan preview failed',
+        ).toBe(false),
+      { timeout: 15000 },
     )
-
-    await waitFor(() => expect(mintPlanPreviewResult.current.isLoading).toBe(false))
-
-    if (mintPlanPreviewResult.current.plan) {
-      return mintPlanPreviewResult
-    }
 
     const error = mintPlanPreviewResult.current.error
     if (error && !error.message.includes('Try increasing your slippage tolerance')) {
       return mintPlanPreviewResult
     }
 
-    currentSlippageBps += slippageIncrementBps
+    if (!error) {
+      return mintPlanPreviewResult
+    }
   }
 
   throw new Error(`Failed to create mint plan with retry helper after ${1 + retries} attempts`)
