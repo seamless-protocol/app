@@ -139,6 +139,9 @@ async function testRedeem({
     equityInCollateralAsset,
   })
 
+  // Wait 3 seconds to avoid quote api rate limiting and for anvil to catch up
+  await new Promise((resolve) => setTimeout(resolve, 3000))
+
   const leverageTokenBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
     address: leverageTokenConfig.address,
     args: [client.account.address],
