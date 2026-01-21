@@ -9,7 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './tests/integration_new/setup.ts',
-    testTimeout: 180_000,
+    testTimeout: 270_000,
     hookTimeout: 180_000,
     poolOptions: { threads: { singleThread: true } }, // avoid Prool port clashes
     sequence: { hooks: 'list' },

@@ -52,7 +52,7 @@ export const createBalmySDK = (client: UseClientReturnType | PublicClient) =>
             apiKey: import.meta.env['VITE_LIFI_API_KEY'] || undefined,
             baseUrl: 'https://partner-seashell.li.quest/v1/quote',
             order: 'CHEAPEST',
-            sourceDenylist: ['sushiswap', 'fly', 'kyberswap', 'openocean'],
+            sourceDenylist: ['sushiswap', 'fly', 'kyberswap'],
           },
           kyberswap: {
             sourceDenylist: ['ekubo-v3'],
