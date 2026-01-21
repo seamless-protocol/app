@@ -43,7 +43,7 @@ export async function useRedeemPlanPreviewWithSlippageRetries({
     },
   )
   await waitFor(() => expect(redeemPlanPreviewResult.current.isLoading).toBe(false), {
-    timeout: 15000,
+    timeout: 30000,
   })
 
   const error = redeemPlanPreviewResult.current.error
@@ -56,15 +56,15 @@ export async function useRedeemPlanPreviewWithSlippageRetries({
   }
 
   for (let i = 0; i < retries; i++) {
-    // avoid rate limiting by waiting 2 seconds
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    // avoid rate limiting by waiting 3 seconds
+    await new Promise((resolve) => setTimeout(resolve, 3000))
 
     currentSlippageBps += slippageIncrementBps
 
     rerender({ slippageBps: currentSlippageBps })
 
     await waitFor(() => expect(redeemPlanPreviewResult.current.isLoading).toBe(false), {
-      timeout: 15000,
+      timeout: 30000,
     })
 
     const error = redeemPlanPreviewResult.current.error

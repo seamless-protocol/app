@@ -85,5 +85,5 @@ export function useCollateralToDebtQuote({
       }
       return { status: 'error' as QuoteStatus, quote: undefined, error }
     }
-  }, [balmySDK, chainId, publicClient, requiresQuote, routerAddress, swap])
+  }, [balmyOverrideOptions, balmySDK, chainId, publicClient, requiresQuote, routerAddress, swap])
 }

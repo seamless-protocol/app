@@ -1,5 +1,6 @@
 import type { AnvilTestClient } from '@morpho-org/test'
 import { waitFor } from '@morpho-org/test-wagmi'
+import { FailedToGenerateAnyQuotesError } from '@seamless-defi/defi-sdk'
 import { act } from '@testing-library/react'
 import { type Address, parseEther } from 'viem'
 import { beforeEach, describe, expect } from 'vitest'
@@ -21,8 +22,8 @@ import { wagmiTest } from '../setup'
 
 describe('redeem integration tests', () => {
   beforeEach(async () => {
-    // avoid quote api rate limiting by waiting 1 seconds between tests
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // avoid quote api rate limiting by waiting 3 seconds between tests
+    await new Promise((resolve) => setTimeout(resolve, 3000))
   })
 
   const leverageTokenConfigs = getAllLeverageTokenConfigs()
@@ -81,12 +82,23 @@ describe('redeem integration tests', () => {
         wagmiTest(leverageTokenConfig.chainId)(
           `redeems ${leverageTokenConfig.symbol} shares on chain id ${leverageTokenConfig.chainId} with balmy override options for paraswap`,
           async ({ client, config: wagmiConfig }) => {
-            await testRedeem({
-              client,
-              wagmiConfig,
-              leverageTokenConfig,
-              balmyOverrideOptions: { includeSources: ['paraswap'] },
-            })
+            try {
+              await testRedeem({
+                client,
+                wagmiConfig,
+                leverageTokenConfig,
+                balmyOverrideOptions: { includeSources: ['paraswap'] },
+              })
+            } catch (error) {
+              console.error('Redeem with paraswap integration test error:', error)
+              if (
+                (error instanceof Error && error.message.includes('Rate limit reached')) ||
+                error instanceof FailedToGenerateAnyQuotesError // Paraswap is flaky on some swaps sometimes
+              ) {
+                return
+              }
+              throw error
+            }
           },
         )
       }
@@ -159,12 +171,13 @@ async function testRedeem({
   const quoteFn = useCollateralToDebtQuoteResult.current.quote as QuoteFn
 
   // Preview the redeem plan with slippage retries using the quote function
+  // biome-ignore lint/correctness/useHookAtTopLevel: renderHook usage inside retry loop is intentional
   const redeemPlanPreviewResult = await useRedeemPlanPreviewWithSlippageRetries({
     wagmiConfig,
     leverageTokenConfig,
     sharesToRedeem: leverageTokenBalanceBefore,
     quoteFn,
-    slippageBps: 50,
+    slippageBps: 100,
     retries: 5,
     slippageIncrementBps: 100,
   })

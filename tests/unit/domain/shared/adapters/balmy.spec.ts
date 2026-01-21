@@ -73,10 +73,10 @@ describe('createBalmyQuoteAdapter', () => {
         sellToken: IN_TOKEN,
         buyToken: OUT_TOKEN,
         order: { type: 'sell', sellAmount: 123n },
-        slippagePercentage: 0.005,
+        slippagePercentage: 0.5,
         takerAddress: CALLER,
         recipient: ROUTER,
-        filters: { excludeSources: ['sushiswap', 'fly-trade', 'swing'] },
+        filters: { excludeSources: ['sushiswap', 'fly-trade', 'swing', 'odos'] },
         sourceConfig: { global: { disableValidation: true } },
       }),
       config: {
@@ -108,7 +108,7 @@ describe('createBalmyQuoteAdapter', () => {
         order: { type: 'buy', buyAmount: 500n },
         sellToken: ETH_SENTINEL,
         recipient: ROUTER,
-        slippagePercentage: 0.01,
+        slippagePercentage: 1,
       }),
       config: {
         choose: { by: 'most-swapped', using: 'max sell/min buy amounts' },

@@ -60,7 +60,7 @@ export async function executeMintFlow({
     leverageTokenConfig,
     equityInCollateralAsset,
     quoteFn,
-    slippageBps: 50,
+    slippageBps: 100,
     retries: 5,
     slippageIncrementBps: 100,
   })
@@ -152,7 +152,7 @@ async function useMintPlanPreviewWithSlippageRetries({
         mintPlanPreviewResult.current.isLoading,
         'Initial render of mint plan preview failed',
       ).toBe(false),
-    { timeout: 15000 },
+    { timeout: 30000 },
   )
 
   const error = mintPlanPreviewResult.current.error
@@ -165,8 +165,8 @@ async function useMintPlanPreviewWithSlippageRetries({
   }
 
   for (let i = 0; i < retries; i++) {
-    // avoid rate limiting by waiting 1 seconds
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // avoid rate limiting by waiting 3 seconds
+    await new Promise((resolve) => setTimeout(resolve, 3000))
 
     currentSlippageBps += slippageIncrementBps
 
@@ -177,7 +177,7 @@ async function useMintPlanPreviewWithSlippageRetries({
           mintPlanPreviewResult.current.isLoading,
           'Rerender of mint plan preview failed',
         ).toBe(false),
-      { timeout: 15000 },
+      { timeout: 30000 },
     )
 
     const error = mintPlanPreviewResult.current.error

@@ -44,6 +44,11 @@ const leverageTokenConfig: LeverageTokenConfig = {
     decimals: 6,
   },
   swaps: {},
+  test: {
+    mintIntegrationTest: {
+      equityInCollateralAsset: 1n ** 18n,
+    },
+  },
 }
 
 const readState = readLeverageManagerV2GetLeverageTokenState as Mock
