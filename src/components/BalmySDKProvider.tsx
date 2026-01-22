@@ -1,6 +1,7 @@
 import { buildSDK } from '@seamless-defi/defi-sdk'
 import { createContext, useContext, useRef } from 'react'
 import { type PublicClient, zeroAddress } from 'viem'
+import { base } from 'viem/chains'
 import { type UseClientReturnType, useClient } from 'wagmi'
 
 type BalmySDKProviderProps = {
@@ -36,8 +37,13 @@ export const useBalmySDK = () => {
   return context
 }
 
-export const createBalmySDK = (client: UseClientReturnType | PublicClient) =>
-  buildSDK({
+export const createBalmySDK = (client: UseClientReturnType | PublicClient) => {
+  const liFiSourceDenylist = ['sushiswap', 'fly']
+  if (client?.chain?.id === base.id) {
+    liFiSourceDenylist.push('eisen', 'odos', 'okx')
+  }
+
+  return buildSDK({
     quotes: {
       defaultConfig: {
         global: {
@@ -52,7 +58,7 @@ export const createBalmySDK = (client: UseClientReturnType | PublicClient) =>
             apiKey: import.meta.env['VITE_LIFI_API_KEY'] || undefined,
             baseUrl: 'https://partner-seashell.li.quest/v1/quote',
             order: 'CHEAPEST',
-            sourceDenylist: ['sushiswap', 'fly', 'kyberswap'],
+            sourceDenylist: liFiSourceDenylist,
           },
           kyberswap: {
             sourceDenylist: ['ekubo-v3'],
@@ -90,3 +96,4 @@ export const createBalmySDK = (client: UseClientReturnType | PublicClient) =>
       },
     },
   })
+}

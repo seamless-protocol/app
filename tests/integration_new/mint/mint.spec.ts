@@ -3,12 +3,15 @@ import { FailedToGenerateAnyQuotesError } from '@seamless-defi/defi-sdk'
 import { parseEther } from 'viem'
 import { beforeEach, describe, expect } from 'vitest'
 import type { Config } from 'wagmi'
+import type { MintPlan } from '@/domain/mint'
 import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
-import { executeMintFlow } from '../helpers/mint'
+import { executeMintFlow, MintExecutionSimulationError } from '../helpers/mint'
 import { wagmiTest } from '../setup'
+
+const MAX_RETRY_STARTING_SLIPPAGE_BPS = 600 // 6%
 
 describe('mint integration tests', () => {
   beforeEach(async () => {
@@ -101,11 +104,17 @@ async function testMint({
   wagmiConfig,
   leverageTokenConfig,
   balmyOverrideOptions,
+  startSlippageBps = 100,
+  retries = 5,
+  slippageIncrementBps = 100,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   balmyOverrideOptions?: BalmyAdapterOverrideOptions
+  startSlippageBps?: number
+  retries?: number
+  slippageIncrementBps?: number
 }) {
   const equityInCollateralAsset =
     leverageTokenConfig.test.mintIntegrationTest.equityInCollateralAsset
@@ -129,13 +138,74 @@ async function testMint({
     args: [client.account.address],
   })
 
-  const { plan } = await executeMintFlow({
-    client,
-    wagmiConfig,
-    leverageTokenConfig,
-    equityInCollateralAsset,
-    ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
-  })
+  let plan: MintPlan | undefined
+  try {
+    const result = await executeMintFlow({
+      client,
+      wagmiConfig,
+      leverageTokenConfig,
+      equityInCollateralAsset,
+      ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
+      startSlippageBps,
+      retries,
+      slippageIncrementBps,
+    })
+    plan = result.plan
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Rate limit reached')) {
+      return
+    } else if (
+      error instanceof MintExecutionSimulationError &&
+      error.slippageUsedBps < MAX_RETRY_STARTING_SLIPPAGE_BPS
+    ) {
+      // Retry the mint up to 5 additional times, bumping slippage until MAX_STARTING_SLIPPAGE_BPS
+      let attempts = 0
+      const slippageIncrementBps = 100
+      let nextSlippageBps = error.slippageUsedBps + slippageIncrementBps
+      let lastError: unknown = error
+
+      while (attempts < 5 && nextSlippageBps <= MAX_RETRY_STARTING_SLIPPAGE_BPS) {
+        console.log(`Retrying mint with starting slippage bps: ${nextSlippageBps}`)
+
+        // Reset the client to avoid "BlockOutOfRangeError: block height is 24291059 but requested was 24291058" like errors
+        await client.reset()
+
+        try {
+          await testMint({
+            client,
+            wagmiConfig,
+            leverageTokenConfig,
+            ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
+            startSlippageBps: nextSlippageBps,
+            retries: (MAX_RETRY_STARTING_SLIPPAGE_BPS - nextSlippageBps) / slippageIncrementBps,
+            slippageIncrementBps,
+          })
+          break
+        } catch (retryError) {
+          lastError = retryError
+          if (
+            retryError instanceof MintExecutionSimulationError &&
+            nextSlippageBps < MAX_RETRY_STARTING_SLIPPAGE_BPS
+          ) {
+            attempts += 1
+            nextSlippageBps = retryError.slippageUsedBps + slippageIncrementBps
+            continue
+          }
+          throw retryError
+        }
+      }
+
+      if (!plan) {
+        throw lastError
+      }
+    } else {
+      throw error
+    }
+  }
+
+  if (!plan) {
+    throw new Error('Mint plan not generated after retries')
+  }
 
   // Check the shares minted to the user
   const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {

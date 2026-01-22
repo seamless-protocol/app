@@ -485,11 +485,9 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     swaps: {
       debtToCollateral: {
         type: 'balmy',
-        excludeAdditionalSources: ['kyberswap'], // Kyberswap is flaky for this swap
       },
       collateralToDebt: {
         type: 'balmy',
-        excludeAdditionalSources: ['kyberswap'], // Kyberswap is flaky for this swap
       },
     },
     relatedResources: {

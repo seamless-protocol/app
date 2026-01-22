@@ -20,18 +20,39 @@ export type MintExecutionResult = {
   plan: MintPlan
 }
 
+export class MintExecutionSimulationError extends Error {
+  slippageUsedBps: number
+
+  constructor(slippageUsedBps: number, cause?: unknown) {
+    super(`Failed to create mint plan with slippage ${slippageUsedBps}`)
+    this.name = 'MintExecutionSimulationError'
+    this.slippageUsedBps = slippageUsedBps
+    if (cause !== undefined) {
+      this.cause = cause
+    }
+  }
+}
+
+export type MintExecutionError = MintExecutionSimulationError
+
 export async function executeMintFlow({
   client,
   wagmiConfig,
   leverageTokenConfig,
   equityInCollateralAsset,
   balmyOverrideOptions,
+  startSlippageBps = 100,
+  retries = 5,
+  slippageIncrementBps = 100,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
   balmyOverrideOptions?: BalmyAdapterOverrideOptions
+  startSlippageBps?: number
+  retries?: number
+  slippageIncrementBps?: number
 }): Promise<MintExecutionResult> {
   const addresses = getContractAddresses(leverageTokenConfig.chainId)
 
@@ -60,9 +81,9 @@ export async function executeMintFlow({
     leverageTokenConfig,
     equityInCollateralAsset,
     quoteFn,
-    slippageBps: 100,
-    retries: 5,
-    slippageIncrementBps: 100,
+    slippageBps: startSlippageBps,
+    retries,
+    slippageIncrementBps,
   })
 
   const plan = mintPlanPreviewResult.current.plan
@@ -92,21 +113,25 @@ export async function executeMintFlow({
   )
 
   // Execute the mint using the plan
-  const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())
-  await waitFor(() =>
-    expect(mintWriteResult.current.mutateAsync, 'Mint write function not defined').toBeDefined(),
-  )
-  await act(async () => {
-    await mintWriteResult.current.mutateAsync({
-      config: wagmiConfig,
-      chainId: leverageTokenConfig.chainId,
-      account: client.account,
-      token: leverageTokenConfig.address,
-      plan: plan,
+  try {
+    const { result: mintWriteResult } = renderHook(wagmiConfig, () => useMintWrite())
+    await waitFor(() =>
+      expect(mintWriteResult.current.mutateAsync, 'Mint write function not defined').toBeDefined(),
+    )
+    await act(async () => {
+      await mintWriteResult.current.mutateAsync({
+        config: wagmiConfig,
+        chainId: leverageTokenConfig.chainId,
+        account: client.account,
+        token: leverageTokenConfig.address,
+        plan: plan,
+      })
     })
-  })
 
-  return { plan }
+    return { plan }
+  } catch (error) {
+    throw new MintExecutionSimulationError(mintPlanPreviewResult.slippageUsedBps, error)
+  }
 }
 
 async function useMintPlanPreviewWithSlippageRetries({
@@ -161,7 +186,7 @@ async function useMintPlanPreviewWithSlippageRetries({
   }
 
   if (!error) {
-    return mintPlanPreviewResult
+    return { ...mintPlanPreviewResult, slippageUsedBps: currentSlippageBps }
   }
 
   for (let i = 0; i < retries; i++) {
@@ -182,11 +207,11 @@ async function useMintPlanPreviewWithSlippageRetries({
 
     const error = mintPlanPreviewResult.current.error
     if (error && !error.message.includes('Try increasing your slippage tolerance')) {
-      return mintPlanPreviewResult
+      return { ...mintPlanPreviewResult, slippageUsedBps: currentSlippageBps }
     }
 
     if (!error) {
-      return mintPlanPreviewResult
+      return { ...mintPlanPreviewResult, slippageUsedBps: currentSlippageBps }
     }
   }
 
