@@ -1,6 +1,5 @@
 import type { AnvilTestClient } from '@morpho-org/test'
 import { FailedToGenerateAnyQuotesError } from '@seamless-defi/defi-sdk'
-import { parseEther } from 'viem'
 import { beforeEach, describe, expect } from 'vitest'
 import type { Config } from 'wagmi'
 import type { RedeemPlan } from '@/domain/redeem'
@@ -8,9 +7,9 @@ import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
-import { executeMintFlow } from '../helpers/mint'
 import { executeRedeemFlow, RedeemExecutionSimulationError } from '../helpers/redeem'
 import { wagmiTest } from '../setup'
+import { testMint } from '../mint/mint.spec'
 
 const MAX_RETRY_STARTING_SLIPPAGE_BPS = 600 // 6%
 
@@ -117,24 +116,10 @@ async function testRedeem({
   retries?: number
   slippageIncrementBps?: number
 }) {
-  const equityInCollateralAsset =
-    leverageTokenConfig.test.mintIntegrationTest.equityInCollateralAsset
-
-  await client.deal({
-    erc20: leverageTokenConfig.collateralAsset.address,
-    account: client.account.address,
-    amount: equityInCollateralAsset,
-  })
-  await client.setBalance({
-    address: client.account.address,
-    value: parseEther('1'),
-  })
-
-  await executeMintFlow({
+  await testMint({
     client,
     wagmiConfig,
     leverageTokenConfig,
-    equityInCollateralAsset,
   })
 
   // Wait 3 seconds to avoid quote api rate limiting and for anvil to catch up

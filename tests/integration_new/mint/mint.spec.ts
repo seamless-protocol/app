@@ -99,7 +99,7 @@ describe('mint integration tests', () => {
   }
 })
 
-async function testMint({
+export async function testMint({
   client,
   wagmiConfig,
   leverageTokenConfig,
