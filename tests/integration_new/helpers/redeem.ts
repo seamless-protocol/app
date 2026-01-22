@@ -13,6 +13,8 @@ import { useRedeemExecution } from '@/features/leverage-tokens/hooks/redeem/useR
 import { useRedeemPlanPreview } from '@/features/leverage-tokens/hooks/redeem/useRedeemPlanPreview'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { getContractAddresses } from '@/lib/contracts'
+import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
+import { testMint } from './mint'
 import { renderHook } from './wagmi'
 
 export type RedeemExecutionResult = {
@@ -32,7 +34,9 @@ export class RedeemExecutionSimulationError extends Error {
   }
 }
 
-export async function executeRedeemFlow({
+const MAX_RETRY_STARTING_SLIPPAGE_BPS = 600 // 6%
+
+async function executeRedeemFlow({
   client,
   wagmiConfig,
   leverageTokenConfig,
@@ -72,6 +76,7 @@ export async function executeRedeemFlow({
   const quoteFn = useCollateralToDebtQuoteResult.current.quote as QuoteFn
 
   // Preview the redeem plan with slippage retries using the quote function
+  // biome-ignore lint/correctness/useHookAtTopLevel: renderHook usage inside retry loop is intentional
   const redeemPlanPreviewResult = await useRedeemPlanPreviewWithSlippageRetries({
     wagmiConfig,
     leverageTokenConfig,
@@ -225,4 +230,138 @@ async function useRedeemPlanPreviewWithSlippageRetries({
   }
 
   throw new Error(`Failed to create redeem plan with retry helper after ${1 + retries} attempts`)
+}
+
+export async function testRedeem({
+  client,
+  wagmiConfig,
+  leverageTokenConfig,
+  balmyOverrideOptions,
+  startSlippageBps = 100,
+  retries = 5,
+  slippageIncrementBps = 100,
+}: {
+  client: AnvilTestClient
+  wagmiConfig: Config
+  leverageTokenConfig: LeverageTokenConfig
+  balmyOverrideOptions?: BalmyAdapterOverrideOptions
+  startSlippageBps?: number
+  retries?: number
+  slippageIncrementBps?: number
+}) {
+  await testMint({
+    client,
+    wagmiConfig,
+    leverageTokenConfig,
+  })
+
+  // Wait 3 seconds to avoid quote api rate limiting and for anvil to catch up
+  await new Promise((resolve) => setTimeout(resolve, 3000))
+
+  const leverageTokenBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.address,
+    args: [client.account.address],
+  })
+  const collateralBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.collateralAsset.address,
+    args: [client.account.address],
+  })
+  const debtBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.debtAsset.address,
+    args: [client.account.address],
+  })
+
+  let plan: RedeemPlan | undefined
+  try {
+    const result = await executeRedeemFlow({
+      client,
+      wagmiConfig,
+      leverageTokenConfig,
+      sharesToRedeem: leverageTokenBalanceBefore,
+      ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
+      startSlippageBps,
+      retries,
+      slippageIncrementBps,
+    })
+    plan = result.plan
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Rate limit reached')) {
+      return
+    } else if (
+      error instanceof RedeemExecutionSimulationError &&
+      error.slippageUsedBps < MAX_RETRY_STARTING_SLIPPAGE_BPS
+    ) {
+      // Retry the redeem up to 5 additional times, bumping slippage until MAX_STARTING_SLIPPAGE_BPS
+      let attempts = 0
+      let nextSlippageBps = error.slippageUsedBps + 100
+      let lastError: unknown = error
+
+      while (attempts < 5 && nextSlippageBps <= MAX_RETRY_STARTING_SLIPPAGE_BPS) {
+        console.log(
+          `Retrying redeem for ${leverageTokenConfig.symbol} with starting slippage bps: ${nextSlippageBps}`,
+        )
+
+        // Reset the client to avoid "BlockOutOfRangeError: block height is 24291059 but requested was 24291058" like errors
+        await client.reset()
+
+        try {
+          await testRedeem({
+            client,
+            wagmiConfig,
+            leverageTokenConfig,
+            ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
+            startSlippageBps: nextSlippageBps,
+            retries: (MAX_RETRY_STARTING_SLIPPAGE_BPS - nextSlippageBps) / 100,
+            slippageIncrementBps: 100,
+          })
+          break
+        } catch (retryError) {
+          lastError = retryError
+          if (
+            retryError instanceof RedeemExecutionSimulationError &&
+            nextSlippageBps < MAX_RETRY_STARTING_SLIPPAGE_BPS
+          ) {
+            attempts += 1
+            nextSlippageBps = retryError.slippageUsedBps + 100
+            continue
+          }
+          throw retryError
+        }
+      }
+
+      if (!plan) {
+        throw lastError
+      }
+    } else {
+      throw error
+    }
+  }
+
+  if (!plan) {
+    throw new Error('Redeem plan not generated after retries')
+  }
+
+  // Check the shares redeemed by the user
+  const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.address,
+    args: [client.account.address],
+  })
+  const sharesDelta = leverageTokenBalanceBefore - sharesAfter
+  expect(sharesDelta).toBe(plan.sharesToRedeem)
+
+  // Check the collateral balance of the user
+  const collateralBalanceAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.collateralAsset.address,
+    args: [client.account.address],
+  })
+  const collateralDelta = collateralBalanceAfter - collateralBalanceBefore
+  expect(collateralDelta).toBeGreaterThanOrEqual(plan.minCollateralForSender)
+
+  // Check the debt balance of the user
+  const debtBalanceAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.debtAsset.address,
+    args: [client.account.address],
+  })
+  const debtDelta = debtBalanceAfter - debtBalanceBefore
+  expect(debtDelta).toBeGreaterThanOrEqual(plan.minExcessDebt)
 }
