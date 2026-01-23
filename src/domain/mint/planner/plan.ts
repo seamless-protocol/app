@@ -26,7 +26,6 @@ export interface MintPlan {
 
 export interface PlanMintParams {
   wagmiConfig: Config
-  blockNumber: bigint
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
   slippageBps: number
@@ -35,7 +34,6 @@ export interface PlanMintParams {
 
 export async function planMint({
   wagmiConfig,
-  blockNumber,
   leverageTokenConfig,
   equityInCollateralAsset,
   slippageBps,
@@ -60,14 +58,12 @@ export async function planMint({
   const { collateralRatio } = await readLeverageManagerV2GetLeverageTokenState(wagmiConfig, {
     args: [token],
     chainId,
-    blockNumber,
   })
 
   // Initial router preview to size required debt and collateral top-up.
   const routerPreview = await readLeverageRouterV2PreviewDeposit(wagmiConfig, {
     args: [token, equityInCollateralAsset],
     chainId,
-    blockNumber,
   })
 
   // This price is adding the NAV diff from spot on top of the share slippage
@@ -95,13 +91,11 @@ export async function planMint({
   const managerPreview = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
     args: [token, equityInCollateralAsset + debtToCollateralQuote.out],
     chainId,
-    blockNumber,
   })
 
   const managerMin = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
     args: [token, equityInCollateralAsset + debtToCollateralQuote.minOut],
     chainId,
-    blockNumber,
   })
 
   if (managerPreview.debt < flashLoanAmount) {

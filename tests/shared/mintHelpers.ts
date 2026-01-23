@@ -157,15 +157,12 @@ export async function executeSharedMint({
     args: [account.address],
   })
 
-  const blockNumber = await publicClient.getBlockNumber()
-
   const plan = await planMint({
     wagmiConfig: config,
     leverageTokenConfig,
     equityInCollateralAsset: equityInInputAsset,
     slippageBps: resolvedSlippageBps,
     quoteDebtToCollateral,
-    blockNumber,
   })
 
   const { request } = await simulateLeverageRouterV2Deposit(config, {

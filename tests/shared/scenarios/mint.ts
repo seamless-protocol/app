@@ -77,14 +77,12 @@ export async function planMintTest({
   if (!leverageTokenConfig) {
     throw new Error(`Leverage token config not found for ${setup.token}`)
   }
-  const blockNumber = await ctx.publicClient.getBlockNumber()
   const plan = await planMint({
     wagmiConfig: ctx.config,
     leverageTokenConfig,
     equityInCollateralAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    blockNumber,
   })
 
   return {
@@ -154,7 +152,6 @@ async function runMintScenario({
   if (!leverageTokenConfig) {
     throw new Error(`Leverage token config not found for ${setup.token}`)
   }
-  const blockNumber = await publicClient.getBlockNumber()
 
   // Plan + simulate + write (no orchestrator)
   const plan = await planMint({
@@ -163,7 +160,6 @@ async function runMintScenario({
     equityInCollateralAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    blockNumber,
   })
 
   const { simulateLeverageRouterV2Deposit, writeLeverageRouterV2Deposit } = await import(

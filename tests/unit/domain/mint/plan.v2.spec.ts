@@ -106,7 +106,6 @@ describe('planMint', () => {
       equityInCollateralAsset: 500n,
       slippageBps: 100,
       quoteDebtToCollateral: quote as any,
-      blockNumber: 1n,
     })
 
     // flash loan and shares are slippage-adjusted from router preview
@@ -154,7 +153,6 @@ describe('planMint', () => {
         equityInCollateralAsset: 500n,
         slippageBps: 100,
         quoteDebtToCollateral: quote as any,
-        blockNumber: 1n,
       }),
     ).rejects.toThrow(/previewed debt 800.*flash loan amount 990/i)
   })
@@ -189,7 +187,6 @@ describe('planMint', () => {
         equityInCollateralAsset: 500n,
         slippageBps: 100,
         quoteDebtToCollateral: quote as any,
-        blockNumber: 1n,
       }),
     ).rejects.toThrow(/minimum shares.*less than min shares/i)
   })
