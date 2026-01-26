@@ -301,20 +301,17 @@ export async function testRedeem({
           `Retrying redeem for ${leverageTokenConfig.symbol} with starting slippage bps: ${nextSlippageBps}`,
         )
 
-        // Reset the client to avoid "BlockOutOfRangeError: block height is 24291059 but requested was 24291058" like errors
-        await client.reset()
-
         try {
-          await testRedeem({
+          await executeRedeemFlow({
             client,
             wagmiConfig,
             leverageTokenConfig,
+            sharesToRedeem: leverageTokenBalanceBefore,
             ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
             startSlippageBps: nextSlippageBps,
             retries: (MAX_RETRY_STARTING_SLIPPAGE_BPS - nextSlippageBps) / 100,
             slippageIncrementBps: 100,
           })
-          break
         } catch (retryError) {
           lastError = retryError
           if (

@@ -290,20 +290,17 @@ export async function testMint({
       while (attempts < 5 && nextSlippageBps <= MAX_RETRY_STARTING_SLIPPAGE_BPS) {
         console.log(`Retrying mint with starting slippage bps: ${nextSlippageBps}`)
 
-        // Reset the client to avoid "BlockOutOfRangeError: block height is 24291059 but requested was 24291058" like errors
-        await client.reset()
-
         try {
-          await testMint({
+          await executeMintFlow({
             client,
             wagmiConfig,
             leverageTokenConfig,
+            equityInCollateralAsset,
             ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
             startSlippageBps: nextSlippageBps,
             retries: (MAX_RETRY_STARTING_SLIPPAGE_BPS - nextSlippageBps) / slippageIncrementBps,
             slippageIncrementBps,
           })
-          break
         } catch (retryError) {
           lastError = retryError
           if (
