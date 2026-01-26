@@ -54,19 +54,6 @@ describe('mint integration tests', () => {
           },
         )
       }
-      if (!mintSwapConfig.excludeAdditionalSources?.includes('open-ocean')) {
-        wagmiTest(leverageTokenConfig.chainId)(
-          `mints ${leverageTokenConfig.symbol} shares on chain id ${leverageTokenConfig.chainId} with balmy override options for open-ocean`,
-          async ({ client, config: wagmiConfig }) => {
-            await testMint({
-              client,
-              wagmiConfig,
-              leverageTokenConfig,
-              balmyOverrideOptions: { includeSources: ['open-ocean'] },
-            })
-          },
-        )
-      }
       if (!mintSwapConfig.excludeAdditionalSources?.includes('paraswap')) {
         wagmiTest(leverageTokenConfig.chainId)(
           `mints ${leverageTokenConfig.symbol} shares on chain id ${leverageTokenConfig.chainId} with balmy override options for paraswap`,

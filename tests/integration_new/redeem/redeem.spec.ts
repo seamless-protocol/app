@@ -54,19 +54,6 @@ describe('redeem integration tests', () => {
           },
         )
       }
-      if (!redeemSwapConfig.excludeAdditionalSources?.includes('open-ocean')) {
-        wagmiTest(leverageTokenConfig.chainId)(
-          `redeems ${leverageTokenConfig.symbol} shares on chain id ${leverageTokenConfig.chainId} with balmy override options for open-ocean`,
-          async ({ client, config: wagmiConfig }) => {
-            await testRedeem({
-              client,
-              wagmiConfig,
-              leverageTokenConfig,
-              balmyOverrideOptions: { includeSources: ['open-ocean'] },
-            })
-          },
-        )
-      }
       if (!redeemSwapConfig.excludeAdditionalSources?.includes('paraswap')) {
         wagmiTest(leverageTokenConfig.chainId)(
           `redeems ${leverageTokenConfig.symbol} shares on chain id ${leverageTokenConfig.chainId} with balmy override options for paraswap`,

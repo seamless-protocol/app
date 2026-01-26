@@ -195,11 +195,9 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     swaps: {
       debtToCollateral: {
         type: 'balmy',
-        excludeAdditionalSources: ['open-ocean'], // Open Ocean is flaky for this swap
       },
       collateralToDebt: {
         type: 'balmy',
-        excludeAdditionalSources: ['open-ocean'], // Open Ocean is flaky for this swap
       },
     },
     relatedResources: {
