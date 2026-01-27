@@ -44,6 +44,11 @@ export function useMintPlanPreview({
   const query = useQuery<MintPlan, Error>({
     queryKey: [...ltKeys.simulation.mintKey(keyParams), `slippage:${slippageBps}`],
     enabled: enabledQuery,
+    // Periodically refresh quotes while user is editing
+    refetchInterval: enabled ? 30_000 : false,
+    staleTime: 10_000,
+    refetchOnWindowFocus: true,
+    retry: 1,
     queryFn: async () => {
       const leverageTokenConfig = getLeverageTokenConfig(token, chainId)
       if (!leverageTokenConfig) throw new Error('Leverage token config not found')
