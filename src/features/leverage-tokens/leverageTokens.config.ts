@@ -195,9 +195,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     swaps: {
       debtToCollateral: {
         type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
         type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {
@@ -284,9 +286,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     swaps: {
       debtToCollateral: {
         type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
         type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {
@@ -483,9 +487,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     swaps: {
       debtToCollateral: {
         type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
         type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {
@@ -750,9 +756,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     swaps: {
       debtToCollateral: {
         type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
         type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {

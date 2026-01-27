@@ -39,8 +39,6 @@ export function createBalmyQuoteAdapter(
       'sushiswap',
       'fly-trade',
       'swing',
-      'odos',
-      'open-ocean',
       ...(opts.excludeAdditionalSources ?? []),
     ]
 

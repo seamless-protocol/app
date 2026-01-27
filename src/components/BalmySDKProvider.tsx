@@ -38,7 +38,7 @@ export const useBalmySDK = () => {
 }
 
 export const createBalmySDK = (client: UseClientReturnType | PublicClient) => {
-  const liFiSourceDenylist = ['sushiswap', 'fly', 'kyberswap', 'odos']
+  const liFiSourceDenylist = ['sushiswap', 'fly', 'kyberswap']
   if (client?.chain?.id === base.id) {
     liFiSourceDenylist.push('eisen', 'okx')
   }
