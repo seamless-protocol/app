@@ -34,9 +34,153 @@ export class MintExecutionSimulationError extends Error {
   }
 }
 
-export type MintExecutionError = MintExecutionSimulationError
-
 const MAX_RETRY_STARTING_SLIPPAGE_BPS = 600 // 6%
+const MAX_START_SLIPPAGE_RETRY_ATTEMPTS = 5
+
+export async function testMint({
+  client,
+  wagmiConfig,
+  leverageTokenConfig,
+  balmyOverrideOptions,
+  startSlippageBps = 100,
+  retries = 5,
+  slippageIncrementBps = 100,
+}: {
+  client: AnvilTestClient
+  wagmiConfig: Config
+  leverageTokenConfig: LeverageTokenConfig
+  balmyOverrideOptions?: BalmyAdapterOverrideOptions
+  startSlippageBps?: number
+  retries?: number
+  slippageIncrementBps?: number
+}) {
+  const equityInCollateralAsset =
+    leverageTokenConfig.test.mintIntegrationTest.equityInCollateralAsset
+
+  await client.deal({
+    erc20: leverageTokenConfig.collateralAsset.address,
+    account: client.account.address,
+    amount: equityInCollateralAsset,
+  })
+  await client.setBalance({
+    address: client.account.address,
+    value: parseEther('1'),
+  })
+
+  const collateralBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.collateralAsset.address,
+    args: [client.account.address],
+  })
+  const debtBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.debtAsset.address,
+    args: [client.account.address],
+  })
+
+  const plan = await mintWithRetries({
+    client,
+    wagmiConfig,
+    leverageTokenConfig,
+    ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
+    equityInCollateralAsset,
+    startSlippageBps,
+    retries,
+    slippageIncrementBps,
+  })
+
+  if (!plan) {
+    return
+  }
+
+  // Check the shares minted to the user
+  const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.address,
+    args: [client.account.address],
+  })
+  expect(sharesAfter).toBeGreaterThanOrEqual(plan.minShares)
+
+  // Verify the user's collateral balance decreased by the expected amount
+  const collateralBalanceAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.collateralAsset.address,
+    args: [client.account.address],
+  })
+  const collateralDelta = collateralBalanceBefore - collateralBalanceAfter
+  expect(collateralDelta).toBe(equityInCollateralAsset)
+
+  // Check the excess debt assets the user received from the mint
+  const debtAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
+    address: leverageTokenConfig.debtAsset.address,
+    args: [client.account.address],
+  })
+  const debtDelta = debtAfter - debtBalanceBefore
+  expect(debtDelta).toBeGreaterThanOrEqual(plan.minExcessDebt)
+}
+
+async function mintWithRetries({
+  client,
+  wagmiConfig,
+  leverageTokenConfig,
+  balmyOverrideOptions,
+  equityInCollateralAsset,
+  startSlippageBps,
+  retries,
+  slippageIncrementBps,
+}: {
+  client: AnvilTestClient
+  wagmiConfig: Config
+  leverageTokenConfig: LeverageTokenConfig
+  balmyOverrideOptions?: BalmyAdapterOverrideOptions
+  equityInCollateralAsset: bigint
+  startSlippageBps: number
+  retries: number
+  slippageIncrementBps: number
+}): Promise<MintPlan | undefined> {
+  let nextStartSlippageBps = startSlippageBps
+  let remainingStartBumps = MAX_START_SLIPPAGE_RETRY_ATTEMPTS
+  let lastError: unknown
+
+  while (nextStartSlippageBps <= MAX_RETRY_STARTING_SLIPPAGE_BPS) {
+    const allowedPreviewRetries = Math.min(
+      retries,
+      Math.floor((MAX_RETRY_STARTING_SLIPPAGE_BPS - nextStartSlippageBps) / slippageIncrementBps),
+    )
+
+    try {
+      const { plan } = await executeMintFlow({
+        client,
+        wagmiConfig,
+        leverageTokenConfig,
+        equityInCollateralAsset,
+        ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
+        startSlippageBps: nextStartSlippageBps,
+        retries: allowedPreviewRetries,
+        slippageIncrementBps,
+      })
+
+      return plan
+    } catch (error) {
+      if (isRateLimitError(error)) {
+        return undefined
+      }
+
+      const canBumpStartingSlippage =
+        error instanceof MintExecutionSimulationError &&
+        remainingStartBumps > 0 &&
+        nextStartSlippageBps < MAX_RETRY_STARTING_SLIPPAGE_BPS
+
+      if (canBumpStartingSlippage) {
+        lastError = error
+        remainingStartBumps -= 1
+        nextStartSlippageBps = error.slippageUsedBps + slippageIncrementBps
+        console.log(`Retrying mint with starting slippage bps: ${nextStartSlippageBps}`)
+        continue
+      }
+
+      throw error
+    }
+  }
+
+  throw lastError ?? new Error('Mint plan not generated after retries')
+}
 
 async function executeMintFlow({
   client,
@@ -222,131 +366,6 @@ async function useMintPlanPreviewWithSlippageRetries({
   throw new Error(`Failed to create mint plan with retry helper after ${1 + retries} attempts`)
 }
 
-export async function testMint({
-  client,
-  wagmiConfig,
-  leverageTokenConfig,
-  balmyOverrideOptions,
-  startSlippageBps = 100,
-  retries = 5,
-  slippageIncrementBps = 100,
-}: {
-  client: AnvilTestClient
-  wagmiConfig: Config
-  leverageTokenConfig: LeverageTokenConfig
-  balmyOverrideOptions?: BalmyAdapterOverrideOptions
-  startSlippageBps?: number
-  retries?: number
-  slippageIncrementBps?: number
-}) {
-  const equityInCollateralAsset =
-    leverageTokenConfig.test.mintIntegrationTest.equityInCollateralAsset
-
-  await client.deal({
-    erc20: leverageTokenConfig.collateralAsset.address,
-    account: client.account.address,
-    amount: equityInCollateralAsset,
-  })
-  await client.setBalance({
-    address: client.account.address,
-    value: parseEther('1'),
-  })
-
-  const collateralBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
-    address: leverageTokenConfig.collateralAsset.address,
-    args: [client.account.address],
-  })
-  const debtBalanceBefore = await readLeverageTokenBalanceOf(wagmiConfig, {
-    address: leverageTokenConfig.debtAsset.address,
-    args: [client.account.address],
-  })
-
-  let plan: MintPlan | undefined
-  try {
-    const result = await executeMintFlow({
-      client,
-      wagmiConfig,
-      leverageTokenConfig,
-      equityInCollateralAsset,
-      ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
-      startSlippageBps,
-      retries,
-      slippageIncrementBps,
-    })
-    plan = result.plan
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('Rate limit reached')) {
-      return
-    } else if (
-      error instanceof MintExecutionSimulationError &&
-      error.slippageUsedBps < MAX_RETRY_STARTING_SLIPPAGE_BPS
-    ) {
-      // Retry the mint up to 5 additional times, bumping slippage until MAX_STARTING_SLIPPAGE_BPS
-      let attempts = 0
-      const slippageIncrementBps = 100
-      let nextSlippageBps = error.slippageUsedBps + slippageIncrementBps
-      let lastError: unknown = error
-
-      while (attempts < 5 && nextSlippageBps <= MAX_RETRY_STARTING_SLIPPAGE_BPS) {
-        console.log(`Retrying mint with starting slippage bps: ${nextSlippageBps}`)
-
-        try {
-          await executeMintFlow({
-            client,
-            wagmiConfig,
-            leverageTokenConfig,
-            equityInCollateralAsset,
-            ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
-            startSlippageBps: nextSlippageBps,
-            retries: (MAX_RETRY_STARTING_SLIPPAGE_BPS - nextSlippageBps) / slippageIncrementBps,
-            slippageIncrementBps,
-          })
-        } catch (retryError) {
-          lastError = retryError
-          if (
-            retryError instanceof MintExecutionSimulationError &&
-            nextSlippageBps < MAX_RETRY_STARTING_SLIPPAGE_BPS
-          ) {
-            attempts += 1
-            nextSlippageBps = retryError.slippageUsedBps + slippageIncrementBps
-            continue
-          }
-          throw retryError
-        }
-      }
-
-      if (!plan) {
-        throw lastError
-      }
-    } else {
-      throw error
-    }
-  }
-
-  if (!plan) {
-    throw new Error('Mint plan not generated after retries')
-  }
-
-  // Check the shares minted to the user
-  const sharesAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
-    address: leverageTokenConfig.address,
-    args: [client.account.address],
-  })
-  expect(sharesAfter).toBeGreaterThanOrEqual(plan.minShares)
-
-  // Verify the user's collateral balance decreased by the expected amount
-  const collateralBalanceAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
-    address: leverageTokenConfig.collateralAsset.address,
-    args: [client.account.address],
-  })
-  const collateralDelta = collateralBalanceBefore - collateralBalanceAfter
-  expect(collateralDelta).toBe(equityInCollateralAsset)
-
-  // Check the excess debt assets the user received from the mint
-  const debtAfter = await readLeverageTokenBalanceOf(wagmiConfig, {
-    address: leverageTokenConfig.debtAsset.address,
-    args: [client.account.address],
-  })
-  const debtDelta = debtAfter - debtBalanceBefore
-  expect(debtDelta).toBeGreaterThanOrEqual(plan.minExcessDebt)
+function isRateLimitError(error: unknown): error is Error {
+  return error instanceof Error && error.message.includes('Rate limit reached')
 }
