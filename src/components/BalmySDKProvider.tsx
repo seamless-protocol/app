@@ -67,12 +67,6 @@ export const createBalmySDK = (client: UseClientReturnType | PublicClient) => {
       },
       sourceList: { type: 'local' },
     },
-    providers: {
-      source: {
-        type: 'custom',
-        instance: client,
-      },
-    },
     prices: {
       source: {
         type: 'prioritized',
