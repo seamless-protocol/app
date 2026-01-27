@@ -153,7 +153,7 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
       calls: [
         { target: normalizedUnstakeAndRedeemHelper, data: unstakeAndRedeemCalldata, value: 0n },
       ],
-      quoteSourceName: 'infinifi',
+      quoteSourceName: 'infiniFi',
     }
   }
 }
