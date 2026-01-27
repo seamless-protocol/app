@@ -40,6 +40,7 @@ export function createBalmyQuoteAdapter(
       'fly-trade',
       'swing',
       'odos',
+      'open-ocean',
       ...(opts.excludeAdditionalSources ?? []),
     ]
 
