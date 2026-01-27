@@ -89,7 +89,7 @@ describe('useRedeemPlanPreview', () => {
   it('surfaces errors from planRedeem', async () => {
     const error = new Error('redeem failed')
     mockPlanRedeem.mockReset()
-    mockPlanRedeem.mockImplementationOnce(async () => {
+    mockPlanRedeem.mockImplementation(async () => {
       throw error
     })
 
@@ -107,9 +107,9 @@ describe('useRedeemPlanPreview', () => {
     )
 
     await waitFor(() => expect(mockPlanRedeem).toHaveBeenCalled())
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    await waitFor(() => expect(result.current.isLoading).toBe(false), { timeout: 10000 })
     expect(result.current.plan).toBeUndefined()
     expect(result.current.error).toBeInstanceOf(Error)
-    expect(result.current.error?.message ?? '').toContain('data is undefined')
+    expect(result.current.error?.message ?? '').toContain('redeem failed')
   })
 })

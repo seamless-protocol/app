@@ -141,7 +141,6 @@ export async function planRedeemTest({
   if (!leverageTokenConfig) {
     throw new Error(`Leverage token config not found for ${scenario.token}`)
   }
-  const blockNumber = await ctx.publicClient.getBlockNumber()
 
   const plan = await planRedeem({
     wagmiConfig: ctx.config,
@@ -149,7 +148,6 @@ export async function planRedeemTest({
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
-    blockNumber,
   })
 
   return {

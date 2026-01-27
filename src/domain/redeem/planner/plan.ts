@@ -33,7 +33,6 @@ export interface RedeemPlan {
 
 export interface PlanRedeemParams {
   wagmiConfig: Config
-  blockNumber: bigint
   leverageTokenConfig: LeverageTokenConfig
   sharesToRedeem: bigint
   slippageBps: number
@@ -42,7 +41,6 @@ export interface PlanRedeemParams {
 
 export async function planRedeem({
   wagmiConfig,
-  blockNumber,
   leverageTokenConfig,
   sharesToRedeem,
   slippageBps,
@@ -64,13 +62,11 @@ export async function planRedeem({
   const { collateralRatio } = await readLeverageManagerV2GetLeverageTokenState(wagmiConfig, {
     args: [token],
     chainId,
-    blockNumber,
   })
 
   const preview = await readLeverageManagerV2PreviewRedeem(wagmiConfig, {
     args: [token, sharesToRedeem],
     chainId,
-    blockNumber,
   })
 
   const netShares = preview.shares - preview.treasuryFee - preview.tokenFee
@@ -78,7 +74,6 @@ export async function planRedeem({
   const previewEquity = await readLeverageManagerV2ConvertToAssets(wagmiConfig, {
     args: [token, netShares],
     chainId,
-    blockNumber,
   })
 
   const minCollateralForSender = applySlippageFloor(previewEquity, slippageBps)

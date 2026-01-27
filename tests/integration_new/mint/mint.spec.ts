@@ -40,7 +40,7 @@ describe('mint integration tests', () => {
         wagmiTest(leverageTokenConfig.chainId)(
           `mints ${leverageTokenConfig.symbol} shares on chain id ${leverageTokenConfig.chainId} with balmy override options for li-fi`,
           async ({ client, config: wagmiConfig }) => {
-            // LiFi is flaky on some swaps sometimes if it chooses a bad route, we don't want the test to cause a failure if it happens
+            // LiFi is flaky on some swaps sometimes
             try {
               await testMint({
                 client,

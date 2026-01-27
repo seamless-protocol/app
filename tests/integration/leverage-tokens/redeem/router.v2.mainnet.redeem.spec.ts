@@ -190,15 +190,12 @@ async function performRedeem(
     balmySDK: createBalmySDK(publicClient),
   })
 
-  const blockNumber = await publicClient.getBlockNumber()
-
   const plan = await planRedeem({
     wagmiConfig: config,
     leverageTokenConfig: tokenConfig,
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
-    blockNumber,
   })
 
   const collateralBalanceBefore = await publicClient.readContract({

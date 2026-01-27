@@ -30,7 +30,6 @@ const leverageTokenConfig: LeverageTokenConfig = {
   collateralAsset: { address: collateralAsset, decimals: 18 },
   debtAsset: { address: debtAsset, decimals: 6 },
 } as LeverageTokenConfig
-const blockNumber = 1n
 
 const readState = readLeverageManagerV2GetLeverageTokenState as Mock
 const readPreviewRedeem = readLeverageManagerV2PreviewRedeem as Mock
@@ -60,7 +59,6 @@ describe('planRedeem', () => {
 
     const plan = await planRedeem({
       wagmiConfig: {} as any,
-      blockNumber,
       leverageTokenConfig,
       sharesToRedeem: 100n,
       slippageBps: 100,
@@ -97,7 +95,6 @@ describe('planRedeem', () => {
     await expect(
       planRedeem({
         wagmiConfig: {} as any,
-        blockNumber,
         leverageTokenConfig,
         sharesToRedeem: 100n,
         slippageBps: 100,
@@ -117,7 +114,6 @@ describe('planRedeem', () => {
     await expect(
       planRedeem({
         wagmiConfig: {} as any,
-        blockNumber,
         leverageTokenConfig,
         sharesToRedeem: 100n,
         slippageBps: 100,

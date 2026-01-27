@@ -11,10 +11,6 @@ export default defineConfig({
     setupFiles: './tests/integration_new/setup.ts',
     testTimeout: 270_000,
     hookTimeout: 180_000,
-    isolate: true,
-    maxConcurrency: 1,
-    poolOptions: { threads: { singleThread: true } },
-    sequence: { concurrent: false, hooks: 'list' },
     server: {
       deps: {
         inline: ['zod'],
