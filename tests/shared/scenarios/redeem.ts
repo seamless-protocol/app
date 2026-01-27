@@ -143,7 +143,7 @@ export async function planRedeemTest({
   }
 
   const plan = await planRedeem({
-    wagmiConfig: ctx.config,
+    publicClient: ctx.publicClient,
     leverageTokenConfig,
     sharesToRedeem,
     slippageBps,

@@ -1,26 +1,21 @@
-import type { Address, Hex } from 'viem'
+import type { Address, Hex, PublicClient } from 'viem'
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
+import { planRedeem } from '@/domain/redeem/planner/plan'
+import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 
-vi.mock('@/domain/redeem/planner/plan', async () => {
-  const actual = await vi.importActual<typeof import('@/domain/redeem/planner/plan')>(
-    '@/domain/redeem/planner/plan',
+// Override the global mock from tests/setup.ts which doesn't include leverageManagerV2Abi.
+// We need the actual ABI export since planRedeem uses it directly (not mocked read functions).
+vi.mock('@/lib/contracts/generated', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/contracts/generated')>(
+    '@/lib/contracts/generated',
   )
   return actual
 })
 
-import { planRedeem } from '@/domain/redeem/planner/plan'
-import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
-import {
-  readLeverageManagerV2ConvertToAssets,
-  readLeverageManagerV2GetLeverageTokenState,
-  readLeverageManagerV2PreviewRedeem,
-} from '@/lib/contracts/generated'
-
-vi.mock('@/lib/contracts/generated', () => ({
-  readLeverageManagerV2GetLeverageTokenState: vi.fn(),
-  readLeverageManagerV2PreviewRedeem: vi.fn(),
-  readLeverageManagerV2ConvertToAssets: vi.fn(),
-}))
+const publicClient = {
+  multicall: vi.fn(),
+  readContract: vi.fn(),
+} as unknown as PublicClient
 
 const collateralAsset = '0xcccccccccccccccccccccccccccccccccccccccc' as Address
 const debtAsset = '0xdddddddddddddddddddddddddddddddddddddddd' as Address
@@ -31,22 +26,27 @@ const leverageTokenConfig: LeverageTokenConfig = {
   debtAsset: { address: debtAsset, decimals: 6 },
 } as LeverageTokenConfig
 
-const readState = readLeverageManagerV2GetLeverageTokenState as Mock
-const readPreviewRedeem = readLeverageManagerV2PreviewRedeem as Mock
-const readConvertToAssets = readLeverageManagerV2ConvertToAssets as Mock
+const multicall = publicClient.multicall as Mock
+const readContract = publicClient.readContract as Mock
 
 describe('planRedeem', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    readState.mockResolvedValue({ collateralRatio: 3n * 10n ** 18n })
-    readPreviewRedeem.mockResolvedValue({
-      collateral: 1_000n,
-      debt: 300n,
-      shares: 100n,
-      tokenFee: 0n,
-      treasuryFee: 0n,
-    })
-    readConvertToAssets.mockResolvedValue(800n)
+    // Default multicall: getLeverageTokenState + previewRedeem
+    multicall.mockResolvedValueOnce([
+      { result: { collateralRatio: 3n * 10n ** 18n } },
+      {
+        result: {
+          collateral: 1_000n,
+          debt: 300n,
+          shares: 100n,
+          tokenFee: 0n,
+          treasuryFee: 0n,
+        },
+      },
+    ])
+    // Default readContract: convertToAssets
+    readContract.mockResolvedValue(800n)
   })
 
   it('builds a plan with leverage-adjusted slippage and approvals', async () => {
@@ -58,7 +58,7 @@ describe('planRedeem', () => {
     }))
 
     const plan = await planRedeem({
-      wagmiConfig: {} as any,
+      publicClient,
       leverageTokenConfig,
       sharesToRedeem: 100n,
       slippageBps: 100,
@@ -94,7 +94,7 @@ describe('planRedeem', () => {
 
     await expect(
       planRedeem({
-        wagmiConfig: {} as any,
+        publicClient,
         leverageTokenConfig,
         sharesToRedeem: 100n,
         slippageBps: 100,
@@ -113,7 +113,7 @@ describe('planRedeem', () => {
 
     await expect(
       planRedeem({
-        wagmiConfig: {} as any,
+        publicClient,
         leverageTokenConfig,
         sharesToRedeem: 100n,
         slippageBps: 100,

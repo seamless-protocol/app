@@ -1,15 +1,12 @@
-import { type Address, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
-import type { Config } from 'wagmi'
+import { type Address, encodeFunctionData, erc20Abi, formatUnits, type PublicClient } from 'viem'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import type { Call } from '@/domain/shared/types'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { collateralRatioToLeverage } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
+import { leverageManagerV2Abi } from '@/lib/contracts/abis/leverageManagerV2'
+import { leverageRouterV2Abi } from '@/lib/contracts/abis/leverageRouterV2'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
-import {
-  readLeverageManagerV2GetLeverageTokenState,
-  readLeverageManagerV2PreviewDeposit,
-  readLeverageRouterV2PreviewDeposit,
-} from '@/lib/contracts/generated'
+import { getContractAddresses } from '@/lib/contracts/addresses'
 import { applySlippageFloor } from './math'
 
 export interface MintPlan {
@@ -25,7 +22,7 @@ export interface MintPlan {
 }
 
 export interface PlanMintParams {
-  wagmiConfig: Config
+  publicClient: PublicClient
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
   slippageBps: number
@@ -33,7 +30,7 @@ export interface PlanMintParams {
 }
 
 export async function planMint({
-  wagmiConfig,
+  publicClient,
   leverageTokenConfig,
   equityInCollateralAsset,
   slippageBps,
@@ -55,16 +52,32 @@ export async function planMint({
   const collateralAsset = leverageTokenConfig.collateralAsset.address as Address
   const debtAsset = leverageTokenConfig.debtAsset.address as Address
 
-  const { collateralRatio } = await readLeverageManagerV2GetLeverageTokenState(wagmiConfig, {
-    args: [token],
-    chainId,
+  const ltStateAndRouterPreviewMultiCall = await publicClient.multicall({
+    contracts: [
+      {
+        address: getContractAddresses(chainId).leverageManagerV2 as Address,
+        abi: leverageManagerV2Abi,
+        functionName: 'getLeverageTokenState',
+        args: [token],
+      },
+      {
+        address: getContractAddresses(chainId).leverageRouterV2 as Address,
+        abi: leverageRouterV2Abi,
+        functionName: 'previewDeposit',
+        args: [token, equityInCollateralAsset],
+      },
+    ],
   })
 
-  // Initial router preview to size required debt and collateral top-up.
-  const routerPreview = await readLeverageRouterV2PreviewDeposit(wagmiConfig, {
-    args: [token, equityInCollateralAsset],
-    chainId,
-  })
+  const collateralRatio = (
+    ltStateAndRouterPreviewMultiCall[0].result as { collateralRatio: bigint }
+  ).collateralRatio
+
+  const routerPreview = ltStateAndRouterPreviewMultiCall[1].result as {
+    collateral: bigint
+    debt: bigint
+    shares: bigint
+  }
 
   // This price is adding the NAV diff from spot on top of the share slippage
   const minShares = applySlippageFloor(routerPreview.shares, slippageBps)
@@ -88,15 +101,31 @@ export async function planMint({
     slippageBps: quoteSlippageBps,
   })
 
-  const managerPreview = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
-    args: [token, equityInCollateralAsset + debtToCollateralQuote.out],
-    chainId,
+  const managerPreviewMultiCall = await publicClient.multicall({
+    contracts: [
+      {
+        address: getContractAddresses(chainId).leverageManagerV2 as Address,
+        abi: leverageManagerV2Abi,
+        functionName: 'previewDeposit',
+        args: [token, equityInCollateralAsset + debtToCollateralQuote.out],
+      },
+      {
+        address: getContractAddresses(chainId).leverageManagerV2 as Address,
+        abi: leverageManagerV2Abi,
+        functionName: 'previewDeposit',
+        args: [token, equityInCollateralAsset + debtToCollateralQuote.minOut],
+      },
+    ],
   })
 
-  const managerMin = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
-    args: [token, equityInCollateralAsset + debtToCollateralQuote.minOut],
-    chainId,
-  })
+  const managerPreview = managerPreviewMultiCall[0].result as {
+    debt: bigint
+    shares: bigint
+  }
+  const managerMin = managerPreviewMultiCall[1].result as {
+    debt: bigint
+    shares: bigint
+  }
 
   if (managerPreview.debt < flashLoanAmount) {
     throw new Error(

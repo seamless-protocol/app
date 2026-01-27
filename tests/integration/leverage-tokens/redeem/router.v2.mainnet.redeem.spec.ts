@@ -191,7 +191,7 @@ async function performRedeem(
   })
 
   const plan = await planRedeem({
-    wagmiConfig: config,
+    publicClient,
     leverageTokenConfig: tokenConfig,
     sharesToRedeem,
     slippageBps,

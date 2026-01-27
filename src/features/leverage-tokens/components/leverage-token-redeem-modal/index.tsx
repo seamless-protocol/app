@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
-import { useAccount, useConfig, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { parseUsdPrice, toScaledUsd, usdToFixedString } from '@/domain/shared/prices'
 import { useLeverageTokenUsdPrice } from '@/features/leverage-tokens/hooks/useLeverageTokenUsdPrice'
 import { parseErc20ReceivedFromReceipt } from '@/features/leverage-tokens/utils/receipt'
@@ -78,7 +78,6 @@ export function LeverageTokenRedeemModal({
 
   // Get user account information
   const { address: hookUserAddress, isConnected, chainId: connectedChainId } = useAccount()
-  const wagmiConfig = useConfig()
   const userAddress = (propUserAddress || hookUserAddress) as `0x${string}` | undefined
 
   // Get leverage router address for allowance check
@@ -228,7 +227,6 @@ export function LeverageTokenRedeemModal({
   })
 
   const planPreview = useRedeemPlanPreview({
-    config: wagmiConfig,
     token: leverageTokenAddress,
     sharesToRedeem: form.amountRaw,
     slippageBps,

@@ -5,20 +5,15 @@
  * quote the swap required to repay debt, build approval + swap calls, and
  * return preview/min bounds for the UI and executor.
  */
-import type { Address } from 'viem'
+import type { Address, PublicClient } from 'viem'
 import { encodeFunctionData, erc20Abi, formatUnits } from 'viem'
-import type { Config } from 'wagmi'
 import { applySlippageFloor } from '@/domain/mint/planner/math'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import type { Call } from '@/domain/shared/types'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { collateralRatioToLeverage } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
-import type { SupportedChainId } from '@/lib/contracts/addresses'
-import {
-  readLeverageManagerV2ConvertToAssets,
-  readLeverageManagerV2GetLeverageTokenState,
-  readLeverageManagerV2PreviewRedeem,
-} from '@/lib/contracts/generated'
+import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
+import { leverageManagerV2Abi } from '@/lib/contracts/generated'
 
 export interface RedeemPlan {
   minCollateralForSender: bigint
@@ -32,7 +27,7 @@ export interface RedeemPlan {
 }
 
 export interface PlanRedeemParams {
-  wagmiConfig: Config
+  publicClient: PublicClient
   leverageTokenConfig: LeverageTokenConfig
   sharesToRedeem: bigint
   slippageBps: number
@@ -40,7 +35,7 @@ export interface PlanRedeemParams {
 }
 
 export async function planRedeem({
-  wagmiConfig,
+  publicClient,
   leverageTokenConfig,
   sharesToRedeem,
   slippageBps,
@@ -59,21 +54,41 @@ export async function planRedeem({
   const collateralAsset = leverageTokenConfig.collateralAsset.address as Address
   const debtAsset = leverageTokenConfig.debtAsset.address as Address
 
-  const { collateralRatio } = await readLeverageManagerV2GetLeverageTokenState(wagmiConfig, {
-    args: [token],
-    chainId,
+  const ltStateAndRouterPreviewMultiCall = await publicClient.multicall({
+    contracts: [
+      {
+        address: getContractAddresses(chainId).leverageManagerV2 as Address,
+        abi: leverageManagerV2Abi,
+        functionName: 'getLeverageTokenState',
+        args: [token],
+      },
+      {
+        address: getContractAddresses(chainId).leverageManagerV2 as Address,
+        abi: leverageManagerV2Abi,
+        functionName: 'previewRedeem',
+        args: [token, sharesToRedeem],
+      },
+    ],
   })
 
-  const preview = await readLeverageManagerV2PreviewRedeem(wagmiConfig, {
-    args: [token, sharesToRedeem],
-    chainId,
-  })
+  const collateralRatio = (
+    ltStateAndRouterPreviewMultiCall[0].result as { collateralRatio: bigint }
+  ).collateralRatio
+  const preview = ltStateAndRouterPreviewMultiCall[1].result as {
+    collateral: bigint
+    debt: bigint
+    shares: bigint
+    tokenFee: bigint
+    treasuryFee: bigint
+  }
 
   const netShares = preview.shares - preview.treasuryFee - preview.tokenFee
 
-  const previewEquity = await readLeverageManagerV2ConvertToAssets(wagmiConfig, {
+  const previewEquity = await publicClient.readContract({
+    address: getContractAddresses(chainId).leverageManagerV2 as Address,
+    abi: leverageManagerV2Abi,
+    functionName: 'convertToAssets',
     args: [token, netShares],
-    chainId,
   })
 
   const minCollateralForSender = applySlippageFloor(previewEquity, slippageBps)

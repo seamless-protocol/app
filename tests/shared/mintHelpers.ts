@@ -158,7 +158,7 @@ export async function executeSharedMint({
   })
 
   const plan = await planMint({
-    wagmiConfig: config,
+    publicClient,
     leverageTokenConfig,
     equityInCollateralAsset: equityInInputAsset,
     slippageBps: resolvedSlippageBps,

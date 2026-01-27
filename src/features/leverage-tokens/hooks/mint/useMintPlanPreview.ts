@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import type { Address } from 'viem'
-import type { Config } from 'wagmi'
+import type { Address, PublicClient } from 'viem'
+import { type Config, usePublicClient } from 'wagmi'
 import type { MintPlan } from '@/domain/mint/planner/plan'
 import { planMint } from '@/domain/mint/planner/plan'
 import type { QuoteFn } from '@/domain/mint/planner/types'
@@ -20,7 +20,6 @@ interface UseMintPlanPreviewParams {
 }
 
 export function useMintPlanPreview({
-  config,
   token,
   equityInCollateralAsset,
   slippageBps,
@@ -29,6 +28,7 @@ export function useMintPlanPreview({
   quote,
   debounceMs = 500,
 }: UseMintPlanPreviewParams) {
+  const publicClient = usePublicClient({ chainId }) as PublicClient
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
 
   const enabledQuery =
@@ -54,7 +54,7 @@ export function useMintPlanPreview({
       if (!leverageTokenConfig) throw new Error('Leverage token config not found')
 
       return planMint({
-        wagmiConfig: config,
+        publicClient: publicClient,
         leverageTokenConfig,
         equityInCollateralAsset: debounced as bigint,
         slippageBps,

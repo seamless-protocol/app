@@ -314,7 +314,6 @@ async function useRedeemPlanPreviewWithSlippageRetries({
     (props: { slippageBps: number }) =>
       // biome-ignore lint/correctness/useHookAtTopLevel: renderHook usage inside retry loop is intentional
       useRedeemPlanPreview({
-        config: wagmiConfig,
         token: leverageTokenConfig.address,
         sharesToRedeem,
         chainId: leverageTokenConfig.chainId,

@@ -79,7 +79,7 @@ export async function planMintTest({
     throw new Error(`Leverage token config not found for ${setup.token}`)
   }
   const plan = await planMint({
-    wagmiConfig: ctx.config,
+    publicClient: ctx.publicClient,
     leverageTokenConfig,
     equityInCollateralAsset: setup.equityInInputAsset,
     slippageBps,
@@ -156,7 +156,7 @@ async function runMintScenario({
 
   // Plan + simulate + write (no orchestrator)
   const plan = await planMint({
-    wagmiConfig: config,
+    publicClient,
     leverageTokenConfig,
     equityInCollateralAsset: setup.equityInInputAsset,
     slippageBps,
