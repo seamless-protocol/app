@@ -12,8 +12,8 @@ const SOURCE_ID = 'balmy-source'
 
 type MockedBalmySDK = ReturnType<typeof buildSDK>
 
-function createMockBalmySDK() {
-  const mockQuote = {
+function createMockBalmySDK(overrides?: { mockQuote?: any }) {
+  const mockQuote = overrides?.mockQuote ?? {
     source: {
       id: SOURCE_ID,
       name: 'Mock Source',
@@ -124,6 +124,56 @@ describe('createBalmyQuoteAdapter', () => {
     expect(quote.approvalTarget).toBe(mockQuote.source.allowanceTarget)
     expect(quote.calls[0]?.data).toBe(txResponse.data)
     expect(quote.calls[0]?.target).toBe(mockQuote.source.allowanceTarget)
+    expect(quote.wantsNativeIn).toBe(true)
+    expect(quote.quoteSourceId).toBe(SOURCE_ID)
+    expect(quote.quoteSourceName).toBe('Mock Source')
+  })
+
+  it('builds buy quotes for exact-out intents with custom data', async () => {
+    const mockQuote = {
+      source: {
+        id: SOURCE_ID,
+        name: 'Mock Source',
+        allowanceTarget: getAddress('0xABCDEFabcdefABCDefabcDEFabcdefABCDEFABCD'),
+      },
+      buyAmount: { amount: 200n },
+      minBuyAmount: { amount: 180n },
+      maxSellAmount: { amount: 220n },
+      customData: {
+        tx: {
+          to: getAddress('0x9999999999999999999999999999999999999999'),
+          value: 123n,
+        },
+      },
+    }
+
+    const { balmySDK, txResponse } = createMockBalmySDK({
+      mockQuote,
+    })
+
+    const adapter = createBalmyQuoteAdapter({
+      balmySDK,
+      chainId: 8453,
+      fromAddress: CALLER,
+      toAddress: ROUTER,
+    })
+
+    const quote = await adapter({
+      inToken: ETH_SENTINEL,
+      outToken: OUT_TOKEN,
+      amountOut: 500n,
+      intent: 'exactOut',
+      slippageBps: 100,
+    })
+
+    expect(quote.calls[0]?.target).toBe(mockQuote.customData.tx.to)
+    expect(quote.calls[0]?.value).toBe(mockQuote.customData.tx.value)
+
+    expect(quote.out).toBe(mockQuote.buyAmount.amount)
+    expect(quote.minOut).toBe(mockQuote.minBuyAmount.amount)
+    expect(quote.maxIn).toBe(mockQuote.maxSellAmount.amount)
+    expect(quote.approvalTarget).toBe(mockQuote.source.allowanceTarget)
+    expect(quote.calls[0]?.data).toBe(txResponse.data)
     expect(quote.wantsNativeIn).toBe(true)
     expect(quote.quoteSourceId).toBe(SOURCE_ID)
     expect(quote.quoteSourceName).toBe('Mock Source')

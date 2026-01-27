@@ -101,9 +101,9 @@ export function createBalmyQuoteAdapter(
       approvalTarget: getAddress(quote.source.allowanceTarget),
       calls: [
         {
-          target: getAddress(quote.source.allowanceTarget),
+          target: getAddress(quote.customData?.['tx']?.to ?? quote.source.allowanceTarget),
           data: tx?.data as `0x${string}`,
-          value: 0n,
+          value: quote.customData?.['tx']?.value ?? 0n,
         },
       ],
       wantsNativeIn,
