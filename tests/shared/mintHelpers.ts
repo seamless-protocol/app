@@ -123,7 +123,7 @@ export async function executeSharedMint({
       routerAddress: router,
       swap: debtToCollateralConfig,
       getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
-      balmySDK: createBalmySDK(publicClient),
+      balmySDK: createBalmySDK(config),
     })
     quoteDebtToCollateral = quote
   } else {

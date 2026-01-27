@@ -134,7 +134,7 @@ export async function planRedeemTest({
     routerAddress: scenario.router,
     swap: scenario.swap,
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
-    balmySDK: createBalmySDK(ctx.publicClient),
+    balmySDK: createBalmySDK(ctx.config),
   })
 
   const leverageTokenConfig = getLeverageTokenConfig(scenario.token, scenario.chainId)

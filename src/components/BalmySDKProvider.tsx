@@ -1,8 +1,8 @@
 import { buildSDK } from '@seamless-defi/defi-sdk'
 import { createContext, useContext, useRef } from 'react'
-import { type PublicClient, zeroAddress } from 'viem'
-import { base } from 'viem/chains'
-import { type UseClientReturnType, useClient } from 'wagmi'
+import { zeroAddress } from 'viem'
+import { type UseConfigReturnType, useConfig } from 'wagmi'
+import { getTransport } from '@/lib/config/wagmi.config'
 
 type BalmySDKProviderProps = {
   children: React.ReactNode
@@ -16,10 +16,10 @@ const BalmySDKProviderContext = createContext<BalmySDKProviderState | null>(null
 
 export function BalmySDKProvider({ children, ...props }: BalmySDKProviderProps) {
   const balmySDKRef = useRef<ReturnType<typeof buildSDK> | null>(null)
-  const client = useClient()
+  const config = useConfig()
 
   if (balmySDKRef.current === null) {
-    balmySDKRef.current = createBalmySDK(client)
+    balmySDKRef.current = createBalmySDK(config)
   }
 
   return (
@@ -37,11 +37,8 @@ export const useBalmySDK = () => {
   return context
 }
 
-export const createBalmySDK = (client: UseClientReturnType | PublicClient) => {
+export const createBalmySDK = (config: UseConfigReturnType) => {
   const liFiSourceDenylist = ['sushiswap', 'fly', 'kyberswap']
-  if (client?.chain?.id === base.id) {
-    liFiSourceDenylist.push('eisen', 'okx')
-  }
 
   return buildSDK({
     quotes: {
@@ -66,6 +63,18 @@ export const createBalmySDK = (client: UseClientReturnType | PublicClient) => {
         },
       },
       sourceList: { type: 'local' },
+    },
+    provider: {
+      source: {
+        type: 'custom',
+        instance: {
+          supportedChains: () => config.chains.map((chain) => chain.id),
+          // @ts-expect-error – bridging app viem Transport to defi-sdk viem Transport
+          getViemTransport: ({ chainId }: { chainId: number }) => {
+            return getTransport(chainId)
+          },
+        },
+      },
     },
     prices: {
       source: {

@@ -187,7 +187,7 @@ async function performRedeem(
     routerAddress: router,
     swap: collateralToDebtConfig,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
-    balmySDK: createBalmySDK(publicClient),
+    balmySDK: createBalmySDK(config),
   })
 
   const plan = await planRedeem({

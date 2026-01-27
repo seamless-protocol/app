@@ -1,4 +1,5 @@
 import { type Address, erc20Abi, getAddress, type Hash, type PublicClient, parseUnits } from 'viem'
+import { useConfig } from 'wagmi'
 import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { planMint } from '@/domain/mint/planner/plan'
 import {
@@ -337,13 +338,14 @@ function buildQuoteAdapter({
   publicClient: PublicClient
   swapConfig: DebtToCollateralSwapConfig
 }) {
+  const config = useConfig()
   const { quote } = createDebtToCollateralQuote({
     chainId,
     routerAddress: router,
     swap: swapConfig,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
     fromAddress: multicallExecutor,
-    balmySDK: createBalmySDK(publicClient),
+    balmySDK: createBalmySDK(config),
   })
   return quote
 }
