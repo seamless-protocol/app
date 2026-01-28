@@ -1,5 +1,4 @@
 import { type Address, getAddress, type PublicClient } from 'viem'
-import { vi } from 'vitest'
 import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { planRedeem } from '@/domain/redeem'
 import {
@@ -136,7 +135,6 @@ export async function planRedeemTest({
     swap: scenario.swap,
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
     balmySDK: createBalmySDK(ctx.config),
-    trackBestQuoteSource: vi.fn(),
   })
 
   const leverageTokenConfig = getLeverageTokenConfig(scenario.token, scenario.chainId)

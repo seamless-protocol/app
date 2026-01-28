@@ -1,6 +1,5 @@
 import type { Address, PublicClient } from 'viem'
 import { parseUnits } from 'viem'
-import { vi } from 'vitest'
 import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { planMint } from '@/domain/mint/planner/plan'
 import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
@@ -125,7 +124,6 @@ export async function executeSharedMint({
       swap: debtToCollateralConfig,
       getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
       balmySDK: createBalmySDK(config),
-      trackBestQuoteSource: vi.fn(),
     })
     quoteDebtToCollateral = quote
   } else {

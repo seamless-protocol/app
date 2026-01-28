@@ -5,15 +5,6 @@
 
 import { useLocation } from '@tanstack/react-router'
 import { useEffect, useMemo } from 'react'
-import type { Address } from 'viem'
-
-export interface TrackBestQuoteSourceParams {
-  tokenIn: Address
-  tokenOut: Address
-  quoteSource: string
-  amountIn: bigint
-  amountOut: bigint
-}
 
 // Extend the global Window interface to include gtag
 declare global {
@@ -64,23 +55,6 @@ export const trackEvent = (eventName: string, parameters?: Record<string, unknow
   window.gtag('event', eventName, {
     event_category: parameters?.['category'] || 'engagement',
     ...parameters,
-  })
-}
-
-export const trackBestQuoteSource = ({
-  tokenIn,
-  tokenOut,
-  quoteSource,
-  amountIn,
-  amountOut,
-}: TrackBestQuoteSourceParams): void => {
-  trackEvent('best_quote_source', {
-    category: 'quote',
-    token_in: tokenIn,
-    token_out: tokenOut,
-    quote_source: quoteSource,
-    amount_in: amountIn,
-    amount_out: amountOut,
   })
 }
 
@@ -289,9 +263,6 @@ export const useGA = () => {
       // DeFi-specific event tracking (direct access to trackDeFiEvents)
       ...trackDeFiEvents,
 
-      // Quote tracking
-      trackBestQuoteSource,
-
       // Utility functions
       isAvailable: isGA4Available,
     }),
@@ -333,13 +304,5 @@ export const useTransactionGA = () => {
     trackStakingAction: stakingAction,
     trackVaultInteraction: vaultInteraction,
     trackTransactionError: transactionError,
-  }
-}
-
-export const useQuoteGA = () => {
-  const { trackBestQuoteSource } = useGA()
-
-  return {
-    trackBestQuoteSource,
   }
 }

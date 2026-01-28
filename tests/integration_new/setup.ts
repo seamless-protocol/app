@@ -8,17 +8,6 @@ import { type Config, http } from 'wagmi'
 import { connectMockConnectorToAnvil } from './helpers/wagmi'
 import { basePublicClient, mainnetPublicClient } from './utils'
 
-// Mock TanStack Router hooks
-vi.mock('@tanstack/react-router', () => ({
-  useLocation: vi.fn(() => ({
-    pathname: '/',
-    search: {},
-    hash: '',
-    state: {},
-    key: 'default',
-  })),
-}))
-
 export type WagmiChainTestAPI<chain extends Chain = Chain> = TestAPI<{
   client: AnvilTestClient<chain>
   config: Config<readonly [chain], Record<chain['id'], HttpTransport>>

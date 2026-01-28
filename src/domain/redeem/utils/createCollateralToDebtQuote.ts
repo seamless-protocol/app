@@ -14,7 +14,6 @@ import {
   createBalmyQuoteAdapter,
 } from '@/domain/shared/adapters/balmy'
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
-import type { trackBestQuoteSource } from '@/lib/config/ga4.config'
 import {
   getUniswapV3ChainConfig,
   getUniswapV3PoolConfig,
@@ -76,7 +75,6 @@ export interface CreateCollateralToDebtQuoteParams {
   fromAddress?: Address
   balmySDK: ReturnType<typeof buildSDK>
   balmyOverrideOptions?: BalmyAdapterOverrideOptions
-  trackBestQuoteSource: typeof trackBestQuoteSource
 }
 
 export interface CreateCollateralToDebtQuoteResult {
@@ -92,20 +90,16 @@ export function createCollateralToDebtQuote({
   fromAddress,
   balmySDK,
   balmyOverrideOptions,
-  trackBestQuoteSource,
 }: CreateCollateralToDebtQuoteParams): CreateCollateralToDebtQuoteResult {
   if (swap.type === 'balmy') {
-    const quote = createBalmyQuoteAdapter(
-      {
-        chainId,
-        toAddress: routerAddress,
-        fromAddress: fromAddress ?? routerAddress,
-        balmySDK,
-        excludeAdditionalSources: swap.excludeAdditionalSources,
-        ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
-      },
-      trackBestQuoteSource,
-    )
+    const quote = createBalmyQuoteAdapter({
+      chainId,
+      toAddress: routerAddress,
+      fromAddress: fromAddress ?? routerAddress,
+      balmySDK,
+      excludeAdditionalSources: swap.excludeAdditionalSources,
+      ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
+    })
     return { quote, adapterType: 'balmy' }
   }
 

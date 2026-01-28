@@ -1,6 +1,6 @@
 import { type Address, erc20Abi, parseUnits } from 'viem'
 import { mainnet } from 'viem/chains'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { orchestrateRedeem, planRedeem } from '@/domain/redeem'
 import { createCollateralToDebtQuote } from '@/domain/redeem/utils/createCollateralToDebtQuote'
@@ -188,7 +188,6 @@ async function performRedeem(
     swap: collateralToDebtConfig,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
     balmySDK: createBalmySDK(config),
-    trackBestQuoteSource: vi.fn(),
   })
 
   const plan = await planRedeem({

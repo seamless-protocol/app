@@ -7,7 +7,6 @@ import {
   createCollateralToDebtQuote,
 } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy'
-import { useQuoteGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { getContractAddresses } from '@/lib/contracts/addresses'
 
@@ -41,7 +40,6 @@ export function useCollateralToDebtQuote({
 } {
   const publicClient = usePublicClient({ chainId })
   const { balmySDK } = useBalmySDK()
-  const { trackBestQuoteSource } = useQuoteGA()
 
   return useMemo(() => {
     if (!requiresQuote) {
@@ -71,7 +69,6 @@ export function useCollateralToDebtQuote({
         getPublicClient,
         balmySDK,
         ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
-        trackBestQuoteSource,
       })
       return { status: 'ready' as QuoteStatus, quote, error: undefined }
     } catch (err) {
@@ -88,14 +85,5 @@ export function useCollateralToDebtQuote({
       }
       return { status: 'error' as QuoteStatus, quote: undefined, error }
     }
-  }, [
-    balmyOverrideOptions,
-    balmySDK,
-    chainId,
-    publicClient,
-    requiresQuote,
-    routerAddress,
-    swap,
-    trackBestQuoteSource,
-  ])
+  }, [balmyOverrideOptions, balmySDK, chainId, publicClient, requiresQuote, routerAddress, swap])
 }

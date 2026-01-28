@@ -40,20 +40,16 @@ function createBalmySDKRecorder() {
       }),
     },
   } as unknown as MockedBalmySDK
-
-  const trackBestQuoteSource = vi.fn()
-
   return {
     balmySDK,
     getCapturedAddress: () => capturedAddress,
-    trackBestQuoteSource,
   }
 }
 
 describe('createCollateralToDebtQuote (balmy)', () => {
   it('passes the provided executor to the balmy adapter', async () => {
     const { getter } = createPublicClientGetter()
-    const { balmySDK, getCapturedAddress, trackBestQuoteSource } = createBalmySDKRecorder()
+    const { balmySDK, getCapturedAddress } = createBalmySDKRecorder()
 
     const result = actualCreateCollateralToDebtQuote({
       chainId: 8453,
@@ -62,7 +58,6 @@ describe('createCollateralToDebtQuote (balmy)', () => {
       fromAddress: EXECUTOR,
       getPublicClient: getter,
       balmySDK,
-      trackBestQuoteSource,
     })
 
     expect(result).toBeDefined()
@@ -78,18 +73,11 @@ describe('createCollateralToDebtQuote (balmy)', () => {
 
     expect(adapterType).toBe('balmy')
     expect(getCapturedAddress()).toBe(EXECUTOR)
-    expect(trackBestQuoteSource).toHaveBeenCalledWith({
-      tokenIn: ROUTER,
-      tokenOut: ROUTER,
-      quoteSource: 'mock-source',
-      amountIn: 1n,
-      amountOut: 1n,
-    })
   })
 
   it('falls back to the router address when no executor is provided', async () => {
     const { getter } = createPublicClientGetter()
-    const { balmySDK, getCapturedAddress, trackBestQuoteSource } = createBalmySDKRecorder()
+    const { balmySDK, getCapturedAddress } = createBalmySDKRecorder()
 
     const result = actualCreateCollateralToDebtQuote({
       chainId: 8453,
@@ -97,7 +85,6 @@ describe('createCollateralToDebtQuote (balmy)', () => {
       swap: { type: 'balmy' },
       getPublicClient: getter,
       balmySDK,
-      trackBestQuoteSource,
     })
 
     expect(result).toBeDefined()
@@ -112,12 +99,5 @@ describe('createCollateralToDebtQuote (balmy)', () => {
     })
 
     expect(getCapturedAddress()).toBe(ROUTER)
-    expect(trackBestQuoteSource).toHaveBeenCalledWith({
-      tokenIn: ROUTER,
-      tokenOut: ROUTER,
-      quoteSource: 'mock-source',
-      amountIn: 1n,
-      amountOut: 1n,
-    })
   })
 })

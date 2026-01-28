@@ -12,7 +12,6 @@ import {
 import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy'
 import { createBalmyQuoteAdapter } from '@/domain/shared/adapters/balmy'
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
-import type { trackBestQuoteSource } from '@/lib/config/ga4.config'
 import { getUniswapV3ChainConfig, getUniswapV3PoolConfig } from '@/lib/config/uniswapV3'
 import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 import type { QuoteFn } from '../planner/types'
@@ -27,7 +26,6 @@ export interface CreateDebtToCollateralQuoteParams {
   fromAddress?: Address
   balmySDK: ReturnType<typeof buildSDK>
   balmyOverrideOptions?: BalmyAdapterOverrideOptions
-  trackBestQuoteSource: typeof trackBestQuoteSource
 }
 
 export interface CreateDebtToCollateralQuoteResult {
@@ -43,7 +41,6 @@ export function createDebtToCollateralQuote({
   fromAddress,
   balmySDK,
   balmyOverrideOptions,
-  trackBestQuoteSource,
 }: CreateDebtToCollateralQuoteParams): CreateDebtToCollateralQuoteResult {
   // Default fromAddress to the chain's MulticallExecutor when not provided
   const defaultFrom = (() => {
@@ -57,17 +54,14 @@ export function createDebtToCollateralQuote({
   const effectiveFrom = (fromAddress ?? defaultFrom) as Address | undefined
 
   if (swap.type === 'balmy') {
-    const quote = createBalmyQuoteAdapter(
-      {
-        chainId,
-        fromAddress: effectiveFrom ?? routerAddress,
-        toAddress: routerAddress,
-        balmySDK,
-        excludeAdditionalSources: swap.excludeAdditionalSources,
-        ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
-      },
-      trackBestQuoteSource,
-    )
+    const quote = createBalmyQuoteAdapter({
+      chainId,
+      fromAddress: effectiveFrom ?? routerAddress,
+      toAddress: routerAddress,
+      balmySDK,
+      excludeAdditionalSources: swap.excludeAdditionalSources,
+      ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
+    })
     return { quote, adapterType: 'balmy' }
   }
 
