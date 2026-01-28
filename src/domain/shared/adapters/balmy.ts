@@ -88,9 +88,9 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       approvalTarget: getAddress(quote.source.allowanceTarget),
       calls: [
         {
-          target: getAddress(quote.customData?.['tx']?.to ?? quote.source.allowanceTarget),
+          target: tx?.to as Address,
           data: tx?.data as `0x${string}`,
-          value: quote.customData?.['tx']?.value ?? 0n,
+          value: tx?.value as bigint,
         },
       ],
       wantsNativeIn,

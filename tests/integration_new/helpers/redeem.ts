@@ -81,7 +81,7 @@ export async function testRedeem({
   })
 
   if (!plan) {
-    return
+    throw new Error('Redeem execution failed after retries')
   }
 
   // Check the shares redeemed by the user
@@ -149,10 +149,6 @@ async function redeemWithRetries({
 
       return plan
     } catch (error) {
-      if (isRateLimitError(error)) {
-        return undefined
-      }
-
       const canBumpStartingSlippage =
         error instanceof RedeemExecutionSimulationError &&
         remainingStartBumps > 0 &&
@@ -224,7 +220,7 @@ async function executeRedeemFlow({
   })
   const plan = redeemPlanPreviewResult.current.plan
   if (!plan) {
-    throw new Error('Redeem plan not found')
+    throw new Error('Redeem plan not found after previewing with slippage retries')
   }
 
   // Approve the leverage token shares from the user to be spent by the leverage router

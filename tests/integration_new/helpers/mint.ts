@@ -84,7 +84,7 @@ export async function testMint({
   })
 
   if (!plan) {
-    return
+    throw new Error('Mint execution failed after retries')
   }
 
   // Check the shares minted to the user
@@ -151,10 +151,6 @@ async function mintWithRetries({
 
       return plan
     } catch (error) {
-      if (isRateLimitError(error)) {
-        return undefined
-      }
-
       const canBumpStartingSlippage =
         error instanceof MintExecutionSimulationError &&
         remainingStartBumps > 0 &&
@@ -226,7 +222,7 @@ async function executeMintFlow({
 
   const plan = mintPlanPreviewResult.current.plan
   if (!plan) {
-    throw new Error('Mint plan not found')
+    throw new Error('Mint plan not found after previewing with slippage retries')
   }
 
   // Approve the collateral asset from the user to be spent by the leverage router
@@ -354,8 +350,4 @@ async function useMintPlanPreviewWithSlippageRetries({
   }
 
   throw new Error(`Failed to create mint plan with retry helper after ${1 + retries} attempts`)
-}
-
-function isRateLimitError(error: unknown): error is Error {
-  return error instanceof Error && error.message.includes('Rate limit reached')
 }
