@@ -105,12 +105,19 @@ if (useTenderlyVNet) {
   logger.info('Tenderly VNet mode enabled', { baseRpc: baseCandidates[0] })
 }
 
+export const getTransport = (chainId: number) => {
+  if (chainId === base.id) {
+    return fallback(baseCandidates.map((u) => http(u)))
+  }
+  return fallback(mainnetCandidates.map((u) => http(u)))
+}
+
 export const config = createConfig({
   connectors,
   chains: [base, mainnet],
   transports: {
-    [base.id]: fallback(baseCandidates.map((u) => http(u))),
-    [mainnet.id]: fallback(mainnetCandidates.map((u) => http(u))),
+    [base.id]: getTransport(base.id),
+    [mainnet.id]: getTransport(mainnet.id),
   },
   ssr: false, // Critical for IPFS deployment - we're a pure client-side app
   // Improve wallet connection behavior

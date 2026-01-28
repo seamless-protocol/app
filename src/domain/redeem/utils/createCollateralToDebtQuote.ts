@@ -1,3 +1,4 @@
+import type { buildSDK } from '@seamless-defi/defi-sdk'
 import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import {
@@ -8,6 +9,7 @@ import {
   createVeloraQuoteAdapter,
   type LifiOrder,
 } from '@/domain/shared/adapters'
+import { createBalmyQuoteAdapter } from '@/domain/shared/adapters/balmy'
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
 import {
   getUniswapV3ChainConfig,
@@ -18,7 +20,14 @@ import { BASE_WETH, getContractAddresses, type SupportedChainId } from '@/lib/co
 import type { QuoteFn } from '../planner/types'
 
 /** Supported adapter types for collateral-to-debt swaps */
-export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2' | 'pendle' | 'infinifi'
+export type SwapAdapterType =
+  | 'balmy'
+  | 'lifi'
+  | 'velora'
+  | 'uniswapV3'
+  | 'uniswapV2'
+  | 'pendle'
+  | 'infinifi'
 /**
  * Validated ParaSwap methods for Velora exactOut operations.
  * Contract has hardcoded byte offsets that only work with swapExactAmountOut.
@@ -27,6 +36,10 @@ export type SwapAdapterType = 'lifi' | 'velora' | 'uniswapV3' | 'uniswapV2' | 'p
 const VELORA_VALIDATED_EXACT_OUT_METHODS = ['swapExactAmountOut'] as const
 
 export type CollateralToDebtSwapConfig =
+  | {
+      type: 'balmy'
+      excludeAdditionalSources?: Array<string>
+    }
   | {
       type: 'uniswapV3'
       poolKey: UniswapV3PoolKey
@@ -57,6 +70,7 @@ export interface CreateCollateralToDebtQuoteParams {
   getPublicClient: (chainId: number) => PublicClient | undefined
   /** Optional override for aggregator `fromAddress` (defaults handled by adapter). */
   fromAddress?: Address
+  balmySDK: ReturnType<typeof buildSDK>
 }
 
 export interface CreateCollateralToDebtQuoteResult {
@@ -70,7 +84,19 @@ export function createCollateralToDebtQuote({
   swap,
   getPublicClient,
   fromAddress,
+  balmySDK,
 }: CreateCollateralToDebtQuoteParams): CreateCollateralToDebtQuoteResult {
+  if (swap.type === 'balmy') {
+    const quote = createBalmyQuoteAdapter({
+      chainId,
+      toAddress: routerAddress,
+      fromAddress: fromAddress ?? routerAddress,
+      balmySDK,
+      excludeAdditionalSources: swap.excludeAdditionalSources,
+    })
+    return { quote, adapterType: 'balmy' }
+  }
+
   if (swap.type === 'lifi') {
     const quote = createLifiQuoteAdapter({
       chainId,

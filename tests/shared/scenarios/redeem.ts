@@ -1,4 +1,5 @@
 import { type Address, getAddress, type PublicClient } from 'viem'
+import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { planRedeem } from '@/domain/redeem'
 import {
   type CollateralToDebtSwapConfig,
@@ -31,6 +32,7 @@ export type RedeemScenarioConfig = {
   debtAsset: Address
   swap: CollateralToDebtSwapConfig
   chainId: number
+  multicallExecutor: Address
 }
 
 export type RedeemPlanResult = {
@@ -95,6 +97,7 @@ export async function ensureRedeemSetup({
         token: scenario.token,
         manager: scenario.manager,
         router: scenario.router,
+        multicallExecutor: scenario.multicallExecutor,
       },
     })
   } finally {
@@ -131,21 +134,20 @@ export async function planRedeemTest({
     routerAddress: scenario.router,
     swap: scenario.swap,
     getPublicClient: (cid: number) => (cid === scenario.chainId ? ctx.publicClient : undefined),
+    balmySDK: createBalmySDK(ctx.config),
   })
 
   const leverageTokenConfig = getLeverageTokenConfig(scenario.token, scenario.chainId)
   if (!leverageTokenConfig) {
     throw new Error(`Leverage token config not found for ${scenario.token}`)
   }
-  const blockNumber = await ctx.publicClient.getBlockNumber()
 
   const plan = await planRedeem({
-    wagmiConfig: ctx.config,
+    publicClient: ctx.publicClient,
     leverageTokenConfig,
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
-    blockNumber,
   })
 
   return {
@@ -163,8 +165,8 @@ async function resolveRedeemScenario({
   tokenDefinition: LeverageTokenDefinition
 }): Promise<RedeemScenarioConfig> {
   const addresses = getAddressesForToken(tokenDefinition.key)
-  const executor = addresses.executor
-  if (!executor) {
+  const multicallExecutor = addresses.multicallExecutor
+  if (!multicallExecutor) {
     throw new Error('Multicall executor address missing; update contract map for V2 harness')
   }
 
@@ -190,6 +192,7 @@ async function resolveRedeemScenario({
     debtAsset,
     swap,
     chainId,
+    multicallExecutor,
   }
 }
 

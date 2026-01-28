@@ -6,6 +6,10 @@ import { hookTestUtils, makeAddr, mockSetup } from '../../../../../utils.tsx'
 // Mock dependencies
 const mockCreateCollateralToDebtQuote = createCollateralToDebtQuote as Mock
 
+vi.mock('@/components/BalmySDKProvider', () => ({
+  useBalmySDK: () => ({ balmySDK: {} as any }),
+}))
+
 describe('useCollateralToDebtQuote', () => {
   const mockChainId = 8453
   const mockRouterAddress = makeAddr('router')

@@ -1,5 +1,6 @@
 import type { Address, PublicClient } from 'viem'
 import { parseUnits } from 'viem'
+import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { planMint } from '@/domain/mint/planner/plan'
 import { createDebtToCollateralQuote } from '@/domain/mint/utils/createDebtToCollateralQuote'
 import { createLifiQuoteAdapter } from '@/domain/shared/adapters/lifi'
@@ -36,6 +37,7 @@ export type MintSetupParams = {
     token: Address
     manager: Address
     router: Address
+    multicallExecutor: Address
     uniswapV3?: {
       pool: Address
       fee: number
@@ -75,11 +77,11 @@ export async function executeSharedMint({
 }: MintSetupParams): Promise<MintOutcome> {
   const resolvedSlippageBps = Number(process.env['TEST_SLIPPAGE_BPS'] ?? slippageBps ?? 50)
 
-  const executor = ADDR.executor
-  if (!executor) {
+  const multicallExecutor = addresses?.multicallExecutor
+  if (!multicallExecutor) {
     throw new Error('Multicall executor address missing; update contract map for V2 harness')
   }
-  process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = executor
+  process.env['VITE_MULTICALL_EXECUTOR_ADDRESS'] = multicallExecutor
 
   const token: Address = (addresses?.token ?? ADDR.leverageToken) as Address
   const manager: Address = (addresses?.manager ?? ADDR.managerV2 ?? ADDR.manager) as Address
@@ -121,6 +123,7 @@ export async function executeSharedMint({
       routerAddress: router,
       swap: debtToCollateralConfig,
       getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
+      balmySDK: createBalmySDK(config),
     })
     quoteDebtToCollateral = quote
   } else {
@@ -139,7 +142,7 @@ export async function executeSharedMint({
       canUseV3,
       chainId,
       router,
-      executor,
+      multicallExecutor,
       publicClient,
     })
   }
@@ -154,15 +157,12 @@ export async function executeSharedMint({
     args: [account.address],
   })
 
-  const blockNumber = await publicClient.getBlockNumber()
-
   const plan = await planMint({
-    wagmiConfig: config,
+    publicClient,
     leverageTokenConfig,
     equityInCollateralAsset: equityInInputAsset,
     slippageBps: resolvedSlippageBps,
     quoteDebtToCollateral,
-    blockNumber,
   })
 
   const { request } = await simulateLeverageRouterV2Deposit(config, {
@@ -171,7 +171,7 @@ export async function executeSharedMint({
       plan.equityInCollateralAsset,
       plan.flashLoanAmount,
       plan.minShares,
-      executor,
+      multicallExecutor,
       plan.calls,
     ],
     account: account.address,
@@ -221,10 +221,10 @@ async function resolveDebtToCollateralQuote(params: {
   canUseV3: boolean
   chainId: number
   router: Address
-  executor: Address
+  multicallExecutor: Address
   publicClient: PublicClient
 }): Promise<QuoteFn> {
-  const { preference, useLiFi, canUseV3, chainId, router, executor, publicClient } = params
+  const { preference, useLiFi, canUseV3, chainId, router, multicallExecutor, publicClient } = params
 
   const normalizedPreference = preference.trim()
   const mode = selectQuoteMode({ preference: normalizedPreference, useLiFi, canUseV3 })
@@ -234,8 +234,8 @@ async function resolveDebtToCollateralQuote(params: {
       return createLifiQuoteAdapter({
         chainId,
         router,
-        // Align LiFi's expected sender with the actual caller (MulticallExecutor)
-        fromAddress: executor,
+        // Align swapper's expected sender with the actual caller (MulticallExecutor)
+        fromAddress: multicallExecutor,
         allowBridges: 'none',
       })
     }

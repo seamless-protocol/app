@@ -86,6 +86,8 @@ interface InputStepProps {
   isBelowMinimum?: boolean | undefined
   impactWarning?: string
   debtAssetSymbol?: string
+  // Selected quote source name/label
+  quoteSourceName?: string | undefined
 }
 
 export function InputStep({
@@ -126,6 +128,7 @@ export function InputStep({
   isBelowMinimum,
   debtAssetSymbol,
   impactWarning,
+  quoteSourceName,
 }: InputStepProps) {
   const slippageInputRef = useRef<HTMLInputElement>(null)
   const redeemAmountId = useId()
@@ -455,6 +458,18 @@ export function InputStep({
               )}
             </div>
           </div>
+          {quoteSourceName && (
+            <div className="flex items-center justify-between">
+              <span className="text-secondary-foreground">Quote source</span>
+              {isCalculating ? (
+                <span className="inline-flex items-center" aria-live="polite">
+                  <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                </span>
+              ) : (
+                <span className="text-foreground">{quoteSourceName}</span>
+              )}
+            </div>
+          )}
         </div>
       </Card>
 

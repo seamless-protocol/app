@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import type { Address } from 'viem'
-import type { Config } from 'wagmi'
-import { usePublicClient } from 'wagmi'
+import type { Address, PublicClient } from 'viem'
+import { type Config, usePublicClient } from 'wagmi'
 import type { MintPlan } from '@/domain/mint/planner/plan'
 import { planMint } from '@/domain/mint/planner/plan'
 import type { QuoteFn } from '@/domain/mint/planner/types'
@@ -21,7 +20,6 @@ interface UseMintPlanPreviewParams {
 }
 
 export function useMintPlanPreview({
-  config,
   token,
   equityInCollateralAsset,
   slippageBps,
@@ -30,8 +28,8 @@ export function useMintPlanPreview({
   quote,
   debounceMs = 500,
 }: UseMintPlanPreviewParams) {
+  const publicClient = usePublicClient({ chainId }) as PublicClient
   const debounced = useDebouncedBigint(equityInCollateralAsset, debounceMs)
-  const publicClient = usePublicClient({ config, chainId })
 
   const enabledQuery =
     enabled && typeof debounced === 'bigint' && debounced > 0n && typeof quote === 'function'
@@ -54,19 +52,13 @@ export function useMintPlanPreview({
     queryFn: async () => {
       const leverageTokenConfig = getLeverageTokenConfig(token, chainId)
       if (!leverageTokenConfig) throw new Error('Leverage token config not found')
-      // Block number is fetched once per query for consistency across preview calls,
-      // but intentionally NOT added to query key to avoid per-block cache invalidation.
-      // React Query's staleTime/refetchInterval control when plans are recomputed.
-      if (!publicClient) throw new Error('Public client not available')
-      const blockNumber = await publicClient.getBlockNumber()
 
       return planMint({
-        wagmiConfig: config,
+        publicClient: publicClient,
         leverageTokenConfig,
         equityInCollateralAsset: debounced as bigint,
         slippageBps,
         quoteDebtToCollateral: quote as QuoteFn,
-        blockNumber,
       })
     },
   })
@@ -77,6 +69,8 @@ export function useMintPlanPreview({
     isLoading: enabled && query.isFetching,
     error: query.error,
     refetch: query.refetch,
+    quoteSourceName: query.data?.quoteSourceName,
+    quoteSourceId: query.data?.quoteSourceId,
   }
 }
 

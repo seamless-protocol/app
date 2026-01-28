@@ -15,7 +15,7 @@ import {
   parseMintedSharesFromReceipt,
 } from '@/features/leverage-tokens/utils/receipt'
 import { invalidatePortfolioQueries } from '@/features/portfolio/utils/invalidation'
-import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
+import { useGA, useQuotesGA, useTransactionGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
@@ -83,6 +83,7 @@ export function LeverageTokenMintModal({
   userAddress: propUserAddress,
 }: LeverageTokenMintModalProps) {
   const { trackLeverageTokenMinted, trackTransactionError } = useTransactionGA()
+  const { trackBestQuoteSource } = useQuotesGA()
   const analytics = useGA()
 
   // Get leverage token configuration by address
@@ -457,6 +458,50 @@ export function LeverageTokenMintModal({
     leverageTokenConfig.debtAsset.decimals,
   ])
 
+  useEffect(() => {
+    if (
+      planPreview.plan?.quoteSourceName &&
+      planPreview.plan?.flashLoanAmount &&
+      planPreview.plan?.flashLoanToCollateralQuoteAmount &&
+      debtUsdPrice &&
+      collateralUsdPrice
+    ) {
+      const amountInUSD = toScaledUsd(
+        planPreview.plan?.flashLoanAmount,
+        leverageTokenConfig.debtAsset.decimals,
+        parseUsdPrice(debtUsdPrice),
+      )
+
+      const amountOutUSD = toScaledUsd(
+        planPreview.plan?.flashLoanToCollateralQuoteAmount,
+        leverageTokenConfig.collateralAsset.decimals,
+        parseUsdPrice(collateralUsdPrice),
+      )
+
+      trackBestQuoteSource({
+        event: 'best_quote_source',
+        tokenIn: leverageTokenConfig.debtAsset.address,
+        tokenOut: leverageTokenConfig.collateralAsset.address,
+        quoteSource: planPreview.plan.quoteSourceName,
+        amountIn: planPreview.plan.flashLoanAmount,
+        amountInUSD: Number(amountInUSD),
+        amountOut: planPreview.plan.flashLoanToCollateralQuoteAmount,
+        amountOutUSD: Number(amountOutUSD),
+      })
+    }
+  }, [
+    collateralUsdPrice,
+    debtUsdPrice,
+    leverageTokenConfig.collateralAsset.address,
+    leverageTokenConfig.debtAsset.address,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.decimals,
+    planPreview.plan?.quoteSourceName,
+    planPreview.plan?.flashLoanAmount,
+    planPreview.plan?.flashLoanToCollateralQuoteAmount,
+    trackBestQuoteSource,
+  ])
+
   // Parse actual minted shares from receipt logs (typed util) and format for display
   const actualMintedTokens = useMemo(() => {
     const receipt = receiptState.data
@@ -722,6 +767,8 @@ export function LeverageTokenMintModal({
       (Boolean(leverageTokenConfig.swaps?.debtToCollateral) &&
         quoteDebtToCollateral.status !== 'ready'))
 
+  const quoteSourceName = planPreview.plan?.quoteSourceName
+
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
@@ -766,6 +813,7 @@ export function LeverageTokenMintModal({
             isBelowMinimum={isBelowMinimum()}
             supplyCapExceeded={!form.supplyCapOk}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
+            quoteSourceName={quoteSourceName}
           />
         )
 
