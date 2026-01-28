@@ -15,6 +15,7 @@ export interface MintPlan {
   previewShares: bigint
   previewExcessDebt: bigint
   flashLoanAmount: bigint
+  flashLoanToCollateralQuoteAmount: bigint
   equityInCollateralAsset: bigint
   calls: Array<Call>
   quoteSourceName: string | undefined
@@ -171,6 +172,7 @@ export async function planMint({
     previewShares: managerPreview.shares,
     previewExcessDebt,
     flashLoanAmount,
+    flashLoanToCollateralQuoteAmount: debtToCollateralQuote.out,
     equityInCollateralAsset,
     calls,
     quoteSourceName: debtToCollateralQuote.quoteSourceName,

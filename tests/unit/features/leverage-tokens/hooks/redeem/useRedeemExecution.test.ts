@@ -28,6 +28,8 @@ describe('useRedeemExecution', () => {
   const MOCK_HASH: Hash = makeTxnHash('redeem-transaction')
 
   const mockPlan = {
+    collateralToSwap: 1_000_000_000_000_000_000n,
+    collateralToDebtQuoteAmount: 1_000_000_000_000_000_000n,
     sharesToRedeem: 1_000_000_000_000_000_000n, // 1 token
     minCollateralForSender: 900_000_000_000_000_000n, // 0.9 tokens
     minExcessDebt: 0n,

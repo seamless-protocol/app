@@ -6,7 +6,7 @@ import { parseUsdPrice, toScaledUsd, usdToFixedString } from '@/domain/shared/pr
 import { useLeverageTokenUsdPrice } from '@/features/leverage-tokens/hooks/useLeverageTokenUsdPrice'
 import { parseErc20ReceivedFromReceipt } from '@/features/leverage-tokens/utils/receipt'
 import { invalidatePortfolioQueries } from '@/features/portfolio/utils/invalidation'
-import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
+import { useGA, useQuotesGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
@@ -65,6 +65,7 @@ export function LeverageTokenRedeemModal({
   userAddress: propUserAddress,
 }: LeverageTokenRedeemModalProps) {
   const { trackLeverageTokenRedeemed, trackTransactionError } = useTransactionGA()
+  const { trackBestQuoteSource } = useQuotesGA()
   const analytics = useGA()
   const queryClient = useQueryClient()
 
@@ -655,6 +656,50 @@ export function LeverageTokenRedeemModal({
       toError()
     }
   }, [exec.error, currentStep, toError])
+
+  useEffect(() => {
+    if (
+      planPreview.plan?.collateralToSwap &&
+      planPreview.plan?.collateralToDebtQuoteAmount &&
+      planPreview.plan?.quoteSourceName &&
+      debtUsdPrice &&
+      collateralUsdPrice
+    ) {
+      const amountInUSD = toScaledUsd(
+        planPreview.plan?.collateralToSwap,
+        leverageTokenConfig.collateralAsset.decimals,
+        parseUsdPrice(collateralUsdPrice),
+      )
+
+      const amountOutUSD = toScaledUsd(
+        planPreview.plan?.collateralToDebtQuoteAmount,
+        leverageTokenConfig.debtAsset.decimals,
+        parseUsdPrice(debtUsdPrice),
+      )
+
+      trackBestQuoteSource({
+        event: 'best_quote_source',
+        tokenIn: leverageTokenConfig.collateralAsset.address,
+        tokenOut: leverageTokenConfig.debtAsset.address,
+        quoteSource: planPreview.plan.quoteSourceName,
+        amountIn: planPreview.plan.collateralToSwap,
+        amountInUSD: Number(amountInUSD),
+        amountOut: planPreview.plan.collateralToDebtQuoteAmount,
+        amountOutUSD: Number(amountOutUSD),
+      })
+    }
+  }, [
+    collateralUsdPrice,
+    debtUsdPrice,
+    leverageTokenConfig.collateralAsset.address,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.address,
+    leverageTokenConfig.debtAsset.decimals,
+    planPreview.plan?.collateralToDebtQuoteAmount,
+    planPreview.plan?.collateralToSwap,
+    planPreview.plan?.quoteSourceName,
+    trackBestQuoteSource,
+  ])
 
   // Drive success/error once receipt resolves
   useEffect(() => {

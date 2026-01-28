@@ -24,6 +24,8 @@ const MULTICALL_EXECUTOR: Address = '0x6666666666666666666666666666666666666666'
 const MOCK_HASH: Hash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890'
 
 const mockPlan: RedeemPlan = {
+  collateralToSwap: 1_000n,
+  collateralToDebtQuoteAmount: 1_000n,
   sharesToRedeem: 1_000n,
   minCollateralForSender: 900n,
   minExcessDebt: 0n,

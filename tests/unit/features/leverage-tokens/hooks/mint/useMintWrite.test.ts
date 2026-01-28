@@ -43,6 +43,7 @@ const basePlan: MintPlan = {
   previewExcessDebt: 0n,
   minExcessDebt: 0n,
   flashLoanAmount: 1000000000000000000n,
+  flashLoanToCollateralQuoteAmount: 1000000000000000000n,
   calls: [
     {
       target: makeAddr('swap'),

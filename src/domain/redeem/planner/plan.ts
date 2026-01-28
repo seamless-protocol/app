@@ -16,6 +16,8 @@ import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/add
 import { leverageManagerV2Abi } from '@/lib/contracts/generated'
 
 export interface RedeemPlan {
+  collateralToSwap: bigint
+  collateralToDebtQuoteAmount: bigint
   minCollateralForSender: bigint
   minExcessDebt: bigint
   previewCollateralForSender: bigint
@@ -143,6 +145,8 @@ export async function planRedeem({
   calls.push(...collateralToDebtQuote.calls)
 
   return {
+    collateralToSwap: collateralToSpend,
+    collateralToDebtQuoteAmount: collateralToDebtQuote.out,
     minCollateralForSender,
     minExcessDebt,
     previewCollateralForSender: preview.collateral - collateralToSpend,
