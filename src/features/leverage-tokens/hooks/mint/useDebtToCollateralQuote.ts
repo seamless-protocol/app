@@ -6,7 +6,6 @@ import {
   createDebtToCollateralQuote,
   type DebtToCollateralSwapConfig,
 } from '@/domain/mint/utils/createDebtToCollateralQuote'
-import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 
 export type QuoteStatus =
@@ -24,7 +23,6 @@ interface UseDebtToCollateralQuoteParams {
   swap?: DebtToCollateralSwapConfig
   requiresQuote: boolean
   fromAddress?: Address
-  balmyOverrideOptions?: BalmyAdapterOverrideOptions
 }
 
 export function useDebtToCollateralQuote({
@@ -33,7 +31,6 @@ export function useDebtToCollateralQuote({
   swap,
   requiresQuote,
   fromAddress,
-  balmyOverrideOptions,
 }: UseDebtToCollateralQuoteParams): {
   quote: ReturnType<typeof createDebtToCollateralQuote>['quote'] | undefined
   status: QuoteStatus
@@ -66,7 +63,6 @@ export function useDebtToCollateralQuote({
         getPublicClient,
         ...(fromAddress ? { fromAddress } : {}),
         balmySDK,
-        ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
       })
       return { status: 'ready', quote, error: undefined }
     } catch (err) {
@@ -94,14 +90,5 @@ export function useDebtToCollateralQuote({
       }
       return { status: 'error', quote: undefined, error }
     }
-  }, [
-    balmySDK,
-    balmyOverrideOptions,
-    chainId,
-    fromAddress,
-    publicClient,
-    requiresQuote,
-    routerAddress,
-    swap,
-  ])
+  }, [balmySDK, chainId, fromAddress, publicClient, requiresQuote, routerAddress, swap])
 }

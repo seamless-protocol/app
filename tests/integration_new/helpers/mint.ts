@@ -6,7 +6,6 @@ import { expect } from 'vitest'
 import type { Config } from 'wagmi'
 import type { MintPlan } from '@/domain/mint'
 import type { DebtToCollateralSwapConfig } from '@/domain/mint/utils/createDebtToCollateralQuote'
-import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import { useApprovalFlow } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
 import { useDebtToCollateralQuote } from '@/features/leverage-tokens/hooks/mint/useDebtToCollateralQuote'
@@ -41,7 +40,6 @@ export async function testMint({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  balmyOverrideOptions,
   startSlippageBps = 100,
   retries = 5,
   slippageIncrementBps = 100,
@@ -49,7 +47,6 @@ export async function testMint({
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
-  balmyOverrideOptions?: BalmyAdapterOverrideOptions
   startSlippageBps?: number
   retries?: number
   slippageIncrementBps?: number
@@ -80,7 +77,6 @@ export async function testMint({
     client,
     wagmiConfig,
     leverageTokenConfig,
-    ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
     equityInCollateralAsset,
     startSlippageBps,
     retries,
@@ -119,7 +115,6 @@ async function mintWithRetries({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  balmyOverrideOptions,
   equityInCollateralAsset,
   startSlippageBps,
   retries,
@@ -128,7 +123,6 @@ async function mintWithRetries({
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
-  balmyOverrideOptions?: BalmyAdapterOverrideOptions
   equityInCollateralAsset: bigint
   startSlippageBps: number
   retries: number
@@ -150,7 +144,6 @@ async function mintWithRetries({
         wagmiConfig,
         leverageTokenConfig,
         equityInCollateralAsset,
-        ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
         startSlippageBps: nextStartSlippageBps,
         retries: allowedPreviewRetries,
         slippageIncrementBps,
@@ -187,7 +180,6 @@ async function executeMintFlow({
   wagmiConfig,
   leverageTokenConfig,
   equityInCollateralAsset,
-  balmyOverrideOptions,
   startSlippageBps = 100,
   retries = 5,
   slippageIncrementBps = 100,
@@ -196,7 +188,6 @@ async function executeMintFlow({
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
-  balmyOverrideOptions?: BalmyAdapterOverrideOptions
   startSlippageBps?: number
   retries?: number
   slippageIncrementBps?: number
@@ -211,7 +202,6 @@ async function executeMintFlow({
       swap: leverageTokenConfig.swaps?.debtToCollateral as DebtToCollateralSwapConfig,
       requiresQuote: true,
       fromAddress: addresses.multicallExecutor as Address,
-      ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
     }),
   )
   await waitFor(() =>

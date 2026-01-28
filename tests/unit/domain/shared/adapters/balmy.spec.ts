@@ -220,6 +220,46 @@ describe('createBalmyQuoteAdapter', () => {
     expect(quote.maxIn).toBe(350n)
   })
 
+  it('excludes additional sources', async () => {
+    const { balmySDK, getBestQuote } = createMockBalmySDK()
+
+    const adapter = createBalmyQuoteAdapter({
+      balmySDK,
+      chainId: 8453,
+      fromAddress: CALLER,
+      toAddress: ROUTER,
+      excludeAdditionalSources: ['test-source'],
+    })
+
+    await adapter({
+      inToken: IN_TOKEN,
+      outToken: OUT_TOKEN,
+      amountIn: 123n,
+      intent: 'exactIn',
+      slippageBps: 50,
+    })
+
+    expect(getBestQuote).toHaveBeenCalledTimes(1)
+    expect(getBestQuote).toHaveBeenCalledWith({
+      request: expect.objectContaining({
+        chainId: 8453,
+        sellToken: IN_TOKEN,
+        buyToken: OUT_TOKEN,
+        order: { type: 'sell', sellAmount: 123n },
+        slippagePercentage: 0.5,
+        takerAddress: CALLER,
+        recipient: ROUTER,
+        filters: {
+          excludeSources: ['sushiswap', 'fly-trade', 'swing', 'xy-finance', 'test-source'],
+        },
+        sourceConfig: { global: { disableValidation: true } },
+      }),
+      config: {
+        choose: { by: 'most-swapped', using: 'max sell/min buy amounts' },
+      },
+    })
+  })
+
   it('throws when amountOut is 0 for exact-out', async () => {
     await expect(
       createBalmyQuoteAdapter({

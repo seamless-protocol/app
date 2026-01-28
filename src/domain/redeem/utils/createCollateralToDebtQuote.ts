@@ -9,10 +9,7 @@ import {
   createVeloraQuoteAdapter,
   type LifiOrder,
 } from '@/domain/shared/adapters'
-import {
-  type BalmyAdapterOverrideOptions,
-  createBalmyQuoteAdapter,
-} from '@/domain/shared/adapters/balmy'
+import { createBalmyQuoteAdapter } from '@/domain/shared/adapters/balmy'
 import { createUniswapV2QuoteAdapter } from '@/domain/shared/adapters/uniswapV2'
 import {
   getUniswapV3ChainConfig,
@@ -74,7 +71,6 @@ export interface CreateCollateralToDebtQuoteParams {
   /** Optional override for aggregator `fromAddress` (defaults handled by adapter). */
   fromAddress?: Address
   balmySDK: ReturnType<typeof buildSDK>
-  balmyOverrideOptions?: BalmyAdapterOverrideOptions
 }
 
 export interface CreateCollateralToDebtQuoteResult {
@@ -89,7 +85,6 @@ export function createCollateralToDebtQuote({
   getPublicClient,
   fromAddress,
   balmySDK,
-  balmyOverrideOptions,
 }: CreateCollateralToDebtQuoteParams): CreateCollateralToDebtQuoteResult {
   if (swap.type === 'balmy') {
     const quote = createBalmyQuoteAdapter({
@@ -98,7 +93,6 @@ export function createCollateralToDebtQuote({
       fromAddress: fromAddress ?? routerAddress,
       balmySDK,
       excludeAdditionalSources: swap.excludeAdditionalSources,
-      ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
     })
     return { quote, adapterType: 'balmy' }
   }

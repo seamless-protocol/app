@@ -5,7 +5,6 @@ import type { Address } from 'viem'
 import { expect } from 'vitest'
 import type { Config } from 'wagmi'
 import type { CollateralToDebtSwapConfig, RedeemPlan } from '@/domain/redeem'
-import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import { useApprovalFlow } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
 import { useCollateralToDebtQuote } from '@/features/leverage-tokens/hooks/redeem/useCollateralToDebtQuote'
@@ -41,7 +40,6 @@ export async function testRedeem({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  balmyOverrideOptions,
   startSlippageBps = 100,
   retries = 5,
   slippageIncrementBps = 100,
@@ -49,7 +47,6 @@ export async function testRedeem({
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
-  balmyOverrideOptions?: BalmyAdapterOverrideOptions
   startSlippageBps?: number
   retries?: number
   slippageIncrementBps?: number
@@ -77,7 +74,6 @@ export async function testRedeem({
     client,
     wagmiConfig,
     leverageTokenConfig,
-    ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
     leverageTokenBalanceBefore,
     startSlippageBps,
     retries,
@@ -117,7 +113,6 @@ async function redeemWithRetries({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  balmyOverrideOptions,
   leverageTokenBalanceBefore,
   startSlippageBps,
   retries,
@@ -126,7 +121,6 @@ async function redeemWithRetries({
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
-  balmyOverrideOptions?: BalmyAdapterOverrideOptions
   leverageTokenBalanceBefore: bigint
   startSlippageBps: number
   retries: number
@@ -148,7 +142,6 @@ async function redeemWithRetries({
         wagmiConfig,
         leverageTokenConfig,
         sharesToRedeem: leverageTokenBalanceBefore,
-        ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
         startSlippageBps: nextStartSlippageBps,
         retries: allowedPreviewRetries,
         slippageIncrementBps,
@@ -187,7 +180,6 @@ async function executeRedeemFlow({
   wagmiConfig,
   leverageTokenConfig,
   sharesToRedeem,
-  balmyOverrideOptions,
   startSlippageBps = 100,
   retries = 5,
   slippageIncrementBps = 100,
@@ -196,7 +188,6 @@ async function executeRedeemFlow({
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   sharesToRedeem: bigint
-  balmyOverrideOptions?: BalmyAdapterOverrideOptions
   startSlippageBps?: number
   retries?: number
   slippageIncrementBps?: number
@@ -210,7 +201,6 @@ async function executeRedeemFlow({
       routerAddress: addresses.leverageRouterV2 as Address,
       swap: leverageTokenConfig.swaps?.collateralToDebt as CollateralToDebtSwapConfig,
       requiresQuote: true,
-      ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
     }),
   )
   await waitFor(() =>
