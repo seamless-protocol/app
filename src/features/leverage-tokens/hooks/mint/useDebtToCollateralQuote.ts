@@ -7,6 +7,7 @@ import {
   type DebtToCollateralSwapConfig,
 } from '@/domain/mint/utils/createDebtToCollateralQuote'
 import type { BalmyAdapterOverrideOptions } from '@/domain/shared/adapters/balmy'
+import { useQuoteGA } from '@/lib/config/ga4.config'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 
 export type QuoteStatus =
@@ -41,6 +42,7 @@ export function useDebtToCollateralQuote({
 } {
   const publicClient = usePublicClient({ chainId })
   const { balmySDK } = useBalmySDK()
+  const { trackBestQuoteSource } = useQuoteGA()
 
   return useMemo(() => {
     if (!requiresQuote) {
@@ -67,6 +69,7 @@ export function useDebtToCollateralQuote({
         ...(fromAddress ? { fromAddress } : {}),
         balmySDK,
         ...(balmyOverrideOptions ? { balmyOverrideOptions } : {}),
+        trackBestQuoteSource,
       })
       return { status: 'ready', quote, error: undefined }
     } catch (err) {
@@ -103,5 +106,6 @@ export function useDebtToCollateralQuote({
     requiresQuote,
     routerAddress,
     swap,
+    trackBestQuoteSource,
   ])
 }

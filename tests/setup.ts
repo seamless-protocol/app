@@ -17,6 +17,17 @@ vi.mock('@/components/BalmySDKProvider', () => ({
   useBalmySDK: () => ({ balmySDK: mockBalmySDK }),
 }))
 
+// Mock TanStack Router hooks
+vi.mock('@tanstack/react-router', () => ({
+  useLocation: vi.fn(() => ({
+    pathname: '/',
+    search: {},
+    hash: '',
+    state: {},
+    key: 'default',
+  })),
+}))
+
 // Mock wagmi hooks
 vi.mock('wagmi', () => ({
   useAccount: vi.fn(),

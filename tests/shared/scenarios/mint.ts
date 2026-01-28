@@ -1,4 +1,5 @@
 import { type Address, erc20Abi, getAddress, type Hash, type PublicClient, parseUnits } from 'viem'
+import { vi } from 'vitest'
 import { useConfig } from 'wagmi'
 import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { planMint } from '@/domain/mint/planner/plan'
@@ -346,6 +347,7 @@ function buildQuoteAdapter({
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
     fromAddress: multicallExecutor,
     balmySDK: createBalmySDK(config),
+    trackBestQuoteSource: vi.fn(),
   })
   return quote
 }

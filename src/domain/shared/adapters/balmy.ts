@@ -1,5 +1,6 @@
 import type { QuoteRequest as BalmyQuoteRequest, buildSDK } from '@seamless-defi/defi-sdk'
 import { type Address, getAddress, isAddressEqual } from 'viem'
+import type { TrackBestQuoteSourceParams } from '@/lib/config/ga4.config'
 import { ETH_SENTINEL } from '@/lib/contracts/addresses'
 import { bpsToDecimalString, validateSlippage } from './helpers'
 import type { QuoteFn, QuoteRequest } from './types'
@@ -20,6 +21,7 @@ export interface BalmyAdapterOverrideOptions {
 
 export function createBalmyQuoteAdapter(
   opts: BalmyAdapterOptions & BalmyAdapterOverrideOptions,
+  trackBestQuoteSource: (params: TrackBestQuoteSourceParams) => void,
 ): QuoteFn {
   return async ({ inToken, outToken, amountIn, amountOut, intent, slippageBps }: QuoteRequest) => {
     validateSlippage(slippageBps)
@@ -91,6 +93,14 @@ export function createBalmyQuoteAdapter(
     const wantsNativeIn = isAddressEqual(request.sellToken as Address, ETH_SENTINEL)
     const sourceId = quote.source.id
     const sourceName = quote.source.name ?? quote.source.id
+
+    trackBestQuoteSource({
+      tokenIn: inToken,
+      tokenOut: outToken,
+      quoteSource: sourceName,
+      amountIn: quote.maxSellAmount.amount,
+      amountOut: quote.buyAmount.amount,
+    })
 
     return {
       out: quote.buyAmount.amount,

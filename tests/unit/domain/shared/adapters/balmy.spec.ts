@@ -38,25 +38,31 @@ function createMockBalmySDK(overrides?: { mockQuote?: any }) {
     },
   } as unknown as MockedBalmySDK
 
+  const trackBestQuoteSource = vi.fn()
+
   return {
     balmySDK,
     getBestQuote,
     buildTxs,
     mockQuote,
     txResponse,
+    trackBestQuoteSource,
   }
 }
 
 describe('createBalmyQuoteAdapter', () => {
   it('builds sell quotes for exact-in intents with expected request payload', async () => {
-    const { balmySDK, getBestQuote } = createMockBalmySDK()
+    const { balmySDK, getBestQuote, trackBestQuoteSource } = createMockBalmySDK()
 
-    const adapter = createBalmyQuoteAdapter({
-      balmySDK,
-      chainId: 8453,
-      fromAddress: CALLER,
-      toAddress: ROUTER,
-    })
+    const adapter = createBalmyQuoteAdapter(
+      {
+        balmySDK,
+        chainId: 8453,
+        fromAddress: CALLER,
+        toAddress: ROUTER,
+      },
+      trackBestQuoteSource,
+    )
 
     await adapter({
       inToken: IN_TOKEN,
@@ -83,17 +89,28 @@ describe('createBalmyQuoteAdapter', () => {
         choose: { by: 'most-swapped', using: 'max sell/min buy amounts' },
       },
     })
+    expect(trackBestQuoteSource).toHaveBeenCalledWith({
+      tokenIn: IN_TOKEN,
+      tokenOut: OUT_TOKEN,
+      quoteSource: 'Mock Source',
+      amountIn: 220n,
+      amountOut: 200n,
+    })
   })
 
   it('builds buy quotes for exact-out intents and maps response to QuoteFn result', async () => {
-    const { balmySDK, getBestQuote, buildTxs, mockQuote, txResponse } = createMockBalmySDK()
+    const { balmySDK, getBestQuote, buildTxs, mockQuote, txResponse, trackBestQuoteSource } =
+      createMockBalmySDK()
 
-    const adapter = createBalmyQuoteAdapter({
-      balmySDK,
-      chainId: 8453,
-      fromAddress: CALLER,
-      toAddress: ROUTER,
-    })
+    const adapter = createBalmyQuoteAdapter(
+      {
+        balmySDK,
+        chainId: 8453,
+        fromAddress: CALLER,
+        toAddress: ROUTER,
+      },
+      trackBestQuoteSource,
+    )
 
     const quote = await adapter({
       inToken: ETH_SENTINEL,
@@ -127,6 +144,14 @@ describe('createBalmyQuoteAdapter', () => {
     expect(quote.wantsNativeIn).toBe(true)
     expect(quote.quoteSourceId).toBe(SOURCE_ID)
     expect(quote.quoteSourceName).toBe('Mock Source')
+
+    expect(trackBestQuoteSource).toHaveBeenCalledWith({
+      tokenIn: ETH_SENTINEL,
+      tokenOut: OUT_TOKEN,
+      quoteSource: 'Mock Source',
+      amountIn: 220n,
+      amountOut: 200n,
+    })
   })
 
   it('builds buy quotes for exact-out intents with custom data', async () => {
@@ -147,16 +172,19 @@ describe('createBalmyQuoteAdapter', () => {
       },
     }
 
-    const { balmySDK, txResponse } = createMockBalmySDK({
+    const { balmySDK, txResponse, trackBestQuoteSource } = createMockBalmySDK({
       mockQuote,
     })
 
-    const adapter = createBalmyQuoteAdapter({
-      balmySDK,
-      chainId: 8453,
-      fromAddress: CALLER,
-      toAddress: ROUTER,
-    })
+    const adapter = createBalmyQuoteAdapter(
+      {
+        balmySDK,
+        chainId: 8453,
+        fromAddress: CALLER,
+        toAddress: ROUTER,
+      },
+      trackBestQuoteSource,
+    )
 
     const quote = await adapter({
       inToken: ETH_SENTINEL,
@@ -177,10 +205,19 @@ describe('createBalmyQuoteAdapter', () => {
     expect(quote.wantsNativeIn).toBe(true)
     expect(quote.quoteSourceId).toBe(SOURCE_ID)
     expect(quote.quoteSourceName).toBe('Mock Source')
+
+    expect(trackBestQuoteSource).toHaveBeenCalledWith({
+      tokenIn: ETH_SENTINEL,
+      tokenOut: OUT_TOKEN,
+      quoteSource: 'Mock Source',
+      amountIn: 220n,
+      amountOut: 200n,
+    })
   })
 
   it('falls back to source id when name missing and keeps wantsNativeIn false for ERC20 sells', async () => {
-    const { balmySDK, getBestQuote, mockQuote, txResponse } = createMockBalmySDK()
+    const { balmySDK, getBestQuote, mockQuote, txResponse, trackBestQuoteSource } =
+      createMockBalmySDK()
 
     const namelessQuote = {
       source: {
@@ -194,12 +231,15 @@ describe('createBalmyQuoteAdapter', () => {
     }
     getBestQuote.mockResolvedValueOnce(namelessQuote as any)
 
-    const adapter = createBalmyQuoteAdapter({
-      balmySDK,
-      chainId: 8453,
-      fromAddress: CALLER,
-      toAddress: ROUTER,
-    })
+    const adapter = createBalmyQuoteAdapter(
+      {
+        balmySDK,
+        chainId: 8453,
+        fromAddress: CALLER,
+        toAddress: ROUTER,
+      },
+      trackBestQuoteSource,
+    )
 
     const quote = await adapter({
       inToken: IN_TOKEN,
@@ -218,16 +258,27 @@ describe('createBalmyQuoteAdapter', () => {
     expect(quote.out).toBe(300n)
     expect(quote.minOut).toBe(250n)
     expect(quote.maxIn).toBe(350n)
+
+    expect(trackBestQuoteSource).toHaveBeenCalledWith({
+      tokenIn: IN_TOKEN,
+      tokenOut: OUT_TOKEN,
+      quoteSource: SOURCE_ID,
+      amountIn: 350n,
+      amountOut: 300n,
+    })
   })
 
   it('throws when amountOut is 0 for exact-out', async () => {
     await expect(
-      createBalmyQuoteAdapter({
-        balmySDK: createMockBalmySDK().balmySDK,
-        chainId: 8453,
-        fromAddress: CALLER,
-        toAddress: ROUTER,
-      })({
+      createBalmyQuoteAdapter(
+        {
+          balmySDK: createMockBalmySDK().balmySDK,
+          chainId: 8453,
+          fromAddress: CALLER,
+          toAddress: ROUTER,
+        },
+        vi.fn(),
+      )({
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountOut: 0n,
@@ -239,12 +290,15 @@ describe('createBalmyQuoteAdapter', () => {
 
   it('throws when amountIn is 0 for exact-in', async () => {
     await expect(
-      createBalmyQuoteAdapter({
-        balmySDK: createMockBalmySDK().balmySDK,
-        chainId: 8453,
-        fromAddress: CALLER,
-        toAddress: ROUTER,
-      })({
+      createBalmyQuoteAdapter(
+        {
+          balmySDK: createMockBalmySDK().balmySDK,
+          chainId: 8453,
+          fromAddress: CALLER,
+          toAddress: ROUTER,
+        },
+        vi.fn(),
+      )({
         inToken: IN_TOKEN,
         outToken: OUT_TOKEN,
         amountIn: 0n,

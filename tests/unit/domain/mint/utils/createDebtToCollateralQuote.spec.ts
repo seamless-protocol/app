@@ -43,16 +43,19 @@ function createBalmySDKRecorder() {
     },
   } as unknown as MockedBalmySDK
 
+  const trackBestQuoteSource = vi.fn()
+
   return {
     balmySDK,
     getCapturedAddress: () => capturedAddress,
+    trackBestQuoteSource,
   }
 }
 
 describe('createDebtToCollateralQuote (balmy)', () => {
   it('uses the provided fromAddress when supplied', async () => {
     const { getter } = createPublicClientGetter()
-    const { balmySDK, getCapturedAddress } = createBalmySDKRecorder()
+    const { balmySDK, getCapturedAddress, trackBestQuoteSource } = createBalmySDKRecorder()
 
     const result = actualCreateDebtToCollateralQuote({
       chainId: base.id,
@@ -61,6 +64,7 @@ describe('createDebtToCollateralQuote (balmy)', () => {
       getPublicClient: getter,
       fromAddress: CUSTOM_FROM,
       balmySDK,
+      trackBestQuoteSource,
     })
 
     expect(result).toBeDefined()
@@ -76,11 +80,18 @@ describe('createDebtToCollateralQuote (balmy)', () => {
 
     expect(adapterType).toBe('balmy')
     expect(getCapturedAddress()).toBe(CUSTOM_FROM)
+    expect(trackBestQuoteSource).toHaveBeenCalledWith({
+      tokenIn: ROUTER,
+      tokenOut: ROUTER,
+      quoteSource: 'mock-source',
+      amountIn: 1n,
+      amountOut: 1n,
+    })
   })
 
   it('defaults fromAddress to the chain multicall executor when available', async () => {
     const { getter } = createPublicClientGetter()
-    const { balmySDK, getCapturedAddress } = createBalmySDKRecorder()
+    const { balmySDK, getCapturedAddress, trackBestQuoteSource } = createBalmySDKRecorder()
     const executor = contractAddresses[base.id]?.multicallExecutor as Address
 
     const result = actualCreateDebtToCollateralQuote({
@@ -89,6 +100,7 @@ describe('createDebtToCollateralQuote (balmy)', () => {
       swap: { type: 'balmy' },
       getPublicClient: getter,
       balmySDK,
+      trackBestQuoteSource,
     })
 
     expect(result).toBeDefined()
@@ -103,11 +115,18 @@ describe('createDebtToCollateralQuote (balmy)', () => {
     })
 
     expect(getCapturedAddress()).toBe(executor)
+    expect(trackBestQuoteSource).toHaveBeenCalledWith({
+      tokenIn: ROUTER,
+      tokenOut: ROUTER,
+      quoteSource: 'mock-source',
+      amountIn: 1n,
+      amountOut: 1n,
+    })
   })
 
   it('falls back to the router address when no default executor exists', async () => {
     const { getter } = createPublicClientGetter()
-    const { balmySDK, getCapturedAddress } = createBalmySDKRecorder()
+    const { balmySDK, getCapturedAddress, trackBestQuoteSource } = createBalmySDKRecorder()
     const unknownChainId = 999_999
 
     const result = actualCreateDebtToCollateralQuote({
@@ -116,6 +135,7 @@ describe('createDebtToCollateralQuote (balmy)', () => {
       swap: { type: 'balmy' },
       getPublicClient: getter,
       balmySDK,
+      trackBestQuoteSource,
     })
 
     expect(result).toBeDefined()
@@ -130,5 +150,12 @@ describe('createDebtToCollateralQuote (balmy)', () => {
     })
 
     expect(getCapturedAddress()).toBe(ROUTER)
+    expect(trackBestQuoteSource).toHaveBeenCalledWith({
+      tokenIn: ROUTER,
+      tokenOut: ROUTER,
+      quoteSource: 'mock-source',
+      amountIn: 1n,
+      amountOut: 1n,
+    })
   })
 })
