@@ -12,7 +12,7 @@ const SOURCE_ID = 'balmy-source'
 
 type MockedBalmySDK = ReturnType<typeof buildSDK>
 
-function createMockBalmySDK(overrides?: { mockQuote?: any }) {
+function createMockBalmySDK(overrides?: { mockQuote?: any; txResponse?: any }) {
   const mockQuote = overrides?.mockQuote ?? {
     source: {
       id: SOURCE_ID,
@@ -24,7 +24,7 @@ function createMockBalmySDK(overrides?: { mockQuote?: any }) {
     maxSellAmount: { amount: 220n },
   }
 
-  const txResponse = { data: '0xdeadbeef' }
+  const txResponse = overrides?.txResponse ?? { data: '0xdeadbeef' }
 
   const getBestQuote = vi.fn().mockResolvedValue(mockQuote)
   const buildTxs = vi.fn().mockReturnValue({
@@ -129,7 +129,7 @@ describe('createBalmyQuoteAdapter', () => {
     expect(quote.quoteSourceName).toBe('Mock Source')
   })
 
-  it('builds buy quotes for exact-out intents with custom data', async () => {
+  it('builds quotes with custom tx data', async () => {
     const mockQuote = {
       source: {
         id: SOURCE_ID,
@@ -149,6 +149,11 @@ describe('createBalmyQuoteAdapter', () => {
 
     const { balmySDK, txResponse } = createMockBalmySDK({
       mockQuote,
+      txResponse: {
+        data: '0xdeadbeef',
+        to: mockQuote.customData.tx.to,
+        value: mockQuote.customData.tx.value,
+      },
     })
 
     const adapter = createBalmyQuoteAdapter({

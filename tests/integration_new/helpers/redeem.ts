@@ -362,7 +362,3 @@ async function useRedeemPlanPreviewWithSlippageRetries({
 
   throw new Error(`Failed to create redeem plan with retry helper after ${1 + retries} attempts`)
 }
-
-function isRateLimitError(error: unknown): error is Error {
-  return error instanceof Error && error.message.includes('Rate limit reached')
-}

@@ -2,7 +2,7 @@ import { buildSDK } from '@seamless-defi/defi-sdk'
 import { createContext, useContext, useRef } from 'react'
 import { zeroAddress } from 'viem'
 import { type UseConfigReturnType, useConfig } from 'wagmi'
-import { getTransport } from '@/lib/config/wagmi.config'
+import { getClient } from 'wagmi/actions'
 
 type BalmySDKProviderProps = {
   children: React.ReactNode
@@ -37,10 +37,50 @@ export const useBalmySDK = () => {
   return context
 }
 
-export const createBalmySDK = (config: UseConfigReturnType) => {
+const getProviderFallbackSources = (config: UseConfigReturnType) => {
+  const chains = config.chains.map((chain) => chain.id)
+
+  const sources = []
+
+  for (const chain of chains) {
+    const client = getClient(config, { chainId: chain })
+    if (!client) {
+      throw new Error(`No client found for chain ${chain}`)
+    }
+
+    // If client uses fallback transports, use them
+    const transports = client.transport?.['transports']
+
+    if (transports) {
+      for (const transport of transports) {
+        sources.push({
+          type: 'http',
+          config: transport.config,
+          supportedChains: [chain],
+          url: transport.value.url,
+        })
+      }
+    } else {
+      const url = client.transport?.['url']
+      if (!url) {
+        throw new Error(`No transport URL found for chain ${chain}`)
+      }
+      sources.push({
+        type: 'http',
+        config: client.transport,
+        supportedChains: [chain],
+        url: url,
+      })
+    }
+  }
+
+  return sources
+}
+
+export const getBalmySDKConfig = (config: UseConfigReturnType) => {
   const liFiSourceDenylist = ['sushiswap', 'fly', 'kyberswap']
 
-  return buildSDK({
+  return {
     quotes: {
       defaultConfig: {
         global: {
@@ -66,17 +106,11 @@ export const createBalmySDK = (config: UseConfigReturnType) => {
     },
     provider: {
       source: {
-        type: 'custom',
-        instance: {
-          supportedChains: () => config.chains.map((chain) => chain.id),
-          // @ts-expect-error – bridging app viem Transport to defi-sdk viem Transport
-          getViemTransport: ({ chainId }: { chainId: number }) => {
-            return getTransport(chainId)
-          },
-        },
+        type: 'fallback',
+        sources: getProviderFallbackSources(config),
       },
     },
-    prices: {
+    price: {
       source: {
         type: 'prioritized',
         sources: [
@@ -98,5 +132,10 @@ export const createBalmySDK = (config: UseConfigReturnType) => {
         ],
       },
     },
-  })
+  }
+}
+
+export const createBalmySDK = (config: UseConfigReturnType) => {
+  // @ts-expect-error – bridging app viem Transport to defi-sdk viem Transport in provider config
+  return buildSDK(getBalmySDKConfig(config))
 }
