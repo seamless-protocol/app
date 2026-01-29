@@ -13,7 +13,7 @@ vi.mock('@/lib/contracts/generated', async () => {
 })
 
 const publicClient = {
-  multicall: vi.fn(),
+  multicall: vi.fn().mockResolvedValue([{ status: 'success' }, { status: 'success' }]),
   readContract: vi.fn(),
 } as unknown as PublicClient
 
@@ -34,7 +34,7 @@ describe('planRedeem', () => {
     vi.clearAllMocks()
     // Default multicall: getLeverageTokenState + previewRedeem
     multicall.mockResolvedValueOnce([
-      { result: { collateralRatio: 3n * 10n ** 18n } },
+      { result: { collateralRatio: 3n * 10n ** 18n }, status: 'success' },
       {
         result: {
           collateral: 1_000n,
@@ -43,6 +43,7 @@ describe('planRedeem', () => {
           tokenFee: 0n,
           treasuryFee: 0n,
         },
+        status: 'success',
       },
     ])
     // Default readContract: convertToAssets

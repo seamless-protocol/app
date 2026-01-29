@@ -49,13 +49,14 @@ describe('planMint', () => {
     vi.clearAllMocks()
     // Default first multicall: getLeverageTokenState + router previewDeposit
     multicall.mockResolvedValueOnce([
-      { result: { collateralRatio: 3n * 10n ** 18n } },
+      { result: { collateralRatio: 3n * 10n ** 18n }, status: 'success' },
       {
         result: {
           collateral: 2_000n,
           debt: 1_000n,
           shares: 1_000n,
         },
+        status: 'success',
       },
     ])
   })
@@ -76,12 +77,14 @@ describe('planMint', () => {
           debt: 1_300n,
           shares: 1_600n,
         },
+        status: 'success',
       },
       {
         result: {
           debt: 1_100n,
           shares: 1_500n,
         },
+        status: 'success',
       },
     ])
 
@@ -130,12 +133,14 @@ describe('planMint', () => {
           debt: 800n,
           shares: 1_600n,
         },
+        status: 'success',
       },
       {
         result: {
           debt: 800n,
           shares: 1_600n,
         },
+        status: 'success',
       },
     ])
 
@@ -165,12 +170,14 @@ describe('planMint', () => {
           debt: 1_300n,
           shares: 1_600n,
         },
+        status: 'success',
       },
       {
         result: {
           debt: 1_000n,
           shares: 800n, // below minShares of 990n
         },
+        status: 'success',
       },
     ])
 
