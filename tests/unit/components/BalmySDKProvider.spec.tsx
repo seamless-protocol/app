@@ -67,8 +67,10 @@ describe('createBalmySDK', () => {
     // @ts-expect-error - priceSource is not typed on IPriceService
     const priceSources = balmySDK.priceService.priceSource.sources
     expect(priceSources[0].constructor.name).toEqual('CoingeckoPriceSource')
-    // @ts-expect-error - baseUrl is not typed on IPriceSource
-    expect(priceSources[0].baseUrl).toEqual(expectedBalmyConfig.price.source.sources[0].baseUrl)
+    expect(priceSources[0].baseUrl).toEqual(
+      // @ts-expect-error - baseUrl is not typed on IPriceSource
+      expectedBalmyConfig.price.source.sources[0].baseUrl ?? 'https://api.coingecko.com',
+    )
 
     expect(priceSources[1].constructor.name).toEqual('AlchemyPriceSource')
     // @ts-expect-error - apiKey is not typed on IPriceSource
