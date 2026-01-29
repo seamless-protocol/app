@@ -89,7 +89,7 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       approvalTarget: allowanceTarget,
       calls: [
         {
-          target: tx?.to ?? allowanceTarget,
+          target: (tx?.to as Address) ?? allowanceTarget,
           data: tx?.data as `0x${string}`,
           value: tx?.value ?? 0n,
         },
