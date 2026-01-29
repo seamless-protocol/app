@@ -80,15 +80,16 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
     const wantsNativeIn = isAddressEqual(request.sellToken as Address, ETH_SENTINEL)
     const sourceId = quote.source.id
     const sourceName = quote.source.name ?? quote.source.id
+    const allowanceTarget = getAddress(quote.source.allowanceTarget)
 
     return {
       out: quote.buyAmount.amount,
       minOut: quote.minBuyAmount.amount,
       maxIn: quote.maxSellAmount.amount,
-      approvalTarget: getAddress(quote.source.allowanceTarget),
+      approvalTarget: allowanceTarget,
       calls: [
         {
-          target: (tx?.to as Address) ?? getAddress(quote.source.allowanceTarget),
+          target: tx?.to ?? allowanceTarget,
           data: tx?.data as `0x${string}`,
           value: tx?.value ?? 0n,
         },
