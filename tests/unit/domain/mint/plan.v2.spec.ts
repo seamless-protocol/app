@@ -1,21 +1,12 @@
-import type { Address, Hex } from 'viem'
+import type { Address, Hex, PublicClient } from 'viem'
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
-import type { Config } from 'wagmi'
 import { planMint } from '@/domain/mint/planner/plan'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
-import {
-  readLeverageManagerV2GetLeverageTokenState,
-  readLeverageManagerV2PreviewDeposit,
-  readLeverageRouterV2PreviewDeposit,
-} from '@/lib/contracts/generated'
 
-vi.mock('@/lib/contracts/generated', () => ({
-  readLeverageManagerV2GetLeverageTokenState: vi.fn(),
-  readLeverageRouterV2PreviewDeposit: vi.fn(),
-  readLeverageManagerV2PreviewDeposit: vi.fn(),
-}))
+const publicClient = {
+  multicall: vi.fn(),
+} as unknown as PublicClient
 
-const wagmiConfig = {} as Config
 const leverageToken = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as Address
 const collateral = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' as Address
 const debt = '0xcccccccccccccccccccccccccccccccccccccccc' as Address
@@ -44,30 +35,23 @@ const leverageTokenConfig: LeverageTokenConfig = {
     decimals: 6,
   },
   swaps: {},
+  test: {
+    mintIntegrationTest: {
+      equityInCollateralAsset: 1n ** 18n,
+    },
+  },
 }
 
-const readState = readLeverageManagerV2GetLeverageTokenState as Mock
-const readRouterPreview = readLeverageRouterV2PreviewDeposit as Mock
-const readManagerPreview = readLeverageManagerV2PreviewDeposit as Mock
+const multicall = publicClient.multicall as Mock
 
 describe('planMint', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    readState.mockResolvedValue({ collateralRatio: 3n * 10n ** 18n })
-    readRouterPreview.mockResolvedValue({
-      collateral: 2_000n,
-      debt: 1_000n,
-      shares: 1_000n,
-      tokenFee: 0n,
-      treasuryFee: 0n,
-    })
-    readManagerPreview.mockResolvedValue({
-      collateral: 2_500n,
-      debt: 1_300n,
-      shares: 1_600n,
-      tokenFee: 0n,
-      treasuryFee: 0n,
-    })
+    // Default first multicall: getLeverageTokenState + router previewDeposit
+    multicall.mockResolvedValueOnce([
+      { collateralRatio: 3n * 10n ** 18n },
+      { collateral: 2_000n, debt: 1_000n, shares: 1_000n },
+    ])
   })
 
   it('builds a plan with leverage-adjusted slippage and approvals', async () => {
@@ -79,29 +63,24 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    readManagerPreview.mockResolvedValueOnce({
-      collateral: 2_500n,
-      debt: 1_300n,
-      shares: 1_600n,
-      tokenFee: 0n,
-      treasuryFee: 0n,
-    })
-    // managerMin response for minOut path
-    readManagerPreview.mockResolvedValueOnce({
-      collateral: 2_400n,
-      debt: 1_100n,
-      shares: 1_500n,
-      tokenFee: 0n,
-      treasuryFee: 0n,
-    })
+    // Second multicall: manager previewDeposit (with out) + manager previewDeposit (with minOut)
+    multicall.mockResolvedValueOnce([
+      {
+        debt: 1_300n,
+        shares: 1_600n,
+      },
+      {
+        debt: 1_100n,
+        shares: 1_500n,
+      },
+    ])
 
     const plan = await planMint({
-      wagmiConfig,
+      publicClient,
       leverageTokenConfig,
       equityInCollateralAsset: 500n,
       slippageBps: 100,
       quoteDebtToCollateral: quote as any,
-      blockNumber: 1n,
     })
 
     // flash loan and shares are slippage-adjusted from router preview
@@ -127,14 +106,6 @@ describe('planMint', () => {
   })
 
   it('throws when manager previewed debt is below flash loan amount', async () => {
-    readManagerPreview.mockResolvedValueOnce({
-      collateral: 2_500n,
-      debt: 800n,
-      shares: 1_600n,
-      tokenFee: 0n,
-      treasuryFee: 0n,
-    })
-
     const quote = vi.fn(async () => ({
       out: 1_200n,
       minOut: 1_100n,
@@ -142,34 +113,30 @@ describe('planMint', () => {
       calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
     }))
 
+    // Second multicall: manager previewDeposit returns debt below flash loan amount
+    multicall.mockResolvedValueOnce([
+      {
+        debt: 800n,
+        shares: 1_600n,
+      },
+      {
+        debt: 800n,
+        shares: 1_600n,
+      },
+    ])
+
     await expect(
       planMint({
-        wagmiConfig,
+        publicClient,
         leverageTokenConfig,
         equityInCollateralAsset: 500n,
         slippageBps: 100,
         quoteDebtToCollateral: quote as any,
-        blockNumber: 1n,
       }),
     ).rejects.toThrow(/previewed debt 800.*flash loan amount 990/i)
   })
 
   it('throws when minimum shares from manager are below slippage floor', async () => {
-    readManagerPreview.mockResolvedValueOnce({
-      collateral: 2_500n,
-      debt: 1_300n,
-      shares: 1_600n,
-      tokenFee: 0n,
-      treasuryFee: 0n,
-    })
-    readManagerPreview.mockResolvedValueOnce({
-      collateral: 2_400n,
-      debt: 1_000n,
-      shares: 800n, // below minShares of 990n
-      tokenFee: 0n,
-      treasuryFee: 0n,
-    })
-
     const quote = vi.fn(async () => ({
       out: 1_200n,
       minOut: 1_100n,
@@ -177,14 +144,25 @@ describe('planMint', () => {
       calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
     }))
 
+    // Second multicall: manager previewDeposit (minOut path) returns shares below minShares
+    multicall.mockResolvedValueOnce([
+      {
+        debt: 1_300n,
+        shares: 1_600n,
+      },
+      {
+        debt: 1_000n,
+        shares: 800n, // below minShares of 990n
+      },
+    ])
+
     await expect(
       planMint({
-        wagmiConfig,
+        publicClient,
         leverageTokenConfig,
         equityInCollateralAsset: 500n,
         slippageBps: 100,
         quoteDebtToCollateral: quote as any,
-        blockNumber: 1n,
       }),
     ).rejects.toThrow(/minimum shares.*less than min shares/i)
   })

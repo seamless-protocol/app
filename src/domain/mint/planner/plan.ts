@@ -1,15 +1,12 @@
-import { type Address, encodeFunctionData, erc20Abi, formatUnits } from 'viem'
-import type { Config } from 'wagmi'
+import { type Address, encodeFunctionData, erc20Abi, formatUnits, type PublicClient } from 'viem'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import type { Call } from '@/domain/shared/types'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { collateralRatioToLeverage } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
+import { leverageManagerV2Abi } from '@/lib/contracts/abis/leverageManagerV2'
+import { leverageRouterV2Abi } from '@/lib/contracts/abis/leverageRouterV2'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
-import {
-  readLeverageManagerV2GetLeverageTokenState,
-  readLeverageManagerV2PreviewDeposit,
-  readLeverageRouterV2PreviewDeposit,
-} from '@/lib/contracts/generated'
+import { getContractAddresses } from '@/lib/contracts/addresses'
 import { applySlippageFloor } from './math'
 
 export interface MintPlan {
@@ -18,13 +15,15 @@ export interface MintPlan {
   previewShares: bigint
   previewExcessDebt: bigint
   flashLoanAmount: bigint
+  flashLoanToCollateralQuoteAmount: bigint
   equityInCollateralAsset: bigint
   calls: Array<Call>
+  quoteSourceName: string | undefined
+  quoteSourceId: string | undefined
 }
 
 export interface PlanMintParams {
-  wagmiConfig: Config
-  blockNumber: bigint
+  publicClient: PublicClient
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
   slippageBps: number
@@ -32,8 +31,7 @@ export interface PlanMintParams {
 }
 
 export async function planMint({
-  wagmiConfig,
-  blockNumber,
+  publicClient,
   leverageTokenConfig,
   equityInCollateralAsset,
   slippageBps,
@@ -47,23 +45,30 @@ export async function planMint({
     throw new Error('slippageBps cannot be negative')
   }
 
+  console.debug(`planMint slippageBps: ${slippageBps}`)
+
   const chainId = leverageTokenConfig.chainId as SupportedChainId
 
   const token = leverageTokenConfig.address as Address
   const collateralAsset = leverageTokenConfig.collateralAsset.address as Address
   const debtAsset = leverageTokenConfig.debtAsset.address as Address
 
-  const { collateralRatio } = await readLeverageManagerV2GetLeverageTokenState(wagmiConfig, {
-    args: [token],
-    chainId,
-    blockNumber,
-  })
-
-  // Initial router preview to size required debt and collateral top-up.
-  const routerPreview = await readLeverageRouterV2PreviewDeposit(wagmiConfig, {
-    args: [token, equityInCollateralAsset],
-    chainId,
-    blockNumber,
+  const [{ collateralRatio }, routerPreview] = await publicClient.multicall({
+    allowFailure: false,
+    contracts: [
+      {
+        address: getContractAddresses(chainId).leverageManagerV2 as Address,
+        abi: leverageManagerV2Abi,
+        functionName: 'getLeverageTokenState',
+        args: [token],
+      },
+      {
+        address: getContractAddresses(chainId).leverageRouterV2 as Address,
+        abi: leverageRouterV2Abi,
+        functionName: 'previewDeposit',
+        args: [token, equityInCollateralAsset],
+      },
+    ],
   })
 
   // This price is adding the NAV diff from spot on top of the share slippage
@@ -88,16 +93,22 @@ export async function planMint({
     slippageBps: quoteSlippageBps,
   })
 
-  const managerPreview = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
-    args: [token, equityInCollateralAsset + debtToCollateralQuote.out],
-    chainId,
-    blockNumber,
-  })
-
-  const managerMin = await readLeverageManagerV2PreviewDeposit(wagmiConfig, {
-    args: [token, equityInCollateralAsset + debtToCollateralQuote.minOut],
-    chainId,
-    blockNumber,
+  const [managerPreview, managerMin] = await publicClient.multicall({
+    allowFailure: false,
+    contracts: [
+      {
+        address: getContractAddresses(chainId).leverageManagerV2 as Address,
+        abi: leverageManagerV2Abi,
+        functionName: 'previewDeposit',
+        args: [token, equityInCollateralAsset + debtToCollateralQuote.out],
+      },
+      {
+        address: getContractAddresses(chainId).leverageManagerV2 as Address,
+        abi: leverageManagerV2Abi,
+        functionName: 'previewDeposit',
+        args: [token, equityInCollateralAsset + debtToCollateralQuote.minOut],
+      },
+    ],
   })
 
   if (managerPreview.debt < flashLoanAmount) {
@@ -144,7 +155,10 @@ export async function planMint({
     previewShares: managerPreview.shares,
     previewExcessDebt,
     flashLoanAmount,
+    flashLoanToCollateralQuoteAmount: debtToCollateralQuote.out,
     equityInCollateralAsset,
     calls,
+    quoteSourceName: debtToCollateralQuote.quoteSourceName,
+    quoteSourceId: debtToCollateralQuote.quoteSourceId,
   }
 }

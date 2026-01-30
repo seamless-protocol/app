@@ -43,6 +43,7 @@ const basePlan: MintPlan = {
   previewExcessDebt: 0n,
   minExcessDebt: 0n,
   flashLoanAmount: 1000000000000000000n,
+  flashLoanToCollateralQuoteAmount: 1000000000000000000n,
   calls: [
     {
       target: makeAddr('swap'),
@@ -50,6 +51,8 @@ const basePlan: MintPlan = {
       data: '0xabcdef1234567890' as `0x${string}`,
     },
   ],
+  quoteSourceName: 'Mock Source',
+  quoteSourceId: 'mock-source-id',
 }
 
 describe('useMintWrite', () => {

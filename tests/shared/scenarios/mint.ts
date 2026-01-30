@@ -1,4 +1,6 @@
 import { type Address, erc20Abi, getAddress, type Hash, type PublicClient, parseUnits } from 'viem'
+import { useConfig } from 'wagmi'
+import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { planMint } from '@/domain/mint/planner/plan'
 import {
   createDebtToCollateralQuote,
@@ -76,14 +78,12 @@ export async function planMintTest({
   if (!leverageTokenConfig) {
     throw new Error(`Leverage token config not found for ${setup.token}`)
   }
-  const blockNumber = await ctx.publicClient.getBlockNumber()
   const plan = await planMint({
-    wagmiConfig: ctx.config,
+    publicClient: ctx.publicClient,
     leverageTokenConfig,
     equityInCollateralAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    blockNumber,
   })
 
   return {
@@ -153,16 +153,14 @@ async function runMintScenario({
   if (!leverageTokenConfig) {
     throw new Error(`Leverage token config not found for ${setup.token}`)
   }
-  const blockNumber = await publicClient.getBlockNumber()
 
   // Plan + simulate + write (no orchestrator)
   const plan = await planMint({
-    wagmiConfig: config,
+    publicClient,
     leverageTokenConfig,
     equityInCollateralAsset: setup.equityInInputAsset,
     slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
-    blockNumber,
   })
 
   const { simulateLeverageRouterV2Deposit, writeLeverageRouterV2Deposit } = await import(
@@ -174,7 +172,7 @@ async function runMintScenario({
       plan.equityInCollateralAsset,
       plan.flashLoanAmount,
       plan.minShares,
-      getAddressesForToken(tokenDefinition.key).executor as Address,
+      getAddressesForToken(tokenDefinition.key).multicallExecutor as Address,
       plan.calls,
     ],
     account: account.address,
@@ -213,8 +211,8 @@ async function runMintScenario({
 
 function resolveTokenAddresses(tokenDefinition: LeverageTokenDefinition) {
   const addresses = getAddressesForToken(tokenDefinition.key)
-  const executor = addresses.executor
-  if (!executor) {
+  const multicallExecutor = addresses.multicallExecutor
+  if (!multicallExecutor) {
     throw new Error('Multicall executor address missing; update contract map for V2 harness')
   }
 
@@ -267,7 +265,7 @@ async function prepareMintScenario({
   const quoteDebtToCollateral = buildQuoteAdapter({
     chainId: tokenDefinition.chainId,
     router,
-    executor: addresses.executor as Address,
+    multicallExecutor: addresses.multicallExecutor as Address,
     publicClient,
     swapConfig: effectiveSwapConfig,
   })
@@ -330,22 +328,24 @@ async function fundAccount({
 function buildQuoteAdapter({
   chainId,
   router,
-  executor,
+  multicallExecutor,
   publicClient,
   swapConfig,
 }: {
   chainId: number
   router: Address
-  executor: Address
+  multicallExecutor: Address
   publicClient: PublicClient
   swapConfig: DebtToCollateralSwapConfig
 }) {
+  const config = useConfig()
   const { quote } = createDebtToCollateralQuote({
     chainId,
     routerAddress: router,
     swap: swapConfig,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
-    fromAddress: executor,
+    fromAddress: multicallExecutor,
+    balmySDK: createBalmySDK(config),
   })
   return quote
 }

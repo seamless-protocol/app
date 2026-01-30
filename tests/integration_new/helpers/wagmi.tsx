@@ -1,6 +1,16 @@
 import type { AnvilTestClient } from '@morpho-org/test'
-import type { Config } from 'wagmi'
+import { createWrapper } from '@morpho-org/test-wagmi'
+import type { QueryClient } from '@tanstack/react-query'
+import {
+  type Queries,
+  type queries,
+  type RenderHookOptions,
+  renderHook as rtl_renderHook,
+} from '@testing-library/react'
+import type { Chain } from 'viem'
+import { type Config, type Transport, WagmiProvider } from 'wagmi'
 import { connect } from 'wagmi/actions'
+import { BalmySDKProvider } from '@/components/BalmySDKProvider'
 
 type TransportWithUrl = {
   url?: string
@@ -58,5 +68,42 @@ export async function connectMockConnectorToAnvil({
   await connect(wagmiConfig, {
     connector,
     chainId: chain.id,
+  })
+}
+
+// Copied from @morpho-org/test-wagmi, but modified to include BalmySDKProvider on the wrapper
+export function renderHook<
+  Result,
+  Props,
+  Q extends Queries = typeof queries,
+  chains extends readonly [Chain, ...Array<Chain>] = readonly [Chain, ...Array<Chain>],
+  transports extends Record<chains[number]['id'], Transport> = Record<
+    chains[number]['id'],
+    Transport
+  >,
+>(
+  config: Config<chains, transports>,
+  render: (props: Props) => Result,
+  options?: RenderHookOptions<Props, Q> & { queryClient?: QueryClient },
+) {
+  options?.queryClient?.clear()
+
+  // Wrapper that includes WagmiProvider and QueryClient using the test wagmi config
+  const wagmiWrapper = createWrapper(
+    WagmiProvider,
+    {
+      config,
+      reconnectOnMount: false,
+    },
+    options?.queryClient,
+  )
+
+  // This wrapper adds Balmy on top of the default
+  const wrapper = ({ children }: { children: React.ReactNode }) =>
+    wagmiWrapper({ children: <BalmySDKProvider>{children}</BalmySDKProvider> })
+
+  return rtl_renderHook(render, {
+    wrapper,
+    ...options,
   })
 }

@@ -10,6 +10,7 @@ import './index.css'
 
 const logger = createLogger('main')
 
+import { BalmySDKProvider } from './components/BalmySDKProvider'
 import { ErrorBoundary } from './components/error-boundary'
 import { LiFiSync } from './components/lifi-sync'
 import { RainbowThemeWrapper } from './components/rainbow-theme-wrapper'
@@ -114,16 +115,18 @@ try {
         <ThemeProvider defaultTheme="dark">
           <WagmiProvider config={config}>
             <QueryClientProvider client={queryClient}>
-              <LiFiWrapper config={config}>
-                <RainbowThemeWrapper>
-                  <RouterProvider router={router} />
-                  {ReactQueryDevtoolsLazy ? (
-                    <Suspense fallback={null}>
-                      <ReactQueryDevtoolsLazy initialIsOpen={false} />
-                    </Suspense>
-                  ) : null}
-                </RainbowThemeWrapper>
-              </LiFiWrapper>
+              <BalmySDKProvider>
+                <LiFiWrapper config={config}>
+                  <RainbowThemeWrapper>
+                    <RouterProvider router={router} />
+                    {ReactQueryDevtoolsLazy ? (
+                      <Suspense fallback={null}>
+                        <ReactQueryDevtoolsLazy initialIsOpen={false} />
+                      </Suspense>
+                    ) : null}
+                  </RainbowThemeWrapper>
+                </LiFiWrapper>
+              </BalmySDKProvider>
             </QueryClientProvider>
           </WagmiProvider>
         </ThemeProvider>

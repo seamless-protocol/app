@@ -1,5 +1,5 @@
 import type { Address } from 'viem'
-import { getAddress, isAddressEqual } from 'viem'
+import { getAddress, isAddressEqual, parseEther, parseUnits } from 'viem'
 import {
   BaseLogo,
   EthereumLogo,
@@ -132,6 +132,12 @@ export interface LeverageTokenConfig {
       presets: Array<string>
     }
   }
+
+  test: {
+    mintIntegrationTest: {
+      equityInCollateralAsset: bigint
+    }
+  }
 }
 
 /**
@@ -188,12 +194,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {
@@ -238,6 +244,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: parseEther('0.01'),
+      },
+    },
   },
   [LeverageTokenKey.RLP_USDC_6_75X_ETHEREUM_MAINNET]: {
     address: '0x6426811fF283Fa7c78F0BC5D71858c2f79c0Fc3d' as Address,
@@ -274,12 +285,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {
@@ -334,6 +345,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           },
         },
       ],
+    },
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: parseEther('50'),
+      },
     },
   },
   [LeverageTokenKey.PT_RLP_4DEC2025_USDC_2X_ETHEREUM_MAINNET]: {
@@ -430,6 +446,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: parseUnits('50', 6),
+      },
+    },
   },
   [LeverageTokenKey.WEETH_WETH_17X_BASE_MAINNET]: {
     address: '0xA2fceEAe99d2cAeEe978DA27bE2d95b0381dBB8c' as Address,
@@ -465,12 +486,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {
@@ -525,6 +546,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: parseEther('0.01'),
+      },
+    },
   },
   [LeverageTokenKey.WSTETH_ETH_2X_MAINNET]: {
     isTestOnly: true,
@@ -560,12 +586,15 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+      },
+    },
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: parseEther('0.01'),
       },
     },
   },
@@ -680,6 +709,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: parseEther('50'),
+      },
+    },
   },
   [LeverageTokenKey.SUSDS_USDT_25X_ETHEREUM_MAINNET]: {
     featuredRank: 2,
@@ -721,12 +755,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     swaps: {
       debtToCollateral: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'lifi',
-        allowBridges: 'none',
+        type: 'balmy',
+        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {
@@ -786,6 +820,11 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       mint: {
         default: '0.7',
         presets: ['0.5', '1.0', '1.5'],
+      },
+    },
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: parseEther('50'),
       },
     },
   },

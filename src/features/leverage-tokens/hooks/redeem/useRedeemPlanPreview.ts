@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import type { Address } from 'viem'
-import type { Config } from 'wagmi'
+import type { Address, PublicClient } from 'viem'
 import { usePublicClient } from 'wagmi'
 import { planRedeem } from '@/domain/redeem/planner/plan'
 import type { QuoteFn } from '@/domain/redeem/planner/types'
@@ -9,7 +8,6 @@ import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageToken
 import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 
 interface UseRedeemPlanPreviewParams {
-  config: Config
   token: Address
   sharesToRedeem: bigint | undefined
   slippageBps: number
@@ -20,7 +18,6 @@ interface UseRedeemPlanPreviewParams {
 }
 
 export function useRedeemPlanPreview({
-  config,
   token,
   sharesToRedeem,
   slippageBps,
@@ -29,8 +26,8 @@ export function useRedeemPlanPreview({
   enabled = true,
   debounceMs = 500,
 }: UseRedeemPlanPreviewParams) {
+  const publicClient = usePublicClient({ chainId }) as PublicClient
   const debounced = useDebouncedBigint(sharesToRedeem, debounceMs)
-  const publicClient = usePublicClient({ config, chainId })
 
   const enabledQuery =
     enabled && typeof debounced === 'bigint' && debounced > 0n && typeof quote === 'function'
@@ -57,19 +54,12 @@ export function useRedeemPlanPreview({
         throw new Error('Leverage token config not found')
       }
 
-      // Block number is fetched once per query for consistency across preview calls,
-      // but intentionally NOT added to query key to avoid per-block cache invalidation.
-      // React Query's staleTime/refetchInterval control when plans are recomputed.
-      if (!publicClient) throw new Error('Public client not available')
-      const blockNumber = await publicClient.getBlockNumber()
-
       return planRedeem({
-        wagmiConfig: config,
+        publicClient,
         leverageTokenConfig,
         sharesToRedeem: debounced as bigint,
         slippageBps,
         quoteCollateralToDebt: quote as QuoteFn,
-        blockNumber,
       })
     },
   })
@@ -79,6 +69,8 @@ export function useRedeemPlanPreview({
     isLoading: query.isPending || query.isFetching,
     error: query.error,
     refetch: query.refetch,
+    quoteSourceName: query.data?.quoteSourceName,
+    quoteSourceId: query.data?.quoteSourceId,
   }
 }
 

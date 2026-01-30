@@ -73,6 +73,11 @@ const mockToken = {
   chainName: mainnet.name,
   chainLogo: EthereumLogo,
   rank: 1,
+  test: {
+    mintIntegrationTest: {
+      equityInCollateralAsset: 1n ** 18n,
+    },
+  },
 }
 
 const mockTokens = [

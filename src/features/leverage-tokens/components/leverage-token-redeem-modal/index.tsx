@@ -1,12 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { formatUnits } from 'viem'
-import { useAccount, useConfig, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { parseUsdPrice, toScaledUsd, usdToFixedString } from '@/domain/shared/prices'
 import { useLeverageTokenUsdPrice } from '@/features/leverage-tokens/hooks/useLeverageTokenUsdPrice'
 import { parseErc20ReceivedFromReceipt } from '@/features/leverage-tokens/utils/receipt'
 import { invalidatePortfolioQueries } from '@/features/portfolio/utils/invalidation'
-import { useGA, useTransactionGA } from '@/lib/config/ga4.config'
+import { useGA, useQuotesGA, useTransactionGA } from '@/lib/config/ga4.config'
 import { captureTxError } from '@/lib/observability/sentry'
 import { MultiStepModal, type StepConfig } from '../../../../components/multi-step-modal'
 import { getContractAddresses, type SupportedChainId } from '../../../../lib/contracts/addresses'
@@ -65,6 +65,7 @@ export function LeverageTokenRedeemModal({
   userAddress: propUserAddress,
 }: LeverageTokenRedeemModalProps) {
   const { trackLeverageTokenRedeemed, trackTransactionError } = useTransactionGA()
+  const { trackBestQuoteSource } = useQuotesGA()
   const analytics = useGA()
   const queryClient = useQueryClient()
 
@@ -78,7 +79,6 @@ export function LeverageTokenRedeemModal({
 
   // Get user account information
   const { address: hookUserAddress, isConnected, chainId: connectedChainId } = useAccount()
-  const wagmiConfig = useConfig()
   const userAddress = (propUserAddress || hookUserAddress) as `0x${string}` | undefined
 
   // Get leverage router address for allowance check
@@ -228,7 +228,6 @@ export function LeverageTokenRedeemModal({
   })
 
   const planPreview = useRedeemPlanPreview({
-    config: wagmiConfig,
     token: leverageTokenAddress,
     sharesToRedeem: form.amountRaw,
     slippageBps,
@@ -658,6 +657,50 @@ export function LeverageTokenRedeemModal({
     }
   }, [exec.error, currentStep, toError])
 
+  useEffect(() => {
+    if (
+      planPreview.plan?.collateralToSwap &&
+      planPreview.plan?.collateralToDebtQuoteAmount &&
+      planPreview.plan?.quoteSourceName &&
+      debtUsdPrice &&
+      collateralUsdPrice
+    ) {
+      const amountInUSD = toScaledUsd(
+        planPreview.plan?.collateralToSwap,
+        leverageTokenConfig.collateralAsset.decimals,
+        parseUsdPrice(collateralUsdPrice),
+      )
+
+      const amountOutUSD = toScaledUsd(
+        planPreview.plan?.collateralToDebtQuoteAmount,
+        leverageTokenConfig.debtAsset.decimals,
+        parseUsdPrice(debtUsdPrice),
+      )
+
+      trackBestQuoteSource({
+        event: 'best_quote_source',
+        tokenIn: leverageTokenConfig.collateralAsset.address,
+        tokenOut: leverageTokenConfig.debtAsset.address,
+        quoteSource: planPreview.plan.quoteSourceName,
+        amountIn: planPreview.plan.collateralToSwap,
+        amountInUSD: Number(amountInUSD),
+        amountOut: planPreview.plan.collateralToDebtQuoteAmount,
+        amountOutUSD: Number(amountOutUSD),
+      })
+    }
+  }, [
+    collateralUsdPrice,
+    debtUsdPrice,
+    leverageTokenConfig.collateralAsset.address,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.address,
+    leverageTokenConfig.debtAsset.decimals,
+    planPreview.plan?.collateralToDebtQuoteAmount,
+    planPreview.plan?.collateralToSwap,
+    planPreview.plan?.quoteSourceName,
+    trackBestQuoteSource,
+  ])
+
   // Drive success/error once receipt resolves
   useEffect(() => {
     if (!transactionHash) return
@@ -740,6 +783,8 @@ export function LeverageTokenRedeemModal({
     onClose()
   }
 
+  const quoteSourceName = planPreview.plan?.quoteSourceName
+
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
@@ -782,6 +827,7 @@ export function LeverageTokenRedeemModal({
             isRedeemTokenFeeLoading={isFeesLoading}
             isBelowMinimum={isBelowMinimum()}
             debtAssetSymbol={leverageTokenConfig.debtAsset.symbol}
+            quoteSourceName={quoteSourceName}
           />
         )
 

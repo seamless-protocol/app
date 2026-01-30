@@ -65,6 +65,11 @@ const mockTokens = [
     tvl: 12500000,
     supplyCap: 1000000,
     currentSupply: 750000,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 18n,
+      },
+    },
   },
   {
     address: '0xa0b86a33e6441b8c4c8c8c8c8c8c8c8c8c8c8c8c' as Address,
@@ -93,6 +98,11 @@ const mockTokens = [
     chainId: mainnet.id,
     chainName: mainnet.name,
     chainLogo: USDCLogo,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 6n,
+      },
+    },
   },
   {
     address: '0xCd5fE23C85820F7B08D4D8A6c35929B5d900B527' as Address,
@@ -120,6 +130,11 @@ const mockTokens = [
     chainId: mainnet.id,
     chainName: mainnet.name,
     chainLogo: weETHLogo,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 18n,
+      },
+    },
   },
   {
     address: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619' as Address,
@@ -147,6 +162,11 @@ const mockTokens = [
     chainId: mainnet.id,
     chainName: mainnet.name,
     chainLogo: EthereumLogo,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 18n,
+      },
+    },
   },
   {
     address: '0x4444444444444444444444444444444444444444' as Address,
@@ -174,6 +194,11 @@ const mockTokens = [
     chainId: mainnet.id,
     chainName: mainnet.name,
     chainLogo: USDCLogo,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 8n,
+      },
+    },
   },
   {
     address: '0x5555555555555555555555555555555555555555' as Address,
@@ -201,6 +226,11 @@ const mockTokens = [
     chainId: mainnet.id,
     chainName: mainnet.name,
     chainLogo: EthereumLogo,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 18n,
+      },
+    },
   },
   {
     address: '0x6666666666666666666666666666666666666666' as Address,
@@ -228,6 +258,11 @@ const mockTokens = [
     chainId: mainnet.id,
     chainName: mainnet.name,
     chainLogo: USDCLogo,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 18n,
+      },
+    },
   },
   {
     address: '0x7777777777777777777777777777777777777777' as Address,
@@ -255,6 +290,11 @@ const mockTokens = [
     chainId: mainnet.id,
     chainName: mainnet.name,
     chainLogo: weETHLogo,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 18n,
+      },
+    },
   },
   {
     address: '0x2222222222222222222222222222222222222222' as Address,
@@ -282,6 +322,11 @@ const mockTokens = [
     chainId: mainnet.id,
     chainName: mainnet.name,
     chainLogo: EthereumLogo,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 18n,
+      },
+    },
   },
   {
     address: '0x1111111111111111111111111111111111111111' as Address,
@@ -309,6 +354,11 @@ const mockTokens = [
     chainId: mainnet.id,
     chainName: mainnet.name,
     chainLogo: USDCLogo,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 18n,
+      },
+    },
   },
   {
     address: '0x3333333333333333333333333333333333333333' as Address,
@@ -336,6 +386,11 @@ const mockTokens = [
     chainId: mainnet.id,
     chainName: mainnet.name,
     chainLogo: weETHLogo,
+    test: {
+      mintIntegrationTest: {
+        equityInCollateralAsset: 1n ** 18n,
+      },
+    },
   },
 ]
 

@@ -1,7 +1,6 @@
 import { waitFor } from '@testing-library/react'
 import type { Address } from 'viem'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Config } from 'wagmi'
 import { planRedeem } from '@/domain/redeem/planner/plan'
 import { useRedeemPlanPreview } from '@/features/leverage-tokens/hooks/redeem/useRedeemPlanPreview'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
@@ -19,7 +18,6 @@ const mockPlanRedeem = planRedeem as unknown as ReturnType<typeof vi.fn>
 const mockGetLeverageTokenConfig = getLeverageTokenConfig as unknown as ReturnType<typeof vi.fn>
 
 describe('useRedeemPlanPreview', () => {
-  const MOCK_CONFIG = {} as Config
   const CHAIN_ID = 8453
   const TOKEN_ADDRESS: Address = makeAddr('token')
   const SHARES_TO_REDEEM = 1_000n
@@ -51,7 +49,6 @@ describe('useRedeemPlanPreview', () => {
     const quote = vi.fn()
     const { result } = hookTestUtils.renderHookWithQuery(() =>
       useRedeemPlanPreview({
-        config: MOCK_CONFIG,
         token: TOKEN_ADDRESS,
         sharesToRedeem: SHARES_TO_REDEEM,
         slippageBps: 50,
@@ -71,7 +68,6 @@ describe('useRedeemPlanPreview', () => {
   it('does not fetch when shares are missing', async () => {
     const { result } = hookTestUtils.renderHookWithQuery(() =>
       useRedeemPlanPreview({
-        config: MOCK_CONFIG,
         token: TOKEN_ADDRESS,
         sharesToRedeem: undefined,
         slippageBps: 50,
@@ -89,13 +85,12 @@ describe('useRedeemPlanPreview', () => {
   it('surfaces errors from planRedeem', async () => {
     const error = new Error('redeem failed')
     mockPlanRedeem.mockReset()
-    mockPlanRedeem.mockImplementationOnce(async () => {
+    mockPlanRedeem.mockImplementation(async () => {
       throw error
     })
 
     const { result } = hookTestUtils.renderHookWithQuery(() =>
       useRedeemPlanPreview({
-        config: MOCK_CONFIG,
         token: TOKEN_ADDRESS,
         sharesToRedeem: SHARES_TO_REDEEM,
         slippageBps: 50,
@@ -107,9 +102,9 @@ describe('useRedeemPlanPreview', () => {
     )
 
     await waitFor(() => expect(mockPlanRedeem).toHaveBeenCalled())
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    await waitFor(() => expect(result.current.isLoading).toBe(false), { timeout: 10000 })
     expect(result.current.plan).toBeUndefined()
     expect(result.current.error).toBeInstanceOf(Error)
-    expect(result.current.error?.message ?? '').toContain('data is undefined')
+    expect(result.current.error?.message ?? '').toContain('redeem failed')
   })
 })

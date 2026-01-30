@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { Address, PublicClient } from 'viem'
 import { usePublicClient } from 'wagmi'
+import { useBalmySDK } from '@/components/BalmySDKProvider'
 import {
   createDebtToCollateralQuote,
   type DebtToCollateralSwapConfig,
@@ -36,6 +37,7 @@ export function useDebtToCollateralQuote({
   error: Error | undefined
 } {
   const publicClient = usePublicClient({ chainId })
+  const { balmySDK } = useBalmySDK()
 
   return useMemo(() => {
     if (!requiresQuote) {
@@ -60,6 +62,7 @@ export function useDebtToCollateralQuote({
         swap,
         getPublicClient,
         ...(fromAddress ? { fromAddress } : {}),
+        balmySDK,
       })
       return { status: 'ready', quote, error: undefined }
     } catch (err) {
@@ -87,5 +90,5 @@ export function useDebtToCollateralQuote({
       }
       return { status: 'error', quote: undefined, error }
     }
-  }, [chainId, fromAddress, publicClient, requiresQuote, routerAddress, swap])
+  }, [balmySDK, chainId, fromAddress, publicClient, requiresQuote, routerAddress, swap])
 }

@@ -1,6 +1,7 @@
 import { type Address, erc20Abi, parseUnits } from 'viem'
 import { mainnet } from 'viem/chains'
 import { describe, expect, it } from 'vitest'
+import { createBalmySDK } from '@/components/BalmySDKProvider'
 import { orchestrateRedeem, planRedeem } from '@/domain/redeem'
 import { createCollateralToDebtQuote } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import { getLeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
@@ -46,6 +47,7 @@ type RedeemScenario = {
   toleranceBps: number
   richHolderAddress: Address
   chainId: number
+  multicallExecutor: Address
 }
 
 async function runRedeemTest({
@@ -116,6 +118,7 @@ async function prepareRedeemScenario(
     toleranceBps: params.toleranceBps,
     richHolderAddress: params.richHolderAddress,
     chainId: mainnet.id,
+    multicallExecutor: addresses.multicallExecutor as Address,
   }
 }
 
@@ -135,6 +138,7 @@ async function executeMintPath(ctx: WithForkCtx, scenario: RedeemScenario): Prom
       token: scenario.token,
       manager: scenario.manager,
       router: scenario.router,
+      multicallExecutor: scenario.multicallExecutor,
     },
   })
 
@@ -183,17 +187,15 @@ async function performRedeem(
     routerAddress: router,
     swap: collateralToDebtConfig,
     getPublicClient: (cid: number) => (cid === chainId ? publicClient : undefined),
+    balmySDK: createBalmySDK(config),
   })
 
-  const blockNumber = await publicClient.getBlockNumber()
-
   const plan = await planRedeem({
-    wagmiConfig: config,
+    publicClient,
     leverageTokenConfig: tokenConfig,
     sharesToRedeem,
     slippageBps,
     quoteCollateralToDebt,
-    blockNumber,
   })
 
   const collateralBalanceBefore = await publicClient.readContract({
@@ -289,7 +291,7 @@ function assertRedeemExecution(result: RedeemExecutionResult): void {
 
   expect(sharesAfter).toBe(sharesBefore - sharesToRedeem)
 
-  // Add extra tolerance for LiFi routing variability
+  // Add extra tolerance for routing variability
   const effectiveToleranceBps = BigInt(toleranceBps) + 100n
   const withinTolerance = (actual: bigint, expected: bigint): boolean => {
     if (expected === 0n) return actual === 0n
