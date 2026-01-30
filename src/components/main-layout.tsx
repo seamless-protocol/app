@@ -11,11 +11,12 @@ import {
   Vote,
 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo } from 'react'
+import ReactGA from 'react-ga4'
 import { useAccount } from 'wagmi'
 import { usePortfolioPrefetch } from '@/features/portfolio/hooks/usePrefetchPortfolio'
 import { useIdlePrefetch } from '@/hooks/useIdlePrefetch'
 import { features } from '@/lib/config/features'
-import { useGA } from '@/lib/config/ga4.config'
+import { trackDeFiEvents } from '@/lib/config/ga4.config'
 import { useDeFiLlamaProtocolTVL } from '@/lib/defillama/useProtocolTVL'
 import { formatCurrency } from '@/lib/utils/formatting'
 import { ConnectButtonTest } from './ConnectButtonTest'
@@ -129,7 +130,6 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
-  const analytics = useGA()
   useQueryClient() // initialize to ensure QueryClientProvider exists
   const { address, isConnected } = useAccount()
   const {
@@ -138,14 +138,25 @@ export function MainLayout({ children }: MainLayoutProps) {
     isError: isProtocolTvlError,
   } = useDeFiLlamaProtocolTVL()
 
+  useEffect(() => {
+    ReactGA.initialize(import.meta.env['VITE_GA4_MEASUREMENT_ID'], {
+      gaOptions: {
+        debug_mode: import.meta.env['MODE'] === 'development',
+      },
+      gtagOptions: {
+        debug_mode: import.meta.env['MODE'] === 'development',
+      },
+    })
+  }, [])
+
   const tvlUsd = defillamaData?.tvl ?? 0
 
   // Track navigation between pages
   useEffect(() => {
     const currentPath = location.pathname
     const fromPage = document.referrer ? new URL(document.referrer).pathname : 'direct'
-    analytics.navigation(fromPage, currentPath)
-  }, [location.pathname, analytics])
+    trackDeFiEvents.navigation(fromPage, currentPath)
+  }, [location.pathname])
 
   // Warm portfolio cache globally on wallet connect (30D default)
   usePortfolioPrefetch({

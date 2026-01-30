@@ -1,10 +1,11 @@
 /**
- * Google Analytics 4 (GA4) - Complete integration
- * Includes initialization, utilities, and React hooks
+ * Google Analytics 4 (GA4) - Complete integration via react-ga4
+ * Includes utilities and React hooks. Initialization is done in MainLayout.
  */
 
 import { useLocation } from '@tanstack/react-router'
 import { useEffect, useMemo } from 'react'
+import ReactGA from 'react-ga4'
 import type { Address } from 'viem'
 
 export interface TrackBestQuoteSourceParams {
@@ -18,20 +19,14 @@ export interface TrackBestQuoteSourceParams {
   amountOutUSD: number
 }
 
-// Extend the global Window interface to include gtag
 declare global {
   interface Window {
-    gtag: (
-      command: 'config' | 'event' | 'js' | 'set',
-      targetId: string,
-      config?: Record<string, unknown>,
-    ) => void
-    dataLayer: Array<unknown>
+    gtag?: (...args: Array<unknown>) => void
   }
 }
 
 /**
- * Check if GA4 is available in the current environment
+ * Check if GA4 is available (react-ga4 sets window.gtag after initialize)
  */
 export const isGA4Available = (): boolean => {
   return typeof window !== 'undefined' && typeof window.gtag === 'function'
@@ -50,9 +45,10 @@ export const trackPageView = (pageTitle: string, pagePath?: string): void => {
     return
   }
 
-  window.gtag('config', measurementId, {
-    page_title: pageTitle,
-    page_location: pagePath || window.location.href,
+  ReactGA.send({
+    hitType: 'pageview',
+    page: pagePath ?? window.location.pathname,
+    title: pageTitle,
   })
 }
 
@@ -64,13 +60,13 @@ export const trackEvent = (eventName: string, parameters?: Record<string, unknow
     return
   }
 
-  window.gtag('event', eventName, {
-    event_category: parameters?.['category'] || 'engagement',
+  ReactGA.gtag('event', eventName, {
+    event_category: parameters?.['category'] ?? 'engagement',
     ...parameters,
   })
 }
 
-export const trackBestQuoteSource = ({
+export const trackQuoteSource = ({
   event,
   tokenIn,
   tokenOut,
@@ -80,10 +76,11 @@ export const trackBestQuoteSource = ({
   amountOut,
   amountOutUSD,
 }: TrackBestQuoteSourceParams): void => {
+  // Addresses are prefixed due to GA automatically converting hex strings to numbers
   trackEvent(event, {
     category: 'quote',
-    token_in: tokenIn,
-    token_out: tokenOut,
+    token_in: `addr_${tokenIn}`,
+    token_out: `addr_${tokenOut}`,
     quote_source: quoteSource,
     amount_in: amountIn,
     amount_in_usd: amountInUSD,
@@ -192,7 +189,7 @@ export const trackDeFiEvents = {
    */
   navigation: (fromPage: string, toPage: string): void => {
     trackEvent('navigation', {
-      category: 'user_engagement',
+      category: 'engagement',
       from_page: fromPage,
       to_page: toPage,
     })
@@ -226,46 +223,6 @@ export const trackDeFiEvents = {
   },
 }
 
-export function initGA4() {
-  const measurementId = import.meta.env['VITE_GA4_MEASUREMENT_ID']
-
-  if (!measurementId) {
-    console.log('[GA4] No Measurement ID provided, skipping initialization')
-    return
-  }
-
-  try {
-    // Load the GA4 script dynamically
-    const script = document.createElement('script')
-    script.async = true
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`
-    document.head.appendChild(script)
-
-    // Initialize the data layer and gtag function
-    window.dataLayer = window.dataLayer || []
-
-    function gtag(...args: Array<unknown>) {
-      window.dataLayer.push(args)
-    }
-
-    // Make gtag available globally
-    window.gtag = gtag
-
-    // Initialize GA4
-    gtag('js', new Date())
-    gtag('config', measurementId, {
-      page_title: document.title,
-      page_location: window.location.href,
-      // Add environment context for better analytics
-      environment: import.meta.env.MODE,
-    })
-
-    console.log('[GA4] Initialized successfully with Measurement ID:', measurementId)
-  } catch (error) {
-    console.error('[GA4] Failed to initialize:', error)
-  }
-}
-
 /**
  * React hook for Google Analytics 4 (GA4) tracking
  * Provides easy access to GA4 tracking functions within React components
@@ -286,21 +243,16 @@ export const useGA = () => {
   // Memoized tracking functions to prevent unnecessary re-renders
   const analytics = useMemo(
     () => ({
-      // Basic event tracking
       trackEvent,
 
-      // Page view tracking
       trackPageView: (title: string, path?: string) => {
         trackPageView(title, path)
       },
 
-      // Quote tracking
-      trackBestQuoteSource: trackBestQuoteSource,
+      trackQuoteSource: trackQuoteSource,
 
-      // DeFi-specific event tracking (direct access to trackDeFiEvents)
       ...trackDeFiEvents,
 
-      // Utility functions
       isAvailable: isGA4Available,
     }),
     [],
@@ -345,9 +297,9 @@ export const useTransactionGA = () => {
 }
 
 export const useQuotesGA = () => {
-  const { trackBestQuoteSource } = useGA()
+  const { trackQuoteSource } = useGA()
 
   return {
-    trackBestQuoteSource: trackBestQuoteSource,
+    trackQuoteSource: trackQuoteSource,
   }
 }
