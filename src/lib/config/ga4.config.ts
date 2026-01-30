@@ -70,7 +70,7 @@ export const trackEvent = (eventName: string, parameters?: Record<string, unknow
   })
 }
 
-export const trackBestQuoteSource = ({
+export const trackQuoteSource = ({
   event,
   tokenIn,
   tokenOut,
@@ -80,6 +80,17 @@ export const trackBestQuoteSource = ({
   amountOut,
   amountOutUSD,
 }: TrackBestQuoteSourceParams): void => {
+  console.log(
+    '[GA4] trackQuoteSource',
+    event,
+    tokenIn,
+    tokenOut,
+    quoteSource,
+    amountIn,
+    amountInUSD,
+    amountOut,
+    amountOutUSD,
+  )
   trackEvent(event, {
     category: 'quote',
     token_in: tokenIn,
@@ -295,7 +306,7 @@ export const useGA = () => {
       },
 
       // Quote tracking
-      trackBestQuoteSource: trackBestQuoteSource,
+      trackQuoteSource: trackQuoteSource,
 
       // DeFi-specific event tracking (direct access to trackDeFiEvents)
       ...trackDeFiEvents,
@@ -345,9 +356,9 @@ export const useTransactionGA = () => {
 }
 
 export const useQuotesGA = () => {
-  const { trackBestQuoteSource } = useGA()
+  const { trackQuoteSource } = useGA()
 
   return {
-    trackBestQuoteSource: trackBestQuoteSource,
+    trackQuoteSource: trackQuoteSource,
   }
 }

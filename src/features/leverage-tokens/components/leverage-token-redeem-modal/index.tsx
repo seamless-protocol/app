@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { formatUnits } from 'viem'
 import { useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { parseUsdPrice, toScaledUsd, usdToFixedString } from '@/domain/shared/prices'
@@ -65,7 +65,7 @@ export function LeverageTokenRedeemModal({
   userAddress: propUserAddress,
 }: LeverageTokenRedeemModalProps) {
   const { trackLeverageTokenRedeemed, trackTransactionError } = useTransactionGA()
-  const { trackBestQuoteSource } = useQuotesGA()
+  const { trackQuoteSource } = useQuotesGA()
   const analytics = useGA()
   const queryClient = useQueryClient()
 
@@ -677,7 +677,7 @@ export function LeverageTokenRedeemModal({
         parseUsdPrice(debtUsdPrice),
       )
 
-      trackBestQuoteSource({
+      trackQuoteSource({
         event: 'best_quote_source',
         tokenIn: leverageTokenConfig.collateralAsset.address,
         tokenOut: leverageTokenConfig.debtAsset.address,
@@ -698,8 +698,11 @@ export function LeverageTokenRedeemModal({
     planPreview.plan?.collateralToDebtQuoteAmount,
     planPreview.plan?.collateralToSwap,
     planPreview.plan?.quoteSourceName,
-    trackBestQuoteSource,
+    trackQuoteSource,
   ])
+
+  // Guard: run success path (invalidation, tracking, toSuccess) only once per transaction hash
+  const processedSuccessTxRef = useRef<Set<string>>(new Set())
 
   // Drive success/error once receipt resolves
   useEffect(() => {
@@ -710,11 +713,36 @@ export function LeverageTokenRedeemModal({
       return
     }
     if (redeemSuccess) {
+      if (processedSuccessTxRef.current.has(transactionHash)) return
+      processedSuccessTxRef.current.add(transactionHash)
+
       void (async () => {
         const tokenSymbol = leverageTokenConfig.symbol
         const amount = form.amount
         const usdValue = parseFloat(form.amount || '0') * (collateralUsdPrice || 0)
         trackLeverageTokenRedeemed(tokenSymbol, amount, usdValue)
+
+        const swapAmountInUSD = toScaledUsd(
+          planPreview.plan?.collateralToSwap || 0n,
+          leverageTokenConfig.collateralAsset.decimals,
+          parseUsdPrice(collateralUsdPrice || '0'),
+        )
+        const swapAmountOutUSD = toScaledUsd(
+          planPreview.plan?.collateralToDebtQuoteAmount || 0n,
+          leverageTokenConfig.debtAsset.decimals,
+          parseUsdPrice(debtUsdPrice || '0'),
+        )
+        trackQuoteSource({
+          event: 'quote_executed',
+          tokenIn: leverageTokenConfig.collateralAsset.address,
+          tokenOut: leverageTokenConfig.debtAsset.address,
+          quoteSource: planPreview.plan?.quoteSourceName || '',
+          amountIn: planPreview.plan?.collateralToSwap || 0n,
+          amountInUSD: Number(swapAmountInUSD),
+          amountOut: planPreview.plan?.collateralToDebtQuoteAmount || 0n,
+          amountOutUSD: Number(swapAmountOutUSD),
+        })
+
         analytics.funnelStep('redeem_leverage_token', 'transaction_completed', 3)
 
         try {
@@ -747,24 +775,33 @@ export function LeverageTokenRedeemModal({
       })()
     }
   }, [
-    transactionHash,
-    redeemSuccess,
+    analytics,
+    collateralUsdPrice,
+    debtUsdPrice,
+    form.amount,
+    leverageTokenAddress,
+    leverageTokenConfig.chainId,
+    leverageTokenConfig.collateralAsset.address,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.address,
+    leverageTokenConfig.debtAsset.decimals,
+    leverageTokenConfig.symbol,
+    planPreview.plan?.collateralToDebtQuoteAmount,
+    planPreview.plan?.collateralToSwap,
+    planPreview.plan?.quoteSourceName,
+    queryClient,
     redeemError,
     redeemReceiptError?.message,
-    leverageTokenConfig.symbol,
-    leverageTokenAddress,
-    form.amount,
-    refetchLeverageTokenBalance,
+    redeemSuccess,
     refetchCollateralTokenBalance,
     refetchDebtTokenBalance,
-    queryClient,
-    userAddress,
-    trackLeverageTokenRedeemed,
-    analytics,
-    toSuccess,
+    refetchLeverageTokenBalance,
     toError,
-    leverageTokenConfig.chainId,
-    collateralUsdPrice,
+    toSuccess,
+    trackLeverageTokenRedeemed,
+    trackQuoteSource,
+    transactionHash,
+    userAddress,
   ])
 
   // Handle retry from error state

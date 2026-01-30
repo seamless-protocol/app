@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
 import {
@@ -83,7 +83,7 @@ export function LeverageTokenMintModal({
   userAddress: propUserAddress,
 }: LeverageTokenMintModalProps) {
   const { trackLeverageTokenMinted, trackTransactionError } = useTransactionGA()
-  const { trackBestQuoteSource } = useQuotesGA()
+  const { trackQuoteSource } = useQuotesGA()
   const analytics = useGA()
 
   // Get leverage token configuration by address
@@ -478,7 +478,7 @@ export function LeverageTokenMintModal({
         parseUsdPrice(collateralUsdPrice),
       )
 
-      trackBestQuoteSource({
+      trackQuoteSource({
         event: 'best_quote_source',
         tokenIn: leverageTokenConfig.debtAsset.address,
         tokenOut: leverageTokenConfig.collateralAsset.address,
@@ -499,7 +499,7 @@ export function LeverageTokenMintModal({
     planPreview.plan?.quoteSourceName,
     planPreview.plan?.flashLoanAmount,
     planPreview.plan?.flashLoanToCollateralQuoteAmount,
-    trackBestQuoteSource,
+    trackQuoteSource,
   ])
 
   // Parse actual minted shares from receipt logs (typed util) and format for display
@@ -521,6 +521,9 @@ export function LeverageTokenMintModal({
     return undefined
   }, [receiptState.data, userAddress, leverageTokenAddress, leverageTokenConfig.decimals])
 
+  // Guard: run success path (invalidation, tracking, toSuccess) only once per transaction hash
+  const processedSuccessTxRef = useRef<Set<string>>(new Set())
+
   // Receipt effect (after expectedTokens to satisfy dependency ordering)
   useEffect(() => {
     if (!transactionHash) return
@@ -531,6 +534,9 @@ export function LeverageTokenMintModal({
       return
     }
     if (receiptState.isSuccess) {
+      if (processedSuccessTxRef.current.has(transactionHash)) return
+      processedSuccessTxRef.current.add(transactionHash)
+
       void (async () => {
         // Ensure a paint so on-chain pending text can flash on instant receipts
         try {
@@ -562,29 +568,61 @@ export function LeverageTokenMintModal({
         const amount = form.amount
         const usdValue = (parseFloat(form.amount || '0') || 0) * (selectedToken.price || 0)
         trackLeverageTokenMinted(tokenSymbol, amount, usdValue)
+
+        const swapAmountInUSD = toScaledUsd(
+          planPreview.plan?.flashLoanAmount || 0n,
+          leverageTokenConfig.debtAsset.decimals,
+          parseUsdPrice(debtUsdPrice || '0'),
+        )
+        const swapAmountOutUSD = toScaledUsd(
+          planPreview.plan?.flashLoanToCollateralQuoteAmount || 0n,
+          leverageTokenConfig.collateralAsset.decimals,
+          parseUsdPrice(collateralUsdPrice || '0'),
+        )
+        trackQuoteSource({
+          event: 'quote_executed',
+          tokenIn: leverageTokenConfig.debtAsset.address,
+          tokenOut: leverageTokenConfig.collateralAsset.address,
+          quoteSource: planPreview.plan?.quoteSourceName || '',
+          amountIn: planPreview.plan?.flashLoanAmount || 0n,
+          amountInUSD: Number(swapAmountInUSD),
+          amountOut: planPreview.plan?.flashLoanToCollateralQuoteAmount || 0n,
+          amountOutUSD: Number(swapAmountOutUSD),
+        })
+
         analytics.funnelStep('mint_leverage_token', 'transaction_completed', 3)
         // Success feedback is conveyed by the Success step UI
         toSuccess()
       })()
     }
   }, [
-    transactionHash,
-    receiptState.isSuccess,
-    receiptState.isError,
-    receiptState.error,
-    leverageTokenConfig.chainId,
-    leverageTokenAddress,
-    userAddress,
+    analytics,
+    collateralUsdPrice,
+    debtUsdPrice,
     form.amount,
-    selectedToken.price,
+    leverageTokenAddress,
+    leverageTokenConfig.chainId,
+    leverageTokenConfig.collateralAsset.address,
+    leverageTokenConfig.collateralAsset.decimals,
+    leverageTokenConfig.debtAsset.address,
+    leverageTokenConfig.debtAsset.decimals,
+    leverageTokenConfig.symbol,
+    planPreview.plan?.flashLoanAmount,
+    planPreview.plan?.flashLoanToCollateralQuoteAmount,
+    planPreview.plan?.quoteSourceName,
+    queryClient,
+    receiptState.error,
+    receiptState.isError,
+    receiptState.isSuccess,
     refetchCollateralBalance,
     refetchLeverageTokenBalance,
-    trackLeverageTokenMinted,
-    analytics,
-    toSuccess,
+    selectedToken.price,
     toError,
-    leverageTokenConfig.symbol,
-    queryClient,
+    toSuccess,
+    trackLeverageTokenMinted,
+    trackQuoteSource,
+    transactionHash,
+    userAddress,
   ])
 
   // Available tokens for minting (only collateral asset for now)
