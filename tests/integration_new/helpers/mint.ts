@@ -21,34 +21,30 @@ export type MintExecutionResult = {
 }
 
 export class MintExecutionSimulationError extends Error {
-  slippageUsedBps: number
-
-  constructor(slippageUsedBps: number, cause?: unknown) {
-    super(`Failed to create mint plan with slippage ${slippageUsedBps}`)
+  constructor(cause?: unknown) {
+    super(`Simulation of mint plan failed`)
     this.name = 'MintExecutionSimulationError'
-    this.slippageUsedBps = slippageUsedBps
     if (cause !== undefined) {
       this.cause = cause
     }
   }
 }
 
-const MAX_RETRY_STARTING_SLIPPAGE_BPS = 600 // 6%
-const MAX_START_SLIPPAGE_RETRY_ATTEMPTS = 5
+const DEFAULT_START_SLIPPAGE_BPS = 100
+const DEFAULT_SLIPPAGE_INCREMENT_BPS = 100
+const MAX_ATTEMPTS = 5
 
 export async function testMint({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  startSlippageBps = 100,
-  retries = 5,
-  slippageIncrementBps = 100,
+  startSlippageBps = DEFAULT_START_SLIPPAGE_BPS,
+  slippageIncrementBps = DEFAULT_SLIPPAGE_INCREMENT_BPS,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   startSlippageBps?: number
-  retries?: number
   slippageIncrementBps?: number
 }) {
   const equityInCollateralAsset =
@@ -79,7 +75,6 @@ export async function testMint({
     leverageTokenConfig,
     equityInCollateralAsset,
     startSlippageBps,
-    retries,
     slippageIncrementBps,
   })
 
@@ -117,7 +112,6 @@ async function mintWithRetries({
   leverageTokenConfig,
   equityInCollateralAsset,
   startSlippageBps,
-  retries,
   slippageIncrementBps,
 }: {
   client: AnvilTestClient
@@ -125,42 +119,29 @@ async function mintWithRetries({
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
   startSlippageBps: number
-  retries: number
   slippageIncrementBps: number
 }): Promise<MintPlan | undefined> {
-  let nextStartSlippageBps = startSlippageBps
-  let remainingStartBumps = MAX_START_SLIPPAGE_RETRY_ATTEMPTS
-  let lastError: unknown
+  let slippageBps = startSlippageBps
 
-  while (nextStartSlippageBps <= MAX_RETRY_STARTING_SLIPPAGE_BPS) {
-    const allowedPreviewRetries = Math.min(
-      retries,
-      Math.floor((MAX_RETRY_STARTING_SLIPPAGE_BPS - nextStartSlippageBps) / slippageIncrementBps),
-    )
-
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
     try {
       const { plan } = await executeMintFlow({
         client,
         wagmiConfig,
         leverageTokenConfig,
         equityInCollateralAsset,
-        startSlippageBps: nextStartSlippageBps,
-        retries: allowedPreviewRetries,
-        slippageIncrementBps,
+        slippageBps,
       })
 
       return plan
     } catch (error) {
-      const canBumpStartingSlippage =
-        error instanceof MintExecutionSimulationError &&
-        remainingStartBumps > 0 &&
-        nextStartSlippageBps < MAX_RETRY_STARTING_SLIPPAGE_BPS
+      const isRetryableError =
+        error instanceof MintExecutionSimulationError ||
+        (error instanceof Error && error.message.includes('Try increasing your slippage tolerance'))
 
-      if (canBumpStartingSlippage) {
-        lastError = error
-        remainingStartBumps -= 1
-        nextStartSlippageBps = error.slippageUsedBps + slippageIncrementBps
-        console.log(`Retrying mint with starting slippage bps: ${nextStartSlippageBps}`)
+      if (isRetryableError && i < MAX_ATTEMPTS - 1) {
+        slippageBps += slippageIncrementBps
+        console.log(`Retrying mint with slippage bps: ${slippageBps}`)
         continue
       }
 
@@ -168,7 +149,7 @@ async function mintWithRetries({
     }
   }
 
-  throw lastError ?? new Error('Mint plan not generated after retries')
+  throw new Error(`Mint failed after ${MAX_ATTEMPTS} attempts`)
 }
 
 async function executeMintFlow({
@@ -176,17 +157,13 @@ async function executeMintFlow({
   wagmiConfig,
   leverageTokenConfig,
   equityInCollateralAsset,
-  startSlippageBps = 100,
-  retries = 5,
-  slippageIncrementBps = 100,
+  slippageBps,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
-  startSlippageBps?: number
-  retries?: number
-  slippageIncrementBps?: number
+  slippageBps: number
 }): Promise<MintExecutionResult> {
   const addresses = getContractAddresses(leverageTokenConfig.chainId)
 
@@ -208,17 +185,34 @@ async function executeMintFlow({
   )
   const quoteFn = useDebtToCollateralQuoteResult.current.quote as QuoteFn
 
-  // Preview the mint plan with slippage retries using the quote function
-  // biome-ignore lint/correctness/useHookAtTopLevel: renderHook usage inside retry loop is intentional
-  const mintPlanPreviewResult = await useMintPlanPreviewWithSlippageRetries({
+  // Preview the mint plan
+  const { result: mintPlanPreviewResult } = renderHook(
     wagmiConfig,
-    leverageTokenConfig,
-    equityInCollateralAsset,
-    quoteFn,
-    slippageBps: startSlippageBps,
-    retries,
-    slippageIncrementBps,
-  })
+    (props: { slippageBps: number }) =>
+      useMintPlanPreview({
+        config: wagmiConfig,
+        token: leverageTokenConfig.address,
+        equityInCollateralAsset,
+        chainId: leverageTokenConfig.chainId,
+        enabled: true,
+        quote: quoteFn,
+        ...props,
+      }),
+    {
+      initialProps: { slippageBps },
+    },
+  )
+  await waitFor(
+    () =>
+      expect(
+        mintPlanPreviewResult.current.isLoading,
+        'Initial render of mint plan preview failed',
+      ).toBe(false),
+    { timeout: 30000 },
+  )
+
+  const error = mintPlanPreviewResult.current.error
+  if (error) throw error
 
   const plan = mintPlanPreviewResult.current.plan
   if (!plan) {
@@ -264,90 +258,6 @@ async function executeMintFlow({
 
     return { plan }
   } catch (error) {
-    throw new MintExecutionSimulationError(mintPlanPreviewResult.slippageUsedBps, error)
+    throw new MintExecutionSimulationError(error)
   }
-}
-
-async function useMintPlanPreviewWithSlippageRetries({
-  wagmiConfig,
-  leverageTokenConfig,
-  equityInCollateralAsset,
-  quoteFn,
-  slippageBps,
-  retries,
-  slippageIncrementBps,
-}: {
-  wagmiConfig: Config
-  leverageTokenConfig: LeverageTokenConfig
-  equityInCollateralAsset: bigint
-  quoteFn: QuoteFn
-  slippageBps: number
-  retries: number
-  slippageIncrementBps: number
-}) {
-  let currentSlippageBps = slippageBps
-
-  const { result: mintPlanPreviewResult, rerender } = renderHook(
-    wagmiConfig,
-    (props: { slippageBps: number }) =>
-      // biome-ignore lint/correctness/useHookAtTopLevel: renderHook usage inside retry loop is intentional
-      useMintPlanPreview({
-        config: wagmiConfig,
-        token: leverageTokenConfig.address,
-        equityInCollateralAsset,
-        chainId: leverageTokenConfig.chainId,
-        enabled: true,
-        quote: quoteFn,
-        debounceMs: 0,
-        ...props,
-      }),
-    {
-      initialProps: { slippageBps: currentSlippageBps },
-    },
-  )
-  await waitFor(
-    () =>
-      expect(
-        mintPlanPreviewResult.current.isLoading,
-        'Initial render of mint plan preview failed',
-      ).toBe(false),
-    { timeout: 30000 },
-  )
-
-  const error = mintPlanPreviewResult.current.error
-  if (error && !error.message.includes('Try increasing your slippage tolerance')) {
-    throw error
-  }
-
-  if (!error) {
-    return { ...mintPlanPreviewResult, slippageUsedBps: currentSlippageBps }
-  }
-
-  for (let i = 0; i < retries; i++) {
-    // avoid rate limiting by waiting 3 seconds
-    await new Promise((resolve) => setTimeout(resolve, 3000))
-
-    currentSlippageBps += slippageIncrementBps
-
-    rerender({ slippageBps: currentSlippageBps })
-    await waitFor(
-      () =>
-        expect(
-          mintPlanPreviewResult.current.isLoading,
-          'Rerender of mint plan preview failed',
-        ).toBe(false),
-      { timeout: 30000 },
-    )
-
-    const error = mintPlanPreviewResult.current.error
-    if (error && !error.message.includes('Try increasing your slippage tolerance')) {
-      return { ...mintPlanPreviewResult, slippageUsedBps: currentSlippageBps }
-    }
-
-    if (!error) {
-      return { ...mintPlanPreviewResult, slippageUsedBps: currentSlippageBps }
-    }
-  }
-
-  throw new Error(`Failed to create mint plan with retry helper after ${1 + retries} attempts`)
 }

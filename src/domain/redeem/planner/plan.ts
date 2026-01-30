@@ -56,7 +56,8 @@ export async function planRedeem({
   const collateralAsset = leverageTokenConfig.collateralAsset.address as Address
   const debtAsset = leverageTokenConfig.debtAsset.address as Address
 
-  const [ltStateCall, previewRedeemCall] = await publicClient.multicall({
+  const [{ collateralRatio }, preview] = await publicClient.multicall({
+    allowFailure: false,
     contracts: [
       {
         address: getContractAddresses(chainId).leverageManagerV2 as Address,
@@ -72,13 +73,6 @@ export async function planRedeem({
       },
     ],
   })
-
-  if (ltStateCall.status !== 'success' || previewRedeemCall.status !== 'success') {
-    throw new Error('Redeem plan multicall failed')
-  }
-
-  const collateralRatio = ltStateCall.result.collateralRatio
-  const preview = previewRedeemCall.result
 
   const netShares = preview.shares - preview.treasuryFee - preview.tokenFee
 

@@ -49,15 +49,8 @@ describe('planMint', () => {
     vi.clearAllMocks()
     // Default first multicall: getLeverageTokenState + router previewDeposit
     multicall.mockResolvedValueOnce([
-      { result: { collateralRatio: 3n * 10n ** 18n }, status: 'success' },
-      {
-        result: {
-          collateral: 2_000n,
-          debt: 1_000n,
-          shares: 1_000n,
-        },
-        status: 'success',
-      },
+      { collateralRatio: 3n * 10n ** 18n },
+      { collateral: 2_000n, debt: 1_000n, shares: 1_000n },
     ])
   })
 
@@ -73,18 +66,12 @@ describe('planMint', () => {
     // Second multicall: manager previewDeposit (with out) + manager previewDeposit (with minOut)
     multicall.mockResolvedValueOnce([
       {
-        result: {
-          debt: 1_300n,
-          shares: 1_600n,
-        },
-        status: 'success',
+        debt: 1_300n,
+        shares: 1_600n,
       },
       {
-        result: {
-          debt: 1_100n,
-          shares: 1_500n,
-        },
-        status: 'success',
+        debt: 1_100n,
+        shares: 1_500n,
       },
     ])
 
@@ -129,18 +116,12 @@ describe('planMint', () => {
     // Second multicall: manager previewDeposit returns debt below flash loan amount
     multicall.mockResolvedValueOnce([
       {
-        result: {
-          debt: 800n,
-          shares: 1_600n,
-        },
-        status: 'success',
+        debt: 800n,
+        shares: 1_600n,
       },
       {
-        result: {
-          debt: 800n,
-          shares: 1_600n,
-        },
-        status: 'success',
+        debt: 800n,
+        shares: 1_600n,
       },
     ])
 
@@ -166,18 +147,12 @@ describe('planMint', () => {
     // Second multicall: manager previewDeposit (minOut path) returns shares below minShares
     multicall.mockResolvedValueOnce([
       {
-        result: {
-          debt: 1_300n,
-          shares: 1_600n,
-        },
-        status: 'success',
+        debt: 1_300n,
+        shares: 1_600n,
       },
       {
-        result: {
-          debt: 1_000n,
-          shares: 800n, // below minShares of 990n
-        },
-        status: 'success',
+        debt: 1_000n,
+        shares: 800n, // below minShares of 990n
       },
     ])
 

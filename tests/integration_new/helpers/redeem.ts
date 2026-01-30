@@ -21,34 +21,30 @@ export type RedeemExecutionResult = {
 }
 
 export class RedeemExecutionSimulationError extends Error {
-  slippageUsedBps: number
-
-  constructor(slippageUsedBps: number, cause?: unknown) {
-    super(`Failed to create redeem plan with slippage ${slippageUsedBps}`)
+  constructor(cause?: unknown) {
+    super(`Simulation of redeem plan failed`)
     this.name = 'RedeemExecutionSimulationError'
-    this.slippageUsedBps = slippageUsedBps
     if (cause !== undefined) {
       this.cause = cause
     }
   }
 }
 
-const MAX_RETRY_STARTING_SLIPPAGE_BPS = 600 // 6%
-const MAX_START_SLIPPAGE_RETRY_ATTEMPTS = 5
+const DEFAULT_START_SLIPPAGE_BPS = 100
+const DEFAULT_SLIPPAGE_INCREMENT_BPS = 100
+const MAX_ATTEMPTS = 5
 
 export async function testRedeem({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  startSlippageBps = 100,
-  retries = 5,
-  slippageIncrementBps = 100,
+  startSlippageBps = DEFAULT_START_SLIPPAGE_BPS,
+  slippageIncrementBps = DEFAULT_SLIPPAGE_INCREMENT_BPS,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   startSlippageBps?: number
-  retries?: number
   slippageIncrementBps?: number
 }) {
   await testMint({
@@ -76,7 +72,6 @@ export async function testRedeem({
     leverageTokenConfig,
     leverageTokenBalanceBefore,
     startSlippageBps,
-    retries,
     slippageIncrementBps,
   })
 
@@ -115,7 +110,6 @@ async function redeemWithRetries({
   leverageTokenConfig,
   leverageTokenBalanceBefore,
   startSlippageBps,
-  retries,
   slippageIncrementBps,
 }: {
   client: AnvilTestClient
@@ -123,44 +117,29 @@ async function redeemWithRetries({
   leverageTokenConfig: LeverageTokenConfig
   leverageTokenBalanceBefore: bigint
   startSlippageBps: number
-  retries: number
   slippageIncrementBps: number
 }): Promise<RedeemPlan | undefined> {
-  let nextStartSlippageBps = startSlippageBps
-  let remainingStartBumps = MAX_START_SLIPPAGE_RETRY_ATTEMPTS
-  let lastError: unknown
+  let slippageBps = startSlippageBps
 
-  while (nextStartSlippageBps <= MAX_RETRY_STARTING_SLIPPAGE_BPS) {
-    const allowedPreviewRetries = Math.min(
-      retries,
-      Math.floor((MAX_RETRY_STARTING_SLIPPAGE_BPS - nextStartSlippageBps) / slippageIncrementBps),
-    )
-
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
     try {
       const { plan } = await executeRedeemFlow({
         client,
         wagmiConfig,
         leverageTokenConfig,
         sharesToRedeem: leverageTokenBalanceBefore,
-        startSlippageBps: nextStartSlippageBps,
-        retries: allowedPreviewRetries,
-        slippageIncrementBps,
+        slippageBps,
       })
 
       return plan
     } catch (error) {
-      const canBumpStartingSlippage =
-        error instanceof RedeemExecutionSimulationError &&
-        remainingStartBumps > 0 &&
-        nextStartSlippageBps < MAX_RETRY_STARTING_SLIPPAGE_BPS
+      const isRetryableError =
+        error instanceof RedeemExecutionSimulationError ||
+        (error instanceof Error && error.message.includes('Try increasing your slippage tolerance'))
 
-      if (canBumpStartingSlippage) {
-        lastError = error
-        remainingStartBumps -= 1
-        nextStartSlippageBps = error.slippageUsedBps + slippageIncrementBps
-        console.log(
-          `Retrying redeem for ${leverageTokenConfig.symbol} with starting slippage bps: ${nextStartSlippageBps}`,
-        )
+      if (isRetryableError && i < MAX_ATTEMPTS - 1) {
+        slippageBps += slippageIncrementBps
+        console.log(`Retrying redeem with slippage bps: ${slippageBps}`)
         continue
       }
 
@@ -168,7 +147,7 @@ async function redeemWithRetries({
     }
   }
 
-  throw lastError ?? new Error('Redeem plan not generated after retries')
+  throw new Error(`Redeem failed after ${MAX_ATTEMPTS} attempts`)
 }
 
 async function executeRedeemFlow({
@@ -176,17 +155,13 @@ async function executeRedeemFlow({
   wagmiConfig,
   leverageTokenConfig,
   sharesToRedeem,
-  startSlippageBps = 100,
-  retries = 5,
-  slippageIncrementBps = 100,
+  slippageBps,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   sharesToRedeem: bigint
-  startSlippageBps?: number
-  retries?: number
-  slippageIncrementBps?: number
+  slippageBps: number
 }): Promise<RedeemExecutionResult> {
   const addresses = getContractAddresses(leverageTokenConfig.chainId)
 
@@ -207,17 +182,36 @@ async function executeRedeemFlow({
   )
   const quoteFn = useCollateralToDebtQuoteResult.current.quote as QuoteFn
 
-  // Preview the redeem plan with slippage retries using the quote function
-  // biome-ignore lint/correctness/useHookAtTopLevel: renderHook usage inside retry loop is intentional
-  const redeemPlanPreviewResult = await useRedeemPlanPreviewWithSlippageRetries({
+  // Preview the redeem plan
+  const { result: redeemPlanPreviewResult } = renderHook(
     wagmiConfig,
-    leverageTokenConfig,
-    sharesToRedeem,
-    quoteFn,
-    slippageBps: startSlippageBps,
-    retries,
-    slippageIncrementBps,
-  })
+    (props: { slippageBps: number }) =>
+      useRedeemPlanPreview({
+        token: leverageTokenConfig.address,
+        sharesToRedeem,
+        chainId: leverageTokenConfig.chainId,
+        enabled: true,
+        quote: quoteFn,
+        ...props,
+      }),
+    {
+      initialProps: { slippageBps },
+    },
+  )
+  await waitFor(
+    () =>
+      expect(
+        redeemPlanPreviewResult.current.isLoading,
+        'isLoading not set to false on redeem plan preview',
+      ).toBe(false),
+    {
+      timeout: 30000,
+    },
+  )
+
+  const error = redeemPlanPreviewResult.current.error
+  if (error) throw error
+
   const plan = redeemPlanPreviewResult.current.plan
   if (!plan) {
     throw new Error('Redeem plan not found after previewing with slippage retries')
@@ -272,93 +266,6 @@ async function executeRedeemFlow({
 
     return { plan }
   } catch (error) {
-    throw new RedeemExecutionSimulationError(redeemPlanPreviewResult.slippageUsedBps, error)
+    throw new RedeemExecutionSimulationError(error)
   }
-}
-
-async function useRedeemPlanPreviewWithSlippageRetries({
-  wagmiConfig,
-  leverageTokenConfig,
-  sharesToRedeem,
-  quoteFn,
-  slippageBps,
-  retries,
-  slippageIncrementBps,
-}: {
-  wagmiConfig: Config
-  leverageTokenConfig: LeverageTokenConfig
-  sharesToRedeem: bigint
-  quoteFn: QuoteFn
-  slippageBps: number
-  retries: number
-  slippageIncrementBps: number
-}) {
-  let currentSlippageBps = slippageBps
-
-  const { result: redeemPlanPreviewResult, rerender } = renderHook(
-    wagmiConfig,
-    (props: { slippageBps: number }) =>
-      // biome-ignore lint/correctness/useHookAtTopLevel: renderHook usage inside retry loop is intentional
-      useRedeemPlanPreview({
-        token: leverageTokenConfig.address,
-        sharesToRedeem,
-        chainId: leverageTokenConfig.chainId,
-        enabled: true,
-        quote: quoteFn,
-        ...props,
-      }),
-    {
-      initialProps: { slippageBps: currentSlippageBps },
-    },
-  )
-  await waitFor(
-    () =>
-      expect(
-        redeemPlanPreviewResult.current.isLoading,
-        'isLoading not set to false on redeem plan preview',
-      ).toBe(false),
-    {
-      timeout: 30000,
-    },
-  )
-
-  const error = redeemPlanPreviewResult.current.error
-  if (error && !error.message.includes('Try increasing your slippage tolerance')) {
-    throw error
-  }
-
-  if (!error) {
-    return { ...redeemPlanPreviewResult, slippageUsedBps: currentSlippageBps }
-  }
-
-  for (let i = 0; i < retries; i++) {
-    // avoid rate limiting by waiting 3 seconds
-    await new Promise((resolve) => setTimeout(resolve, 3000))
-
-    currentSlippageBps += slippageIncrementBps
-
-    rerender({ slippageBps: currentSlippageBps })
-
-    await waitFor(
-      () =>
-        expect(
-          redeemPlanPreviewResult.current.isLoading,
-          'isLoading not set to false on redeem plan preview for retry',
-        ).toBe(false),
-      {
-        timeout: 30000,
-      },
-    )
-
-    const error = redeemPlanPreviewResult.current.error
-    if (error && !error.message.includes('Try increasing your slippage tolerance')) {
-      throw error
-    }
-
-    if (!error) {
-      return { ...redeemPlanPreviewResult, slippageUsedBps: currentSlippageBps }
-    }
-  }
-
-  throw new Error(`Failed to create redeem plan with retry helper after ${1 + retries} attempts`)
 }

@@ -34,17 +34,8 @@ describe('planRedeem', () => {
     vi.clearAllMocks()
     // Default multicall: getLeverageTokenState + previewRedeem
     multicall.mockResolvedValueOnce([
-      { result: { collateralRatio: 3n * 10n ** 18n }, status: 'success' },
-      {
-        result: {
-          collateral: 1_000n,
-          debt: 300n,
-          shares: 100n,
-          tokenFee: 0n,
-          treasuryFee: 0n,
-        },
-        status: 'success',
-      },
+      { collateralRatio: 3n * 10n ** 18n },
+      { collateral: 1_000n, debt: 300n, shares: 100n, tokenFee: 0n, treasuryFee: 0n },
     ])
     // Default readContract: convertToAssets
     readContract.mockResolvedValue(800n)

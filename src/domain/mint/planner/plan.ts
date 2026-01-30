@@ -53,7 +53,8 @@ export async function planMint({
   const collateralAsset = leverageTokenConfig.collateralAsset.address as Address
   const debtAsset = leverageTokenConfig.debtAsset.address as Address
 
-  const [ltStateCall, routerPreviewCall] = await publicClient.multicall({
+  const [{ collateralRatio }, routerPreview] = await publicClient.multicall({
+    allowFailure: false,
     contracts: [
       {
         address: getContractAddresses(chainId).leverageManagerV2 as Address,
@@ -69,13 +70,6 @@ export async function planMint({
       },
     ],
   })
-
-  if (ltStateCall.status !== 'success' || routerPreviewCall.status !== 'success') {
-    throw new Error('Mint plan multicall failed')
-  }
-
-  const collateralRatio = ltStateCall.result.collateralRatio
-  const routerPreview = routerPreviewCall.result
 
   // This price is adding the NAV diff from spot on top of the share slippage
   const minShares = applySlippageFloor(routerPreview.shares, slippageBps)
@@ -99,7 +93,8 @@ export async function planMint({
     slippageBps: quoteSlippageBps,
   })
 
-  const [managerPreviewCall, managerMinCall] = await publicClient.multicall({
+  const [managerPreview, managerMin] = await publicClient.multicall({
+    allowFailure: false,
     contracts: [
       {
         address: getContractAddresses(chainId).leverageManagerV2 as Address,
@@ -115,13 +110,6 @@ export async function planMint({
       },
     ],
   })
-
-  if (managerPreviewCall.status !== 'success' || managerMinCall.status !== 'success') {
-    throw new Error('Mint plan multicall failed')
-  }
-
-  const managerPreview = managerPreviewCall.result
-  const managerMin = managerMinCall.result
 
   if (managerPreview.debt < flashLoanAmount) {
     throw new Error(
