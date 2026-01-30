@@ -16,7 +16,6 @@ import { LiFiSync } from './components/lifi-sync'
 import { RainbowThemeWrapper } from './components/rainbow-theme-wrapper'
 import { ThemeProvider } from './components/theme-provider'
 import { features } from './lib/config/features'
-import { initGA4 } from './lib/config/ga4.config'
 import { queryClient } from './lib/config/query.config'
 import { initSentry } from './lib/config/sentry.config'
 import { config } from './lib/config/wagmi.config'
@@ -74,8 +73,6 @@ try {
 
 // Initialize Sentry and GA4 before app renders
 initSentry()
-initGA4()
-
 // No test-only smoke hooks in production bundles
 
 const rootElement = document.getElementById('root')
