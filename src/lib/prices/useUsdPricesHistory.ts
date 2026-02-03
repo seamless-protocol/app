@@ -6,7 +6,7 @@ import { fetchBalmyTokenUsdPricesHistory } from '@/domain/shared/adapters/balmy'
 export interface UseUsdPricesHistoryParams {
   byChain: Record<number, Array<string>>
   from: number // seconds
-  to: number // seconds
+  now: number // seconds
   enabled?: boolean
   concurrency?: number
   staleTimeMs?: number
@@ -35,12 +35,12 @@ export interface UsdHistoryByChain {
 export function useHistoricalUsdPricesMultiChain({
   byChain,
   from,
-  to,
+  now,
   enabled = true,
   concurrency = 5,
   staleTimeMs = 60_000,
 }: UseUsdPricesHistoryParams) {
-  const key = useMemo(() => createKey(byChain, from, to), [byChain, from, to])
+  const key = useMemo(() => createKey(byChain, from, now), [byChain, from, now])
   const { balmySDK } = useBalmySDK()
 
   const query = useQuery({
@@ -57,7 +57,7 @@ export function useHistoricalUsdPricesMultiChain({
         const chainId = Number(chainIdStr)
         const unique = [...new Set(addresses.map((a) => a.toLowerCase()))]
         const results = await mapWithConcurrency(unique, concurrency, async (addr) => {
-          const series = await fetchBalmyTokenUsdPricesHistory(balmySDK, chainId, addr, from, to)
+          const series = await fetchBalmyTokenUsdPricesHistory(balmySDK, chainId, addr, from, now)
           return [addr, series] as const
         })
         out[chainId] = Object.fromEntries(results)

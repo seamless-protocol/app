@@ -433,7 +433,7 @@ export function usePortfolioPerformance() {
   const { getUsdPriceAt } = useHistoricalUsdPricesMultiChain({
     byChain: addressesByChainForHistory,
     from: fromSec,
-    to: nowSec,
+    now: nowSec,
     enabled: Object.keys(addressesByChainForHistory).length > 0,
   })
 
