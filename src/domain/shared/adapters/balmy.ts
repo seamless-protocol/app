@@ -144,7 +144,7 @@ export async function fetchBalmyTokenUsdPricesHistory(
 
   return Object.fromEntries(
     Object.entries(pricesByChain).map(([address, prices]) => [
-      address,
+      address.toLowerCase(),
       prices.map((p) => [p.closestTimestamp, p.price]),
     ]),
   )

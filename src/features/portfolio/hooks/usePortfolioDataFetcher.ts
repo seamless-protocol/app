@@ -420,7 +420,7 @@ export function usePortfolioPerformance() {
   })
 
   // Build addresses by chain for historical USD price fetching
-  // We fetch CoinGecko USD history for the COLLATERAL ERC-20 contract addresses,
+  // We fetch USD history for the COLLATERAL ERC-20 contract addresses,
   // grouped by their chainId (from leverage token configs).
   const addressesByChainForHistory = useMemo(() => {
     if (!rawUserPositions.length) return {}
