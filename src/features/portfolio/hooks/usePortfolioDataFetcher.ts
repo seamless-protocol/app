@@ -570,13 +570,7 @@ export async function prefetchPortfolioWarmup(
       for (const [chainIdStr, addrs] of Object.entries(byChain)) {
         const chainId = Number(chainIdStr)
         const unique = [...new Set(addrs.map((a) => a.toLowerCase()))]
-        out[chainId] = await fetchBalmyTokenUsdPricesHistory(
-          balmySDK,
-          chainId,
-          unique,
-          fromSec,
-          nowSec,
-        )
+        out[chainId] = await fetchBalmyTokenUsdPricesHistory(balmySDK, chainId, unique, fromSec)
       }
       return out
     },

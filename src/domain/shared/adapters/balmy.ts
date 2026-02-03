@@ -128,8 +128,8 @@ export async function fetchBalmyTokenUsdPricesHistory(
   chainId: number,
   addresses: Array<string>,
   fromSec: number,
-  nowSec: number,
 ): Promise<Record<string, Array<[number, number]>>> {
+  const nowSec = Math.floor(Date.now() / 1000)
   // If 30 days or less, use a span of 120 and 6h periods, otherwise use a span of number of days and 1d period
   const numberOfDays = (nowSec - fromSec) / (24 * 60 * 60)
   const rawBalmyPrices = await balmySDK.priceService.getChart({

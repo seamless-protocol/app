@@ -31,10 +31,11 @@ export interface UsdHistoryByChain {
 export function useHistoricalUsdPricesMultiChain({
   byChain,
   from,
-  now,
   enabled = true,
   staleTimeMs = 60_000,
 }: UseUsdPricesHistoryParams) {
+  // Round down to the nearest 5 minutes so the query key (and thus refetch) stays stable
+  const now = Math.floor(Date.now() / 1000 / 300) * 300
   const key = useMemo(() => createKey(byChain, from, now), [byChain, from, now])
   const { balmySDK } = useBalmySDK()
 
@@ -51,7 +52,7 @@ export function useHistoricalUsdPricesMultiChain({
       for (const [chainIdStr, addresses] of entries) {
         const chainId = Number(chainIdStr)
         const unique = [...new Set(addresses.map((a) => a.toLowerCase()))]
-        out[chainId] = await fetchBalmyTokenUsdPricesHistory(balmySDK, chainId, unique, from, now)
+        out[chainId] = await fetchBalmyTokenUsdPricesHistory(balmySDK, chainId, unique, from)
       }
 
       return out
