@@ -14,7 +14,6 @@ function Wrapper({ children }: PropsWithChildren) {
 describe('useHistoricalUsdPricesMultiChain (stubbed CG)', () => {
   it('fetches range once per asset and serves nearest-prior price via accessor', async () => {
     const from = Math.floor(Date.now() / 1000) - 24 * 60 * 60
-    const now = from + 24 * 60 * 60
 
     const addr = '0xCOLL'
     const platform = 'base'
@@ -41,7 +40,7 @@ describe('useHistoricalUsdPricesMultiChain (stubbed CG)', () => {
 
     const byChain = { 8453: [addr] }
 
-    const { result } = renderHook(() => useHistoricalUsdPricesMultiChain({ byChain, from, now }), {
+    const { result } = renderHook(() => useHistoricalUsdPricesMultiChain({ byChain, from }), {
       wrapper: Wrapper,
     })
 

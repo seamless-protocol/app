@@ -6,7 +6,6 @@ import { fetchBalmyTokenUsdPricesHistory } from '@/domain/shared/adapters/balmy'
 export interface UseUsdPricesHistoryParams {
   byChain: Record<number, Array<string>>
   from: number // seconds
-  now: number // seconds
   enabled?: boolean
   staleTimeMs?: number
 }
@@ -34,8 +33,8 @@ export function useHistoricalUsdPricesMultiChain({
   enabled = true,
   staleTimeMs = 60_000,
 }: UseUsdPricesHistoryParams) {
-  // Round down to the nearest 5 minutes so the query key (and thus refetch) stays stable
-  const now = Math.floor(Date.now() / 1000 / 300) * 300
+  // Round down to the nearest 1 minute so the query key (and thus refetch) stays stable
+  const now = Math.floor(Date.now() / 1000 / 60) * 60
   const key = useMemo(() => createKey(byChain, from, now), [byChain, from, now])
   const { balmySDK } = useBalmySDK()
 

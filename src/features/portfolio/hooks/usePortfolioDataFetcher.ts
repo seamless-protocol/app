@@ -376,8 +376,7 @@ export function usePortfolioPerformance() {
     usePortfolioWithTotalValue()
 
   // Compute timeframe bounds
-  // Round down nowSec to the nearest minute to avoid re-fetching price history on re-renders within the same minute.
-  const nowSec = Math.floor(Date.now() / 1000 / 60) * 60
+  const nowSec = Math.floor(Date.now() / 1000)
   const fromSec = useMemo(() => {
     switch (selectedTimeframe) {
       case '7D':
@@ -431,8 +430,7 @@ export function usePortfolioPerformance() {
   // Fetch historical USD prices for the timeframe
   const { getUsdPriceAt } = useHistoricalUsdPricesMultiChain({
     byChain: addressesByChainForHistory,
-    from: fromSec,
-    now: nowSec,
+    from: Math.floor(fromSec / 60) * 60, // Round down to the nearest minute to avoid re-fetching price history on re-renders within the same minute.
     enabled: Object.keys(addressesByChainForHistory).length > 0,
   })
 
