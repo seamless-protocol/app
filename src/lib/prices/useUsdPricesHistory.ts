@@ -8,7 +8,6 @@ export interface UseUsdPricesHistoryParams {
   from: number // seconds
   now: number // seconds
   enabled?: boolean
-  concurrency?: number
   staleTimeMs?: number
 }
 
@@ -22,22 +21,18 @@ export interface UsdHistoryByChain {
  * Fetch historical USD price ranges for multiple chains and multiple ERC-20 contracts.
  *
  * - Groups requests by `chainId`.
- * - For each chain, fetches each token’s `[from, to]` CoinGecko range with a small
- *   concurrency cap to avoid rate limiting.
+ * - For each chain, fetches all tokens' `[from, now]` price history
  * - Exposes `getUsdPriceAt(chainId, address, tsSec)` which returns the nearest-prior
  *   USD price at a given timestamp using binary search.
  *
  * Notes
- * - CoinGecko returns timestamps in milliseconds; we normalize to seconds.
  * - The returned series per token is sorted ascending and stored as `[tsSec, priceUsd]`.
- * - Concurrency defaults to 5. CoinGecko can rate-limit; values between 4–6 are reasonable.
  */
 export function useHistoricalUsdPricesMultiChain({
   byChain,
   from,
   now,
   enabled = true,
-  concurrency = 5,
   staleTimeMs = 60_000,
 }: UseUsdPricesHistoryParams) {
   const key = useMemo(() => createKey(byChain, from, now), [byChain, from, now])
@@ -56,11 +51,7 @@ export function useHistoricalUsdPricesMultiChain({
       for (const [chainIdStr, addresses] of entries) {
         const chainId = Number(chainIdStr)
         const unique = [...new Set(addresses.map((a) => a.toLowerCase()))]
-        const results = await mapWithConcurrency(unique, concurrency, async (addr) => {
-          const series = await fetchBalmyTokenUsdPricesHistory(balmySDK, chainId, addr, from, now)
-          return [addr, series] as const
-        })
-        out[chainId] = Object.fromEntries(results)
+        out[chainId] = await fetchBalmyTokenUsdPricesHistory(balmySDK, chainId, unique, from, now)
       }
 
       return out
@@ -129,47 +120,4 @@ export function usdHistoryQueryKey(
   to: number,
 ) {
   return ['usd-history', createKey(byChain, from, to)] as const
-}
-
-/**
- * Minimal concurrency-limited map.
- *
- * - Runs up to `limit` promises in flight at once.
- * - Preserves the original order of `items` in the returned array.
- * - First rejection rejects the whole operation (no retry/backoff here).
- *
- * Useful for gently parallelizing many network requests (e.g., CoinGecko range
- * calls) without hammering the provider.
- */
-export async function mapWithConcurrency<T, R>(
-  items: Array<T>,
-  limit: number,
-  fn: (item: T, index: number) => Promise<R>,
-): Promise<Array<R>> {
-  const results: Array<R> = new Array(items.length)
-  let inFlight = 0
-  let i = 0
-  return new Promise((resolve, reject) => {
-    const next = () => {
-      if (i >= items.length && inFlight === 0) {
-        resolve(results)
-        return
-      }
-      while (inFlight < limit && i < items.length) {
-        const idx = i++
-        inFlight++
-        const item = items[idx] as T
-        Promise.resolve(fn(item, idx))
-          .then((res) => {
-            results[idx] = res
-          })
-          .catch(reject)
-          .finally(() => {
-            inFlight--
-            next()
-          })
-      }
-    }
-    next()
-  })
 }

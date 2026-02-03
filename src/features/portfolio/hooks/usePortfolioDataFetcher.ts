@@ -17,7 +17,6 @@ import { fetchUserBalanceHistoryWithBaseline } from '@/lib/graphql/fetchers/port
 import type { BalanceChange, LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
 import {
   createUsdHistoryKey,
-  mapWithConcurrency as mapWithConcurrencyHistory,
   usdHistoryQueryKey,
   useHistoricalUsdPricesMultiChain,
 } from '@/lib/prices/useUsdPricesHistory'
@@ -521,9 +520,9 @@ export function usePortfolioPerformance() {
 export async function prefetchPortfolioWarmup(
   queryClient: QueryClient,
   balmySDK: ReturnType<typeof buildSDK>,
-  params: { address: string; timeframe?: '7D' | '30D' | '90D' | '1Y'; concurrency?: number },
+  params: { address: string; timeframe?: '7D' | '30D' | '90D' | '1Y' },
 ) {
-  const { address, timeframe = '30D', concurrency = 5 } = params
+  const { address, timeframe = '30D' } = params
   if (!address) return
 
   // 1) Prefetch core portfolio data and read from cache
@@ -571,17 +570,13 @@ export async function prefetchPortfolioWarmup(
       for (const [chainIdStr, addrs] of Object.entries(byChain)) {
         const chainId = Number(chainIdStr)
         const unique = [...new Set(addrs.map((a) => a.toLowerCase()))]
-        const results = await mapWithConcurrencyHistory(unique, concurrency, async (addr) => {
-          const series = await fetchBalmyTokenUsdPricesHistory(
-            balmySDK,
-            chainId,
-            addr,
-            fromSec,
-            nowSec,
-          )
-          return [addr, series] as const
-        })
-        out[chainId] = Object.fromEntries(results)
+        out[chainId] = await fetchBalmyTokenUsdPricesHistory(
+          balmySDK,
+          chainId,
+          unique,
+          fromSec,
+          nowSec,
+        )
       }
       return out
     },

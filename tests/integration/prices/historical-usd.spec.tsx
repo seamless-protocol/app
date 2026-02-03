@@ -41,10 +41,9 @@ describe('useHistoricalUsdPricesMultiChain (stubbed CG)', () => {
 
     const byChain = { 8453: [addr] }
 
-    const { result } = renderHook(
-      () => useHistoricalUsdPricesMultiChain({ byChain, from, now, concurrency: 2 }),
-      { wrapper: Wrapper },
-    )
+    const { result } = renderHook(() => useHistoricalUsdPricesMultiChain({ byChain, from, now }), {
+      wrapper: Wrapper,
+    })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 

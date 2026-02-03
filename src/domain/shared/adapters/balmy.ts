@@ -126,21 +126,26 @@ export async function fetchBalmyTokenUsdPrices(
 export async function fetchBalmyTokenUsdPricesHistory(
   balmySDK: ReturnType<typeof buildSDK>,
   chainId: number,
-  address: string,
+  addresses: Array<string>,
   fromSec: number,
   nowSec: number,
-): Promise<Array<[number, number]>> {
+): Promise<Record<string, Array<[number, number]>>> {
   // If 30 days or less, use a span of 120 and 6h periods, otherwise use a span of number of days and 1d period
   const numberOfDays = (nowSec - fromSec) / (24 * 60 * 60)
   const rawBalmyPrices = await balmySDK.priceService.getChart({
-    tokens: [{ chainId, token: address as Address }],
+    tokens: addresses.map((a) => ({ chainId, token: a as Address })),
     span: numberOfDays <= 30 ? 120 : numberOfDays,
     period: numberOfDays <= 30 ? '6h' : '1d',
     bound: { from: fromSec },
   })
 
-  const prices = rawBalmyPrices[chainId]?.[address]
-  if (!prices) return []
+  const pricesByChain = rawBalmyPrices[chainId]
+  if (!pricesByChain) return {}
 
-  return prices.map((p) => [p.closestTimestamp, p.price])
+  return Object.fromEntries(
+    Object.entries(pricesByChain).map(([address, prices]) => [
+      address,
+      prices.map((p) => [p.closestTimestamp, p.price]),
+    ]),
+  )
 }
