@@ -1,3 +1,4 @@
+import { useBalmySDK } from '@/components/BalmySDKProvider'
 import { useUsdPricesMultiChain } from './useUsdPricesMulti'
 
 interface UseUsdPricesOptions {
@@ -19,8 +20,10 @@ export function useUsdPrices({
   staleTimeMs = 15_000,
   refetchIntervalMs = 15_000,
 }: UseUsdPricesOptions) {
+  const { balmySDK } = useBalmySDK()
   const { data, ...rest } = useUsdPricesMultiChain({
     byChain: { [chainId]: addresses },
+    balmySDK,
     enabled: enabled && addresses.length > 0,
     staleTimeMs,
     refetchIntervalMs,

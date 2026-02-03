@@ -6,13 +6,15 @@ import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('portfolio-data-fetcher')
 
+import type { buildSDK } from '@seamless-defi/defi-sdk'
+import { useBalmySDK } from '@/components/BalmySDKProvider'
+import { fetchBalmyTokenUsdPricesRange } from '@/domain/shared/adapters/balmy'
 import {
   getAllLeverageTokenConfigs,
   getLeverageTokenConfig,
 } from '@/features/leverage-tokens/leverageTokens.config'
 import { fetchUserBalanceHistoryWithBaseline } from '@/lib/graphql/fetchers/portfolio'
 import type { BalanceChange, LeverageTokenState, UserPosition } from '@/lib/graphql/types/portfolio'
-import { fetchCoingeckoTokenUsdPricesRange } from '@/lib/prices/coingecko'
 import {
   createUsdHistoryKey,
   mapWithConcurrency as mapWithConcurrencyHistory,
@@ -242,6 +244,7 @@ export function usePortfolioDataFetcher() {
  */
 export function usePortfolioWithTotalValue() {
   const { data: portfolioQueryData, isLoading, isError, error } = usePortfolioDataFetcher()
+  const { balmySDK } = useBalmySDK()
 
   // Get unique collateral asset addresses grouped by chain ID
   const addressesByChain = useMemo(() => {
@@ -252,6 +255,7 @@ export function usePortfolioWithTotalValue() {
   // Fetch prices for all collateral assets across all chains
   const { data: usdPricesByChain = {} } = useUsdPricesMultiChain({
     byChain: addressesByChain,
+    balmySDK,
     enabled: Object.keys(addressesByChain).length > 0,
     staleTimeMs: 15 * 60 * 1000,
     refetchIntervalMs: 15 * 60 * 1000,
@@ -515,6 +519,7 @@ export function usePortfolioPerformance() {
  */
 export async function prefetchPortfolioWarmup(
   queryClient: QueryClient,
+  balmySDK: ReturnType<typeof buildSDK>,
   params: { address: string; timeframe?: '7D' | '30D' | '90D' | '1Y'; concurrency?: number },
 ) {
   const { address, timeframe = '30D', concurrency = 5 } = params
@@ -556,7 +561,6 @@ export async function prefetchPortfolioWarmup(
   // 3) Prefetch historical USD ranges
   const byChain = buildCollateralAddressesByChain(rawUserPositions)
   if (Object.keys(byChain).length === 0) return
-
   // normalize input for stable query key; returned value unused directly
   createUsdHistoryKey(byChain, fromSec, nowSec)
   await queryClient.prefetchQuery({
@@ -567,7 +571,7 @@ export async function prefetchPortfolioWarmup(
         const chainId = Number(chainIdStr)
         const unique = [...new Set(addrs.map((a) => a.toLowerCase()))]
         const results = await mapWithConcurrencyHistory(unique, concurrency, async (addr) => {
-          const series = await fetchCoingeckoTokenUsdPricesRange(chainId, addr, fromSec, nowSec)
+          const series = await fetchBalmyTokenUsdPricesRange(balmySDK, chainId, addr, fromSec)
           return [addr, series] as const
         })
         out[chainId] = Object.fromEntries(results)

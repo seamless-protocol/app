@@ -66,17 +66,17 @@ describe('createBalmySDK', () => {
 
     // @ts-expect-error - priceSource is not typed on IPriceService
     const priceSources = balmySDK.priceService.priceSource.sources
-    expect(priceSources[0].constructor.name).toEqual('CoingeckoPriceSource')
-    expect(priceSources[0].baseUrl).toEqual(
-      // @ts-expect-error - baseUrl is not typed on IPriceSource
-      expectedBalmyConfig.price.source.sources[0].baseUrl ?? 'https://api.coingecko.com',
-    )
+    expect(priceSources[0].constructor.name).toEqual('DefiLlamaPriceSource')
 
-    expect(priceSources[1].constructor.name).toEqual('AlchemyPriceSource')
+    expect(priceSources[1].constructor.name).toEqual('CoingeckoPriceSource')
+    // @ts-expect-error - baseUrl is not typed on IPriceSource
+    expect(priceSources[1].baseUrl).toEqual(expectedBalmyConfig.price.source.sources[1].baseUrl)
+
+    expect(priceSources[2].constructor.name).toEqual('AlchemyPriceSource')
     // @ts-expect-error - apiKey is not typed on IPriceSource
-    expect(priceSources[1].apiKey).toEqual(expectedBalmyConfig.price.source.sources[1].apiKey)
+    expect(priceSources[2].apiKey).toEqual(expectedBalmyConfig.price.source.sources[2].apiKey)
 
-    expect(priceSources[2].constructor.name).toEqual('OdosPriceSource')
+    expect(priceSources[3].constructor.name).toEqual('OdosPriceSource')
   })
 
   it('should create a Balmy SDK instance with custom provider config with no fallback transports array on client', () => {

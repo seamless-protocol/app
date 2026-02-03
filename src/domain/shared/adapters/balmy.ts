@@ -100,3 +100,44 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
     }
   }
 }
+
+export async function fetchBalmyTokenUsdPrices(
+  balmySDK: ReturnType<typeof buildSDK>,
+  chainId: number,
+  addresses: Array<string>,
+): Promise<Record<string, number>> {
+  const uniqueAddresses = Array.from(new Set(addresses.map((a) => a.toLowerCase())))
+  if (uniqueAddresses.length === 0) return {}
+
+  const rawBalmyPrices = await balmySDK.priceService.getCurrentPrices({
+    tokens: uniqueAddresses.map((a) => ({ chainId, token: a as Address })),
+  })
+
+  const pricesForChain = (
+    rawBalmyPrices as Record<string, Record<string, { price: number; closestTimestamp: number }>>
+  )[String(chainId)]
+  if (!pricesForChain) return {}
+
+  return Object.fromEntries(
+    Object.entries(pricesForChain).map(([addr, entry]) => [addr, entry.price]),
+  )
+}
+
+export async function fetchBalmyTokenUsdPricesRange(
+  balmySDK: ReturnType<typeof buildSDK>,
+  chainId: number,
+  address: string,
+  fromSec: number,
+): Promise<Array<[number, number]>> {
+  const rawBalmyPrices = await balmySDK.priceService.getChart({
+    tokens: [{ chainId, token: address as Address }],
+    span: 100,
+    period: '6h',
+    bound: { from: fromSec },
+  })
+
+  const prices = rawBalmyPrices[chainId]?.[address]
+  if (!prices) return []
+
+  return prices.map((p) => [p.closestTimestamp, p.price])
+}
