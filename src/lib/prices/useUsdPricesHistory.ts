@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { useBalmySDK } from '@/components/BalmySDKProvider'
-import { fetchBalmyTokenUsdPricesRange } from '@/domain/shared/adapters/balmy'
+import { fetchBalmyTokenUsdPricesHistory } from '@/domain/shared/adapters/balmy'
 
 export interface UseUsdPricesHistoryParams {
   byChain: Record<number, Array<string>>
@@ -57,7 +57,7 @@ export function useHistoricalUsdPricesMultiChain({
         const chainId = Number(chainIdStr)
         const unique = [...new Set(addresses.map((a) => a.toLowerCase()))]
         const results = await mapWithConcurrency(unique, concurrency, async (addr) => {
-          const series = await fetchBalmyTokenUsdPricesRange(balmySDK, chainId, addr, from)
+          const series = await fetchBalmyTokenUsdPricesHistory(balmySDK, chainId, addr, from, to)
           return [addr, series] as const
         })
         out[chainId] = Object.fromEntries(results)

@@ -8,7 +8,7 @@ const logger = createLogger('portfolio-data-fetcher')
 
 import type { buildSDK } from '@seamless-defi/defi-sdk'
 import { useBalmySDK } from '@/components/BalmySDKProvider'
-import { fetchBalmyTokenUsdPricesRange } from '@/domain/shared/adapters/balmy'
+import { fetchBalmyTokenUsdPricesHistory } from '@/domain/shared/adapters/balmy'
 import {
   getAllLeverageTokenConfigs,
   getLeverageTokenConfig,
@@ -377,7 +377,8 @@ export function usePortfolioPerformance() {
     usePortfolioWithTotalValue()
 
   // Compute timeframe bounds
-  const nowSec = Math.floor(Date.now() / 1000)
+  // Round down nowSec to the nearest minute to avoid re-fetching price history on re-renders within the same minute.
+  const nowSec = Math.floor(Date.now() / 1000 / 60) * 60
   const fromSec = useMemo(() => {
     switch (selectedTimeframe) {
       case '7D':
@@ -571,7 +572,13 @@ export async function prefetchPortfolioWarmup(
         const chainId = Number(chainIdStr)
         const unique = [...new Set(addrs.map((a) => a.toLowerCase()))]
         const results = await mapWithConcurrencyHistory(unique, concurrency, async (addr) => {
-          const series = await fetchBalmyTokenUsdPricesRange(balmySDK, chainId, addr, fromSec)
+          const series = await fetchBalmyTokenUsdPricesHistory(
+            balmySDK,
+            chainId,
+            addr,
+            fromSec,
+            nowSec,
+          )
           return [addr, series] as const
         })
         out[chainId] = Object.fromEntries(results)
