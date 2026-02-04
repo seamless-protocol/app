@@ -1,3 +1,4 @@
+import { useBalmySDK } from '@/components/BalmySDKProvider'
 import { useUsdPricesMultiChain } from './useUsdPricesMulti'
 
 interface UseUsdPricesOptions {
@@ -10,7 +11,7 @@ interface UseUsdPricesOptions {
 
 /**
  * React Query hook to fetch USD prices for a set of token addresses on a chain.
- * Batches into a single CoinGecko call and returns a map of lowercase address -> usd price.
+ * Batches into a single call and returns a map of lowercase address -> usd price.
  */
 export function useUsdPrices({
   chainId,
@@ -19,8 +20,10 @@ export function useUsdPrices({
   staleTimeMs = 15_000,
   refetchIntervalMs = 15_000,
 }: UseUsdPricesOptions) {
+  const { balmySDK } = useBalmySDK()
   const { data, ...rest } = useUsdPricesMultiChain({
     byChain: { [chainId]: addresses },
+    balmySDK,
     enabled: enabled && addresses.length > 0,
     staleTimeMs,
     refetchIntervalMs,

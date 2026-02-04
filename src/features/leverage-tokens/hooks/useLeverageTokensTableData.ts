@@ -6,6 +6,7 @@ import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('leverage-tokens-table-data')
 
+import { useBalmySDK } from '@/components/BalmySDKProvider'
 import type { LeverageToken } from '@/features/leverage-tokens/components/leverage-token-table'
 import { getAllLeverageTokenConfigs } from '@/features/leverage-tokens/leverageTokens.config'
 import { lendingAdapterAbi, leverageManagerV2Abi, leverageTokenAbi } from '@/lib/contracts'
@@ -173,8 +174,10 @@ export function useLeverageTokensTableData() {
     return out
   }, [configs])
 
+  const { balmySDK } = useBalmySDK()
   const { data: usdPricesByChain = {} } = useUsdPricesMultiChain({
     byChain: addressesByChain,
+    balmySDK,
     enabled: Object.keys(addressesByChain).length > 0,
     staleTimeMs: 15 * 60 * 1000,
     refetchIntervalMs: 15 * 60 * 1000,

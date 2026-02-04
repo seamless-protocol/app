@@ -8,6 +8,7 @@ import { prefetchPortfolioWarmup } from '@/features/portfolio/hooks/usePortfolio
 import { prefetchMorphoVaultsMaxAPY } from '@/features/vaults/hooks/useMorphoVaultsAPY'
 import { prefetchMorphoVaultsStats } from '@/features/vaults/hooks/useMorphoVaultsStats'
 import { getRepoCommitUrl, getShortCommitHash } from '@/lib/config/buildInfo'
+import { useBalmySDK } from './BalmySDKProvider'
 import { SeamlessLogo } from './icons'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
@@ -95,6 +96,7 @@ function NavigationItem({
   const Icon = item.icon
   const queryClient = useQueryClient()
   const prefetchedRef = useRef(false)
+  const { balmySDK } = useBalmySDK()
 
   const handleClick = () => {
     if (item.externalUrl) {
@@ -117,9 +119,10 @@ function NavigationItem({
     // Prefetch portfolio cache on Portfolio hover
     if (item.id?.toLowerCase?.() === 'portfolio' && userAddress) {
       prefetchedRef.current = true
-      prefetchPortfolioWarmup(queryClient, { address: userAddress, timeframe: '30D' }).catch(
-        () => {},
-      )
+      prefetchPortfolioWarmup(queryClient, balmySDK, {
+        address: userAddress,
+        timeframe: '30D',
+      }).catch(() => {})
     }
   }
 

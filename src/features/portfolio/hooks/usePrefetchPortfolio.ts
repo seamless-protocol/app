@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
+import { useBalmySDK } from '@/components/BalmySDKProvider'
 import { prefetchPortfolioWarmup } from './usePortfolioDataFetcher'
 
 interface UsePortfolioPrefetchParams {
@@ -21,12 +22,13 @@ export function usePortfolioPrefetch({
   oncePerAddress = true,
 }: UsePortfolioPrefetchParams) {
   const queryClient = useQueryClient()
+  const { balmySDK } = useBalmySDK()
   const lastAddressRef = useRef<`0x${string}` | null | undefined>(null)
 
   useEffect(() => {
     if (!enabled || !address) return
     if (oncePerAddress && lastAddressRef.current === address) return
     lastAddressRef.current = address
-    prefetchPortfolioWarmup(queryClient, { address, timeframe }).catch(() => {})
-  }, [enabled, address, timeframe, oncePerAddress, queryClient])
+    prefetchPortfolioWarmup(queryClient, balmySDK, { address, timeframe }).catch(() => {})
+  }, [enabled, address, timeframe, oncePerAddress, queryClient, balmySDK])
 }

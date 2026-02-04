@@ -185,7 +185,7 @@ export function LeverageTokenMintModal({
     symbol: leverageTokenConfig.collateralAsset.symbol,
     name: leverageTokenConfig.collateralAsset.name,
     balance: collateralBalanceFormatted,
-    price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
+    price: collateralUsdPrice || 0, // Real-time USD price
   })
   const { slippage, setSlippage, slippageBps } = useSlippage(
     leverageTokenAddress,
@@ -631,7 +631,7 @@ export function LeverageTokenMintModal({
       symbol: leverageTokenConfig.collateralAsset.symbol,
       name: leverageTokenConfig.collateralAsset.name,
       balance: collateralBalanceFormatted,
-      price: collateralUsdPrice || 0, // Real-time USD price from CoinGecko
+      price: collateralUsdPrice || 0, // Real-time USD price
     },
   ]
 

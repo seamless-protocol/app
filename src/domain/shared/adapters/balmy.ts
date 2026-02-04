@@ -100,3 +100,52 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
     }
   }
 }
+
+export async function fetchBalmyTokenUsdPrices(
+  balmySDK: ReturnType<typeof buildSDK>,
+  chainId: number,
+  addresses: Array<string>,
+): Promise<Record<string, number>> {
+  const uniqueAddresses = Array.from(new Set(addresses.map((a) => a.toLowerCase())))
+  if (uniqueAddresses.length === 0) return {}
+
+  const rawBalmyPrices = await balmySDK.priceService.getCurrentPrices({
+    tokens: uniqueAddresses.map((a) => ({ chainId, token: a as Address })),
+  })
+
+  const pricesForChain = (
+    rawBalmyPrices as Record<string, Record<string, { price: number; closestTimestamp: number }>>
+  )[String(chainId)]
+  if (!pricesForChain) return {}
+
+  return Object.fromEntries(
+    Object.entries(pricesForChain).map(([addr, entry]) => [addr, entry.price]),
+  )
+}
+
+export async function fetchBalmyTokenUsdPricesHistory(
+  balmySDK: ReturnType<typeof buildSDK>,
+  chainId: number,
+  addresses: Array<string>,
+  fromSec: number,
+): Promise<Record<string, Array<[number, number]>>> {
+  const nowSec = Math.floor(Date.now() / 1000)
+  // If 30 days or less, use a span of 120 and 6h periods, otherwise use a span of number of days and 1d period
+  const numberOfDays = (nowSec - fromSec) / (24 * 60 * 60)
+  const rawBalmyPrices = await balmySDK.priceService.getChart({
+    tokens: addresses.map((a) => ({ chainId, token: a as Address })),
+    span: numberOfDays <= 30 ? 120 : numberOfDays,
+    period: numberOfDays <= 30 ? '6h' : '1d',
+    bound: { from: fromSec },
+  })
+
+  const pricesByChain = rawBalmyPrices[chainId]
+  if (!pricesByChain) return {}
+
+  return Object.fromEntries(
+    Object.entries(pricesByChain).map(([address, prices]) => [
+      address.toLowerCase(),
+      prices.map((p) => [p.closestTimestamp, p.price]),
+    ]),
+  )
+}

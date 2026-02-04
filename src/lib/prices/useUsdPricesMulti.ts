@@ -1,8 +1,10 @@
+import type { buildSDK } from '@seamless-defi/defi-sdk'
 import { useQuery } from '@tanstack/react-query'
 import { fetchTokenUsdPrices } from './fetchUsdPrices'
 
 export interface UseUsdPricesMultiParams {
   byChain: Record<number, Array<string>>
+  balmySDK: ReturnType<typeof buildSDK>
   enabled?: boolean
   staleTimeMs?: number
   refetchIntervalMs?: number
@@ -14,6 +16,7 @@ export interface UseUsdPricesMultiParams {
  */
 export function useUsdPricesMultiChain({
   byChain,
+  balmySDK,
   enabled = true,
   staleTimeMs = 15_000,
   refetchIntervalMs = 15_000,
@@ -29,7 +32,7 @@ export function useUsdPricesMultiChain({
       const results = await Promise.all(
         entries.map(async ([chainIdStr, addrs]) => {
           const chainId = Number(chainIdStr)
-          const map = await fetchTokenUsdPrices(chainId, addrs)
+          const map = await fetchTokenUsdPrices(balmySDK, chainId, addrs)
           return [chainId, map] as const
         }),
       )
