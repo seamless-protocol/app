@@ -10,6 +10,7 @@ import {
   useWaitForTransactionReceipt,
 } from 'wagmi'
 import { parseUsdPrice, toScaledUsd, usdToFixedString } from '@/domain/shared/prices'
+import { useSwapSlippage } from '@/features/leverage-tokens/hooks/mint/useSwapSlippage'
 import {
   parseErc20ReceivedFromReceipt,
   parseMintedSharesFromReceipt,
@@ -27,6 +28,7 @@ import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
 import {
   DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+  DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
   MIN_MINT_AMOUNT_DISPLAY,
   TOKEN_AMOUNT_DISPLAY_DECIMALS,
 } from '../../constants'
@@ -191,6 +193,11 @@ export function LeverageTokenMintModal({
     leverageTokenAddress,
     leverageTokenConfig.slippagePresets?.mint?.default ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
   )
+  const { swapSlippage, setSwapSlippage, swapSlippageBps } = useSwapSlippage(
+    leverageTokenAddress,
+    DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+  )
+
   const [showAdvanced, setShowAdvanced] = useState(false)
   // Derive expected tokens from preview data (no local state needed)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
@@ -223,16 +230,6 @@ export function LeverageTokenMintModal({
     ...(contractAddresses.multicallExecutor
       ? { fromAddress: contractAddresses.multicallExecutor }
       : {}),
-  })
-
-  const planPreview = useMintPlanPreview({
-    config: wagmiConfig,
-    token: leverageTokenAddress,
-    equityInCollateralAsset: form.amountRaw,
-    slippageBps,
-    chainId: leverageTokenConfig.chainId,
-    ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
-    enabled: isOpen,
   })
 
   // Track receipt (declared before expectedTokens; effect declared below after expectedTokens)
@@ -338,6 +335,17 @@ export function LeverageTokenMintModal({
     collateralBalanceFormatted,
     collateralUsdPrice,
   ])
+
+  const planPreview = useMintPlanPreview({
+    config: wagmiConfig,
+    token: leverageTokenAddress,
+    equityInCollateralAsset: form.amountRaw,
+    slippageBps,
+    swapSlippageBps,
+    chainId: leverageTokenConfig.chainId,
+    ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
+    enabled: isOpen,
+  })
 
   // Handle approval side-effects in one place
   useEffect(() => {
@@ -764,6 +772,7 @@ export function LeverageTokenMintModal({
           token: leverageTokenAddress,
           inputAsset: leverageTokenConfig.collateralAsset.address,
           slippageBps,
+          swapSlippageBps,
           amountIn: form.amount,
           expectedOut: String(expectedTokens),
           ...(provider ? { provider } : {}),
@@ -823,6 +832,8 @@ export function LeverageTokenMintModal({
             onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
             slippage={slippage}
             onSlippageChange={setSlippage}
+            swapSlippage={swapSlippage}
+            onSwapSlippageChange={setSwapSlippage}
             isCollateralBalanceLoading={isCollateralBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
             isCalculating={isCalculating}

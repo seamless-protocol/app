@@ -27,6 +27,7 @@ export interface PlanMintParams {
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
   slippageBps: number
+  swapSlippageBps: number
   quoteDebtToCollateral: QuoteFn
 }
 
@@ -35,14 +36,19 @@ export async function planMint({
   leverageTokenConfig,
   equityInCollateralAsset,
   slippageBps,
+  swapSlippageBps,
   quoteDebtToCollateral,
 }: PlanMintParams): Promise<MintPlan> {
   if (equityInCollateralAsset <= 0n) {
     throw new Error('equityInCollateralAsset must be positive')
   }
 
-  if (slippageBps < 0) {
-    throw new Error('slippageBps cannot be negative')
+  if (slippageBps < 1) {
+    throw new Error('Share slippage cannot be less than 0.01%')
+  }
+
+  if (swapSlippageBps < 1) {
+    throw new Error('Swap slippage cannot be less than 0.01%')
   }
 
   console.debug(`planMint slippageBps: ${slippageBps}`)
@@ -76,13 +82,13 @@ export async function planMint({
 
   const currentLeverage = collateralRatioToLeverage(collateralRatio)
 
-  // Leverage-adjusted slippage for the swap: scale by previewed leverage.
-  const quoteSlippageBps = Math.max(
-    1,
-    Math.floor((slippageBps * 0.5) / (Number(formatUnits(currentLeverage, 18)) - 1)),
-  )
+  const quoteSlippageBps = swapSlippageBps
 
-  const flashLoanAmount = applySlippageFloor(routerPreview.debt, slippageBps)
+  // Leverage-adjusted slippage for the flash loan: scale by previewed leverage.
+  const flashLoanAmount = applySlippageFloor(
+    routerPreview.debt,
+    Math.floor(slippageBps / Number(formatUnits(currentLeverage, 18))),
+  )
 
   // Exact-in quote using the previewed debt amount (with leverage-adjusted slippage hint)
   const debtToCollateralQuote = await quoteDebtToCollateral({

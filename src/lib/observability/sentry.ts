@@ -101,6 +101,7 @@ export function captureTxError(params: {
   inputAsset?: string
   outputAsset?: string
   slippageBps?: number
+  swapSlippageBps?: number
   amountIn?: string
   expectedOut?: string
   provider?: string
@@ -117,6 +118,7 @@ export function captureTxError(params: {
     inputAsset,
     outputAsset,
     slippageBps,
+    swapSlippageBps,
     amountIn,
     expectedOut,
     provider,
@@ -141,6 +143,7 @@ export function captureTxError(params: {
       inputAsset,
       outputAsset,
       slippageBps,
+      swapSlippageBps,
       amountIn,
       expectedOut,
       provider,
@@ -159,6 +162,7 @@ export function captureTxError(params: {
     ...(inputAsset ? { inputAsset } : {}),
     ...(outputAsset ? { outputAsset } : {}),
     ...(typeof slippageBps === 'number' ? { slippageBps } : {}),
+    ...(typeof swapSlippageBps === 'number' ? { swapSlippageBps } : {}),
     ...(amountIn ? { amountIn } : {}),
     ...(expectedOut ? { expectedOut } : {}),
     ...(provider ? { provider } : {}),
