@@ -17,7 +17,7 @@
         "@radix-ui/react-switch": "^1.2.6",
         "@radix-ui/react-tooltip": "^1.2.8",
         "@rainbow-me/rainbowkit": "^2.2.10",
-        "@seamless-defi/defi-sdk": "^0.0.6",
+        "@seamless-defi/defi-sdk": "^0.0.7",
         "@sentry/react": "^10.30.0",
         "@tailwindcss/vite": "^4.1.18",
         "@tanstack/react-query": "^5.90.12",
@@ -665,7 +665,7 @@
 
     "@scure/bip39": ["@scure/bip39@1.6.0", "", { "dependencies": { "@noble/hashes": "~1.8.0", "@scure/base": "~1.2.5" } }, "sha512-+lF0BbLiJNwVlev4eKelw1WWLaiKXw7sSl8T6FvBlWkdX+94aGJ4o8XjUdlyhTCjd8c+B3KT3JfS8P0bLRNU6A=="],
 
-    "@seamless-defi/defi-sdk": ["@seamless-defi/defi-sdk@0.0.6", "", { "dependencies": { "cross-fetch": "4.1.0", "crypto-js": "4.2.0", "deepmerge": "4.3.1", "lru-cache": "11.1.0", "ms": "3.0.0-canary.1", "qs": "6.14.0", "viem": "2.33.1" } }, "sha512-ooJdwdUcSB4wdQAn+ELgxFQjNU04kwbF6OrFRA3LCqAg+BvKIy1SsHfMfr63/dXUrApIKsxEcukM6GUu0W8lmQ=="],
+    "@seamless-defi/defi-sdk": ["@seamless-defi/defi-sdk@0.0.7", "", { "dependencies": { "cross-fetch": "4.1.0", "crypto-js": "4.2.0", "deepmerge": "4.3.1", "lru-cache": "11.1.0", "ms": "3.0.0-canary.1", "qs": "6.14.0", "viem": "2.33.1" } }, "sha512-ING1LMlPx+HXHIJlI7OwD9No65drtMC2UWEoXvbhoJ23sU5fk7MvJ1f35PSy46XL53OSidvjh+qyf9YVYpm7Iw=="],
 
     "@sentry-internal/browser-utils": ["@sentry-internal/browser-utils@10.31.0", "", { "dependencies": { "@sentry/core": "10.31.0" } }, "sha512-2Pvk0aRA0M/wiUj2K00mhw8dhD/zRhGKK9xQVAPtSz9cbKO/0WIS5dMAX0bfNvYVVMQPrQM46BmEwxeMMuY6HQ=="],
 
