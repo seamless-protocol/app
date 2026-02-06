@@ -466,7 +466,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     supplyCap: 120,
     apyConfig: {
       aprProvider: {
-        type: APR_PROVIDERS.ETHERFI,
+        type: APR_PROVIDERS.DEFI_LLAMA,
+        id: '46bd2bdf-6d92-4066-b482-e885ee172264',
       },
       pointsMultiplier: 34,
     },
