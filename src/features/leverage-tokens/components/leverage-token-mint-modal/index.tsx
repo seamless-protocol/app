@@ -9,8 +9,8 @@ import {
   useSwitchChain,
   useWaitForTransactionReceipt,
 } from 'wagmi'
+import { DEFAULT_SHARE_SLIPPAGE_BPS } from '@/domain/shared/adapters/helpers'
 import { parseUsdPrice, toScaledUsd, usdToFixedString } from '@/domain/shared/prices'
-import { useSwapSlippage } from '@/features/leverage-tokens/hooks/mint/useSwapSlippage'
 import {
   parseErc20ReceivedFromReceipt,
   parseMintedSharesFromReceipt,
@@ -27,6 +27,7 @@ import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
 import {
+  DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY,
   DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
   DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
   MIN_MINT_AMOUNT_DISPLAY,
@@ -37,12 +38,12 @@ import { useMintForm } from '../../hooks/mint/useMintForm'
 import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useMintWrite } from '../../hooks/mint/useMintWrite'
-import { useShareSlippage } from '../../hooks/mint/useShareSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
 import { useLeverageTokenUsdPrice } from '../../hooks/useLeverageTokenUsdPrice'
 import { useMinSharesGuard } from '../../hooks/useMinSharesGuard'
+import { usePercentSlippageInput } from '../../hooks/usePercentSlippageInput'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
 import { ApproveStep } from './ApproveStep'
@@ -52,8 +53,6 @@ import { ErrorStep } from './ErrorStep'
 import { InputStep } from './InputStep'
 import { PendingStep } from './PendingStep'
 import { SuccessStep } from './SuccessStep'
-import { useFlashLoanAdjustment } from '@/features/leverage-tokens/hooks/mint/useFlashLoanAdjustment'
-import { DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY } from '../../constants'
 
 interface Token {
   symbol: string
@@ -192,18 +191,37 @@ export function LeverageTokenMintModal({
     price: collateralUsdPrice || 0, // Real-time USD price
   })
 
-  const { shareSlippage, setShareSlippage, shareSlippageBps } = useShareSlippage(
-    leverageTokenAddress,
-    leverageTokenConfig.slippagePresets?.mint?.defaultShareSlippage ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
-  )
-  const { swapSlippage, setSwapSlippage, swapSlippageBps } = useSwapSlippage(
-    leverageTokenAddress,
-    DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
-  )
-  const { flashLoanAdjustment, setFlashLoanAdjustment, flashLoanAdjustmentBps } = useFlashLoanAdjustment(
-    leverageTokenAddress,
-    leverageTokenConfig.slippagePresets?.mint?.defaultFlashLoanAdjustment ?? DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY,
-  )
+  const {
+    value: shareSlippage,
+    setValue: setShareSlippage,
+    valueBps: shareSlippageBps,
+  } = usePercentSlippageInput({
+    storageKey: `mint-share-slippage-${leverageTokenAddress}`,
+    initial:
+      leverageTokenConfig.slippagePresets?.mint?.defaultShareSlippage ??
+      DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+    fallbackBps: DEFAULT_SHARE_SLIPPAGE_BPS,
+  })
+  const {
+    value: swapSlippage,
+    setValue: setSwapSlippage,
+    valueBps: swapSlippageBps,
+  } = usePercentSlippageInput({
+    storageKey: `mint-swap-slippage-${leverageTokenAddress}`,
+    initial: DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY) * 100,
+  })
+  const {
+    value: flashLoanAdjustment,
+    setValue: setFlashLoanAdjustment,
+    valueBps: flashLoanAdjustmentBps,
+  } = usePercentSlippageInput({
+    storageKey: `mint-flash-loan-adjustment-${leverageTokenAddress}`,
+    initial:
+      leverageTokenConfig.slippagePresets?.mint?.defaultFlashLoanAdjustment ??
+      DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY) * 100,
+  })
 
   const [showAdvanced, setShowAdvanced] = useState(false)
   // Derive expected tokens from preview data (no local state needed)

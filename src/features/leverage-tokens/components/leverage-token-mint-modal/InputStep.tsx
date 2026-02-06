@@ -13,7 +13,7 @@ import {
   AMOUNT_PERCENTAGE_PRESETS,
   FLASH_LOAN_ADJUSTMENT_PRESETS_PERCENT_DISPLAY,
   MIN_MINT_AMOUNT_DISPLAY,
-  SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT,
+  SHARE_SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT,
   SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY,
 } from '../../constants'
 import { SlippageInput } from '../SlippageInput'
@@ -174,8 +174,12 @@ export function InputStep({
     return { label: `Mint ${leverageTokenConfig.symbol}`, busy: false }
   })()
 
-  const shareSlippagePresets = leverageTokenConfig.slippagePresets?.mint?.presetsShareSlippage ?? SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT
-  const flashLoanAdjustmentPresets = leverageTokenConfig.slippagePresets?.mint?.presetsFlashLoanAdjustment ?? FLASH_LOAN_ADJUSTMENT_PRESETS_PERCENT_DISPLAY
+  const shareSlippagePresets =
+    leverageTokenConfig.slippagePresets?.mint?.presetsShareSlippage ??
+    SHARE_SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT
+  const flashLoanAdjustmentPresets =
+    leverageTokenConfig.slippagePresets?.mint?.presetsFlashLoanAdjustment ??
+    FLASH_LOAN_ADJUSTMENT_PRESETS_PERCENT_DISPLAY
 
   return (
     <div className="space-y-6">

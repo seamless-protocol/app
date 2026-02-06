@@ -10,8 +10,8 @@ import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
+  COLLATERAL_ADJUSTMENT_PRESETS_PERCENT_DISPLAY_REDEEM,
   MIN_REDEEM_AMOUNT_DISPLAY,
-  SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM,
   SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY,
 } from '../../constants'
 
@@ -35,8 +35,8 @@ interface LeverageTokenConfig {
   }
   slippagePresets?: {
     redeem?: {
-      defaultCollateralSlippage?: string
-      presetsCollateralSlippage?: Array<string>
+      defaultCollateralAdjustment?: string
+      presetsCollateralAdjustment?: Array<string>
     }
   }
 }
@@ -60,8 +60,8 @@ interface InputStepProps {
   onPercentageClick: (percentage: number) => void
   showAdvanced: boolean
   onToggleAdvanced: () => void
-  collateralSlippage: string
-  onCollateralSlippageChange: (value: string) => void
+  collateralAdjustment: string
+  onCollateralAdjustmentChange: (value: string) => void
   swapSlippage: string
   onSwapSlippageChange: (value: string) => void
   isLeverageTokenBalanceLoading: boolean
@@ -104,8 +104,8 @@ export function InputStep({
   onPercentageClick,
   showAdvanced,
   onToggleAdvanced,
-  collateralSlippage,
-  onCollateralSlippageChange,
+  collateralAdjustment,
+  onCollateralAdjustmentChange,
   swapSlippage,
   onSwapSlippageChange,
   isLeverageTokenBalanceLoading,
@@ -159,9 +159,9 @@ export function InputStep({
     return { label: `Redeem ${leverageTokenConfig.symbol}`, busy: false }
   })()
 
-  const collateralSlippagePresets =
-    leverageTokenConfig.slippagePresets?.redeem?.presetsCollateralSlippage ??
-    SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM
+  const collateralAdjustmentPresets =
+    leverageTokenConfig.slippagePresets?.redeem?.presetsCollateralAdjustment ??
+    COLLATERAL_ADJUSTMENT_PRESETS_PERCENT_DISPLAY_REDEEM
 
   return (
     <div className="space-y-6">
@@ -243,11 +243,11 @@ export function InputStep({
         {showAdvanced && (
           <>
             <SlippageInput
-              label="Collateral Slippage"
-              tooltipText="The maximum allowed difference between the expected amount of collateral to be received and the actual amount received."
-              presets={collateralSlippagePresets}
-              value={collateralSlippage}
-              onChange={onCollateralSlippageChange}
+              label="Collateral Adjustment"
+              tooltipText="The leverage portion of the collateral is swapped to the debt asset during the redeem flow to repay a flash loan. If the redeem simulation fails due to the debt quote output being less than the previewed debt, you can try increasing this value."
+              presets={collateralAdjustmentPresets}
+              value={collateralAdjustment}
+              onChange={onCollateralAdjustmentChange}
               step={0.1}
               min={0.1}
               max={50}
@@ -359,8 +359,8 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Collateral Slippage</span>
-            <span className="text-foreground">{collateralSlippage}%</span>
+            <span className="text-secondary-foreground">Collateral Adjustment</span>
+            <span className="text-foreground">{collateralAdjustment}%</span>
           </div>
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Swap Slippage</span>

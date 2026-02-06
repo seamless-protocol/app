@@ -50,9 +50,7 @@ describe('planMint', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Default first multicall: getLeverageTokenState + router previewDeposit
-    readContract.mockResolvedValueOnce(
-      { collateral: 2_000n, debt: 1_000n, shares: 1_000n },
-    )
+    readContract.mockResolvedValueOnce({ collateral: 2_000n, debt: 1_000n, shares: 1_000n })
   })
 
   it('builds a plan with leverage-adjusted slippage and approvals', async () => {

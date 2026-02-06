@@ -32,9 +32,13 @@ describe('planRedeem', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // previewRedeem
-    readContract.mockResolvedValueOnce(
-      { collateral: 1_000n, debt: 300n, shares: 100n, tokenFee: 0n, treasuryFee: 0n },
-    )
+    readContract.mockResolvedValueOnce({
+      collateral: 1_000n,
+      debt: 300n,
+      shares: 100n,
+      tokenFee: 0n,
+      treasuryFee: 0n,
+    })
     // convertToAssets
     readContract.mockResolvedValueOnce(800n)
   })
@@ -51,7 +55,7 @@ describe('planRedeem', () => {
       publicClient,
       leverageTokenConfig,
       sharesToRedeem: 100n,
-      collateralSlippageBps: 100,
+      collateralAdjustmentBps: 100,
       swapSlippageBps: 100,
       quoteCollateralToDebt: quote as any,
     })
@@ -88,7 +92,7 @@ describe('planRedeem', () => {
         publicClient,
         leverageTokenConfig,
         sharesToRedeem: 100n,
-        collateralSlippageBps: 100,
+        collateralAdjustmentBps: 100,
         swapSlippageBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
@@ -108,7 +112,7 @@ describe('planRedeem', () => {
         publicClient,
         leverageTokenConfig,
         sharesToRedeem: 100n,
-        collateralSlippageBps: 100,
+        collateralAdjustmentBps: 100,
         swapSlippageBps: 100,
         quoteCollateralToDebt: quote as any,
       }),

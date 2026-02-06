@@ -130,8 +130,8 @@ export interface LeverageTokenConfig {
       presetsFlashLoanAdjustment?: Array<string>
     }
     redeem?: {
-      defaultCollateralSlippage?: string
-      presetsCollateralSlippage?: Array<string>
+      defaultCollateralAdjustment?: string
+      presetsCollateralAdjustment?: Array<string>
     }
   }
 

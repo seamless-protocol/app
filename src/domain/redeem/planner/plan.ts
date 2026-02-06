@@ -31,7 +31,7 @@ export interface PlanRedeemParams {
   publicClient: PublicClient
   leverageTokenConfig: LeverageTokenConfig
   sharesToRedeem: bigint
-  collateralSlippageBps: number
+  collateralAdjustmentBps: number
   swapSlippageBps: number
   quoteCollateralToDebt: QuoteFn
 }
@@ -40,7 +40,7 @@ export async function planRedeem({
   publicClient,
   leverageTokenConfig,
   sharesToRedeem,
-  collateralSlippageBps,
+  collateralAdjustmentBps,
   swapSlippageBps,
   quoteCollateralToDebt,
 }: PlanRedeemParams): Promise<RedeemPlan> {
@@ -48,13 +48,16 @@ export async function planRedeem({
     throw new Error('sharesToRedeem must be positive')
   }
 
-  if (collateralSlippageBps < 1) {
-    throw new Error('Collateral slippage cannot be less than 0.01%')
+  if (collateralAdjustmentBps < 1) {
+    throw new Error('Collateral adjustment cannot be less than 0.01%')
   }
 
   if (swapSlippageBps < 1) {
     throw new Error('Swap slippage cannot be less than 0.01%')
   }
+
+  console.debug(`planRedeem collateralAdjustmentBps: ${collateralAdjustmentBps}`)
+  console.debug(`planRedeem swapSlippageBps: ${swapSlippageBps}`)
 
   const chainId = leverageTokenConfig.chainId as SupportedChainId
   const token = leverageTokenConfig.address as Address
@@ -77,7 +80,7 @@ export async function planRedeem({
     args: [token, netShares],
   })
 
-  const minCollateralForSender = applySlippageFloor(previewEquity, collateralSlippageBps)
+  const minCollateralForSender = applySlippageFloor(previewEquity, collateralAdjustmentBps)
 
   // Leverage-adjusted slippage for the swap: scale by previewed leverage.
   const quoteSlippageBps = swapSlippageBps
@@ -93,13 +96,13 @@ export async function planRedeem({
 
   if (collateralToDebtQuote.out < preview.debt) {
     throw new Error(
-      `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}. Try increasing your collateral slippage tolerance`,
+      `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}. Try increasing your collateral adjustment`,
     )
   }
 
   if (collateralToDebtQuote.minOut < preview.debt) {
     throw new Error(
-      `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}. Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral slippage tolerance`,
+      `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}. Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral adjustment`,
     )
   }
 

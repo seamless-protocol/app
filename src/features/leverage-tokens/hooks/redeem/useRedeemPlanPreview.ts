@@ -10,7 +10,7 @@ import { ltKeys } from '@/features/leverage-tokens/utils/queryKeys'
 interface UseRedeemPlanPreviewParams {
   token: Address
   sharesToRedeem: bigint | undefined
-  collateralSlippageBps: number
+  collateralAdjustmentBps: number
   swapSlippageBps: number
   chainId: number
   enabled: boolean
@@ -21,7 +21,7 @@ interface UseRedeemPlanPreviewParams {
 export function useRedeemPlanPreview({
   token,
   sharesToRedeem,
-  collateralSlippageBps,
+  collateralAdjustmentBps,
   swapSlippageBps,
   chainId,
   quote,
@@ -38,7 +38,7 @@ export function useRedeemPlanPreview({
     chainId,
     addr: token,
     amount: debounced ?? 0n,
-    collateralSlippageBps,
+    collateralAdjustmentBps,
     swapSlippageBps,
   }
 
@@ -61,7 +61,7 @@ export function useRedeemPlanPreview({
         publicClient,
         leverageTokenConfig,
         sharesToRedeem: debounced as bigint,
-        collateralSlippageBps,
+        collateralAdjustmentBps,
         swapSlippageBps,
         quoteCollateralToDebt: quote as QuoteFn,
       })

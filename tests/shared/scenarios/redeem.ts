@@ -146,7 +146,8 @@ export async function planRedeemTest({
     publicClient: ctx.publicClient,
     leverageTokenConfig,
     sharesToRedeem,
-    slippageBps,
+    collateralAdjustmentBps: slippageBps,
+    swapSlippageBps: slippageBps,
     quoteCollateralToDebt,
   })
 

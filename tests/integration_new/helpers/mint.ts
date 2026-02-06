@@ -139,7 +139,8 @@ async function mintWithRetries({
     } catch (error) {
       const isRetryableError =
         error instanceof MintExecutionSimulationError ||
-        (error instanceof Error && error.message.includes('Try increasing your slippage tolerance'))
+        (error instanceof Error &&
+          error.message.includes('Try increasing your share slippage tolerance'))
 
       if (isRetryableError && i < MAX_ATTEMPTS - 1) {
         shareSlippageBps += slippageIncrementBps
@@ -194,7 +195,11 @@ async function executeMintFlow({
   // Preview the mint plan
   const { result: mintPlanPreviewResult } = renderHook(
     wagmiConfig,
-    (props: { shareSlippageBps: number, swapSlippageBps: number, flashLoanAdjustmentBps: number }) =>
+    (props: {
+      shareSlippageBps: number
+      swapSlippageBps: number
+      flashLoanAdjustmentBps: number
+    }) =>
       useMintPlanPreview({
         config: wagmiConfig,
         token: leverageTokenConfig.address,

@@ -16,12 +16,13 @@ export const DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY = '0.01'
 // Default flash loan adjustment tolerance shown in the UI (percent as string)
 export const DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY = '0.5'
 
-// Preset slippage options (percent strings) shown in the advanced UI
-export const SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM = ['0.5', '1.0', '1.5'] as const
-export const SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT = ['0.1', '0.5', '1.0'] as const
+export const DEFAULT_COLLATERAL_ADJUSTMENT_PERCENT_DISPLAY = '5.0'
 
+// Preset slippage options (percent strings) shown in the advanced UI
+export const SHARE_SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT = ['0.1', '0.5', '1.0'] as const
 export const SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY = ['0.01', '0.05', '0.1'] as const
 export const FLASH_LOAN_ADJUSTMENT_PRESETS_PERCENT_DISPLAY = ['0.5', '1.0', '1.5'] as const
+export const COLLATERAL_ADJUSTMENT_PRESETS_PERCENT_DISPLAY_REDEEM = ['4.0', '5.0', '6.0'] as const
 
 // Preset percentage options for amount selection (25%, 50%, 75%, 100%)
 export const AMOUNT_PERCENTAGE_PRESETS = [25, 50, 75, 100] as const

@@ -51,7 +51,7 @@ describe('useRedeemPlanPreview', () => {
       useRedeemPlanPreview({
         token: TOKEN_ADDRESS,
         sharesToRedeem: SHARES_TO_REDEEM,
-        collateralSlippageBps: 50,
+        collateralAdjustmentBps: 50,
         swapSlippageBps: 50,
         chainId: CHAIN_ID,
         enabled: true,
@@ -71,7 +71,7 @@ describe('useRedeemPlanPreview', () => {
       useRedeemPlanPreview({
         token: TOKEN_ADDRESS,
         sharesToRedeem: undefined,
-        collateralSlippageBps: 50,
+        collateralAdjustmentBps: 50,
         swapSlippageBps: 50,
         chainId: CHAIN_ID,
         enabled: true,
@@ -95,7 +95,7 @@ describe('useRedeemPlanPreview', () => {
       useRedeemPlanPreview({
         token: TOKEN_ADDRESS,
         sharesToRedeem: SHARES_TO_REDEEM,
-        collateralSlippageBps: 50,
+        collateralAdjustmentBps: 50,
         swapSlippageBps: 50,
         chainId: CHAIN_ID,
         enabled: true,
