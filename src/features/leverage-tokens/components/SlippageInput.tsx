@@ -48,25 +48,27 @@ export function SlippageInput({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="text-xs font-medium text-foreground">{label}</div>
-          <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center text-text-muted hover:text-secondary-foreground transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-0 -m-2 sm:m-0"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  setTooltipOpen((prev) => !prev)
-                }}
-              >
-                <Info className="h-5 w-5 sm:h-3 sm:w-3" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-2xs p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
-              <div className="min-w-52 max-w-2xs space-y-2 rounded-lg border border-border bg-card p-4">
-                <div className="text-sm wrap-break-word text-text-primary">{tooltipText}</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
+          <div className="mr-2">
+            <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center text-text-muted hover:text-secondary-foreground transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-0 -m-2 sm:m-0"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    setTooltipOpen((prev) => !prev)
+                  }}
+                >
+                  <Info className="h-5 w-5 sm:h-3 sm:w-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-2xs p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
+                <div className="min-w-52 max-w-2xs space-y-2 rounded-lg border border-border bg-card p-4">
+                  <div className="text-sm wrap-break-word text-text-primary">{tooltipText}</div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           {presets.map((preset) => (

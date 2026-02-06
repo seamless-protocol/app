@@ -270,7 +270,7 @@ export function InputStep({
         {showAdvanced && (
           <>
             <SlippageInput
-              label="Share Slippage"
+              label="Leverage Token Slippage Tolerance"
               tooltipText="The maximum allowed difference between previewed Leverage Tokens received and actual Leverage Tokens received when executed onchain."
               presets={shareSlippagePresets}
               value={shareSlippage}
