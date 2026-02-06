@@ -127,17 +127,17 @@ export function InputStep({
   impactWarning,
   quoteSourceName,
 }: InputStepProps) {
-  const collateralSlippageInputRef = useRef<HTMLInputElement>(null)
+  const collateralAdjustmentInputRef = useRef<HTMLInputElement>(null)
 
   const redeemAmountId = useId()
 
-  // Auto-select and focus slippage input when advanced is shown
+  // Auto-select and focus collateral adjustment input when advanced is shown
   useEffect(() => {
-    if (showAdvanced && collateralSlippageInputRef.current) {
+    if (showAdvanced && collateralAdjustmentInputRef.current) {
       // Small delay to ensure the input is rendered
       setTimeout(() => {
-        collateralSlippageInputRef.current?.focus()
-        collateralSlippageInputRef.current?.select()
+        collateralAdjustmentInputRef.current?.focus()
+        collateralAdjustmentInputRef.current?.select()
       }, 100)
     }
   }, [showAdvanced])
@@ -248,6 +248,7 @@ export function InputStep({
               presets={collateralAdjustmentPresets}
               value={collateralAdjustment}
               onChange={onCollateralAdjustmentChange}
+              inputRef={collateralAdjustmentInputRef}
               step={0.1}
               min={0.1}
               max={50}
