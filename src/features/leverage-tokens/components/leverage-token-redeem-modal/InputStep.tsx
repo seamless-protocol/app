@@ -256,7 +256,7 @@ export function InputStep({
             />
             <SlippageInput
               label="Swap Slippage"
-              tooltipText="The maximum allowed difference between the expected amount of debt received from the swap of collateral performed during the redeem flow and the actual amount received. If the redeem simulation fails due to the minimum debt being less than the flash loan amount, you can try decreasing this value."
+              tooltipText="Advanced setting. The default value works in most cases."
               presets={SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY}
               value={swapSlippage}
               onChange={onSwapSlippageChange}

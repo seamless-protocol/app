@@ -271,7 +271,7 @@ export function InputStep({
           <>
             <SlippageInput
               label="Share Slippage"
-              tooltipText="The maximum allowed difference between the expected amount of Leverage Token shares to be received and the actual amount received."
+              tooltipText="The maximum allowed difference between previewed Leverage Tokens received and actual Leverage Tokens received when executed onchain."
               presets={shareSlippagePresets}
               value={shareSlippage}
               onChange={onShareSlippageChange}
@@ -283,7 +283,7 @@ export function InputStep({
             />
             <SlippageInput
               label="Flash Loan Adjustment"
-              tooltipText="The debt asset is flash loaned and swapped to the collateral asset during the mint flow to obtain leverage. If the mint simulation fails due to the minimum shares being less than min shares, you can try decreasing this value."
+              tooltipText="Advanced setting. The default value works in most cases."
               presets={flashLoanAdjustmentPresets}
               value={flashLoanAdjustment}
               onChange={onFlashLoanAdjustmentChange}
@@ -294,7 +294,7 @@ export function InputStep({
             />
             <SlippageInput
               label="Swap Slippage"
-              tooltipText="The maximum allowed difference between the expected amount of collateral received from the swap of flash loaned debt performed during the mint flow and the actual amount received. If the mint simulation fails due to the minimum debt being less than the flash loan amount, you can try decreasing this value."
+              tooltipText="Advanced setting. The default value works in most cases."
               presets={SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY}
               value={swapSlippage}
               onChange={onSwapSlippageChange}
