@@ -255,7 +255,7 @@ export function captureRedeemPlanError(params: {
   }
   previewEquity: bigint
   minCollateralForSender: bigint
-  collateralToSpend: bigint
+  collateralToSpend?: bigint
   collateralToDebtQuote: Quote
 }) {
   const {
@@ -265,8 +265,8 @@ export function captureRedeemPlanError(params: {
     previewRedeem,
     previewEquity,
     minCollateralForSender,
-    collateralToSpend,
     collateralToDebtQuote,
+    collateralToSpend,
   } = params
 
   Sentry.addBreadcrumb({

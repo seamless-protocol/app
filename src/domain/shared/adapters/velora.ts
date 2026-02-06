@@ -205,9 +205,13 @@ function mapVeloraResponseToQuote(
 
   // Calculate slippage-adjusted minimum amount
   // Note: This is not used but instead keep for the sake of consistency with other adapters
-  const slippageBps = Math.round(parseFloat(slippage) * 10000)
-  const slippageMultiplier = (10000 - slippageBps) / 10000
-  const minOut = BigInt(Math.floor(Number(expectedOut) * slippageMultiplier))
+  let minOut = expectedOut
+
+  if (intent === 'exactIn') {
+    const slippageBps = Math.round(parseFloat(slippage) * 10000)
+    const slippageMultiplier = (10000 - slippageBps) / 10000
+    minOut = BigInt(Math.floor(Number(expectedOut) * slippageMultiplier))
+  }
 
   // Velora API already handles slippage internally in the transaction calldata
   // We use the API's expected amount for UI display and debt repayment
@@ -217,6 +221,7 @@ function mapVeloraResponseToQuote(
   const baseQuote = {
     out,
     minOut,
+    in: maxIn,
     maxIn,
     approvalTarget: getAddress(approvalTarget),
     wantsNativeIn,

@@ -9,7 +9,13 @@
 import { useMutation } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import { useConfig } from 'wagmi'
-import { type OrchestrateRedeemResult, orchestrateRedeem, type RedeemPlan } from '@/domain/redeem'
+import {
+  type OrchestrateRedeemResult,
+  orchestrateRedeem,
+  orchestrateRedeemWithVelora,
+  type RedeemPlan,
+} from '@/domain/redeem'
+import type { SupportedChainId } from '@/lib/contracts/addresses'
 
 type Gen = typeof import('@/lib/contracts/generated')
 
@@ -29,18 +35,31 @@ export interface UseRedeemWithRouterParams {
 /**
  * Thin hook wrapper around the domain-level orchestrateRedeem.
  */
-export function useRedeemWithRouter() {
+export function useRedeemWithRouter(swapType?: string) {
   const config = useConfig()
   return useMutation<OrchestrateRedeemResult, Error, UseRedeemWithRouterParams>({
-    mutationFn: async ({ token, account, plan, chainId, routerAddress, managerAddress }) =>
-      orchestrateRedeem({
-        config,
-        account,
-        token,
-        plan,
-        chainId,
-        ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
-        ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
-      }),
+    mutationFn: async ({ token, account, plan, chainId, routerAddress, managerAddress }) => {
+      if (swapType === 'velora') {
+        return orchestrateRedeemWithVelora({
+          config,
+          account,
+          token,
+          plan,
+          chainId: chainId as SupportedChainId,
+          ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
+          ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
+        })
+      } else {
+        return orchestrateRedeem({
+          config,
+          account,
+          token,
+          plan,
+          chainId,
+          ...(typeof routerAddress !== 'undefined' ? { routerAddress } : {}),
+          ...(typeof managerAddress !== 'undefined' ? { managerAddress } : {}),
+        })
+      }
+    },
   })
 }

@@ -71,6 +71,9 @@ export interface ContractAddresses {
     cbbtc?: Address
     weth?: Address
   }
+
+  // Velora
+  augustus?: Address
 }
 
 /**
@@ -118,6 +121,8 @@ const baseContracts: ContractAddresses = {
     cbbtc: '0x5a47C803488FE2BB0A0EAaf346b420e4dF22F3C7' as Address,
     weth: '0x27d8c7273fd3fcc6956a0b370ce5fd4a7fc65c18' as Address,
   },
+
+  augustus: '0x6a000f20005980200259b80c5102003040001068' as Address,
 }
 
 const mainnetContracts: ContractAddresses = {
@@ -144,6 +149,8 @@ const mainnetContracts: ContractAddresses = {
 
   // Helpers
   multicallExecutor: '0x16D02Ebd89988cAd1Ce945807b963aB7A9Fd22E1' as Address,
+
+  augustus: '0x6a000f20005980200259b80c5102003040001068' as Address,
 }
 
 export const contractAddresses: Record<number, ContractAddresses> = {

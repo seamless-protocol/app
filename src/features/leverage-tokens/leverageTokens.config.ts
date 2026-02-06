@@ -200,8 +200,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'balmy',
-        excludeAdditionalSources: ['odos'],
+        type: 'velora',
       },
     },
     relatedResources: {
@@ -297,8 +296,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'balmy',
-        excludeAdditionalSources: ['odos'],
+        type: 'velora',
       },
     },
     relatedResources: {
@@ -506,8 +504,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'balmy',
-        excludeAdditionalSources: ['odos'],
+        type: 'velora',
       },
     },
     relatedResources: {
@@ -793,8 +790,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'balmy',
-        excludeAdditionalSources: ['odos'],
+        type: 'velora',
       },
     },
     relatedResources: {
