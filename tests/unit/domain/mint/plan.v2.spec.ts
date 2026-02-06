@@ -136,7 +136,7 @@ describe('planMint', () => {
         flashLoanAdjustmentBps: 100,
         quoteDebtToCollateral: quote as any,
       }),
-    ).rejects.toThrow(/previewed debt 800.*flash loan amount 990/i)
+    ).rejects.toThrow(/Try increasing your share slippage tolerance./i)
   })
 
   it('throws when minimum shares from manager are below slippage floor', async () => {
@@ -169,7 +169,9 @@ describe('planMint', () => {
         flashLoanAdjustmentBps: 100,
         quoteDebtToCollateral: quote as any,
       }),
-    ).rejects.toThrow(/minimum shares.*less than min shares/i)
+    ).rejects.toThrow(
+      /Try increasing your share slippage tolerance first. You can also try decreasing your flash loan adjustment/i,
+    )
   })
 
   it('builds a plan with zero flash loan adjustment', async () => {

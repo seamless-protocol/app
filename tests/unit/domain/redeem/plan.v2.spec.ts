@@ -95,7 +95,7 @@ describe('planRedeem', () => {
         swapSlippageBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
-    ).rejects.toThrow(/less than preview debt/i)
+    ).rejects.toThrow(/Try increasing your collateral adjustment/i)
   })
 
   it('throws when minOut is below required debt', async () => {
@@ -115,7 +115,9 @@ describe('planRedeem', () => {
         swapSlippageBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
-    ).rejects.toThrow(/minimum output .* less than preview debt/i)
+    ).rejects.toThrow(
+      /Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral adjustment/i,
+    )
   })
 
   it('builds a plan with zero collateral adjustment', async () => {

@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react'
+import type { Quote } from '@/domain/shared/adapters/types'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('observability')
@@ -178,5 +179,119 @@ export function captureTxError(params: {
     ...(decodedName ? { decodedName } : {}),
     ...(routeTag ? { route: routeTag } : {}),
     status,
+  })
+}
+
+export function captureMintPlanError(params: {
+  errorString: string
+  shareSlippageBps: number
+  swapSlippageBps: number
+  flashLoanAdjustmentBps: number
+  routerPreview: {
+    shares: bigint
+    debt: bigint
+  }
+  debtToCollateralQuote: Quote
+  managerPreview: {
+    debt: bigint
+  }
+  managerMin: {
+    debt: bigint
+    shares: bigint
+  }
+  flashLoanAmount: bigint
+}) {
+  const {
+    errorString,
+    shareSlippageBps,
+    swapSlippageBps,
+    flashLoanAdjustmentBps,
+    routerPreview,
+    debtToCollateralQuote,
+    managerPreview,
+    managerMin,
+    flashLoanAmount,
+  } = params
+
+  Sentry.addBreadcrumb({
+    category: 'mint_plan',
+    level: 'error',
+    message: errorString,
+    data: {
+      shareSlippageBps,
+      swapSlippageBps,
+      flashLoanAdjustmentBps,
+      routerPreview,
+      debtToCollateralQuote,
+      managerPreview,
+      managerMin,
+      flashLoanAmount,
+    },
+  })
+
+  logger.error('Mint plan error', {
+    errorString,
+    shareSlippageBps,
+    swapSlippageBps,
+    flashLoanAdjustmentBps,
+    routerPreview,
+    debtToCollateralQuote,
+    managerPreview,
+    managerMin,
+    flashLoanAmount,
+  })
+}
+
+export function captureRedeemPlanError(params: {
+  errorString: string
+  collateralAdjustmentBps: number
+  swapSlippageBps: number
+  previewRedeem: {
+    collateral: bigint
+    debt: bigint
+    shares: bigint
+    treasuryFee: bigint
+    tokenFee: bigint
+  }
+  previewEquity: bigint
+  minCollateralForSender: bigint
+  collateralToSpend: bigint
+  collateralToDebtQuote: Quote
+}) {
+  const {
+    errorString,
+    collateralAdjustmentBps,
+    swapSlippageBps,
+    previewRedeem,
+    previewEquity,
+    minCollateralForSender,
+    collateralToSpend,
+    collateralToDebtQuote,
+  } = params
+
+  Sentry.addBreadcrumb({
+    category: 'redeem_plan',
+    level: 'error',
+    message: errorString,
+    data: {
+      collateralAdjustmentBps,
+      swapSlippageBps,
+      previewRedeem,
+      previewEquity,
+      minCollateralForSender,
+      collateralToSpend,
+      collateralToDebtQuote,
+    },
+  })
+
+  logger.error('Redeem plan error', {
+    errorString,
+    collateralAdjustmentBps,
+    swapSlippageBps,
+    previewRedeem,
+    previewEquity,
+    minCollateralForSender,
+    collateralToSpend,
+    collateralToDebtQuote,
   })
 }

@@ -6,6 +6,7 @@ import { leverageManagerV2Abi } from '@/lib/contracts/abis/leverageManagerV2'
 import { leverageRouterV2Abi } from '@/lib/contracts/abis/leverageRouterV2'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 import { getContractAddresses } from '@/lib/contracts/addresses'
+import { captureMintPlanError } from '@/lib/observability/sentry'
 import { applySlippageFloor } from './math'
 
 export interface MintPlan {
@@ -104,20 +105,51 @@ export async function planMint({
   })
 
   if (managerPreview.debt < flashLoanAmount) {
-    throw new Error(
-      `Manager previewed debt ${managerPreview.debt} is less than flash loan amount ${flashLoanAmount}. Try increasing your share slippage tolerance`,
-    )
+    captureMintPlanError({
+      errorString: `Manager previewed debt ${managerPreview.debt} is less than flash loan amount ${flashLoanAmount}.`,
+      shareSlippageBps,
+      swapSlippageBps,
+      flashLoanAdjustmentBps,
+      routerPreview,
+      debtToCollateralQuote,
+      managerPreview,
+      managerMin,
+      flashLoanAmount,
+    })
+    throw new Error(`Try increasing your share slippage tolerance.`)
   }
 
   if (managerMin.debt < flashLoanAmount) {
+    captureMintPlanError({
+      errorString: `Manager minimum debt ${managerMin.debt} is less than flash loan amount ${flashLoanAmount}.`,
+      shareSlippageBps,
+      swapSlippageBps,
+      flashLoanAdjustmentBps,
+      routerPreview,
+      debtToCollateralQuote,
+      managerPreview,
+      managerMin,
+      flashLoanAmount,
+    })
     throw new Error(
-      `Manager minimum debt ${managerMin.debt} is less than flash loan amount ${flashLoanAmount}. Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your share slippage tolerance`,
+      `Try decreasing your swap slippage tolerance. If you cannot decrease it further, try increasing your share slippage tolerance`,
     )
   }
 
   if (managerMin.shares < minShares) {
+    captureMintPlanError({
+      errorString: `Manager minimum shares ${managerMin.shares} are less than min shares ${minShares}.`,
+      shareSlippageBps,
+      swapSlippageBps,
+      flashLoanAdjustmentBps,
+      routerPreview,
+      debtToCollateralQuote,
+      managerPreview,
+      managerMin,
+      flashLoanAmount,
+    })
     throw new Error(
-      `Manager minimum shares ${managerMin.shares} are less than min shares ${minShares}. Try decreasing your flash loan adjustment or increasing your share slippage tolerance`,
+      `Try increasing your share slippage tolerance first. You can also try decreasing your flash loan adjustment`,
     )
   }
 

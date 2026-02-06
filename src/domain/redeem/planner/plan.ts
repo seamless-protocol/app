@@ -13,6 +13,7 @@ import type { Call } from '@/domain/shared/types'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 import { leverageManagerV2Abi } from '@/lib/contracts/generated'
+import { captureRedeemPlanError } from '@/lib/observability/sentry'
 
 export interface RedeemPlan {
   collateralToSwap: bigint
@@ -95,14 +96,32 @@ export async function planRedeem({
   })
 
   if (collateralToDebtQuote.out < preview.debt) {
-    throw new Error(
-      `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}. Try increasing your collateral adjustment`,
-    )
+    captureRedeemPlanError({
+      errorString: `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}`,
+      collateralAdjustmentBps,
+      swapSlippageBps,
+      previewRedeem: preview,
+      previewEquity,
+      minCollateralForSender,
+      collateralToSpend,
+      collateralToDebtQuote,
+    })
+    throw new Error(`Try increasing your collateral adjustment`)
   }
 
   if (collateralToDebtQuote.minOut < preview.debt) {
+    captureRedeemPlanError({
+      errorString: `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}`,
+      collateralAdjustmentBps,
+      swapSlippageBps,
+      previewRedeem: preview,
+      previewEquity,
+      minCollateralForSender,
+      collateralToSpend,
+      collateralToDebtQuote,
+    })
     throw new Error(
-      `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}. Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral adjustment`,
+      `Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral adjustment`,
     )
   }
 
