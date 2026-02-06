@@ -277,7 +277,7 @@ export function InputStep({
               onChange={onShareSlippageChange}
               inputRef={shareSlippageInputRef}
               step={0.1}
-              min={0.1}
+              min={0}
               max={50}
               precision={1}
             />
@@ -288,7 +288,7 @@ export function InputStep({
               value={flashLoanAdjustment}
               onChange={onFlashLoanAdjustmentChange}
               step={0.1}
-              min={0.1}
+              min={-10}
               max={10}
               precision={1}
             />

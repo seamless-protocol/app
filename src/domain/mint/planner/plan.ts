@@ -44,16 +44,12 @@ export async function planMint({
     throw new Error('equityInCollateralAsset must be positive')
   }
 
-  if (shareSlippageBps < 1) {
-    throw new Error('Share slippage cannot be less than 0.01%')
+  if (shareSlippageBps < 0) {
+    throw new Error('Share slippage cannot be less than 0')
   }
 
   if (swapSlippageBps < 1) {
     throw new Error('Swap slippage cannot be less than 0.01%')
-  }
-
-  if (flashLoanAdjustmentBps < 1) {
-    throw new Error('Flash loan adjustment cannot be less than 0.01%')
   }
 
   console.debug(`planMint shareSlippageBps: ${shareSlippageBps}`)
@@ -78,7 +74,6 @@ export async function planMint({
 
   const quoteSlippageBps = swapSlippageBps
 
-  // Leverage-adjusted slippage for the flash loan: scale by previewed leverage.
   const flashLoanAmount = applySlippageFloor(routerPreview.debt, flashLoanAdjustmentBps)
 
   // Exact-in quote using the previewed debt amount (with leverage-adjusted slippage hint)

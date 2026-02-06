@@ -49,7 +49,7 @@ const readContract = publicClient.readContract as Mock
 describe('planMint', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Default first multicall: getLeverageTokenState + router previewDeposit
+    // router previewDeposit
     readContract.mockResolvedValueOnce({ collateral: 2_000n, debt: 1_000n, shares: 1_000n })
   })
 
@@ -62,7 +62,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // Second multicall: manager previewDeposit (with out) + manager previewDeposit (with minOut)
+    // manager previewDeposit (with out) + manager previewDeposit (with minOut)
     multicall.mockResolvedValueOnce([
       {
         debt: 1_300n,
@@ -114,7 +114,7 @@ describe('planMint', () => {
       calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
     }))
 
-    // Second multicall: manager previewDeposit returns debt below flash loan amount
+    // manager previewDeposit returns debt below flash loan amount
     multicall.mockResolvedValueOnce([
       {
         debt: 800n,
@@ -147,7 +147,7 @@ describe('planMint', () => {
       calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
     }))
 
-    // Second multicall: manager previewDeposit (minOut path) returns shares below minShares
+    // manager previewDeposit (minOut path) returns shares below minShares
     multicall.mockResolvedValueOnce([
       {
         debt: 1_300n,
@@ -170,5 +170,135 @@ describe('planMint', () => {
         quoteDebtToCollateral: quote as any,
       }),
     ).rejects.toThrow(/minimum shares.*less than min shares/i)
+  })
+
+  it('builds a plan with zero flash loan adjustment', async () => {
+    const quote = vi.fn(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
+    }))
+
+    // manager previewDeposit (with out) + manager previewDeposit (with minOut)
+    multicall.mockResolvedValueOnce([
+      {
+        debt: 1_300n,
+        shares: 1_600n,
+      },
+      {
+        debt: 1_100n,
+        shares: 1_500n,
+      },
+    ])
+
+    const plan = await planMint({
+      publicClient,
+      leverageTokenConfig,
+      equityInCollateralAsset: 500n,
+      shareSlippageBps: 100,
+      swapSlippageBps: 10,
+      flashLoanAdjustmentBps: 0,
+      quoteDebtToCollateral: quote as any,
+    })
+
+    // flash loan and shares are slippage-adjusted from router preview
+    expect(plan.flashLoanAmount).toBe(1000n)
+    expect(plan.minShares).toBe(990n)
+    expect(plan.previewShares).toBe(1_600n)
+    expect(plan.previewExcessDebt).toBe(300n) // 1300 - 1000
+    expect(plan.minExcessDebt).toBe(100n) // 1100 - 1000
+    expect(plan.calls[0]?.target).toBe(debt) // approval first
+    expect(plan.calls.length).toBeGreaterThanOrEqual(1)
+
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 10,
+        amountIn: 1000n,
+        intent: 'exactIn',
+        inToken: debt,
+        outToken: collateral,
+      }),
+    )
+  })
+
+  it('builds a plan with negative flash loan adjustment', async () => {
+    const quote = vi.fn(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
+    }))
+
+    // manager previewDeposit (with out) + manager previewDeposit (with minOut)
+    multicall.mockResolvedValueOnce([
+      {
+        debt: 1_300n,
+        shares: 1_600n,
+      },
+      {
+        debt: 1_100n,
+        shares: 1_500n,
+      },
+    ])
+
+    const plan = await planMint({
+      publicClient,
+      leverageTokenConfig,
+      equityInCollateralAsset: 500n,
+      shareSlippageBps: 100,
+      swapSlippageBps: 10,
+      flashLoanAdjustmentBps: -100,
+      quoteDebtToCollateral: quote as any,
+    })
+
+    // flash loan and shares are slippage-adjusted from router preview
+    expect(plan.flashLoanAmount).toBe(1010n)
+    expect(plan.minShares).toBe(990n)
+    expect(plan.previewShares).toBe(1_600n)
+    expect(plan.previewExcessDebt).toBe(290n) // 1300 - 1010
+    expect(plan.minExcessDebt).toBe(90n) // 1100 - 1010
+    expect(plan.calls[0]?.target).toBe(debt) // approval first
+    expect(plan.calls.length).toBeGreaterThanOrEqual(1)
+
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 10,
+        amountIn: 1010n,
+        intent: 'exactIn',
+        inToken: debt,
+        outToken: collateral,
+      }),
+    )
+  })
+
+  it('throws error when share slippage is negative', async () => {
+    await expect(
+      planMint({
+        publicClient,
+        leverageTokenConfig,
+        equityInCollateralAsset: 500n,
+        shareSlippageBps: -100,
+        swapSlippageBps: 10,
+        flashLoanAdjustmentBps: 100,
+        quoteDebtToCollateral: vi.fn() as any,
+      }),
+    ).rejects.toThrow(/Share slippage cannot be less than 0/i)
+  })
+
+  it('throws error when swap slippage is less than 0.01%', async () => {
+    await expect(
+      planMint({
+        publicClient,
+        leverageTokenConfig,
+        equityInCollateralAsset: 500n,
+        shareSlippageBps: 100,
+        swapSlippageBps: 0,
+        flashLoanAdjustmentBps: 100,
+        quoteDebtToCollateral: vi.fn() as any,
+      }),
+    ).rejects.toThrow(/Swap slippage cannot be less than 0.01%/i)
   })
 })

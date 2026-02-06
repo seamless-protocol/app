@@ -250,7 +250,7 @@ export function InputStep({
               onChange={onCollateralAdjustmentChange}
               inputRef={collateralAdjustmentInputRef}
               step={0.1}
-              min={0.1}
+              min={0}
               max={50}
               precision={1}
             />

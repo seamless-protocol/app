@@ -48,8 +48,8 @@ export async function planRedeem({
     throw new Error('sharesToRedeem must be positive')
   }
 
-  if (collateralAdjustmentBps < 1) {
-    throw new Error('Collateral adjustment cannot be less than 0.01%')
+  if (collateralAdjustmentBps < 0) {
+    throw new Error('Collateral adjustment cannot be less than 0')
   }
 
   if (swapSlippageBps < 1) {
