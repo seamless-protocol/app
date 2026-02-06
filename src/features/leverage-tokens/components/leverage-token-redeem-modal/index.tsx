@@ -15,8 +15,11 @@ import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
-import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
-import { useSlippage } from '../../hooks/mint/useSlippage'
+import {
+  DEFAULT_COLLATERAL_ADJUSTMENT_PERCENT_DISPLAY,
+  DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+  TOKEN_AMOUNT_DISPLAY_DECIMALS,
+} from '../../constants'
 import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
 import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
@@ -24,6 +27,7 @@ import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { useMinSharesGuard } from '../../hooks/useMinSharesGuard'
+import { usePercentSlippageInput } from '../../hooks/usePercentSlippageInput'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
 import { ApproveStep } from '../leverage-token-mint-modal/ApproveStep'
@@ -180,10 +184,27 @@ export function LeverageTokenRedeemModal({
     }
   }, [leverageTokenUsdPrice, selectedToken])
 
-  const { slippage, setSlippage, slippageBps } = useSlippage(
-    leverageTokenAddress,
-    leverageTokenConfig.slippagePresets?.redeem?.default ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
-  )
+  const {
+    value: collateralAdjustment,
+    setValue: setCollateralAdjustment,
+    valueBps: collateralAdjustmentBps,
+  } = usePercentSlippageInput({
+    storageKey: `redeem-collateral-adjustment-${leverageTokenAddress}`,
+    initial:
+      leverageTokenConfig.slippagePresets?.redeem?.defaultCollateralAdjustment ??
+      DEFAULT_COLLATERAL_ADJUSTMENT_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_COLLATERAL_ADJUSTMENT_PERCENT_DISPLAY) * 100,
+  })
+  const {
+    value: swapSlippage,
+    setValue: setSwapSlippage,
+    valueBps: swapSlippageBps,
+  } = usePercentSlippageInput({
+    storageKey: `redeem-swap-slippage-${leverageTokenAddress}`,
+    initial: DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY) * 100,
+  })
+
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
@@ -230,7 +251,8 @@ export function LeverageTokenRedeemModal({
   const planPreview = useRedeemPlanPreview({
     token: leverageTokenAddress,
     sharesToRedeem: form.amountRaw,
-    slippageBps,
+    collateralAdjustmentBps,
+    swapSlippageBps,
     chainId: leverageTokenConfig.chainId,
     enabled: isOpen,
     ...(exec.quote ? { quote: exec.quote } : {}),
@@ -636,7 +658,8 @@ export function LeverageTokenRedeemModal({
         ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
         token: leverageTokenAddress,
         inputAsset: leverageTokenAddress,
-        slippageBps,
+        collateralAdjustmentBps,
+        swapSlippageBps,
         amountIn: form.amount ?? '',
         expectedOut: String(expectedTokens),
         ...(provider ? { provider } : {}),
@@ -845,8 +868,10 @@ export function LeverageTokenRedeemModal({
             onPercentageClick={handlePercentageClickWithBalance}
             showAdvanced={showAdvanced}
             onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
-            slippage={slippage}
-            onSlippageChange={setSlippage}
+            collateralAdjustment={collateralAdjustment}
+            onCollateralAdjustmentChange={setCollateralAdjustment}
+            swapSlippage={swapSlippage}
+            onSwapSlippageChange={setSwapSlippage}
             isLeverageTokenBalanceLoading={isLeverageTokenBalanceLoading}
             isUsdPriceLoading={isPositionLoading}
             isCalculating={isCalculating}

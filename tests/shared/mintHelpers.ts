@@ -161,7 +161,9 @@ export async function executeSharedMint({
     publicClient,
     leverageTokenConfig,
     equityInCollateralAsset: equityInInputAsset,
-    slippageBps: resolvedSlippageBps,
+    shareSlippageBps: resolvedSlippageBps,
+    swapSlippageBps: resolvedSlippageBps,
+    flashLoanAdjustmentBps: resolvedSlippageBps,
     quoteDebtToCollateral,
   })
 

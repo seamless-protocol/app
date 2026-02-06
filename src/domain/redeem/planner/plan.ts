@@ -6,14 +6,14 @@
  * return preview/min bounds for the UI and executor.
  */
 import type { Address, PublicClient } from 'viem'
-import { encodeFunctionData, erc20Abi, formatUnits } from 'viem'
+import { encodeFunctionData, erc20Abi } from 'viem'
 import { applySlippageFloor } from '@/domain/mint/planner/math'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import type { Call } from '@/domain/shared/types'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
-import { collateralRatioToLeverage } from '@/features/leverage-tokens/utils/apy-calculations/leverage-ratios'
 import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 import { leverageManagerV2Abi } from '@/lib/contracts/generated'
+import { captureRedeemPlanError } from '@/lib/observability/sentry'
 
 export interface RedeemPlan {
   collateralToSwap: bigint
@@ -32,7 +32,8 @@ export interface PlanRedeemParams {
   publicClient: PublicClient
   leverageTokenConfig: LeverageTokenConfig
   sharesToRedeem: bigint
-  slippageBps: number
+  collateralAdjustmentBps: number
+  swapSlippageBps: number
   quoteCollateralToDebt: QuoteFn
 }
 
@@ -40,38 +41,35 @@ export async function planRedeem({
   publicClient,
   leverageTokenConfig,
   sharesToRedeem,
-  slippageBps,
+  collateralAdjustmentBps,
+  swapSlippageBps,
   quoteCollateralToDebt,
 }: PlanRedeemParams): Promise<RedeemPlan> {
   if (sharesToRedeem <= 0n) {
     throw new Error('sharesToRedeem must be positive')
   }
 
-  if (slippageBps < 0) {
-    throw new Error('slippageBps cannot be negative')
+  if (collateralAdjustmentBps < 0) {
+    throw new Error('Collateral adjustment cannot be less than 0')
   }
+
+  if (swapSlippageBps < 1) {
+    throw new Error('Swap slippage cannot be less than 0.01%')
+  }
+
+  console.debug(`planRedeem collateralAdjustmentBps: ${collateralAdjustmentBps}`)
+  console.debug(`planRedeem swapSlippageBps: ${swapSlippageBps}`)
 
   const chainId = leverageTokenConfig.chainId as SupportedChainId
   const token = leverageTokenConfig.address as Address
   const collateralAsset = leverageTokenConfig.collateralAsset.address as Address
   const debtAsset = leverageTokenConfig.debtAsset.address as Address
 
-  const [{ collateralRatio }, preview] = await publicClient.multicall({
-    allowFailure: false,
-    contracts: [
-      {
-        address: getContractAddresses(chainId).leverageManagerV2 as Address,
-        abi: leverageManagerV2Abi,
-        functionName: 'getLeverageTokenState',
-        args: [token],
-      },
-      {
-        address: getContractAddresses(chainId).leverageManagerV2 as Address,
-        abi: leverageManagerV2Abi,
-        functionName: 'previewRedeem',
-        args: [token, sharesToRedeem],
-      },
-    ],
+  const preview = await publicClient.readContract({
+    address: getContractAddresses(chainId).leverageManagerV2 as Address,
+    abi: leverageManagerV2Abi,
+    functionName: 'previewRedeem',
+    args: [token, sharesToRedeem],
   })
 
   const netShares = preview.shares - preview.treasuryFee - preview.tokenFee
@@ -83,15 +81,10 @@ export async function planRedeem({
     args: [token, netShares],
   })
 
-  const minCollateralForSender = applySlippageFloor(previewEquity, slippageBps)
-
-  const currentLeverage = collateralRatioToLeverage(collateralRatio)
+  const minCollateralForSender = applySlippageFloor(previewEquity, collateralAdjustmentBps)
 
   // Leverage-adjusted slippage for the swap: scale by previewed leverage.
-  const quoteSlippageBps = Math.max(
-    1,
-    Math.floor((slippageBps * 0.5) / (Number(formatUnits(currentLeverage, 18)) - 1)),
-  )
+  const quoteSlippageBps = swapSlippageBps
 
   const collateralToSpend = preview.collateral - minCollateralForSender
   const collateralToDebtQuote = await quoteCollateralToDebt({
@@ -103,14 +96,32 @@ export async function planRedeem({
   })
 
   if (collateralToDebtQuote.out < preview.debt) {
-    throw new Error(
-      `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}. Try increasing your slippage tolerance`,
-    )
+    captureRedeemPlanError({
+      errorString: `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}`,
+      collateralAdjustmentBps,
+      swapSlippageBps,
+      previewRedeem: preview,
+      previewEquity,
+      minCollateralForSender,
+      collateralToSpend,
+      collateralToDebtQuote,
+    })
+    throw new Error(`Try increasing your collateral adjustment`)
   }
 
   if (collateralToDebtQuote.minOut < preview.debt) {
+    captureRedeemPlanError({
+      errorString: `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}`,
+      collateralAdjustmentBps,
+      swapSlippageBps,
+      previewRedeem: preview,
+      previewEquity,
+      minCollateralForSender,
+      collateralToSpend,
+      collateralToDebtQuote,
+    })
     throw new Error(
-      `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}. Try increasing your slippage tolerance`,
+      `Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral adjustment`,
     )
   }
 

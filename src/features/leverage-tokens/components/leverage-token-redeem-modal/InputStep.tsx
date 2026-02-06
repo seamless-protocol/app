@@ -1,14 +1,6 @@
-import {
-  AlertTriangle,
-  ArrowDown,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  Percent,
-  Settings,
-  TrendingDown,
-} from 'lucide-react'
+import { AlertTriangle, ArrowDown, Loader2, Settings, TrendingDown } from 'lucide-react'
 import { useEffect, useId, useRef } from 'react'
+import { SlippageInput } from '@/features/leverage-tokens/components/SlippageInput'
 import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
 import { Button } from '../../../../components/ui/button'
@@ -18,8 +10,9 @@ import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
+  COLLATERAL_ADJUSTMENT_PRESETS_PERCENT_DISPLAY_REDEEM,
   MIN_REDEEM_AMOUNT_DISPLAY,
-  SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM,
+  SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY,
 } from '../../constants'
 
 interface Token {
@@ -42,8 +35,8 @@ interface LeverageTokenConfig {
   }
   slippagePresets?: {
     redeem?: {
-      default: string
-      presets: Array<string>
+      defaultCollateralAdjustment?: string
+      presetsCollateralAdjustment?: Array<string>
     }
   }
 }
@@ -67,8 +60,10 @@ interface InputStepProps {
   onPercentageClick: (percentage: number) => void
   showAdvanced: boolean
   onToggleAdvanced: () => void
-  slippage: string
-  onSlippageChange: (value: string) => void
+  collateralAdjustment: string
+  onCollateralAdjustmentChange: (value: string) => void
+  swapSlippage: string
+  onSwapSlippageChange: (value: string) => void
   isLeverageTokenBalanceLoading: boolean
   isUsdPriceLoading: boolean
   isCalculating: boolean
@@ -109,8 +104,10 @@ export function InputStep({
   onPercentageClick,
   showAdvanced,
   onToggleAdvanced,
-  slippage,
-  onSlippageChange,
+  collateralAdjustment,
+  onCollateralAdjustmentChange,
+  swapSlippage,
+  onSwapSlippageChange,
   isLeverageTokenBalanceLoading,
   isUsdPriceLoading,
   isCalculating,
@@ -130,16 +127,17 @@ export function InputStep({
   impactWarning,
   quoteSourceName,
 }: InputStepProps) {
-  const slippageInputRef = useRef<HTMLInputElement>(null)
+  const collateralAdjustmentInputRef = useRef<HTMLInputElement>(null)
+
   const redeemAmountId = useId()
 
-  // Auto-select and focus slippage input when advanced is shown
+  // Auto-select and focus collateral adjustment input when advanced is shown
   useEffect(() => {
-    if (showAdvanced && slippageInputRef.current) {
+    if (showAdvanced && collateralAdjustmentInputRef.current) {
       // Small delay to ensure the input is rendered
       setTimeout(() => {
-        slippageInputRef.current?.focus()
-        slippageInputRef.current?.select()
+        collateralAdjustmentInputRef.current?.focus()
+        collateralAdjustmentInputRef.current?.select()
       }, 100)
     }
   }, [showAdvanced])
@@ -161,8 +159,9 @@ export function InputStep({
     return { label: `Redeem ${leverageTokenConfig.symbol}`, busy: false }
   })()
 
-  const slippagePresets =
-    leverageTokenConfig.slippagePresets?.redeem?.presets || SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM
+  const collateralAdjustmentPresets =
+    leverageTokenConfig.slippagePresets?.redeem?.presetsCollateralAdjustment ??
+    COLLATERAL_ADJUSTMENT_PRESETS_PERCENT_DISPLAY_REDEEM
 
   return (
     <div className="space-y-6">
@@ -242,66 +241,31 @@ export function InputStep({
         </Card>
 
         {showAdvanced && (
-          <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-xs font-medium text-foreground">Slippage Tolerance</div>
-              <div className="flex items-center space-x-2">
-                {slippagePresets.map((value) => (
-                  <Button
-                    key={value}
-                    variant={slippage === value ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => onSlippageChange(value)}
-                    className={cn(
-                      'h-8 px-3 text-xs transition-colors',
-                      slippage === value
-                        ? 'border border-brand-purple bg-brand-purple text-primary-foreground hover:opacity-90'
-                        : 'border border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-foreground',
-                    )}
-                  >
-                    {value}%
-                  </Button>
-                ))}
-                <div className="flex items-center space-x-1">
-                  <div className="relative">
-                    <Input
-                      ref={slippageInputRef}
-                      type="text"
-                      value={slippage}
-                      onChange={(e) => onSlippageChange(e.target.value)}
-                      className="h-8 w-16 border border-border bg-[var(--input-background)] text-center text-xs text-foreground pr-6"
-                      placeholder="0.5"
-                    />
-                    <div className="absolute right-1 top-0 flex h-full flex-col items-center justify-center space-y-0.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const currentValue = parseFloat(slippage) || 0
-                          const newValue = Math.min(currentValue + 0.1, 50).toFixed(1)
-                          onSlippageChange(newValue)
-                        }}
-                        className="flex h-4 w-4 items-center justify-center hover:bg-muted rounded-sm transition-colors"
-                      >
-                        <ChevronUp className="h-2 w-2 text-muted-foreground hover:text-foreground" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const currentValue = parseFloat(slippage) || 0
-                          const newValue = Math.max(currentValue - 0.1, 0.1).toFixed(1)
-                          onSlippageChange(newValue)
-                        }}
-                        className="flex h-4 w-4 items-center justify-center hover:bg-muted rounded-sm transition-colors"
-                      >
-                        <ChevronDown className="h-2 w-2 text-muted-foreground hover:text-foreground" />
-                      </button>
-                    </div>
-                  </div>
-                  <Percent className="h-3 w-3 text-muted-foreground" />
-                </div>
-              </div>
-            </div>
-          </Card>
+          <>
+            <SlippageInput
+              label="Collateral Adjustment"
+              tooltipText="The leverage portion of the collateral is swapped to the debt asset during the redeem flow to repay a flash loan. If the redeem simulation fails due to the debt quote output being less than the previewed debt, you can try increasing this value."
+              presets={collateralAdjustmentPresets}
+              value={collateralAdjustment}
+              onChange={onCollateralAdjustmentChange}
+              inputRef={collateralAdjustmentInputRef}
+              step={0.1}
+              min={0}
+              max={50}
+              precision={1}
+            />
+            <SlippageInput
+              label="Swap Slippage"
+              tooltipText="Advanced setting. The default value works in most cases."
+              presets={SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY}
+              value={swapSlippage}
+              onChange={onSwapSlippageChange}
+              step={0.01}
+              min={0.01}
+              max={10}
+              precision={2}
+            />
+          </>
         )}
       </div>
 
@@ -396,8 +360,12 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Slippage Tolerance</span>
-            <span className="text-foreground">{slippage}%</span>
+            <span className="text-secondary-foreground">Collateral Adjustment</span>
+            <span className="text-foreground">{collateralAdjustment}%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-secondary-foreground">Swap Slippage</span>
+            <span className="text-foreground">{swapSlippage}%</span>
           </div>
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Approval Status</span>
