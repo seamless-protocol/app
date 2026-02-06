@@ -12,8 +12,9 @@ interface UseMintPlanPreviewParams {
   config: Config
   token: Address
   equityInCollateralAsset: bigint | undefined
-  slippageBps: number
+  shareSlippageBps: number
   swapSlippageBps: number
+  flashLoanAdjustmentBps: number
   chainId: number
   enabled: boolean
   quote?: QuoteFn
@@ -23,8 +24,9 @@ interface UseMintPlanPreviewParams {
 export function useMintPlanPreview({
   token,
   equityInCollateralAsset,
-  slippageBps,
+  shareSlippageBps,
   swapSlippageBps,
+  flashLoanAdjustmentBps,
   chainId,
   enabled = true,
   quote,
@@ -40,15 +42,17 @@ export function useMintPlanPreview({
     chainId,
     addr: token,
     amount: debounced ?? 0n,
-    slippageBps,
+    shareSlippageBps,
     swapSlippageBps,
+    flashLoanAdjustmentBps,
   }
 
   const query = useQuery<MintPlan, Error>({
     queryKey: [
       ...ltKeys.simulation.mintKey(keyParams),
-      `slippage:${slippageBps}`,
+      `shareSlippage:${shareSlippageBps}`,
       `swapSlippage:${swapSlippageBps}`,
+      `flashLoanAdjustment:${flashLoanAdjustmentBps}`,
     ],
     enabled: enabledQuery,
     // Periodically refresh quotes while user is editing
@@ -64,8 +68,9 @@ export function useMintPlanPreview({
         publicClient: publicClient,
         leverageTokenConfig,
         equityInCollateralAsset: debounced as bigint,
-        slippageBps,
+        shareSlippageBps,
         swapSlippageBps,
+        flashLoanAdjustmentBps,
         quoteDebtToCollateral: quote as QuoteFn,
       })
     },

@@ -1,16 +1,5 @@
-import {
-  AlertTriangle,
-  ArrowDown,
-  ChevronDown,
-  ChevronUp,
-  Info,
-  Loader2,
-  Percent,
-  Settings,
-  TrendingUp,
-} from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { AlertTriangle, ArrowDown, Loader2, Settings, TrendingUp } from 'lucide-react'
+import { useEffect, useId, useRef } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
@@ -22,10 +11,12 @@ import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
+  FLASH_LOAN_ADJUSTMENT_PRESETS_PERCENT_DISPLAY,
   MIN_MINT_AMOUNT_DISPLAY,
   SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT,
   SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY,
 } from '../../constants'
+import { SlippageInput } from '../SlippageInput'
 
 interface Token {
   symbol: string
@@ -47,8 +38,10 @@ interface LeverageTokenConfig {
   }
   slippagePresets?: {
     mint?: {
-      default: string
-      presets: Array<string>
+      defaultShareSlippage?: string
+      defaultFlashLoanAdjustment?: string
+      presetsShareSlippage?: Array<string>
+      presetsFlashLoanAdjustment?: Array<string>
     }
   }
 }
@@ -62,10 +55,12 @@ interface InputStepProps {
   onPercentageClick: (percentage: number) => void
   showAdvanced: boolean
   onToggleAdvanced: () => void
-  slippage: string
-  onSlippageChange: (value: string) => void
+  shareSlippage: string
+  onShareSlippageChange: (value: string) => void
   swapSlippage: string
   onSwapSlippageChange: (value: string) => void
+  flashLoanAdjustment: string
+  onFlashLoanAdjustmentChange: (value: string) => void
   isCollateralBalanceLoading: boolean
   isUsdPriceLoading: boolean
   isCalculating: boolean
@@ -113,10 +108,12 @@ export function InputStep({
   onPercentageClick,
   showAdvanced,
   onToggleAdvanced,
-  slippage,
-  onSlippageChange,
+  shareSlippage,
+  onShareSlippageChange,
   swapSlippage,
   onSwapSlippageChange,
+  flashLoanAdjustment,
+  onFlashLoanAdjustmentChange,
   isCollateralBalanceLoading,
   isUsdPriceLoading,
   isCalculating,
@@ -150,11 +147,7 @@ export function InputStep({
 }: InputStepProps) {
   const mintAmountId = useId()
 
-  const swapSlippageInputRef = useRef<HTMLInputElement>(null)
-  const [desktopSwapSlippageTooltipOpen, setDesktopSwapSlippageTooltipOpen] = useState(false)
-
   const shareSlippageInputRef = useRef<HTMLInputElement>(null)
-  const [desktopShareSlippageTooltipOpen, setDesktopShareSlippageTooltipOpen] = useState(false)
 
   // Auto-select and focus slippage input when advanced is shown
   useEffect(() => {
@@ -181,8 +174,8 @@ export function InputStep({
     return { label: `Mint ${leverageTokenConfig.symbol}`, busy: false }
   })()
 
-  const slippagePresets =
-    leverageTokenConfig.slippagePresets?.mint?.presets || SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT
+  const shareSlippagePresets = leverageTokenConfig.slippagePresets?.mint?.presetsShareSlippage ?? SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT
+  const flashLoanAdjustmentPresets = leverageTokenConfig.slippagePresets?.mint?.presetsFlashLoanAdjustment ?? FLASH_LOAN_ADJUSTMENT_PRESETS_PERCENT_DISPLAY
 
   return (
     <div className="space-y-6">
@@ -271,185 +264,41 @@ export function InputStep({
         </Card>
 
         {showAdvanced && (
-          // TODO: Move these cards into a resuable component instead of duplicating here
           <>
-            <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="text-xs font-medium text-foreground">Share Slippage</div>
-                  <Tooltip
-                    open={desktopShareSlippageTooltipOpen}
-                    onOpenChange={setDesktopShareSlippageTooltipOpen}
-                  >
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="inline-flex items-center justify-center text-text-muted hover:text-secondary-foreground transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-0 -m-2 sm:m-0"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setDesktopShareSlippageTooltipOpen((prev) => !prev)
-                        }}
-                      >
-                        <Info className="h-5 w-5 sm:h-3 sm:w-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-2xs p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
-                      <div className="min-w-52 max-w-2xs space-y-2 rounded-lg border border-border bg-card p-4">
-                        <div className="text-sm wrap-break-word text-[var(--text-primary)]">
-                          The maximum allowed difference between the expected amount of Leverage
-                          Token shares to be received and the actual amount received.
-                        </div>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {slippagePresets.map((value) => (
-                    <Button
-                      key={value}
-                      variant={slippage === value ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => onSlippageChange(value)}
-                      className={cn(
-                        'h-8 px-3 text-xs transition-colors',
-                        slippage === value
-                          ? 'border border-brand-purple bg-brand-purple text-primary-foreground hover:opacity-90'
-                          : 'border border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-foreground',
-                      )}
-                    >
-                      {value}%
-                    </Button>
-                  ))}
-                  <div className="flex items-center space-x-1">
-                    <div className="relative">
-                      <Input
-                        ref={shareSlippageInputRef}
-                        type="text"
-                        value={slippage}
-                        onChange={(e) => onSlippageChange(e.target.value)}
-                        className="h-8 w-16 border border-border bg-input text-center text-xs text-foreground pr-6"
-                        placeholder="0.5"
-                      />
-                      <div className="absolute right-1 top-0 flex h-full flex-col items-center justify-center space-y-0.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const currentValue = parseFloat(slippage) || 0
-                            const newValue = Math.min(currentValue + 0.1, 50).toFixed(1)
-                            onSlippageChange(newValue)
-                          }}
-                          className="flex h-4 w-4 items-center justify-center hover:bg-muted rounded-sm transition-colors"
-                        >
-                          <ChevronUp className="h-2 w-2 text-muted-foreground hover:text-foreground" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const currentValue = parseFloat(slippage) || 0
-                            const newValue = Math.max(currentValue - 0.1, 0.1).toFixed(1)
-                            onSlippageChange(newValue)
-                          }}
-                          className="flex h-4 w-4 items-center justify-center hover:bg-muted rounded-sm transition-colors"
-                        >
-                          <ChevronDown className="h-2 w-2 text-muted-foreground hover:text-foreground" />
-                        </button>
-                      </div>
-                    </div>
-                    <Percent className="h-3 w-3 text-muted-foreground" />
-                  </div>
-                </div>
-              </div>
-            </Card>
-            <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="text-xs font-medium text-foreground">Swap Slippage</div>
-                  <Tooltip
-                    open={desktopSwapSlippageTooltipOpen}
-                    onOpenChange={setDesktopSwapSlippageTooltipOpen}
-                  >
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="inline-flex items-center justify-center text-text-muted hover:text-secondary-foreground transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:p-0 -m-2 sm:m-0"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setDesktopSwapSlippageTooltipOpen((prev) => !prev)
-                        }}
-                      >
-                        <Info className="h-5 w-5 sm:h-3 sm:w-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-2xs p-0 text-sm bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)]">
-                      <div className="min-w-52 max-w-2xs space-y-2 rounded-lg border border-border bg-card p-4">
-                        <div className="text-sm wrap-break-word text-[var(--text-primary)]">
-                          The maximum allowed difference between the expected amount of collateral
-                          received from the swap of flash loaned debt performed during the mint flow
-                          and the actual amount received. If the mint simulation fails due to the
-                          minimum debt being less than the flash loan amount, you can try decreasing
-                          this value.
-                        </div>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY.map((value) => (
-                    <Button
-                      key={value}
-                      variant={swapSlippage === value ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => onSwapSlippageChange(value)}
-                      className={cn(
-                        'h-8 px-3 text-xs transition-colors',
-                        swapSlippage === value
-                          ? 'border border-brand-purple bg-brand-purple text-primary-foreground hover:opacity-90'
-                          : 'border border-[var(--divider-line)] text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-foreground',
-                      )}
-                    >
-                      {value}%
-                    </Button>
-                  ))}
-                  <div className="flex items-center space-x-1">
-                    <div className="relative">
-                      <Input
-                        ref={swapSlippageInputRef}
-                        type="text"
-                        value={swapSlippage}
-                        onChange={(e) => onSwapSlippageChange(e.target.value)}
-                        className="h-8 w-16 border border-border bg-input text-center text-xs text-foreground pr-6"
-                        placeholder="0.5"
-                      />
-                      <div className="absolute right-1 top-0 flex h-full flex-col items-center justify-center space-y-0.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const currentValue = parseFloat(swapSlippage) || 0
-                            const newValue = Math.min(currentValue + 0.01, 10).toFixed(2)
-                            onSwapSlippageChange(newValue)
-                          }}
-                          className="flex h-4 w-4 items-center justify-center hover:bg-muted rounded-sm transition-colors"
-                        >
-                          <ChevronUp className="h-2 w-2 text-muted-foreground hover:text-foreground" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const currentValue = parseFloat(swapSlippage) || 0
-                            const newValue = Math.max(currentValue - 0.01, 0.01).toFixed(2)
-                            onSwapSlippageChange(newValue)
-                          }}
-                          className="flex h-4 w-4 items-center justify-center hover:bg-muted rounded-sm transition-colors"
-                        >
-                          <ChevronDown className="h-2 w-2 text-muted-foreground hover:text-foreground" />
-                        </button>
-                      </div>
-                    </div>
-                    <Percent className="h-3 w-3 text-muted-foreground" />
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <SlippageInput
+              label="Share Slippage"
+              tooltipText="The maximum allowed difference between the expected amount of Leverage Token shares to be received and the actual amount received."
+              presets={shareSlippagePresets}
+              value={shareSlippage}
+              onChange={onShareSlippageChange}
+              inputRef={shareSlippageInputRef}
+              step={0.1}
+              min={0.1}
+              max={50}
+              precision={1}
+            />
+            <SlippageInput
+              label="Flash Loan Adjustment"
+              tooltipText="The debt asset is flash loaned and swapped to the collateral asset during the mint flow to obtain leverage. If the mint simulation fails due to the minimum shares being less than min shares, you can try decreasing this value."
+              presets={flashLoanAdjustmentPresets}
+              value={flashLoanAdjustment}
+              onChange={onFlashLoanAdjustmentChange}
+              step={0.1}
+              min={0.1}
+              max={10}
+              precision={1}
+            />
+            <SlippageInput
+              label="Swap Slippage"
+              tooltipText="The maximum allowed difference between the expected amount of collateral received from the swap of flash loaned debt performed during the mint flow and the actual amount received. If the mint simulation fails due to the minimum debt being less than the flash loan amount, you can try decreasing this value."
+              presets={SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY}
+              value={swapSlippage}
+              onChange={onSwapSlippageChange}
+              step={0.01}
+              min={0.01}
+              max={10}
+              precision={2}
+            />
           </>
         )}
       </div>
@@ -547,8 +396,16 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Slippage Tolerance</span>
-            <span className="text-foreground">{slippage}%</span>
+            <span className="text-secondary-foreground">Share Slippage</span>
+            <span className="text-foreground">{shareSlippage}%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-secondary-foreground">Swap Slippage</span>
+            <span className="text-foreground">{swapSlippage}%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-secondary-foreground">Flash Loan Adjustment</span>
+            <span className="text-foreground">{flashLoanAdjustment}%</span>
           </div>
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Approval Status</span>

@@ -100,8 +100,10 @@ export function captureTxError(params: {
   token: string
   inputAsset?: string
   outputAsset?: string
-  slippageBps?: number
+  collateralSlippageBps?: number
+  shareSlippageBps?: number
   swapSlippageBps?: number
+  flashLoanAdjustmentBps?: number
   amountIn?: string
   expectedOut?: string
   provider?: string
@@ -117,8 +119,10 @@ export function captureTxError(params: {
     token,
     inputAsset,
     outputAsset,
-    slippageBps,
+    collateralSlippageBps,
+    shareSlippageBps,
     swapSlippageBps,
+    flashLoanAdjustmentBps,
     amountIn,
     expectedOut,
     provider,
@@ -142,8 +146,10 @@ export function captureTxError(params: {
       token,
       inputAsset,
       outputAsset,
-      slippageBps,
+      collateralSlippageBps,
+      shareSlippageBps,
       swapSlippageBps,
+      flashLoanAdjustmentBps,
       amountIn,
       expectedOut,
       provider,
@@ -161,7 +167,9 @@ export function captureTxError(params: {
     token,
     ...(inputAsset ? { inputAsset } : {}),
     ...(outputAsset ? { outputAsset } : {}),
-    ...(typeof slippageBps === 'number' ? { slippageBps } : {}),
+    ...(typeof collateralSlippageBps === 'number' ? { collateralSlippageBps } : {}),
+    ...(typeof shareSlippageBps === 'number' ? { shareSlippageBps } : {}),
+    ...(typeof flashLoanAdjustmentBps === 'number' ? { flashLoanAdjustmentBps } : {}),
     ...(typeof swapSlippageBps === 'number' ? { swapSlippageBps } : {}),
     ...(amountIn ? { amountIn } : {}),
     ...(expectedOut ? { expectedOut } : {}),

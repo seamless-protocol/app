@@ -37,7 +37,7 @@ import { useMintForm } from '../../hooks/mint/useMintForm'
 import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useMintWrite } from '../../hooks/mint/useMintWrite'
-import { useSlippage } from '../../hooks/mint/useSlippage'
+import { useShareSlippage } from '../../hooks/mint/useShareSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
@@ -52,6 +52,8 @@ import { ErrorStep } from './ErrorStep'
 import { InputStep } from './InputStep'
 import { PendingStep } from './PendingStep'
 import { SuccessStep } from './SuccessStep'
+import { useFlashLoanAdjustment } from '@/features/leverage-tokens/hooks/mint/useFlashLoanAdjustment'
+import { DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY } from '../../constants'
 
 interface Token {
   symbol: string
@@ -189,13 +191,18 @@ export function LeverageTokenMintModal({
     balance: collateralBalanceFormatted,
     price: collateralUsdPrice || 0, // Real-time USD price
   })
-  const { slippage, setSlippage, slippageBps } = useSlippage(
+
+  const { shareSlippage, setShareSlippage, shareSlippageBps } = useShareSlippage(
     leverageTokenAddress,
-    leverageTokenConfig.slippagePresets?.mint?.default ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+    leverageTokenConfig.slippagePresets?.mint?.defaultShareSlippage ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
   )
   const { swapSlippage, setSwapSlippage, swapSlippageBps } = useSwapSlippage(
     leverageTokenAddress,
     DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+  )
+  const { flashLoanAdjustment, setFlashLoanAdjustment, flashLoanAdjustmentBps } = useFlashLoanAdjustment(
+    leverageTokenAddress,
+    leverageTokenConfig.slippagePresets?.mint?.defaultFlashLoanAdjustment ?? DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY,
   )
 
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -340,8 +347,9 @@ export function LeverageTokenMintModal({
     config: wagmiConfig,
     token: leverageTokenAddress,
     equityInCollateralAsset: form.amountRaw,
-    slippageBps,
+    shareSlippageBps,
     swapSlippageBps,
+    flashLoanAdjustmentBps,
     chainId: leverageTokenConfig.chainId,
     ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
     enabled: isOpen,
@@ -771,8 +779,9 @@ export function LeverageTokenMintModal({
           ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
           token: leverageTokenAddress,
           inputAsset: leverageTokenConfig.collateralAsset.address,
-          slippageBps,
+          shareSlippageBps,
           swapSlippageBps,
+          flashLoanAdjustmentBps,
           amountIn: form.amount,
           expectedOut: String(expectedTokens),
           ...(provider ? { provider } : {}),
@@ -830,10 +839,12 @@ export function LeverageTokenMintModal({
             onPercentageClick={handlePercentageClick}
             showAdvanced={showAdvanced}
             onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
-            slippage={slippage}
-            onSlippageChange={setSlippage}
+            shareSlippage={shareSlippage}
+            onShareSlippageChange={setShareSlippage}
             swapSlippage={swapSlippage}
             onSwapSlippageChange={setSwapSlippage}
+            flashLoanAdjustment={flashLoanAdjustment}
+            onFlashLoanAdjustmentChange={setFlashLoanAdjustment}
             isCollateralBalanceLoading={isCollateralBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
             isCalculating={isCalculating}

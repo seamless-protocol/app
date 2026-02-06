@@ -124,12 +124,14 @@ export interface LeverageTokenConfig {
 
   slippagePresets?: {
     mint?: {
-      default: string
-      presets: Array<string>
+      defaultShareSlippage?: string
+      defaultFlashLoanAdjustment?: string
+      presetsShareSlippage?: Array<string>
+      presetsFlashLoanAdjustment?: Array<string>
     }
     redeem?: {
-      default: string
-      presets: Array<string>
+      defaultCollateralSlippage?: string
+      presetsCollateralSlippage?: Array<string>
     }
   }
 
@@ -244,6 +246,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
+    slippagePresets: {
+      mint: {
+        defaultFlashLoanAdjustment: '0.5',
+        presetsFlashLoanAdjustment: ['0.5', '1.0', '1.5'],
+      },
+    },
     test: {
       mintIntegrationTest: {
         equityInCollateralAsset: parseEther('0.01'),
@@ -345,6 +353,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           },
         },
       ],
+    },
+    slippagePresets: {
+      mint: {
+        defaultFlashLoanAdjustment: '1.0',
+        presetsFlashLoanAdjustment: ['0.5', '1.0', '1.5'],
+      },
     },
     test: {
       mintIntegrationTest: {
@@ -546,6 +560,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
+    slippagePresets: {
+      mint: {
+        defaultFlashLoanAdjustment: '0.5',
+        presetsFlashLoanAdjustment: ['0.5', '1.0', '1.5'],
+      },
+    },
     test: {
       mintIntegrationTest: {
         equityInCollateralAsset: parseEther('0.01'),
@@ -709,6 +729,12 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
+    slippagePresets: {
+      mint: {
+        defaultFlashLoanAdjustment: '0.1',
+        presetsFlashLoanAdjustment: ['0.1', '0.5', '1.0'],
+      },
+    },
     test: {
       mintIntegrationTest: {
         equityInCollateralAsset: parseEther('50'),
@@ -818,8 +844,10 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     slippagePresets: {
       mint: {
-        default: '0.7',
-        presets: ['0.5', '1.0', '1.5'],
+        defaultShareSlippage: '0.7',
+        presetsShareSlippage: ['0.5', '1.0', '1.5'],
+        defaultFlashLoanAdjustment: '0.5',
+        presetsFlashLoanAdjustment: ['0.5', '1.0', '1.5'],
       },
     },
     test: {

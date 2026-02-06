@@ -5,6 +5,7 @@ import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTok
 
 const publicClient = {
   multicall: vi.fn(),
+  readContract: vi.fn(),
 } as unknown as PublicClient
 
 const leverageToken = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as Address
@@ -43,15 +44,15 @@ const leverageTokenConfig: LeverageTokenConfig = {
 }
 
 const multicall = publicClient.multicall as Mock
+const readContract = publicClient.readContract as Mock
 
 describe('planMint', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Default first multicall: getLeverageTokenState + router previewDeposit
-    multicall.mockResolvedValueOnce([
-      { collateralRatio: 3n * 10n ** 18n },
+    readContract.mockResolvedValueOnce(
       { collateral: 2_000n, debt: 1_000n, shares: 1_000n },
-    ])
+    )
   })
 
   it('builds a plan with leverage-adjusted slippage and approvals', async () => {
@@ -79,7 +80,9 @@ describe('planMint', () => {
       publicClient,
       leverageTokenConfig,
       equityInCollateralAsset: 500n,
-      slippageBps: 100,
+      shareSlippageBps: 100,
+      swapSlippageBps: 10,
+      flashLoanAdjustmentBps: 100,
       quoteDebtToCollateral: quote as any,
     })
 
@@ -96,7 +99,7 @@ describe('planMint', () => {
     // collateralRatio 3 → leverage 1.5 → (100 * 0.5)/(1.5-1)=100 bps
     expect(quote).toHaveBeenCalledWith(
       expect.objectContaining({
-        slippageBps: 100,
+        slippageBps: 10,
         amountIn: 990n,
         intent: 'exactIn',
         inToken: debt,
@@ -130,7 +133,9 @@ describe('planMint', () => {
         publicClient,
         leverageTokenConfig,
         equityInCollateralAsset: 500n,
-        slippageBps: 100,
+        shareSlippageBps: 100,
+        swapSlippageBps: 10,
+        flashLoanAdjustmentBps: 100,
         quoteDebtToCollateral: quote as any,
       }),
     ).rejects.toThrow(/previewed debt 800.*flash loan amount 990/i)
@@ -161,7 +166,9 @@ describe('planMint', () => {
         publicClient,
         leverageTokenConfig,
         equityInCollateralAsset: 500n,
-        slippageBps: 100,
+        shareSlippageBps: 100,
+        swapSlippageBps: 10,
+        flashLoanAdjustmentBps: 100,
         quoteDebtToCollateral: quote as any,
       }),
     ).rejects.toThrow(/minimum shares.*less than min shares/i)

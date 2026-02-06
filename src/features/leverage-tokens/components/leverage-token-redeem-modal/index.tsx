@@ -15,8 +15,7 @@ import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
-import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
-import { useSlippage } from '../../hooks/mint/useSlippage'
+import { DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY, DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
 import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
 import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
@@ -32,6 +31,8 @@ import { ErrorStep } from './ErrorStep'
 import { InputStep } from './InputStep'
 import { PendingStep } from './PendingStep'
 import { SuccessStep } from './SuccessStep'
+import { useSwapSlippage } from '@/features/leverage-tokens/hooks/mint/useSwapSlippage'
+import { useCollateralSlippage } from '../../hooks/redeem/useCollateralSlippage'
 
 interface Token {
   symbol: string
@@ -180,10 +181,15 @@ export function LeverageTokenRedeemModal({
     }
   }, [leverageTokenUsdPrice, selectedToken])
 
-  const { slippage, setSlippage, slippageBps } = useSlippage(
+  const { collateralSlippage, setCollateralSlippage, collateralSlippageBps } = useCollateralSlippage(
     leverageTokenAddress,
-    leverageTokenConfig.slippagePresets?.redeem?.default ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+    leverageTokenConfig.slippagePresets?.redeem?.defaultCollateralSlippage ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
   )
+  const { swapSlippage, setSwapSlippage, swapSlippageBps } = useSwapSlippage(
+    leverageTokenAddress,
+    DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+  )
+
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
@@ -230,7 +236,8 @@ export function LeverageTokenRedeemModal({
   const planPreview = useRedeemPlanPreview({
     token: leverageTokenAddress,
     sharesToRedeem: form.amountRaw,
-    slippageBps,
+    collateralSlippageBps,
+    swapSlippageBps,
     chainId: leverageTokenConfig.chainId,
     enabled: isOpen,
     ...(exec.quote ? { quote: exec.quote } : {}),
@@ -636,7 +643,8 @@ export function LeverageTokenRedeemModal({
         ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
         token: leverageTokenAddress,
         inputAsset: leverageTokenAddress,
-        slippageBps,
+        collateralSlippageBps,
+        swapSlippageBps,
         amountIn: form.amount ?? '',
         expectedOut: String(expectedTokens),
         ...(provider ? { provider } : {}),
@@ -845,8 +853,10 @@ export function LeverageTokenRedeemModal({
             onPercentageClick={handlePercentageClickWithBalance}
             showAdvanced={showAdvanced}
             onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
-            slippage={slippage}
-            onSlippageChange={setSlippage}
+            collateralSlippage={collateralSlippage}
+            onCollateralSlippageChange={setCollateralSlippage}
+            swapSlippage={swapSlippage}
+            onSwapSlippageChange={setSwapSlippage}
             isLeverageTokenBalanceLoading={isLeverageTokenBalanceLoading}
             isUsdPriceLoading={isPositionLoading}
             isCalculating={isCalculating}

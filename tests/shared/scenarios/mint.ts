@@ -82,7 +82,9 @@ export async function planMintTest({
     publicClient: ctx.publicClient,
     leverageTokenConfig,
     equityInCollateralAsset: setup.equityInInputAsset,
-    slippageBps,
+    shareSlippageBps: slippageBps,
+    swapSlippageBps: slippageBps,
+    flashLoanAdjustmentBps: slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
   })
 
@@ -159,7 +161,9 @@ async function runMintScenario({
     publicClient,
     leverageTokenConfig,
     equityInCollateralAsset: setup.equityInInputAsset,
-    slippageBps,
+    shareSlippageBps: slippageBps,
+    swapSlippageBps: slippageBps,
+    flashLoanAdjustmentBps: slippageBps,
     quoteDebtToCollateral: setup.quoteDebtToCollateral,
   })
 

@@ -30,21 +30,21 @@ export class RedeemExecutionSimulationError extends Error {
   }
 }
 
-const DEFAULT_START_SLIPPAGE_BPS = 100
-const DEFAULT_SLIPPAGE_INCREMENT_BPS = 100
+const DEFAULT_START_COLLATERAL_SLIPPAGE_BPS = 100
+const DEFAULT_COLLATERAL_SLIPPAGE_INCREMENT_BPS = 100
 const MAX_ATTEMPTS = 5
 
 export async function testRedeem({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  startSlippageBps = DEFAULT_START_SLIPPAGE_BPS,
-  slippageIncrementBps = DEFAULT_SLIPPAGE_INCREMENT_BPS,
+  startCollateralSlippageBps = DEFAULT_START_COLLATERAL_SLIPPAGE_BPS,
+  slippageIncrementBps = DEFAULT_COLLATERAL_SLIPPAGE_INCREMENT_BPS,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
-  startSlippageBps?: number
+  startCollateralSlippageBps?: number
   slippageIncrementBps?: number
 }) {
   await testMint({
@@ -71,7 +71,7 @@ export async function testRedeem({
     wagmiConfig,
     leverageTokenConfig,
     leverageTokenBalanceBefore,
-    startSlippageBps,
+    startCollateralSlippageBps,
     slippageIncrementBps,
   })
 
@@ -109,17 +109,17 @@ async function redeemWithRetries({
   wagmiConfig,
   leverageTokenConfig,
   leverageTokenBalanceBefore,
-  startSlippageBps,
+  startCollateralSlippageBps,
   slippageIncrementBps,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   leverageTokenBalanceBefore: bigint
-  startSlippageBps: number
+  startCollateralSlippageBps: number
   slippageIncrementBps: number
 }): Promise<RedeemPlan | undefined> {
-  let slippageBps = startSlippageBps
+  let collateralSlippageBps = startCollateralSlippageBps
 
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     try {
@@ -128,7 +128,8 @@ async function redeemWithRetries({
         wagmiConfig,
         leverageTokenConfig,
         sharesToRedeem: leverageTokenBalanceBefore,
-        slippageBps,
+        collateralSlippageBps,
+        swapSlippageBps: 1,
       })
 
       return plan
@@ -138,8 +139,8 @@ async function redeemWithRetries({
         (error instanceof Error && error.message.includes('Try increasing your slippage tolerance'))
 
       if (isRetryableError && i < MAX_ATTEMPTS - 1) {
-        slippageBps += slippageIncrementBps
-        console.log(`Retrying redeem with slippage bps: ${slippageBps}`)
+        collateralSlippageBps += slippageIncrementBps
+        console.log(`Retrying redeem with collateral slippage bps: ${collateralSlippageBps}`)
         continue
       }
 
@@ -155,13 +156,15 @@ async function executeRedeemFlow({
   wagmiConfig,
   leverageTokenConfig,
   sharesToRedeem,
-  slippageBps,
+  collateralSlippageBps,
+  swapSlippageBps,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   sharesToRedeem: bigint
-  slippageBps: number
+  collateralSlippageBps: number
+  swapSlippageBps: number
 }): Promise<RedeemExecutionResult> {
   const addresses = getContractAddresses(leverageTokenConfig.chainId)
 
@@ -185,7 +188,7 @@ async function executeRedeemFlow({
   // Preview the redeem plan
   const { result: redeemPlanPreviewResult } = renderHook(
     wagmiConfig,
-    (props: { slippageBps: number }) =>
+    (props: { collateralSlippageBps: number, swapSlippageBps: number }) =>
       useRedeemPlanPreview({
         token: leverageTokenConfig.address,
         sharesToRedeem,
@@ -195,7 +198,7 @@ async function executeRedeemFlow({
         ...props,
       }),
     {
-      initialProps: { slippageBps },
+      initialProps: { collateralSlippageBps, swapSlippageBps },
     },
   )
   await waitFor(

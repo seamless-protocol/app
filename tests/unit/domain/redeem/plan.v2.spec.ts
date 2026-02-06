@@ -26,19 +26,17 @@ const leverageTokenConfig: LeverageTokenConfig = {
   debtAsset: { address: debtAsset, decimals: 6 },
 } as LeverageTokenConfig
 
-const multicall = publicClient.multicall as Mock
 const readContract = publicClient.readContract as Mock
 
 describe('planRedeem', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Default multicall: getLeverageTokenState + previewRedeem
-    multicall.mockResolvedValueOnce([
-      { collateralRatio: 3n * 10n ** 18n },
+    // previewRedeem
+    readContract.mockResolvedValueOnce(
       { collateral: 1_000n, debt: 300n, shares: 100n, tokenFee: 0n, treasuryFee: 0n },
-    ])
-    // Default readContract: convertToAssets
-    readContract.mockResolvedValue(800n)
+    )
+    // convertToAssets
+    readContract.mockResolvedValueOnce(800n)
   })
 
   it('builds a plan with leverage-adjusted slippage and approvals', async () => {
@@ -53,7 +51,8 @@ describe('planRedeem', () => {
       publicClient,
       leverageTokenConfig,
       sharesToRedeem: 100n,
-      slippageBps: 100,
+      collateralSlippageBps: 100,
+      swapSlippageBps: 100,
       quoteCollateralToDebt: quote as any,
     })
 
@@ -89,7 +88,8 @@ describe('planRedeem', () => {
         publicClient,
         leverageTokenConfig,
         sharesToRedeem: 100n,
-        slippageBps: 100,
+        collateralSlippageBps: 100,
+        swapSlippageBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
     ).rejects.toThrow(/less than preview debt/i)
@@ -108,7 +108,8 @@ describe('planRedeem', () => {
         publicClient,
         leverageTokenConfig,
         sharesToRedeem: 100n,
-        slippageBps: 100,
+        collateralSlippageBps: 100,
+        swapSlippageBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
     ).rejects.toThrow(/minimum output .* less than preview debt/i)

@@ -51,7 +51,8 @@ describe('useRedeemPlanPreview', () => {
       useRedeemPlanPreview({
         token: TOKEN_ADDRESS,
         sharesToRedeem: SHARES_TO_REDEEM,
-        slippageBps: 50,
+        collateralSlippageBps: 50,
+        swapSlippageBps: 50,
         chainId: CHAIN_ID,
         enabled: true,
         quote,
@@ -70,7 +71,8 @@ describe('useRedeemPlanPreview', () => {
       useRedeemPlanPreview({
         token: TOKEN_ADDRESS,
         sharesToRedeem: undefined,
-        slippageBps: 50,
+        collateralSlippageBps: 50,
+        swapSlippageBps: 50,
         chainId: CHAIN_ID,
         enabled: true,
         quote: vi.fn(),
@@ -93,7 +95,8 @@ describe('useRedeemPlanPreview', () => {
       useRedeemPlanPreview({
         token: TOKEN_ADDRESS,
         sharesToRedeem: SHARES_TO_REDEEM,
-        slippageBps: 50,
+        collateralSlippageBps: 50,
+        swapSlippageBps: 50,
         chainId: CHAIN_ID,
         enabled: true,
         quote: vi.fn(),

@@ -46,7 +46,8 @@ export const ltKeys = {
     redeemPlan: (
       addr: Address,
       amount: bigint,
-      slippageBps: number,
+      collateralSlippageBps: number,
+      swapSlippageBps: number,
       managerAddress?: Address,
       swapKey?: string,
       outputAsset?: Address,
@@ -56,7 +57,8 @@ export const ltKeys = {
         'simulate',
         'redeem-plan',
         amount.toString(),
-        `slippage:${slippageBps}`,
+        `collateralSlippage:${collateralSlippageBps}`,
+        `swapSlippage:${swapSlippageBps}`,
         managerAddress ? `manager:${managerAddress}` : 'manager:default',
         swapKey ? `swap:${swapKey}` : 'swap:default',
         outputAsset ? `output:${outputAsset}` : 'output:default',
@@ -65,7 +67,8 @@ export const ltKeys = {
       chainId: number,
       addr: Address,
       amount: bigint,
-      slippageBps: number,
+      collateralSlippageBps: number,
+      swapSlippageBps: number,
       managerAddress?: Address,
       swapKey?: string,
       outputAsset?: Address,
@@ -75,7 +78,8 @@ export const ltKeys = {
         'simulate',
         'redeem-plan',
         amount.toString(),
-        `slippage:${slippageBps}`,
+        `collateralSlippage:${collateralSlippageBps}`,
+        `swapSlippage:${swapSlippageBps}`,
         managerAddress ? `manager:${managerAddress}` : 'manager:default',
         swapKey ? `swap:${swapKey}` : 'swap:default',
         outputAsset ? `output:${outputAsset}` : 'output:default',
@@ -84,7 +88,8 @@ export const ltKeys = {
       chainId: number | undefined
       addr: Address
       amount: bigint
-      slippageBps: number
+      collateralSlippageBps: number
+      swapSlippageBps: number
       managerAddress?: Address
       swapKey?: string
       outputAsset?: Address
@@ -94,7 +99,8 @@ export const ltKeys = {
             params.chainId,
             params.addr,
             params.amount,
-            params.slippageBps,
+            params.collateralSlippageBps,
+            params.swapSlippageBps,
             params.managerAddress,
             params.swapKey,
             params.outputAsset,
@@ -102,7 +108,8 @@ export const ltKeys = {
         : ltKeys.simulation.redeemPlan(
             params.addr,
             params.amount,
-            params.slippageBps,
+            params.collateralSlippageBps,
+            params.swapSlippageBps,
             params.managerAddress,
             params.swapKey,
             params.outputAsset,
