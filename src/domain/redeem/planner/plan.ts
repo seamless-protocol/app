@@ -86,7 +86,7 @@ export async function planRedeem({
       inToken: collateralAsset,
       outToken: debtAsset,
       amountOut: preview.debt,
-      slippageBps: 1, // TODO What should this be set to? Should it be configurable by the user?
+      slippageBps: swapSlippageBps,
     })
 
     const expectedCollateralForSender = preview.collateral - (collateralToDebtQuote.in ?? 0n)
@@ -106,6 +106,21 @@ export async function planRedeem({
         collateralToDebtQuote,
       })
       throw new Error(`Try increasing your collateral slippage tolerance`)
+    }
+
+    if (preview.collateral - (collateralToDebtQuote.maxIn ?? 0n) < minCollateralForSender) {
+      captureRedeemPlanError({
+        errorString: `Preview collateral ${preview.collateral} minus max input ${collateralToDebtQuote.maxIn ?? 0n} is less than min collateral for sender ${minCollateralForSender}`,
+        collateralSlippageBps,
+        swapSlippageBps,
+        previewRedeem: preview,
+        previewEquity,
+        minCollateralForSender,
+        collateralToDebtQuote,
+      })
+      throw new Error(
+        `Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral slippage tolerance`,
+      )
     }
 
     const previewExcessDebt = collateralToDebtQuote.out - preview.debt
