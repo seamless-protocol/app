@@ -95,19 +95,6 @@ export async function planRedeem({
       collateralSlippageBps,
     )
 
-    if (collateralToDebtQuote.out < preview.debt) {
-      captureRedeemPlanError({
-        errorString: `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}`,
-        collateralSlippageBps,
-        swapSlippageBps,
-        previewRedeem: preview,
-        previewEquity,
-        minCollateralForSender,
-        collateralToDebtQuote,
-      })
-      throw new Error(`Try increasing your collateral slippage tolerance`)
-    }
-
     if (preview.collateral - (collateralToDebtQuote.maxIn ?? 0n) < minCollateralForSender) {
       captureRedeemPlanError({
         errorString: `Preview collateral ${preview.collateral} minus max input ${collateralToDebtQuote.maxIn ?? 0n} is less than min collateral for sender ${minCollateralForSender}`,

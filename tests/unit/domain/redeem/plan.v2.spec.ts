@@ -25,6 +25,15 @@ const leverageTokenConfig: LeverageTokenConfig = {
   debtAsset: { address: debtAsset, decimals: 6 },
 } as LeverageTokenConfig
 
+const leverageTokenConfigVelora = {
+  ...leverageTokenConfig,
+  swaps: {
+    collateralToDebt: {
+      type: 'velora',
+    },
+  },
+} as LeverageTokenConfig
+
 const readContract = publicClient.readContract as Mock
 
 describe('planRedeem', () => {
@@ -75,6 +84,66 @@ describe('planRedeem', () => {
         inToken: collateralAsset,
         outToken: debtAsset,
       }),
+    )
+  })
+
+  it('builds a plan with leverage-adjusted slippage and approvals for velora redemptions', async () => {
+    const quote = vi.fn(async () => ({
+      out: 350n,
+      minOut: 350n,
+      in: 208n,
+      maxIn: 210n,
+      approvalTarget: debtAsset,
+      calls: [{ target: debtAsset, data: '0x1234' as Hex, value: 0n }],
+    }))
+
+    const plan = await planRedeem({
+      publicClient,
+      leverageTokenConfig: leverageTokenConfigVelora,
+      sharesToRedeem: 100n,
+      collateralSlippageBps: 50,
+      swapSlippageBps: 10,
+      quoteCollateralToDebt: quote as any,
+    })
+
+    expect(plan.minCollateralForSender).toBe(788n) // (1000 - 208) * 0.995
+    expect(plan.previewCollateralForSender).toBe(792n) // 1000 - 208
+    expect(plan.previewExcessDebt).toBe(50n)
+    expect(plan.minExcessDebt).toBe(50n)
+    expect(plan.calls.length).toBeGreaterThanOrEqual(1)
+
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 10,
+        amountOut: 300n,
+        intent: 'exactOut',
+        inToken: collateralAsset,
+        outToken: debtAsset,
+      }),
+    )
+  })
+
+  it('throws when preview collateral minus max input amount is less than min collateral for sender for velora redemptions', async () => {
+    const quote = vi.fn(async () => ({
+      out: 350n,
+      minOut: 350n,
+      in: 208n,
+      maxIn: 1000n,
+      approvalTarget: debtAsset,
+      calls: [{ target: debtAsset, data: '0x1234' as Hex, value: 0n }],
+    }))
+
+    await expect(
+      planRedeem({
+        publicClient,
+        leverageTokenConfig: leverageTokenConfigVelora,
+        sharesToRedeem: 100n,
+        collateralSlippageBps: 50,
+        swapSlippageBps: 10,
+        quoteCollateralToDebt: quote as any,
+      }),
+    ).rejects.toThrow(
+      /Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral slippage tolerance/i,
     )
   })
 
