@@ -39,7 +39,7 @@ export function useRedeemWithRouter(swapType?: string) {
   const config = useConfig()
   return useMutation<OrchestrateRedeemResult, Error, UseRedeemWithRouterParams>({
     mutationFn: async ({ token, account, plan, chainId, routerAddress, managerAddress }) => {
-      if (swapType === 'velora') {
+      if (swapType === 'balmy') {
         return orchestrateRedeemWithVelora({
           config,
           account,

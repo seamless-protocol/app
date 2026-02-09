@@ -80,7 +80,7 @@ export async function planRedeem({
     args: [token, netShares],
   })
 
-  if (leverageTokenConfig.swaps?.collateralToDebt?.type === 'velora') {
+  if (isRedeemWithVelora(leverageTokenConfig)) {
     const collateralToDebtQuote = await quoteCollateralToDebt({
       intent: 'exactOut',
       inToken: collateralAsset,
@@ -205,4 +205,15 @@ export async function planRedeem({
       quoteSourceId: collateralToDebtQuote.quoteSourceId,
     }
   }
+}
+
+function isRedeemWithVelora(leverageTokenConfig: LeverageTokenConfig): boolean {
+  const collateralToDebtSwap = leverageTokenConfig.swaps?.collateralToDebt
+  return (
+    collateralToDebtSwap?.type === 'velora' ||
+    (collateralToDebtSwap?.type === 'balmy' &&
+      Array.isArray(collateralToDebtSwap.sourceWhitelist) &&
+      collateralToDebtSwap.sourceWhitelist.length === 1 &&
+      collateralToDebtSwap.sourceWhitelist[0] === 'paraswap')
+  )
 }

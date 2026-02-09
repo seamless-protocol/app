@@ -200,7 +200,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'velora',
+        type: 'balmy',
+        sourceWhitelist: ['paraswap'],
       },
     },
     relatedResources: {
@@ -296,7 +297,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'velora',
+        type: 'balmy',
+        sourceWhitelist: ['paraswap'],
       },
     },
     relatedResources: {
@@ -504,7 +506,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'velora',
+        type: 'balmy',
+        sourceWhitelist: ['paraswap'],
       },
     },
     relatedResources: {
@@ -791,7 +794,14 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       },
       collateralToDebt: {
         type: 'balmy',
-        excludeAdditionalSources: ['odos', 'paraswap'],
+        sourceWhitelist: ['paraswap'],
+        sourceConfig: {
+          custom: {
+            paraswap: {
+              sourceDenylist: ['CurveV1StableNg'],
+            },
+          },
+        },
       },
     },
     relatedResources: {

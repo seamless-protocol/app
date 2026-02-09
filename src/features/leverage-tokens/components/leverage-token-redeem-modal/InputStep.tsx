@@ -247,11 +247,7 @@ export function InputStep({
         {showAdvanced && (
           <>
             <SlippageInput
-              label={
-                leverageTokenConfig.swaps?.collateralToDebt?.type === 'velora'
-                  ? 'Collateral Slippage Tolerance'
-                  : 'Collateral Adjustment'
-              }
+              label="Collateral Slippage Tolerance"
               tooltipText="The leverage portion of the collateral is swapped to the debt asset during the redeem flow to repay a flash loan. If the redeem simulation fails due to the debt quote output being less than the previewed debt, you can try increasing this value."
               presets={collateralSlippagePresets}
               value={collateralSlippage}
