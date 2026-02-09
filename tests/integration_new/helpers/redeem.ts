@@ -137,7 +137,7 @@ async function redeemWithRetries({
       const isRetryableError =
         error instanceof RedeemExecutionSimulationError ||
         (error instanceof Error &&
-          error.message.includes('Try increasing your collateral slippage tolerance'))
+          error.message.includes('try increasing your collateral slippage tolerance'))
 
       if (isRetryableError && i < MAX_ATTEMPTS - 1) {
         collateralSlippageBps += collateralSlippageIncrementBps
