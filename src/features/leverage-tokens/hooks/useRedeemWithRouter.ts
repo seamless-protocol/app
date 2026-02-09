@@ -10,13 +10,11 @@ import { useMutation } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import { useConfig } from 'wagmi'
 import {
-  type CollateralToDebtSwapConfig,
   type OrchestrateRedeemResult,
   orchestrateRedeem,
   orchestrateRedeemWithVelora,
   type RedeemPlan,
 } from '@/domain/redeem'
-import { isRedeemWithVelora } from '@/domain/redeem/planner/plan'
 import type { SupportedChainId } from '@/lib/contracts/addresses'
 
 type Gen = typeof import('@/lib/contracts/generated')
@@ -37,11 +35,12 @@ export interface UseRedeemWithRouterParams {
 /**
  * Thin hook wrapper around the domain-level orchestrateRedeem.
  */
-export function useRedeemWithRouter(swap?: CollateralToDebtSwapConfig) {
+export function useRedeemWithRouter() {
   const config = useConfig()
   return useMutation<OrchestrateRedeemResult, Error, UseRedeemWithRouterParams>({
     mutationFn: async ({ token, account, plan, chainId, routerAddress, managerAddress }) => {
-      if (swap && isRedeemWithVelora(swap)) {
+      const quoteSourceNameLowercase = plan.quoteSourceName?.toLowerCase()
+      if (quoteSourceNameLowercase === 'velora' || quoteSourceNameLowercase === 'paraswap') {
         return orchestrateRedeemWithVelora({
           config,
           account,

@@ -138,6 +138,8 @@ export async function orchestrateRedeemWithVelora(params: {
       ((): Address => {
         throw new Error(`Augustus address required on chain ${chainId}`)
       })(),
+    // See https://github.com/seamless-protocol/leverage-tokens/blob/main/test/integration/1/LeverageRouter/RedeemWithVelora.t.sol#L13
+    // for validation of these offsets
     offsets: {
       exactAmount: 132n,
       limitAmount: 100n,

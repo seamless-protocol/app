@@ -35,7 +35,7 @@ export function useRedeemExecution({
 
   const publicClient = usePublicClient()
 
-  const redeemWithRouter = useRedeemWithRouter(swap)
+  const redeemWithRouter = useRedeemWithRouter()
 
   // V2 always requires a quote
   const requiresQuote = true

@@ -98,7 +98,7 @@ export async function planRedeem({
 
     if (preview.collateral - collateralToDebtQuote.maxIn < minCollateralForSender) {
       captureRedeemPlanError({
-        errorString: `Preview collateral ${preview.collateral} minus max input ${collateralToDebtQuote.maxIn ?? 0n} is less than min collateral for sender ${minCollateralForSender}`,
+        errorString: `Preview collateral ${preview.collateral} minus max input ${collateralToDebtQuote.maxIn} is less than min collateral for sender ${minCollateralForSender}`,
         collateralSlippageBps,
         swapSlippageBps,
         previewRedeem: preview,
@@ -107,22 +107,20 @@ export async function planRedeem({
         collateralToDebtQuote,
       })
       throw new Error(
-        `Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral slippage tolerance`,
+        `Collateral slippage tolerance is too low. Try increasing your collateral slippage tolerance`,
       )
     }
-
-    const previewExcessDebt = collateralToDebtQuote.out - preview.debt
 
     const calls: Array<Call> = []
     calls.push(...collateralToDebtQuote.calls)
 
     return {
-      collateralToSwap: collateralToDebtQuote.in ?? 0n,
+      collateralToSwap: collateralToDebtQuote.in,
       collateralToDebtQuoteAmount: collateralToDebtQuote.out,
       minCollateralForSender,
-      minExcessDebt: previewExcessDebt,
+      minExcessDebt: 0n,
       previewCollateralForSender: expectedCollateralForSender,
-      previewExcessDebt,
+      previewExcessDebt: 0n,
       sharesToRedeem,
       calls,
       quoteSourceName: collateralToDebtQuote.quoteSourceName,
@@ -208,7 +206,7 @@ export async function planRedeem({
   }
 }
 
-export function isRedeemWithVelora(swap?: CollateralToDebtSwapConfig): boolean {
+function isRedeemWithVelora(swap?: CollateralToDebtSwapConfig): boolean {
   return (
     swap?.type === 'velora' ||
     (swap?.type === 'balmy' &&

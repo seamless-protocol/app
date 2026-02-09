@@ -109,8 +109,8 @@ describe('planRedeem', () => {
 
     expect(plan.minCollateralForSender).toBe(788n) // (1000 - 208) * 0.995
     expect(plan.previewCollateralForSender).toBe(792n) // 1000 - 208
-    expect(plan.previewExcessDebt).toBe(50n)
-    expect(plan.minExcessDebt).toBe(50n)
+    expect(plan.previewExcessDebt).toBe(0n)
+    expect(plan.minExcessDebt).toBe(0n)
     expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
     expect(quote).toHaveBeenCalledWith(
@@ -154,8 +154,8 @@ describe('planRedeem', () => {
 
     expect(plan.minCollateralForSender).toBe(788n) // (1000 - 208) * 0.995
     expect(plan.previewCollateralForSender).toBe(792n) // 1000 - 208
-    expect(plan.previewExcessDebt).toBe(50n)
-    expect(plan.minExcessDebt).toBe(50n)
+    expect(plan.previewExcessDebt).toBe(0n)
+    expect(plan.minExcessDebt).toBe(0n)
     expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
     expect(quote).toHaveBeenCalledWith(
@@ -189,7 +189,7 @@ describe('planRedeem', () => {
         quoteCollateralToDebt: quote as any,
       }),
     ).rejects.toThrow(
-      /Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral slippage tolerance/i,
+      /Collateral slippage tolerance is too low. Try increasing your collateral slippage tolerance/i,
     )
   })
 
