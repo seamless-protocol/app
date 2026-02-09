@@ -981,7 +981,7 @@ export function LeverageTokenRedeemModal({
       }
       currentStep={currentStep}
       steps={steps}
-      className="max-w-lg border border-[var(--divider-line)] bg-[var(--surface-card)]"
+      className="max-w-xl border border-[var(--divider-line)] bg-[var(--surface-card)]"
       closable={!(currentStep === 'pending' || (currentStep === 'approve' && Boolean(approveHash)))}
     >
       {renderStepContent()}

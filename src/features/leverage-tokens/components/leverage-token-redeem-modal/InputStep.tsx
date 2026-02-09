@@ -243,7 +243,7 @@ export function InputStep({
         {showAdvanced && (
           <>
             <SlippageInput
-              label="Collateral Slippage"
+              label="Collateral Slippage Tolerance"
               tooltipText="The leverage portion of the collateral is swapped to the debt asset during the redeem flow to repay a flash loan. If the redeem simulation fails due to the debt quote output being less than the previewed debt, you can try increasing this value."
               presets={collateralSlippagePresets}
               value={collateralSlippage}
@@ -255,7 +255,7 @@ export function InputStep({
               precision={1}
             />
             <SlippageInput
-              label="Swap Slippage"
+              label="Swap Slippage Tolerance"
               tooltipText="Advanced setting. The default value works in most cases."
               presets={SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY}
               value={swapSlippage}
