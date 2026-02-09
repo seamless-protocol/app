@@ -7,6 +7,7 @@
  */
 import { type Address, encodeFunctionData, erc20Abi, type PublicClient } from 'viem'
 import { applySlippageFloor } from '@/domain/mint/planner/math'
+import type { CollateralToDebtSwapConfig } from '@/domain/redeem/utils/createCollateralToDebtQuote'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import type { Call } from '@/domain/shared/types'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
@@ -80,7 +81,7 @@ export async function planRedeem({
     args: [token, netShares],
   })
 
-  if (isRedeemWithVelora(leverageTokenConfig)) {
+  if (isRedeemWithVelora(leverageTokenConfig?.swaps?.collateralToDebt)) {
     const collateralToDebtQuote = await quoteCollateralToDebt({
       intent: 'exactOut',
       inToken: collateralAsset,
@@ -89,13 +90,13 @@ export async function planRedeem({
       slippageBps: swapSlippageBps,
     })
 
-    const expectedCollateralForSender = preview.collateral - (collateralToDebtQuote.in ?? 0n)
+    const expectedCollateralForSender = preview.collateral - collateralToDebtQuote.in
     const minCollateralForSender = applySlippageFloor(
       expectedCollateralForSender,
       collateralSlippageBps,
     )
 
-    if (preview.collateral - (collateralToDebtQuote.maxIn ?? 0n) < minCollateralForSender) {
+    if (preview.collateral - collateralToDebtQuote.maxIn < minCollateralForSender) {
       captureRedeemPlanError({
         errorString: `Preview collateral ${preview.collateral} minus max input ${collateralToDebtQuote.maxIn ?? 0n} is less than min collateral for sender ${minCollateralForSender}`,
         collateralSlippageBps,
@@ -207,13 +208,12 @@ export async function planRedeem({
   }
 }
 
-function isRedeemWithVelora(leverageTokenConfig: LeverageTokenConfig): boolean {
-  const collateralToDebtSwap = leverageTokenConfig.swaps?.collateralToDebt
+export function isRedeemWithVelora(swap?: CollateralToDebtSwapConfig): boolean {
   return (
-    collateralToDebtSwap?.type === 'velora' ||
-    (collateralToDebtSwap?.type === 'balmy' &&
-      Array.isArray(collateralToDebtSwap.sourceWhitelist) &&
-      collateralToDebtSwap.sourceWhitelist.length === 1 &&
-      collateralToDebtSwap.sourceWhitelist[0] === 'paraswap')
+    swap?.type === 'velora' ||
+    (swap?.type === 'balmy' &&
+      Array.isArray(swap.sourceWhitelist) &&
+      swap.sourceWhitelist.length === 1 &&
+      swap.sourceWhitelist[0] === 'paraswap')
   )
 }
