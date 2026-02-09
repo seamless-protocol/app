@@ -14,6 +14,7 @@ import {
   MIN_REDEEM_AMOUNT_DISPLAY,
   SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY,
 } from '../../constants'
+import type { SwapConfig } from '../../leverageTokens.config'
 
 interface Token {
   symbol: string
@@ -38,6 +39,9 @@ interface LeverageTokenConfig {
       defaultCollateralSlippage?: string
       presetsCollateralSlippage?: Array<string>
     }
+  }
+  swaps?: {
+    collateralToDebt?: SwapConfig
   }
 }
 
@@ -243,7 +247,11 @@ export function InputStep({
         {showAdvanced && (
           <>
             <SlippageInput
-              label="Collateral Slippage Tolerance"
+              label={
+                leverageTokenConfig.swaps?.collateralToDebt?.type === 'velora'
+                  ? 'Collateral Slippage Tolerance'
+                  : 'Collateral Adjustment'
+              }
               tooltipText="The leverage portion of the collateral is swapped to the debt asset during the redeem flow to repay a flash loan. If the redeem simulation fails due to the debt quote output being less than the previewed debt, you can try increasing this value."
               presets={collateralSlippagePresets}
               value={collateralSlippage}

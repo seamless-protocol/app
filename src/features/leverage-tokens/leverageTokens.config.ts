@@ -56,7 +56,7 @@ interface ResourceItem {
   highlight?: boolean
 }
 
-type SwapConfig = CollateralToDebtSwapConfig
+export type SwapConfig = CollateralToDebtSwapConfig
 
 // Leverage token configuration interface
 export interface LeverageTokenConfig {
@@ -790,7 +790,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'velora',
+        type: 'balmy',
+        excludeAdditionalSources: ['odos', 'paraswap'],
       },
     },
     relatedResources: {
