@@ -293,7 +293,7 @@ export function InputStep({
               precision={1}
             />
             <SlippageInput
-              label="Swap Slippage"
+              label="Swap Slippage Tolerance"
               tooltipText="Advanced setting. The default value works in most cases."
               presets={SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY}
               value={swapSlippage}

@@ -194,7 +194,7 @@ async function performRedeem(
     publicClient,
     leverageTokenConfig: tokenConfig,
     sharesToRedeem,
-    collateralAdjustmentBps: slippageBps,
+    collateralSlippageBps: slippageBps,
     swapSlippageBps: slippageBps,
     quoteCollateralToDebt,
   })

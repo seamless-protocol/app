@@ -130,8 +130,8 @@ export interface LeverageTokenConfig {
       presetsFlashLoanAdjustment?: Array<string>
     }
     redeem?: {
-      defaultCollateralAdjustment?: string
-      presetsCollateralAdjustment?: Array<string>
+      defaultCollateralSlippage?: string
+      presetsCollateralSlippage?: Array<string>
     }
   }
 
@@ -200,8 +200,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'balmy',
-        excludeAdditionalSources: ['odos'],
+        type: 'velora',
       },
     },
     relatedResources: {
@@ -297,8 +296,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'balmy',
-        excludeAdditionalSources: ['odos'],
+        type: 'velora',
       },
     },
     relatedResources: {
@@ -506,8 +504,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'balmy',
-        excludeAdditionalSources: ['odos'],
+        type: 'velora',
       },
     },
     relatedResources: {
@@ -739,8 +736,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         presetsFlashLoanAdjustment: ['0.1', '0.5', '1.0'],
       },
       redeem: {
-        defaultCollateralAdjustment: '0.1',
-        presetsCollateralAdjustment: ['0.1', '0.5', '1.0'],
+        defaultCollateralSlippage: '0.1',
+        presetsCollateralSlippage: ['0.1', '0.5', '1.0'],
       },
     },
     test: {
@@ -793,8 +790,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         excludeAdditionalSources: ['odos'],
       },
       collateralToDebt: {
-        type: 'balmy',
-        excludeAdditionalSources: ['odos'],
+        type: 'velora',
       },
     },
     relatedResources: {

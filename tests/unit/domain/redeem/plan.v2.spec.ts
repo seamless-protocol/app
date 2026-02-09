@@ -54,7 +54,7 @@ describe('planRedeem', () => {
       publicClient,
       leverageTokenConfig,
       sharesToRedeem: 100n,
-      collateralAdjustmentBps: 100,
+      collateralSlippageBps: 100,
       swapSlippageBps: 100,
       quoteCollateralToDebt: quote as any,
     })
@@ -91,11 +91,11 @@ describe('planRedeem', () => {
         publicClient,
         leverageTokenConfig,
         sharesToRedeem: 100n,
-        collateralAdjustmentBps: 100,
+        collateralSlippageBps: 100,
         swapSlippageBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
-    ).rejects.toThrow(/Try increasing your collateral adjustment/i)
+    ).rejects.toThrow(/Try increasing your collateral slippage tolerance/i)
   })
 
   it('throws when minOut is below required debt', async () => {
@@ -111,16 +111,16 @@ describe('planRedeem', () => {
         publicClient,
         leverageTokenConfig,
         sharesToRedeem: 100n,
-        collateralAdjustmentBps: 100,
+        collateralSlippageBps: 100,
         swapSlippageBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
     ).rejects.toThrow(
-      /Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral adjustment/i,
+      /Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral slippage tolerance/i,
     )
   })
 
-  it('builds a plan with zero collateral adjustment', async () => {
+  it('builds a plan with zero collateral slippage tolerance', async () => {
     const quote = vi.fn(async () => ({
       out: 350n,
       minOut: 330n,
@@ -132,7 +132,7 @@ describe('planRedeem', () => {
       publicClient,
       leverageTokenConfig,
       sharesToRedeem: 100n,
-      collateralAdjustmentBps: 0,
+      collateralSlippageBps: 0,
       swapSlippageBps: 100,
       quoteCollateralToDebt: quote as any,
     })
@@ -155,17 +155,17 @@ describe('planRedeem', () => {
     )
   })
 
-  it('throws error when collateral adjustment is negative', async () => {
+  it('throws error when collateral slippage tolerance is negative', async () => {
     await expect(
       planRedeem({
         publicClient,
         leverageTokenConfig,
         sharesToRedeem: 100n,
-        collateralAdjustmentBps: -100,
+        collateralSlippageBps: -100,
         swapSlippageBps: 100,
         quoteCollateralToDebt: vi.fn() as any,
       }),
-    ).rejects.toThrow(/Collateral adjustment cannot be less than 0/i)
+    ).rejects.toThrow(/Collateral slippage cannot be less than 0/i)
   })
 
   it('throws error when swap slippage is less than 0.01%', async () => {
@@ -174,7 +174,7 @@ describe('planRedeem', () => {
         publicClient,
         leverageTokenConfig,
         sharesToRedeem: 100n,
-        collateralAdjustmentBps: 100,
+        collateralSlippageBps: 100,
         swapSlippageBps: 0,
         quoteCollateralToDebt: vi.fn() as any,
       }),

@@ -46,7 +46,7 @@ export const ltKeys = {
     redeemPlan: (
       addr: Address,
       amount: bigint,
-      collateralAdjustmentBps: number,
+      collateralSlippageBps: number,
       swapSlippageBps: number,
       managerAddress?: Address,
       swapKey?: string,
@@ -57,7 +57,7 @@ export const ltKeys = {
         'simulate',
         'redeem-plan',
         amount.toString(),
-        `collateralAdjustment:${collateralAdjustmentBps}`,
+        `collateralSlippage:${collateralSlippageBps}`,
         `swapSlippage:${swapSlippageBps}`,
         managerAddress ? `manager:${managerAddress}` : 'manager:default',
         swapKey ? `swap:${swapKey}` : 'swap:default',
@@ -67,7 +67,7 @@ export const ltKeys = {
       chainId: number,
       addr: Address,
       amount: bigint,
-      collateralAdjustmentBps: number,
+      collateralSlippageBps: number,
       swapSlippageBps: number,
       managerAddress?: Address,
       swapKey?: string,
@@ -78,7 +78,7 @@ export const ltKeys = {
         'simulate',
         'redeem-plan',
         amount.toString(),
-        `collateralAdjustment:${collateralAdjustmentBps}`,
+        `collateralSlippage:${collateralSlippageBps}`,
         `swapSlippage:${swapSlippageBps}`,
         managerAddress ? `manager:${managerAddress}` : 'manager:default',
         swapKey ? `swap:${swapKey}` : 'swap:default',
@@ -88,7 +88,7 @@ export const ltKeys = {
       chainId: number | undefined
       addr: Address
       amount: bigint
-      collateralAdjustmentBps: number
+      collateralSlippageBps: number
       swapSlippageBps: number
       managerAddress?: Address
       swapKey?: string
@@ -99,7 +99,7 @@ export const ltKeys = {
             params.chainId,
             params.addr,
             params.amount,
-            params.collateralAdjustmentBps,
+            params.collateralSlippageBps,
             params.swapSlippageBps,
             params.managerAddress,
             params.swapKey,
@@ -108,7 +108,7 @@ export const ltKeys = {
         : ltKeys.simulation.redeemPlan(
             params.addr,
             params.amount,
-            params.collateralAdjustmentBps,
+            params.collateralSlippageBps,
             params.swapSlippageBps,
             params.managerAddress,
             params.swapKey,
