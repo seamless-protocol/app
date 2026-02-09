@@ -202,6 +202,13 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       collateralToDebt: {
         type: 'balmy',
         sourceWhitelist: ['paraswap'],
+        sourceConfig: {
+          custom: {
+            paraswap: {
+              includeContractMethods: ['swapExactAmountOut'],
+            },
+          },
+        },
       },
     },
     relatedResources: {
@@ -299,6 +306,13 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       collateralToDebt: {
         type: 'balmy',
         sourceWhitelist: ['paraswap'],
+        sourceConfig: {
+          custom: {
+            paraswap: {
+              includeContractMethods: ['swapExactAmountOut'],
+            },
+          },
+        },
       },
     },
     relatedResources: {
@@ -508,6 +522,13 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       collateralToDebt: {
         type: 'balmy',
         sourceWhitelist: ['paraswap'],
+        sourceConfig: {
+          custom: {
+            paraswap: {
+              includeContractMethods: ['swapExactAmountOut'],
+            },
+          },
+        },
       },
     },
     relatedResources: {
@@ -799,6 +820,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           custom: {
             paraswap: {
               sourceDenylist: ['CurveV1StableNg'],
+              includeContractMethods: ['swapExactAmountOut'],
             },
           },
         },
