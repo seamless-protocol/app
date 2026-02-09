@@ -611,13 +611,13 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     chainId: 1,
     chainName: 'Ethereum',
     chainLogo: EthereumLogo,
-    supplyCap: 1255000,
+    supplyCap: 2255000,
     apyConfig: {
       aprProvider: {
         type: APR_PROVIDERS.DEFI_LLAMA,
         id: '8fa2e60e-365a-41fc-8d50-fadde5041f94',
       },
-      pointsMultiplier: 16.5,
+      pointsMultiplier: 20,
     },
     collateralAsset: {
       symbol: 'siUSD',
