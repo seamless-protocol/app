@@ -131,6 +131,8 @@ export function createUniswapV2QuoteAdapter(options: UniswapV2QuoteOptions): Quo
     return {
       out,
       minOut,
+      in: amountIn,
+      maxIn: amountIn,
       approvalTarget: normalizedRouter,
       calls: [
         {

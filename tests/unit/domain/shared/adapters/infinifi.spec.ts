@@ -51,6 +51,8 @@ describe('createInfinifiQuoteAdapter', () => {
 
     expect(quote.out).toBe(4_000_000n)
     expect(quote.minOut).toBe(3_960_000n) // 1% slippage floor applied
+    expect(quote.in).toBe(1_000_000n)
+    expect(quote.maxIn).toBe(1_000_000n)
     expect(quote.approvalTarget).toBe(DEFAULT_ADDRESSES.gateway)
     expect(quote.calls).toHaveLength(1)
 

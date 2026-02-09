@@ -94,6 +94,7 @@ describe('createPendleQuoteAdapter', () => {
 
       expect(result.out).toBe(2000000000000000000n)
       expect(result.maxIn).toBe(1000000000000000000n)
+      expect(result.in).toBe(1000000000000000000n)
       expect(result.approvalTarget.toLowerCase()).toBe(APPROVAL_TARGET.toLowerCase())
       expect(result.calls[0]?.data).toBe('0xdeadbeef')
       expect(result.wantsNativeIn).toBe(false)

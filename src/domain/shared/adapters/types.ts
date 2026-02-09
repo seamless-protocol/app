@@ -11,9 +11,9 @@ export type BaseQuote = {
   // Guaranteed output after slippage in outToken base units
   minOut: bigint
   // Expected input (nice-weather) in inToken base units
-  in?: bigint
+  in: bigint
   // For exact-out quotes: maximum input the router may spend to achieve `out` under slippage
-  maxIn?: bigint
+  maxIn: bigint
   // Adapter may require native (ETH) input value
   wantsNativeIn?: boolean
   // Optional deadline (if provided by the aggregator/DEX)

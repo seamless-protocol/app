@@ -118,6 +118,7 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
       return {
         out: sharesOut,
         minOut,
+        in: amountIn,
         maxIn: amountIn,
         approvalTarget: addresses.gateway,
         calls: [{ target: addresses.gateway, data: calldata, value: 0n }],
@@ -148,6 +149,7 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
     return {
       out: usdcOut,
       minOut,
+      in: amountIn,
       maxIn: amountIn,
       approvalTarget: normalizedUnstakeAndRedeemHelper,
       calls: [
