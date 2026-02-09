@@ -10,7 +10,7 @@ import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
-  COLLATERAL_ADJUSTMENT_PRESETS_PERCENT_DISPLAY_REDEEM,
+  COLLATERAL_SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM,
   MIN_REDEEM_AMOUNT_DISPLAY,
   SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY,
 } from '../../constants'
@@ -35,8 +35,8 @@ interface LeverageTokenConfig {
   }
   slippagePresets?: {
     redeem?: {
-      defaultCollateralAdjustment?: string
-      presetsCollateralAdjustment?: Array<string>
+      defaultCollateralSlippage?: string
+      presetsCollateralSlippage?: Array<string>
     }
   }
 }
@@ -60,8 +60,8 @@ interface InputStepProps {
   onPercentageClick: (percentage: number) => void
   showAdvanced: boolean
   onToggleAdvanced: () => void
-  collateralAdjustment: string
-  onCollateralAdjustmentChange: (value: string) => void
+  collateralSlippage: string
+  onCollateralSlippageChange: (value: string) => void
   swapSlippage: string
   onSwapSlippageChange: (value: string) => void
   isLeverageTokenBalanceLoading: boolean
@@ -104,8 +104,8 @@ export function InputStep({
   onPercentageClick,
   showAdvanced,
   onToggleAdvanced,
-  collateralAdjustment,
-  onCollateralAdjustmentChange,
+  collateralSlippage,
+  onCollateralSlippageChange,
   swapSlippage,
   onSwapSlippageChange,
   isLeverageTokenBalanceLoading,
@@ -127,17 +127,17 @@ export function InputStep({
   impactWarning,
   quoteSourceName,
 }: InputStepProps) {
-  const collateralAdjustmentInputRef = useRef<HTMLInputElement>(null)
+  const collateralSlippageInputRef = useRef<HTMLInputElement>(null)
 
   const redeemAmountId = useId()
 
-  // Auto-select and focus collateral adjustment input when advanced is shown
+  // Auto-select and focus collateral slippage input when advanced is shown
   useEffect(() => {
-    if (showAdvanced && collateralAdjustmentInputRef.current) {
+    if (showAdvanced && collateralSlippageInputRef.current) {
       // Small delay to ensure the input is rendered
       setTimeout(() => {
-        collateralAdjustmentInputRef.current?.focus()
-        collateralAdjustmentInputRef.current?.select()
+        collateralSlippageInputRef.current?.focus()
+        collateralSlippageInputRef.current?.select()
       }, 100)
     }
   }, [showAdvanced])
@@ -159,9 +159,9 @@ export function InputStep({
     return { label: `Redeem ${leverageTokenConfig.symbol}`, busy: false }
   })()
 
-  const collateralAdjustmentPresets =
-    leverageTokenConfig.slippagePresets?.redeem?.presetsCollateralAdjustment ??
-    COLLATERAL_ADJUSTMENT_PRESETS_PERCENT_DISPLAY_REDEEM
+  const collateralSlippagePresets =
+    leverageTokenConfig.slippagePresets?.redeem?.presetsCollateralSlippage ??
+    COLLATERAL_SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM
 
   return (
     <div className="space-y-6">
@@ -243,12 +243,12 @@ export function InputStep({
         {showAdvanced && (
           <>
             <SlippageInput
-              label="Collateral Adjustment"
+              label="Collateral Slippage"
               tooltipText="The leverage portion of the collateral is swapped to the debt asset during the redeem flow to repay a flash loan. If the redeem simulation fails due to the debt quote output being less than the previewed debt, you can try increasing this value."
-              presets={collateralAdjustmentPresets}
-              value={collateralAdjustment}
-              onChange={onCollateralAdjustmentChange}
-              inputRef={collateralAdjustmentInputRef}
+              presets={collateralSlippagePresets}
+              value={collateralSlippage}
+              onChange={onCollateralSlippageChange}
+              inputRef={collateralSlippageInputRef}
               step={0.1}
               min={0}
               max={50}
@@ -360,8 +360,8 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Collateral Adjustment</span>
-            <span className="text-foreground">{collateralAdjustment}%</span>
+            <span className="text-secondary-foreground">Collateral Slippage</span>
+            <span className="text-foreground">{collateralSlippage}%</span>
           </div>
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Swap Slippage</span>

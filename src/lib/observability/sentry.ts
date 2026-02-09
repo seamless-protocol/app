@@ -101,7 +101,7 @@ export function captureTxError(params: {
   token: string
   inputAsset?: string
   outputAsset?: string
-  collateralAdjustmentBps?: number
+  collateralSlippageBps?: number
   shareSlippageBps?: number
   swapSlippageBps?: number
   flashLoanAdjustmentBps?: number
@@ -120,7 +120,7 @@ export function captureTxError(params: {
     token,
     inputAsset,
     outputAsset,
-    collateralAdjustmentBps,
+    collateralSlippageBps,
     shareSlippageBps,
     swapSlippageBps,
     flashLoanAdjustmentBps,
@@ -147,7 +147,7 @@ export function captureTxError(params: {
       token,
       inputAsset,
       outputAsset,
-      collateralAdjustmentBps,
+      collateralSlippageBps,
       shareSlippageBps,
       swapSlippageBps,
       flashLoanAdjustmentBps,
@@ -168,7 +168,7 @@ export function captureTxError(params: {
     token,
     ...(inputAsset ? { inputAsset } : {}),
     ...(outputAsset ? { outputAsset } : {}),
-    ...(typeof collateralAdjustmentBps === 'number' ? { collateralAdjustmentBps } : {}),
+    ...(typeof collateralSlippageBps === 'number' ? { collateralSlippageBps } : {}),
     ...(typeof shareSlippageBps === 'number' ? { shareSlippageBps } : {}),
     ...(typeof flashLoanAdjustmentBps === 'number' ? { flashLoanAdjustmentBps } : {}),
     ...(typeof swapSlippageBps === 'number' ? { swapSlippageBps } : {}),
@@ -244,7 +244,7 @@ export function captureMintPlanError(params: {
 
 export function captureRedeemPlanError(params: {
   errorString: string
-  collateralAdjustmentBps: number
+  collateralSlippageBps: number
   swapSlippageBps: number
   previewRedeem: {
     collateral: bigint
@@ -260,7 +260,7 @@ export function captureRedeemPlanError(params: {
 }) {
   const {
     errorString,
-    collateralAdjustmentBps,
+    collateralSlippageBps,
     swapSlippageBps,
     previewRedeem,
     previewEquity,
@@ -274,7 +274,7 @@ export function captureRedeemPlanError(params: {
     level: 'error',
     message: errorString,
     data: {
-      collateralAdjustmentBps,
+      collateralSlippageBps,
       swapSlippageBps,
       previewRedeem,
       previewEquity,
@@ -286,7 +286,7 @@ export function captureRedeemPlanError(params: {
 
   logger.error('Redeem plan error', {
     errorString,
-    collateralAdjustmentBps,
+    collateralSlippageBps,
     swapSlippageBps,
     previewRedeem,
     previewEquity,

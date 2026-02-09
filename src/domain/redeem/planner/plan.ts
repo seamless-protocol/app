@@ -31,7 +31,7 @@ export interface PlanRedeemParams {
   publicClient: PublicClient
   leverageTokenConfig: LeverageTokenConfig
   sharesToRedeem: bigint
-  collateralAdjustmentBps: number
+  collateralSlippageBps: number
   swapSlippageBps: number
   quoteCollateralToDebt: QuoteFn
 }
@@ -40,7 +40,7 @@ export async function planRedeem({
   publicClient,
   leverageTokenConfig,
   sharesToRedeem,
-  collateralAdjustmentBps,
+  collateralSlippageBps,
   swapSlippageBps,
   quoteCollateralToDebt,
 }: PlanRedeemParams): Promise<RedeemPlan> {
@@ -48,7 +48,7 @@ export async function planRedeem({
     throw new Error('sharesToRedeem must be positive')
   }
 
-  if (collateralAdjustmentBps < 0) {
+  if (collateralSlippageBps < 0) {
     throw new Error('Collateral slippage cannot be less than 0')
   }
 
@@ -56,7 +56,7 @@ export async function planRedeem({
     throw new Error('Swap slippage cannot be less than 0.01%')
   }
 
-  console.debug(`planRedeem collateralAdjustmentBps: ${collateralAdjustmentBps}`)
+  console.debug(`planRedeem collateralSlippageBps: ${collateralSlippageBps}`)
   console.debug(`planRedeem swapSlippageBps: ${swapSlippageBps}`)
 
   const chainId = leverageTokenConfig.chainId as SupportedChainId
@@ -92,20 +92,20 @@ export async function planRedeem({
     const expectedCollateralForSender = preview.collateral - (collateralToDebtQuote.in ?? 0n)
     const minCollateralForSender = applySlippageFloor(
       expectedCollateralForSender,
-      collateralAdjustmentBps,
+      collateralSlippageBps,
     )
 
     if (collateralToDebtQuote.out < preview.debt) {
       captureRedeemPlanError({
         errorString: `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}`,
-        collateralAdjustmentBps,
+        collateralSlippageBps,
         swapSlippageBps,
         previewRedeem: preview,
         previewEquity,
         minCollateralForSender,
         collateralToDebtQuote,
       })
-      throw new Error(`Try increasing your collateral adjustment`)
+      throw new Error(`Try increasing your collateral slippage tolerance`)
     }
 
     const previewExcessDebt = collateralToDebtQuote.out - preview.debt
@@ -126,7 +126,7 @@ export async function planRedeem({
       quoteSourceId: collateralToDebtQuote.quoteSourceId,
     }
   } else {
-    const minCollateralForSender = applySlippageFloor(previewEquity, collateralAdjustmentBps)
+    const minCollateralForSender = applySlippageFloor(previewEquity, collateralSlippageBps)
 
     // Leverage-adjusted slippage for the swap: scale by previewed leverage.
     const quoteSlippageBps = swapSlippageBps
@@ -143,7 +143,7 @@ export async function planRedeem({
     if (collateralToDebtQuote.out < preview.debt) {
       captureRedeemPlanError({
         errorString: `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}`,
-        collateralAdjustmentBps,
+        collateralSlippageBps,
         swapSlippageBps,
         previewRedeem: preview,
         previewEquity,
@@ -151,13 +151,13 @@ export async function planRedeem({
         collateralToSpend,
         collateralToDebtQuote,
       })
-      throw new Error(`Try increasing your collateral adjustment`)
+      throw new Error(`Try increasing your collateral slippage tolerance`)
     }
 
     if (collateralToDebtQuote.minOut < preview.debt) {
       captureRedeemPlanError({
         errorString: `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}`,
-        collateralAdjustmentBps,
+        collateralSlippageBps,
         swapSlippageBps,
         previewRedeem: preview,
         previewEquity,
@@ -166,7 +166,7 @@ export async function planRedeem({
         collateralToDebtQuote,
       })
       throw new Error(
-        `Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral adjustment`,
+        `Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral slippage tolerance`,
       )
     }
 

@@ -16,7 +16,7 @@ import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
 import {
-  DEFAULT_COLLATERAL_ADJUSTMENT_PERCENT_DISPLAY,
+  DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY,
   DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
   TOKEN_AMOUNT_DISPLAY_DECIMALS,
 } from '../../constants'
@@ -185,15 +185,15 @@ export function LeverageTokenRedeemModal({
   }, [leverageTokenUsdPrice, selectedToken])
 
   const {
-    value: collateralAdjustment,
-    setValue: setCollateralAdjustment,
-    valueBps: collateralAdjustmentBps,
+    value: collateralSlippage,
+    setValue: setCollateralSlippage,
+    valueBps: collateralSlippageBps,
   } = usePercentSlippageInput({
-    storageKey: `redeem-collateral-adjustment-${leverageTokenAddress}`,
+    storageKey: `redeem-collateral-slippage-${leverageTokenAddress}`,
     initial:
-      leverageTokenConfig.slippagePresets?.redeem?.defaultCollateralAdjustment ??
-      DEFAULT_COLLATERAL_ADJUSTMENT_PERCENT_DISPLAY,
-    fallbackBps: Number(DEFAULT_COLLATERAL_ADJUSTMENT_PERCENT_DISPLAY) * 100,
+      leverageTokenConfig.slippagePresets?.redeem?.defaultCollateralSlippage ??
+      DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY) * 100,
   })
   const {
     value: swapSlippage,
@@ -251,7 +251,7 @@ export function LeverageTokenRedeemModal({
   const planPreview = useRedeemPlanPreview({
     token: leverageTokenAddress,
     sharesToRedeem: form.amountRaw,
-    collateralAdjustmentBps,
+    collateralSlippageBps,
     swapSlippageBps,
     chainId: leverageTokenConfig.chainId,
     enabled: isOpen,
@@ -658,7 +658,7 @@ export function LeverageTokenRedeemModal({
         ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
         token: leverageTokenAddress,
         inputAsset: leverageTokenAddress,
-        collateralAdjustmentBps,
+        collateralSlippageBps,
         swapSlippageBps,
         amountIn: form.amount ?? '',
         expectedOut: String(expectedTokens),
@@ -868,8 +868,8 @@ export function LeverageTokenRedeemModal({
             onPercentageClick={handlePercentageClickWithBalance}
             showAdvanced={showAdvanced}
             onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
-            collateralAdjustment={collateralAdjustment}
-            onCollateralAdjustmentChange={setCollateralAdjustment}
+            collateralSlippage={collateralSlippage}
+            onCollateralSlippageChange={setCollateralSlippage}
             swapSlippage={swapSlippage}
             onSwapSlippageChange={setSwapSlippage}
             isLeverageTokenBalanceLoading={isLeverageTokenBalanceLoading}
