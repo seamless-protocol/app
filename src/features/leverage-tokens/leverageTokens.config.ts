@@ -756,8 +756,8 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
     slippagePresets: {
       mint: {
-        defaultShareSlippage: '0.1',
-        defaultFlashLoanAdjustment: '0.1',
+        defaultShareSlippage: '0.5',
+        defaultFlashLoanAdjustment: '0.5',
         presetsFlashLoanAdjustment: ['0.1', '0.5', '1.0'],
       },
       redeem: {

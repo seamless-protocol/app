@@ -311,6 +311,8 @@ contract InfinifiPreviewer {
         sharesOut = _convertToShares(IERC4626PreviewDeposit(vault), receiptAmount);
     }
 
+    /// @notice Chains assetToReceipt and receiptToStaked to quote iUSD and siUSD amounts in one RPC call.
+    /// @dev Based on logic from InfiniFi's RedeemController.Redeem https://etherscan.deth.net/address/0xCb1747E89a43DEdcF4A2b831a0D94859EFeC7601#writeContract
     function previewWithdrawToAsset(
         address gateway,
         uint256 assetAmount
@@ -345,15 +347,15 @@ contract InfinifiPreviewer {
         return supply == 0 ? assetAmount : ((assetAmount * supply) / assets);
     }
 
-    /// @notice returns the convert ratio between receiptToken and assetToken
+    /// @notice Returns the convert ratio between receiptToken and assetToken, rounded down
     /// @dev for iUSD/USDC, 1 iUSD = 1e18, receiptToken price is for example 0.8e18, USDC token price is 1e(18 + 18 - USDC decimals) = 1e30
     /// @dev then convert ratio is 1e18 * 0.8e18 / 1e30 = 0.8e36 / 1e30 = 0.8e6
     /// @dev so 1e18 iUSD is worth 0.8e6 USDC
+    /// @dev Based on logic from InfiniFi's RedeemController._getReceiptToAssetConvertRatio https://etherscan.deth.net/address/0xCb1747E89a43DEdcF4A2b831a0D94859EFeC7601#writeContract
     function _getReceiptToAssetConvertRatio(address accounting, address assetToken, address receiptToken) internal view returns (uint256) {
         uint256 _assetTokenPrice = IAccounting(accounting).price(assetToken);
         uint256 _receiptTokenPrice = IAccounting(accounting).price(receiptToken);
 
-        // divWadDown
         return _receiptTokenPrice.divWadDown(_assetTokenPrice);
     }
 
@@ -361,6 +363,7 @@ contract InfinifiPreviewer {
     /// @param _amountAsset the amount of assetToken to convert
     /// @param _convertRatio the convert ratio between receiptToken and assetToken
     /// @dev if the convertRatio is 0.8e18, then 1 asset token is worth 1e18 * 1e18 / 0.8e18 = 1.25e18 receipt tokens
+    /// @dev Based on logic from InfiniFi's RedeemController._convertAssetToReceipt https://etherscan.deth.net/address/0xCb1747E89a43DEdcF4A2b831a0D94859EFeC7601#writeContract
     function _convertAssetToReceipt(uint256 _amountAsset, uint256 _convertRatio) internal pure returns (uint256) {
         return _amountAsset.divWadUp(_convertRatio);
     }
@@ -368,6 +371,7 @@ contract InfinifiPreviewer {
     /// @notice Converts _amountIn of receipt tokens to staked tokens
     /// @param _gateway reference
     /// @param _amountIn receipt token amount
+    /// @dev Based on logic from InfiniFi's GatewayLib.receiptToStaked https://etherscan.deth.net/address/0x4f0122D43aB4893d5977FB0358B73CC178339dFE#code
     function _receiptToStaked(IInfinifiGateway _gateway, uint256 _amountIn) internal view returns (uint256) {
         if (_amountIn == 0) return 0;
 
