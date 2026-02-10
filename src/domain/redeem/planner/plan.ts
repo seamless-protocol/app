@@ -81,112 +81,61 @@ export async function planRedeem({
     args: [token, netShares],
   })
 
-  if (isRedeemWithVelora(leverageTokenConfig?.swaps?.collateralToDebt)) {
-    const collateralToDebtQuote = await quoteCollateralToDebt({
-      intent: 'exactOut',
-      inToken: collateralAsset,
-      outToken: debtAsset,
-      amountOut: preview.debt,
-      slippageBps: swapSlippageBps,
-    })
+  const collateralToDebtQuote = await quoteCollateralToDebt({
+    intent: 'exactOut',
+    inToken: collateralAsset,
+    outToken: debtAsset,
+    amountOut: preview.debt,
+    slippageBps: swapSlippageBps,
+  })
 
-    const expectedCollateralForSender = preview.collateral - collateralToDebtQuote.in
-    const minCollateralForSender = applySlippageFloor(
-      expectedCollateralForSender,
+  const expectedCollateralForSender = preview.collateral - collateralToDebtQuote.in
+  const minCollateralForSender = applySlippageFloor(
+    expectedCollateralForSender,
+    collateralSlippageBps,
+  )
+
+  if (preview.collateral - collateralToDebtQuote.maxIn < minCollateralForSender) {
+    captureRedeemPlanError({
+      errorString: `Preview collateral ${preview.collateral} minus max input ${collateralToDebtQuote.maxIn} is less than min collateral for sender ${minCollateralForSender}`,
       collateralSlippageBps,
-    )
-
-    if (preview.collateral - collateralToDebtQuote.maxIn < minCollateralForSender) {
-      captureRedeemPlanError({
-        errorString: `Preview collateral ${preview.collateral} minus max input ${collateralToDebtQuote.maxIn} is less than min collateral for sender ${minCollateralForSender}`,
-        collateralSlippageBps,
-        swapSlippageBps,
-        previewRedeem: preview,
-        previewEquity,
-        minCollateralForSender,
-        collateralToDebtQuote,
-      })
-      throw new Error(
-        `Collateral slippage tolerance is too low. Try increasing your collateral slippage tolerance`,
-      )
-    }
-
-    const calls: Array<Call> = []
-    calls.push(...collateralToDebtQuote.calls)
-
-    return {
-      collateralToSwap: collateralToDebtQuote.in,
-      collateralToDebtQuoteAmount: collateralToDebtQuote.out,
+      swapSlippageBps,
+      previewRedeem: preview,
+      previewEquity,
       minCollateralForSender,
-      minExcessDebt: 0n,
-      previewCollateralForSender: expectedCollateralForSender,
-      previewExcessDebt: 0n,
-      sharesToRedeem,
-      calls,
-      quoteSourceName: collateralToDebtQuote.quoteSourceName,
-      quoteSourceId: collateralToDebtQuote.quoteSourceId,
-    }
-  } else {
-    const collateralToDebtQuote = await quoteCollateralToDebt({
-      intent: 'exactOut',
-      inToken: collateralAsset,
-      outToken: debtAsset,
-      amountOut: preview.debt,
-      slippageBps: swapSlippageBps,
+      collateralToDebtQuote,
     })
-
-    const expectedCollateralForSender = preview.collateral - collateralToDebtQuote.in
-    const minCollateralForSender = applySlippageFloor(
-      expectedCollateralForSender,
-      collateralSlippageBps,
+    throw new Error(
+      `Collateral slippage tolerance is too low. Try increasing your collateral slippage tolerance`,
     )
+  }
 
-    if (preview.collateral - collateralToDebtQuote.maxIn < minCollateralForSender) {
-      captureRedeemPlanError({
-        errorString: `Preview collateral ${preview.collateral} minus max input ${collateralToDebtQuote.maxIn} is less than min collateral for sender ${minCollateralForSender}`,
-        collateralSlippageBps,
-        swapSlippageBps,
-        previewRedeem: preview,
-        previewEquity,
-        minCollateralForSender,
-        collateralToDebtQuote,
-      })
-      throw new Error(
-        `Collateral slippage tolerance is too low. Try increasing your collateral slippage tolerance`,
-      )
-    }
+  const isVeloraSwap = isRedeemWithVelora(leverageTokenConfig?.swaps?.collateralToDebt)
+  const calls: Array<Call> = []
+  if (!isVeloraSwap && collateralToDebtQuote.out > 0n) {
+    calls.push({
+      target: collateralAsset,
+      data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'approve',
+        args: [collateralToDebtQuote.approvalTarget, collateralToDebtQuote.maxIn],
+      }),
+      value: 0n,
+    })
+  }
+  calls.push(...collateralToDebtQuote.calls)
 
-    const approvalCall: Call | undefined =
-      collateralToDebtQuote.out > 0n
-        ? {
-            target: collateralAsset,
-            data: encodeFunctionData({
-              abi: erc20Abi,
-              functionName: 'approve',
-              args: [collateralToDebtQuote.approvalTarget, collateralToDebtQuote.maxIn],
-            }),
-            value: 0n,
-          }
-        : undefined
-
-    const calls: Array<Call> = []
-    if (approvalCall) calls.push(approvalCall)
-    calls.push(...collateralToDebtQuote.calls)
-
-    const previewExcessDebt = collateralToDebtQuote.out - preview.debt
-
-    return {
-      collateralToSwap: collateralToDebtQuote.maxIn,
-      collateralToDebtQuoteAmount: collateralToDebtQuote.out,
-      minCollateralForSender,
-      minExcessDebt: 0n,
-      previewCollateralForSender: expectedCollateralForSender,
-      previewExcessDebt,
-      sharesToRedeem,
-      calls,
-      quoteSourceName: collateralToDebtQuote.quoteSourceName,
-      quoteSourceId: collateralToDebtQuote.quoteSourceId,
-    }
+  return {
+    collateralToSwap: isVeloraSwap ? collateralToDebtQuote.in : collateralToDebtQuote.maxIn,
+    collateralToDebtQuoteAmount: collateralToDebtQuote.out,
+    minCollateralForSender,
+    minExcessDebt: 0n,
+    previewCollateralForSender: expectedCollateralForSender,
+    previewExcessDebt: isVeloraSwap ? 0n : collateralToDebtQuote.out - preview.debt,
+    sharesToRedeem,
+    calls,
+    quoteSourceName: collateralToDebtQuote.quoteSourceName,
+    quoteSourceId: collateralToDebtQuote.quoteSourceId,
   }
 }
 
