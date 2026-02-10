@@ -32,6 +32,7 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       'fly-trade',
       'swing',
       'xy-finance',
+      'open-ocean',
       ...(opts.excludeAdditionalSources ?? []),
     ]
 

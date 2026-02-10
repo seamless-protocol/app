@@ -76,7 +76,9 @@ describe('createBalmyQuoteAdapter', () => {
         slippagePercentage: 0.5,
         takerAddress: CALLER,
         recipient: ROUTER,
-        filters: { excludeSources: ['sushiswap', 'fly-trade', 'swing', 'xy-finance'] },
+        filters: {
+          excludeSources: ['sushiswap', 'fly-trade', 'swing', 'xy-finance', 'open-ocean'],
+        },
         sourceConfig: { global: { disableValidation: true } },
       }),
       config: {
@@ -255,7 +257,14 @@ describe('createBalmyQuoteAdapter', () => {
         takerAddress: CALLER,
         recipient: ROUTER,
         filters: {
-          excludeSources: ['sushiswap', 'fly-trade', 'swing', 'xy-finance', 'test-source'],
+          excludeSources: [
+            'sushiswap',
+            'fly-trade',
+            'swing',
+            'xy-finance',
+            'open-ocean',
+            'test-source',
+          ],
         },
         sourceConfig: { global: { disableValidation: true } },
       }),
