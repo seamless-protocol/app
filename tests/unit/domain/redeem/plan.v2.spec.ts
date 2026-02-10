@@ -31,6 +31,13 @@ const leverageTokenConfigBalmyVelora = {
     collateralToDebt: {
       type: 'balmy',
       sourceWhitelist: ['paraswap'],
+      sourceConfig: {
+        custom: {
+          paraswap: {
+            includeContractMethods: ['swapExactAmountOut'],
+          },
+        },
+      },
     },
   },
 } as LeverageTokenConfig
