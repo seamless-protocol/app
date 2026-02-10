@@ -110,7 +110,10 @@ export async function planRedeem({
     )
   }
 
-  const isVeloraSwap = isRedeemWithVelora(leverageTokenConfig?.swaps?.collateralToDebt)
+  const isVeloraSwap = isRedeemWithVelora(
+    leverageTokenConfig?.swaps?.collateralToDebt,
+    collateralToDebtQuote.quoteSourceName,
+  )
   const calls: Array<Call> = []
   if (!isVeloraSwap && collateralToDebtQuote.out > 0n) {
     calls.push({
@@ -139,12 +142,12 @@ export async function planRedeem({
   }
 }
 
-function isRedeemWithVelora(swap?: CollateralToDebtSwapConfig): boolean {
+function isRedeemWithVelora(swap?: CollateralToDebtSwapConfig, quoteSourceName?: string): boolean {
   return (
-    swap?.type === 'velora' ||
-    (swap?.type === 'balmy' &&
+    swap?.type === 'balmy' &&
+      quoteSourceName?.toLowerCase() === 'paraswap' &&
       Array.isArray(swap.sourceWhitelist) &&
       swap.sourceWhitelist.length === 1 &&
-      swap.sourceWhitelist[0] === 'paraswap')
+      swap.sourceWhitelist[0] === 'paraswap'
   )
 }

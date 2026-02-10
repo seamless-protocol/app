@@ -89,7 +89,7 @@ describe('planRedeem', () => {
     )
   })
 
-  it('builds a plan with slippage and approvals for balmy (sourceWhitelist: [paraswap]) redemptions', async () => {
+  it('builds a plan with slippage and approvals for balmy (quoteSourceName: paraswap) redemptions', async () => {
     const quote = vi.fn(async () => ({
       out: 350n,
       minOut: 350n,
@@ -97,6 +97,7 @@ describe('planRedeem', () => {
       maxIn: 210n,
       approvalTarget: debtAsset,
       calls: [{ target: debtAsset, data: '0x1234' as Hex, value: 0n }],
+      quoteSourceName: 'paraswap',
     }))
 
     const plan = await planRedeem({
@@ -125,52 +126,7 @@ describe('planRedeem', () => {
     )
   })
 
-  it('builds a plan with slippage and approvals for velora redemptions', async () => {
-    const leverageTokenConfigVelora = {
-      ...leverageTokenConfig,
-      swaps: {
-        collateralToDebt: {
-          type: 'velora',
-        },
-      },
-    } as LeverageTokenConfig
-
-    const quote = vi.fn(async () => ({
-      out: 350n,
-      minOut: 350n,
-      in: 208n,
-      maxIn: 210n,
-      approvalTarget: debtAsset,
-      calls: [{ target: debtAsset, data: '0x1234' as Hex, value: 0n }],
-    }))
-
-    const plan = await planRedeem({
-      publicClient,
-      leverageTokenConfig: leverageTokenConfigVelora,
-      sharesToRedeem: 100n,
-      collateralSlippageBps: 50,
-      swapSlippageBps: 10,
-      quoteCollateralToDebt: quote as any,
-    })
-
-    expect(plan.minCollateralForSender).toBe(788n) // (1000 - 208) * 0.995
-    expect(plan.previewCollateralForSender).toBe(792n) // 1000 - 208
-    expect(plan.previewExcessDebt).toBe(0n)
-    expect(plan.minExcessDebt).toBe(0n)
-    expect(plan.calls.length).toBeGreaterThanOrEqual(1)
-
-    expect(quote).toHaveBeenCalledWith(
-      expect.objectContaining({
-        slippageBps: 10,
-        amountOut: 300n,
-        intent: 'exactOut',
-        inToken: collateralAsset,
-        outToken: debtAsset,
-      }),
-    )
-  })
-
-  it('throws when preview collateral minus max input amount is less than min collateral for sender for balmy redemptions (sourceWhitelist: [paraswap])', async () => {
+  it('throws when preview collateral minus max input amount is less than min collateral for sender for balmy redemptions', async () => {
     const quote = vi.fn(async () => ({
       out: 350n,
       minOut: 350n,
