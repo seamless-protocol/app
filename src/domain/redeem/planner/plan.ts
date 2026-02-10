@@ -145,9 +145,9 @@ export async function planRedeem({
 function isRedeemWithVelora(swap?: CollateralToDebtSwapConfig, quoteSourceName?: string): boolean {
   return (
     swap?.type === 'balmy' &&
-      quoteSourceName?.toLowerCase() === 'paraswap' &&
-      Array.isArray(swap.sourceWhitelist) &&
-      swap.sourceWhitelist.length === 1 &&
-      swap.sourceWhitelist[0] === 'paraswap'
+    quoteSourceName?.toLowerCase() === 'paraswap' &&
+    Array.isArray(swap.sourceWhitelist) &&
+    swap.sourceWhitelist.length === 1 &&
+    swap.sourceWhitelist[0] === 'paraswap'
   )
 }
