@@ -100,9 +100,6 @@ export const getBalmySDKConfig = (config: UseConfigReturnType) => {
           kyberswap: {
             sourceDenylist: ['ekubo-v3'],
           },
-          paraswap: {
-            includeContractMethods: ['swapExactAmountOut'],
-          },
         },
       },
       sourceList: { type: 'local' },

@@ -52,7 +52,7 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
   const addresses = resolveAddresses(chainId, overrides)
   const normalizedRouter = getAddress(router)
 
-  return async ({ inToken, outToken, amountIn, intent, slippageBps }) => {
+  return async ({ inToken, outToken, amountIn, amountOut, intent, slippageBps }) => {
     validateSlippage(slippageBps)
 
     const normalizedIn = getAddress(inToken)
@@ -90,10 +90,6 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
       throw new Error('Infinifi adapter only supports USDC <-> siUSD conversions')
     }
 
-    if (intent === 'exactOut') {
-      throw new Error('Infinifi adapter does not support exactOut/withdraw')
-    }
-
     // USDC -> siUSD (stake)
     if (isMint) {
       if (typeof amountIn !== 'bigint') {
@@ -127,35 +123,61 @@ export function createInfinifiQuoteAdapter(options: InfinifiAdapterOptions): Quo
     }
 
     // siUSD -> USDC (unstake and redeem)
-    if (typeof amountIn !== 'bigint') {
-      throw new Error('Infinifi exact-in redeem requires amountIn')
-    }
-    const [, usdcOut] = await publicClient.readContract({
-      // Deployless call using the previewer bytecode (not deployed on-chain).
-      abi: infinifiPreviewerAbi,
-      code: infinifiPreviewerBytecode,
-      functionName: 'previewRedeemToAsset',
-      args: [normalizedUnstakeAndRedeemHelper, amountIn],
-    })
+    if (intent === 'exactIn') {
+      const [, usdcOut] = await publicClient.readContract({
+        // Deployless call using the previewer bytecode (not deployed on-chain).
+        abi: infinifiPreviewerAbi,
+        code: infinifiPreviewerBytecode,
+        functionName: 'previewRedeemToAsset',
+        args: [normalizedUnstakeAndRedeemHelper, amountIn],
+      })
 
-    // siUSD -> USDC: unstake then redeem via helper
-    const minOut = applySlippageFloor(usdcOut, slippageBps)
-    const unstakeAndRedeemCalldata = encodeFunctionData({
-      abi: unstakeAndRedeemHelperAbi,
-      functionName: 'unstakeAndRedeem',
-      args: [amountIn],
-    })
+      // siUSD -> USDC: unstake then redeem via helper
+      const minOut = applySlippageFloor(usdcOut, slippageBps)
+      const unstakeAndRedeemCalldata = encodeFunctionData({
+        abi: unstakeAndRedeemHelperAbi,
+        functionName: 'unstakeAndRedeem',
+        args: [amountIn],
+      })
 
-    return {
-      out: usdcOut,
-      minOut,
-      in: amountIn,
-      maxIn: amountIn,
-      approvalTarget: normalizedUnstakeAndRedeemHelper,
-      calls: [
-        { target: normalizedUnstakeAndRedeemHelper, data: unstakeAndRedeemCalldata, value: 0n },
-      ],
-      quoteSourceName: 'infiniFi',
+      return {
+        out: usdcOut,
+        minOut,
+        in: amountIn,
+        maxIn: amountIn,
+        approvalTarget: normalizedUnstakeAndRedeemHelper,
+        calls: [
+          { target: normalizedUnstakeAndRedeemHelper, data: unstakeAndRedeemCalldata, value: 0n },
+        ],
+        quoteSourceName: 'infiniFi',
+      }
+    } else {
+      const amountOutWithSlippage = applySlippageFloor(amountOut, -slippageBps)
+
+      const [, siUSDIn] = await publicClient.readContract({
+        abi: infinifiPreviewerAbi,
+        code: infinifiPreviewerBytecode,
+        functionName: 'previewWithdrawToAsset',
+        args: [addresses.gateway, amountOutWithSlippage],
+      })
+
+      const unstakeAndRedeemCalldata = encodeFunctionData({
+        abi: unstakeAndRedeemHelperAbi,
+        functionName: 'unstakeAndRedeem',
+        args: [siUSDIn],
+      })
+
+      return {
+        out: amountOutWithSlippage,
+        minOut: 0n, // There's no guarantee on the output amount
+        in: siUSDIn,
+        maxIn: siUSDIn,
+        approvalTarget: normalizedUnstakeAndRedeemHelper,
+        calls: [
+          { target: normalizedUnstakeAndRedeemHelper, data: unstakeAndRedeemCalldata, value: 0n },
+        ],
+        quoteSourceName: 'infiniFi',
+      }
     }
   }
 }

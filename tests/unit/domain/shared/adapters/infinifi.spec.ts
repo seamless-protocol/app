@@ -94,7 +94,7 @@ describe('createInfinifiQuoteAdapter', () => {
     )
   })
 
-  it('quotes siUSD -> USDC redeem with helper call', async () => {
+  it('quotes siUSD -> USDC redeem with helper call for exactIn intent', async () => {
     multicall.mockResolvedValueOnce([USDC, MINT_CONTROLLER])
     readContract.mockResolvedValueOnce([6_000_000n, 5_700_000n]) // previewRedeemToAsset
 
@@ -123,6 +123,39 @@ describe('createInfinifiQuoteAdapter', () => {
     expect(helperCall?.target).toBe(DEFAULT_ADDRESSES.unstakeAndRedeemHelper)
     expect(helperDecoded.functionName).toBe('unstakeAndRedeem')
     expect(helperDecoded.args).toEqual([amountIn])
+  })
+
+  it('quotes siUSD -> USDC redeem with helper call for exactOut intent', async () => {
+    multicall.mockResolvedValueOnce([USDC, MINT_CONTROLLER])
+    readContract.mockResolvedValueOnce([6_000_000n, 5_700_000n]) // previewWithdrawToAsset
+
+    const adapter = createAdapter()
+    const amountOut = 6_500_000n
+
+    const quote = await adapter({
+      inToken: DEFAULT_ADDRESSES.siusd,
+      outToken: USDC,
+      amountOut,
+      intent: 'exactOut',
+      slippageBps: 200,
+    })
+
+    expect(quote.out).toBe(6630000n) // 6500000 * 10100 / 10000
+    expect(quote.minOut).toBe(0n)
+    expect(quote.in).toBe(5_700_000n)
+    expect(quote.maxIn).toBe(5_700_000n)
+    expect(quote.approvalTarget).toBe(DEFAULT_ADDRESSES.unstakeAndRedeemHelper)
+    expect(quote.calls).toHaveLength(1)
+
+    const [helperCall] = quote.calls
+
+    const helperDecoded = decodeFunctionData({
+      abi: unstakeAndRedeemHelperAbi,
+      data: helperCall?.data ?? '0x',
+    })
+    expect(helperCall?.target).toBe(DEFAULT_ADDRESSES.unstakeAndRedeemHelper)
+    expect(helperDecoded.functionName).toBe('unstakeAndRedeem')
+    expect(helperDecoded.args).toEqual([5_700_000n])
   })
 
   it('rejects iUSD inputs or outputs', async () => {
@@ -169,21 +202,5 @@ describe('createInfinifiQuoteAdapter', () => {
     ).rejects.toThrow('Infinifi adapter only supports USDC <-> siUSD conversions')
 
     expect(readContract).not.toHaveBeenCalled()
-  })
-
-  it('throws on exactOut intent', async () => {
-    multicall.mockResolvedValueOnce([USDC, MINT_CONTROLLER])
-
-    const adapter = createAdapter()
-
-    await expect(
-      adapter({
-        inToken: USDC,
-        outToken: DEFAULT_ADDRESSES.siusd,
-        amountOut: 1_000n,
-        intent: 'exactOut',
-        slippageBps: 50,
-      } as any),
-    ).rejects.toThrow('Infinifi adapter does not support exactOut/withdraw')
   })
 })

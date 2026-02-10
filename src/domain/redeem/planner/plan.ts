@@ -127,52 +127,34 @@ export async function planRedeem({
       quoteSourceId: collateralToDebtQuote.quoteSourceId,
     }
   } else {
-    const minCollateralForSender = applySlippageFloor(previewEquity, collateralSlippageBps)
-
-    // Leverage-adjusted slippage for the swap: scale by previewed leverage.
-    const quoteSlippageBps = swapSlippageBps
-
-    const collateralToSpend = preview.collateral - minCollateralForSender
     const collateralToDebtQuote = await quoteCollateralToDebt({
-      intent: 'exactIn',
+      intent: 'exactOut',
       inToken: collateralAsset,
       outToken: debtAsset,
-      amountIn: collateralToSpend,
-      slippageBps: quoteSlippageBps,
+      amountOut: preview.debt,
+      slippageBps: swapSlippageBps,
     })
 
-    if (collateralToDebtQuote.out < preview.debt) {
-      captureRedeemPlanError({
-        errorString: `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}`,
-        collateralSlippageBps,
-        swapSlippageBps,
-        previewRedeem: preview,
-        previewEquity,
-        minCollateralForSender,
-        collateralToSpend,
-        collateralToDebtQuote,
-      })
-      throw new Error(`Try increasing your collateral slippage tolerance`)
-    }
+    const expectedCollateralForSender = preview.collateral - collateralToDebtQuote.in
+    const minCollateralForSender = applySlippageFloor(
+      expectedCollateralForSender,
+      collateralSlippageBps,
+    )
 
-    if (collateralToDebtQuote.minOut < preview.debt) {
+    if (preview.collateral - collateralToDebtQuote.maxIn < minCollateralForSender) {
       captureRedeemPlanError({
-        errorString: `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}`,
+        errorString: `Preview collateral ${preview.collateral} minus max input ${collateralToDebtQuote.maxIn} is less than min collateral for sender ${minCollateralForSender}`,
         collateralSlippageBps,
         swapSlippageBps,
         previewRedeem: preview,
         previewEquity,
         minCollateralForSender,
-        collateralToSpend,
         collateralToDebtQuote,
       })
       throw new Error(
-        `Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral slippage tolerance`,
+        `Collateral slippage tolerance is too low. Try increasing your collateral slippage tolerance`,
       )
     }
-
-    const previewExcessDebt = collateralToDebtQuote.out - preview.debt
-    const minExcessDebt = collateralToDebtQuote.minOut - preview.debt
 
     const approvalCall: Call | undefined =
       collateralToDebtQuote.out > 0n
@@ -181,7 +163,7 @@ export async function planRedeem({
             data: encodeFunctionData({
               abi: erc20Abi,
               functionName: 'approve',
-              args: [collateralToDebtQuote.approvalTarget, collateralToSpend],
+              args: [collateralToDebtQuote.approvalTarget, collateralToDebtQuote.maxIn],
             }),
             value: 0n,
           }
@@ -191,12 +173,14 @@ export async function planRedeem({
     if (approvalCall) calls.push(approvalCall)
     calls.push(...collateralToDebtQuote.calls)
 
+    const previewExcessDebt = collateralToDebtQuote.out - preview.debt
+
     return {
-      collateralToSwap: collateralToSpend,
+      collateralToSwap: collateralToDebtQuote.maxIn,
       collateralToDebtQuoteAmount: collateralToDebtQuote.out,
       minCollateralForSender,
-      minExcessDebt,
-      previewCollateralForSender: preview.collateral - collateralToSpend,
+      minExcessDebt: 0n,
+      previewCollateralForSender: expectedCollateralForSender,
       previewExcessDebt,
       sharesToRedeem,
       calls,
