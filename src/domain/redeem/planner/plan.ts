@@ -133,6 +133,7 @@ export async function planRedeem({
       quoteSourceId: collateralToDebtQuote.quoteSourceId,
     }
   } else {
+    // First quote to get the expected exchange rate
     const collateralToSpendInitial = preview.collateral - previewEquity
     const collateralToDebtQuoteInitial = await quoteCollateralToDebt({
       intent: 'exactIn',
@@ -146,8 +147,10 @@ export async function planRedeem({
     const exchangeRate =
       (collateralToDebtQuoteInitial.out * exchangeRateScale) / collateralToSpendInitial
 
-    const minCollateralToSpend = (preview.debt * exchangeRateScale / exchangeRate)
-    console.log('minCollateralToSpend: ', minCollateralToSpend)
+    // Calculate the minimum collateral to spend based on the expected exchange rate
+    const minCollateralToSpend = (preview.debt * exchangeRateScale) / exchangeRate
+
+    // Check if the preview collateral minus the minimum collateral to spend is less than 0. If it is, there is insufficient DEX liquidity to redeem the shares
     if (preview.collateral - minCollateralToSpend <= 0) {
       captureRedeemPlanError({
         errorString: `Insufficient DEX liquidity to redeem ${sharesToRedeem} shares`,
@@ -160,8 +163,10 @@ export async function planRedeem({
       throw new Error(`Insufficient DEX liquidity to redeem ${sharesToRedeem} shares`)
     }
 
+    // Apply the collateral swap adjustment to the minimum collateral to spend. This adjustment is necessary to account for debt accrual between off-chain preview and on-chain redemption
+    // It also helps account for slight variance in the exchange rate for the actual amount to swap
     const collateralToSpend = applySlippageFloor(minCollateralToSpend, -collateralSwapAdjustmentBps)
-    console.log('collateralToSpend: ', collateralToSpend)
+
     const collateralToDebtQuote = await quoteCollateralToDebt({
       intent: 'exactIn',
       inToken: collateralAsset,

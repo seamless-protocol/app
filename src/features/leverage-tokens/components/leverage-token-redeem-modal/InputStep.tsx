@@ -263,17 +263,6 @@ export function InputStep({
               precision={1}
             />
             <SlippageInput
-              label="Swap Slippage Tolerance"
-              tooltipText="Advanced setting. The default value works in most cases."
-              presets={SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY}
-              value={swapSlippage}
-              onChange={onSwapSlippageChange}
-              step={0.01}
-              min={0.01}
-              max={10}
-              precision={2}
-            />
-            <SlippageInput
               label={`Collateral Swap Adjustment`}
               tooltipText="Advanced setting. The default value works in most cases."
               presets={COLLATERAL_SWAP_ADJUSTMENT_PRESETS_PERCENT_DISPLAY}
@@ -283,6 +272,17 @@ export function InputStep({
               min={0}
               max={50}
               precision={1}
+            />
+            <SlippageInput
+              label="Swap Slippage Tolerance"
+              tooltipText="Advanced setting. The default value works in most cases."
+              presets={SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY}
+              value={swapSlippage}
+              onChange={onSwapSlippageChange}
+              step={0.01}
+              min={0.01}
+              max={10}
+              precision={2}
             />
           </>
         )}
