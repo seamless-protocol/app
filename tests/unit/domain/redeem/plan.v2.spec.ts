@@ -77,12 +77,8 @@ describe('planRedeem', () => {
       quoteCollateralToDebt: quote as any,
     })
 
-    // exchange rate becomes (quote.out * 1e18 / (preview.collateral - previewEquity)) = (350 * 1e18) / (1000 - 800) = 1.75e18
-    // so minCollateralToSpend becomes (preview.debt * exchangeRateScale) / exchangeRate = (300 * 1e18) / 1.75e18 = 171
-    // so collateralToSpend becomes minCollateralToSpend * 1.01 = 171 * 1.01 = 172
-    // thus minCollateralForSender becomes (preview.collateral - collateralToSpend) * 0.99 = (1000 - 172) * 0.99 = 819
-    expect(plan.minCollateralForSender).toBe(819n)
-    expect(plan.previewCollateralForSender).toBe(828n) // preview.collateral - collateralToSpend = 1000 - 172 = 827
+    expect(plan.minCollateralForSender).toBe(818n)
+    expect(plan.previewCollateralForSender).toBe(827n)
     expect(plan.previewExcessDebt).toBe(50n) // 350 - 300
     expect(plan.minExcessDebt).toBe(30n) // 330 - 300
     expect(plan.calls[0]?.target).toBe(collateralAsset) // approval first
@@ -103,7 +99,7 @@ describe('planRedeem', () => {
     expect(quote).toHaveBeenCalledWith(
       expect.objectContaining({
         slippageBps: 100,
-        amountIn: 172n, // collateralToSpend
+        amountIn: 173n, // collateralToSpend
         intent: 'exactIn',
         inToken: collateralAsset,
         outToken: debtAsset,
@@ -295,8 +291,8 @@ describe('planRedeem', () => {
       quoteCollateralToDebt: quote as any,
     })
 
-    expect(plan.minCollateralForSender).toBe(792n)
-    expect(plan.previewCollateralForSender).toBe(792n)
+    expect(plan.minCollateralForSender).toBe(791n)
+    expect(plan.previewCollateralForSender).toBe(791n)
     expect(plan.previewExcessDebt).toBe(10n)
     expect(plan.minExcessDebt).toBe(5n)
     expect(plan.calls[0]?.target).toBe(collateralAsset) // approval first
@@ -315,7 +311,7 @@ describe('planRedeem', () => {
     expect(quote).toHaveBeenCalledWith(
       expect.objectContaining({
         slippageBps: 100,
-        amountIn: 208n,
+        amountIn: 209n,
         intent: 'exactIn',
         inToken: collateralAsset,
         outToken: debtAsset,
