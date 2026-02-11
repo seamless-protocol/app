@@ -169,7 +169,7 @@ describe('planRedeem', () => {
         quoteCollateralToDebt: quote as any,
       }),
     ).rejects.toThrow(
-      /Collateral slippage tolerance is too low. Try increasing your collateral slippage tolerance/i,
+      /Redeem preview resulted in less collateral than the allowed slippage tolerance. Try increasing the collateral slippage tolerance parameter./i,
     )
   })
 
@@ -220,7 +220,7 @@ describe('planRedeem', () => {
         collateralSwapAdjustmentBps: 5000,
         quoteCollateralToDebt: quote as any,
       }),
-    ).rejects.toThrow(/Try decreasing your collateral swap adjustment/i)
+    ).rejects.toThrow(/Try decreasing the collateral swap adjustment/i)
   })
 
   it('throws when swap output is below required debt', async () => {
@@ -241,7 +241,7 @@ describe('planRedeem', () => {
         collateralSwapAdjustmentBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
-    ).rejects.toThrow(/Try increasing your collateral swap adjustment/i)
+    ).rejects.toThrow(/Try increasing the collateral swap adjustment/i)
   })
 
   it('throws when minOut is below required debt', async () => {
@@ -263,7 +263,7 @@ describe('planRedeem', () => {
         quoteCollateralToDebt: quote as any,
       }),
     ).rejects.toThrow(
-      /Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral swap adjustment/i,
+      /Try decreasing the swap slippage tolerance. If you cannot further decrease it, try increasing the collateral swap adjustment/i,
     )
   })
 

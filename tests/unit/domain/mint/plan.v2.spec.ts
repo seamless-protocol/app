@@ -136,7 +136,41 @@ describe('planMint', () => {
         flashLoanAdjustmentBps: 100,
         quoteDebtToCollateral: quote as any,
       }),
-    ).rejects.toThrow(/Try increasing your leverage token slippage tolerance./i)
+    ).rejects.toThrow(/Flash loan too large. Try increasing the flash loan adjustment parameter./i)
+  })
+
+  it('throws when manager minimum debt is below flash loan amount', async () => {
+    const quote = vi.fn(async () => ({
+      out: 1_300n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+    }))
+
+    multicall.mockResolvedValueOnce([
+      {
+        debt: 1000n,
+        shares: 1_600n,
+      },
+      {
+        debt: 800n,
+        shares: 1_600n,
+      },
+    ])
+
+    await expect(
+      planMint({
+        publicClient,
+        leverageTokenConfig,
+        equityInCollateralAsset: 500n,
+        shareSlippageBps: 100,
+        swapSlippageBps: 10,
+        flashLoanAdjustmentBps: 100,
+        quoteDebtToCollateral: quote as any,
+      }),
+    ).rejects.toThrow(
+      /Flash loan too large. Try decreasing the swap slippage tolerance or increasing the flash loan adjustment./i,
+    )
   })
 
   it('throws when minimum shares from manager are below slippage floor', async () => {
@@ -170,7 +204,7 @@ describe('planMint', () => {
         quoteDebtToCollateral: quote as any,
       }),
     ).rejects.toThrow(
-      /Try increasing your leverage token slippage tolerance first. You can also try decreasing your flash loan adjustment/i,
+      /Mint preview resulted in less Leverage Tokens than the allowed slippage tolerance. Try reducing the swap slippage tolerance, or increasing the Leverage Token slippage tolerance./i,
     )
   })
 

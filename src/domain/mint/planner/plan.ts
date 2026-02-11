@@ -113,7 +113,7 @@ export async function planMint({
       managerMin,
       flashLoanAmount,
     })
-    throw new Error(`Try increasing your Leverage Token slippage tolerance.`)
+    throw new Error('Flash loan too large. Try increasing the flash loan adjustment parameter.')
   }
 
   if (managerMin.debt < flashLoanAmount) {
@@ -129,7 +129,7 @@ export async function planMint({
       flashLoanAmount,
     })
     throw new Error(
-      `Try decreasing your swap slippage tolerance. If you cannot decrease it further, try increasing your Leverage Token slippage Tolerance`,
+      'Flash loan too large. Try decreasing the swap slippage tolerance or increasing the flash loan adjustment parameter.',
     )
   }
 
@@ -146,7 +146,7 @@ export async function planMint({
       flashLoanAmount,
     })
     throw new Error(
-      `Try increasing your Leverage Token slippage tolerance first. You can also try decreasing your flash loan adjustment`,
+      `Mint preview resulted in less Leverage Tokens than the allowed slippage tolerance. Try reducing the swap slippage tolerance, or increasing the Leverage Token slippage tolerance.`,
     )
   }
 

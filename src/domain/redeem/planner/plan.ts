@@ -160,7 +160,7 @@ async function planRedeemVeloraExactOut(ctx: RedeemPlanContext): Promise<RedeemP
       collateralToDebtQuote,
     })
     throw new Error(
-      `Collateral slippage tolerance is too low. Try increasing your collateral slippage tolerance`,
+      `Redeem preview resulted in less collateral than the allowed slippage tolerance. Try increasing the collateral slippage tolerance parameter.`,
     )
   }
 
@@ -249,7 +249,9 @@ async function planRedeemExactIn(ctx: RedeemPlanContext): Promise<RedeemPlan> {
       collateralToSpend,
       collateralToDebtQuote,
     })
-    throw new Error(`Try decreasing your collateral swap adjustment`)
+    throw new Error(
+      'Insufficient total collateral to swap to debt to repay flash loan. Try decreasing the collateral swap adjustment parameter.',
+    )
   }
 
   if (collateralToDebtQuote.out < preview.debt) {
@@ -264,7 +266,9 @@ async function planRedeemExactIn(ctx: RedeemPlanContext): Promise<RedeemPlan> {
       collateralToSpend,
       collateralToDebtQuote,
     })
-    throw new Error(`Try increasing your collateral swap adjustment`)
+    throw new Error(
+      'Collateral swapped to debt to repay flash loan is too low. Try increasing the collateral swap adjustment parameter.',
+    )
   }
 
   if (collateralToDebtQuote.minOut < preview.debt) {
@@ -280,7 +284,7 @@ async function planRedeemExactIn(ctx: RedeemPlanContext): Promise<RedeemPlan> {
       collateralToDebtQuote,
     })
     throw new Error(
-      `Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral swap adjustment`,
+      `Debt received from the swap of collateral to debt is too low. Try decreasing the swap slippage tolerance. If you cannot further decrease it, try increasing the collateral swap adjustment parameter.`,
     )
   }
 
