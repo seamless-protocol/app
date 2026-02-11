@@ -11,6 +11,7 @@ import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
   COLLATERAL_SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM,
+  COLLATERAL_SWAP_ADJUSTMENT_PRESETS_PERCENT_DISPLAY,
   MIN_REDEEM_AMOUNT_DISPLAY,
   SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY,
 } from '../../constants'
@@ -68,6 +69,8 @@ interface InputStepProps {
   onCollateralSlippageChange: (value: string) => void
   swapSlippage: string
   onSwapSlippageChange: (value: string) => void
+  collateralSwapAdjustment: string
+  onCollateralSwapAdjustmentChange: (value: string) => void
   isLeverageTokenBalanceLoading: boolean
   isUsdPriceLoading: boolean
   isCalculating: boolean
@@ -112,6 +115,8 @@ export function InputStep({
   onCollateralSlippageChange,
   swapSlippage,
   onSwapSlippageChange,
+  collateralSwapAdjustment,
+  onCollateralSwapAdjustmentChange,
   isLeverageTokenBalanceLoading,
   isUsdPriceLoading,
   isCalculating,
@@ -267,6 +272,17 @@ export function InputStep({
               min={0.01}
               max={10}
               precision={2}
+            />
+            <SlippageInput
+              label={`Collateral Swap Adjustment`}
+              tooltipText="Advanced setting. The default value works in most cases."
+              presets={COLLATERAL_SWAP_ADJUSTMENT_PRESETS_PERCENT_DISPLAY}
+              value={collateralSwapAdjustment}
+              onChange={onCollateralSwapAdjustmentChange}
+              step={0.1}
+              min={0}
+              max={50}
+              precision={1}
             />
           </>
         )}

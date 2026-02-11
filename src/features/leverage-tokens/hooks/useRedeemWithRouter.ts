@@ -39,8 +39,7 @@ export function useRedeemWithRouter() {
   const config = useConfig()
   return useMutation<OrchestrateRedeemResult, Error, UseRedeemWithRouterParams>({
     mutationFn: async ({ token, account, plan, chainId, routerAddress, managerAddress }) => {
-      const quoteSourceNameLowercase = plan.quoteSourceName?.toLowerCase()
-      if (quoteSourceNameLowercase === 'velora' || quoteSourceNameLowercase === 'paraswap') {
+      if (plan.routerMethod === 'redeemWithVelora') {
         return orchestrateRedeemWithVelora({
           config,
           account,

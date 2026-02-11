@@ -12,6 +12,7 @@ interface UseRedeemPlanPreviewParams {
   sharesToRedeem: bigint | undefined
   collateralSlippageBps: number
   swapSlippageBps: number
+  collateralSwapAdjustmentBps: number
   chainId: number
   enabled: boolean
   quote?: QuoteFn
@@ -23,6 +24,7 @@ export function useRedeemPlanPreview({
   sharesToRedeem,
   collateralSlippageBps,
   swapSlippageBps,
+  collateralSwapAdjustmentBps,
   chainId,
   quote,
   enabled = true,
@@ -40,6 +42,7 @@ export function useRedeemPlanPreview({
     amount: debounced ?? 0n,
     collateralSlippageBps,
     swapSlippageBps,
+    collateralSwapAdjustmentBps,
   }
 
   const query = useQuery({
@@ -63,6 +66,7 @@ export function useRedeemPlanPreview({
         sharesToRedeem: debounced as bigint,
         collateralSlippageBps,
         swapSlippageBps,
+        collateralSwapAdjustmentBps,
         quoteCollateralToDebt: quote as QuoteFn,
       })
     },

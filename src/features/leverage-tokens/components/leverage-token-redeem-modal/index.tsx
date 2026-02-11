@@ -17,6 +17,7 @@ import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
 import {
   DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY,
+  DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY,
   DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
   TOKEN_AMOUNT_DISPLAY_DECIMALS,
 } from '../../constants'
@@ -204,6 +205,15 @@ export function LeverageTokenRedeemModal({
     initial: DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
     fallbackBps: Number(DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY) * 100,
   })
+  const {
+    value: collateralSwapAdjustment,
+    setValue: setCollateralSwapAdjustment,
+    valueBps: collateralSwapAdjustmentBps,
+  } = usePercentSlippageInput({
+    storageKey: `redeem-collateral-swap-adjustment-${leverageTokenAddress}`,
+    initial: DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY) * 100,
+  })
 
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
@@ -253,6 +263,7 @@ export function LeverageTokenRedeemModal({
     sharesToRedeem: form.amountRaw,
     collateralSlippageBps,
     swapSlippageBps,
+    collateralSwapAdjustmentBps,
     chainId: leverageTokenConfig.chainId,
     enabled: isOpen,
     ...(exec.quote ? { quote: exec.quote } : {}),
@@ -872,6 +883,8 @@ export function LeverageTokenRedeemModal({
             onCollateralSlippageChange={setCollateralSlippage}
             swapSlippage={swapSlippage}
             onSwapSlippageChange={setSwapSlippage}
+            collateralSwapAdjustment={collateralSwapAdjustment}
+            onCollateralSwapAdjustmentChange={setCollateralSwapAdjustment}
             isLeverageTokenBalanceLoading={isLeverageTokenBalanceLoading}
             isUsdPriceLoading={isPositionLoading}
             isCalculating={isCalculating}

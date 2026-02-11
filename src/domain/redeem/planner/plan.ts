@@ -23,6 +23,7 @@ export interface RedeemPlan {
   previewCollateralForSender: bigint
   previewExcessDebt: bigint
   sharesToRedeem: bigint
+  routerMethod: 'redeem' | 'redeemWithVelora'
   calls: Array<Call>
   quoteSourceName: string | undefined
   quoteSourceId: string | undefined
@@ -34,6 +35,7 @@ export interface PlanRedeemParams {
   sharesToRedeem: bigint
   collateralSlippageBps: number
   swapSlippageBps: number
+  collateralSwapAdjustmentBps: number
   quoteCollateralToDebt: QuoteFn
 }
 
@@ -43,6 +45,7 @@ export async function planRedeem({
   sharesToRedeem,
   collateralSlippageBps,
   swapSlippageBps,
+  collateralSwapAdjustmentBps,
   quoteCollateralToDebt,
 }: PlanRedeemParams): Promise<RedeemPlan> {
   if (sharesToRedeem <= 0n) {
@@ -59,6 +62,7 @@ export async function planRedeem({
 
   console.debug(`planRedeem collateralSlippageBps: ${collateralSlippageBps}`)
   console.debug(`planRedeem swapSlippageBps: ${swapSlippageBps}`)
+  console.debug(`planRedeem collateralSwapAdjustmentBps: ${collateralSwapAdjustmentBps}`)
 
   const chainId = leverageTokenConfig.chainId as SupportedChainId
   const token = leverageTokenConfig.address as Address
@@ -101,6 +105,7 @@ export async function planRedeem({
         errorString: `Preview collateral ${preview.collateral} minus max input ${collateralToDebtQuote.maxIn} is less than min collateral for sender ${minCollateralForSender}`,
         collateralSlippageBps,
         swapSlippageBps,
+        collateralSwapAdjustmentBps,
         previewRedeem: preview,
         previewEquity,
         minCollateralForSender,
@@ -122,37 +127,82 @@ export async function planRedeem({
       previewCollateralForSender: expectedCollateralForSender,
       previewExcessDebt: 0n,
       sharesToRedeem,
+      routerMethod: 'redeemWithVelora',
       calls,
       quoteSourceName: collateralToDebtQuote.quoteSourceName,
       quoteSourceId: collateralToDebtQuote.quoteSourceId,
     }
   } else {
-    const minCollateralForSender = applySlippageFloor(previewEquity, collateralSlippageBps)
+    const collateralToSpendInitial = preview.collateral - previewEquity
+    const collateralToDebtQuoteInitial = await quoteCollateralToDebt({
+      intent: 'exactIn',
+      inToken: collateralAsset,
+      outToken: debtAsset,
+      amountIn: collateralToSpendInitial,
+      slippageBps: swapSlippageBps,
+    })
 
-    // Leverage-adjusted slippage for the swap: scale by previewed leverage.
-    const quoteSlippageBps = swapSlippageBps
+    const exchangeRateScale = 10n ** 18n
+    const exchangeRate =
+      (collateralToDebtQuoteInitial.out * exchangeRateScale) / collateralToSpendInitial
 
-    const collateralToSpend = preview.collateral - minCollateralForSender
+    const minCollateralToSpend = (preview.debt * exchangeRateScale / exchangeRate)
+    console.log('minCollateralToSpend: ', minCollateralToSpend)
+    if (preview.collateral - minCollateralToSpend <= 0) {
+      captureRedeemPlanError({
+        errorString: `Insufficient DEX liquidity to redeem ${sharesToRedeem} shares`,
+        collateralSlippageBps,
+        swapSlippageBps,
+        collateralSwapAdjustmentBps,
+        previewRedeem: preview,
+        previewEquity,
+      })
+      throw new Error(`Insufficient DEX liquidity to redeem ${sharesToRedeem} shares`)
+    }
+
+    const collateralToSpend = applySlippageFloor(minCollateralToSpend, -collateralSwapAdjustmentBps)
+    console.log('collateralToSpend: ', collateralToSpend)
     const collateralToDebtQuote = await quoteCollateralToDebt({
       intent: 'exactIn',
       inToken: collateralAsset,
       outToken: debtAsset,
       amountIn: collateralToSpend,
-      slippageBps: quoteSlippageBps,
+      slippageBps: swapSlippageBps,
     })
 
-    if (collateralToDebtQuote.out < preview.debt) {
+    const minCollateralForSender = applySlippageFloor(
+      preview.collateral - collateralToSpend,
+      collateralSlippageBps,
+    )
+
+    if (minCollateralForSender < 0) {
       captureRedeemPlanError({
-        errorString: `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}`,
+        errorString: `Min collateral for sender ${minCollateralForSender} is less than 0`,
         collateralSlippageBps,
         swapSlippageBps,
+        collateralSwapAdjustmentBps,
         previewRedeem: preview,
         previewEquity,
         minCollateralForSender,
         collateralToSpend,
         collateralToDebtQuote,
       })
-      throw new Error(`Try increasing your collateral slippage tolerance`)
+      throw new Error(`Try decreasing your collateral swap adjustment`)
+    }
+
+    if (collateralToDebtQuote.out < preview.debt) {
+      captureRedeemPlanError({
+        errorString: `Collateral to debt quote output ${collateralToDebtQuote.out} is less than preview debt ${preview.debt}`,
+        collateralSlippageBps,
+        swapSlippageBps,
+        collateralSwapAdjustmentBps,
+        previewRedeem: preview,
+        previewEquity,
+        minCollateralForSender,
+        collateralToSpend,
+        collateralToDebtQuote,
+      })
+      throw new Error(`Try increasing your collateral swap adjustment`)
     }
 
     if (collateralToDebtQuote.minOut < preview.debt) {
@@ -160,6 +210,7 @@ export async function planRedeem({
         errorString: `Collateral to debt quote minimum output ${collateralToDebtQuote.minOut} is less than preview debt ${preview.debt}`,
         collateralSlippageBps,
         swapSlippageBps,
+        collateralSwapAdjustmentBps,
         previewRedeem: preview,
         previewEquity,
         minCollateralForSender,
@@ -167,7 +218,7 @@ export async function planRedeem({
         collateralToDebtQuote,
       })
       throw new Error(
-        `Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral slippage tolerance`,
+        `Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral swap adjustment`,
       )
     }
 
@@ -199,6 +250,7 @@ export async function planRedeem({
       previewCollateralForSender: preview.collateral - collateralToSpend,
       previewExcessDebt,
       sharesToRedeem,
+      routerMethod: 'redeem',
       calls,
       quoteSourceName: collateralToDebtQuote.quoteSourceName,
       quoteSourceId: collateralToDebtQuote.quoteSourceId,
@@ -208,10 +260,13 @@ export async function planRedeem({
 
 function isRedeemWithVelora(swap?: CollateralToDebtSwapConfig): boolean {
   return (
-    swap?.type === 'velora' ||
     (swap?.type === 'balmy' &&
       Array.isArray(swap.sourceWhitelist) &&
       swap.sourceWhitelist.length === 1 &&
-      swap.sourceWhitelist[0] === 'paraswap')
+      swap.sourceWhitelist[0] === 'paraswap' &&
+      swap.sourceConfig?.custom?.paraswap?.includeContractMethods?.includes(
+        'swapExactAmountOut',
+      )) ||
+    false
   )
 }

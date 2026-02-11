@@ -40,6 +40,7 @@ const mockPlan: RedeemPlan = {
   ],
   quoteSourceName: 'Mock Source',
   quoteSourceId: 'mock-source-id',
+  routerMethod: 'redeem',
 }
 
 describe('orchestrateRedeem', () => {

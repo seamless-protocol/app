@@ -53,7 +53,7 @@ describe('planMint', () => {
     readContract.mockResolvedValueOnce({ collateral: 2_000n, debt: 1_000n, shares: 1_000n })
   })
 
-  it('builds a plan with leverage-adjusted slippage and approvals', async () => {
+  it('builds a plan with slippage and approvals', async () => {
     const quote = vi.fn(async ({ slippageBps }: { slippageBps: number }) => ({
       out: 1_200n,
       minOut: 1_100n,

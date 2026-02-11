@@ -196,6 +196,7 @@ async function performRedeem(
     sharesToRedeem,
     collateralSlippageBps: slippageBps,
     swapSlippageBps: slippageBps,
+    collateralSwapAdjustmentBps: slippageBps,
     quoteCollateralToDebt,
   })
 

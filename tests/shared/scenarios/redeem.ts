@@ -148,6 +148,7 @@ export async function planRedeemTest({
     sharesToRedeem,
     collateralSlippageBps: slippageBps,
     swapSlippageBps: slippageBps,
+    collateralSwapAdjustmentBps: slippageBps,
     quoteCollateralToDebt,
   })
 

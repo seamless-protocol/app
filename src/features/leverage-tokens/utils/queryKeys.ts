@@ -48,6 +48,7 @@ export const ltKeys = {
       amount: bigint,
       collateralSlippageBps: number,
       swapSlippageBps: number,
+      collateralSwapAdjustmentBps: number,
       managerAddress?: Address,
       swapKey?: string,
       outputAsset?: Address,
@@ -59,6 +60,7 @@ export const ltKeys = {
         amount.toString(),
         `collateralSlippage:${collateralSlippageBps}`,
         `swapSlippage:${swapSlippageBps}`,
+        `collateralSwapAdjustment:${collateralSwapAdjustmentBps}`,
         managerAddress ? `manager:${managerAddress}` : 'manager:default',
         swapKey ? `swap:${swapKey}` : 'swap:default',
         outputAsset ? `output:${outputAsset}` : 'output:default',
@@ -69,6 +71,7 @@ export const ltKeys = {
       amount: bigint,
       collateralSlippageBps: number,
       swapSlippageBps: number,
+      collateralSwapAdjustmentBps: number,
       managerAddress?: Address,
       swapKey?: string,
       outputAsset?: Address,
@@ -80,6 +83,7 @@ export const ltKeys = {
         amount.toString(),
         `collateralSlippage:${collateralSlippageBps}`,
         `swapSlippage:${swapSlippageBps}`,
+        `collateralSwapAdjustment:${collateralSwapAdjustmentBps}`,
         managerAddress ? `manager:${managerAddress}` : 'manager:default',
         swapKey ? `swap:${swapKey}` : 'swap:default',
         outputAsset ? `output:${outputAsset}` : 'output:default',
@@ -90,6 +94,7 @@ export const ltKeys = {
       amount: bigint
       collateralSlippageBps: number
       swapSlippageBps: number
+      collateralSwapAdjustmentBps: number
       managerAddress?: Address
       swapKey?: string
       outputAsset?: Address
@@ -101,6 +106,7 @@ export const ltKeys = {
             params.amount,
             params.collateralSlippageBps,
             params.swapSlippageBps,
+            params.collateralSwapAdjustmentBps,
             params.managerAddress,
             params.swapKey,
             params.outputAsset,
@@ -110,6 +116,7 @@ export const ltKeys = {
             params.amount,
             params.collateralSlippageBps,
             params.swapSlippageBps,
+            params.collateralSwapAdjustmentBps,
             params.managerAddress,
             params.swapKey,
             params.outputAsset,

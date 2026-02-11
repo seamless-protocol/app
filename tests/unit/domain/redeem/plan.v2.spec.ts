@@ -31,6 +31,13 @@ const leverageTokenConfigBalmy = {
     collateralToDebt: {
       type: 'balmy',
       sourceWhitelist: ['paraswap'],
+      sourceConfig: {
+        custom: {
+          paraswap: {
+            includeContractMethods: ['swapExactAmountOut'],
+          },
+        },
+      },
     },
   },
 } as LeverageTokenConfig
@@ -52,7 +59,7 @@ describe('planRedeem', () => {
     readContract.mockResolvedValueOnce(800n)
   })
 
-  it('builds a plan with leverage-adjusted slippage and approvals', async () => {
+  it('builds a plan with slippage and approvals', async () => {
     const quote = vi.fn(async () => ({
       out: 350n,
       minOut: 330n,
@@ -66,21 +73,37 @@ describe('planRedeem', () => {
       sharesToRedeem: 100n,
       collateralSlippageBps: 100,
       swapSlippageBps: 100,
+      collateralSwapAdjustmentBps: 100,
       quoteCollateralToDebt: quote as any,
     })
 
-    expect(plan.minCollateralForSender).toBe(792n) // 800 * 0.99
-    expect(plan.previewCollateralForSender).toBe(792n)
+    // exchange rate becomes (quote.out * 1e18 / (preview.collateral - previewEquity)) = (350 * 1e18) / (1000 - 800) = 1.75e18
+    // so minCollateralToSpend becomes (preview.debt * exchangeRateScale) / exchangeRate = (300 * 1e18) / 1.75e18 = 171
+    // so collateralToSpend becomes minCollateralToSpend * 1.01 = 171 * 1.01 = 172
+    // thus minCollateralForSender becomes (preview.collateral - collateralToSpend) * 0.99 = (1000 - 172) * 0.99 = 819
+    expect(plan.minCollateralForSender).toBe(819n)
+    expect(plan.previewCollateralForSender).toBe(828n) // preview.collateral - collateralToSpend = 1000 - 172 = 827
     expect(plan.previewExcessDebt).toBe(50n) // 350 - 300
     expect(plan.minExcessDebt).toBe(30n) // 330 - 300
     expect(plan.calls[0]?.target).toBe(collateralAsset) // approval first
     expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
-    // slippage scales with leverage using a 50% factor: collateralRatio 3 -> leverage 1.5 -> floor(100*0.5/(1.5-1)) = 100 bps
+    // first quote
     expect(quote).toHaveBeenCalledWith(
       expect.objectContaining({
         slippageBps: 100,
-        amountIn: 208n, // 1000 - 792
+        amountIn: 200n, // preview.collateral - convertToAssets(netShares) = 1000 - 800 = 200
+        intent: 'exactIn',
+        inToken: collateralAsset,
+        outToken: debtAsset,
+      }),
+    )
+
+    // second quote
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 100,
+        amountIn: 172n, // collateralToSpend
         intent: 'exactIn',
         inToken: collateralAsset,
         outToken: debtAsset,
@@ -88,7 +111,7 @@ describe('planRedeem', () => {
     )
   })
 
-  it('builds a plan with leverage-adjusted slippage and approvals for balmy redemptions', async () => {
+  it('builds a plan with slippage and approvals for balmy redemptions using exact amount out velora quote', async () => {
     const quote = vi.fn(async () => ({
       out: 350n,
       minOut: 350n,
@@ -104,6 +127,7 @@ describe('planRedeem', () => {
       sharesToRedeem: 100n,
       collateralSlippageBps: 50,
       swapSlippageBps: 10,
+      collateralSwapAdjustmentBps: 100,
       quoteCollateralToDebt: quote as any,
     })
 
@@ -124,52 +148,7 @@ describe('planRedeem', () => {
     )
   })
 
-  it('builds a plan with leverage-adjusted slippage and approvals for velora redemptions', async () => {
-    const leverageTokenConfigVelora = {
-      ...leverageTokenConfig,
-      swaps: {
-        collateralToDebt: {
-          type: 'velora',
-        },
-      },
-    } as LeverageTokenConfig
-
-    const quote = vi.fn(async () => ({
-      out: 350n,
-      minOut: 350n,
-      in: 208n,
-      maxIn: 210n,
-      approvalTarget: debtAsset,
-      calls: [{ target: debtAsset, data: '0x1234' as Hex, value: 0n }],
-    }))
-
-    const plan = await planRedeem({
-      publicClient,
-      leverageTokenConfig: leverageTokenConfigVelora,
-      sharesToRedeem: 100n,
-      collateralSlippageBps: 50,
-      swapSlippageBps: 10,
-      quoteCollateralToDebt: quote as any,
-    })
-
-    expect(plan.minCollateralForSender).toBe(788n) // (1000 - 208) * 0.995
-    expect(plan.previewCollateralForSender).toBe(792n) // 1000 - 208
-    expect(plan.previewExcessDebt).toBe(0n)
-    expect(plan.minExcessDebt).toBe(0n)
-    expect(plan.calls.length).toBeGreaterThanOrEqual(1)
-
-    expect(quote).toHaveBeenCalledWith(
-      expect.objectContaining({
-        slippageBps: 10,
-        amountOut: 300n,
-        intent: 'exactOut',
-        inToken: collateralAsset,
-        outToken: debtAsset,
-      }),
-    )
-  })
-
-  it('throws when preview collateral minus max input amount is less than min collateral for sender for balmy redemptions', async () => {
+  it('throws when preview collateral minus max input amount is less than min collateral for sender for balmy redemptions using exact amount out velora quote', async () => {
     const quote = vi.fn(async () => ({
       out: 350n,
       minOut: 350n,
@@ -186,6 +165,7 @@ describe('planRedeem', () => {
         sharesToRedeem: 100n,
         collateralSlippageBps: 50,
         swapSlippageBps: 10,
+        collateralSwapAdjustmentBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
     ).rejects.toThrow(
@@ -208,9 +188,10 @@ describe('planRedeem', () => {
         sharesToRedeem: 100n,
         collateralSlippageBps: 100,
         swapSlippageBps: 100,
+        collateralSwapAdjustmentBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
-    ).rejects.toThrow(/Try increasing your collateral slippage tolerance/i)
+    ).rejects.toThrow(/Try increasing your collateral swap adjustment/i)
   })
 
   it('throws when minOut is below required debt', async () => {
@@ -228,20 +209,29 @@ describe('planRedeem', () => {
         sharesToRedeem: 100n,
         collateralSlippageBps: 100,
         swapSlippageBps: 100,
+        collateralSwapAdjustmentBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
     ).rejects.toThrow(
-      /Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral slippage tolerance/i,
+      /Try decreasing your swap slippage tolerance. If you cannot further decrease it, try increasing your collateral swap adjustment/i,
     )
   })
 
   it('builds a plan with zero collateral slippage tolerance', async () => {
-    const quote = vi.fn(async () => ({
-      out: 350n,
-      minOut: 330n,
+    const quote = vi.fn()
+    quote.mockResolvedValueOnce({
+      out: 290n,
+      minOut: 280n,
       approvalTarget: debtAsset,
       calls: [{ target: debtAsset, data: '0x1234' as Hex, value: 0n }],
-    }))
+    })
+
+    quote.mockResolvedValueOnce({
+      out: 310n,
+      minOut: 305n,
+      approvalTarget: debtAsset,
+      calls: [{ target: debtAsset, data: '0x1234' as Hex, value: 0n }],
+    })
 
     const plan = await planRedeem({
       publicClient,
@@ -249,13 +239,14 @@ describe('planRedeem', () => {
       sharesToRedeem: 100n,
       collateralSlippageBps: 0,
       swapSlippageBps: 100,
+      collateralSwapAdjustmentBps: 100,
       quoteCollateralToDebt: quote as any,
     })
 
-    expect(plan.minCollateralForSender).toBe(800n) // 800 * 1
-    expect(plan.previewCollateralForSender).toBe(800n)
-    expect(plan.previewExcessDebt).toBe(50n) // 350 - 300
-    expect(plan.minExcessDebt).toBe(30n) // 330 - 300
+    expect(plan.minCollateralForSender).toBe(792n) // 800 * 0.99
+    expect(plan.previewCollateralForSender).toBe(792n)
+    expect(plan.previewExcessDebt).toBe(10n)
+    expect(plan.minExcessDebt).toBe(5n)
     expect(plan.calls[0]?.target).toBe(collateralAsset) // approval first
     expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
@@ -263,6 +254,16 @@ describe('planRedeem', () => {
       expect.objectContaining({
         slippageBps: 100,
         amountIn: 200n, // 1000 - 800
+        intent: 'exactIn',
+        inToken: collateralAsset,
+        outToken: debtAsset,
+      }),
+    )
+
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 100,
+        amountIn: 172n, // collateralToSpend
         intent: 'exactIn',
         inToken: collateralAsset,
         outToken: debtAsset,
@@ -278,6 +279,7 @@ describe('planRedeem', () => {
         sharesToRedeem: 100n,
         collateralSlippageBps: -100,
         swapSlippageBps: 100,
+        collateralSwapAdjustmentBps: 100,
         quoteCollateralToDebt: vi.fn() as any,
       }),
     ).rejects.toThrow(/Collateral slippage cannot be less than 0/i)
@@ -291,6 +293,7 @@ describe('planRedeem', () => {
         sharesToRedeem: 100n,
         collateralSlippageBps: 100,
         swapSlippageBps: 0,
+        collateralSwapAdjustmentBps: 100,
         quoteCollateralToDebt: vi.fn() as any,
       }),
     ).rejects.toThrow(/Swap slippage cannot be less than 0.01%/i)

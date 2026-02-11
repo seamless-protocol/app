@@ -73,17 +73,14 @@ export async function planMint({
   // This price is adding the NAV diff from spot on top of the share slippage
   const minShares = applySlippageFloor(routerPreview.shares, shareSlippageBps)
 
-  const quoteSlippageBps = swapSlippageBps
-
   const flashLoanAmount = applySlippageFloor(routerPreview.debt, flashLoanAdjustmentBps)
 
-  // Exact-in quote using the previewed debt amount (with leverage-adjusted slippage hint)
   const debtToCollateralQuote = await quoteDebtToCollateral({
     intent: 'exactIn',
     inToken: debtAsset,
     outToken: collateralAsset,
     amountIn: flashLoanAmount,
-    slippageBps: quoteSlippageBps,
+    slippageBps: swapSlippageBps,
   })
 
   const [managerPreview, managerMin] = await publicClient.multicall({

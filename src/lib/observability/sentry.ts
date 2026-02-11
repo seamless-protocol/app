@@ -246,6 +246,7 @@ export function captureRedeemPlanError(params: {
   errorString: string
   collateralSlippageBps: number
   swapSlippageBps: number
+  collateralSwapAdjustmentBps: number
   previewRedeem: {
     collateral: bigint
     debt: bigint
@@ -254,14 +255,15 @@ export function captureRedeemPlanError(params: {
     tokenFee: bigint
   }
   previewEquity: bigint
-  minCollateralForSender: bigint
+  minCollateralForSender?: bigint
   collateralToSpend?: bigint
-  collateralToDebtQuote: Quote
+  collateralToDebtQuote?: Quote
 }) {
   const {
     errorString,
     collateralSlippageBps,
     swapSlippageBps,
+    collateralSwapAdjustmentBps,
     previewRedeem,
     previewEquity,
     minCollateralForSender,
@@ -276,6 +278,7 @@ export function captureRedeemPlanError(params: {
     data: {
       collateralSlippageBps,
       swapSlippageBps,
+      collateralSwapAdjustmentBps,
       previewRedeem,
       previewEquity,
       minCollateralForSender,
@@ -288,6 +291,7 @@ export function captureRedeemPlanError(params: {
     errorString,
     collateralSlippageBps,
     swapSlippageBps,
+    collateralSwapAdjustmentBps,
     previewRedeem,
     previewEquity,
     minCollateralForSender,
