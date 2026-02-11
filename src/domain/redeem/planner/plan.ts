@@ -14,6 +14,7 @@ import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTok
 import { getContractAddresses, type SupportedChainId } from '@/lib/contracts/addresses'
 import { leverageManagerV2Abi } from '@/lib/contracts/generated'
 import { captureRedeemPlanError } from '@/lib/observability/sentry'
+import { ceilDiv } from './math'
 
 export interface RedeemPlan {
   collateralToSwap: bigint
@@ -32,6 +33,24 @@ export interface RedeemPlan {
 export interface PlanRedeemParams {
   publicClient: PublicClient
   leverageTokenConfig: LeverageTokenConfig
+  sharesToRedeem: bigint
+  collateralSlippageBps: number
+  swapSlippageBps: number
+  collateralSwapAdjustmentBps: number
+  quoteCollateralToDebt: QuoteFn
+}
+
+interface RedeemPlanContext {
+  preview: Awaited<ReturnType<PublicClient['readContract']>> & {
+    collateral: bigint
+    debt: bigint
+    shares: bigint
+    tokenFee: bigint
+    treasuryFee: bigint
+  }
+  previewEquity: bigint
+  collateralAsset: Address
+  debtAsset: Address
   sharesToRedeem: bigint
   collateralSlippageBps: number
   swapSlippageBps: number
@@ -90,8 +109,6 @@ export async function planRedeem({
     previewEquity,
     collateralAsset,
     debtAsset,
-    collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
-    debtDecimals: leverageTokenConfig.debtAsset.decimals,
     sharesToRedeem,
     collateralSlippageBps,
     swapSlippageBps,
@@ -103,26 +120,6 @@ export async function planRedeem({
     return planRedeemVeloraExactOut(ctx)
   }
   return planRedeemExactIn(ctx)
-}
-
-interface RedeemPlanContext {
-  preview: Awaited<ReturnType<PublicClient['readContract']>> & {
-    collateral: bigint
-    debt: bigint
-    shares: bigint
-    tokenFee: bigint
-    treasuryFee: bigint
-  }
-  previewEquity: bigint
-  collateralAsset: Address
-  debtAsset: Address
-  collateralDecimals: number
-  debtDecimals: number
-  sharesToRedeem: bigint
-  collateralSlippageBps: number
-  swapSlippageBps: number
-  collateralSwapAdjustmentBps: number
-  quoteCollateralToDebt: QuoteFn
 }
 
 async function planRedeemVeloraExactOut(ctx: RedeemPlanContext): Promise<RedeemPlan> {
@@ -192,8 +189,6 @@ async function planRedeemExactIn(ctx: RedeemPlanContext): Promise<RedeemPlan> {
     previewEquity,
     collateralAsset,
     debtAsset,
-    collateralDecimals,
-    debtDecimals,
     sharesToRedeem,
     collateralSlippageBps,
     swapSlippageBps,
@@ -210,11 +205,16 @@ async function planRedeemExactIn(ctx: RedeemPlanContext): Promise<RedeemPlan> {
     slippageBps: swapSlippageBps,
   })
 
-  const exchangeRateScale = 10n ** BigInt(Math.max(collateralDecimals, debtDecimals))
-  const exchangeRate =
-    (collateralToDebtQuoteInitial.out * exchangeRateScale) / collateralToSpendInitial
-
-  const minCollateralToSpend = (preview.debt * exchangeRateScale) / exchangeRate
+  // Min collateral to spend = preview.debt / (debt per unit of collateral).
+  // The quote gives: collateralToSpendInitial (collateral) -> out (debt).
+  // debt per collateral = out / collateralToSpendInitial.
+  // collateral needed = preview.debt / (out / collateralToSpendInitial)
+  //                   = preview.debt * collateralToSpendInitial / out.
+  // All amounts are in base units, so decimals cancel automatically.
+  const minCollateralToSpend = ceilDiv(
+    preview.debt * collateralToSpendInitial,
+    collateralToDebtQuoteInitial.out,
+  )
 
   if (preview.collateral - minCollateralToSpend <= 0) {
     captureRedeemPlanError({
