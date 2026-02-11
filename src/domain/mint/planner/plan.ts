@@ -46,7 +46,7 @@ export async function planMint({
   }
 
   if (shareSlippageBps < 0) {
-    throw new Error('Share slippage cannot be less than 0')
+    throw new Error('Leverage Token slippage tolerance cannot be less than 0')
   }
 
   if (swapSlippageBps < 1) {
@@ -113,7 +113,7 @@ export async function planMint({
       managerMin,
       flashLoanAmount,
     })
-    throw new Error(`Try increasing your share slippage tolerance.`)
+    throw new Error(`Try increasing your Leverage Token slippage tolerance.`)
   }
 
   if (managerMin.debt < flashLoanAmount) {
@@ -129,7 +129,7 @@ export async function planMint({
       flashLoanAmount,
     })
     throw new Error(
-      `Try decreasing your swap slippage tolerance. If you cannot decrease it further, try increasing your share slippage tolerance`,
+      `Try decreasing your swap slippage tolerance. If you cannot decrease it further, try increasing your Leverage Token slippage Tolerance`,
     )
   }
 
@@ -146,7 +146,7 @@ export async function planMint({
       flashLoanAmount,
     })
     throw new Error(
-      `Try increasing your share slippage tolerance first. You can also try decreasing your flash loan adjustment`,
+      `Try increasing your Leverage Token slippage tolerance first. You can also try decreasing your flash loan adjustment`,
     )
   }
 

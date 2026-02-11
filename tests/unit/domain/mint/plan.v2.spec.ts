@@ -136,7 +136,7 @@ describe('planMint', () => {
         flashLoanAdjustmentBps: 100,
         quoteDebtToCollateral: quote as any,
       }),
-    ).rejects.toThrow(/Try increasing your share slippage tolerance./i)
+    ).rejects.toThrow(/Try increasing your leverage token slippage tolerance./i)
   })
 
   it('throws when minimum shares from manager are below slippage floor', async () => {
@@ -170,7 +170,7 @@ describe('planMint', () => {
         quoteDebtToCollateral: quote as any,
       }),
     ).rejects.toThrow(
-      /Try increasing your share slippage tolerance first. You can also try decreasing your flash loan adjustment/i,
+      /Try increasing your leverage token slippage tolerance first. You can also try decreasing your flash loan adjustment/i,
     )
   })
 
@@ -287,7 +287,7 @@ describe('planMint', () => {
         flashLoanAdjustmentBps: 100,
         quoteDebtToCollateral: vi.fn() as any,
       }),
-    ).rejects.toThrow(/Share slippage cannot be less than 0/i)
+    ).rejects.toThrow(/Leverage token slippage tolerance cannot be less than 0/i)
   })
 
   it('throws error when swap slippage is less than 0.01%', async () => {

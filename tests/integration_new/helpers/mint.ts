@@ -140,7 +140,9 @@ async function mintWithRetries({
       const isRetryableError =
         error instanceof MintExecutionSimulationError ||
         (error instanceof Error &&
-          error.message.toLowerCase().includes('try increasing your share slippage tolerance'))
+          error.message
+            .toLowerCase()
+            .includes('try increasing your leverage token slippage tolerance'))
 
       if (isRetryableError && i < MAX_ATTEMPTS - 1) {
         shareSlippageBps += slippageIncrementBps

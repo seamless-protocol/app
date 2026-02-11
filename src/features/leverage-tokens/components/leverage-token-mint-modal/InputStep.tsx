@@ -400,11 +400,11 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Share Slippage</span>
+            <span className="text-secondary-foreground">Leverage Token Slippage Tolerance</span>
             <span className="text-foreground">{shareSlippage}%</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Swap Slippage</span>
+            <span className="text-secondary-foreground">Swap Slippage Tolerance</span>
             <span className="text-foreground">{swapSlippage}%</span>
           </div>
           <div className="flex justify-between">
