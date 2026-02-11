@@ -253,6 +253,7 @@ export function InputStep({
           <>
             <SlippageInput
               label={`${leverageTokenConfig.collateralAsset.symbol} Slippage Tolerance`}
+              tooltipText={`The maximum allowed difference between the previewed ${leverageTokenConfig.collateralAsset.symbol} amount received and actual amount received when executed onchain.`}
               presets={collateralSlippagePresets}
               value={collateralSlippage}
               onChange={onCollateralSlippageChange}
@@ -268,10 +269,10 @@ export function InputStep({
               presets={COLLATERAL_SWAP_ADJUSTMENT_PRESETS_PERCENT_DISPLAY}
               value={collateralSwapAdjustment}
               onChange={onCollateralSwapAdjustmentChange}
-              step={0.1}
+              step={0.01}
               min={0}
               max={50}
-              precision={1}
+              precision={2}
             />
             <SlippageInput
               label="Swap Slippage Tolerance"
@@ -381,6 +382,10 @@ export function InputStep({
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Collateral Slippage</span>
             <span className="text-foreground">{collateralSlippage}%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-secondary-foreground">Collateral Swap Adjustment</span>
+            <span className="text-foreground">{collateralSwapAdjustment}%</span>
           </div>
           <div className="flex justify-between">
             <span className="text-secondary-foreground">Swap Slippage</span>

@@ -85,7 +85,7 @@ export async function planRedeem({
     args: [token, netShares],
   })
 
-  if (isRedeemWithVelora(leverageTokenConfig?.swaps?.collateralToDebt)) {
+  if (isRedeemWithVeloraExactOut(leverageTokenConfig?.swaps?.collateralToDebt)) {
     const collateralToDebtQuote = await quoteCollateralToDebt({
       intent: 'exactOut',
       inToken: collateralAsset,
@@ -263,7 +263,7 @@ export async function planRedeem({
   }
 }
 
-function isRedeemWithVelora(swap?: CollateralToDebtSwapConfig): boolean {
+function isRedeemWithVeloraExactOut(swap?: CollateralToDebtSwapConfig): boolean {
   return (
     (swap?.type === 'balmy' &&
       Array.isArray(swap.sourceWhitelist) &&

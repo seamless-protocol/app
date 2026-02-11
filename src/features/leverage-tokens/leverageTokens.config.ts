@@ -245,12 +245,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
-    slippagePresets: {
-      mint: {
-        defaultFlashLoanAdjustment: '0.5',
-        presetsFlashLoanAdjustment: ['0.5', '1.0', '1.5'],
-      },
-    },
     test: {
       mintIntegrationTest: {
         equityInCollateralAsset: parseEther('0.01'),
@@ -351,14 +345,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           },
         },
       ],
-    },
-    slippagePresets: {
-      mint: {
-        defaultShareSlippage: '1.0',
-        presetsShareSlippage: ['0.5', '1.0', '1.5'],
-        defaultFlashLoanAdjustment: '1.0',
-        presetsFlashLoanAdjustment: ['0.5', '1.0', '1.5'],
-      },
     },
     test: {
       mintIntegrationTest: {
@@ -560,13 +546,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
-    slippagePresets: {
-      mint: {
-        defaultShareSlippage: '0.5',
-        defaultFlashLoanAdjustment: '0.5',
-        presetsFlashLoanAdjustment: ['0.5', '1.0', '1.5'],
-      },
-    },
     test: {
       mintIntegrationTest: {
         equityInCollateralAsset: parseEther('0.01'),
@@ -730,17 +709,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
-    slippagePresets: {
-      mint: {
-        defaultShareSlippage: '0.5',
-        defaultFlashLoanAdjustment: '0.5',
-        presetsFlashLoanAdjustment: ['0.1', '0.5', '1.0'],
-      },
-      redeem: {
-        defaultCollateralSlippage: '0.1',
-        presetsCollateralSlippage: ['0.1', '0.5', '1.0'],
-      },
-    },
     test: {
       mintIntegrationTest: {
         equityInCollateralAsset: parseEther('50'),
@@ -847,14 +815,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           },
         },
       ],
-    },
-    slippagePresets: {
-      mint: {
-        defaultShareSlippage: '0.7',
-        presetsShareSlippage: ['0.5', '1.0', '1.5'],
-        defaultFlashLoanAdjustment: '0.5',
-        presetsFlashLoanAdjustment: ['0.5', '1.0', '1.5'],
-      },
     },
     test: {
       mintIntegrationTest: {
