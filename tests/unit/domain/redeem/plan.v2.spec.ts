@@ -169,7 +169,7 @@ describe('planRedeem', () => {
         quoteCollateralToDebt: quote as any,
       }),
     ).rejects.toThrow(
-      /Redeem preview resulted in less collateral than the allowed slippage tolerance. Try increasing the collateral slippage tolerance parameter./i,
+      /Redeem preview resulted in less collateral than the allowed slippage tolerance. Try decreasing the swap slippage tolerance, or increasing the collateral slippage tolerance./i,
     )
   })
 
@@ -189,7 +189,9 @@ describe('planRedeem', () => {
         collateralSwapAdjustmentBps: 100,
         quoteCollateralToDebt: quote as any,
       }),
-    ).rejects.toThrow(/Insufficient DEX liquidity to redeem 100 shares/i)
+    ).rejects.toThrow(
+      /Insufficient DEX liquidity to redeem 100 Leverage Tokens. Try redeeming a smaller amount of Leverage Tokens./i,
+    )
   })
 
   it('throws when min collateral for sender is less than 0', async () => {

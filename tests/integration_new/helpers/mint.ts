@@ -142,7 +142,7 @@ async function mintWithRetries({
         (error instanceof Error &&
           error.message
             .toLowerCase()
-            .includes('try increasing your leverage token slippage tolerance'))
+            .includes('try increasing the flash loan adjustment parameter'))
 
       if (isRetryableError && i < MAX_ATTEMPTS - 1) {
         shareSlippageBps += slippageIncrementBps

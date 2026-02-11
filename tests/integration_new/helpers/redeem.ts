@@ -151,7 +151,7 @@ async function redeemWithRetries({
       const isRetryableError =
         error instanceof RedeemExecutionSimulationError ||
         (error instanceof Error &&
-          error.message.toLowerCase().includes('try increasing your collateral swap adjustment'))
+          error.message.toLowerCase().includes('try increasing the collateral swap adjustment'))
 
       if (isRetryableError && i < MAX_ATTEMPTS - 1) {
         collateralSwapAdjustmentBps += collateralSwapAdjustmentIncrementBps

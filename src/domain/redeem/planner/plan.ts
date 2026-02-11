@@ -90,6 +90,8 @@ export async function planRedeem({
     previewEquity,
     collateralAsset,
     debtAsset,
+    collateralDecimals: leverageTokenConfig.collateralAsset.decimals,
+    debtDecimals: leverageTokenConfig.debtAsset.decimals,
     sharesToRedeem,
     collateralSlippageBps,
     swapSlippageBps,
@@ -114,6 +116,8 @@ interface RedeemPlanContext {
   previewEquity: bigint
   collateralAsset: Address
   debtAsset: Address
+  collateralDecimals: number
+  debtDecimals: number
   sharesToRedeem: bigint
   collateralSlippageBps: number
   swapSlippageBps: number
@@ -160,7 +164,7 @@ async function planRedeemVeloraExactOut(ctx: RedeemPlanContext): Promise<RedeemP
       collateralToDebtQuote,
     })
     throw new Error(
-      `Redeem preview resulted in less collateral than the allowed slippage tolerance. Try increasing the collateral slippage tolerance parameter.`,
+      `Redeem preview resulted in less collateral than the allowed slippage tolerance. Try decreasing the swap slippage tolerance, or increasing the collateral slippage tolerance.`,
     )
   }
 
@@ -188,6 +192,8 @@ async function planRedeemExactIn(ctx: RedeemPlanContext): Promise<RedeemPlan> {
     previewEquity,
     collateralAsset,
     debtAsset,
+    collateralDecimals,
+    debtDecimals,
     sharesToRedeem,
     collateralSlippageBps,
     swapSlippageBps,
@@ -204,7 +210,7 @@ async function planRedeemExactIn(ctx: RedeemPlanContext): Promise<RedeemPlan> {
     slippageBps: swapSlippageBps,
   })
 
-  const exchangeRateScale = 10n ** 18n
+  const exchangeRateScale = 10n ** BigInt(Math.max(collateralDecimals, debtDecimals))
   const exchangeRate =
     (collateralToDebtQuoteInitial.out * exchangeRateScale) / collateralToSpendInitial
 
@@ -219,18 +225,12 @@ async function planRedeemExactIn(ctx: RedeemPlanContext): Promise<RedeemPlan> {
       previewRedeem: preview,
       previewEquity,
     })
-    throw new Error(`Insufficient DEX liquidity to redeem ${sharesToRedeem} shares`)
+    throw new Error(
+      `Insufficient DEX liquidity to redeem ${sharesToRedeem} Leverage Tokens. Try redeeming a smaller amount of Leverage Tokens.`,
+    )
   }
 
   const collateralToSpend = applySlippageFloor(minCollateralToSpend, -collateralSwapAdjustmentBps)
-
-  const collateralToDebtQuote = await quoteCollateralToDebt({
-    intent: 'exactIn',
-    inToken: collateralAsset,
-    outToken: debtAsset,
-    amountIn: collateralToSpend,
-    slippageBps: swapSlippageBps,
-  })
 
   const minCollateralForSender = applySlippageFloor(
     preview.collateral - collateralToSpend,
@@ -247,12 +247,19 @@ async function planRedeemExactIn(ctx: RedeemPlanContext): Promise<RedeemPlan> {
       previewEquity,
       minCollateralForSender,
       collateralToSpend,
-      collateralToDebtQuote,
     })
     throw new Error(
-      'Insufficient total collateral to swap to debt to repay flash loan. Try decreasing the collateral swap adjustment parameter.',
+      'Insufficient collateral returned from preview. Try decreasing the collateral swap adjustment parameter.',
     )
   }
+
+  const collateralToDebtQuote = await quoteCollateralToDebt({
+    intent: 'exactIn',
+    inToken: collateralAsset,
+    outToken: debtAsset,
+    amountIn: collateralToSpend,
+    slippageBps: swapSlippageBps,
+  })
 
   if (collateralToDebtQuote.out < preview.debt) {
     captureRedeemPlanError({
