@@ -131,6 +131,105 @@ describe('planMint', () => {
     )
   })
 
+  it('sets initial quote exchange rate to zero when initial debt-to-collateral quote output is zero and continues', async () => {
+    const quote = vi.fn()
+    quote.mockResolvedValueOnce({
+      out: 0n,
+      minOut: 0n,
+      approvalTarget: debt,
+      calls: [],
+      slippageBps: 10,
+    })
+    readContract.mockImplementationOnce(async () => ({
+      debt: 950n,
+      shares: 1_200n,
+    }))
+    quote.mockResolvedValueOnce({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps: 10,
+    })
+    multicall.mockResolvedValueOnce([
+      { debt: 1_300n, shares: 1_600n },
+      { debt: 1_100n, shares: 1_584n },
+    ])
+
+    const plan = await planMint({
+      publicClient,
+      leverageTokenConfig,
+      equityInCollateralAsset: 500n,
+      shareSlippageBps: 100,
+      swapSlippageBps: 10,
+      flashLoanAdjustmentBps: 100,
+      quoteDebtToCollateral: quote as any,
+    })
+
+    expect(plan.flashLoanAmount).toBe(940n)
+    expect(plan.minShares).toBe(1584n)
+    expect(plan.previewShares).toBe(1600n)
+    expect(plan.previewExcessDebt).toBe(360n)
+    expect(plan.minExcessDebt).toBe(160n)
+    expect(plan.calls[0]?.target).toBe(debt)
+    expect(plan.calls.length).toBeGreaterThanOrEqual(1)
+
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 10,
+        amountIn: 1000n,
+        intent: 'exactIn',
+        inToken: debt,
+        outToken: collateral,
+      }),
+    )
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 10,
+        amountIn: 940n,
+        intent: 'exactIn',
+        inToken: debt,
+        outToken: collateral,
+      }),
+    )
+  })
+
+  it('throws when debt-to-collateral quote for flash loan amount returns zero or negative output', async () => {
+    const quote = vi.fn()
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
+    }))
+    readContract.mockImplementationOnce(async () => ({
+      debt: 950n,
+      shares: 1_200n,
+    }))
+    quote.mockImplementationOnce(async () => ({
+      out: 0n,
+      minOut: 0n,
+      approvalTarget: debt,
+      calls: [],
+      slippageBps: 10,
+    }))
+
+    await expect(
+      planMint({
+        publicClient,
+        leverageTokenConfig,
+        equityInCollateralAsset: 500n,
+        shareSlippageBps: 100,
+        swapSlippageBps: 10,
+        flashLoanAdjustmentBps: 100,
+        quoteDebtToCollateral: quote as any,
+      }),
+    ).rejects.toThrow(
+      /Insufficient DEX liquidity to mint. Try minting a smaller amount of Leverage Tokens./i,
+    )
+  })
+
   it('throws when manager previewed debt is below flash loan amount', async () => {
     const quote = vi.fn()
 

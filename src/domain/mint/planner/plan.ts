@@ -95,7 +95,9 @@ export async function planMint({
       ),
     )
   const collateralToDebtRateFromQuote =
-    (flashLoanAmountInitial * exchangeRateScale) / debtToCollateralQuoteInitial.out
+    debtToCollateralQuoteInitial.out > 0n
+      ? (flashLoanAmountInitial * exchangeRateScale) / debtToCollateralQuoteInitial.out
+      : 0n
   const collateralToDebtRateFromManager =
     (managerPreviewInitial.debt * exchangeRateScale) /
     (equityInCollateralAsset + debtToCollateralQuoteInitial.out)
@@ -117,6 +119,21 @@ export async function planMint({
     amountIn: flashLoanAmount,
     slippageBps: swapSlippageBps,
   })
+
+  if (debtToCollateralQuote.out <= 0n) {
+    captureMintPlanError({
+      errorString: `Debt to collateral quote output ${debtToCollateralQuote.out} is less than or equal to 0`,
+      shareSlippageBps,
+      swapSlippageBps,
+      flashLoanAdjustmentBps,
+      routerPreview,
+      debtToCollateralQuote,
+      flashLoanAmount,
+    })
+    throw new Error(
+      `Insufficient DEX liquidity to mint. Try minting a smaller amount of Leverage Tokens.`,
+    )
+  }
 
   const [managerPreview, managerMin] = await publicClient.multicall({
     allowFailure: false,
