@@ -1,6 +1,6 @@
 import type { Address, Hex, PublicClient } from 'viem'
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
-import { planMint } from '@/domain/mint/planner/plan'
+import { planMint, solveFlashLoanAmountFromImpliedRates } from '@/domain/mint/planner/plan'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
 
 const publicClient = {
@@ -54,7 +54,25 @@ describe('planMint', () => {
   })
 
   it('builds a plan with slippage and approvals', async () => {
-    const quote = vi.fn(async ({ slippageBps }: { slippageBps: number }) => ({
+    const quote = vi.fn()
+
+    // Initial quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
+    }))
+
+    // Initial manager preview
+    readContract.mockImplementationOnce(async () => ({
+      debt: 950n,
+      shares: 1_200n,
+    }))
+
+    // Second quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
       out: 1_200n,
       minOut: 1_100n,
       approvalTarget: debt,
@@ -70,7 +88,7 @@ describe('planMint', () => {
       },
       {
         debt: 1_100n,
-        shares: 1_500n,
+        shares: 1_584n,
       },
     ])
 
@@ -84,21 +102,28 @@ describe('planMint', () => {
       quoteDebtToCollateral: quote as any,
     })
 
-    // flash loan and shares are slippage-adjusted from router preview
-    expect(plan.flashLoanAmount).toBe(990n)
-    expect(plan.minShares).toBe(990n)
-    expect(plan.previewShares).toBe(1_600n)
-    expect(plan.previewExcessDebt).toBe(310n) // 1300 - 990
-    expect(plan.minExcessDebt).toBe(110n) // 1100 - 990
+    expect(plan.flashLoanAmount).toBe(839n)
+    expect(plan.minShares).toBe(1584n)
+    expect(plan.previewShares).toBe(1600n)
+    expect(plan.previewExcessDebt).toBe(461n)
+    expect(plan.minExcessDebt).toBe(261n)
     expect(plan.calls[0]?.target).toBe(debt) // approval first
     expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
-    // quote slippage scales with leverage using a 50% factor:
-    // collateralRatio 3 → leverage 1.5 → (100 * 0.5)/(1.5-1)=100 bps
     expect(quote).toHaveBeenCalledWith(
       expect.objectContaining({
         slippageBps: 10,
-        amountIn: 990n,
+        amountIn: 1000n,
+        intent: 'exactIn',
+        inToken: debt,
+        outToken: collateral,
+      }),
+    )
+
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 10,
+        amountIn: 839n,
         intent: 'exactIn',
         inToken: debt,
         outToken: collateral,
@@ -107,11 +132,30 @@ describe('planMint', () => {
   })
 
   it('throws when manager previewed debt is below flash loan amount', async () => {
-    const quote = vi.fn(async () => ({
+    const quote = vi.fn()
+
+    // Initial quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
       out: 1_200n,
       minOut: 1_100n,
       approvalTarget: debt,
       calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
+    }))
+
+    // Initial manager preview
+    readContract.mockImplementationOnce(async () => ({
+      debt: 950n,
+      shares: 1_200n,
+    }))
+
+    // Second quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
     }))
 
     // manager previewDeposit returns debt below flash loan amount
@@ -140,11 +184,30 @@ describe('planMint', () => {
   })
 
   it('throws when manager minimum debt is below flash loan amount', async () => {
-    const quote = vi.fn(async () => ({
-      out: 1_300n,
+    const quote = vi.fn()
+
+    // Initial quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
       minOut: 1_100n,
       approvalTarget: debt,
       calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
+    }))
+
+    // Initial manager preview
+    readContract.mockImplementationOnce(async () => ({
+      debt: 950n,
+      shares: 1_200n,
+    }))
+
+    // Second quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
     }))
 
     multicall.mockResolvedValueOnce([
@@ -174,11 +237,30 @@ describe('planMint', () => {
   })
 
   it('throws when minimum shares from manager are below slippage floor', async () => {
-    const quote = vi.fn(async () => ({
+    const quote = vi.fn()
+
+    // Initial quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
       out: 1_200n,
       minOut: 1_100n,
       approvalTarget: debt,
       calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
+    }))
+
+    // Initial manager preview
+    readContract.mockImplementationOnce(async () => ({
+      debt: 950n,
+      shares: 1_200n,
+    }))
+
+    // Second quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
     }))
 
     // manager previewDeposit (minOut path) returns shares below minShares
@@ -209,7 +291,25 @@ describe('planMint', () => {
   })
 
   it('builds a plan with zero flash loan adjustment', async () => {
-    const quote = vi.fn(async ({ slippageBps }: { slippageBps: number }) => ({
+    const quote = vi.fn()
+
+    // Initial quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
+    }))
+
+    // Initial manager preview
+    readContract.mockImplementationOnce(async () => ({
+      debt: 950n,
+      shares: 1_200n,
+    }))
+
+    // Second quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
       out: 1_200n,
       minOut: 1_100n,
       approvalTarget: debt,
@@ -225,7 +325,7 @@ describe('planMint', () => {
       },
       {
         debt: 1_100n,
-        shares: 1_500n,
+        shares: 1_600n,
       },
     ])
 
@@ -239,12 +339,11 @@ describe('planMint', () => {
       quoteDebtToCollateral: quote as any,
     })
 
-    // flash loan and shares are slippage-adjusted from router preview
-    expect(plan.flashLoanAmount).toBe(1000n)
-    expect(plan.minShares).toBe(990n)
-    expect(plan.previewShares).toBe(1_600n)
-    expect(plan.previewExcessDebt).toBe(300n) // 1300 - 1000
-    expect(plan.minExcessDebt).toBe(100n) // 1100 - 1000
+    expect(plan.flashLoanAmount).toBe(848n)
+    expect(plan.minShares).toBe(1584n)
+    expect(plan.previewShares).toBe(1600n)
+    expect(plan.previewExcessDebt).toBe(452n)
+    expect(plan.minExcessDebt).toBe(252n)
     expect(plan.calls[0]?.target).toBe(debt) // approval first
     expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
@@ -257,10 +356,38 @@ describe('planMint', () => {
         outToken: collateral,
       }),
     )
+
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 10,
+        amountIn: 848n,
+        intent: 'exactIn',
+        inToken: debt,
+        outToken: collateral,
+      }),
+    )
   })
 
   it('builds a plan with negative flash loan adjustment', async () => {
-    const quote = vi.fn(async ({ slippageBps }: { slippageBps: number }) => ({
+    const quote = vi.fn()
+
+    // Initial quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
+      out: 1_200n,
+      minOut: 1_100n,
+      approvalTarget: debt,
+      calls: [{ target: debt, data: '0x01' as Hex, value: 0n }],
+      slippageBps,
+    }))
+
+    // Initial manager preview
+    readContract.mockImplementationOnce(async () => ({
+      debt: 950n,
+      shares: 1_200n,
+    }))
+
+    // Second quote
+    quote.mockImplementationOnce(async ({ slippageBps }: { slippageBps: number }) => ({
       out: 1_200n,
       minOut: 1_100n,
       approvalTarget: debt,
@@ -276,7 +403,7 @@ describe('planMint', () => {
       },
       {
         debt: 1_100n,
-        shares: 1_500n,
+        shares: 1_600n,
       },
     ])
 
@@ -290,19 +417,28 @@ describe('planMint', () => {
       quoteDebtToCollateral: quote as any,
     })
 
-    // flash loan and shares are slippage-adjusted from router preview
-    expect(plan.flashLoanAmount).toBe(1010n)
-    expect(plan.minShares).toBe(990n)
+    expect(plan.flashLoanAmount).toBe(856n)
+    expect(plan.minShares).toBe(1584n)
     expect(plan.previewShares).toBe(1_600n)
-    expect(plan.previewExcessDebt).toBe(290n) // 1300 - 1010
-    expect(plan.minExcessDebt).toBe(90n) // 1100 - 1010
+    expect(plan.previewExcessDebt).toBe(444n)
+    expect(plan.minExcessDebt).toBe(244n)
     expect(plan.calls[0]?.target).toBe(debt) // approval first
     expect(plan.calls.length).toBeGreaterThanOrEqual(1)
 
     expect(quote).toHaveBeenCalledWith(
       expect.objectContaining({
         slippageBps: 10,
-        amountIn: 1010n,
+        amountIn: 1000n,
+        intent: 'exactIn',
+        inToken: debt,
+        outToken: collateral,
+      }),
+    )
+
+    expect(quote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slippageBps: 10,
+        amountIn: 856n,
         intent: 'exactIn',
         inToken: debt,
         outToken: collateral,
@@ -336,5 +472,69 @@ describe('planMint', () => {
         quoteDebtToCollateral: vi.fn() as any,
       }),
     ).rejects.toThrow(/Swap slippage cannot be less than 0.01%/i)
+  })
+})
+
+describe('solveFlashLoanAmountFromImpliedRates', () => {
+  it('returns initial flash loan when quote-implied rate is less than manager-implied rate and sample is feasible', () => {
+    const flashLoanAmount = solveFlashLoanAmountFromImpliedRates({
+      equityInCollateralAsset: 500n,
+      collateralToDebtRateFromQuote: 8_000n,
+      collateralToDebtRateFromManager: 9_000n,
+      exchangeRateScale: 10_000n,
+      flashLoanAmountInitial: 1_000n,
+      managerDebtAtInitialSample: 1_100n,
+    })
+
+    expect(flashLoanAmount).toBe(1_000n)
+  })
+
+  it('returns sampled manager debt when quote-implied rate is less than manager-implied rate and sample is not feasible', () => {
+    const flashLoanAmount = solveFlashLoanAmountFromImpliedRates({
+      equityInCollateralAsset: 500n,
+      collateralToDebtRateFromQuote: 8_000n,
+      collateralToDebtRateFromManager: 9_000n,
+      exchangeRateScale: 10_000n,
+      flashLoanAmountInitial: 1_000n,
+      managerDebtAtInitialSample: 900n,
+    })
+
+    expect(flashLoanAmount).toBe(900n)
+  })
+
+  it('solves the inequality bound when quote-implied rate is greater than manager-implied rate', () => {
+    const flashLoanAmount = solveFlashLoanAmountFromImpliedRates({
+      equityInCollateralAsset: 500n,
+      collateralToDebtRateFromQuote: 8_000n,
+      collateralToDebtRateFromManager: 7_000n,
+      exchangeRateScale: 10_000n,
+      flashLoanAmountInitial: 1_000n,
+      managerDebtAtInitialSample: 950n,
+    })
+
+    // Formula:
+    // F_max = (mScaled * qScaled * E) / (scale * (qScaled - mScaled))
+    //       = (7000 * 8000 * 500) / (10000 * (8000 - 7000))
+    //       = 28,000,000,000 / 10,000,000
+    //       = 2800
+    expect(flashLoanAmount).toBe(2_800n)
+  })
+
+  it('falls back to initial flash loan when computed inequality bound rounds down to zero', () => {
+    const flashLoanAmount = solveFlashLoanAmountFromImpliedRates({
+      equityInCollateralAsset: 1n,
+      collateralToDebtRateFromQuote: 3n,
+      collateralToDebtRateFromManager: 2n,
+      exchangeRateScale: 1_000n,
+      flashLoanAmountInitial: 1_000n,
+      managerDebtAtInitialSample: 900n,
+    })
+
+    // Formula:
+    // F_max = (2 * 3 * 1) / (1000 * (3 - 2))
+    //       = 6 / 1000
+    //       = 0 (integer division)
+    // Fallback should return flashLoanAmountInitial.
+    expect(flashLoanAmount).toBe(1_000n)
   })
 })

@@ -221,7 +221,7 @@ export async function planMint({
   }
 }
 
-function solveFlashLoanAmountFromImpliedRates({
+export function solveFlashLoanAmountFromImpliedRates({
   equityInCollateralAsset,
   collateralToDebtRateFromQuote,
   collateralToDebtRateFromManager,
