@@ -476,7 +476,7 @@ describe('planMint', () => {
 })
 
 describe('solveFlashLoanAmountFromImpliedRates', () => {
-  it('returns initial flash loan when quote-implied rate is less than manager-implied rate and sample is feasible', () => {
+  it('returns initial flash loan when quote-implied rate is less than manager-implied rate', () => {
     const flashLoanAmount = solveFlashLoanAmountFromImpliedRates({
       equityInCollateralAsset: 500n,
       collateralToDebtRateFromQuote: 8_000n,
@@ -489,7 +489,7 @@ describe('solveFlashLoanAmountFromImpliedRates', () => {
     expect(flashLoanAmount).toBe(1_000n)
   })
 
-  it('returns sampled manager debt when quote-implied rate is less than manager-implied rate and sample is not feasible', () => {
+  it('returns sampled manager debt when quote-implied rate is less than manager-implied rate', () => {
     const flashLoanAmount = solveFlashLoanAmountFromImpliedRates({
       equityInCollateralAsset: 500n,
       collateralToDebtRateFromQuote: 8_000n,

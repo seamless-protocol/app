@@ -240,13 +240,9 @@ export function solveFlashLoanAmountFromImpliedRates({
     // Under the linearized model, quoteRate <= managerRate means there is no
     // finite upper bound for debt >= flash-loan. Use the sampled point that is
     // already observed via exact quote + manager preview.
-    const sampledFeasibleFlashLoanAmount =
-      managerDebtAtInitialSample >= flashLoanAmountInitial
-        ? flashLoanAmountInitial
-        : managerDebtAtInitialSample
-    return sampledFeasibleFlashLoanAmount > 0n
-      ? sampledFeasibleFlashLoanAmount
-      : flashLoanAmountInitial
+    return managerDebtAtInitialSample >= flashLoanAmountInitial
+      ? flashLoanAmountInitial
+      : managerDebtAtInitialSample
   }
 
   // Derive a bound for flash-loan debt F such that predicted manager debt covers repayment.
