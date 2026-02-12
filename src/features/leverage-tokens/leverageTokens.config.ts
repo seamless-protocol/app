@@ -816,6 +816,14 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         },
       ],
     },
+    slippagePresets: {
+      mint: {
+        defaultShareSlippage: '1.7',
+        presetsShareSlippage: ['1.0', '1.5', '2.0'],
+        defaultFlashLoanAdjustment: '1.7',
+        presetsFlashLoanAdjustment: ['1.0', '1.5', '2.0'],
+      },
+    },
     test: {
       mintIntegrationTest: {
         equityInCollateralAsset: parseEther('50'),
