@@ -70,10 +70,45 @@ export async function planMint({
     args: [token, equityInCollateralAsset],
   })
 
-  // This price is adding the NAV diff from spot on top of the share slippage
-  const minShares = applySlippageFloor(routerPreview.shares, shareSlippageBps)
+  const flashLoanAmountInitial = routerPreview.debt
+  const debtToCollateralQuoteInitial = await quoteDebtToCollateral({
+    intent: 'exactIn',
+    inToken: debtAsset,
+    outToken: collateralAsset,
+    amountIn: flashLoanAmountInitial,
+    slippageBps: swapSlippageBps,
+  })
 
-  const flashLoanAmount = applySlippageFloor(routerPreview.debt, flashLoanAdjustmentBps)
+  const managerPreviewInitial = await publicClient.readContract({
+    address: getContractAddresses(chainId).leverageManagerV2 as Address,
+    abi: leverageManagerV2Abi,
+    functionName: 'previewDeposit',
+    args: [token, equityInCollateralAsset + debtToCollateralQuoteInitial.out],
+  })
+
+  const exchangeRateScale =
+    10n **
+    BigInt(
+      Math.max(
+        leverageTokenConfig.debtAsset.decimals,
+        leverageTokenConfig.collateralAsset.decimals,
+      ),
+    )
+  const collateralToDebtRateFromQuote =
+    (flashLoanAmountInitial * exchangeRateScale) / debtToCollateralQuoteInitial.out
+  const collateralToDebtRateFromManager =
+    (managerPreviewInitial.debt * exchangeRateScale) /
+    (equityInCollateralAsset + debtToCollateralQuoteInitial.out)
+
+  const flashLoanAmountUnadjusted = solveFlashLoanAmountFromImpliedRates({
+    equityInCollateralAsset,
+    collateralToDebtRateFromQuote,
+    collateralToDebtRateFromManager,
+    exchangeRateScale,
+    flashLoanAmountInitial,
+    managerDebtAtInitialSample: managerPreviewInitial.debt,
+  })
+  const flashLoanAmount = applySlippageFloor(flashLoanAmountUnadjusted, flashLoanAdjustmentBps)
 
   const debtToCollateralQuote = await quoteDebtToCollateral({
     intent: 'exactIn',
@@ -100,6 +135,8 @@ export async function planMint({
       },
     ],
   })
+
+  const minShares = applySlippageFloor(managerPreview.shares, shareSlippageBps)
 
   if (managerPreview.debt < flashLoanAmount) {
     captureMintPlanError({
@@ -182,4 +219,80 @@ export async function planMint({
     quoteSourceName: debtToCollateralQuote.quoteSourceName,
     quoteSourceId: debtToCollateralQuote.quoteSourceId,
   }
+}
+
+function solveFlashLoanAmountFromImpliedRates({
+  equityInCollateralAsset,
+  collateralToDebtRateFromQuote,
+  collateralToDebtRateFromManager,
+  exchangeRateScale,
+  flashLoanAmountInitial,
+  managerDebtAtInitialSample,
+}: {
+  equityInCollateralAsset: bigint
+  collateralToDebtRateFromQuote: bigint
+  collateralToDebtRateFromManager: bigint
+  exchangeRateScale: bigint
+  flashLoanAmountInitial: bigint
+  managerDebtAtInitialSample: bigint
+}): bigint {
+  if (collateralToDebtRateFromQuote <= collateralToDebtRateFromManager) {
+    // Under the linearized model, quoteRate <= managerRate means there is no
+    // finite upper bound for debt >= flash-loan. Use the sampled point that is
+    // already observed via exact quote + manager preview.
+    const sampledFeasibleFlashLoanAmount =
+      managerDebtAtInitialSample >= flashLoanAmountInitial
+        ? flashLoanAmountInitial
+        : managerDebtAtInitialSample
+    return sampledFeasibleFlashLoanAmount > 0n
+      ? sampledFeasibleFlashLoanAmount
+      : flashLoanAmountInitial
+  }
+
+  // Derive a bound for flash-loan debt F such that predicted manager debt covers repayment.
+  //
+  // Definitions (all in base units):
+  // - F = flash-loan debt amount (debt units)
+  // - E = equityInCollateralAsset (collateral units)
+  // - q = collateralToDebtRateFromQuote / exchangeRateScale
+  //       where q is debt-per-collateral from the quote sample
+  // - m = collateralToDebtRateFromManager / exchangeRateScale
+  //       where m is debt-per-collateral from the manager sample
+  //
+  // Approximate relationships:
+  // - quoteOutCollateral(F) ~= F / q
+  // - managerDebt(F) ~= m * (E + quoteOutCollateral(F))
+  //                   ~= m * (E + F / q)
+  //
+  // Safety condition we want:
+  // - managerDebt(F) >= F
+  //
+  // Solve:
+  //   m * (E + F / q) >= F
+  //   mE + (m/q)F >= F
+  //   mE >= F * (1 - m/q)
+  //   F <= mE / (1 - m/q)
+  //   F <= (m * q * E) / (q - m)
+  //
+  // Since rates are scaled integers:
+  // - mScaled = m * exchangeRateScale
+  // - qScaled = q * exchangeRateScale
+  // Substituting and simplifying gives:
+  //   F <= (mScaled * qScaled * E) / (exchangeRateScale * (qScaled - mScaled))
+  const numerator =
+    collateralToDebtRateFromManager * collateralToDebtRateFromQuote * equityInCollateralAsset
+  const denominator =
+    exchangeRateScale * (collateralToDebtRateFromQuote - collateralToDebtRateFromManager)
+
+  const maxFlashLoanSatisfyingInequality = numerator / denominator
+
+  // Defensive fallback: if the inequality-derived bound is zero/negative
+  // (e.g. due to rounding or degenerate sampled rates), use the router
+  // preview baseline rather than returning an invalid flash-loan amount.
+  // This value may still work depending on what the flash loan adjustment parameter is set to.
+  if (maxFlashLoanSatisfyingInequality <= 0n) {
+    return flashLoanAmountInitial
+  }
+
+  return maxFlashLoanSatisfyingInequality
 }
