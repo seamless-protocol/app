@@ -8,6 +8,11 @@ import type { MintPlan } from '@/domain/mint'
 import type { DebtToCollateralSwapConfig } from '@/domain/mint/utils/createDebtToCollateralQuote'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import { useApprovalFlow } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
+import {
+  DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY,
+  DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+  DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+} from '@/features/leverage-tokens/constants'
 import { useDebtToCollateralQuote } from '@/features/leverage-tokens/hooks/mint/useDebtToCollateralQuote'
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
 import { useMintWrite } from '@/features/leverage-tokens/hooks/mint/useMintWrite'
@@ -30,22 +35,21 @@ export class MintExecutionSimulationError extends Error {
   }
 }
 
-const DEFAULT_START_SHARE_SLIPPAGE_BPS = 100
-const DEFAULT_SHARE_SLIPPAGE_INCREMENT_BPS = 100
+const DEFAULT_FLASH_LOAN_ADJUSTMENT_INCREMENT_BPS = 100
 const MAX_ATTEMPTS = 5
 
 export async function testMint({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  startShareSlippageBps = DEFAULT_START_SHARE_SLIPPAGE_BPS,
-  slippageIncrementBps = DEFAULT_SHARE_SLIPPAGE_INCREMENT_BPS,
+  startFlashLoanAdjustmentBps = Number(DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY) * 100,
+  flashLoanAdjustmentIncrementBps = DEFAULT_FLASH_LOAN_ADJUSTMENT_INCREMENT_BPS,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
-  startShareSlippageBps?: number
-  slippageIncrementBps?: number
+  startFlashLoanAdjustmentBps?: number
+  flashLoanAdjustmentIncrementBps?: number
 }) {
   const equityInCollateralAsset =
     leverageTokenConfig.test.mintIntegrationTest.equityInCollateralAsset
@@ -74,8 +78,8 @@ export async function testMint({
     wagmiConfig,
     leverageTokenConfig,
     equityInCollateralAsset,
-    startShareSlippageBps,
-    slippageIncrementBps,
+    startFlashLoanAdjustmentBps,
+    flashLoanAdjustmentIncrementBps,
   })
 
   if (!plan) {
@@ -111,17 +115,17 @@ async function mintWithRetries({
   wagmiConfig,
   leverageTokenConfig,
   equityInCollateralAsset,
-  startShareSlippageBps,
-  slippageIncrementBps,
+  startFlashLoanAdjustmentBps,
+  flashLoanAdjustmentIncrementBps,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
-  startShareSlippageBps: number
-  slippageIncrementBps: number
+  startFlashLoanAdjustmentBps: number
+  flashLoanAdjustmentIncrementBps: number
 }): Promise<MintPlan | undefined> {
-  let shareSlippageBps = startShareSlippageBps
+  let flashLoanAdjustmentBps = startFlashLoanAdjustmentBps
 
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     try {
@@ -130,9 +134,9 @@ async function mintWithRetries({
         wagmiConfig,
         leverageTokenConfig,
         equityInCollateralAsset,
-        shareSlippageBps,
-        swapSlippageBps: 1,
-        flashLoanAdjustmentBps: shareSlippageBps, // Setting to the same value as share slippage works fairly consistently
+        shareSlippageBps: Number(DEFAULT_SLIPPAGE_PERCENT_DISPLAY) * 100,
+        swapSlippageBps: Number(DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY) * 100,
+        flashLoanAdjustmentBps,
       })
 
       return plan
@@ -145,8 +149,8 @@ async function mintWithRetries({
             .includes('try increasing the flash loan adjustment parameter'))
 
       if (isRetryableError && i < MAX_ATTEMPTS - 1) {
-        shareSlippageBps += slippageIncrementBps
-        console.log(`Retrying mint with share slippage bps: ${shareSlippageBps}`)
+        flashLoanAdjustmentBps += flashLoanAdjustmentIncrementBps
+        console.log(`Retrying mint with flash loan adjustment bps: ${flashLoanAdjustmentBps}`)
         continue
       }
 

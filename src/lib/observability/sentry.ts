@@ -192,10 +192,10 @@ export function captureMintPlanError(params: {
     debt: bigint
   }
   debtToCollateralQuote: Quote
-  managerPreview: {
+  managerPreview?: {
     debt: bigint
   }
-  managerMin: {
+  managerMin?: {
     debt: bigint
     shares: bigint
   }
