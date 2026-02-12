@@ -17,7 +17,7 @@ export const DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY = '0.01'
 export const DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY = '0.02'
 
 // Default flash loan adjustment tolerance shown in the UI (percent as string)
-export const DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY = '0.1'
+export const DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY = '0.5'
 
 // Default collateral slippage tolerance shown in the UI (percent as string)
 export const DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY = '0.5'
