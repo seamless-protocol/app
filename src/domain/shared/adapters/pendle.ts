@@ -170,6 +170,7 @@ function mapPendleResponseToQuote(
   return {
     out: outAmount,
     minOut: 0n, // Not used
+    in: inAmount,
     maxIn: inAmount,
     approvalTarget: route.tx.to,
     calls: [

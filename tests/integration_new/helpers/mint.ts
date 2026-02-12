@@ -30,21 +30,21 @@ export class MintExecutionSimulationError extends Error {
   }
 }
 
-const DEFAULT_START_SLIPPAGE_BPS = 100
-const DEFAULT_SLIPPAGE_INCREMENT_BPS = 100
+const DEFAULT_START_SHARE_SLIPPAGE_BPS = 100
+const DEFAULT_SHARE_SLIPPAGE_INCREMENT_BPS = 100
 const MAX_ATTEMPTS = 5
 
 export async function testMint({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  startSlippageBps = DEFAULT_START_SLIPPAGE_BPS,
-  slippageIncrementBps = DEFAULT_SLIPPAGE_INCREMENT_BPS,
+  startShareSlippageBps = DEFAULT_START_SHARE_SLIPPAGE_BPS,
+  slippageIncrementBps = DEFAULT_SHARE_SLIPPAGE_INCREMENT_BPS,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
-  startSlippageBps?: number
+  startShareSlippageBps?: number
   slippageIncrementBps?: number
 }) {
   const equityInCollateralAsset =
@@ -74,7 +74,7 @@ export async function testMint({
     wagmiConfig,
     leverageTokenConfig,
     equityInCollateralAsset,
-    startSlippageBps,
+    startShareSlippageBps,
     slippageIncrementBps,
   })
 
@@ -111,17 +111,17 @@ async function mintWithRetries({
   wagmiConfig,
   leverageTokenConfig,
   equityInCollateralAsset,
-  startSlippageBps,
+  startShareSlippageBps,
   slippageIncrementBps,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
-  startSlippageBps: number
+  startShareSlippageBps: number
   slippageIncrementBps: number
 }): Promise<MintPlan | undefined> {
-  let slippageBps = startSlippageBps
+  let shareSlippageBps = startShareSlippageBps
 
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     try {
@@ -130,18 +130,23 @@ async function mintWithRetries({
         wagmiConfig,
         leverageTokenConfig,
         equityInCollateralAsset,
-        slippageBps,
+        shareSlippageBps,
+        swapSlippageBps: 1,
+        flashLoanAdjustmentBps: shareSlippageBps, // Setting to the same value as share slippage works fairly consistently
       })
 
       return plan
     } catch (error) {
       const isRetryableError =
         error instanceof MintExecutionSimulationError ||
-        (error instanceof Error && error.message.includes('Try increasing your slippage tolerance'))
+        (error instanceof Error &&
+          error.message
+            .toLowerCase()
+            .includes('try increasing the flash loan adjustment parameter'))
 
       if (isRetryableError && i < MAX_ATTEMPTS - 1) {
-        slippageBps += slippageIncrementBps
-        console.log(`Retrying mint with slippage bps: ${slippageBps}`)
+        shareSlippageBps += slippageIncrementBps
+        console.log(`Retrying mint with share slippage bps: ${shareSlippageBps}`)
         continue
       }
 
@@ -157,13 +162,17 @@ async function executeMintFlow({
   wagmiConfig,
   leverageTokenConfig,
   equityInCollateralAsset,
-  slippageBps,
+  shareSlippageBps,
+  swapSlippageBps,
+  flashLoanAdjustmentBps,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   equityInCollateralAsset: bigint
-  slippageBps: number
+  shareSlippageBps: number
+  swapSlippageBps: number
+  flashLoanAdjustmentBps: number
 }): Promise<MintExecutionResult> {
   const addresses = getContractAddresses(leverageTokenConfig.chainId)
 
@@ -188,7 +197,11 @@ async function executeMintFlow({
   // Preview the mint plan
   const { result: mintPlanPreviewResult } = renderHook(
     wagmiConfig,
-    (props: { slippageBps: number }) =>
+    (props: {
+      shareSlippageBps: number
+      swapSlippageBps: number
+      flashLoanAdjustmentBps: number
+    }) =>
       useMintPlanPreview({
         config: wagmiConfig,
         token: leverageTokenConfig.address,
@@ -199,7 +212,7 @@ async function executeMintFlow({
         ...props,
       }),
     {
-      initialProps: { slippageBps },
+      initialProps: { shareSlippageBps, swapSlippageBps, flashLoanAdjustmentBps },
     },
   )
   await waitFor(

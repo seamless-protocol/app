@@ -35,6 +35,7 @@ function createBalmySDKRecorder() {
           buyAmount: { amount: 1n },
           minBuyAmount: { amount: 1n },
           maxSellAmount: { amount: 1n },
+          sellAmount: { amount: 1n },
         }
       }),
       buildTxs: vi.fn().mockReturnValue({

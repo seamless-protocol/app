@@ -9,6 +9,7 @@ import {
   useSwitchChain,
   useWaitForTransactionReceipt,
 } from 'wagmi'
+import { DEFAULT_SHARE_SLIPPAGE_BPS } from '@/domain/shared/adapters/helpers'
 import { parseUsdPrice, toScaledUsd, usdToFixedString } from '@/domain/shared/prices'
 import {
   parseErc20ReceivedFromReceipt,
@@ -26,7 +27,9 @@ import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
 import {
+  DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY,
   DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+  DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
   MIN_MINT_AMOUNT_DISPLAY,
   TOKEN_AMOUNT_DISPLAY_DECIMALS,
 } from '../../constants'
@@ -35,12 +38,12 @@ import { useMintForm } from '../../hooks/mint/useMintForm'
 import { useMintPlanPreview } from '../../hooks/mint/useMintPlanPreview'
 import { useMintSteps } from '../../hooks/mint/useMintSteps'
 import { useMintWrite } from '../../hooks/mint/useMintWrite'
-import { useSlippage } from '../../hooks/mint/useSlippage'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenManagerAssets } from '../../hooks/useLeverageTokenManagerAssets'
 import { useLeverageTokenState } from '../../hooks/useLeverageTokenState'
 import { useLeverageTokenUsdPrice } from '../../hooks/useLeverageTokenUsdPrice'
 import { useMinSharesGuard } from '../../hooks/useMinSharesGuard'
+import { usePercentSlippageInput } from '../../hooks/usePercentSlippageInput'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
 import { ApproveStep } from './ApproveStep'
@@ -187,10 +190,39 @@ export function LeverageTokenMintModal({
     balance: collateralBalanceFormatted,
     price: collateralUsdPrice || 0, // Real-time USD price
   })
-  const { slippage, setSlippage, slippageBps } = useSlippage(
-    leverageTokenAddress,
-    leverageTokenConfig.slippagePresets?.mint?.default ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
-  )
+
+  const {
+    value: shareSlippage,
+    setValue: setShareSlippage,
+    valueBps: shareSlippageBps,
+  } = usePercentSlippageInput({
+    storageKey: `mint-share-slippage-${leverageTokenAddress}`,
+    initial:
+      leverageTokenConfig.slippagePresets?.mint?.defaultShareSlippage ??
+      DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+    fallbackBps: DEFAULT_SHARE_SLIPPAGE_BPS,
+  })
+  const {
+    value: swapSlippage,
+    setValue: setSwapSlippage,
+    valueBps: swapSlippageBps,
+  } = usePercentSlippageInput({
+    storageKey: `mint-swap-slippage-${leverageTokenAddress}`,
+    initial: DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY) * 100,
+  })
+  const {
+    value: flashLoanAdjustment,
+    setValue: setFlashLoanAdjustment,
+    valueBps: flashLoanAdjustmentBps,
+  } = usePercentSlippageInput({
+    storageKey: `mint-flash-loan-adjustment-${leverageTokenAddress}`,
+    initial:
+      leverageTokenConfig.slippagePresets?.mint?.defaultFlashLoanAdjustment ??
+      DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY) * 100,
+  })
+
   const [showAdvanced, setShowAdvanced] = useState(false)
   // Derive expected tokens from preview data (no local state needed)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
@@ -223,16 +255,6 @@ export function LeverageTokenMintModal({
     ...(contractAddresses.multicallExecutor
       ? { fromAddress: contractAddresses.multicallExecutor }
       : {}),
-  })
-
-  const planPreview = useMintPlanPreview({
-    config: wagmiConfig,
-    token: leverageTokenAddress,
-    equityInCollateralAsset: form.amountRaw,
-    slippageBps,
-    chainId: leverageTokenConfig.chainId,
-    ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
-    enabled: isOpen,
   })
 
   // Track receipt (declared before expectedTokens; effect declared below after expectedTokens)
@@ -338,6 +360,18 @@ export function LeverageTokenMintModal({
     collateralBalanceFormatted,
     collateralUsdPrice,
   ])
+
+  const planPreview = useMintPlanPreview({
+    config: wagmiConfig,
+    token: leverageTokenAddress,
+    equityInCollateralAsset: form.amountRaw,
+    shareSlippageBps,
+    swapSlippageBps,
+    flashLoanAdjustmentBps,
+    chainId: leverageTokenConfig.chainId,
+    ...(quoteDebtToCollateral.quote ? { quote: quoteDebtToCollateral.quote } : {}),
+    enabled: isOpen,
+  })
 
   // Handle approval side-effects in one place
   useEffect(() => {
@@ -763,7 +797,9 @@ export function LeverageTokenMintModal({
           ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
           token: leverageTokenAddress,
           inputAsset: leverageTokenConfig.collateralAsset.address,
-          slippageBps,
+          shareSlippageBps,
+          swapSlippageBps,
+          flashLoanAdjustmentBps,
           amountIn: form.amount,
           expectedOut: String(expectedTokens),
           ...(provider ? { provider } : {}),
@@ -821,8 +857,12 @@ export function LeverageTokenMintModal({
             onPercentageClick={handlePercentageClick}
             showAdvanced={showAdvanced}
             onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
-            slippage={slippage}
-            onSlippageChange={setSlippage}
+            shareSlippage={shareSlippage}
+            onShareSlippageChange={setShareSlippage}
+            swapSlippage={swapSlippage}
+            onSwapSlippageChange={setSwapSlippage}
+            flashLoanAdjustment={flashLoanAdjustment}
+            onFlashLoanAdjustmentChange={setFlashLoanAdjustment}
             isCollateralBalanceLoading={isCollateralBalanceLoading}
             isUsdPriceLoading={isUsdPriceLoading}
             isCalculating={isCalculating}
@@ -935,7 +975,7 @@ export function LeverageTokenMintModal({
       description={currentStep === 'success' ? 'Your leverage tokens have been successfully.' : ''}
       currentStep={currentStep}
       steps={steps}
-      className="max-w-lg border border-[var(--divider-line)] bg-[var(--surface-card)]"
+      className="max-w-xl border border-[var(--divider-line)] bg-[var(--surface-card)]"
       closable={!(currentStep === 'pending' || (currentStep === 'approve' && Boolean(approveHash)))}
     >
       {renderStepContent()}

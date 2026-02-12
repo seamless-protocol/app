@@ -22,10 +22,10 @@ export interface LifiAdapterOptions {
 }
 
 type StepEstimate = {
-  toAmount?: string
-  toAmountMin?: string
-  approvalAddress?: string
-  fromAmount?: string
+  toAmount: string
+  toAmountMin: string
+  approvalAddress: string
+  fromAmount: string
 }
 
 type TransactionRequest = {
@@ -219,17 +219,20 @@ function mapStepToQuote(step: Step, wantsNativeIn: boolean) {
   const data = tx?.data
   if (!data) throw new Error('LiFi quote missing transaction data')
 
-  const expectedStr = step.estimate?.toAmount
-  const minStr = step.estimate?.toAmountMin
-  // Prefer minOut (toAmountMin) for safer defaults; fall back to toAmount
-  const out = expectedStr ? BigInt(expectedStr) : minStr ? BigInt(minStr) : 0n
-  const minOut = minStr ? BigInt(minStr) : out
-  const maxIn = step.estimate?.fromAmount ? BigInt(step.estimate.fromAmount) : undefined
+  const estimate = step.estimate
+  if (!estimate) throw new Error('LiFi quote missing estimate')
+
+  const out = BigInt(estimate.toAmount)
+  const minOut = BigInt(estimate.toAmountMin)
+
+  const amountIn = BigInt(estimate.fromAmount)
+  const maxIn = BigInt(estimate.fromAmount)
 
   return {
     out,
     minOut,
-    ...(typeof maxIn === 'bigint' ? { maxIn } : {}),
+    in: amountIn,
+    maxIn,
     approvalTarget: getAddress(approvalTarget),
     calls: [{ target: getAddress(tx?.to), data, value: 0n }],
     wantsNativeIn,

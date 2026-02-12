@@ -9,7 +9,9 @@ export interface BalmyAdapterOptions {
   chainId: number
   fromAddress: Address
   toAddress: Address
+  sourceWhitelist?: Array<string> | undefined
   excludeAdditionalSources?: Array<string> | undefined
+  sourceConfig?: BalmyQuoteRequest['sourceConfig'] | undefined
 }
 
 export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
@@ -36,6 +38,17 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       ...(opts.excludeAdditionalSources ?? []),
     ]
 
+    const filters = opts.sourceWhitelist
+      ? { includeSources: opts.sourceWhitelist }
+      : { excludeSources }
+
+    const sourceConfig: BalmyQuoteRequest['sourceConfig'] = {
+      global: { disableValidation: true, ...(opts.sourceConfig?.global ?? {}) },
+      ...(opts.sourceConfig?.custom !== undefined
+        ? { custom: { ...opts.sourceConfig.custom } }
+        : {}),
+    }
+
     const request: BalmyQuoteRequest = {
       chainId: opts.chainId,
       sellToken: inToken,
@@ -48,8 +61,8 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       slippagePercentage,
       takerAddress: opts.fromAddress,
       recipient: opts.toAddress,
-      filters: { excludeSources },
-      sourceConfig: { global: { disableValidation: true } },
+      filters,
+      sourceConfig,
     }
 
     if (import.meta.env['VITE_BALMY_DEBUG'] === 'true') {
@@ -73,7 +86,7 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
       quotes: {
         [quote.source.id]: quote,
       },
-      sourceConfig: { global: { disableValidation: true } },
+      sourceConfig,
     })
 
     const tx = await txs[quote.source.id]
@@ -86,6 +99,7 @@ export function createBalmyQuoteAdapter(opts: BalmyAdapterOptions): QuoteFn {
     return {
       out: quote.buyAmount.amount,
       minOut: quote.minBuyAmount.amount,
+      in: quote.sellAmount.amount,
       maxIn: quote.maxSellAmount.amount,
       approvalTarget: allowanceTarget,
       calls: [

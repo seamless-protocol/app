@@ -15,8 +15,12 @@ import { useTokenApprove } from '../../../../lib/hooks/useTokenApprove'
 import { useTokenBalance } from '../../../../lib/hooks/useTokenBalance'
 import { useUsdPrices } from '../../../../lib/prices/useUsdPrices'
 import { formatTokenAmountFromBase } from '../../../../lib/utils/formatting'
-import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY, TOKEN_AMOUNT_DISPLAY_DECIMALS } from '../../constants'
-import { useSlippage } from '../../hooks/mint/useSlippage'
+import {
+  DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY,
+  DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY,
+  DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+  TOKEN_AMOUNT_DISPLAY_DECIMALS,
+} from '../../constants'
 import { useRedeemExecution } from '../../hooks/redeem/useRedeemExecution'
 import { useRedeemForm } from '../../hooks/redeem/useRedeemForm'
 import { useRedeemPlanPreview } from '../../hooks/redeem/useRedeemPlanPreview'
@@ -24,6 +28,7 @@ import { useRedeemSteps } from '../../hooks/redeem/useRedeemSteps'
 import { useLeverageTokenFees } from '../../hooks/useLeverageTokenFees'
 import { useLeverageTokenUserPosition } from '../../hooks/useLeverageTokenUserPosition'
 import { useMinSharesGuard } from '../../hooks/useMinSharesGuard'
+import { usePercentSlippageInput } from '../../hooks/usePercentSlippageInput'
 import { getLeverageTokenConfig } from '../../leverageTokens.config'
 import { invalidateLeverageTokenQueries } from '../../utils/invalidation'
 import { ApproveStep } from '../leverage-token-mint-modal/ApproveStep'
@@ -180,10 +185,36 @@ export function LeverageTokenRedeemModal({
     }
   }, [leverageTokenUsdPrice, selectedToken])
 
-  const { slippage, setSlippage, slippageBps } = useSlippage(
-    leverageTokenAddress,
-    leverageTokenConfig.slippagePresets?.redeem?.default ?? DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
-  )
+  const {
+    value: collateralSlippage,
+    setValue: setCollateralSlippage,
+    valueBps: collateralSlippageBps,
+  } = usePercentSlippageInput({
+    storageKey: `redeem-collateral-slippage-${leverageTokenAddress}`,
+    initial:
+      leverageTokenConfig.slippagePresets?.redeem?.defaultCollateralSlippage ??
+      DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY) * 100,
+  })
+  const {
+    value: swapSlippage,
+    setValue: setSwapSlippage,
+    valueBps: swapSlippageBps,
+  } = usePercentSlippageInput({
+    storageKey: `redeem-swap-slippage-${leverageTokenAddress}`,
+    initial: DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY) * 100,
+  })
+  const {
+    value: collateralSwapAdjustment,
+    setValue: setCollateralSwapAdjustment,
+    valueBps: collateralSwapAdjustmentBps,
+  } = usePercentSlippageInput({
+    storageKey: `redeem-collateral-swap-adjustment-${leverageTokenAddress}`,
+    initial: DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY,
+    fallbackBps: Number(DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY) * 100,
+  })
+
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined)
   const [error, setError] = useState('')
@@ -230,7 +261,9 @@ export function LeverageTokenRedeemModal({
   const planPreview = useRedeemPlanPreview({
     token: leverageTokenAddress,
     sharesToRedeem: form.amountRaw,
-    slippageBps,
+    collateralSlippageBps,
+    swapSlippageBps,
+    collateralSwapAdjustmentBps,
     chainId: leverageTokenConfig.chainId,
     enabled: isOpen,
     ...(exec.quote ? { quote: exec.quote } : {}),
@@ -636,7 +669,8 @@ export function LeverageTokenRedeemModal({
         ...(typeof connectedChainId === 'number' ? { connectedChainId } : {}),
         token: leverageTokenAddress,
         inputAsset: leverageTokenAddress,
-        slippageBps,
+        collateralSlippageBps,
+        swapSlippageBps,
         amountIn: form.amount ?? '',
         expectedOut: String(expectedTokens),
         ...(provider ? { provider } : {}),
@@ -845,8 +879,12 @@ export function LeverageTokenRedeemModal({
             onPercentageClick={handlePercentageClickWithBalance}
             showAdvanced={showAdvanced}
             onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
-            slippage={slippage}
-            onSlippageChange={setSlippage}
+            collateralSlippage={collateralSlippage}
+            onCollateralSlippageChange={setCollateralSlippage}
+            swapSlippage={swapSlippage}
+            onSwapSlippageChange={setSwapSlippage}
+            collateralSwapAdjustment={collateralSwapAdjustment}
+            onCollateralSwapAdjustmentChange={setCollateralSwapAdjustment}
             isLeverageTokenBalanceLoading={isLeverageTokenBalanceLoading}
             isUsdPriceLoading={isPositionLoading}
             isCalculating={isCalculating}
@@ -956,7 +994,7 @@ export function LeverageTokenRedeemModal({
       }
       currentStep={currentStep}
       steps={steps}
-      className="max-w-lg border border-[var(--divider-line)] bg-[var(--surface-card)]"
+      className="max-w-xl border border-[var(--divider-line)] bg-[var(--surface-card)]"
       closable={!(currentStep === 'pending' || (currentStep === 'approve' && Boolean(approveHash)))}
     >
       {renderStepContent()}

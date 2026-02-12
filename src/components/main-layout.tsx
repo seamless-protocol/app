@@ -139,7 +139,12 @@ export function MainLayout({ children }: MainLayoutProps) {
   } = useDeFiLlamaProtocolTVL()
 
   useEffect(() => {
-    ReactGA.initialize(import.meta.env['VITE_GA4_MEASUREMENT_ID'], {
+    const measurementId = import.meta.env['VITE_GA4_MEASUREMENT_ID']
+    if (!measurementId) {
+      return
+    }
+
+    ReactGA.initialize(measurementId, {
       gaOptions: {
         debug_mode: import.meta.env['MODE'] === 'development',
       },

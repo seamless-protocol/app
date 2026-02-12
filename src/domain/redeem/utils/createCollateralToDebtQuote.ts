@@ -1,4 +1,4 @@
-import type { buildSDK } from '@seamless-defi/defi-sdk'
+import type { QuoteRequest as BalmyQuoteRequest, buildSDK } from '@seamless-defi/defi-sdk'
 import type { Address, PublicClient } from 'viem'
 import { base } from 'viem/chains'
 import {
@@ -36,10 +36,20 @@ export type SwapAdapterType =
 const VELORA_VALIDATED_EXACT_OUT_METHODS = ['swapExactAmountOut'] as const
 
 export type CollateralToDebtSwapConfig =
-  | {
-      type: 'balmy'
-      excludeAdditionalSources?: Array<string>
-    }
+  | (
+      | {
+          type: 'balmy'
+          excludeAdditionalSources?: Array<string>
+          sourceConfig?: BalmyQuoteRequest['sourceConfig']
+          sourceWhitelist?: never
+        }
+      | {
+          type: 'balmy'
+          sourceWhitelist?: Array<string>
+          sourceConfig?: BalmyQuoteRequest['sourceConfig']
+          excludeAdditionalSources?: never
+        }
+    )
   | {
       type: 'uniswapV3'
       poolKey: UniswapV3PoolKey
@@ -93,6 +103,8 @@ export function createCollateralToDebtQuote({
       fromAddress: fromAddress ?? routerAddress,
       balmySDK,
       excludeAdditionalSources: swap.excludeAdditionalSources,
+      sourceWhitelist: swap.sourceWhitelist,
+      sourceConfig: swap.sourceConfig,
     })
     return { quote, adapterType: 'balmy' }
   }

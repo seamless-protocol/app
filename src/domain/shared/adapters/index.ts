@@ -3,7 +3,7 @@ export {
   applySlippageFloor,
   BPS_DENOMINATOR,
   bpsToDecimalString,
-  DEFAULT_SLIPPAGE_BPS,
+  DEFAULT_SHARE_SLIPPAGE_BPS,
   validateSlippage,
 } from './helpers'
 export { createInfinifiQuoteAdapter, type InfinifiAdapterOptions } from './infinifi'

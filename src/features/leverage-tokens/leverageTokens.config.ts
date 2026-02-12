@@ -56,7 +56,7 @@ interface ResourceItem {
   highlight?: boolean
 }
 
-type SwapConfig = CollateralToDebtSwapConfig
+export type SwapConfig = CollateralToDebtSwapConfig
 
 // Leverage token configuration interface
 export interface LeverageTokenConfig {
@@ -124,12 +124,14 @@ export interface LeverageTokenConfig {
 
   slippagePresets?: {
     mint?: {
-      default: string
-      presets: Array<string>
+      defaultShareSlippage?: string
+      defaultFlashLoanAdjustment?: string
+      presetsShareSlippage?: Array<string>
+      presetsFlashLoanAdjustment?: Array<string>
     }
     redeem?: {
-      default: string
-      presets: Array<string>
+      defaultCollateralSlippage?: string
+      presetsCollateralSlippage?: Array<string>
     }
   }
 
@@ -199,7 +201,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       },
       collateralToDebt: {
         type: 'balmy',
-        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {
@@ -290,7 +291,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       },
       collateralToDebt: {
         type: 'balmy',
-        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {
@@ -492,7 +492,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       },
       collateralToDebt: {
         type: 'balmy',
-        excludeAdditionalSources: ['odos'],
       },
     },
     relatedResources: {
@@ -761,7 +760,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
       },
       collateralToDebt: {
         type: 'balmy',
-        excludeAdditionalSources: ['odos'],
+        excludeAdditionalSources: ['paraswap'],
       },
     },
     relatedResources: {
@@ -816,12 +815,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
           },
         },
       ],
-    },
-    slippagePresets: {
-      mint: {
-        default: '0.7',
-        presets: ['0.5', '1.0', '1.5'],
-      },
     },
     test: {
       mintIntegrationTest: {

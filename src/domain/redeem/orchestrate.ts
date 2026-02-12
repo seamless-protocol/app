@@ -8,8 +8,13 @@
 
 import type { Address, Hash } from 'viem'
 import type { Config } from 'wagmi'
-import { contractAddresses, getContractAddresses } from '@/lib/contracts/addresses'
+import {
+  contractAddresses,
+  getContractAddresses,
+  type SupportedChainId,
+} from '@/lib/contracts/addresses'
 import { executeRedeem } from './exec/execute'
+import { executeRedeemWithVelora } from './exec/execute.velora'
 import type { RedeemPlan } from './planner/plan'
 
 // Keep parameter types simple to avoid brittle codegen coupling
@@ -85,6 +90,66 @@ export async function orchestrateRedeem(params: {
         throw new Error(`Multicall executor address required on chain ${chainId}`)
       })(),
     swapCalls: plan.calls,
+    routerAddress:
+      routerAddress ||
+      (contractAddresses[chainId]?.leverageRouterV2 as Address | undefined) ||
+      (() => {
+        throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
+      })(),
+    chainId,
+  })
+  return { plan, ...tx }
+}
+
+export async function orchestrateRedeemWithVelora(params: {
+  config: Config
+  account: AccountArg
+  token: TokenArg
+  plan: RedeemPlan
+  /** Optional overrides when using VNet/custom deployments */
+  routerAddress?: Address
+  managerAddress?: Address
+  /** Chain ID to execute the transaction on */
+  chainId: SupportedChainId
+}): Promise<OrchestrateRedeemResult> {
+  const { config, account, token, plan, chainId } = params
+
+  const envRouter = import.meta.env['VITE_ROUTER_V2_ADDRESS'] as Address | undefined
+  // Resolve chain-scoped addresses first (respects Tenderly overrides), then allow explicit/env overrides
+  const chainAddresses = getContractAddresses(chainId)
+  const routerAddress = params.routerAddress || chainAddresses.leverageRouterV2 || envRouter
+  if (!routerAddress) {
+    throw new Error(`LeverageRouterV2 address required on chain ${chainId}`)
+  }
+
+  const tx = await executeRedeemWithVelora({
+    config,
+    token,
+    account,
+    sharesToRedeem: plan.sharesToRedeem,
+    minCollateralForSender: plan.minCollateralForSender,
+    veloraAdapter:
+      (chainAddresses.veloraAdapter as Address | undefined) ||
+      ((): Address => {
+        throw new Error(`Velora adapter address required on chain ${chainId}`)
+      })(),
+    augustus:
+      (chainAddresses.augustus as Address | undefined) ||
+      ((): Address => {
+        throw new Error(`Augustus address required on chain ${chainId}`)
+      })(),
+    // See https://github.com/seamless-protocol/leverage-tokens/blob/b0020744a2b58ed5a7d9ab4511fe4d7ec3cddc2d/test/integration/1/LeverageRouter/RedeemWithVelora.t.sol#L13
+    // for validation of these offsets
+    offsets: {
+      exactAmount: 132n,
+      limitAmount: 100n,
+      quotedAmount: 164n,
+    },
+    swapData:
+      (plan.calls?.[0]?.data as `0x${string}` | undefined) ||
+      ((): `0x${string}` => {
+        throw new Error(`Swap data required for redeemWithVelora on chain ${chainId}`)
+      })(),
     routerAddress:
       routerAddress ||
       (contractAddresses[chainId]?.leverageRouterV2 as Address | undefined) ||

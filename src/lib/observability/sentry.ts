@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react'
+import type { Quote } from '@/domain/shared/adapters/types'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('observability')
@@ -100,7 +101,10 @@ export function captureTxError(params: {
   token: string
   inputAsset?: string
   outputAsset?: string
-  slippageBps?: number
+  collateralSlippageBps?: number
+  shareSlippageBps?: number
+  swapSlippageBps?: number
+  flashLoanAdjustmentBps?: number
   amountIn?: string
   expectedOut?: string
   provider?: string
@@ -116,7 +120,10 @@ export function captureTxError(params: {
     token,
     inputAsset,
     outputAsset,
-    slippageBps,
+    collateralSlippageBps,
+    shareSlippageBps,
+    swapSlippageBps,
+    flashLoanAdjustmentBps,
     amountIn,
     expectedOut,
     provider,
@@ -140,7 +147,10 @@ export function captureTxError(params: {
       token,
       inputAsset,
       outputAsset,
-      slippageBps,
+      collateralSlippageBps,
+      shareSlippageBps,
+      swapSlippageBps,
+      flashLoanAdjustmentBps,
       amountIn,
       expectedOut,
       provider,
@@ -158,7 +168,10 @@ export function captureTxError(params: {
     token,
     ...(inputAsset ? { inputAsset } : {}),
     ...(outputAsset ? { outputAsset } : {}),
-    ...(typeof slippageBps === 'number' ? { slippageBps } : {}),
+    ...(typeof collateralSlippageBps === 'number' ? { collateralSlippageBps } : {}),
+    ...(typeof shareSlippageBps === 'number' ? { shareSlippageBps } : {}),
+    ...(typeof flashLoanAdjustmentBps === 'number' ? { flashLoanAdjustmentBps } : {}),
+    ...(typeof swapSlippageBps === 'number' ? { swapSlippageBps } : {}),
     ...(amountIn ? { amountIn } : {}),
     ...(expectedOut ? { expectedOut } : {}),
     ...(provider ? { provider } : {}),
@@ -166,5 +179,123 @@ export function captureTxError(params: {
     ...(decodedName ? { decodedName } : {}),
     ...(routeTag ? { route: routeTag } : {}),
     status,
+  })
+}
+
+export function captureMintPlanError(params: {
+  errorString: string
+  shareSlippageBps: number
+  swapSlippageBps: number
+  flashLoanAdjustmentBps: number
+  routerPreview: {
+    shares: bigint
+    debt: bigint
+  }
+  debtToCollateralQuote: Quote
+  managerPreview: {
+    debt: bigint
+  }
+  managerMin: {
+    debt: bigint
+    shares: bigint
+  }
+  flashLoanAmount: bigint
+}) {
+  const {
+    errorString,
+    shareSlippageBps,
+    swapSlippageBps,
+    flashLoanAdjustmentBps,
+    routerPreview,
+    debtToCollateralQuote,
+    managerPreview,
+    managerMin,
+    flashLoanAmount,
+  } = params
+
+  Sentry.addBreadcrumb({
+    category: 'mint_plan',
+    level: 'error',
+    message: errorString,
+    data: {
+      shareSlippageBps,
+      swapSlippageBps,
+      flashLoanAdjustmentBps,
+      routerPreview,
+      debtToCollateralQuote,
+      managerPreview,
+      managerMin,
+      flashLoanAmount,
+    },
+  })
+
+  logger.error('Mint plan error', {
+    errorString,
+    shareSlippageBps,
+    swapSlippageBps,
+    flashLoanAdjustmentBps,
+    routerPreview,
+    debtToCollateralQuote,
+    managerPreview,
+    managerMin,
+    flashLoanAmount,
+  })
+}
+
+export function captureRedeemPlanError(params: {
+  errorString: string
+  collateralSlippageBps: number
+  swapSlippageBps: number
+  collateralSwapAdjustmentBps: number
+  previewRedeem: {
+    collateral: bigint
+    debt: bigint
+    shares: bigint
+    treasuryFee: bigint
+    tokenFee: bigint
+  }
+  previewEquity: bigint
+  minCollateralForSender?: bigint
+  collateralToSpend?: bigint
+  collateralToDebtQuote?: Quote
+}) {
+  const {
+    errorString,
+    collateralSlippageBps,
+    swapSlippageBps,
+    collateralSwapAdjustmentBps,
+    previewRedeem,
+    previewEquity,
+    minCollateralForSender,
+    collateralToDebtQuote,
+    collateralToSpend,
+  } = params
+
+  Sentry.addBreadcrumb({
+    category: 'redeem_plan',
+    level: 'error',
+    message: errorString,
+    data: {
+      collateralSlippageBps,
+      swapSlippageBps,
+      collateralSwapAdjustmentBps,
+      previewRedeem,
+      previewEquity,
+      minCollateralForSender,
+      collateralToSpend,
+      collateralToDebtQuote,
+    },
+  })
+
+  logger.error('Redeem plan error', {
+    errorString,
+    collateralSlippageBps,
+    swapSlippageBps,
+    collateralSwapAdjustmentBps,
+    previewRedeem,
+    previewEquity,
+    minCollateralForSender,
+    collateralToSpend,
+    collateralToDebtQuote,
   })
 }

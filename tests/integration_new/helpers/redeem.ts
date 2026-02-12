@@ -1,17 +1,22 @@
 import type { AnvilTestClient } from '@morpho-org/test'
 import { waitFor } from '@morpho-org/test-wagmi'
 import { act } from '@testing-library/react'
-import type { Address } from 'viem'
+import { type Address, parseEther } from 'viem'
 import { expect } from 'vitest'
 import type { Config } from 'wagmi'
 import type { CollateralToDebtSwapConfig, RedeemPlan } from '@/domain/redeem'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import { useApprovalFlow } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
+import {
+  DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY,
+  DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY,
+  DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
+} from '@/features/leverage-tokens/constants'
 import { useCollateralToDebtQuote } from '@/features/leverage-tokens/hooks/redeem/useCollateralToDebtQuote'
 import { useRedeemExecution } from '@/features/leverage-tokens/hooks/redeem/useRedeemExecution'
 import { useRedeemPlanPreview } from '@/features/leverage-tokens/hooks/redeem/useRedeemPlanPreview'
 import type { LeverageTokenConfig } from '@/features/leverage-tokens/leverageTokens.config'
-import { getContractAddresses } from '@/lib/contracts'
+import { getContractAddresses, lendingAdapterAbi, leverageManagerV2Abi } from '@/lib/contracts'
 import { readLeverageTokenBalanceOf } from '@/lib/contracts/generated'
 import { testMint } from './mint'
 import { renderHook } from './wagmi'
@@ -30,22 +35,24 @@ export class RedeemExecutionSimulationError extends Error {
   }
 }
 
-const DEFAULT_START_SLIPPAGE_BPS = 100
-const DEFAULT_SLIPPAGE_INCREMENT_BPS = 100
+const DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_INCREMENT_BPS = 5
 const MAX_ATTEMPTS = 5
 
 export async function testRedeem({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  startSlippageBps = DEFAULT_START_SLIPPAGE_BPS,
-  slippageIncrementBps = DEFAULT_SLIPPAGE_INCREMENT_BPS,
+  startCollateralSwapAdjustmentBps = Number(DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY) *
+    100,
+  collateralSwapAdjustmentIncrementBps = DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_INCREMENT_BPS,
+  debtIncreaseBetweenPlanAndRedeemAmount,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
-  startSlippageBps?: number
-  slippageIncrementBps?: number
+  startCollateralSwapAdjustmentBps?: number
+  collateralSwapAdjustmentIncrementBps?: number
+  debtIncreaseBetweenPlanAndRedeemAmount?: bigint
 }) {
   await testMint({
     client,
@@ -71,8 +78,9 @@ export async function testRedeem({
     wagmiConfig,
     leverageTokenConfig,
     leverageTokenBalanceBefore,
-    startSlippageBps,
-    slippageIncrementBps,
+    startCollateralSwapAdjustmentBps,
+    collateralSwapAdjustmentIncrementBps,
+    ...(debtIncreaseBetweenPlanAndRedeemAmount ? { debtIncreaseBetweenPlanAndRedeemAmount } : {}),
   })
 
   if (!plan) {
@@ -109,17 +117,19 @@ async function redeemWithRetries({
   wagmiConfig,
   leverageTokenConfig,
   leverageTokenBalanceBefore,
-  startSlippageBps,
-  slippageIncrementBps,
+  startCollateralSwapAdjustmentBps,
+  collateralSwapAdjustmentIncrementBps,
+  debtIncreaseBetweenPlanAndRedeemAmount,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   leverageTokenBalanceBefore: bigint
-  startSlippageBps: number
-  slippageIncrementBps: number
+  startCollateralSwapAdjustmentBps: number
+  collateralSwapAdjustmentIncrementBps: number
+  debtIncreaseBetweenPlanAndRedeemAmount?: bigint
 }): Promise<RedeemPlan | undefined> {
-  let slippageBps = startSlippageBps
+  let collateralSwapAdjustmentBps = startCollateralSwapAdjustmentBps
 
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     try {
@@ -128,18 +138,26 @@ async function redeemWithRetries({
         wagmiConfig,
         leverageTokenConfig,
         sharesToRedeem: leverageTokenBalanceBefore,
-        slippageBps,
+        collateralSlippageBps: Number(DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY) * 100,
+        swapSlippageBps: Number(DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY) * 100,
+        collateralSwapAdjustmentBps,
+        ...(debtIncreaseBetweenPlanAndRedeemAmount
+          ? { debtIncreaseBetweenPlanAndRedeemAmount }
+          : {}),
       })
 
       return plan
     } catch (error) {
       const isRetryableError =
         error instanceof RedeemExecutionSimulationError ||
-        (error instanceof Error && error.message.includes('Try increasing your slippage tolerance'))
+        (error instanceof Error &&
+          error.message.toLowerCase().includes('try increasing the collateral swap adjustment'))
 
       if (isRetryableError && i < MAX_ATTEMPTS - 1) {
-        slippageBps += slippageIncrementBps
-        console.log(`Retrying redeem with slippage bps: ${slippageBps}`)
+        collateralSwapAdjustmentBps += collateralSwapAdjustmentIncrementBps
+        console.log(
+          `Retrying redeem with collateral swap adjustment bps: ${collateralSwapAdjustmentBps}`,
+        )
         continue
       }
 
@@ -155,13 +173,19 @@ async function executeRedeemFlow({
   wagmiConfig,
   leverageTokenConfig,
   sharesToRedeem,
-  slippageBps,
+  collateralSlippageBps,
+  swapSlippageBps,
+  collateralSwapAdjustmentBps,
+  debtIncreaseBetweenPlanAndRedeemAmount,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
   sharesToRedeem: bigint
-  slippageBps: number
+  collateralSlippageBps: number
+  swapSlippageBps: number
+  collateralSwapAdjustmentBps: number
+  debtIncreaseBetweenPlanAndRedeemAmount?: bigint
 }): Promise<RedeemExecutionResult> {
   const addresses = getContractAddresses(leverageTokenConfig.chainId)
 
@@ -185,7 +209,11 @@ async function executeRedeemFlow({
   // Preview the redeem plan
   const { result: redeemPlanPreviewResult } = renderHook(
     wagmiConfig,
-    (props: { slippageBps: number }) =>
+    (props: {
+      collateralSlippageBps: number
+      swapSlippageBps: number
+      collateralSwapAdjustmentBps: number
+    }) =>
       useRedeemPlanPreview({
         token: leverageTokenConfig.address,
         sharesToRedeem,
@@ -195,7 +223,7 @@ async function executeRedeemFlow({
         ...props,
       }),
     {
-      initialProps: { slippageBps },
+      initialProps: { collateralSlippageBps, swapSlippageBps, collateralSwapAdjustmentBps },
     },
   )
   await waitFor(
@@ -215,6 +243,17 @@ async function executeRedeemFlow({
   const plan = redeemPlanPreviewResult.current.plan
   if (!plan) {
     throw new Error('Redeem plan not found after previewing with slippage retries')
+  }
+
+  // If debtIncreaseBetweenPlanAndRedeemAmount is provided, increase the LT's total debt by the given amount
+  if (debtIncreaseBetweenPlanAndRedeemAmount) {
+    await increaseDebtBetweenPlanAndRedeem({
+      client,
+      leverageTokenConfig,
+      sharesToRedeem,
+      debtIncreaseBetweenPlanAndRedeemAmount,
+      leverageManagerAddress: addresses.leverageManagerV2 as Address,
+    })
   }
 
   // Approve the leverage token shares from the user to be spent by the leverage router
@@ -267,5 +306,51 @@ async function executeRedeemFlow({
     return { plan }
   } catch (error) {
     throw new RedeemExecutionSimulationError(error)
+  }
+}
+
+async function increaseDebtBetweenPlanAndRedeem({
+  client,
+  leverageTokenConfig,
+  sharesToRedeem,
+  debtIncreaseBetweenPlanAndRedeemAmount,
+  leverageManagerAddress,
+}: {
+  client: AnvilTestClient
+  leverageTokenConfig: LeverageTokenConfig
+  sharesToRedeem: bigint
+  debtIncreaseBetweenPlanAndRedeemAmount: bigint
+  leverageManagerAddress: Address
+}) {
+  const previewBeforeBorrow = await client.readContract({
+    address: getContractAddresses(leverageTokenConfig.chainId).leverageManagerV2 as Address,
+    abi: leverageManagerV2Abi,
+    functionName: 'previewRedeem',
+    args: [leverageTokenConfig.address, sharesToRedeem],
+  })
+
+  await client.setBalance({
+    address: leverageManagerAddress,
+    value: parseEther('1'),
+  })
+  await client.writeContract({
+    address: '0xe33Eaf6EE64f4B9353ff2ce3748FA05EEb9bd809' as Address,
+    abi: lendingAdapterAbi,
+    functionName: 'borrow',
+    args: [debtIncreaseBetweenPlanAndRedeemAmount],
+    account: leverageManagerAddress,
+  })
+
+  const previewAfterBorrow = await client.readContract({
+    address: getContractAddresses(leverageTokenConfig.chainId).leverageManagerV2 as Address,
+    abi: leverageManagerV2Abi,
+    functionName: 'previewRedeem',
+    args: [leverageTokenConfig.address, sharesToRedeem],
+  })
+
+  if (previewAfterBorrow.debt <= previewBeforeBorrow.debt) {
+    throw new Error(
+      `Debt required for redeem of shares after increasing debt is not greater than before. Increase debtIncreaseBetweenPlanAndRedeemAmount for this test.`,
+    )
   }
 }

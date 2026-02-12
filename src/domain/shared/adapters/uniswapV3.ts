@@ -246,6 +246,8 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
       return {
         out: targetOut,
         minOut: targetOut,
+        in: requiredIn,
+        maxIn: maxIn,
         approvalTarget: getAddress(router),
         calls: [{ target: getAddress(router), data: calldata, value: callValue }],
         deadline,
@@ -286,6 +288,8 @@ export function createUniswapV3QuoteAdapter(options: UniswapV3QuoteOptions): Quo
     return {
       out: amountOut,
       minOut,
+      in: amountIn,
+      maxIn: amountIn,
       approvalTarget: getAddress(router),
       calls: [{ target: getAddress(router), data: calldata, value: callValue }],
       deadline,

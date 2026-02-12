@@ -22,6 +22,7 @@ function createMockBalmySDK(overrides?: { mockQuote?: any; txResponse?: any }) {
     buyAmount: { amount: 200n },
     minBuyAmount: { amount: 180n },
     maxSellAmount: { amount: 220n },
+    sellAmount: { amount: 210n },
   }
 
   const txResponse = overrides?.txResponse ?? { data: '0xdeadbeef' }
@@ -140,7 +141,8 @@ describe('createBalmyQuoteAdapter', () => {
       },
       buyAmount: { amount: 200n },
       minBuyAmount: { amount: 180n },
-      maxSellAmount: { amount: 220n },
+      maxSellAmount: { amount: 230n },
+      sellAmount: { amount: 220n },
       customData: {
         tx: {
           to: getAddress('0x9999999999999999999999999999999999999999'),
@@ -198,6 +200,7 @@ describe('createBalmyQuoteAdapter', () => {
       buyAmount: { amount: 300n },
       minBuyAmount: { amount: 250n },
       maxSellAmount: { amount: 350n },
+      sellAmount: { amount: 340n },
     }
     getBestQuote.mockResolvedValueOnce(namelessQuote as any)
 
@@ -271,6 +274,47 @@ describe('createBalmyQuoteAdapter', () => {
       config: {
         choose: { by: 'most-swapped', using: 'max sell/min buy amounts' },
       },
+    })
+  })
+
+  it('passes through custom sourceConfig overrides', async () => {
+    const { balmySDK, getBestQuote, buildTxs, mockQuote } = createMockBalmySDK()
+
+    const adapter = createBalmyQuoteAdapter({
+      balmySDK,
+      chainId: 8453,
+      fromAddress: CALLER,
+      toAddress: ROUTER,
+      sourceConfig: {
+        global: { disableValidation: false },
+        custom: { paraswap: { sourceDenylist: ['CurveV1StableNg', 'Foo'] } },
+      },
+    })
+
+    await adapter({
+      inToken: IN_TOKEN,
+      outToken: OUT_TOKEN,
+      amountIn: 123n,
+      intent: 'exactIn',
+      slippageBps: 50,
+    })
+
+    const expectedSourceConfig = {
+      global: { disableValidation: false },
+      custom: { paraswap: { sourceDenylist: ['CurveV1StableNg', 'Foo'] } },
+    }
+
+    expect(getBestQuote).toHaveBeenCalledWith({
+      request: expect.objectContaining({
+        sourceConfig: expectedSourceConfig,
+      }),
+      config: {
+        choose: { by: 'most-swapped', using: 'max sell/min buy amounts' },
+      },
+    })
+    expect(buildTxs).toHaveBeenCalledWith({
+      quotes: { [SOURCE_ID]: mockQuote },
+      sourceConfig: expectedSourceConfig,
     })
   })
 
