@@ -65,7 +65,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // Initial manager preview
+    // Initial previewDeposit
     readContract.mockImplementationOnce(async () => ({
       debt: 950n,
       shares: 1_200n,
@@ -80,7 +80,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // manager previewDeposit (with out) + manager previewDeposit (with minOut)
+    // previewDeposit (with out) + previewDeposit (with minOut)
     multicall.mockResolvedValueOnce([
       {
         debt: 1_300n,
@@ -230,7 +230,7 @@ describe('planMint', () => {
     )
   })
 
-  it('throws when manager previewed debt is below flash loan amount', async () => {
+  it('throws when previewDeposit debt is below flash loan amount', async () => {
     const quote = vi.fn()
 
     // Initial quote
@@ -242,7 +242,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // Initial manager preview
+    // Initial previewDeposit
     readContract.mockImplementationOnce(async () => ({
       debt: 950n,
       shares: 1_200n,
@@ -257,7 +257,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // manager previewDeposit returns debt below flash loan amount
+    // previewDeposit returns debt below flash loan amount
     multicall.mockResolvedValueOnce([
       {
         debt: 800n,
@@ -282,7 +282,7 @@ describe('planMint', () => {
     ).rejects.toThrow(/Flash loan too large. Try increasing the flash loan adjustment parameter./i)
   })
 
-  it('throws when manager minimum debt is below flash loan amount', async () => {
+  it('throws when previewDeposit minimum debt is below flash loan amount', async () => {
     const quote = vi.fn()
 
     // Initial quote
@@ -294,7 +294,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // Initial manager preview
+    // Initial previewDeposit
     readContract.mockImplementationOnce(async () => ({
       debt: 950n,
       shares: 1_200n,
@@ -335,7 +335,7 @@ describe('planMint', () => {
     )
   })
 
-  it('throws when minimum shares from manager are below slippage floor', async () => {
+  it('throws when minimum shares from previewDeposit are below slippage floor', async () => {
     const quote = vi.fn()
 
     // Initial quote
@@ -347,7 +347,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // Initial manager preview
+    // Initial previewDeposit
     readContract.mockImplementationOnce(async () => ({
       debt: 950n,
       shares: 1_200n,
@@ -362,7 +362,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // manager previewDeposit (minOut path) returns shares below minShares
+    // previewDeposit (minOut path) returns shares below minShares
     multicall.mockResolvedValueOnce([
       {
         debt: 1_300n,
@@ -401,7 +401,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // Initial manager preview
+    // Initial previewDeposit
     readContract.mockImplementationOnce(async () => ({
       debt: 950n,
       shares: 1_200n,
@@ -416,7 +416,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // manager previewDeposit (with out) + manager previewDeposit (with minOut)
+    // previewDeposit (with out) + previewDeposit (with minOut)
     multicall.mockResolvedValueOnce([
       {
         debt: 1_300n,
@@ -479,7 +479,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // Initial manager preview
+    // Initial previewDeposit
     readContract.mockImplementationOnce(async () => ({
       debt: 950n,
       shares: 1_200n,
@@ -494,7 +494,7 @@ describe('planMint', () => {
       slippageBps,
     }))
 
-    // manager previewDeposit (with out) + manager previewDeposit (with minOut)
+    // previewDeposit (with out) + previewDeposit (with minOut)
     multicall.mockResolvedValueOnce([
       {
         debt: 1_300n,
@@ -575,40 +575,40 @@ describe('planMint', () => {
 })
 
 describe('solveFlashLoanAmountFromImpliedRates', () => {
-  it('returns initial flash loan when quote-implied rate is less than manager-implied rate', () => {
+  it('returns initial flash loan when quote-implied rate is less than previewDeposit-implied rate', () => {
     const flashLoanAmount = solveFlashLoanAmountFromImpliedRates({
       equityInCollateralAsset: 500n,
       collateralToDebtRateFromQuote: 8_000n,
-      collateralToDebtRateFromManager: 9_000n,
+      collateralToDebtRateFromPreviewDeposit: 9_000n,
       exchangeRateScale: 10_000n,
       flashLoanAmountInitial: 1_000n,
-      managerDebtAtInitialSample: 1_100n,
+      previewDepositDebtInitialSample: 1_100n,
     })
 
     expect(flashLoanAmount).toBe(1_000n)
   })
 
-  it('returns sampled manager debt when quote-implied rate is less than manager-implied rate', () => {
+  it('returns sampled previewDeposit debt when quote-implied rate is less than previewDeposit-implied rate', () => {
     const flashLoanAmount = solveFlashLoanAmountFromImpliedRates({
       equityInCollateralAsset: 500n,
       collateralToDebtRateFromQuote: 8_000n,
-      collateralToDebtRateFromManager: 9_000n,
+      collateralToDebtRateFromPreviewDeposit: 9_000n,
       exchangeRateScale: 10_000n,
       flashLoanAmountInitial: 1_000n,
-      managerDebtAtInitialSample: 900n,
+      previewDepositDebtInitialSample: 900n,
     })
 
     expect(flashLoanAmount).toBe(900n)
   })
 
-  it('solves the inequality bound when quote-implied rate is greater than manager-implied rate', () => {
+  it('solves the inequality bound when quote-implied rate is greater than previewDeposit-implied rate', () => {
     const flashLoanAmount = solveFlashLoanAmountFromImpliedRates({
       equityInCollateralAsset: 500n,
       collateralToDebtRateFromQuote: 8_000n,
-      collateralToDebtRateFromManager: 7_000n,
+      collateralToDebtRateFromPreviewDeposit: 7_000n,
       exchangeRateScale: 10_000n,
       flashLoanAmountInitial: 1_000n,
-      managerDebtAtInitialSample: 950n,
+      previewDepositDebtInitialSample: 950n,
     })
 
     // Formula:
@@ -623,10 +623,10 @@ describe('solveFlashLoanAmountFromImpliedRates', () => {
     const flashLoanAmount = solveFlashLoanAmountFromImpliedRates({
       equityInCollateralAsset: 1n,
       collateralToDebtRateFromQuote: 3n,
-      collateralToDebtRateFromManager: 2n,
+      collateralToDebtRateFromPreviewDeposit: 2n,
       exchangeRateScale: 1_000n,
       flashLoanAmountInitial: 1_000n,
-      managerDebtAtInitialSample: 900n,
+      previewDepositDebtInitialSample: 900n,
     })
 
     // Formula:
