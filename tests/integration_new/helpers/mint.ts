@@ -8,6 +8,7 @@ import type { MintPlan } from '@/domain/mint'
 import type { DebtToCollateralSwapConfig } from '@/domain/mint/utils/createDebtToCollateralQuote'
 import type { QuoteFn } from '@/domain/shared/adapters/types'
 import { useApprovalFlow } from '@/features/leverage-tokens/components/leverage-token-mint-modal'
+import { DEFAULT_SLIPPAGE_PERCENT_DISPLAY } from '@/features/leverage-tokens/constants'
 import { useDebtToCollateralQuote } from '@/features/leverage-tokens/hooks/mint/useDebtToCollateralQuote'
 import { useMintPlanPreview } from '@/features/leverage-tokens/hooks/mint/useMintPlanPreview'
 import { useMintWrite } from '@/features/leverage-tokens/hooks/mint/useMintWrite'
@@ -30,7 +31,6 @@ export class MintExecutionSimulationError extends Error {
   }
 }
 
-const DEFAULT_START_SHARE_SLIPPAGE_BPS = 100
 const DEFAULT_SHARE_SLIPPAGE_INCREMENT_BPS = 100
 const MAX_ATTEMPTS = 5
 
@@ -38,15 +38,17 @@ export async function testMint({
   client,
   wagmiConfig,
   leverageTokenConfig,
-  startShareSlippageBps = DEFAULT_START_SHARE_SLIPPAGE_BPS,
   slippageIncrementBps = DEFAULT_SHARE_SLIPPAGE_INCREMENT_BPS,
 }: {
   client: AnvilTestClient
   wagmiConfig: Config
   leverageTokenConfig: LeverageTokenConfig
-  startShareSlippageBps?: number
   slippageIncrementBps?: number
 }) {
+  const startShareSlippageBps =
+    Number(leverageTokenConfig.slippagePresets?.mint?.defaultShareSlippage) * 100 ||
+    Number(DEFAULT_SLIPPAGE_PERCENT_DISPLAY) * 100
+
   const equityInCollateralAsset =
     leverageTokenConfig.test.mintIntegrationTest.equityInCollateralAsset
 
