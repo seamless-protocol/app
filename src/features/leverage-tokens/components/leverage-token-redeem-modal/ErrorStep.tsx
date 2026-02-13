@@ -12,6 +12,7 @@ export function ErrorStep({ error, onRetry, onClose }: ErrorStepProps) {
   const { icon, title, message, showRetry, severity, technicalDetails } = getErrorDisplay(
     error || '',
     'Redemption Failed',
+    'redeemLt',
   )
   const bgClass =
     severity === 'warning'
