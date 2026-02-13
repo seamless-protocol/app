@@ -10,10 +10,10 @@ import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
-  COLLATERAL_SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM,
-  COLLATERAL_SWAP_ADJUSTMENT_PRESETS_PERCENT_DISPLAY,
+  DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY,
+  DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY,
+  DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
   MIN_REDEEM_AMOUNT_DISPLAY,
-  SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY,
 } from '../../constants'
 import type { SwapConfig } from '../../leverageTokens.config'
 
@@ -168,10 +168,6 @@ export function InputStep({
     return { label: `Redeem ${leverageTokenConfig.symbol}`, busy: false }
   })()
 
-  const collateralSlippagePresets =
-    leverageTokenConfig.slippagePresets?.redeem?.presetsCollateralSlippage ??
-    COLLATERAL_SLIPPAGE_PRESETS_PERCENT_DISPLAY_REDEEM
-
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -254,7 +250,10 @@ export function InputStep({
             <SlippageInput
               label={`${leverageTokenConfig.collateralAsset.symbol} Slippage Tolerance`}
               tooltipText={`The maximum allowed difference between the previewed ${leverageTokenConfig.collateralAsset.symbol} amount received and actual amount received when executed onchain.`}
-              presets={collateralSlippagePresets}
+              defaultValue={
+                leverageTokenConfig.slippagePresets?.redeem?.defaultCollateralSlippage ??
+                DEFAULT_COLLATERAL_SLIPPAGE_PERCENT_DISPLAY
+              }
               value={collateralSlippage}
               onChange={onCollateralSlippageChange}
               inputRef={collateralSlippageInputRef}
@@ -266,7 +265,7 @@ export function InputStep({
             <SlippageInput
               label={`Collateral Swap Adjustment`}
               tooltipText="Advanced setting. The default value works in most cases."
-              presets={COLLATERAL_SWAP_ADJUSTMENT_PRESETS_PERCENT_DISPLAY}
+              defaultValue={DEFAULT_COLLATERAL_SWAP_ADJUSTMENT_PERCENT_DISPLAY}
               value={collateralSwapAdjustment}
               onChange={onCollateralSwapAdjustmentChange}
               step={0.01}
@@ -277,7 +276,7 @@ export function InputStep({
             <SlippageInput
               label="Swap Slippage Tolerance"
               tooltipText="Advanced setting. The default value works in most cases."
-              presets={SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY}
+              defaultValue={DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY}
               value={swapSlippage}
               onChange={onSwapSlippageChange}
               step={0.01}

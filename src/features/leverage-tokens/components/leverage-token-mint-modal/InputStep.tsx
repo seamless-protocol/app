@@ -11,10 +11,10 @@ import { Separator } from '../../../../components/ui/separator'
 import { Skeleton } from '../../../../components/ui/skeleton'
 import {
   AMOUNT_PERCENTAGE_PRESETS,
-  FLASH_LOAN_ADJUSTMENT_PRESETS_PERCENT_DISPLAY,
+  DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY,
+  DEFAULT_SLIPPAGE_PERCENT_DISPLAY,
+  DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY,
   MIN_MINT_AMOUNT_DISPLAY,
-  SHARE_SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT,
-  SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY,
 } from '../../constants'
 import { SlippageInput } from '../SlippageInput'
 
@@ -174,13 +174,6 @@ export function InputStep({
     return { label: `Mint ${leverageTokenConfig.symbol}`, busy: false }
   })()
 
-  const shareSlippagePresets =
-    leverageTokenConfig.slippagePresets?.mint?.presetsShareSlippage ??
-    SHARE_SLIPPAGE_PRESETS_PERCENT_DISPLAY_MINT
-  const flashLoanAdjustmentPresets =
-    leverageTokenConfig.slippagePresets?.mint?.presetsFlashLoanAdjustment ??
-    FLASH_LOAN_ADJUSTMENT_PRESETS_PERCENT_DISPLAY
-
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -272,7 +265,10 @@ export function InputStep({
             <SlippageInput
               label="Leverage Token Slippage Tolerance"
               tooltipText="The maximum allowed difference between previewed Leverage Tokens received and actual Leverage Tokens received when executed onchain."
-              presets={shareSlippagePresets}
+              defaultValue={
+                leverageTokenConfig.slippagePresets?.mint?.defaultShareSlippage ??
+                DEFAULT_SLIPPAGE_PERCENT_DISPLAY
+              }
               value={shareSlippage}
               onChange={onShareSlippageChange}
               inputRef={shareSlippageInputRef}
@@ -284,7 +280,7 @@ export function InputStep({
             <SlippageInput
               label="Swap Slippage Tolerance"
               tooltipText="Advanced setting. The default value works in most cases."
-              presets={SWAP_SLIPPAGE_PRESETS_PERCENT_DISPLAY}
+              defaultValue={DEFAULT_SWAP_SLIPPAGE_PERCENT_DISPLAY}
               value={swapSlippage}
               onChange={onSwapSlippageChange}
               step={0.01}
@@ -295,7 +291,10 @@ export function InputStep({
             <SlippageInput
               label="Flash Loan Adjustment"
               tooltipText="Advanced setting. The default value works in most cases."
-              presets={flashLoanAdjustmentPresets}
+              defaultValue={
+                leverageTokenConfig.slippagePresets?.mint?.defaultFlashLoanAdjustment ??
+                DEFAULT_FLASH_LOAN_ADJUSTMENT_PERCENT_DISPLAY
+              }
               value={flashLoanAdjustment}
               onChange={onFlashLoanAdjustmentChange}
               step={0.1}

@@ -4,12 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils/cn'
 
 interface SlippageInputProps {
   label: string
   tooltipText?: string
-  presets: ReadonlyArray<string>
+  defaultValue: string
   value: string
   onChange: (value: string) => void
   inputRef?: Ref<HTMLInputElement>
@@ -23,7 +22,7 @@ interface SlippageInputProps {
 export function SlippageInput({
   label,
   tooltipText,
-  presets,
+  defaultValue,
   value,
   onChange,
   inputRef,
@@ -34,6 +33,7 @@ export function SlippageInput({
   placeholder = '0.5',
 }: SlippageInputProps) {
   const [tooltipOpen, setTooltipOpen] = useState(false)
+  const isResetDisabled = value === defaultValue
 
   const handleStepChange = (direction: 'up' | 'down') => {
     const currentValue = parseFloat(value) || 0
@@ -73,22 +73,6 @@ export function SlippageInput({
           )}
         </div>
         <div className="flex items-center space-x-2">
-          {presets.map((preset) => (
-            <Button
-              key={preset}
-              variant={value === preset ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onChange(preset)}
-              className={cn(
-                'h-8 px-3 text-xs transition-colors',
-                value === preset
-                  ? 'border border-brand-purple bg-brand-purple text-primary-foreground hover:opacity-90'
-                  : 'border border-divider-line text-secondary-foreground hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-foreground',
-              )}
-            >
-              {preset}%
-            </Button>
-          ))}
           <div className="flex items-center space-x-1">
             <div className="relative">
               <Input
@@ -118,6 +102,15 @@ export function SlippageInput({
             </div>
             <Percent className="h-3 w-3 text-muted-foreground" />
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onChange(defaultValue)}
+            disabled={isResetDisabled}
+            className="h-8 border border-divider-line px-3 text-xs text-secondary-foreground transition-colors hover:bg-[color-mix(in_srgb,var(--surface-elevated) 35%,transparent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-secondary-foreground"
+          >
+            Reset
+          </Button>
         </div>
       </div>
     </Card>
