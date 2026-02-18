@@ -616,7 +616,7 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         type: APR_PROVIDERS.DEFI_LLAMA,
         id: '8fa2e60e-365a-41fc-8d50-fadde5041f94',
       },
-      pointsMultiplier: 20,
+      pointsMultiplier: 16.5,
     },
     collateralAsset: {
       symbol: 'siUSD',
