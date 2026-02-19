@@ -148,11 +148,7 @@ bun build
 # Deploy dist/ folder to IPFS
 ```
 
-## Documentation
-
-- **[Adding Leverage Tokens](docs/adding-leverage-tokens.md)** - Complete guide for adding new leverage tokens to the protocol
-- **[Adding New Chains](docs/adding-new-chains.md)** - Comprehensive guide for adding support for new blockchain networks
-- **[IPFS Deployment](docs/ipfs-deployment.md)** - Instructions for deploying to IPFS using GitHub Actions
+See **[IPFS Deployment](docs/ipfs-deployment.md)** for instructions on deploying to IPFS using GitHub Actions
 
 ## Contributing
 
@@ -161,11 +157,3 @@ Please ensure all code passes checks before submitting PRs:
 ```bash
 bun check:fix
 ```
-
-## Testing Deployment
-
-Minimal test added 2025-08-25 to verify Vercel deployment access.
-
-## License
-
-[License details to be added]

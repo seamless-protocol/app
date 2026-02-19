@@ -125,7 +125,7 @@ jobs:
           version: stable
 
       - name: Run integration tests
-        run: bun run test:integration:new
+        run: bun run test:integration
         env:
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless

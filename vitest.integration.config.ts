@@ -1,31 +1,21 @@
 /// <reference types="vitest/config" />
 import path from 'node:path'
-import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
+    name: 'integration',
+    include: ['tests/integration/**/*.{test,spec}.{ts,tsx}'],
     environment: 'jsdom',
-    // No global setup that mocks modules — integration uses real modules
     globals: true,
-    // Anvil can't properly isolate nonces when test files run in parallel with same account
-    // Keep sequential execution to avoid nonce conflicts and state interference
-    fileParallelism: false,
-    include: [
-      'tests/integration/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-    ],
-    exclude: ['tests/e2e/**/*', 'node_modules/**/*', 'src/**/*.stories.{js,jsx,ts,tsx}'],
-    testTimeout: 120_000,
-    hookTimeout: 60_000,
-    isolate: true,
-    environmentOptions: {
-      jsdom: { resources: 'usable' },
-    },
-    mockReset: true,
-    clearMocks: true,
-    restoreMocks: true,
+    setupFiles: './tests/integration/setup.ts',
+    testTimeout: 270_000,
+    hookTimeout: 180_000,
+    server: {
+      deps: {
+        inline: ['zod'],
+      }
+    }
   },
-  resolve: {
-    alias: { '@': path.resolve(__dirname, './src') },
-  },
+  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
 })

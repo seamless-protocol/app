@@ -246,7 +246,7 @@ function mapVeloraResponseToQuote(
   // Only validate method and add veloraData for exactOut (used by redeemWithVelora)
   else {
     // Validate ParaSwap method matches the only validated method for our hardcoded offsets
-    // Only swapExactAmountOut has been validated with live API testing (see tests/integration/domain/adapters/velora-offset-validation.spec.ts)
+    // Only swapExactAmountOut has been validated with live API testing (see tests/integration/redeem/redeem.spec.ts)
     // Other ParaSwap BUY methods use different calldata structures where offsets (132, 100, 164) extract incorrect values
     // Velora API docs: https://developers.velora.xyz/api/velora-api/velora-market-api/master/api-v6.2
     const SUPPORTED_METHOD = 'swapExactAmountOut'
@@ -271,7 +271,7 @@ function mapVeloraResponseToQuote(
           //
           // Validated method: swapExactAmountOut (ParaSwap Augustus V6.2)
           // - See Solidity tests: https://github.com/seamless-protocol/leverage-tokens/blob/audit-fixes/test/integration/8453/LeverageRouter/RedeemWithVelora.t.sol#L19
-          // - See live API validation: tests/integration/domain/adapters/velora-offset-validation.spec.ts
+          // - See live API validation: tests/integration/redeem/redeem.spec.ts
           //
           // Other BUY methods (UniswapV2, UniswapV3, BalancerV2, RFQ, MakerPSM) use different
           // calldata structures where these offsets extract incorrect values.
