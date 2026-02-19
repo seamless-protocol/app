@@ -380,18 +380,6 @@ export function InputStep({
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Collateral Slippage Tolerance</span>
-            <span className="text-foreground">{collateralSlippage}%</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-secondary-foreground">Collateral Swap Adjustment</span>
-            <span className="text-foreground">{collateralSwapAdjustment}%</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-secondary-foreground">Swap Slippage Tolerance</span>
-            <span className="text-foreground">{swapSlippage}%</span>
-          </div>
-          <div className="flex justify-between">
             <span className="text-secondary-foreground">Approval Status</span>
             <span
               className={cn(
