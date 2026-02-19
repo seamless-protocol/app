@@ -64,7 +64,7 @@ describe('redeem integration tests', () => {
         client,
         wagmiConfig,
         leverageTokenConfig: rlpUsdc675xConfig,
-        debtIncreaseBetweenPlanAndRedeemAmount: parseUnits('0.1', 6), // 0.1 USDC
+        debtIncreaseBetweenPlanAndRedeemAmount: parseUnits('0.05', 6), // 0.05 USDC
       })
     },
   )
@@ -99,7 +99,7 @@ describe('redeem integration tests', () => {
         client,
         wagmiConfig,
         leverageTokenConfig: wstethEth25xConfig,
-        debtIncreaseBetweenPlanAndRedeemAmount: parseUnits('0.000000001', 18), // 0.000000001 WSTETH
+        debtIncreaseBetweenPlanAndRedeemAmount: parseUnits('0.0000000001', 18), // 0.0000000001 WSTETH
       })
     },
   )
