@@ -31,15 +31,6 @@ export interface APYBreakdownData {
     rewardTokens?: Error | null
     totalAPY?: Error | null
     utilization?: Error | null
-    raw?: {
-      rawBorrowRate?: Error | null
-      rawStakingYield?: Error | null
-      rawRestakingYield?: Error | null
-    }
-    metadata?: {
-      yieldAveragingPeriod?: Error | null
-      borrowAveragingPeriod?: Error | null
-    }
   }
 }
 
