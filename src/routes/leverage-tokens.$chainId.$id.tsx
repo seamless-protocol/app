@@ -31,7 +31,7 @@ import {
   getLeverageTokenConfig,
 } from '@/features/leverage-tokens/leverageTokens.config'
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
-import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
+import { hasApyError, useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
 import { useGA } from '@/lib/config/ga4.config'
 import { useExplorer } from '@/lib/hooks/useExplorer'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
@@ -166,7 +166,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
       if (!apyData || !apyData.raw || isLoading) return undefined
       return {
         borrowRate: apyData.raw.rawBorrowRate,
-        baseYield: apyData.raw.rawStakingYield + apyData.raw.rawRestakingYield,
+        baseYield: (apyData.raw.rawStakingYield ?? 0) + (apyData.raw.rawRestakingYield ?? 0),
       }
     }
 
@@ -283,6 +283,8 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
       },
     ]
 
+    const hasApyErrors = hasApyError(apyData)
+
     return (
       <PageContainer padded={false}>
         {/* Breadcrumb Navigation */}
@@ -378,8 +380,10 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                     }
                     className="text-sm"
                   >
-                    {apyData?.totalAPY ? (
+                    {apyData?.totalAPY && !hasApyErrors ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
+                    ) : hasApyErrors ? (
+                      <span className="text-sm font-medium text-[var(--text-muted)]">N/A</span>
                     ) : (
                       <Skeleton className="h-4 w-20" />
                     )}
@@ -466,13 +470,15 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                 <div className="flex items-center space-x-1">
                   <Badge
                     className={
-                      apyData?.totalAPY !== undefined && apyData.totalAPY < 0
+                      (apyData?.totalAPY !== undefined && apyData.totalAPY < 0) || hasApyErrors
                         ? 'border-[color-mix(in_srgb,var(--state-error-text)_25%,transparent)] bg-[var(--state-error-bg)] text-[var(--state-error-text)]'
                         : 'border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]'
                     }
                   >
-                    {apyData?.totalAPY ? (
+                    {apyData?.totalAPY && !hasApyErrors ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
+                    ) : hasApyErrors ? (
+                      <span className="text-sm font-medium text-[var(--text-muted)]">N/A</span>
                     ) : (
                       <Skeleton className="h-4 w-20" />
                     )}
