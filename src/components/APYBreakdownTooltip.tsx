@@ -50,7 +50,10 @@ export function APYBreakdownTooltip({
     <APYBreakdown
       data={apyData}
       compact={compact}
-      className={cn('min-w-[240px] rounded-lg border border-border bg-card', className)}
+      className={cn(
+        'max-w-[min(92vw,420px)] min-w-[240px] rounded-lg border border-border bg-card',
+        className,
+      )}
     />
   )
 }
