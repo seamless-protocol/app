@@ -10,6 +10,7 @@ describe('APYBreakdown', () => {
     rewardsAPR: 0.8,
     points: 6.0,
     totalAPY: 6.6,
+    errors: {},
   }
 
   it('should render all yield components correctly', () => {
@@ -42,5 +43,29 @@ describe('APYBreakdown', () => {
     // Component should still render all elements
     expect(screen.getByText('APY Breakdown')).toBeInTheDocument()
     expect(screen.getByText('Staking Yield:')).toBeInTheDocument()
+  })
+
+  it('should render with errors', () => {
+    render(
+      <APYBreakdown
+        data={{ ...mockData, stakingYield: 0, errors: { stakingYield: new Error('test reason') } }}
+      />,
+    )
+
+    expect(screen.getByText('Staking Yield:')).toBeInTheDocument()
+    expect(screen.getByText('test reason')).toBeInTheDocument()
+
+    // Still show the other values
+    expect(screen.getByText('Restaking Yield:')).toBeInTheDocument()
+    expect(screen.getByText('Borrow Rate:')).toBeInTheDocument()
+    expect(screen.getByText('Rewards APR:')).toBeInTheDocument()
+    expect(screen.getByText('Points:')).toBeInTheDocument()
+    expect(screen.getByText('+210.00%')).toBeInTheDocument() // Restaking Yield
+    expect(screen.getByText('-150.00%')).toBeInTheDocument() // Borrow Rate (negative)
+    expect(screen.getByText('+80.00%')).toBeInTheDocument() // Rewards APR
+    expect(screen.getByText('6 x')).toBeInTheDocument() // Points
+
+    // Total APY should not be shown
+    expect(screen.queryByText('Total APY:')).not.toBeInTheDocument()
   })
 })

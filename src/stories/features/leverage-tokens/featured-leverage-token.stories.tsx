@@ -156,6 +156,7 @@ export const Default: Story = {
             yieldAveragingPeriod: '7-day average' as const,
             borrowAveragingPeriod: '24-hour average' as const,
           },
+          errors: {},
         },
       ],
       [
@@ -171,6 +172,7 @@ export const Default: Story = {
             yieldAveragingPeriod: '7-day average' as const,
             borrowAveragingPeriod: '7-day average' as const,
           },
+          errors: {},
         },
       ],
     ]),

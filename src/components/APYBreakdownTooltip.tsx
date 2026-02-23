@@ -1,3 +1,4 @@
+import { hasApyBreakdownError } from '@/features/portfolio/hooks/usePositionsAPY'
 import type { APYBreakdownData } from './APYBreakdown'
 import { APYBreakdown } from './APYBreakdown'
 import { Skeleton } from './ui/skeleton'
@@ -35,7 +36,8 @@ export function APYBreakdownTooltip({
     )
   }
 
-  if (isError || !apyData) {
+  const showGenericError = !apyData || (isError && !hasApyBreakdownError(apyData))
+  if (showGenericError) {
     return (
       <div className="min-w-[240px] space-y-2 rounded-lg border border-border bg-card p-4">
         <div className="text-sm font-semibold text-foreground">APY Breakdown</div>
@@ -48,7 +50,10 @@ export function APYBreakdownTooltip({
     <APYBreakdown
       data={apyData}
       compact={compact}
-      className={cn('min-w-[240px] rounded-lg border border-border bg-card', className)}
+      className={cn(
+        'max-w-[min(92vw,420px)] min-w-[240px] rounded-lg border border-border bg-card',
+        className,
+      )}
     />
   )
 }

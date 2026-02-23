@@ -28,8 +28,8 @@ export const Route = createFileRoute('/leverage-tokens/')({
     // Calculate APY data for all leverage tokens
     const {
       data: tokensAPYData,
-      isLoading: isApyLoading,
-      isError: isApyError,
+      isLoading: isApyHookLoading,
+      isError: isApyHookError,
     } = useTokensAPY({
       tokens: leverageTokens,
       enabled: leverageTokens.length > 0,
@@ -63,8 +63,8 @@ export const Route = createFileRoute('/leverage-tokens/')({
                 tokens={featuredTokens}
                 onTokenClick={handleTokenClick}
                 apyDataMap={tokensAPYData}
-                isApyLoading={isApyLoading}
-                isApyError={isApyError}
+                isApyLoading={isApyHookLoading}
+                isApyError={isApyHookError}
               />
             </div>
           )}
@@ -126,8 +126,8 @@ export const Route = createFileRoute('/leverage-tokens/')({
                 tokens={leverageTokens}
                 onTokenClick={handleTokenClick}
                 apyDataMap={tokensAPYData}
-                isApyLoading={isApyLoading}
-                isApyError={isApyError}
+                isApyLoading={isApyHookLoading}
+                isApyError={isApyHookError}
               />
             )}
           </motion.div>

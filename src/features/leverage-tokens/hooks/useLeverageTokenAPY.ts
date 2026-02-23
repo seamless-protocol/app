@@ -51,6 +51,7 @@ export function useLeverageTokenAPY({
             rawStakingYield: 0,
             rawRestakingYield: 0,
           },
+          errors: {},
         }
       }
 
@@ -73,6 +74,7 @@ export function useLeverageTokenAPY({
             rawStakingYield: 0,
             rawRestakingYield: 0,
           },
+          errors: {},
         }
       }
 
@@ -182,6 +184,15 @@ export function useLeverageTokenAPY({
           rawBorrowRate,
           rawStakingYield,
           rawRestakingYield,
+        },
+        errors: {
+          stakingYield: aprDataResult.status === 'rejected' ? aprDataResult.reason : null,
+          restakingYield: aprDataResult.status === 'rejected' ? aprDataResult.reason : null,
+          borrowRate: borrowApyDataResult.status === 'rejected' ? borrowApyDataResult.reason : null,
+          rewardsAPR:
+            rewardsAPRDataResult.status === 'rejected' ? rewardsAPRDataResult.reason : null,
+          rewardTokens:
+            rewardsAPRDataResult.status === 'rejected' ? rewardsAPRDataResult.reason : null,
         },
         ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
       }

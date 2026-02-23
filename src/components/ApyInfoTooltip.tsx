@@ -64,7 +64,7 @@ export function ApyInfoTooltip({
         </button>
       </TooltipTrigger>
       <TooltipContent
-        className={`p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] ${className ?? ''}`}
+        className={`max-w-[min(92vw,420px)] p-0 text-sm border border-[var(--divider-line)] bg-[color-mix(in_srgb,var(--surface-card) 92%,transparent)] ${className ?? ''}`}
         side={side}
         align={align}
         sideOffset={sideOffset}

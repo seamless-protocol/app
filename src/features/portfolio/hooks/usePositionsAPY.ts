@@ -80,16 +80,24 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
             }
 
             // Fetch all required data in parallel
-            const [leverageRatios, aprData, borrowApyData, rewardsAPRData] = await Promise.all([
-              fetchLeverageRatios(tokenAddress, tokenConfig.chainId, config),
-              fetchAprForToken(tokenAddress, tokenConfig.chainId),
-              fetchBorrowApyForToken(tokenAddress, tokenConfig.chainId, config),
-              fetchRewardsAprForToken(tokenAddress, tokenConfig.chainId),
-            ])
+            const [leverageRatios, aprDataResult, borrowApyData, rewardsAPRData] =
+              await Promise.allSettled([
+                fetchLeverageRatios(tokenAddress, tokenConfig.chainId, config),
+                fetchAprForToken(tokenAddress, tokenConfig.chainId),
+                fetchBorrowApyForToken(tokenAddress, tokenConfig.chainId, config),
+                fetchRewardsAprForToken(tokenAddress, tokenConfig.chainId),
+              ])
 
-            const borrowAPY = borrowApyData.borrowAPY
-            const utilization = borrowApyData.utilization
-            const targetLeverage = leverageRatios.targetLeverage
+            const borrowAPY =
+              borrowApyData.status === 'fulfilled' ? borrowApyData.value.borrowAPY : 0
+            const utilization =
+              borrowApyData.status === 'fulfilled' ? borrowApyData.value.utilization : 0
+            const targetLeverage =
+              leverageRatios.status === 'fulfilled' ? leverageRatios.value.targetLeverage : 0
+            const aprData =
+              aprDataResult.status === 'fulfilled'
+                ? aprDataResult.value
+                : { stakingAPR: 0, restakingAPR: 0, averagingPeriod: undefined }
 
             // Calculate APY components
             const stakingYield =
@@ -105,8 +113,10 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
             const borrowRate =
               (borrowAPY && targetLeverage ? borrowAPY * -1 * (targetLeverage - 1) : undefined) ?? 0
 
-            const rewardsAPR = rewardsAPRData?.rewardsAPR ?? 0
-            const rewardTokens = rewardsAPRData?.rewardTokens
+            const rewardsAPR =
+              rewardsAPRData.status === 'fulfilled' ? rewardsAPRData.value.rewardsAPR : 0
+            const rewardTokens =
+              rewardsAPRData.status === 'fulfilled' ? rewardsAPRData.value.rewardTokens : undefined
 
             // Points calculation - use pointsMultiplier from config if available, otherwise default to 0
             const points = tokenConfig.apyConfig?.pointsMultiplier ?? 0
@@ -121,8 +131,8 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
             if (aprData.averagingPeriod) {
               metadata.yieldAveragingPeriod = aprData.averagingPeriod
             }
-            if (borrowApyData.averagingPeriod) {
-              metadata.borrowAveragingPeriod = borrowApyData.averagingPeriod
+            if (borrowApyData.status === 'fulfilled' && borrowApyData.value.averagingPeriod) {
+              metadata.borrowAveragingPeriod = borrowApyData.value.averagingPeriod
             }
 
             // Build base APY breakdown
@@ -138,6 +148,13 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
                 rawBorrowRate: borrowAPY ?? 0,
                 rawStakingYield: aprData.stakingAPR ? aprData.stakingAPR / 100 : 0,
                 rawRestakingYield: aprData.restakingAPR ? aprData.restakingAPR / 100 : 0,
+              },
+              errors: {
+                stakingYield: aprDataResult.status === 'rejected' ? aprDataResult.reason : null,
+                restakingYield: aprDataResult.status === 'rejected' ? aprDataResult.reason : null,
+                borrowRate: borrowApyData.status === 'rejected' ? borrowApyData.reason : null,
+                rewardsAPR: rewardsAPRData.status === 'rejected' ? rewardsAPRData.reason : null,
+                rewardTokens: rewardsAPRData.status === 'rejected' ? rewardsAPRData.reason : null,
               },
               ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
             }
@@ -196,3 +213,7 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
 
 // Backward compatibility export
 export const usePositionsAPY = useTokensAPY
+
+export const hasApyBreakdownError = (apyData: APYBreakdownData) => {
+  return Object.values(apyData.errors).some((error) => error !== null)
+}

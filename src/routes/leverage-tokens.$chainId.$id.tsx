@@ -31,7 +31,7 @@ import {
   getLeverageTokenConfig,
 } from '@/features/leverage-tokens/leverageTokens.config'
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
-import { useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
+import { hasApyBreakdownError, useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
 import { useGA } from '@/lib/config/ga4.config'
 import { useExplorer } from '@/lib/hooks/useExplorer'
 import { useUsdPrices } from '@/lib/prices/useUsdPrices'
@@ -283,6 +283,8 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
       },
     ]
 
+    const hasApyBreakdownErrors = apyData ? hasApyBreakdownError(apyData) : false
+
     return (
       <PageContainer padded={false}>
         {/* Breadcrumb Navigation */}
@@ -378,8 +380,10 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                     }
                     className="text-sm"
                   >
-                    {apyData?.totalAPY ? (
+                    {apyData?.totalAPY && !hasApyBreakdownErrors ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
+                    ) : hasApyBreakdownErrors ? (
+                      <span className="text-sm font-medium text-[var(--text-muted)]">N/A</span>
                     ) : (
                       <Skeleton className="h-4 w-20" />
                     )}
@@ -466,13 +470,16 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
                 <div className="flex items-center space-x-1">
                   <Badge
                     className={
-                      apyData?.totalAPY !== undefined && apyData.totalAPY < 0
+                      (apyData?.totalAPY !== undefined && apyData.totalAPY < 0) ||
+                      hasApyBreakdownErrors
                         ? 'border-[color-mix(in_srgb,var(--state-error-text)_25%,transparent)] bg-[var(--state-error-bg)] text-[var(--state-error-text)]'
                         : 'border-[color-mix(in_srgb,var(--state-success-text)_25%,transparent)] bg-[var(--state-success-bg)] text-[var(--state-success-text)]'
                     }
                   >
-                    {apyData?.totalAPY ? (
+                    {apyData?.totalAPY && !hasApyBreakdownErrors ? (
                       `${formatAPY(apyData.totalAPY, 2)} APY`
+                    ) : hasApyBreakdownErrors ? (
+                      <span className="text-sm font-medium text-[var(--text-muted)]">N/A</span>
                     ) : (
                       <Skeleton className="h-4 w-20" />
                     )}

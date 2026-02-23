@@ -28,6 +28,7 @@ const mockAPYData: APYBreakdownData = {
   rewardsAPR: 2.55,
   points: 1096,
   totalAPY: 6.34,
+  errors: {},
 }
 
 const highAPYData: APYBreakdownData = {
@@ -37,6 +38,7 @@ const highAPYData: APYBreakdownData = {
   rewardsAPR: 3.89,
   points: 2340,
   totalAPY: 11.34,
+  errors: {},
 }
 
 const lowAPYData: APYBreakdownData = {
@@ -46,6 +48,7 @@ const lowAPYData: APYBreakdownData = {
   rewardsAPR: 0.95,
   points: 234,
   totalAPY: 2.52,
+  errors: {},
 }
 
 export const Default: Story = {

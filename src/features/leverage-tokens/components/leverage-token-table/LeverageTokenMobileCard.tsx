@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { ApyInfoTooltip } from '@/components/ApyInfoTooltip'
+import { hasApyBreakdownError } from '@/features/portfolio/hooks/usePositionsAPY'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
 import { Card, CardContent } from '../../../../components/ui/card'
@@ -73,7 +74,7 @@ export function LeverageTokenMobileCard({
             <div className="flex justify-between items-center">
               <span className="text-sm text-[var(--text-secondary)]">APY</span>
               <div className="flex items-center space-x-1">
-                {isApyError ? (
+                {isApyError || (apyData && hasApyBreakdownError(apyData)) ? (
                   <span className="text-sm font-medium text-[var(--text-muted)]">N/A</span>
                 ) : isApyLoading || !apyData ? (
                   <Skeleton variant="pulse" className="h-4 w-16" />

@@ -1,4 +1,5 @@
 import type { RewardTokenApr } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers/types'
+import { hasApyBreakdownError } from '@/features/portfolio/hooks/usePositionsAPY'
 import { formatPercentage, formatPoints } from '@/lib/utils/formatting'
 import { getTokenLogoComponent } from '@/lib/utils/token-logos'
 import { cn } from './ui/utils'
@@ -23,6 +24,15 @@ export interface APYBreakdownData {
     yieldAveragingPeriod?: string
     borrowAveragingPeriod?: string
   }
+  errors: {
+    stakingYield?: Error | null
+    restakingYield?: Error | null
+    borrowRate?: Error | null
+    rewardsAPR?: Error | null
+    rewardTokens?: Error | null
+    totalAPY?: Error | null
+    utilization?: Error | null
+  }
 }
 
 interface APYBreakdownProps {
@@ -37,6 +47,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
     : 'space-y-4 p-4 min-w-[240px] rounded-lg border border-[var(--divider-line)] bg-[var(--surface-card)]'
   const titleClass = 'text-sm'
   const itemClass = 'text-sm'
+  const hasApyBreakdownErrors = hasApyBreakdownError(data)
 
   return (
     <div className={cn(containerClass, className)}>
@@ -56,6 +67,15 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
             </span>
           </div>
         )}
+        {/* Show staking yield: error if present */}
+        {data.errors.stakingYield && (
+          <div className="flex items-start gap-2">
+            <span className="shrink-0 text-[var(--text-secondary)]">Staking Yield:&nbsp;</span>
+            <span className="min-w-0 flex-1 break-words text-right font-medium text-[var(--state-error-text)]">
+              {data.errors.stakingYield.message}
+            </span>
+          </div>
+        )}
 
         {/* Restaking Yield - only show if not zero */}
         {data.restakingYield !== 0 && (
@@ -63,6 +83,15 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
             <span className="text-[var(--text-secondary)]">Restaking Yield:</span>
             <span className="font-medium text-[var(--brand-primary)]">
               {formatPercentage(data.restakingYield, { decimals: 2, showSign: true })}
+            </span>
+          </div>
+        )}
+        {/* Show restaking yield: error if present */}
+        {data.errors.restakingYield && (
+          <div className="flex items-start gap-2">
+            <span className="shrink-0 text-[var(--text-secondary)]">Restaking Yield:&nbsp;</span>
+            <span className="min-w-0 flex-1 break-words text-right font-medium text-[var(--state-error-text)]">
+              {data.errors.restakingYield.message}
             </span>
           </div>
         )}
@@ -76,24 +105,37 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
             </span>
           </div>
         )}
+        {/* Show borrow rate: error if present */}
+        {data.errors.borrowRate && (
+          <div className="flex items-start gap-2">
+            <span className="shrink-0 text-[var(--text-secondary)]">Borrow Rate:&nbsp;</span>
+            <span className="min-w-0 flex-1 break-words text-right font-medium text-[var(--state-error-text)]">
+              {data.errors.borrowRate.message}
+            </span>
+          </div>
+        )}
 
         {/* Individual Reward Tokens - show breakdown if available */}
-        {data.rewardTokens && data.rewardTokens.length > 0
-          ? data.rewardTokens.map((rewardToken) => (
-              <div key={rewardToken.tokenAddress} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 flex-shrink-0">
-                    {getTokenLogoComponent(rewardToken.tokenSymbol)}
+        {data.rewardTokens?.length
+          ? data.rewardTokens.map((rewardToken) =>
+              rewardToken.tokenAddress != null &&
+              rewardToken.tokenSymbol != null &&
+              rewardToken.apr ? (
+                <div key={rewardToken.tokenAddress} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 flex-shrink-0">
+                      {getTokenLogoComponent(rewardToken.tokenSymbol)}
+                    </div>
+                    <span className="text-[var(--text-secondary)]">
+                      {rewardToken.tokenSymbol} APR:
+                    </span>
                   </div>
-                  <span className="text-[var(--text-secondary)]">
-                    {rewardToken.tokenSymbol} APR:
+                  <span className="font-medium text-[var(--accent-1)]">
+                    {formatPercentage(rewardToken.apr, { decimals: 2, showSign: true })}
                   </span>
                 </div>
-                <span className="font-medium text-[var(--accent-1)]">
-                  {formatPercentage(rewardToken.apr, { decimals: 2, showSign: true })}
-                </span>
-              </div>
-            ))
+              ) : null,
+            )
           : // Fallback: show total rewards APR if no breakdown available
             data.rewardsAPR !== 0 && (
               <div className="flex justify-between">
@@ -112,21 +154,23 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
           </div>
         )}
 
-        {/* Total APY - Separated */}
-        <div className="mt-3 border-t border-[var(--divider-line)] pt-3">
-          <div className="flex justify-between font-semibold">
-            <span className="text-[var(--text-primary)]">Total APY:</span>
-            <span
-              className={
-                data.totalAPY < 0
-                  ? 'text-[var(--state-error-text)]'
-                  : 'text-[var(--state-success-text)]'
-              }
-            >
-              {formatPercentage(data.totalAPY, { decimals: 2, showSign: true })}
-            </span>
+        {/* Total APY - Separated. Only show if no errors */}
+        {!hasApyBreakdownErrors && (
+          <div className="mt-3 border-t border-[var(--divider-line)] pt-3">
+            <div className="flex justify-between font-semibold">
+              <span className="text-[var(--text-primary)]">Total APY:</span>
+              <span
+                className={
+                  data.totalAPY < 0
+                    ? 'text-[var(--state-error-text)]'
+                    : 'text-[var(--state-success-text)]'
+                }
+              >
+                {formatPercentage(data.totalAPY, { decimals: 2, showSign: true })}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Averaging Period Disclosure */}
         {data.metadata &&
