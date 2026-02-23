@@ -44,4 +44,24 @@ describe('APYBreakdown', () => {
     expect(screen.getByText('APY Breakdown')).toBeInTheDocument()
     expect(screen.getByText('Staking Yield:')).toBeInTheDocument()
   })
+
+  it('should render with errors', () => {
+    render(
+      <APYBreakdown
+        data={{ ...mockData, stakingYield: 0, errors: { stakingYield: new Error('test reason') } }}
+      />,
+    )
+
+    expect(screen.getByText('Staking Yield:')).toBeInTheDocument()
+    expect(screen.getByText('test reason')).toBeInTheDocument()
+
+    // Still show the other values
+    expect(screen.getByText('Restaking Yield:')).toBeInTheDocument()
+    expect(screen.getByText('Borrow Rate:')).toBeInTheDocument()
+    expect(screen.getByText('Rewards APR:')).toBeInTheDocument()
+    expect(screen.getByText('Points:')).toBeInTheDocument()
+
+    // Total APY should not be shown
+    expect(screen.queryByText('Total APY:')).not.toBeInTheDocument()
+  })
 })
