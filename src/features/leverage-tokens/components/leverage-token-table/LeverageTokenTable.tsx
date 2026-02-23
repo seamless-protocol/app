@@ -3,7 +3,7 @@ import { Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { ApyInfoTooltip } from '@/components/ApyInfoTooltip'
-import { hasApyError } from '@/features/portfolio/hooks/usePositionsAPY'
+import { hasApyBreakdownError } from '@/features/portfolio/hooks/usePositionsAPY'
 import { getTokenExplorerInfo } from '@/lib/utils/block-explorer'
 import { cn } from '@/lib/utils/cn'
 import { formatAPY, formatCurrency } from '@/lib/utils/formatting'
@@ -368,7 +368,7 @@ export function LeverageTokenTable({
                   const tokenApyError =
                     apyError ||
                     (!apyLoading && !apyDataMap?.has(token.address)) ||
-                    (tokenApyData ? hasApyError(tokenApyData) : false)
+                    (tokenApyData ? hasApyBreakdownError(tokenApyData) : false)
 
                   return (
                     <motion.tr

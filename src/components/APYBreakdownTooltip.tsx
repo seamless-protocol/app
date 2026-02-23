@@ -1,4 +1,4 @@
-import { hasApyError } from '@/features/portfolio/hooks/usePositionsAPY'
+import { hasApyBreakdownError } from '@/features/portfolio/hooks/usePositionsAPY'
 import type { APYBreakdownData } from './APYBreakdown'
 import { APYBreakdown } from './APYBreakdown'
 import { Skeleton } from './ui/skeleton'
@@ -36,7 +36,7 @@ export function APYBreakdownTooltip({
     )
   }
 
-  const showGenericError = !apyData || (isError && !hasApyError(apyData))
+  const showGenericError = !apyData || (isError && !hasApyBreakdownError(apyData))
   if (showGenericError) {
     return (
       <div className="min-w-[240px] space-y-2 rounded-lg border border-border bg-card p-4">

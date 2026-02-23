@@ -1,5 +1,5 @@
 import type { RewardTokenApr } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers/types'
-import { hasApyError } from '@/features/portfolio/hooks/usePositionsAPY'
+import { hasApyBreakdownError } from '@/features/portfolio/hooks/usePositionsAPY'
 import { formatPercentage, formatPoints } from '@/lib/utils/formatting'
 import { getTokenLogoComponent } from '@/lib/utils/token-logos'
 import { cn } from './ui/utils'
@@ -47,7 +47,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
     : 'space-y-4 p-4 min-w-[240px] rounded-lg border border-[var(--divider-line)] bg-[var(--surface-card)]'
   const titleClass = 'text-sm'
   const itemClass = 'text-sm'
-  const hasAnyError = hasApyError(data)
+  const hasApyBreakdownErrors = hasApyBreakdownError(data)
 
   return (
     <div className={cn(containerClass, className)}>
@@ -116,7 +116,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
         )}
 
         {/* Individual Reward Tokens - show breakdown if available */}
-        {data.rewardTokens && data.rewardTokens.length > 0
+        {data.rewardTokens?.length
           ? data.rewardTokens.map((rewardToken) =>
               rewardToken.tokenAddress != null &&
               rewardToken.tokenSymbol != null &&
@@ -155,7 +155,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
         )}
 
         {/* Total APY - Separated. Only show if no errors */}
-        {!hasAnyError && (
+        {!hasApyBreakdownErrors && (
           <div className="mt-3 border-t border-[var(--divider-line)] pt-3">
             <div className="flex justify-between font-semibold">
               <span className="text-[var(--text-primary)]">Total APY:</span>

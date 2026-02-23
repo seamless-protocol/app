@@ -214,6 +214,6 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
 // Backward compatibility export
 export const usePositionsAPY = useTokensAPY
 
-export const hasApyError = (apyData: APYBreakdownData) => {
+export const hasApyBreakdownError = (apyData: APYBreakdownData) => {
   return Object.values(apyData.errors).some((error) => error !== null)
 }
