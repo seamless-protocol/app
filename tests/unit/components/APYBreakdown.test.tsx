@@ -60,6 +60,10 @@ describe('APYBreakdown', () => {
     expect(screen.getByText('Borrow Rate:')).toBeInTheDocument()
     expect(screen.getByText('Rewards APR:')).toBeInTheDocument()
     expect(screen.getByText('Points:')).toBeInTheDocument()
+    expect(screen.getByText('+210.00%')).toBeInTheDocument() // Restaking Yield
+    expect(screen.getByText('-150.00%')).toBeInTheDocument() // Borrow Rate (negative)
+    expect(screen.getByText('+80.00%')).toBeInTheDocument() // Rewards APR
+    expect(screen.getByText('6 x')).toBeInTheDocument() // Points
 
     // Total APY should not be shown
     expect(screen.queryByText('Total APY:')).not.toBeInTheDocument()
