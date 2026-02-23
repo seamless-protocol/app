@@ -51,6 +51,7 @@ export function useLeverageTokenAPY({
             rawStakingYield: 0,
             rawRestakingYield: 0,
           },
+          errors: {},
         }
       }
 
@@ -73,6 +74,7 @@ export function useLeverageTokenAPY({
             rawStakingYield: 0,
             rawRestakingYield: 0,
           },
+          errors: {},
         }
       }
 
@@ -183,6 +185,7 @@ export function useLeverageTokenAPY({
           rawStakingYield,
           rawRestakingYield,
         },
+        errors: {},
         ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
       }
 

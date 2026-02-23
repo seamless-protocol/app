@@ -166,7 +166,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
       if (!apyData || !apyData.raw || isLoading) return undefined
       return {
         borrowRate: apyData.raw.rawBorrowRate,
-        baseYield: (apyData.raw.rawStakingYield ?? 0) + (apyData.raw.rawRestakingYield ?? 0),
+        baseYield: apyData.raw.rawStakingYield + apyData.raw.rawRestakingYield,
       }
     }
 
@@ -283,7 +283,7 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
       },
     ]
 
-    const hasApyErrors = hasApyError(apyData)
+    const hasApyErrors = apyData ? hasApyError(apyData) : false
 
     return (
       <PageContainer padded={false}>

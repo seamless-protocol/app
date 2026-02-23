@@ -202,6 +202,7 @@ describe('useLeverageTokenAPY', () => {
           rawStakingYield: 0,
           rawRestakingYield: 0,
         },
+        errors: {},
       })
 
       // Should not call external APIs
@@ -300,6 +301,7 @@ describe('useLeverageTokenAPY', () => {
           rawStakingYield: 0,
           rawRestakingYield: 0,
         },
+        errors: {},
       })
     })
   })

@@ -365,8 +365,10 @@ export function LeverageTokenTable({
               ) : (
                 currentItems.map((token, index) => {
                   const tokenApyData = apyDataMap?.get(token.address)
-                  const tokenApyError = apyError || (!apyLoading && !apyDataMap?.has(token.address))
-                  const isApyError = hasApyError(tokenApyData)
+                  const tokenApyError =
+                    apyError ||
+                    (!apyLoading && !apyDataMap?.has(token.address)) ||
+                    (tokenApyData ? hasApyError(tokenApyData) : false)
 
                   return (
                     <motion.tr
@@ -465,7 +467,7 @@ export function LeverageTokenTable({
 
                       <TableCell className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end space-x-1">
-                          {tokenApyError || isApyError ? (
+                          {tokenApyError ? (
                             <span className="text-sm font-medium text-[var(--text-muted)]">
                               N/A
                             </span>

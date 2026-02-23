@@ -214,14 +214,6 @@ export function useTokensAPY({ tokens, enabled = true }: UseTokensAPYOptions) {
 // Backward compatibility export
 export const usePositionsAPY = useTokensAPY
 
-export const hasApyError = (apyData: APYBreakdownData | undefined) => {
-  return (
-    !!apyData?.errors?.stakingYield ||
-    !!apyData?.errors?.restakingYield ||
-    !!apyData?.errors?.borrowRate ||
-    !!apyData?.errors?.rewardsAPR ||
-    !!apyData?.errors?.rewardTokens ||
-    !!apyData?.errors?.totalAPY ||
-    !!apyData?.errors?.utilization
-  )
+export const hasApyError = (apyData: APYBreakdownData) => {
+  return Object.values(apyData.errors).some((error) => error !== null)
 }

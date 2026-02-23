@@ -1,4 +1,5 @@
 import type { RewardTokenApr } from '@/features/leverage-tokens/utils/apy-calculations/rewards-providers/types'
+import { hasApyError } from '@/features/portfolio/hooks/usePositionsAPY'
 import { formatPercentage, formatPoints } from '@/lib/utils/formatting'
 import { getTokenLogoComponent } from '@/lib/utils/token-logos'
 import { cn } from './ui/utils'
@@ -23,7 +24,7 @@ export interface APYBreakdownData {
     yieldAveragingPeriod?: string
     borrowAveragingPeriod?: string
   }
-  errors?: {
+  errors: {
     stakingYield?: Error | null
     restakingYield?: Error | null
     borrowRate?: Error | null
@@ -46,14 +47,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
     : 'space-y-4 p-4 min-w-[240px] rounded-lg border border-[var(--divider-line)] bg-[var(--surface-card)]'
   const titleClass = 'text-sm'
   const itemClass = 'text-sm'
-  const hasAnyError =
-    !!data.errors?.stakingYield ||
-    !!data.errors?.restakingYield ||
-    !!data.errors?.borrowRate ||
-    !!data.errors?.rewardsAPR ||
-    !!data.errors?.rewardTokens ||
-    !!data.errors?.totalAPY ||
-    !!data.errors?.utilization
+  const hasAnyError = hasApyError(data)
 
   return (
     <div className={cn(containerClass, className)}>
@@ -74,7 +68,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
           </div>
         )}
         {/* Show staking yield: error if present */}
-        {data.errors?.stakingYield && (
+        {data.errors.stakingYield && (
           <div className="flex items-start gap-2">
             <span className="shrink-0 text-[var(--text-secondary)]">Staking Yield:&nbsp;</span>
             <span className="min-w-0 flex-1 break-words text-right font-medium text-[var(--state-error-text)]">
@@ -93,7 +87,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
           </div>
         )}
         {/* Show restaking yield: error if present */}
-        {data.errors?.restakingYield && (
+        {data.errors.restakingYield && (
           <div className="flex items-start gap-2">
             <span className="shrink-0 text-[var(--text-secondary)]">Restaking Yield:&nbsp;</span>
             <span className="min-w-0 flex-1 break-words text-right font-medium text-[var(--state-error-text)]">
@@ -112,7 +106,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
           </div>
         )}
         {/* Show borrow rate: error if present */}
-        {data.errors?.borrowRate && (
+        {data.errors.borrowRate && (
           <div className="flex items-start gap-2">
             <span className="shrink-0 text-[var(--text-secondary)]">Borrow Rate:&nbsp;</span>
             <span className="min-w-0 flex-1 break-words text-right font-medium text-[var(--state-error-text)]">
@@ -160,7 +154,7 @@ export function APYBreakdown({ data, compact = false, className }: APYBreakdownP
           </div>
         )}
 
-        {/* Total APY - Separated */}
+        {/* Total APY - Separated. Only show if no errors */}
         {!hasAnyError && (
           <div className="mt-3 border-t border-[var(--divider-line)] pt-3">
             <div className="flex justify-between font-semibold">

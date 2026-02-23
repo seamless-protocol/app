@@ -10,6 +10,7 @@ describe('APYBreakdown', () => {
     rewardsAPR: 0.8,
     points: 6.0,
     totalAPY: 6.6,
+    errors: {},
   }
 
   it('should render all yield components correctly', () => {
