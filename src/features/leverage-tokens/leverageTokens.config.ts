@@ -159,7 +159,6 @@ export function getTokenDecimals(tokenAddress: Address): number {
 // Leverage token configurations
 export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
   [LeverageTokenKey.WSTETH_ETH_25X_ETHEREUM_MAINNET]: {
-    featuredRank: 1,
     address: '0x98c4E43e3Bde7B649E5aa2F88DE1658E8d3eD1bF' as Address,
     name: 'wstETH / ETH 25x Leverage Token',
     symbol: 'WSTETH-ETH-25x',
@@ -265,7 +264,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
         type: APR_PROVIDERS.DEFI_LLAMA,
         id: '2ad8497d-c855-4840-85ad-cdc536b92ced',
       },
-      pointsMultiplier: 6.75,
     },
     collateralAsset: {
       symbol: 'RLP',
@@ -596,7 +594,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
   },
   [LeverageTokenKey.SIUSD_USDC_11X_ETHEREUM_MAINNET]: {
-    featuredRank: 3,
     address: '0x604d37747f3382fA51519e7542d54F1e730B97A3' as Address,
     name: 'siUSD / USDC 11x Leverage Token',
     symbol: 'SIUSD-USDC-11x',
@@ -713,7 +710,6 @@ export const leverageTokenConfigs: Record<string, LeverageTokenConfig> = {
     },
   },
   [LeverageTokenKey.SUSDS_USDT_25X_ETHEREUM_MAINNET]: {
-    featuredRank: 2,
     address: '0xc73CE54dBC4A02D7110F69AdF123B3DbE5B3033f' as Address,
     name: 'sUSDS / USDT 25x Leverage Token',
     symbol: 'sUSDS-USDT-25x',
