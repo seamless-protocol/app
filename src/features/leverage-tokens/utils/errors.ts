@@ -126,7 +126,10 @@ function classifyErrorFromObject(
     }
   }
 
-  if (txType === 'redeemLt' && (rawMessage.includes('0x76baadda') || 'CollateralSlippageTooHigh')) {
+  if (
+    txType === 'redeemLt' &&
+    (rawMessage.includes('0x76baadda') || rawMessage.includes('CollateralSlippageTooHigh'))
+  ) {
     return {
       type: 'LT_COLLATERAL_SLIPPAGE_EXCEEDED',
     }

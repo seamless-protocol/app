@@ -46,10 +46,12 @@ describe('classifyError', () => {
       })
     })
 
-    it('returns LT_COLLATERAL_SLIPPAGE_EXCEEDED when txType is redeemLt even without slippage text (current behavior)', () => {
+    it('does not return LT_COLLATERAL_SLIPPAGE_EXCEEDED when txType is redeemLt but message is not CollateralSlippageTooHigh or 0x76baadda', () => {
       const error = { message: 'Some other revert' }
       expect(classifyError(error, 'redeemLt')).toEqual({
-        type: 'LT_COLLATERAL_SLIPPAGE_EXCEEDED',
+        type: 'UNKNOWN',
+        message: 'Some other revert',
+        originalError: error,
       })
     })
 
@@ -80,7 +82,7 @@ describe('classifyError', () => {
     it('returns INSUFFICIENT_ASSETS_FOR_FLASH_LOAN_REPAYMENT when txType is redeemLt and message contains transferFrom reverted', () => {
       const error = { message: 'transferFrom reverted' }
       expect(classifyError(error, 'redeemLt')).toEqual({
-        type: 'LT_COLLATERAL_SLIPPAGE_EXCEEDED',
+        type: 'INSUFFICIENT_ASSETS_FOR_FLASH_LOAN_REPAYMENT',
       })
     })
 
