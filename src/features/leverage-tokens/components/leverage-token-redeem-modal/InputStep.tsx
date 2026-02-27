@@ -215,7 +215,7 @@ export function InputStep({
               </div>
             </div>
 
-            <div className="ml-4 flex items-center gap-1.5">
+            <div className="ml-4 flex items-center gap-1.5 pb-2">
               <div className="flex -space-x-1">
                 <AssetDisplay
                   asset={leverageTokenConfig.collateralAsset}
