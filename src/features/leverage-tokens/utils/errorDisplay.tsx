@@ -19,11 +19,12 @@ export interface ErrorDisplayConfig {
 export function getErrorDisplay(
   error: string,
   defaultTitle: string = 'Transaction Failed',
+  txType?: 'mintLt' | 'redeemLt',
 ): ErrorDisplayConfig {
   // Try to classify the error first
   let classifiedError: LeverageTokenError
   try {
-    classifiedError = classifyError(error)
+    classifiedError = classifyError(error, txType)
   } catch {
     classifiedError = { type: 'UNKNOWN', message: error }
   }
@@ -87,12 +88,40 @@ export function getErrorDisplay(
     case 'SLIPPAGE_EXCEEDED':
       return {
         icon: <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />,
-        title: 'Slippage Tolerance Exceeded',
-        message:
-          'The price moved beyond your slippage tolerance. Try increasing your slippage tolerance or retry the transaction.',
+        title: 'Swap Slippage Tolerance Exceeded',
+        message: `The spot price moved beyond your slippage tolerance. Try decreasing your swap slippage tolerance, increasing the ${txType === 'mintLt' ? 'leverage token' : 'collateral'} adjustment parameter, or retry the transaction.`,
         showRetry: true,
         severity: 'warning',
         technicalDetails: error,
+      }
+
+    case 'LT_SHARE_SLIPPAGE_EXCEEDED':
+      return {
+        icon: <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />,
+        title: 'Leverage Token Slippage Exceeded',
+        message:
+          'The Leverage Token share price moved beyond your slippage tolerance. Try decreasing your swap slippage tolerance, increasing the Leverage Token slippage tolerance, or retry the transaction.',
+        showRetry: true,
+        severity: 'warning',
+      }
+
+    case 'LT_COLLATERAL_SLIPPAGE_EXCEEDED':
+      return {
+        icon: <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />,
+        title: 'Leverage Token Collateral Slippage Exceeded',
+        message:
+          'The Leverage Token collateral price moved beyond your slippage tolerance. Try decreasing your swap slippage tolerance, increasing the collateral slippage tolerance, or retry the transaction.',
+        showRetry: true,
+        severity: 'warning',
+      }
+
+    case 'INSUFFICIENT_ASSETS_FOR_FLASH_LOAN_REPAYMENT':
+      return {
+        icon: <AlertTriangle className="h-8 w-8 text-[var(--state-error-text)]" />,
+        title: 'Insufficient Assets for Flash Loan Repayment',
+        message: `Unable to repay flash loan. Try decreasing your swap slippage tolerance, increasing the ${txType === 'mintLt' ? 'flash loan adjustment' : 'collateral swap adjustment'} parameter, or retry the transaction.`,
+        showRetry: true,
+        severity: 'error',
       }
 
     default:

@@ -10,16 +10,19 @@ export type LeverageTokenError =
   | { type: 'USER_REJECTED'; code: 4001 }
   | { type: 'CHAIN_MISMATCH'; expected: number; actual: number }
   | { type: 'UNKNOWN'; message: string; originalError?: unknown }
+  | { type: 'LT_SHARE_SLIPPAGE_EXCEEDED' }
+  | { type: 'LT_COLLATERAL_SLIPPAGE_EXCEEDED' }
+  | { type: 'INSUFFICIENT_ASSETS_FOR_FLASH_LOAN_REPAYMENT' }
 
 /**
  * Classify errors into actionable types
  * User errors (4001, 4902) should not be sent to Sentry
  */
-export function classifyError(e: unknown): LeverageTokenError {
+export function classifyError(e: unknown, txType?: 'mintLt' | 'redeemLt'): LeverageTokenError {
   // Handle string input directly
   if (typeof e === 'string') {
     const error = { message: e }
-    return classifyErrorFromObject(error)
+    return classifyErrorFromObject(error, txType)
   }
 
   const error = e as {
@@ -32,18 +35,21 @@ export function classifyError(e: unknown): LeverageTokenError {
     message?: string
   }
 
-  return classifyErrorFromObject(error)
+  return classifyErrorFromObject(error, txType)
 }
 
-function classifyErrorFromObject(error: {
-  code?: number
-  cause?: { code?: number }
-  expectedChainId?: number
-  actualChainId?: number
-  reason?: string
-  data?: { message?: string }
-  message?: string
-}): LeverageTokenError {
+function classifyErrorFromObject(
+  error: {
+    code?: number
+    cause?: { code?: number }
+    expectedChainId?: number
+    actualChainId?: number
+    reason?: string
+    data?: { message?: string }
+    message?: string
+  },
+  txType?: 'mintLt' | 'redeemLt',
+): LeverageTokenError {
   // User rejected transaction
   if (error?.code === 4001 || error?.cause?.code === 4001) {
     return { type: 'USER_REJECTED', code: 4001 }
@@ -113,9 +119,33 @@ function classifyErrorFromObject(error: {
 
   // Check for slippage-related error signatures in the raw message
   const rawMessage = error?.message || ''
+
+  if (txType === 'mintLt' && rawMessage.includes('0x76baadda')) {
+    return {
+      type: 'LT_SHARE_SLIPPAGE_EXCEEDED',
+    }
+  }
+
+  if (
+    txType === 'redeemLt' &&
+    (rawMessage.includes('0x76baadda') || rawMessage.includes('CollateralSlippageTooHigh'))
+  ) {
+    return {
+      type: 'LT_COLLATERAL_SLIPPAGE_EXCEEDED',
+    }
+  }
+
+  if (
+    (txType === 'mintLt' || txType === 'redeemLt') &&
+    rawMessage.includes('transferFrom reverted')
+  ) {
+    return {
+      type: 'INSUFFICIENT_ASSETS_FOR_FLASH_LOAN_REPAYMENT',
+    }
+  }
+
   if (
     rawMessage.includes('0x5a046737') || // Common slippage signature
-    rawMessage.includes('0x76baadda') || // Another slippage signature
     rawMessage.includes('SlippageExceeded') ||
     rawMessage.includes('SlippageToleranceExceeded') ||
     rawMessage.includes('PriceImpactTooHigh') ||
