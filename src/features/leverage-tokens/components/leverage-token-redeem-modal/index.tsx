@@ -929,6 +929,8 @@ export function LeverageTokenRedeemModal({
               name: leverageTokenConfig.name,
               leverageRatio: leverageTokenConfig.leverageRatio,
               chainId: leverageTokenConfig.chainId,
+              collateralAsset: leverageTokenConfig.collateralAsset,
+              debtAsset: leverageTokenConfig.debtAsset,
             }}
             redemptionFee={fees?.redeemTreasuryFee}
             isRedemptionFeeLoading={isFeesLoading}
@@ -986,11 +988,9 @@ export function LeverageTokenRedeemModal({
     <MultiStepModal
       isOpen={isOpen}
       onClose={handleClose}
-      title={currentStep === 'success' ? 'Redemption Status' : 'Redeem Leverage Token'}
+      title={currentStep === 'success' ? 'Redemption Status' : 'Redeem Leverage Tokens'}
       description={
-        currentStep === 'success'
-          ? 'Your redemption request has been processed successfully.'
-          : 'Redeem your leverage tokens back to the underlying assets.'
+        currentStep === 'success' ? 'Your leverage tokens have been successfully redeemed.' : ''
       }
       currentStep={currentStep}
       steps={steps}
