@@ -1,4 +1,4 @@
-import { ArrowDown, TrendingUp, Zap } from 'lucide-react'
+import { ArrowDown, Zap } from 'lucide-react'
 import { AssetDisplay } from '../../../../components/ui/asset-display'
 import { Button } from '../../../../components/ui/button'
 import { Card } from '../../../../components/ui/card'
@@ -18,6 +18,16 @@ interface LeverageTokenConfig {
   name: string
   leverageRatio: number
   chainId: number
+  collateralAsset: {
+    symbol: string
+    name: string
+    address: string
+  }
+  debtAsset: {
+    symbol: string
+    name: string
+    address: string
+  }
 }
 
 interface ConfirmStepProps {
@@ -70,7 +80,7 @@ export function ConfirmStep({
       <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-secondary-foreground">Minting</span>
+            <span className="text-sm text-secondary-foreground">Depositing</span>
             <div className="flex items-center">
               <span className="mr-2 font-medium text-foreground">
                 {amount} {selectedToken.symbol}
@@ -83,19 +93,34 @@ export function ConfirmStep({
             <ArrowDown className="h-4 w-4 text-muted-foreground" />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between">
             <span className="text-sm text-secondary-foreground">Receiving</span>
-            <div className="flex items-center">
-              <span className="mr-2 font-medium text-foreground">
+            <div className="grid grid-cols-[1fr_auto] justify-items-end gap-x-2 gap-y-1">
+              <div className="col-start-1 row-start-1 text-right font-medium leading-tight text-foreground">
                 {expectedTokens} {leverageTokenConfig.symbol}
-                {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
-                  <>
-                    {' '}
+              </div>
+              <div className="col-start-2 row-start-1 flex -space-x-1">
+                <AssetDisplay
+                  asset={leverageTokenConfig.collateralAsset}
+                  size="sm"
+                  variant="logo-only"
+                />
+                <AssetDisplay asset={leverageTokenConfig.debtAsset} size="sm" variant="logo-only" />
+              </div>
+              {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (
+                <>
+                  <div className="col-start-1 row-start-2 flex items-center justify-end text-right text-xs leading-tight text-secondary-foreground">
                     + {expectedDebtAmount} {debtAssetSymbol}
-                  </>
-                )}
-              </span>
-              <TrendingUp className="h-4 w-4 text-brand-purple" />
+                  </div>
+                  <div className="col-start-2 row-start-2 flex items-center justify-end">
+                    <AssetDisplay
+                      asset={leverageTokenConfig.debtAsset}
+                      size="sm"
+                      variant="logo-only"
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

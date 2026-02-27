@@ -50,7 +50,7 @@ export function PendingStep({
       <Card variant="gradient" className="border border-border bg-card p-4">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Minting</span>
+            <span className="text-secondary-foreground">Receiving</span>
             <span className="text-foreground">
               {expectedTokens} {leverageTokenConfig.symbol}
               {expectedDebtAmount && expectedDebtAmount !== '0' && debtAssetSymbol && (

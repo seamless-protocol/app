@@ -917,6 +917,8 @@ export function LeverageTokenMintModal({
               name: leverageTokenConfig.name,
               leverageRatio: leverageTokenConfig.leverageRatio,
               chainId: leverageTokenConfig.chainId,
+              collateralAsset: leverageTokenConfig.collateralAsset,
+              debtAsset: leverageTokenConfig.debtAsset,
             }}
             onConfirm={handleConfirm}
             disabled={
@@ -971,8 +973,10 @@ export function LeverageTokenMintModal({
     <MultiStepModal
       isOpen={isOpen}
       onClose={handleClose}
-      title={currentStep === 'success' ? 'Mint Success' : 'Mint Leverage Token'}
-      description={currentStep === 'success' ? 'Your leverage tokens have been successfully.' : ''}
+      title={currentStep === 'success' ? 'Mint Success' : 'Mint Leverage Tokens'}
+      description={
+        currentStep === 'success' ? 'Your leverage tokens have been successfully minted.' : ''
+      }
       currentStep={currentStep}
       steps={steps}
       className="max-w-xl border border-[var(--divider-line)] bg-[var(--surface-card)]"
