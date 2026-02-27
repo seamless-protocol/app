@@ -79,10 +79,10 @@ export function ConfirmStep({
 
       <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm text-secondary-foreground">Depositing</span>
-            <div className="flex items-center">
-              <span className="mr-2 font-medium text-foreground">
+            <div className="flex items-center justify-end gap-2">
+              <span className="font-medium text-foreground">
                 {amount} {selectedToken.symbol}
               </span>
               <AssetDisplay asset={selectedToken} size="sm" variant="logo-only" />
@@ -93,7 +93,7 @@ export function ConfirmStep({
             <ArrowDown className="h-4 w-4 text-muted-foreground" />
           </div>
 
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
             <span className="text-sm text-secondary-foreground">Receiving</span>
             <div className="grid grid-cols-[1fr_auto] justify-items-end gap-x-2 gap-y-1">
               <div className="col-start-1 row-start-1 text-right font-medium leading-tight text-foreground">
