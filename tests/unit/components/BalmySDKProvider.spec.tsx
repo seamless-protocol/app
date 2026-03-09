@@ -68,11 +68,11 @@ describe('createBalmySDK', () => {
     const priceSources = balmySDK.priceService.priceSource.sources
     expect(priceSources[0].constructor.name).toEqual('DefiLlamaPriceSource')
 
-    expect(priceSources[2].constructor.name).toEqual('AlchemyPriceSource')
+    expect(priceSources[1].constructor.name).toEqual('AlchemyPriceSource')
     // @ts-expect-error - apiKey is not typed on IPriceSource
-    expect(priceSources[2].apiKey).toEqual(expectedBalmyConfig.price.source.sources[2].apiKey)
+    expect(priceSources[1].apiKey).toEqual(expectedBalmyConfig.price.source.sources[2].apiKey)
 
-    expect(priceSources[3].constructor.name).toEqual('OdosPriceSource')
+    expect(priceSources[2].constructor.name).toEqual('OdosPriceSource')
   })
 
   it('should create a Balmy SDK instance with custom provider config with no fallback transports array on client', () => {
