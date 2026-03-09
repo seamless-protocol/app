@@ -117,10 +117,6 @@ export const getBalmySDKConfig = (config: UseConfigReturnType) => {
           {
             type: 'defi-llama',
           },
-          {
-            type: 'coingecko',
-            baseUrl: import.meta.env['VITE_COINGECKO_API_URL'] ?? undefined,
-          },
           ...(import.meta.env['VITE_ALCHEMY_API_KEY'] !== ''
             ? [
                 {
