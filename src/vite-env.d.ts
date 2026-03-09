@@ -24,7 +24,6 @@ interface ImportMetaEnv {
   readonly VITE_SEAMLESS_SUBGRAPH_URL?: string
   readonly VITE_FUUL_API_URL?: string
   readonly VITE_FUUL_SUBGRAPH_URL?: string
-  readonly VITE_COINGECKO_API_URL?: string
 }
 
 interface ImportMeta {

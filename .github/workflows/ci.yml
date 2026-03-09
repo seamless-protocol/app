@@ -90,7 +90,6 @@ jobs:
   #         VITE_WALLETCONNECT_PROJECT_ID: ${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }}
   #         VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
   #         VITE_LIFI_INTEGRATOR: seamless
-  #         VITE_COINGECKO_API_URL: ${{ secrets.VITE_COINGECKO_API_URL }}
   #         VITE_INCLUDE_TEST_TOKENS: true
 
   #     - name: Upload test results
@@ -129,7 +128,6 @@ jobs:
         env:
           VITE_LIFI_API_KEY: ${{ secrets.VITE_LIFI_API_KEY }}
           VITE_LIFI_INTEGRATOR: seamless
-          VITE_COINGECKO_API_URL: ${{ secrets.VITE_COINGECKO_API_URL }}
           VITE_BASE_FORK_RPC_URL: ${{ secrets.VITE_BASE_FORK_RPC_URL }}
           VITE_ETHEREUM_FORK_RPC_URL: ${{ secrets.VITE_ETHEREUM_FORK_RPC_URL }}
 

@@ -9,7 +9,6 @@ export const API_ENDPOINTS = {
   seamlessSubgraph: 'https://api.thegraph.com/subgraphs/name/seamless/seamless-v2',
   fuul: 'https://api.fuul.xyz',
   fuulSubgraph: 'https://api.thegraph.com/subgraphs/name/fuul/fuul-rewards',
-  coingecko: 'https://api.coingecko.com/api/v3',
 } as const
 
 // Explicit mapping of API keys to environment variable names
@@ -19,7 +18,6 @@ export const API_ENV_OVERRIDE_MAP: Record<keyof typeof API_ENDPOINTS, string> = 
   seamlessSubgraph: 'VITE_SEAMLESS_SUBGRAPH_URL',
   fuul: 'VITE_FUUL_API_URL',
   fuulSubgraph: 'VITE_FUUL_SUBGRAPH_URL',
-  coingecko: 'VITE_COINGECKO_API_URL',
 } as const
 
 // Get API endpoint with environment override support
