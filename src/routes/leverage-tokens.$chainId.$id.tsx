@@ -3,13 +3,14 @@ import { motion } from 'framer-motion'
 import { Info } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Address } from 'viem'
-import { formatUnits } from 'viem'
+import { formatUnits, isAddressEqual } from 'viem'
 import { useAccount } from 'wagmi'
 import type { APYBreakdownData } from '@/components/APYBreakdown'
 import { APYBreakdownTooltip } from '@/components/APYBreakdownTooltip'
 import { FAQ } from '@/components/FAQ'
 import { PageContainer } from '@/components/PageContainer'
 import { StatCardList } from '@/components/StatCardList'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AssetDisplay } from '@/components/ui/asset-display'
 import { Badge } from '@/components/ui/badge'
 import { BreadcrumbNavigation } from '@/components/ui/breadcrumb'
@@ -29,6 +30,8 @@ import { useLeverageTokenUserPosition } from '@/features/leverage-tokens/hooks/u
 import {
   getAllLeverageTokenConfigs,
   getLeverageTokenConfig,
+  LeverageTokenKey,
+  leverageTokenConfigs,
 } from '@/features/leverage-tokens/leverageTokens.config'
 import { generateLeverageTokenFAQ } from '@/features/leverage-tokens/utils/faqGenerator'
 import { hasApyBreakdownError, useTokensAPY } from '@/features/portfolio/hooks/usePositionsAPY'
@@ -285,6 +288,12 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
 
     const hasApyBreakdownErrors = apyData ? hasApyBreakdownError(apyData) : false
 
+    const rlpUsdcConfig = leverageTokenConfigs[LeverageTokenKey.RLP_USDC_6_75X_ETHEREUM_MAINNET]
+    const showResolvExploitWarning =
+      rlpUsdcConfig !== undefined &&
+      isAddressEqual(tokenConfig.address, rlpUsdcConfig.address) &&
+      tokenConfig.chainId === rlpUsdcConfig.chainId
+
     return (
       <PageContainer padded={false}>
         {/* Breadcrumb Navigation */}
@@ -301,6 +310,26 @@ export const Route = createFileRoute('/leverage-tokens/$chainId/$id')({
           ]}
           onBack={() => navigate({ to: '/leverage-tokens' })}
         />
+
+        {showResolvExploitWarning && (
+          <Alert type="warning" title="Resolv protocol incident" className="mb-4 sm:mb-6">
+            <AlertDescription>
+              <p>
+                The Resolv protocol has been exploited, it is not advisable to use this Leverage
+                Token. See{' '}
+                <a
+                  href="https://resolv.xyz/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium underline underline-offset-2 hover:opacity-90"
+                >
+                  Resolv
+                </a>{' '}
+                for the latest updates.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Two-Column Grid Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
