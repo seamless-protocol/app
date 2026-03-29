@@ -36,7 +36,7 @@ export function SuccessStep({
         <h3 className="text-lg font-medium text-foreground mb-2">Redemption Completed!</h3>
         <p className="text-secondary-foreground text-center max-w-sm text-sm">
           Your {amount} {leverageTokenSymbol} have been successfully redeemed for {expectedAmount}{' '}
-          {selectedAsset}.
+          {selectedAsset} and {actualDebtAmount} {debtAssetSymbol}.
         </p>
       </div>
 
@@ -81,8 +81,8 @@ export function SuccessStep({
             Redemption complete
           </p>
           <p className="mt-1 text-xs">
-            Your {selectedAsset} has been transferred to your wallet. Track your remaining positions
-            in your Portfolio.
+            Your {selectedAsset} and {debtAssetSymbol} has been transferred to your wallet. Track
+            your remaining positions in your Portfolio.
           </p>
         </div>
       </Card>
