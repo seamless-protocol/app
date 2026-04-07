@@ -43,17 +43,30 @@ const alertTitles = {
   error: 'Error',
 }
 
-interface AlertProps extends React.ComponentProps<'div'>, VariantProps<typeof alertVariants> {
+interface AlertProps
+  extends Omit<React.ComponentProps<'div'>, 'title'>,
+    VariantProps<typeof alertVariants> {
   type?: keyof typeof alertIcons
-  title?: string
+  title?: React.ReactNode
+  /** Merged into `AlertTitle` (e.g. `line-clamp-none` when the title wraps). */
+  titleClassName?: string
   description?: string
 }
 
-function Alert({ className, variant, type, title, description, children, ...props }: AlertProps) {
+function Alert({
+  className,
+  variant,
+  type,
+  title,
+  titleClassName,
+  description,
+  children,
+  ...props
+}: AlertProps) {
   // If type is provided, use the type-based styling and auto-generate content
   if (type) {
     const Icon = alertIcons[type]
-    const autoTitle = title || alertTitles[type]
+    const resolvedTitle = title != null && title !== '' ? title : alertTitles[type]
 
     return (
       <div
@@ -63,7 +76,7 @@ function Alert({ className, variant, type, title, description, children, ...prop
         {...props}
       >
         <Icon className="h-4 w-4" />
-        <AlertTitle>{autoTitle}</AlertTitle>
+        <AlertTitle className={titleClassName}>{resolvedTitle}</AlertTitle>
         {description && <AlertDescription>{description}</AlertDescription>}
         {children}
       </div>

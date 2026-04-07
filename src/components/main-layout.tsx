@@ -25,6 +25,7 @@ import { XLogo } from './icons/brands/x-logo'
 import { LiFiWidget } from './LiFiWidget'
 import { ModeToggle } from './mode-toggle'
 import { PageContainer } from './PageContainer'
+import { SunsetBanner } from './SunsetBanner'
 import { Skeleton } from './ui/skeleton'
 import { Toaster } from './ui/sonner'
 import { type NavigationItem, VerticalNavbar } from './VerticalNavbar'
@@ -221,87 +222,90 @@ export function MainLayout({ children }: MainLayoutProps) {
   useIdlePrefetch(() => import('./WalletConnectButton'), 300)
 
   return (
-    <div className="h-screen flex overflow-hidden">
-      {/* Vertical Navbar - Desktop Only */}
-      <div className="hidden lg:block w-84 flex-shrink-0">
-        <VerticalNavbar
-          currentPage={currentPage}
-          onPageChange={handlePageChange}
-          navigationItems={navigationItems}
-          communitySection={communitySection}
-          platformTVL={platformTVL}
-        />
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col bg-[var(--bg-hero)] text-[var(--text-primary)]">
-        {/* Top Bar with Actions */}
-        <div className="border-b border-border bg-card backdrop-blur-sm shrink-0">
-          <PageContainer className="py-3 sm:py-[19.2px]">
-            <div className="flex items-center justify-between">
-              {/* Page Header with Mobile Menu */}
-              <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
-                {/* Mobile Menu Button - Only visible on mobile */}
-                <div className="lg:hidden">
-                  <VerticalNavbar
-                    currentPage={currentPage}
-                    onPageChange={handlePageChange}
-                    navigationItems={navigationItems}
-                    communitySection={communitySection}
-                    platformTVL={platformTVL}
-                    isMobile={true}
-                  />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] truncate">
-                    {navigationItems.find((item) => item.id === currentPage)?.title || 'Page'}
-                  </h1>
-                  <p className="text-xs sm:text-sm text-secondary-foreground hidden sm:block truncate">
-                    {navigationItems.find((item) => item.id === currentPage)?.subtitle ||
-                      'Page description'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
-                <LiFiWidget />
-                {features.testMode ? (
-                  <ConnectButtonTest />
-                ) : (
-                  <Suspense
-                    fallback={
-                      <button
-                        type="button"
-                        onMouseEnter={() => {
-                          import('./WalletConnectButton').catch(() => {})
-                        }}
-                        onFocus={() => {
-                          import('./WalletConnectButton').catch(() => {})
-                        }}
-                        className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 rounded-md gap-1.5 has-[>svg]:px-2.5 h-9 px-3 sm:h-10 sm:px-4 cursor-pointer bg-cta-gradient text-[var(--cta-text)]"
-                        aria-label="Connect Wallet"
-                        title="Connect Wallet"
-                      >
-                        Connect
-                      </button>
-                    }
-                  >
-                    <WalletConnectButton />
-                  </Suspense>
-                )}
-                <ModeToggle />
-              </div>
-            </div>
-          </PageContainer>
+    <div className="h-screen flex flex-col overflow-hidden">
+      <SunsetBanner />
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Vertical Navbar - Desktop Only */}
+        <div className="hidden lg:block w-84 flex-shrink-0">
+          <VerticalNavbar
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            navigationItems={navigationItems}
+            communitySection={communitySection}
+            platformTVL={platformTVL}
+          />
         </div>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto">
-          {/* Use a shared container so all routes align with the top nav */}
-          <PageContainer className="py-6">{children}</PageContainer>
-        </main>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col bg-[var(--bg-hero)] text-[var(--text-primary)] min-w-0">
+          {/* Top Bar with Actions */}
+          <div className="border-b border-border bg-card backdrop-blur-sm shrink-0">
+            <PageContainer className="py-3 sm:py-[19.2px]">
+              <div className="flex items-center justify-between">
+                {/* Page Header with Mobile Menu */}
+                <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+                  {/* Mobile Menu Button - Only visible on mobile */}
+                  <div className="lg:hidden">
+                    <VerticalNavbar
+                      currentPage={currentPage}
+                      onPageChange={handlePageChange}
+                      navigationItems={navigationItems}
+                      communitySection={communitySection}
+                      platformTVL={platformTVL}
+                      isMobile={true}
+                    />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] truncate">
+                      {navigationItems.find((item) => item.id === currentPage)?.title || 'Page'}
+                    </h1>
+                    <p className="text-xs sm:text-sm text-secondary-foreground hidden sm:block truncate">
+                      {navigationItems.find((item) => item.id === currentPage)?.subtitle ||
+                        'Page description'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
+                  <LiFiWidget />
+                  {features.testMode ? (
+                    <ConnectButtonTest />
+                  ) : (
+                    <Suspense
+                      fallback={
+                        <button
+                          type="button"
+                          onMouseEnter={() => {
+                            import('./WalletConnectButton').catch(() => {})
+                          }}
+                          onFocus={() => {
+                            import('./WalletConnectButton').catch(() => {})
+                          }}
+                          className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 rounded-md gap-1.5 has-[>svg]:px-2.5 h-9 px-3 sm:h-10 sm:px-4 cursor-pointer bg-cta-gradient text-[var(--cta-text)]"
+                          aria-label="Connect Wallet"
+                          title="Connect Wallet"
+                        >
+                          Connect
+                        </button>
+                      }
+                    >
+                      <WalletConnectButton />
+                    </Suspense>
+                  )}
+                  <ModeToggle />
+                </div>
+              </div>
+            </PageContainer>
+          </div>
+
+          {/* Page Content */}
+          <main className="flex-1 overflow-auto">
+            {/* Use a shared container so all routes align with the top nav */}
+            <PageContainer className="py-6">{children}</PageContainer>
+          </main>
+        </div>
       </div>
 
       {/* Toast Notifications */}
