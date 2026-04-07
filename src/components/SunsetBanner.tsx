@@ -2,7 +2,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils/cn'
 import { PageContainer } from './PageContainer'
 
-const announcementUrl = 'https://docs.seamlessprotocol.com'
+const announcementUrl = 'https://x.com/SeamlessFi/status/2041572728239747558'
 
 export function SunsetBanner() {
   return (
