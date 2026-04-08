@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowDown, Loader2, Settings, TrendingUp } from 'lucide-react'
+import { AlertTriangle, ArrowDown, Loader2, Settings } from 'lucide-react'
 import { useEffect, useId, useRef } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Alert } from '../../../../components/ui/alert'
@@ -31,6 +31,12 @@ interface LeverageTokenConfig {
   name: string
   leverageRatio: number
   collateralAsset: {
+    symbol: string
+    name: string
+    address: string
+    decimals: number
+  }
+  debtAsset: {
     symbol: string
     name: string
     address: string
@@ -316,48 +322,47 @@ export function InputStep({
         <Card variant="gradient" className="gap-0 border border-border bg-card p-4">
           <div className="mb-2 flex items-center justify-between">
             <div className="text-sm text-secondary-foreground">Preview</div>
-            {isCalculating && (
-              <div className="flex items-center text-xs text-slate-400" aria-live="polite">
-                <Loader2 className="h-3 w-3 animate-spin" aria-label="Calculating" />
+            <div className="flex items-center gap-1.5">
+              {isCalculating && (
+                <Loader2 className="h-3 w-3 animate-spin text-slate-400" aria-label="Calculating" />
+              )}
+              <div className="flex -space-x-1">
+                <AssetDisplay
+                  asset={leverageTokenConfig.collateralAsset}
+                  size="sm"
+                  variant="logo-only"
+                />
+                <AssetDisplay asset={leverageTokenConfig.debtAsset} size="sm" variant="logo-only" />
               </div>
-            )}
+              <span className="text-sm font-medium text-foreground">
+                {leverageTokenConfig.symbol}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-end justify-between">
-            <div className="flex-1">
-              <div className="text-xl font-medium text-foreground">
-                {isCalculating ? <Skeleton className="h-6 w-20" /> : expectedTokens}
-              </div>
-              {!isCalculating && (
-                <>
-                  <div className="text-xs text-secondary-foreground">
-                    {expectedExcessDebt && expectedExcessDebt !== '0' && debtAssetSymbol && (
-                      <>
-                        {' '}
-                        + {expectedExcessDebt} {debtAssetSymbol}
-                      </>
-                    )}
-                  </div>
-                  <div className="text-xs text-secondary-foreground">
-                    {expectedTokensUsdOutStr &&
-                    expectedDebtUsdOutStr &&
-                    expectedTotalUsdOutStr &&
-                    expectedDebtUsdOutStr !== '0'
-                      ? `≈ $${expectedTokensUsdOutStr} + $${expectedDebtUsdOutStr} = $${expectedTotalUsdOutStr}`
-                      : `≈ $${expectedTokensUsdOutStr}`}
-                  </div>
-                </>
-              )}
+          <div>
+            <div className="text-2xl font-semibold text-foreground">
+              {isCalculating ? <Skeleton className="h-7 w-28" /> : expectedTokens}
             </div>
-
-            <div className="ml-4 flex items-center space-x-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent">
-                <TrendingUp className="h-3 w-3 text-brand-purple" />
-              </div>
-              <div className="text-sm font-medium text-foreground">
-                {leverageTokenConfig.symbol}
-              </div>
-            </div>
+            {!isCalculating && (
+              <>
+                <div className="text-xs text-secondary-foreground">
+                  {expectedExcessDebt && expectedExcessDebt !== '0' && debtAssetSymbol && (
+                    <>
+                      + {expectedExcessDebt} {debtAssetSymbol}
+                    </>
+                  )}
+                </div>
+                <div className="text-xs text-secondary-foreground">
+                  {expectedTokensUsdOutStr &&
+                  expectedDebtUsdOutStr &&
+                  expectedTotalUsdOutStr &&
+                  expectedDebtUsdOutStr !== '0'
+                    ? `≈ $${expectedTokensUsdOutStr} + $${expectedDebtUsdOutStr} = $${expectedTotalUsdOutStr}`
+                    : `≈ $${expectedTokensUsdOutStr}`}
+                </div>
+              </>
+            )}
           </div>
         </Card>
       </div>

@@ -42,15 +42,15 @@ export function SuccessStep({
         </div>
         <h3 className="text-lg font-medium text-foreground mb-2">Mint Success!</h3>
         <p className="text-secondary-foreground text-center max-w-sm text-sm">
-          Your {amount} {selectedToken.symbol} has been successfully minted into {expectedTokens}{' '}
-          {leverageTokenSymbol}.
+          Your {amount} {selectedToken.symbol} has been successfully deposited to mint{' '}
+          {expectedTokens} {leverageTokenSymbol}.
         </p>
       </div>
 
       <Card variant="gradient" className="border border-border bg-card p-4">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-secondary-foreground">Minted</span>
+            <span className="text-secondary-foreground">Deposited</span>
             <span className="text-foreground">
               {amount} {selectedToken.symbol}
             </span>
